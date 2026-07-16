@@ -1,0 +1,13 @@
+export const bg = "#F3FBF8";
+export const card = "#FFFFFF";
+export const cardBorder = "#E3EFEA";
+export const accent = "#0FB8A3"; // Mint/Teal
+export const accentDark = "#0A9384";
+export const accentSoft = "#E3FBF6";
+export const blue = "#5B9BF0"; // sekundäre Akzentfarbe
+export const blueSoft = "#EAF2FF";
+export const success = "#33C481";
+export const danger = "#F2596A";
+export const textMain = "#1E2B29";
+export const textMuted = "#7C8B87";
+export const shadow = "0 2px 10px rgba(24, 60, 51, 0.06)";
