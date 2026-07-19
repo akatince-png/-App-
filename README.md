@@ -71,6 +71,14 @@ Das Projekt ist ein reines statisches Vite-Build (`npm run build` →
 1. Repository in Vercel importieren.
 2. Framework Preset: **Vite** (Build Command `npm run build`, Output
    Directory `dist` – wird i. d. R. automatisch erkannt).
+   - Falls das Projekt zuerst leer angelegt und die Git-Verbindung erst
+     danach unter Project Settings → Git hergestellt wurde, erkennt Vercel
+     das Framework u. U. nicht automatisch und zeigt "Other" statt "Vite"
+     an (führt zu "404: NOT_FOUND" bei jedem Aufruf). In dem Fall unter
+     **Project Settings → Build and Deployment → Framework Settings**
+     manuell auf **Vite** umstellen und anschließend einen neuen Commit
+     pushen (ein reiner "Redeploy" eines bestehenden Deployments übernimmt
+     u. U. nicht die aktuellen Project Settings).
 3. Unter **Environment Variables** setzen:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
