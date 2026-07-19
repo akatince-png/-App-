@@ -177,7 +177,20 @@ export function useProtocolData(userId) {
       });
       if (error) {
         console.error(error);
-        return { ok: false, error: "Speichern fehlgeschlagen. Bitte nochmal versuchen." };
+        if (error.code === "23505") {
+          const { data: rows } = await supabase.from("protocol_peptide").select("*").eq("protocol_id", protocolId).order("created_at");
+          const nextEinnahmeart = {};
+          const nextDosierung = {};
+          (rows || []).forEach((row) => {
+            nextEinnahmeart[row.name] = row.einnahmeart;
+            nextDosierung[row.name] = rowToDosierung(row);
+          });
+          setPeptideState((rows || []).map((r) => r.name));
+          setEinnahmeartState(nextEinnahmeart);
+          setDosierungState(nextDosierung);
+          return { ok: false, error: `"${name}" war schon gespeichert — deine Liste wurde aktualisiert.` };
+        }
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setPeptideState((prev) => [...prev, name]);
       setEinnahmeartState((prev) => ({ ...prev, [name]: art }));

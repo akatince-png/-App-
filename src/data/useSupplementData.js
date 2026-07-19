@@ -49,7 +49,7 @@ export function useSupplementData(userId) {
         .single();
       if (error) {
         console.error(error);
-        return { ok: false, error: "Speichern fehlgeschlagen. Bitte nochmal versuchen." };
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setSupplemente((prev) => [...prev, { id: data.id, name: data.name, tageszeiten: data.tageszeiten, hinweis: data.hinweis }]);
       return { ok: true };

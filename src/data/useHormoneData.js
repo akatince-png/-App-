@@ -74,7 +74,18 @@ export function useHormoneData(userId, startdatum, dauer) {
       const { error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon) });
       if (error) {
         console.error(error);
-        return { ok: false, error: "Speichern fehlgeschlagen. Bitte nochmal versuchen." };
+        if (error.code === "23505") {
+          // Existiert in der Datenbank schon (z. B. weil ein früherer Versuch
+          // tatsächlich gespeichert wurde, die Seite das aber noch nicht wusste)
+          // -> lokalen Stand aus der DB neu laden statt nur einen Fehler zu zeigen.
+          const { data: rows } = await supabase.from("hormones").select("*").eq("user_id", userId).order("created_at");
+          const nextDosierung = {};
+          (rows || []).forEach((row) => (nextDosierung[row.name] = rowToHormonDosierung(row)));
+          setHormone((rows || []).map((r) => r.name));
+          setHormonDosierung(nextDosierung);
+          return { ok: false, error: `"${name}" war schon gespeichert — deine Liste wurde aktualisiert, schau weiter unten.` };
+        }
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setHormone((prev) => [...prev, name]);
       setHormonDosierung((prev) => ({
