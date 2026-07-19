@@ -1,14 +1,38 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { addDays } from "../utils/dates";
+import { uploadPhoto } from "../lib/storage";
+import { activeDoseDays } from "../utils/schedule";
 
 function rowToHormonDosierung(row) {
   return {
     menge: row.menge || "",
-    intervallDays: row.intervall_mode === "custom" ? "custom" : row.intervall_days,
+    intervallTyp: row.intervall_mode || "fixed",
+    intervallDays: row.intervall_days || 7,
     customDays: row.custom_days != null ? String(row.custom_days) : "",
+    onDays: row.on_days != null ? String(row.on_days) : "",
+    offDays: row.off_days != null ? String(row.off_days) : "",
+    weekdays: row.weekdays || [],
     eigenerStart: row.eigener_start || "",
-    uhrzeit: row.uhrzeit ? row.uhrzeit.slice(0, 5) : "20:00",
+    uhrzeiten: row.uhrzeiten?.length ? row.uhrzeiten.map((t) => t.slice(0, 5)) : ["20:00"],
+    fotoPath: row.foto_path || null,
+  };
+}
+
+function toRow(userId, neuesHormon) {
+  const isCustom = neuesHormon.intervallTyp === "custom";
+  const isCycle = neuesHormon.intervallTyp === "cycle";
+  const isWeekdays = neuesHormon.intervallTyp === "weekdays";
+  return {
+    user_id: userId,
+    menge: neuesHormon.menge,
+    intervall_mode: neuesHormon.intervallTyp || "fixed",
+    intervall_days: !isCustom && !isCycle && !isWeekdays ? neuesHormon.intervallDays : null,
+    custom_days: isCustom && neuesHormon.customDays ? Number(neuesHormon.customDays) : null,
+    on_days: isCycle && neuesHormon.onDays ? Number(neuesHormon.onDays) : null,
+    off_days: isCycle && neuesHormon.offDays !== "" ? Number(neuesHormon.offDays) : null,
+    weekdays: isWeekdays ? neuesHormon.weekdays || [] : [],
+    eigener_start: neuesHormon.eigenerStart || null,
+    uhrzeiten: neuesHormon.uhrzeiten?.length ? neuesHormon.uhrzeiten : ["20:00"],
   };
 }
 
@@ -33,7 +57,7 @@ export function useHormoneData(userId, startdatum, dauer) {
 
       const nextErledigt = {};
       (logs || []).forEach((row) => {
-        nextErledigt[`${row.dose_date}__${row.hormone_name}`] = row.erledigt;
+        nextErledigt[`${row.dose_date}__${row.hormone_name}__${row.uhrzeit}`] = row.erledigt;
       });
       setHormonErledigt(nextErledigt);
     })();
@@ -46,23 +70,27 @@ export function useHormoneData(userId, startdatum, dauer) {
     async (neuesHormon) => {
       const name = neuesHormon.name.trim();
       if (!name || hormone.includes(name)) return;
-      const patch = {
-        user_id: userId,
-        name,
-        menge: neuesHormon.menge,
-        intervall_mode: neuesHormon.intervallDays === "custom" ? "custom" : "fixed",
-        intervall_days: neuesHormon.intervallDays === "custom" ? 7 : neuesHormon.intervallDays,
-        custom_days: neuesHormon.customDays ? Number(neuesHormon.customDays) : null,
-        eigener_start: neuesHormon.eigenerStart || null,
-        uhrzeit: neuesHormon.uhrzeit || "20:00",
-      };
-      const { error } = await supabase.from("hormones").insert(patch);
+      const { error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon) });
       if (error) {
         console.error(error);
         return;
       }
       setHormone((prev) => [...prev, name]);
-      setHormonDosierung((prev) => ({ ...prev, [name]: { ...neuesHormon } }));
+      setHormonDosierung((prev) => ({
+        ...prev,
+        [name]: {
+          menge: neuesHormon.menge,
+          intervallTyp: neuesHormon.intervallTyp || "fixed",
+          intervallDays: neuesHormon.intervallDays,
+          customDays: neuesHormon.customDays,
+          onDays: neuesHormon.onDays,
+          offDays: neuesHormon.offDays,
+          weekdays: neuesHormon.weekdays || [],
+          eigenerStart: neuesHormon.eigenerStart,
+          uhrzeiten: neuesHormon.uhrzeiten?.length ? neuesHormon.uhrzeiten : ["20:00"],
+          fotoPath: null,
+        },
+      }));
     },
     [hormone, userId]
   );
@@ -81,14 +109,29 @@ export function useHormoneData(userId, startdatum, dauer) {
     [userId]
   );
 
+  const setHormonFoto = useCallback(
+    async (name, file) => {
+      try {
+        const path = await uploadPhoto(userId, file, "praeparate");
+        setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], fotoPath: path } }));
+        const { error } = await supabase.from("hormones").update({ foto_path: path }).eq("user_id", userId).eq("name", name);
+        if (error) console.error(error);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [userId]
+  );
+
   const toggleHormonErledigt = useCallback(
-    async (datumStr, name) => {
-      const k = `${datumStr}__${name}`;
+    async (datumStr, name, uhrzeit) => {
+      const k = `${datumStr}__${name}__${uhrzeit}`;
       const nextVal = !hormonErledigt[k];
+      const nowIso = new Date().toISOString();
       setHormonErledigt((prev) => ({ ...prev, [k]: nextVal }));
       const { error } = await supabase.from("hormone_logs").upsert(
-        { user_id: userId, hormone_name: name, dose_date: datumStr, erledigt: nextVal },
-        { onConflict: "user_id,hormone_name,dose_date" }
+        { user_id: userId, hormone_name: name, dose_date: datumStr, uhrzeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null },
+        { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
       );
       if (error) console.error(error);
     },
@@ -101,11 +144,13 @@ export function useHormoneData(userId, startdatum, dauer) {
     hormone.forEach((h) => {
       const d = hormonDosierung[h];
       if (!d) return;
-      const days = d.intervallDays === "custom" ? Number(d.customDays) || 7 : d.intervallDays;
-      const start = new Date(d.eigenerStart || startdatum);
-      for (let n = 0; n < totalDays; n += days) {
-        dosen.push({ date: addDays(start, Math.round(n)), name: h, menge: d.menge, uhrzeit: d.uhrzeit || "20:00" });
-      }
+      const dates = activeDoseDays(d, startdatum, totalDays);
+      const zeiten = d.uhrzeiten?.length ? d.uhrzeiten : ["20:00"];
+      dates.forEach((date) => {
+        zeiten.forEach((uhrzeit) => {
+          dosen.push({ date, name: h, menge: d.menge || "", uhrzeit });
+        });
+      });
     });
     dosen.sort((a, b) => a.date - b.date || a.uhrzeit.localeCompare(b.uhrzeit));
     return dosen;
@@ -116,6 +161,7 @@ export function useHormoneData(userId, startdatum, dauer) {
     hormonDosierung,
     hormonHinzufuegen,
     hormonEntfernen,
+    setHormonFoto,
     hormonErledigt,
     toggleHormonErledigt,
     hormonPlan,

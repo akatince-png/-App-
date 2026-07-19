@@ -1,4 +1,4 @@
-# Peptid Protokoll
+# MyProtocols
 
 Peptid-/Hormon-/Supplement-Protokoll-App. Vite + React im Frontend, Supabase
 für Auth, Datenbank und Foto-Storage, zwei Supabase Edge Functions für die

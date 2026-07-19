@@ -54,7 +54,7 @@ export default function LoginView() {
         >
           🧬
         </div>
-        <div style={{ fontSize: 22, fontWeight: 800, textAlign: "center" }}>Peptid Protokoll</div>
+        <div style={{ fontSize: 22, fontWeight: 800, textAlign: "center" }}>MyProtocols</div>
         <div style={{ fontSize: 13, color: textMuted, marginTop: 4, textAlign: "center" }}>
           Protokollieren. Verstehen. Optimieren.
         </div>

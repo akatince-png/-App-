@@ -1,22 +1,46 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { addDays } from "../utils/dates";
+import { uploadPhoto } from "../lib/storage";
+import { activeDoseDays } from "../utils/schedule";
 
 function rowToDosierung(row) {
   return {
     menge: row.menge || "",
-    intervallDays: row.intervall_mode === "custom" ? "custom" : row.intervall_days,
+    intervallTyp: row.intervall_mode || "fixed",
+    intervallDays: row.intervall_days || 7,
     customDays: row.custom_days != null ? String(row.custom_days) : "",
+    onDays: row.on_days != null ? String(row.on_days) : "",
+    offDays: row.off_days != null ? String(row.off_days) : "",
+    weekdays: row.weekdays || [],
     eigenerStart: row.eigener_start || "",
-    uhrzeit: row.uhrzeit ? row.uhrzeit.slice(0, 5) : "20:00",
+    uhrzeiten: row.uhrzeiten?.length ? row.uhrzeiten.map((t) => t.slice(0, 5)) : ["20:00"],
+    fotoPath: row.foto_path || null,
   };
 }
 
 const DOSE_FELD_TO_COLUMN = {
   menge: "menge",
   customDays: "custom_days",
+  onDays: "on_days",
+  offDays: "off_days",
   eigenerStart: "eigener_start",
-  uhrzeit: "uhrzeit",
+  weekdays: "weekdays",
+  uhrzeiten: "uhrzeiten",
+};
+
+const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays"]);
+
+const DEFAULT_DOSIERUNG = {
+  menge: "",
+  intervallTyp: "fixed",
+  intervallDays: 7,
+  customDays: "",
+  onDays: "",
+  offDays: "",
+  weekdays: [],
+  eigenerStart: "",
+  uhrzeiten: ["20:00"],
+  fotoPath: null,
 };
 
 export function useProtocolData(userId) {
@@ -149,7 +173,7 @@ export function useProtocolData(userId) {
         menge: "",
         intervall_mode: "fixed",
         intervall_days: 7,
-        uhrzeit: "20:00",
+        uhrzeiten: ["20:00"],
       });
       if (error) {
         console.error(error);
@@ -157,7 +181,7 @@ export function useProtocolData(userId) {
       }
       setPeptideState((prev) => [...prev, name]);
       setEinnahmeartState((prev) => ({ ...prev, [name]: art }));
-      setDosierungState((prev) => ({ ...prev, [name]: { menge: "", intervallDays: 7, customDays: "", eigenerStart: "", uhrzeit: "20:00" } }));
+      setDosierungState((prev) => ({ ...prev, [name]: { ...DEFAULT_DOSIERUNG } }));
     },
     [protocolId, userId]
   );
@@ -191,24 +215,65 @@ export function useProtocolData(userId) {
 
   const setDose = useCallback(
     (peptid, feld, val) => {
+      if (feld === "intervallPreset") {
+        setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], intervallTyp: "fixed", intervallDays: val } }));
+        if (protocolId) {
+          supabase
+            .from("protocol_peptide")
+            .update({ intervall_mode: "fixed", intervall_days: val })
+            .eq("protocol_id", protocolId)
+            .eq("name", peptid)
+            .then(({ error }) => error && console.error(error));
+        }
+        return;
+      }
+
       setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], [feld]: val } }));
       if (!protocolId) return;
-      let patch;
-      if (feld === "intervallDays") {
-        patch = val === "custom" ? { intervall_mode: "custom" } : { intervall_mode: "fixed", intervall_days: val };
-      } else {
-        const column = DOSE_FELD_TO_COLUMN[feld];
-        if (!column) return;
-        patch = { [column]: val === "" ? null : val };
+
+      if (feld === "intervallTyp") {
+        supabase
+          .from("protocol_peptide")
+          .update({ intervall_mode: val })
+          .eq("protocol_id", protocolId)
+          .eq("name", peptid)
+          .then(({ error }) => error && console.error(error));
+        return;
       }
+
+      const column = DOSE_FELD_TO_COLUMN[feld];
+      if (!column) return;
+      let value = val;
+      if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
+      else if (feld === "eigenerStart") value = val === "" ? null : val;
+
       supabase
         .from("protocol_peptide")
-        .update(patch)
+        .update({ [column]: value })
         .eq("protocol_id", protocolId)
         .eq("name", peptid)
         .then(({ error }) => error && console.error(error));
     },
     [protocolId]
+  );
+
+  const setPeptidFoto = useCallback(
+    async (peptid, file) => {
+      if (!protocolId) return;
+      try {
+        const path = await uploadPhoto(userId, file, "praeparate");
+        setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], fotoPath: path } }));
+        const { error } = await supabase
+          .from("protocol_peptide")
+          .update({ foto_path: path })
+          .eq("protocol_id", protocolId)
+          .eq("name", peptid);
+        if (error) console.error(error);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [protocolId, userId]
   );
 
   const setStartdatum = useCallback(
@@ -253,34 +318,23 @@ export function useProtocolData(userId) {
     [protocolId]
   );
 
-  const effectiveDays = useCallback(
-    (p) => {
-      const d = dosierung[p];
-      if (d?.intervallDays === "custom") return Number(d.customDays) || 7;
-      return d?.intervallDays || 7;
-    },
-    [dosierung]
-  );
-
   const plan = useMemo(() => {
     const totalDays = (parseInt(dauer, 10) || 12) * 7;
     const dosen = [];
     peptide.forEach((p) => {
-      const days = effectiveDays(p);
-      const eigenerStart = dosierung[p]?.eigenerStart;
-      const start = new Date(eigenerStart || startdatum);
-      for (let d = 0; d < totalDays; d += days) {
-        dosen.push({
-          date: addDays(start, Math.round(d)),
-          peptid: p,
-          menge: dosierung[p]?.menge || "",
-          uhrzeit: dosierung[p]?.uhrzeit || "20:00",
+      const d = dosierung[p];
+      if (!d) return;
+      const dates = activeDoseDays(d, startdatum, totalDays);
+      const zeiten = d.uhrzeiten?.length ? d.uhrzeiten : ["20:00"];
+      dates.forEach((date) => {
+        zeiten.forEach((uhrzeit) => {
+          dosen.push({ date, peptid: p, menge: d.menge || "", uhrzeit });
         });
-      }
+      });
     });
     dosen.sort((a, b) => a.date - b.date || a.uhrzeit.localeCompare(b.uhrzeit));
     return dosen;
-  }, [peptide, dosierung, startdatum, dauer, effectiveDays]);
+  }, [peptide, dosierung, startdatum, dauer]);
 
   const protokollArchivieren = useCallback(async () => {
     if (!protocolId) return;
@@ -317,8 +371,10 @@ export function useProtocolData(userId) {
     (p) => {
       const d = dosierung[p];
       if (!d?.menge) return false;
-      if (d?.intervallDays === "custom") return !!d?.customDays && Number(d.customDays) > 0;
-      return !!d?.intervallDays;
+      if (d.intervallTyp === "custom") return !!d.customDays && Number(d.customDays) > 0;
+      if (d.intervallTyp === "cycle") return !!d.onDays && Number(d.onDays) > 0 && d.offDays !== "";
+      if (d.intervallTyp === "weekdays") return (d.weekdays || []).length > 0;
+      return !!d.intervallDays;
     },
     [dosierung]
   );
@@ -334,6 +390,7 @@ export function useProtocolData(userId) {
     addCustomPreparat,
     dosierung,
     setDose,
+    setPeptidFoto,
     startdatum,
     setStartdatum,
     dauer,

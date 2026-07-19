@@ -9,8 +9,8 @@ export function addDays(d, n) {
   r.setDate(r.getDate() + n);
   return r;
 }
-export function keyOf(date, peptid) {
-  return `${date.toDateString()}__${peptid}`;
+export function keyOf(date, peptid, uhrzeit) {
+  return uhrzeit ? `${date.toDateString()}__${peptid}__${uhrzeit}` : `${date.toDateString()}__${peptid}`;
 }
 export function toLocalISODate(d) {
   const y = d.getFullYear();

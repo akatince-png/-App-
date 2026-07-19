@@ -32,7 +32,7 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>Willkommen zurück 👋</div>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>Peptid Protokoll</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>MyProtocols</div>
         </div>
         <div
           style={{

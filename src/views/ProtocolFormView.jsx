@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Shell, Card, Stepper, CheckRow, Label, TextInput, TextArea, Pill, PrimaryButton } from "../ui/primitives";
-import { accentSoft, cardBorder, textMuted } from "../ui/theme";
-import { EINNAHMEARTEN, INTERVALL_OPTIONEN, PEPTIDE_OPTIONEN, STEP_TITLES, ZIELE } from "../constants";
+import DosierungFields from "../ui/DosierungFields";
+import { SignedPhoto } from "../ui/SignedPhoto";
+import { accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
+import { EINNAHMEARTEN, PEPTIDE_OPTIONEN, STEP_TITLES, ZIELE } from "../constants";
+import { describeInterval } from "../utils/schedule";
 import { useAppData } from "../context/AppDataContext";
 
 export default function ProtocolFormView({ step, setStep, onFinish }) {
@@ -14,6 +17,7 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
     addCustomPreparat,
     dosierung,
     setDose,
+    setPeptidFoto,
     startdatum,
     setStartdatum,
     dauer,
@@ -31,6 +35,13 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
     setCustomPreparatName("");
   };
 
+  const handlePeptidFoto = (p, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPeptidFoto(p, file);
+    e.target.value = "";
+  };
+
   const canNext = () => {
     if (step === 0) return ziele.length > 0;
     if (step === 1) return peptide.length > 0;
@@ -39,12 +50,6 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
   };
   const next = () => setStep((s) => Math.min(s + 1, 4));
   const back = () => setStep((s) => Math.max(s - 1, 0));
-
-  const intervallLabel = (p) => {
-    const d = dosierung[p];
-    if (d?.intervallDays === "custom") return `Alle ${d.customDays || "?"} Tage`;
-    return INTERVALL_OPTIONEN.find((o) => o.days === d?.intervallDays)?.label || "?";
-  };
 
   return (
     <Shell>
@@ -100,48 +105,33 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
               <div style={{ fontSize: 13, color: textMuted, marginTop: 12 }}>Kein Peptid ausgewählt — geh einen Schritt zurück.</div>
             )}
             {peptide.map((p) => (
-              <div key={p} style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{p}</div>
-                <Label>Menge</Label>
-                <TextInput placeholder="z. B. 0,25 mg" value={dosierung[p]?.menge || ""} onChange={(v) => setDose(p, "menge", v)} />
-                <Label>Intervall</Label>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
-                  {INTERVALL_OPTIONEN.map((opt) => (
-                    <Pill
-                      key={opt.label}
-                      label={opt.label}
-                      selected={dosierung[p]?.intervallDays === opt.days}
-                      onClick={() => setDose(p, "intervallDays", opt.days)}
-                    />
-                  ))}
+              <div key={p} style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${cardBorder}` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{p}</div>
+                  {dosierung[p]?.fotoPath && <SignedPhoto path={dosierung[p].fotoPath} alt={p} size={36} />}
                 </div>
-                {dosierung[p]?.intervallDays === "custom" && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                    <span style={{ fontSize: 13, color: textMuted }}>Alle</span>
-                    <div style={{ width: 70 }}>
-                      <TextInput
-                        type="number"
-                        value={dosierung[p]?.customDays || ""}
-                        onChange={(v) => setDose(p, "customDays", v)}
-                        placeholder="3"
-                      />
-                    </div>
-                    <span style={{ fontSize: 13, color: textMuted }}>Tage</span>
-                  </div>
-                )}
-                <div style={{ display: "flex", gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <Label>Eigenes Startdatum (optional)</Label>
-                    <TextInput type="date" value={dosierung[p]?.eigenerStart || ""} onChange={(v) => setDose(p, "eigenerStart", v)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Label>Erinnerungs-Uhrzeit</Label>
-                    <TextInput type="time" value={dosierung[p]?.uhrzeit || "20:00"} onChange={(v) => setDose(p, "uhrzeit", v)} />
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>
-                  Leer lassen = startet mit dem allgemeinen Startdatum des Protokolls.
-                </div>
+
+                <DosierungFields value={dosierung[p]} onChange={(feld, val) => setDose(p, feld, val)} />
+
+                <Label>Foto des Präparats (optional) — hilft, Hersteller/Charge auseinanderzuhalten</Label>
+                <input type="file" accept="image/*" id={`praeparat-foto-${p}`} style={{ display: "none" }} onChange={(e) => handlePeptidFoto(p, e)} />
+                <label
+                  htmlFor={`praeparat-foto-${p}`}
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    padding: "9px",
+                    borderRadius: 10,
+                    border: "1.5px dashed #0FB8A3",
+                    background: "#fff",
+                    color: accentDark,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  📷 {dosierung[p]?.fotoPath ? "Foto ersetzen" : "Foto aufnehmen"}
+                </label>
               </div>
             ))}
           </>
@@ -169,7 +159,7 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
               <ul style={{ margin: "4px 0 0 0", paddingLeft: 18 }}>
                 {peptide.map((p) => (
                   <li key={p}>
-                    {p} — {dosierung[p]?.menge || "?"}, {intervallLabel(p)}
+                    {p} — {dosierung[p]?.menge || "?"}, {describeInterval(dosierung[p])}, {(dosierung[p]?.uhrzeiten || ["20:00"]).join(" & ")}
                   </li>
                 ))}
               </ul>

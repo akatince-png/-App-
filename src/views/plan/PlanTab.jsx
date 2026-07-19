@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../../ui/primitives";
 import { SimpleLineChart } from "../../ui/charts";
-import { accentDark, accentSoft, blue, cardBorder, textMuted } from "../../ui/theme";
-import { INTERVALL_OPTIONEN, NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../../constants";
+import DosierungFields from "../../ui/DosierungFields";
+import { SignedPhoto } from "../../ui/SignedPhoto";
+import { accentDark, accentSoft, blue, cardBorder, danger, textMuted } from "../../ui/theme";
+import { NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../../constants";
+import { describeInterval } from "../../utils/schedule";
 import { fmtDate, keyOf, sameDay, toLocalISODate } from "../../utils/dates";
 import { useAppData } from "../../context/AppDataContext";
 
@@ -12,6 +15,19 @@ const PROTOKOLL_TYPEN = [
   { id: "hormon", label: "🧪 Hormone" },
   { id: "weitere", label: "➕ Weitere" },
 ];
+
+const NEUES_HORMON_LEER = {
+  name: "",
+  menge: "",
+  intervallTyp: "fixed",
+  intervallDays: 7,
+  customDays: "",
+  onDays: "",
+  offDays: "",
+  weekdays: [],
+  eigenerStart: "",
+  uhrzeiten: ["20:00"],
+};
 
 export default function PlanTab({ protokollTyp, setProtokollTyp }) {
   return (
@@ -57,21 +73,36 @@ function WeitereSection() {
   );
 }
 
+function hormonIntervallGueltig(d) {
+  if (d.intervallTyp === "custom") return !!d.customDays && Number(d.customDays) > 0;
+  if (d.intervallTyp === "cycle") return !!d.onDays && Number(d.onDays) > 0 && d.offDays !== "";
+  if (d.intervallTyp === "weekdays") return (d.weekdays || []).length > 0;
+  return true;
+}
+
 function HormonSection() {
-  const { hormone, hormonDosierung, hormonHinzufuegen, hormonEntfernen, hormonErledigt, toggleHormonErledigt, hormonPlan } = useAppData();
-  const [neuesHormon, setNeuesHormon] = useState({
-    name: "",
-    menge: "",
-    intervallDays: 7,
-    customDays: "",
-    eigenerStart: "",
-    uhrzeit: "20:00",
-  });
+  const { hormone, hormonDosierung, hormonHinzufuegen, hormonEntfernen, setHormonFoto, hormonErledigt, toggleHormonErledigt, hormonPlan } =
+    useAppData();
+  const [neuesHormon, setNeuesHormon] = useState(NEUES_HORMON_LEER);
   const today = new Date();
+
+  const handleChange = (feld, val) => {
+    setNeuesHormon((prev) => {
+      if (feld === "intervallPreset") return { ...prev, intervallTyp: "fixed", intervallDays: val };
+      return { ...prev, [feld]: val };
+    });
+  };
 
   const submit = () => {
     hormonHinzufuegen(neuesHormon);
-    setNeuesHormon({ name: "", menge: "", intervallDays: 7, customDays: "", eigenerStart: "", uhrzeit: "20:00" });
+    setNeuesHormon(NEUES_HORMON_LEER);
+  };
+
+  const handleHormonFoto = (name, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setHormonFoto(name, file);
+    e.target.value = "";
   };
 
   return (
@@ -79,36 +110,12 @@ function HormonSection() {
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Hormon / Präparat hinzufügen</div>
         <Label>Name</Label>
-        <TextInput value={neuesHormon.name} onChange={(v) => setNeuesHormon((p) => ({ ...p, name: v }))} placeholder="z. B. Testosteron Enantat" />
-        <Label>Menge</Label>
-        <TextInput value={neuesHormon.menge} onChange={(v) => setNeuesHormon((p) => ({ ...p, menge: v }))} placeholder="z. B. 100 mg" />
-        <Label>Intervall</Label>
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {INTERVALL_OPTIONEN.map((opt) => (
-            <Pill key={opt.label} label={opt.label} selected={neuesHormon.intervallDays === opt.days} onClick={() => setNeuesHormon((p) => ({ ...p, intervallDays: opt.days }))} />
-          ))}
-        </div>
-        {neuesHormon.intervallDays === "custom" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <span style={{ fontSize: 13, color: textMuted }}>Alle</span>
-            <div style={{ width: 70 }}>
-              <TextInput type="number" value={neuesHormon.customDays} onChange={(v) => setNeuesHormon((p) => ({ ...p, customDays: v }))} placeholder="10" />
-            </div>
-            <span style={{ fontSize: 13, color: textMuted }}>Tage</span>
-          </div>
-        )}
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <Label>Eigenes Startdatum (optional)</Label>
-            <TextInput type="date" value={neuesHormon.eigenerStart} onChange={(v) => setNeuesHormon((p) => ({ ...p, eigenerStart: v }))} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <Label>Erinnerungs-Uhrzeit</Label>
-            <TextInput type="time" value={neuesHormon.uhrzeit} onChange={(v) => setNeuesHormon((p) => ({ ...p, uhrzeit: v }))} />
-          </div>
-        </div>
+        <TextInput value={neuesHormon.name} onChange={(v) => handleChange("name", v)} placeholder="z. B. Testosteron Enantat" />
+
+        <DosierungFields value={neuesHormon} onChange={handleChange} mengePlaceholder="z. B. 100 mg" />
+
         <div style={{ marginTop: 10 }}>
-          <PrimaryButton onClick={submit} disabled={!neuesHormon.name.trim() || (neuesHormon.intervallDays === "custom" && !neuesHormon.customDays)}>
+          <PrimaryButton onClick={submit} disabled={!neuesHormon.name.trim() || !hormonIntervallGueltig(neuesHormon)}>
             + Zum Protokoll hinzufügen
           </PrimaryButton>
         </div>
@@ -126,7 +133,7 @@ function HormonSection() {
             {hormonPlan
               .filter((d) => sameDay(d.date, today))
               .map((dose, i, arr) => {
-                const k = `${toLocalISODate(dose.date)}__${dose.name}`;
+                const k = `${toLocalISODate(dose.date)}__${dose.name}__${dose.uhrzeit}`;
                 const done = !!hormonErledigt[k];
                 return (
                   <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
@@ -140,7 +147,7 @@ function HormonSection() {
                       <StatusBadge status="erledigt" />
                     ) : (
                       <button
-                        onClick={() => toggleHormonErledigt(toLocalISODate(dose.date), dose.name)}
+                        onClick={() => toggleHormonErledigt(toLocalISODate(dose.date), dose.name, dose.uhrzeit)}
                         style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#0FB8A3", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                       >
                         Bestätigen
@@ -162,7 +169,7 @@ function HormonSection() {
               .map((dose, i, arr) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>
-                    {fmtDate(dose.date)} · {dose.name}
+                    {fmtDate(dose.date)} · {dose.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 11 }}>· {dose.uhrzeit}</span>
                   </div>
                   <div style={{ fontSize: 12, color: textMuted }}>{dose.menge}</div>
                 </div>
@@ -173,16 +180,24 @@ function HormonSection() {
           <Card style={{ marginBottom: 14 }}>
             {hormone.map((h, i) => (
               <div key={h} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < hormone.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{h}</div>
-                  <div style={{ fontSize: 11, color: textMuted }}>
-                    {hormonDosierung[h]?.menge} ·{" "}
-                    {hormonDosierung[h]?.intervallDays === "custom" ? `alle ${hormonDosierung[h]?.customDays} Tage` : INTERVALL_OPTIONEN.find((o) => o.days === hormonDosierung[h]?.intervallDays)?.label}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {hormonDosierung[h]?.fotoPath && <SignedPhoto path={hormonDosierung[h].fotoPath} alt={h} size={34} />}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{h}</div>
+                    <div style={{ fontSize: 11, color: textMuted }}>
+                      {hormonDosierung[h]?.menge} · {describeInterval(hormonDosierung[h])} · {(hormonDosierung[h]?.uhrzeiten || []).join(" & ")}
+                    </div>
                   </div>
                 </div>
-                <button onClick={() => hormonEntfernen(h)} style={{ border: "none", background: "transparent", color: "#F2596A", fontSize: 16, cursor: "pointer" }}>
-                  ×
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input type="file" accept="image/*" id={`hormon-foto-${h}`} style={{ display: "none" }} onChange={(e) => handleHormonFoto(h, e)} />
+                  <label htmlFor={`hormon-foto-${h}`} style={{ cursor: "pointer", fontSize: 16 }} title="Foto hinzufügen">
+                    📷
+                  </label>
+                  <button onClick={() => hormonEntfernen(h)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>
+                    ×
+                  </button>
+                </div>
               </div>
             ))}
           </Card>
@@ -256,6 +271,12 @@ function SchlafSection() {
   );
 }
 
+function formatZeitpunkt(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return d.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
 function PeptideSection() {
   const { plan, erledigt, feedback, saveFeedback, skipFeedback } = useAppData();
   const [feedbackOpen, setFeedbackOpen] = useState(null);
@@ -266,14 +287,14 @@ function PeptideSection() {
   const kommendeDosen = plan.filter((d) => d.date > today && !sameDay(d.date, today)).slice(0, 8);
 
   const statusOf = (dose) => {
-    const k = keyOf(dose.date, dose.peptid);
+    const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
     if (erledigt[k]) return "erledigt";
     if (dose.date < today && !sameDay(dose.date, today)) return "verpasst";
     return "geplant";
   };
 
   const openFeedback = (dose) => {
-    setFeedbackOpen(keyOf(dose.date, dose.peptid));
+    setFeedbackOpen(keyOf(dose.date, dose.peptid, dose.uhrzeit));
     setDraftFeedback({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
   };
   const toggleDraftNebenwirkung = (n) =>
@@ -298,7 +319,7 @@ function PeptideSection() {
         {heuteDosen.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Heute steht nichts an. 🌿</div>}
         {heuteDosen.map((dose, i) => {
           const st = statusOf(dose);
-          const k = keyOf(dose.date, dose.peptid);
+          const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
           const isOpen = feedbackOpen === k;
           const fb = feedback[k];
           return (
@@ -324,6 +345,7 @@ function PeptideSection() {
 
               {st === "erledigt" && fb && (
                 <div style={{ fontSize: 11, color: textMuted, marginTop: 6 }}>
+                  {formatZeitpunkt(fb.erledigtAt) && <>Injiziert am {formatZeitpunkt(fb.erledigtAt)} · </>}
                   {fb.staerke && fb.staerke !== "Keine" ? <>Nebenwirkungen: {fb.nebenwirkungen.join(", ") || "—"} ({fb.staerke})</> : "Keine Nebenwirkungen gemeldet"}
                 </div>
               )}
@@ -392,7 +414,7 @@ function PeptideSection() {
           <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: i < kommendeDosen.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>
-                {fmtDate(dose.date)} · {dose.peptid}
+                {fmtDate(dose.date)} · {dose.peptid} <span style={{ fontWeight: 600, color: textMuted, fontSize: 11 }}>· {dose.uhrzeit}</span>
               </div>
               <div style={{ fontSize: 11, color: textMuted }}>{dose.menge}</div>
             </div>
@@ -407,7 +429,9 @@ function PeptideSection() {
           <Card style={{ marginBottom: 14 }}>
             {Object.entries(feedback).map(([k, fb], i, arr) => (
               <div key={k} style={{ padding: "8px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{k.split("__")[1]}</div>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>
+                  {k.split("__")[1]} {formatZeitpunkt(fb.erledigtAt) && <span style={{ fontWeight: 500, color: textMuted }}>· {formatZeitpunkt(fb.erledigtAt)}</span>}
+                </div>
                 <div style={{ fontSize: 12, color: textMuted }}>
                   {fb.staerke && fb.staerke !== "Keine" ? `${fb.nebenwirkungen.join(", ") || "—"} (${fb.staerke})` : "Keine Nebenwirkungen"}
                 </div>

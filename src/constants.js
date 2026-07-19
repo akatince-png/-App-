@@ -23,12 +23,21 @@ export const PEPTIDE_OPTIONEN = [
 
 export const EINNAHMEARTEN = ["Injektion", "Tablette", "Pulver", "Shake", "Tropfen", "Sonstiges"];
 
+// Feste Intervall-Presets: mode ist immer "fixed", days die Anzahl Tage zwischen zwei Dosen.
 export const INTERVALL_OPTIONEN = [
-  { label: "Täglich", days: 1 },
-  { label: "Jeden 2. Tag", days: 2 },
-  { label: "2x pro Woche", days: 4 },
-  { label: "1x pro Woche", days: 7 },
-  { label: "Individuell", days: "custom" },
+  { label: "Täglich", mode: "fixed", days: 1 },
+  { label: "Jeden 2. Tag", mode: "fixed", days: 2 },
+  { label: "2x pro Woche", mode: "fixed", days: 4 },
+  { label: "1x pro Woche", mode: "fixed", days: 7 },
+];
+
+// Zusätzliche Intervall-Typen: individuelles festes Intervall, rollierender
+// On/Off-Zyklus (z. B. "5 Tage on, 2 Tage off") und feste Wochentage.
+export const INTERVALL_TYPEN = [
+  ...INTERVALL_OPTIONEN,
+  { label: "Individuell (alle X Tage)", mode: "custom" },
+  { label: "Zyklus (on/off)", mode: "cycle" },
+  { label: "Feste Wochentage", mode: "weekdays" },
 ];
 
 export const STEP_TITLES = [

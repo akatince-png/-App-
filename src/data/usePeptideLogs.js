@@ -16,13 +16,14 @@ export function usePeptideLogs(userId, protocolId) {
       const nextErledigt = {};
       const nextFeedback = {};
       data.forEach((row) => {
-        const k = `${new Date(row.dose_date).toDateString()}__${row.peptid_name}`;
+        const k = keyOf(new Date(row.dose_date), row.peptid_name, row.uhrzeit);
         nextErledigt[k] = row.erledigt;
         nextFeedback[k] = {
           nebenwirkungen: row.nebenwirkungen || [],
           staerke: row.staerke || "",
           notizen: row.notizen || "",
           foto: row.foto_path || null,
+          erledigtAt: row.erledigt_at || null,
         };
       });
       setErledigt(nextErledigt);
@@ -35,7 +36,8 @@ export function usePeptideLogs(userId, protocolId) {
 
   const saveFeedback = useCallback(
     async (dose, draftFeedback) => {
-      const k = keyOf(dose.date, dose.peptid);
+      const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
+      const nowIso = new Date().toISOString();
       let fotoPath = null;
       if (draftFeedback.fotoFile) {
         try {
@@ -49,6 +51,7 @@ export function usePeptideLogs(userId, protocolId) {
         staerke: draftFeedback.staerke,
         notizen: draftFeedback.notizen,
         foto: fotoPath,
+        erledigtAt: nowIso,
       };
       setFeedback((prev) => ({ ...prev, [k]: record }));
       setErledigt((prev) => ({ ...prev, [k]: true }));
@@ -59,13 +62,15 @@ export function usePeptideLogs(userId, protocolId) {
           user_id: userId,
           peptid_name: dose.peptid,
           dose_date: toLocalISODate(dose.date),
+          uhrzeit: dose.uhrzeit,
           erledigt: true,
+          erledigt_at: nowIso,
           nebenwirkungen: draftFeedback.nebenwirkungen,
           staerke: draftFeedback.staerke || null,
           notizen: draftFeedback.notizen,
           foto_path: fotoPath,
         },
-        { onConflict: "protocol_id,peptid_name,dose_date" }
+        { onConflict: "protocol_id,peptid_name,dose_date,uhrzeit" }
       );
       if (error) console.error(error);
     },
@@ -74,17 +79,21 @@ export function usePeptideLogs(userId, protocolId) {
 
   const skipFeedback = useCallback(
     async (dose) => {
-      const k = keyOf(dose.date, dose.peptid);
+      const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
+      const nowIso = new Date().toISOString();
       setErledigt((prev) => ({ ...prev, [k]: true }));
+      setFeedback((prev) => ({ ...prev, [k]: { ...prev[k], erledigtAt: nowIso } }));
       const { error } = await supabase.from("peptide_logs").upsert(
         {
           protocol_id: protocolId,
           user_id: userId,
           peptid_name: dose.peptid,
           dose_date: toLocalISODate(dose.date),
+          uhrzeit: dose.uhrzeit,
           erledigt: true,
+          erledigt_at: nowIso,
         },
-        { onConflict: "protocol_id,peptid_name,dose_date" }
+        { onConflict: "protocol_id,peptid_name,dose_date,uhrzeit" }
       );
       if (error) console.error(error);
     },

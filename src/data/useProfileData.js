@@ -13,6 +13,7 @@ export function useProfileData(userId) {
     gewichtStart: "",
   });
   const [datenteilung, setDatenteilungState] = useState(false);
+  const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const [aktiveMesswerte, setAktiveMesswerte] = useState(DEFAULT_AKTIVE);
   const [customMesswerte, setCustomMesswerte] = useState([]);
 
@@ -34,6 +35,7 @@ export function useProfileData(userId) {
           gewichtStart: profile.gewicht_start ?? "",
         });
         setDatenteilungState(!!profile.datenteilung);
+        setOnboardingCompleteState(!!profile.onboarding_complete);
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
       }
       setCustomMesswerte(
@@ -70,6 +72,15 @@ export function useProfileData(userId) {
         .then(({ error }) => error && console.error(error));
       return next;
     });
+  }, [userId]);
+
+  const completeOnboarding = useCallback(() => {
+    setOnboardingCompleteState(true);
+    supabase
+      .from("profiles")
+      .update({ onboarding_complete: true })
+      .eq("id", userId)
+      .then(({ error }) => error && console.error(error));
   }, [userId]);
 
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
@@ -122,6 +133,8 @@ export function useProfileData(userId) {
     setPersonal,
     datenteilung,
     toggleDatenteilung,
+    onboardingComplete,
+    completeOnboarding,
     aktiveMesswerte,
     toggleMesswert,
     customMesswerte,

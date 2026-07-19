@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 export function useSupplementData(userId) {
   const [supplemente, setSupplemente] = useState([]);
   const [supplementErledigt, setSupplementErledigt] = useState({});
+  const [supplementErledigtAt, setSupplementErledigtAt] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -18,10 +19,14 @@ export function useSupplementData(userId) {
         (rows || []).map((r) => ({ id: r.id, name: r.name, tageszeiten: r.tageszeiten || [], hinweis: r.hinweis || "" }))
       );
       const nextErledigt = {};
+      const nextErledigtAt = {};
       (logs || []).forEach((row) => {
-        nextErledigt[`${row.log_date}__${row.supplement_id}__${row.tageszeit}`] = row.erledigt;
+        const k = `${row.log_date}__${row.supplement_id}__${row.tageszeit}`;
+        nextErledigt[k] = row.erledigt;
+        nextErledigtAt[k] = row.erledigt_at || null;
       });
       setSupplementErledigt(nextErledigt);
+      setSupplementErledigtAt(nextErledigtAt);
     })();
     return () => {
       cancelled = true;
@@ -60,9 +65,11 @@ export function useSupplementData(userId) {
     async (datum, id, zeit) => {
       const k = `${datum}__${id}__${zeit}`;
       const nextVal = !supplementErledigt[k];
+      const nowIso = new Date().toISOString();
       setSupplementErledigt((prev) => ({ ...prev, [k]: nextVal }));
+      setSupplementErledigtAt((prev) => ({ ...prev, [k]: nextVal ? nowIso : null }));
       const { error } = await supabase.from("supplement_logs").upsert(
-        { user_id: userId, supplement_id: id, log_date: datum, tageszeit: zeit, erledigt: nextVal },
+        { user_id: userId, supplement_id: id, log_date: datum, tageszeit: zeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null },
         { onConflict: "supplement_id,log_date,tageszeit" }
       );
       if (error) console.error(error);
@@ -70,5 +77,12 @@ export function useSupplementData(userId) {
     [supplementErledigt, userId]
   );
 
-  return { supplemente, supplementHinzufuegen, supplementEntfernen, supplementErledigt, toggleSupplementErledigt };
+  return {
+    supplemente,
+    supplementHinzufuegen,
+    supplementEntfernen,
+    supplementErledigt,
+    supplementErledigtAt,
+    toggleSupplementErledigt,
+  };
 }
