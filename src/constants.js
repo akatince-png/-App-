@@ -13,15 +13,46 @@ export const ZIELE = [
 
 export const PEPTIDE_OPTIONEN = [
   "Semaglutid",
+  "Tirzepatid",
+  "Retatrutid",
   "BPC-157",
   "TB-500",
   "CJC-1295 (ohne DAC)",
+  "CJC-1295 (mit DAC)",
   "Ipamorelin",
+  "GHRP-2",
   "GHRP-6",
+  "Hexarelin",
+  "Sermorelin",
+  "Tesamorelin",
+  "MK-677 (Ibutamoren)",
   "AOD-9604",
+  "Melanotan I",
+  "Melanotan II",
+  "PT-141 (Bremelanotide)",
+  "GHK-Cu",
+  "Thymosin Alpha-1",
+  "Thymosin Beta-4 (TB4)",
+  "Epithalon",
+  "DSIP",
+  "Selank",
+  "Semax",
+  "Kisspeptin-10",
+  "IGF-1 LR3",
+  "Follistatin 344",
+  "MOTS-c",
+  "Humanin",
+  "Oxytocin",
+  "KPV",
+  "LL-37",
+  "VIP",
+  "Snap-8",
 ];
 
-export const EINNAHMEARTEN = ["Injektion", "Tablette", "Pulver", "Shake", "Tropfen", "Sonstiges"];
+// Einnahmearten speziell für Peptide — Injektion ist der Standard, die meisten
+// Peptide werden subkutan gespritzt; einige gibt es alternativ auch als
+// Nasenspray oder zum Schlucken (z. B. BPC-157 oral).
+export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Nasenspray"];
 
 // Feste Intervall-Presets: mode ist immer "fixed", days die Anzahl Tage zwischen zwei Dosen.
 export const INTERVALL_OPTIONEN = [
@@ -78,7 +109,7 @@ export const MESSWERT_DEFS = [
 export const FOTO_KATEGORIEN = ["Taille", "Arme", "Ganzkörper", "Gesicht", "Haare", "Haut"];
 
 export const TAGESZEITEN = ["Morgens", "Mittags", "Abends"];
-export const HINWEISE = ["Zur Mahlzeit", "Nüchtern", "Vor dem Schlafen", "Sonstiges"];
+export const HINWEISE = ["Zur Mahlzeit", "Nüchtern", "Vor dem Schlafen", "Vor dem Training", "Nach dem Training", "Sonstiges"];
 
 export const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -140,6 +171,7 @@ export const LEXIKON_BEISPIELE = {
 export const PIE_COLORS = ["#0FB8A3", "#5B9BF0", "#F5A623", "#F2596A", "#9B7EDE", "#4FBF8F"];
 
 export const DASHBOARD_KACHELN = [
+  { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: ["#F2596A", "#C9394F"] },
   { id: "plan", label: "Protokoll", desc: "Heute & Kalender", icon: "💉", grad: ["#0FB8A3", "#0A9384"] },
   { id: "supplemente", label: "Supplemente", desc: "Wochenplan", icon: "💊", grad: ["#4FA3D1", "#2E7BAA"] },
   { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: ["#5B9BF0", "#3B6FD1"] },

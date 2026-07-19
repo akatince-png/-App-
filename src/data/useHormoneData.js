@@ -69,11 +69,12 @@ export function useHormoneData(userId, startdatum, dauer) {
   const hormonHinzufuegen = useCallback(
     async (neuesHormon) => {
       const name = neuesHormon.name.trim();
-      if (!name || hormone.includes(name)) return;
+      if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
+      if (hormone.includes(name)) return { ok: false, error: "Dieses Präparat ist schon in deinem Protokoll." };
       const { error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon) });
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: "Speichern fehlgeschlagen. Bitte nochmal versuchen." };
       }
       setHormone((prev) => [...prev, name]);
       setHormonDosierung((prev) => ({
@@ -91,6 +92,7 @@ export function useHormoneData(userId, startdatum, dauer) {
           fotoPath: null,
         },
       }));
+      return { ok: true };
     },
     [hormone, userId]
   );

@@ -35,7 +35,8 @@ export function useSupplementData(userId) {
 
   const supplementHinzufuegen = useCallback(
     async (neuesSupplement) => {
-      if (!neuesSupplement.name.trim() || neuesSupplement.tageszeiten.length === 0) return;
+      if (!neuesSupplement.name.trim()) return { ok: false, error: "Bitte einen Namen eingeben." };
+      if (neuesSupplement.tageszeiten.length === 0) return { ok: false, error: "Bitte mindestens eine Tageszeit wählen." };
       const { data, error } = await supabase
         .from("supplements")
         .insert({
@@ -48,9 +49,10 @@ export function useSupplementData(userId) {
         .single();
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: "Speichern fehlgeschlagen. Bitte nochmal versuchen." };
       }
       setSupplemente((prev) => [...prev, { id: data.id, name: data.name, tageszeiten: data.tageszeiten, hinweis: data.hinweis }]);
+      return { ok: true };
     },
     [userId]
   );
@@ -77,6 +79,32 @@ export function useSupplementData(userId) {
     [supplementErledigt, userId]
   );
 
+  // Bestätigt alle noch offenen Supplemente einer Tageszeit an einem Tag auf einmal
+  // (z. B. "Morgens" komplett abhaken), ohne bereits erledigte anzufassen.
+  const confirmAlleTageszeit = useCallback(
+    async (datum, zeit, ids) => {
+      const offene = ids.filter((id) => !supplementErledigt[`${datum}__${id}__${zeit}`]);
+      if (offene.length === 0) return;
+      const nowIso = new Date().toISOString();
+      setSupplementErledigt((prev) => {
+        const next = { ...prev };
+        offene.forEach((id) => (next[`${datum}__${id}__${zeit}`] = true));
+        return next;
+      });
+      setSupplementErledigtAt((prev) => {
+        const next = { ...prev };
+        offene.forEach((id) => (next[`${datum}__${id}__${zeit}`] = nowIso));
+        return next;
+      });
+      const { error } = await supabase.from("supplement_logs").upsert(
+        offene.map((id) => ({ user_id: userId, supplement_id: id, log_date: datum, tageszeit: zeit, erledigt: true, erledigt_at: nowIso })),
+        { onConflict: "supplement_id,log_date,tageszeit" }
+      );
+      if (error) console.error(error);
+    },
+    [supplementErledigt, userId]
+  );
+
   return {
     supplemente,
     supplementHinzufuegen,
@@ -84,5 +112,6 @@ export function useSupplementData(userId) {
     supplementErledigt,
     supplementErledigtAt,
     toggleSupplementErledigt,
+    confirmAlleTageszeit,
   };
 }

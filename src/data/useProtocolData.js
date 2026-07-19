@@ -164,7 +164,7 @@ export function useProtocolData(userId) {
 
   const addPeptidRow = useCallback(
     async (name, art) => {
-      if (!protocolId) return;
+      if (!protocolId) return { ok: false, error: "Protokoll noch nicht bereit." };
       const { error } = await supabase.from("protocol_peptide").insert({
         protocol_id: protocolId,
         user_id: userId,
@@ -177,11 +177,12 @@ export function useProtocolData(userId) {
       });
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: "Speichern fehlgeschlagen. Bitte nochmal versuchen." };
       }
       setPeptideState((prev) => [...prev, name]);
       setEinnahmeartState((prev) => ({ ...prev, [name]: art }));
       setDosierungState((prev) => ({ ...prev, [name]: { ...DEFAULT_DOSIERUNG } }));
+      return { ok: true };
     },
     [protocolId, userId]
   );
@@ -205,12 +206,27 @@ export function useProtocolData(userId) {
   );
 
   const addCustomPreparat = useCallback(
-    (name, art) => {
+    async (name, art) => {
       const trimmed = name.trim();
-      if (!trimmed || peptide.includes(trimmed)) return;
-      addPeptidRow(trimmed, art);
+      if (!trimmed) return { ok: false, error: "Bitte einen Namen eingeben." };
+      if (peptide.includes(trimmed)) return { ok: false, error: "Dieses Peptid ist schon in deiner Liste." };
+      return addPeptidRow(trimmed, art);
     },
     [peptide, addPeptidRow]
+  );
+
+  const setEinnahmeart = useCallback(
+    (peptid, art) => {
+      setEinnahmeartState((prev) => ({ ...prev, [peptid]: art }));
+      if (!protocolId) return;
+      supabase
+        .from("protocol_peptide")
+        .update({ einnahmeart: art })
+        .eq("protocol_id", protocolId)
+        .eq("name", peptid)
+        .then(({ error }) => error && console.error(error));
+    },
+    [protocolId]
   );
 
   const setDose = useCallback(
@@ -387,6 +403,7 @@ export function useProtocolData(userId) {
     peptide,
     togglePeptid,
     einnahmeart,
+    setEinnahmeart,
     addCustomPreparat,
     dosierung,
     setDose,

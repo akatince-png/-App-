@@ -5,6 +5,7 @@ import { useAppData } from "./context/AppDataContext";
 import HomeView from "./views/HomeView";
 import LexikonView from "./views/LexikonView";
 import SupplementeView from "./views/SupplementeView";
+import TagesplanView from "./views/TagesplanView";
 import ProtocolFormView from "./views/ProtocolFormView";
 import PlanView from "./views/plan/PlanView";
 
@@ -60,6 +61,10 @@ export default function AuthenticatedApp() {
     return <SupplementeView onHome={() => setView("home")} />;
   }
 
+  if (view === "tagesplan") {
+    return <TagesplanView onHome={() => setView("home")} />;
+  }
+
   if (view === "plan") {
     return (
       <PlanView
@@ -76,7 +81,7 @@ export default function AuthenticatedApp() {
   return (
     <HomeView
       onOpenView={(id) => {
-        if (id === "lexikon" || id === "supplemente") setView(id);
+        if (id === "lexikon" || id === "supplemente" || id === "tagesplan") setView(id);
         else goToPlanTab(id);
       }}
       onNewProtocol={() => {

@@ -5,10 +5,16 @@ import { HINWEISE, TAGESZEITEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
+const LEERES_SUPPLEMENT = { name: "", tageszeiten: [], hinweis: "" };
+
 export default function SupplementeView({ onHome }) {
-  const { supplemente, supplementHinzufuegen, supplementEntfernen, supplementErledigt, toggleSupplementErledigt } = useAppData();
-  const [neuesSupplement, setNeuesSupplement] = useState({ name: "", tageszeiten: [], hinweis: "" });
+  const { supplemente, supplementHinzufuegen, supplementEntfernen, supplementErledigt, toggleSupplementErledigt, confirmAlleTageszeit } =
+    useAppData();
+  const [neuesSupplement, setNeuesSupplement] = useState(LEERES_SUPPLEMENT);
   const [supplementTag, setSupplementTag] = useState(new Date());
+  const [eigeneZeit, setEigeneZeit] = useState("");
+  const [customHinweis, setCustomHinweis] = useState("");
+  const [supplementError, setSupplementError] = useState(null);
 
   const toggleNeuesSupplementZeit = (z) =>
     setNeuesSupplement((prev) => ({
@@ -16,9 +22,23 @@ export default function SupplementeView({ onHome }) {
       tageszeiten: prev.tageszeiten.includes(z) ? prev.tageszeiten.filter((x) => x !== z) : [...prev.tageszeiten, z],
     }));
 
-  const submit = () => {
-    supplementHinzufuegen(neuesSupplement);
-    setNeuesSupplement({ name: "", tageszeiten: [], hinweis: "" });
+  const eigeneZeitHinzufuegen = () => {
+    const z = eigeneZeit.trim();
+    if (!z || neuesSupplement.tageszeiten.includes(z)) return;
+    setNeuesSupplement((prev) => ({ ...prev, tageszeiten: [...prev.tageszeiten, z] }));
+    setEigeneZeit("");
+  };
+
+  const submit = async () => {
+    setSupplementError(null);
+    const hinweis = neuesSupplement.hinweis === "Sonstiges" ? customHinweis.trim() : neuesSupplement.hinweis;
+    const result = await supplementHinzufuegen({ ...neuesSupplement, hinweis });
+    if (!result?.ok) {
+      setSupplementError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    setNeuesSupplement(LEERES_SUPPLEMENT);
+    setCustomHinweis("");
   };
 
   const today = new Date();
@@ -30,6 +50,13 @@ export default function SupplementeView({ onHome }) {
     (sum, s) => sum + s.tageszeiten.filter((z) => supplementErledigt[`${tagStr}__${s.id}__${z}`]).length,
     0
   );
+
+  // Feste Tageszeiten zuerst, danach alle frei benannten Zeiten/Anlässe, die
+  // irgendein Supplement tatsächlich benutzt (z. B. "Vor dem Training").
+  const alleZeiten = [
+    ...TAGESZEITEN,
+    ...Array.from(new Set(supplemente.flatMap((s) => s.tageszeiten))).filter((z) => !TAGESZEITEN.includes(z)),
+  ];
 
   return (
     <Shell>
@@ -53,6 +80,22 @@ export default function SupplementeView({ onHome }) {
           {TAGESZEITEN.map((z) => (
             <Pill key={z} label={z} selected={neuesSupplement.tageszeiten.includes(z)} onClick={() => toggleNeuesSupplementZeit(z)} />
           ))}
+          {neuesSupplement.tageszeiten
+            .filter((z) => !TAGESZEITEN.includes(z))
+            .map((z) => (
+              <Pill key={z} label={z} selected onClick={() => toggleNeuesSupplementZeit(z)} />
+            ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+          <div style={{ flex: 1 }}>
+            <TextInput value={eigeneZeit} onChange={setEigeneZeit} placeholder="Eigene Zeit/Anlass, z. B. Vor dem Training" />
+          </div>
+          <button
+            onClick={eigeneZeitHinzufuegen}
+            style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
+          >
+            +
+          </button>
         </div>
         <Label>Hinweis (optional)</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
@@ -65,6 +108,12 @@ export default function SupplementeView({ onHome }) {
             />
           ))}
         </div>
+        {neuesSupplement.hinweis === "Sonstiges" && (
+          <div style={{ marginTop: 6 }}>
+            <TextInput value={customHinweis} onChange={setCustomHinweis} placeholder="z. B. Mit viel Wasser einnehmen" />
+          </div>
+        )}
+        {supplementError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{supplementError}</div>}
         <div style={{ marginTop: 10 }}>
           <PrimaryButton onClick={submit} disabled={!neuesSupplement.name.trim() || neuesSupplement.tageszeiten.length === 0}>
             + Zum Plan hinzufügen
@@ -120,12 +169,23 @@ export default function SupplementeView({ onHome }) {
             })}
           </div>
 
-          {TAGESZEITEN.map((zeit) => {
+          {alleZeiten.map((zeit) => {
             const items = supplemente.filter((s) => s.tageszeiten.includes(zeit));
             if (items.length === 0) return null;
+            const offeneIds = items.filter((s) => !supplementErledigt[`${tagStr}__${s.id}__${zeit}`]).map((s) => s.id);
             return (
               <React.Fragment key={zeit}>
-                <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{zeit}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800 }}>{zeit}</div>
+                  {offeneIds.length > 1 && (
+                    <button
+                      onClick={() => confirmAlleTageszeit(tagStr, zeit, items.map((s) => s.id))}
+                      style={{ border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Alle bestätigen
+                    </button>
+                  )}
+                </div>
                 <Card style={{ marginBottom: 14 }}>
                   {items.map((s, i) => {
                     const k = `${tagStr}__${s.id}__${zeit}`;

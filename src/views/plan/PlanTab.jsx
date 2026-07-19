@@ -84,6 +84,7 @@ function HormonSection() {
   const { hormone, hormonDosierung, hormonHinzufuegen, hormonEntfernen, setHormonFoto, hormonErledigt, toggleHormonErledigt, hormonPlan } =
     useAppData();
   const [neuesHormon, setNeuesHormon] = useState(NEUES_HORMON_LEER);
+  const [hormonError, setHormonError] = useState(null);
   const today = new Date();
 
   const handleChange = (feld, val) => {
@@ -93,8 +94,13 @@ function HormonSection() {
     });
   };
 
-  const submit = () => {
-    hormonHinzufuegen(neuesHormon);
+  const submit = async () => {
+    setHormonError(null);
+    const result = await hormonHinzufuegen(neuesHormon);
+    if (!result?.ok) {
+      setHormonError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
     setNeuesHormon(NEUES_HORMON_LEER);
   };
 
@@ -114,6 +120,7 @@ function HormonSection() {
 
         <DosierungFields value={neuesHormon} onChange={handleChange} mengePlaceholder="z. B. 100 mg" />
 
+        {hormonError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{hormonError}</div>}
         <div style={{ marginTop: 10 }}>
           <PrimaryButton onClick={submit} disabled={!neuesHormon.name.trim() || !hormonIntervallGueltig(neuesHormon)}>
             + Zum Protokoll hinzufügen

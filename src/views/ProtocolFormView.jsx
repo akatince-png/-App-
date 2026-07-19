@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, Stepper, CheckRow, Label, TextInput, TextArea, Pill, PrimaryButton } from "../ui/primitives";
 import DosierungFields from "../ui/DosierungFields";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, PEPTIDE_OPTIONEN, STEP_TITLES, ZIELE } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { useAppData } from "../context/AppDataContext";
@@ -14,6 +14,7 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
     peptide,
     togglePeptid,
     einnahmeart,
+    setEinnahmeart,
     addCustomPreparat,
     dosierung,
     setDose,
@@ -28,10 +29,16 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
   } = useAppData();
 
   const [customPreparatName, setCustomPreparatName] = useState("");
-  const [customEinnahmeart, setCustomEinnahmeart] = useState("Tablette");
+  const [customEinnahmeart, setCustomEinnahmeart] = useState("Injektion");
+  const [customPreparatError, setCustomPreparatError] = useState(null);
 
-  const handleAddCustomPreparat = () => {
-    addCustomPreparat(customPreparatName, customEinnahmeart);
+  const handleAddCustomPreparat = async () => {
+    setCustomPreparatError(null);
+    const result = await addCustomPreparat(customPreparatName, customEinnahmeart);
+    if (!result?.ok) {
+      setCustomPreparatError(result?.error || "Speichern fehlgeschlagen.");
+      return;
+    }
     setCustomPreparatName("");
   };
 
@@ -81,14 +88,18 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
               ))}
 
             <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
-              <Label>Eigenes Präparat hinzufügen</Label>
-              <TextInput value={customPreparatName} onChange={setCustomPreparatName} placeholder="z. B. Vitamin D Tropfen" />
+              <Label>Eigenes Peptid hinzufügen</Label>
+              <div style={{ fontSize: 11, color: textMuted, marginTop: -4, marginBottom: 8 }}>
+                Nur für Peptide, die oben nicht in der Liste stehen. Hormone (z. B. Testosteron) trägst du im Bereich "Hormone" ein.
+              </div>
+              <TextInput value={customPreparatName} onChange={setCustomPreparatName} placeholder="z. B. Cerebrolysin" />
               <Label>Einnahmeart</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {EINNAHMEARTEN.map((a) => (
                   <Pill key={a} label={a} selected={customEinnahmeart === a} onClick={() => setCustomEinnahmeart(a)} />
                 ))}
               </div>
+              {customPreparatError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{customPreparatError}</div>}
               <div style={{ marginTop: 10 }}>
                 <PrimaryButton onClick={handleAddCustomPreparat} disabled={!customPreparatName.trim()} variant="ghost">
                   + Hinzufügen
@@ -109,6 +120,13 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{p}</div>
                   {dosierung[p]?.fotoPath && <SignedPhoto path={dosierung[p].fotoPath} alt={p} size={36} />}
+                </div>
+
+                <Label>Einnahmeart</Label>
+                <div style={{ display: "flex", flexWrap: "wrap" }}>
+                  {EINNAHMEARTEN.map((a) => (
+                    <Pill key={a} label={a} selected={(einnahmeart[p] || "Injektion") === a} onClick={() => setEinnahmeart(p, a)} />
+                  ))}
                 </div>
 
                 <DosierungFields value={dosierung[p]} onChange={(feld, val) => setDose(p, feld, val)} />
