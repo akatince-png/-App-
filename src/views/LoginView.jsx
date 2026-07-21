@@ -60,6 +60,45 @@ export default function LoginView() {
         </div>
       </div>
 
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          padding: 4,
+          borderRadius: 16,
+          background: "#EDF1F0",
+          marginBottom: 16,
+        }}
+      >
+        {[
+          { id: "login", label: "Anmelden" },
+          { id: "register", label: "Registrieren" },
+        ].map((m) => (
+          <button
+            key={m.id}
+            onClick={() => {
+              setMode(m.id);
+              setError(null);
+              setInfo(null);
+            }}
+            style={{
+              flex: 1,
+              padding: "11px 0",
+              borderRadius: 12,
+              border: "none",
+              background: mode === m.id ? "#fff" : "transparent",
+              color: mode === m.id ? "#1E2B29" : textMuted,
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: mode === m.id ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
       <Card style={{ marginBottom: 14 }}>
         <Label>E-Mail</Label>
         <TextInput type="email" value={email} onChange={setEmail} placeholder="deine@email.de" />
@@ -75,27 +114,6 @@ export default function LoginView() {
           </PrimaryButton>
         </div>
       </Card>
-
-      <button
-        onClick={() => {
-          setMode((m) => (m === "login" ? "register" : "login"));
-          setError(null);
-          setInfo(null);
-        }}
-        style={{
-          width: "100%",
-          padding: "10px",
-          borderRadius: 12,
-          border: "none",
-          background: "transparent",
-          color: textMuted,
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        {mode === "login" ? "Noch kein Konto? Jetzt registrieren" : "Schon ein Konto? Anmelden"}
-      </button>
     </Shell>
   );
 }
