@@ -170,14 +170,41 @@ export const LEXIKON_BEISPIELE = {
 
 export const PIE_COLORS = ["#0FB8A3", "#5B9BF0", "#F5A623", "#F2596A", "#9B7EDE", "#4FBF8F"];
 
-export const DASHBOARD_KACHELN = [
-  { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: ["#F2596A", "#C9394F"] },
-  { id: "plan", label: "Protokoll", desc: "Heute & Kalender", icon: "💉", grad: ["#0FB8A3", "#0A9384"] },
-  { id: "supplemente", label: "Supplemente", desc: "Wochenplan", icon: "💊", grad: ["#4FA3D1", "#2E7BAA"] },
-  { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: ["#5B9BF0", "#3B6FD1"] },
-  { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🧬", grad: ["#9B7EDE", "#6E4FBF"] },
-  { id: "community", label: "Community", desc: "Anonyme Insights", icon: "🌍", grad: ["#4FBF8F", "#2F9E71"] },
-  { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: ["#F5A623", "#D98A0F"] },
-  { id: "lexikon", label: "Lexikon", desc: "Fragen zu Peptiden", icon: "📚", grad: ["#E0708C", "#C24A6B"] },
-  { id: "mehr", label: "Mehr", desc: "Datenschutz & Einstellungen", icon: "⚙️", grad: ["#7C8B87", "#5A6864"] },
+// Kacheln sind in Gruppen ("Tiers") organisiert, damit das Dashboard nicht
+// wie eine flache Liste wirkt: oben die am häufigsten genutzten Bereiche,
+// darunter die einzelnen Protokoll-Tools, dann Auswertung/Austausch, unten
+// Verwaltung. HomeView rendert jede Gruppe mit eigenem Abstand.
+export const DASHBOARD_TIERS = [
+  {
+    id: "haupt",
+    kacheln: [
+      { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: ["#F2596A", "#C9394F"] },
+      { id: "training", label: "Trainingsplan", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: ["#FF9E5E", "#E1762E"] },
+      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🧬", grad: ["#9B7EDE", "#6E4FBF"] },
+    ],
+  },
+  {
+    id: "protokolle",
+    kacheln: [
+      { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "💉", grad: ["#0FB8A3", "#0A9384"] },
+      { id: "hormone", label: "Hormone / Off-Label", desc: "Dein Hormon-Protokoll", icon: "⚗️", grad: ["#5B9BF0", "#3B6FD1"] },
+      { id: "supplemente", label: "Supplemente", desc: "Wochenplan", icon: "💊", grad: ["#4FA3D1", "#2E7BAA"] },
+      { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: ["#7C8FE0", "#5567B8"] },
+    ],
+  },
+  {
+    id: "auswertung",
+    kacheln: [
+      { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: ["#5B9BF0", "#3B6FD1"] },
+      { id: "community", label: "Community", desc: "Anonyme Insights", icon: "🌍", grad: ["#4FBF8F", "#2F9E71"] },
+    ],
+  },
+  {
+    id: "verwaltung",
+    kacheln: [
+      { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: ["#F5A623", "#D98A0F"] },
+      { id: "lexikon", label: "Lexikon", desc: "Fragen zu Peptiden", icon: "📚", grad: ["#E0708C", "#C24A6B"] },
+      { id: "mehr", label: "Mehr", desc: "Datenschutz & Einstellungen", icon: "⚙️", grad: ["#7C8B87", "#5A6864"] },
+    ],
+  },
 ];

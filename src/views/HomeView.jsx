@@ -1,7 +1,7 @@
 import React from "react";
 import { Shell, Card } from "../ui/primitives";
 import { accent, accentSoft, blue, cardBorder, danger, shadow, success, textMuted } from "../ui/theme";
-import { DASHBOARD_KACHELN } from "../constants";
+import { DASHBOARD_TIERS } from "../constants";
 import { keyOf, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
@@ -95,57 +95,113 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
         </div>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {DASHBOARD_KACHELN.map((k) => (
-          <button
-            key={k.id}
-            onClick={() => onOpenView(k.id)}
+      {DASHBOARD_TIERS.map((tier, tierIdx) => (
+        <div
+          key={tier.id}
+          style={{
+            marginBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? 0 : 26,
+            paddingBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? 0 : 22,
+            borderBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? "none" : `1px solid ${cardBorder}`,
+          }}
+        >
+          <div
             style={{
-              textAlign: "left",
-              borderRadius: 18,
-              padding: 16,
-              cursor: "pointer",
-              background: "#fff",
-              boxShadow: shadow,
-              border: `1px solid ${cardBorder}`,
-              position: "relative",
-              overflow: "hidden",
+              display: "grid",
+              gridTemplateColumns: tier.id === "haupt" ? "1fr" : "1fr 1fr",
+              gap: tier.id === "haupt" ? 10 : 12,
             }}
           >
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                background: `linear-gradient(135deg, ${k.grad[0]}, ${k.grad[1]})`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 17,
-                marginBottom: 10,
-              }}
-            >
-              {k.icon}
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>{k.label}</div>
-            <div style={{ fontSize: 11, color: textMuted }}>{k.desc}</div>
-          </button>
-        ))}
-      </div>
+            {tier.kacheln.map((k) =>
+              tier.id === "haupt" ? (
+                <button
+                  key={k.id}
+                  onClick={() => onOpenView(k.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    textAlign: "left",
+                    borderRadius: 22,
+                    padding: "14px 16px",
+                    cursor: "pointer",
+                    background: "#fff",
+                    boxShadow: shadow,
+                    border: `1px solid ${cardBorder}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 46,
+                      height: 46,
+                      flexShrink: 0,
+                      borderRadius: 16,
+                      background: `linear-gradient(135deg, ${k.grad[0]}, ${k.grad[1]})`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 20,
+                    }}
+                  >
+                    {k.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>{k.label}</div>
+                    <div style={{ fontSize: 12, color: textMuted }}>{k.desc}</div>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  key={k.id}
+                  onClick={() => onOpenView(k.id)}
+                  style={{
+                    textAlign: "left",
+                    borderRadius: 20,
+                    padding: 16,
+                    cursor: "pointer",
+                    background: "#fff",
+                    boxShadow: shadow,
+                    border: `1px solid ${cardBorder}`,
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 13,
+                      background: `linear-gradient(135deg, ${k.grad[0]}, ${k.grad[1]})`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 17,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {k.icon}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>{k.label}</div>
+                  <div style={{ fontSize: 11, color: textMuted }}>{k.desc}</div>
+                </button>
+              )
+            )}
+          </div>
+        </div>
+      ))}
 
       <button
         onClick={onNewProtocol}
         style={{
           width: "100%",
           padding: "12px",
-          borderRadius: 12,
+          borderRadius: 16,
           border: `1px dashed ${cardBorder}`,
           background: "transparent",
           color: textMuted,
           fontSize: 13,
           fontWeight: 600,
           cursor: "pointer",
-          marginTop: 16,
+          marginTop: 4,
         }}
       >
         + Neues Protokoll erstellen

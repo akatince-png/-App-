@@ -8,6 +8,10 @@ import SupplementeView from "./views/SupplementeView";
 import TagesplanView from "./views/TagesplanView";
 import ProtocolFormView from "./views/ProtocolFormView";
 import PlanView from "./views/plan/PlanView";
+import PeptidView from "./views/PeptidView";
+import HormonView from "./views/HormonView";
+import SchlafView from "./views/SchlafView";
+import TrainingView from "./views/TrainingView";
 
 function LoadingScreen() {
   return (
@@ -19,10 +23,8 @@ function LoadingScreen() {
 
 export default function AuthenticatedApp() {
   const { loading, onboardingComplete, completeOnboarding } = useAppData();
-  const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | 'supplemente'
+  const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | 'supplemente' | ...
   const [step, setStep] = useState(0);
-  const [planTab, setPlanTab] = useState("plan"); // 'plan' | 'statistik' | 'profil' | 'community' | 'archiv' | 'mehr'
-  const [protokollTyp, setProtokollTyp] = useState("peptide"); // 'peptide' | 'schlaf' | 'hormon' | 'weitere'
 
   useEffect(() => {
     if (!loading && view === null) {
@@ -35,11 +37,6 @@ export default function AuthenticatedApp() {
     return <LoadingScreen />;
   }
 
-  const goToPlanTab = (tab) => {
-    setPlanTab(tab);
-    setView("plan");
-  };
-
   if (view === "form") {
     return (
       <ProtocolFormView
@@ -47,7 +44,7 @@ export default function AuthenticatedApp() {
         setStep={setStep}
         onFinish={() => {
           completeOnboarding();
-          setView("plan");
+          setView("home");
         }}
       />
     );
@@ -65,13 +62,27 @@ export default function AuthenticatedApp() {
     return <TagesplanView onHome={() => setView("home")} />;
   }
 
-  if (view === "plan") {
+  if (view === "peptide") {
+    return <PeptidView onHome={() => setView("home")} />;
+  }
+
+  if (view === "hormone") {
+    return <HormonView onHome={() => setView("home")} />;
+  }
+
+  if (view === "schlaf") {
+    return <SchlafView onHome={() => setView("home")} />;
+  }
+
+  if (view === "training") {
+    return <TrainingView onHome={() => setView("home")} />;
+  }
+
+  if (view === "statistik" || view === "profil" || view === "community" || view === "archiv" || view === "mehr") {
     return (
       <PlanView
-        planTab={planTab}
-        setPlanTab={setPlanTab}
-        protokollTyp={protokollTyp}
-        setProtokollTyp={setProtokollTyp}
+        planTab={view}
+        setPlanTab={setView}
         onHome={() => setView("home")}
         onEditProtocol={() => setView("form")}
       />
@@ -80,10 +91,7 @@ export default function AuthenticatedApp() {
 
   return (
     <HomeView
-      onOpenView={(id) => {
-        if (id === "lexikon" || id === "supplemente" || id === "tagesplan") setView(id);
-        else goToPlanTab(id);
-      }}
+      onOpenView={(id) => setView(id)}
       onNewProtocol={() => {
         setView("form");
         setStep(0);

@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Shell, Card, StatusBadge } from "../ui/primitives";
-import { accentDark, cardBorder, textMuted } from "../ui/theme";
-import { WOCHENTAGE } from "../constants";
-import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
+import { accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
+import { NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN, WOCHENTAGE } from "../constants";
+import { addDays, fmtDate, keyOf, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
 const KATEGORIE = {
@@ -24,6 +24,7 @@ export default function TagesplanView({ onHome }) {
   const {
     plan,
     erledigt,
+    saveFeedback,
     skipFeedback,
     hormonPlan,
     hormonErledigt,
@@ -35,6 +36,26 @@ export default function TagesplanView({ onHome }) {
 
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [feedbackOpen, setFeedbackOpen] = useState(null);
+  const [draftFeedback, setDraftFeedback] = useState({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
+
+  const openFeedback = (dose, key) => {
+    setFeedbackOpen(key);
+    setDraftFeedback({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
+  };
+  const toggleDraftNebenwirkung = (n) =>
+    setDraftFeedback((prev) => ({
+      ...prev,
+      nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
+    }));
+  const handleSaveFeedback = (dose) => {
+    saveFeedback(dose, draftFeedback);
+    setFeedbackOpen(null);
+  };
+  const handleSkipFeedback = (dose) => {
+    skipFeedback(dose);
+    setFeedbackOpen(null);
+  };
 
   const today = new Date();
   const montag = addDays(selectedDate, -((selectedDate.getDay() + 6) % 7));
@@ -48,7 +69,7 @@ export default function TagesplanView({ onHome }) {
     plan
       .filter((d) => sameDay(d.date, date))
       .forEach((d) => {
-        const k = `${d.date.toDateString()}__${d.peptid}__${d.uhrzeit}`;
+        const k = keyOf(d.date, d.peptid, d.uhrzeit);
         items.push({
           kategorie: "peptid",
           key: `p-${k}`,
@@ -57,7 +78,8 @@ export default function TagesplanView({ onHome }) {
           name: d.peptid,
           detail: d.menge,
           done: !!erledigt[k],
-          onConfirm: () => skipFeedback(d),
+          raw: d,
+          onConfirm: () => openFeedback(d, `p-${k}`),
         });
       });
 
@@ -101,7 +123,7 @@ export default function TagesplanView({ onHome }) {
     });
       return items;
     },
-    [plan, erledigt, skipFeedback, hormonPlan, hormonErledigt, toggleHormonErledigt, supplemente, supplementErledigt, toggleSupplementErledigt]
+    [plan, erledigt, hormonPlan, hormonErledigt, toggleHormonErledigt, supplemente, supplementErledigt, toggleSupplementErledigt]
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
@@ -216,38 +238,91 @@ export default function TagesplanView({ onHome }) {
               <Card style={{ marginBottom: 14 }}>
                 {items.map((item, i) => {
                   const k = KATEGORIE[item.kategorie];
+                  const isOpen = feedbackOpen === item.key;
                   return (
                     <div
                       key={item.key}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
                         padding: "10px 0",
                         borderBottom: i < items.length - 1 ? `1px solid ${cardBorder}` : "none",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 700 }}>
-                            {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>
-                          </div>
-                          {item.detail && <div style={{ fontSize: 12, color: textMuted }}>{item.detail}</div>}
-                          <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "1px 7px", borderRadius: 8, marginTop: 3 }}>
-                            {k.label}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 700 }}>
+                              {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>
+                            </div>
+                            {item.detail && <div style={{ fontSize: 12, color: textMuted }}>{item.detail}</div>}
+                            <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "1px 7px", borderRadius: 8, marginTop: 3 }}>
+                              {k.label}
+                            </div>
                           </div>
                         </div>
+                        {item.done ? (
+                          <StatusBadge status="erledigt" />
+                        ) : (
+                          <button
+                            onClick={item.onConfirm}
+                            style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: k.dot, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                          >
+                            Bestätigen
+                          </button>
+                        )}
                       </div>
-                      {item.done ? (
-                        <StatusBadge status="erledigt" />
-                      ) : (
-                        <button
-                          onClick={item.onConfirm}
-                          style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: k.dot, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
-                        >
-                          Bestätigen
-                        </button>
+
+                      {item.kategorie === "peptid" && isOpen && (
+                        <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Wie war es seit der letzten Injektion?</div>
+                          <Label>Welche Nebenwirkungen hattest du?</Label>
+                          <div style={{ display: "flex", flexWrap: "wrap" }}>
+                            {NEBENWIRKUNGEN_OPTIONEN.map((n) => (
+                              <Pill key={n} label={n} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
+                            ))}
+                          </div>
+                          <Label>Wie stark?</Label>
+                          <div style={{ display: "flex", flexWrap: "wrap" }}>
+                            {STAERKE_OPTIONEN.map((s) => (
+                              <Pill key={s} label={s} selected={draftFeedback.staerke === s} onClick={() => setDraftFeedback((p) => ({ ...p, staerke: s }))} />
+                            ))}
+                          </div>
+                          <Label>Notizen (optional)</Label>
+                          <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Hier kannst du alles aufschreiben..." />
+                          <Label>Foto (optional) — z. B. Rötung oder Knubbel an der Einstichstelle</Label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id={`tagesplan-nebenwirkung-foto-${item.key}`}
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setDraftFeedback((p) => ({ ...p, fotoFile: file, fotoPreview: URL.createObjectURL(file) }));
+                            }}
+                          />
+                          <label
+                            htmlFor={`tagesplan-nebenwirkung-foto-${item.key}`}
+                            style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed #0FB8A3`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
+                          >
+                            📷 Foto aufnehmen
+                          </label>
+                          {draftFeedback.fotoPreview && (
+                            <img src={draftFeedback.fotoPreview} alt="Nebenwirkung" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, marginTop: 6 }} />
+                          )}
+                          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                            <div style={{ flex: 1 }}>
+                              <PrimaryButton onClick={() => handleSkipFeedback(item.raw)} variant="ghost">
+                                Überspringen
+                              </PrimaryButton>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <PrimaryButton onClick={() => handleSaveFeedback(item.raw)} variant="success">
+                                Speichern
+                              </PrimaryButton>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   );
