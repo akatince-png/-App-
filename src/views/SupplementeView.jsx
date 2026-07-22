@@ -6,8 +6,57 @@ import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
 const LEERES_SUPPLEMENT = { name: "", tageszeiten: [], hinweis: "" };
+const LEERES_REZEPT = { name: "", hinweis: "", zutaten: [{ name: "", menge: "" }] };
+
+const UNTERTABS = [
+  { id: "supplemente", label: "Supplemente" },
+  { id: "rezepte", label: "Rezepte" },
+];
 
 export default function SupplementeView({ onHome }) {
+  const [tab, setTab] = useState("supplemente");
+
+  return (
+    <Shell>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Supplemente</div>
+        <button
+          onClick={onHome}
+          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+          title="Zum Dashboard"
+        >
+          ⌂
+        </button>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+        {UNTERTABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              flex: 1,
+              padding: "9px 0",
+              borderRadius: 10,
+              border: `1px solid ${tab === t.id ? accent : cardBorder}`,
+              background: tab === t.id ? accent : "#fff",
+              color: tab === t.id ? "#fff" : textMuted,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "supplemente" ? <SupplementeSection /> : <RezepteSection />}
+    </Shell>
+  );
+}
+
+function SupplementeSection() {
   const { supplemente, supplementHinzufuegen, supplementEntfernen, supplementErledigt, toggleSupplementErledigt, confirmAlleTageszeit } =
     useAppData();
   const [neuesSupplement, setNeuesSupplement] = useState(LEERES_SUPPLEMENT);
@@ -59,18 +108,7 @@ export default function SupplementeView({ onHome }) {
   ];
 
   return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Supplemente</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
-
+    <>
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neues Supplement</div>
       <Card style={{ marginBottom: 14 }}>
         <Label>Name</Label>
@@ -262,6 +300,143 @@ export default function SupplementeView({ onHome }) {
           </Card>
         </>
       )}
-    </Shell>
+    </>
+  );
+}
+
+function RezepteSection() {
+  const { rezepte, rezeptHinzufuegen, rezeptEntfernen, rezeptErledigt, toggleRezeptErledigt } = useAppData();
+  const [neuesRezept, setNeuesRezept] = useState(LEERES_REZEPT);
+  const [rezeptError, setRezeptError] = useState(null);
+
+  const today = new Date();
+  const tagStr = toLocalISODate(today);
+
+  const zutatAendern = (index, feld, wert) => {
+    setNeuesRezept((prev) => ({
+      ...prev,
+      zutaten: prev.zutaten.map((z, i) => (i === index ? { ...z, [feld]: wert } : z)),
+    }));
+  };
+  const zutatHinzufuegen = () => {
+    setNeuesRezept((prev) => ({ ...prev, zutaten: [...prev.zutaten, { name: "", menge: "" }] }));
+  };
+  const zutatEntfernen = (index) => {
+    setNeuesRezept((prev) => ({ ...prev, zutaten: prev.zutaten.filter((_, i) => i !== index) }));
+  };
+
+  const submit = async () => {
+    setRezeptError(null);
+    const result = await rezeptHinzufuegen(neuesRezept);
+    if (!result?.ok) {
+      setRezeptError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    setNeuesRezept(LEERES_REZEPT);
+  };
+
+  const gueltig = neuesRezept.name.trim() && neuesRezept.zutaten.some((z) => z.name.trim());
+
+  return (
+    <>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neuer Drink</div>
+      <Card style={{ marginBottom: 14 }}>
+        <Label>Name</Label>
+        <TextInput value={neuesRezept.name} onChange={(v) => setNeuesRezept((p) => ({ ...p, name: v }))} placeholder="z. B. Pre-Workout" />
+
+        <Label>Zutaten</Label>
+        {neuesRezept.zutaten.map((z, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+            <div style={{ flex: 2 }}>
+              <TextInput value={z.name} onChange={(v) => zutatAendern(i, "name", v)} placeholder="Zutat, z. B. Kreatin" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <TextInput value={z.menge} onChange={(v) => zutatAendern(i, "menge", v)} placeholder="Menge" />
+            </div>
+            {neuesRezept.zutaten.length > 1 && (
+              <button
+                onClick={() => zutatEntfernen(i)}
+                style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          onClick={zutatHinzufuegen}
+          style={{
+            width: "100%",
+            padding: "8px",
+            borderRadius: 10,
+            border: `1px dashed ${cardBorder}`,
+            background: "transparent",
+            color: accentDark,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            marginBottom: 6,
+          }}
+        >
+          + weitere Zutat
+        </button>
+
+        <Label>Zeitpunkt / Anlass (optional)</Label>
+        <TextInput value={neuesRezept.hinweis} onChange={(v) => setNeuesRezept((p) => ({ ...p, hinweis: v }))} placeholder="z. B. Direkt vor dem Training" />
+
+        {rezeptError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{rezeptError}</div>}
+        <div style={{ marginTop: 10 }}>
+          <PrimaryButton onClick={submit} disabled={!gueltig}>
+            + Drink speichern
+          </PrimaryButton>
+        </div>
+      </Card>
+
+      {rezepte.length === 0 ? (
+        <Card>
+          <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
+            Noch keine Drinks angelegt — leg oben deinen ersten an, z. B. Pre-Workout oder deinen Elektrolyt-Drink.
+          </div>
+        </Card>
+      ) : (
+        rezepte.map((r) => {
+          const k = `${tagStr}__${r.id}`;
+          const done = !!rezeptErledigt[k];
+          return (
+            <Card key={r.id} style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{r.name}</div>
+                  {r.hinweis && <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>{r.hinweis}</div>}
+                </div>
+                <button
+                  onClick={() => rezeptEntfernen(r.id)}
+                  style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}
+                >
+                  ×
+                </button>
+              </div>
+              <div style={{ marginTop: 8, marginBottom: 10 }}>
+                {r.zutaten.map((z) => (
+                  <div key={z.id} style={{ fontSize: 12, color: textMuted, padding: "2px 0" }}>
+                    • {z.name} {z.menge && `— ${z.menge}`}
+                  </div>
+                ))}
+              </div>
+              {done ? (
+                <StatusBadge status="erledigt" />
+              ) : (
+                <button
+                  onClick={() => toggleRezeptErledigt(tagStr, r.id)}
+                  style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Heute bestätigen
+                </button>
+              )}
+            </Card>
+          );
+        })
+      )}
+    </>
   );
 }

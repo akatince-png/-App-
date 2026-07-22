@@ -12,6 +12,8 @@ import PeptidView from "./views/PeptidView";
 import HormonView from "./views/HormonView";
 import SchlafView from "./views/SchlafView";
 import TrainingView from "./views/TrainingView";
+import NutritionView from "./views/NutritionView";
+import BlutzuckerView from "./views/BlutzuckerView";
 
 function LoadingScreen() {
   return (
@@ -76,6 +78,14 @@ export default function AuthenticatedApp() {
 
   if (view === "training") {
     return <TrainingView onHome={() => setView("home")} />;
+  }
+
+  if (view === "ernaehrung") {
+    return <NutritionView onHome={() => setView("home")} />;
+  }
+
+  if (view === "blutzucker") {
+    return <BlutzuckerView onHome={() => setView("home")} />;
   }
 
   if (view === "statistik" || view === "profil" || view === "community" || view === "archiv" || view === "mehr") {

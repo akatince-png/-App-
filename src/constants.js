@@ -180,6 +180,7 @@ export const DASHBOARD_TIERS = [
     kacheln: [
       { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: ["#F2596A", "#C9394F"] },
       { id: "training", label: "Trainingsplan", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: ["#FF9E5E", "#E1762E"] },
+      { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: ["#6FBF6F", "#3F9E4D"] },
       { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🧬", grad: ["#9B7EDE", "#6E4FBF"] },
     ],
   },
@@ -188,8 +189,9 @@ export const DASHBOARD_TIERS = [
     kacheln: [
       { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "💉", grad: ["#0FB8A3", "#0A9384"] },
       { id: "hormone", label: "Hormone / Off-Label", desc: "Dein Hormon-Protokoll", icon: "⚗️", grad: ["#5B9BF0", "#3B6FD1"] },
-      { id: "supplemente", label: "Supplemente", desc: "Wochenplan", icon: "💊", grad: ["#4FA3D1", "#2E7BAA"] },
+      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Rezepte", icon: "💊", grad: ["#4FA3D1", "#2E7BAA"] },
       { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: ["#7C8FE0", "#5567B8"] },
+      { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: ["#E0708C", "#C24A6B"] },
     ],
   },
   {
