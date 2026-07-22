@@ -7,6 +7,7 @@ import { useHormoneData } from "../data/useHormoneData";
 import { useSupplementData } from "../data/useSupplementData";
 import { useDrinkRecipes } from "../data/useDrinkRecipes";
 import { useMealData } from "../data/useMealData";
+import { useRoutines } from "../data/useRoutines";
 import { useCheckinData } from "../data/useCheckinData";
 import { useSleepData } from "../data/useSleepData";
 import { useBiomarkerData } from "../data/useBiomarkerData";
@@ -25,6 +26,7 @@ export function AppDataProvider({ children }) {
   const supplementData = useSupplementData(userId);
   const drinkData = useDrinkRecipes(userId);
   const mealData = useMealData(userId);
+  const routineData = useRoutines(userId);
   const checkinData = useCheckinData(userId);
   const sleepData = useSleepData(userId);
   const biomarkerData = useBiomarkerData(userId);
@@ -40,12 +42,14 @@ export function AppDataProvider({ children }) {
     hormonHinzufuegen: hormoneData.hormonHinzufuegen,
     hormonEntfernen: hormoneData.hormonEntfernen,
     setHormonFoto: hormoneData.setHormonFoto,
+    setHormonKategorie: hormoneData.setHormonKategorie,
     hormonErledigt: hormoneData.hormonErledigt,
     toggleHormonErledigt: hormoneData.toggleHormonErledigt,
     hormonPlan: hormoneData.hormonPlan,
     ...supplementData,
     ...drinkData,
     ...mealData,
+    ...routineData,
     ...checkinData,
     ...sleepData,
     ...biomarkerData,

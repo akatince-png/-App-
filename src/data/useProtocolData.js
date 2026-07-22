@@ -5,6 +5,7 @@ import { activeDoseDays } from "../utils/schedule";
 
 function rowToDosierung(row) {
   return {
+    id: row.id,
     menge: row.menge || "",
     intervallTyp: row.intervall_mode || "fixed",
     intervallDays: row.intervall_days || 7,
@@ -165,16 +166,20 @@ export function useProtocolData(userId) {
   const addPeptidRow = useCallback(
     async (name, art) => {
       if (!protocolId) return { ok: false, error: "Protokoll noch nicht bereit." };
-      const { error } = await supabase.from("protocol_peptide").insert({
-        protocol_id: protocolId,
-        user_id: userId,
-        name,
-        einnahmeart: art,
-        menge: "",
-        intervall_mode: "fixed",
-        intervall_days: 7,
-        uhrzeiten: ["20:00"],
-      });
+      const { data, error } = await supabase
+        .from("protocol_peptide")
+        .insert({
+          protocol_id: protocolId,
+          user_id: userId,
+          name,
+          einnahmeart: art,
+          menge: "",
+          intervall_mode: "fixed",
+          intervall_days: 7,
+          uhrzeiten: ["20:00"],
+        })
+        .select()
+        .single();
       if (error) {
         console.error(error);
         if (error.code === "23505") {
@@ -194,7 +199,7 @@ export function useProtocolData(userId) {
       }
       setPeptideState((prev) => [...prev, name]);
       setEinnahmeartState((prev) => ({ ...prev, [name]: art }));
-      setDosierungState((prev) => ({ ...prev, [name]: { ...DEFAULT_DOSIERUNG } }));
+      setDosierungState((prev) => ({ ...prev, [name]: { ...DEFAULT_DOSIERUNG, id: data.id } }));
       return { ok: true };
     },
     [protocolId, userId]

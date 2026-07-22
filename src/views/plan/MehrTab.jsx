@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "../../ui/primitives";
-import { danger, success, textMuted } from "../../ui/theme";
+import { accentDark, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
+import { useAppData } from "../../context/AppDataContext";
 
 const DATENSCHUTZ = ["Ende-zu-Ende Verschlüsselung", "DSGVO konform", "Daten gehören dir", "Du entscheidest, was geteilt wird", "Kein Verkauf deiner Daten"];
 
@@ -16,6 +17,14 @@ const ERWEITERUNGEN = [
 
 export default function MehrTab() {
   const { signOut, user } = useAuth();
+  const { resetOnboarding } = useAppData();
+  const [resetMsg, setResetMsg] = useState(null);
+
+  const handleResetOnboarding = async () => {
+    setResetMsg(null);
+    const result = await resetOnboarding();
+    setResetMsg(result?.ok ? "Erledigt — beim nächsten Anmelden siehst du wieder die Willkommens-Seiten." : result?.error || "Zurücksetzen fehlgeschlagen.");
+  };
 
   return (
     <>
@@ -47,6 +56,21 @@ export default function MehrTab() {
         >
           Abmelden
         </button>
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Zum Testen</div>
+      <Card>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
+          Setzt diesen Account zurück in den Erstanmelde-Zustand — nützlich, um die Willkommens-Seiten und den
+          Einrichtungs-Assistenten wiederholt mit demselben Konto durchzugehen.
+        </div>
+        <button
+          onClick={handleResetOnboarding}
+          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
+        >
+          Onboarding erneut durchlaufen
+        </button>
+        {resetMsg && <div style={{ fontSize: 12, color: textMuted, marginTop: 10 }}>{resetMsg}</div>}
       </Card>
     </>
   );

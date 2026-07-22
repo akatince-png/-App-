@@ -17,6 +17,7 @@ import BlutzuckerView from "./views/BlutzuckerView";
 import HydrationView from "./views/HydrationView";
 import ProtokolleView from "./views/ProtokolleView";
 import WelcomeView from "./views/WelcomeView";
+import RoutinenView from "./views/RoutinenView";
 
 function LoadingScreen() {
   return (
@@ -73,6 +74,10 @@ export default function AuthenticatedApp() {
 
   if (view === "protokolle") {
     return <ProtokolleView onHome={() => setView("home")} />;
+  }
+
+  if (view === "routinen") {
+    return <RoutinenView onHome={() => setView("home")} />;
   }
 
   if (view === "peptide") {

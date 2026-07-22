@@ -83,6 +83,18 @@ export function useProfileData(userId) {
       .then(({ error }) => error && console.error(error));
   }, [userId]);
 
+  // Zum wiederholten Testen des Willkommens-/Einrichtungs-Ablaufs mit
+  // demselben Account, ohne jedes Mal ein neues Konto anzulegen.
+  const resetOnboarding = useCallback(async () => {
+    const { error } = await supabase.from("profiles").update({ onboarding_complete: false }).eq("id", userId);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setOnboardingCompleteState(false);
+    return { ok: true };
+  }, [userId]);
+
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
   const toggleMesswert = useCallback(
@@ -135,6 +147,7 @@ export function useProfileData(userId) {
     toggleDatenteilung,
     onboardingComplete,
     completeOnboarding,
+    resetOnboarding,
     aktiveMesswerte,
     toggleMesswert,
     customMesswerte,

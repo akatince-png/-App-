@@ -5,6 +5,7 @@ import { activeDoseDays } from "../utils/schedule";
 
 function rowToHormonDosierung(row) {
   return {
+    id: row.id,
     menge: row.menge || "",
     kategorie: row.kategorie || "Hormone",
     intervallTyp: row.intervall_mode || "fixed",
@@ -73,7 +74,7 @@ export function useHormoneData(userId, startdatum, dauer) {
       const name = neuesHormon.name.trim();
       if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
       if (hormone.includes(name)) return { ok: false, error: "Dieses Präparat ist schon in deinem Protokoll." };
-      const { error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon) });
+      const { data, error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon) }).select().single();
       if (error) {
         console.error(error);
         if (error.code === "23505") {
@@ -93,6 +94,7 @@ export function useHormoneData(userId, startdatum, dauer) {
       setHormonDosierung((prev) => ({
         ...prev,
         [name]: {
+          id: data.id,
           menge: neuesHormon.menge,
           kategorie: neuesHormon.kategorie || "Hormone",
           intervallTyp: neuesHormon.intervallTyp || "fixed",

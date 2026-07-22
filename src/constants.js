@@ -193,6 +193,7 @@ export const DASHBOARD_TIERS = [
     id: "haupt",
     kacheln: [
       { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: F_EMERALD },
+      { id: "routinen", label: "Routinen", desc: "Mehrere Einträge bündeln", icon: "⭐", grad: F_WARM },
       { id: "protokolle", label: "Protokolle", desc: "Details zum Nachschauen", icon: "📋", grad: F_SLATE },
     ],
   },
