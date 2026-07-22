@@ -134,6 +134,9 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
     trainingEintraege,
+    trainingWochenplan,
+    trainingTemplates,
+    trainingHinzufuegen,
     routinen,
     routineErledigt,
     toggleRoutineErledigt,
@@ -203,6 +206,40 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
   const montag = addDays(selectedDate, -((selectedDate.getDay() + 6) % 7));
   const wochentage = Array.from({ length: 7 }, (_, i) => addDays(montag, i));
 
+  // Ein Trainings-Tagesplan-Punkt ist entweder schon eine echte Zeile (aus
+  // trainingEintraege) oder nur virtuell aus dem Wochenplan abgeleitet. Beim
+  // Antippen wird ein virtueller Punkt erst zu einer echten Zeile (aus der
+  // Vorlage befüllt) und dann direkt ins Live-Workout geöffnet.
+  const starteTraining = useCallback(
+    async (item) => {
+      if (!item.raw.virtuell) {
+        onOpenTraining(item.raw.id);
+        return;
+      }
+      const tpl = item.raw.template;
+      const result = await trainingHinzufuegen({
+        datum: item.raw.datum,
+        art: item.raw.art,
+        name: tpl?.name || "",
+        uebungen: tpl?.uebungen || [],
+        dauerMin: tpl?.dauerMin || "",
+        distanzKm: tpl?.distanzKm || "",
+        puls: tpl?.puls || "",
+        runden: tpl?.runden || "",
+        intervallArbeitSek: tpl?.intervallArbeitSek || "",
+        intervallPauseSek: tpl?.intervallPauseSek || "",
+        rpe: "",
+        kalorien: "",
+        energielevel: "",
+        schmerzen: "",
+        bemerkungen: "",
+        erledigt: false,
+      });
+      if (result?.ok) onOpenTraining(result.eintrag.id);
+    },
+    [onOpenTraining, trainingHinzufuegen]
+  );
+
   const itemsForDate = useCallback(
     (date) => {
       const tagStr = toLocalISODate(date);
@@ -218,6 +255,8 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
         mahlzeiten,
         mahlzeitErledigt,
         trainingEintraege,
+        trainingWochenplan,
+        trainingTemplates,
       });
       return items.map((item) => {
         if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
@@ -226,7 +265,7 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
           const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
           return { ...item, doseRef, onConfirm: () => openFeedback(doseRef, item.key, "supplement") };
         }
-        if (item.kategorie === "training") return { ...item, onConfirm: () => onOpenTraining(item.raw.id) };
+        if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
         return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.uhrzeit) };
       });
     },
@@ -243,7 +282,9 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
       mahlzeitErledigt,
       toggleMahlzeitErledigt,
       trainingEintraege,
-      onOpenTraining,
+      trainingWochenplan,
+      trainingTemplates,
+      starteTraining,
     ]
   );
 

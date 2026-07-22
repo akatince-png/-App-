@@ -1,7 +1,7 @@
 import { addDays } from "./dates";
 import { INTERVALL_OPTIONEN } from "../constants";
 
-const WEEKDAY_INDEX = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
+export const WEEKDAY_INDEX = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
 
 /** Menschlich lesbare Beschreibung eines Intervalls, unabhängig vom Modus. */
 export function describeInterval(d) {

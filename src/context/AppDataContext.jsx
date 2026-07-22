@@ -10,6 +10,7 @@ import { useMealData } from "../data/useMealData";
 import { useRoutines } from "../data/useRoutines";
 import { useHydrationData } from "../data/useHydrationData";
 import { useTrainingData } from "../data/useTrainingData";
+import { useTrainingTemplates } from "../data/useTrainingTemplates";
 import { useCheckinData } from "../data/useCheckinData";
 import { useSleepData } from "../data/useSleepData";
 import { useBiomarkerData } from "../data/useBiomarkerData";
@@ -31,6 +32,7 @@ export function AppDataProvider({ children }) {
   const routineData = useRoutines(userId);
   const hydrationData = useHydrationData(userId);
   const trainingData = useTrainingData(userId);
+  const trainingTemplates = useTrainingTemplates(userId);
   const checkinData = useCheckinData(userId);
   const sleepData = useSleepData(userId);
   const biomarkerData = useBiomarkerData(userId);
@@ -60,6 +62,7 @@ export function AppDataProvider({ children }) {
     ...routineData,
     ...hydrationData,
     ...trainingData,
+    ...trainingTemplates,
     ...checkinData,
     ...sleepData,
     ...biomarkerData,

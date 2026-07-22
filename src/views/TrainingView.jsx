@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
 import Timer from "../ui/Timer";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
-import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN } from "../constants";
+import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN, WOCHENTAGE } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+
+const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
 
 const LEERE_UEBUNG = { name: "", saetze: "", wiederholungen: "", gewicht: "", pauseSekunden: "180" };
 
@@ -175,11 +177,70 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
 }
 
 // ---------------------------------------------------------------------------
+// Wochenplan: welche Trainingsart (optional mit Vorlage) an welchem Wochentag
+// ansteht — erscheint danach automatisch im Tagesplan, ohne dass etwas
+// vorab manuell für jeden Tag angelegt werden muss.
+// ---------------------------------------------------------------------------
+function WochenplanEditor({ trainingWochenplan, trainingTemplates, wochenplanSetzen, wochenplanEntfernen }) {
+  return (
+    <>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Wochenplan</div>
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: textMuted, marginBottom: 10 }}>
+          Leg fest, was an welchem Tag ansteht — erscheint danach automatisch in deinem Tagesplan.
+        </div>
+        {WOCHENTAGE.map((tag) => {
+          const zuweisung = trainingWochenplan.find((w) => w.wochentag === tag);
+          const passendeVorlagen = trainingTemplates.filter((t) => t.art === zuweisung?.art);
+          return (
+            <div key={tag} style={{ padding: "10px 0", borderBottom: `1px solid ${cardBorder}` }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>{WOCHENTAGE_VOLL[tag]}</div>
+              <div style={{ display: "flex", flexWrap: "wrap" }}>
+                <Pill label="Ruhetag" selected={!zuweisung} onClick={() => wochenplanEntfernen(tag)} />
+                {TRAININGSARTEN.map((a) => (
+                  <Pill key={a} label={a} selected={zuweisung?.art === a} onClick={() => wochenplanSetzen(tag, { art: a, templateId: null })} />
+                ))}
+              </div>
+              {zuweisung && passendeVorlagen.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", marginTop: 6 }}>
+                  {passendeVorlagen.map((t) => (
+                    <Pill
+                      key={t.id}
+                      label={`📋 ${t.name}`}
+                      selected={zuweisung.templateId === t.id}
+                      onClick={() => wochenplanSetzen(tag, { art: zuweisung.art, templateId: zuweisung.templateId === t.id ? null : t.id })}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </Card>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Formular zum Planen/Eintragen + Verlauf + Kurz-Timer.
 // ---------------------------------------------------------------------------
 export default function TrainingView({ onHome, initialSessionId, onConsumedInitialSession }) {
-  const { trainingEintraege, trainingHinzufuegen, trainingEntfernen, trainingAbschliessen } = useAppData();
+  const {
+    trainingEintraege,
+    trainingHinzufuegen,
+    trainingEntfernen,
+    trainingAbschliessen,
+    trainingTemplates,
+    templateSpeichern,
+    trainingWochenplan,
+    wochenplanSetzen,
+    wochenplanEntfernen,
+  } = useAppData();
   const [eintrag, setEintrag] = useState(leererEintrag());
+  const [wochenplanOffen, setWochenplanOffen] = useState(false);
+  const [vorlageSpeichernOffen, setVorlageSpeichernOffen] = useState(false);
+  const [vorlageName, setVorlageName] = useState("");
+  const [vorlageFehler, setVorlageFehler] = useState(null);
   const [fehler, setFehler] = useState(null);
   const [liveSessionId, setLiveSessionId] = useState(null);
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
@@ -238,6 +299,35 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     if (!erledigt && result.eintrag) setLiveSessionId(result.eintrag.id);
   };
 
+  const vorlageLaden = (tpl) => {
+    setEintrag((p) => ({
+      ...p,
+      art: tpl.art,
+      name: tpl.name,
+      uebungen: tpl.uebungen.length ? tpl.uebungen.map((u) => ({ ...u, pauseSekunden: String(u.pauseSekunden || 180) })) : [{ ...LEERE_UEBUNG }],
+      dauerMin: tpl.dauerMin ? String(tpl.dauerMin) : "",
+      distanzKm: tpl.distanzKm ? String(tpl.distanzKm) : "",
+      puls: tpl.puls ? String(tpl.puls) : "",
+      runden: tpl.runden ? String(tpl.runden) : p.runden,
+      intervallArbeitSek: tpl.intervallArbeitSek ? String(tpl.intervallArbeitSek) : p.intervallArbeitSek,
+      intervallPauseSek: tpl.intervallPauseSek ? String(tpl.intervallPauseSek) : p.intervallPauseSek,
+    }));
+  };
+
+  const vorlageSpeichern = async () => {
+    setVorlageFehler(null);
+    const payload = bauePayload(true);
+    const result = await templateSpeichern({ ...payload, name: vorlageName });
+    if (!result?.ok) {
+      setVorlageFehler(result?.error || "Speichern fehlgeschlagen.");
+      return;
+    }
+    setVorlageName("");
+    setVorlageSpeichernOffen(false);
+  };
+
+  const vorlagenFuerArt = trainingTemplates.filter((t) => t.art === eintrag.art);
+
   return (
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -250,6 +340,21 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           ⌂
         </button>
       </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <PrimaryButton variant="ghost" onClick={() => setWochenplanOffen((o) => !o)}>
+          {wochenplanOffen ? "Wochenplan schließen" : "📅 Wochenplan bearbeiten"}
+        </PrimaryButton>
+      </div>
+
+      {wochenplanOffen && (
+        <WochenplanEditor
+          trainingWochenplan={trainingWochenplan}
+          trainingTemplates={trainingTemplates}
+          wochenplanSetzen={wochenplanSetzen}
+          wochenplanEntfernen={wochenplanEntfernen}
+        />
+      )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Nur ein Timer? (ohne Eintrag)</div>
       <Card style={{ marginBottom: 14 }}>
@@ -284,6 +389,17 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
             <Pill key={a} label={a} selected={eintrag.art === a} onClick={() => setFeld("art", a)} />
           ))}
         </div>
+
+        {eintrag.art && vorlagenFuerArt.length > 0 && (
+          <>
+            <Label>Vorlage laden (optional)</Label>
+            <div style={{ display: "flex", flexWrap: "wrap" }}>
+              {vorlagenFuerArt.map((t) => (
+                <Pill key={t.id} label={`📋 ${t.name}`} onClick={() => vorlageLaden(t)} />
+              ))}
+            </div>
+          </>
+        )}
 
         {eintrag.art && (
           <>
@@ -442,6 +558,44 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 </PrimaryButton>
               </div>
             </div>
+
+            {!vorlageSpeichernOffen ? (
+              <button
+                onClick={() => setVorlageSpeichernOffen(true)}
+                style={{
+                  marginTop: 10,
+                  width: "100%",
+                  padding: "9px",
+                  borderRadius: 10,
+                  border: `1px dashed ${cardBorder}`,
+                  background: "transparent",
+                  color: textMuted,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                📋 Als Vorlage speichern (zum Wiederverwenden)
+              </button>
+            ) : (
+              <div style={{ marginTop: 10 }}>
+                <Label>Name der Vorlage</Label>
+                <TextInput value={vorlageName} onChange={setVorlageName} placeholder="z. B. Brusttraining" />
+                {vorlageFehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{vorlageFehler}</div>}
+                <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <PrimaryButton onClick={vorlageSpeichern} disabled={!vorlageName.trim()}>
+                      Speichern
+                    </PrimaryButton>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <PrimaryButton variant="ghost" onClick={() => setVorlageSpeichernOffen(false)}>
+                      Abbrechen
+                    </PrimaryButton>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </Card>

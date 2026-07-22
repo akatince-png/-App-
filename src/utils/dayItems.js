@@ -1,6 +1,9 @@
 import { keyOf, sameDay, toLocalISODate } from "./dates";
 import { accent, accentDark, accentSoft, blue } from "../ui/theme";
 
+// getDay()-indexiert (0 = Sonntag), passend zu JS' Date#getDay().
+const GETDAY_TO_LABEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
 // Feste Tageszeiten bekommen eine repräsentative Stunde, damit sie sich
 // sinnvoll neben exakten Uhrzeiten (Peptide/Medikamente) einsortieren.
 export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
@@ -45,6 +48,8 @@ export function buildDayItems(
     mahlzeiten,
     mahlzeitErledigt,
     trainingEintraege = [],
+    trainingWochenplan = [],
+    trainingTemplates = [],
   }
 ) {
   const tagStr = toLocalISODate(date);
@@ -118,21 +123,42 @@ export function buildDayItems(
     });
   });
 
-  trainingEintraege
-    .filter((t) => t.datum === tagStr)
-    .forEach((t) => {
+  const heutigeTrainings = trainingEintraege.filter((t) => t.datum === tagStr);
+  heutigeTrainings.forEach((t) => {
+    items.push({
+      kategorie: "training",
+      key: `t-${t.id}`,
+      refId: t.id,
+      hour: null,
+      uhrzeit: "",
+      name: t.name ? `${t.art} · ${t.name}` : t.art,
+      detail: trainingDetail(t),
+      done: !!t.erledigt,
+      raw: t,
+    });
+  });
+
+  // Noch kein echter Eintrag für heute? Dann zeigt der Wochenplan (falls für
+  // diesen Wochentag etwas hinterlegt ist) ein virtuelles, noch nicht
+  // gespeichertes Training — wird erst beim Antippen zu einer echten Zeile.
+  if (heutigeTrainings.length === 0) {
+    const wochentagLabel = GETDAY_TO_LABEL[date.getDay()];
+    const zuweisung = trainingWochenplan.find((w) => w.wochentag === wochentagLabel);
+    if (zuweisung) {
+      const template = trainingTemplates.find((tpl) => tpl.id === zuweisung.templateId) || null;
       items.push({
         kategorie: "training",
-        key: `t-${t.id}`,
-        refId: t.id,
+        key: `t-virtual-${tagStr}`,
+        refId: null,
         hour: null,
         uhrzeit: "",
-        name: t.name ? `${t.art} · ${t.name}` : t.art,
-        detail: trainingDetail(t),
-        done: !!t.erledigt,
-        raw: t,
+        name: template ? `${zuweisung.art} · ${template.name}` : zuweisung.art,
+        detail: template ? trainingDetail(template) : "Laut Wochenplan",
+        done: false,
+        raw: { virtuell: true, datum: tagStr, art: zuweisung.art, template },
       });
-    });
+    }
+  }
 
   items.sort((a, b) => {
     const ha = a.hour ?? "99";

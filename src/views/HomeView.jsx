@@ -18,6 +18,8 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
     mahlzeiten,
     mahlzeitErledigt,
     trainingEintraege,
+    trainingWochenplan,
+    trainingTemplates,
   } = useAppData();
 
   const today = new Date();
@@ -34,6 +36,8 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
     mahlzeiten,
     mahlzeitErledigt,
     trainingEintraege,
+    trainingWochenplan,
+    trainingTemplates,
   });
   const erledigtCount = heuteItems.filter((i) => i.done).length;
   const offeneItems = heuteItems.filter((i) => !i.done);
