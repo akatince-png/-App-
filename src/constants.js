@@ -104,6 +104,10 @@ export const SCHLAFQUALITAET_OPTIONEN = ["Sehr gut", "Gut", "Mittel", "Schlecht"
 
 export const WEITERE_BIOMARKER = ["Testosteron", "Cortisol", "Östradiol", "SHBG", "Vitamin D", "CRP", "HbA1c"];
 
+export const TRAININGSARTEN = ["Krafttraining", "Cardio", "HIIT / Bodyweight", "Sonstiges"];
+export const TRAINING_ENERGIELEVEL_OPTIONEN = ["Niedrig", "Mittel", "Hoch"];
+export const SCHMERZEN_OPTIONEN = ["Keine", "Leicht", "Stark"];
+
 export const ENERGIELEVEL_OPTIONEN = ["😩", "😐", "🙂", "⚡"];
 
 export const MESSWERT_DEFS = [
