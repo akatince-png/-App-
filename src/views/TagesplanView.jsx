@@ -219,6 +219,7 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
       const tpl = item.raw.template;
       const result = await trainingHinzufuegen({
         datum: item.raw.datum,
+        uhrzeit: item.raw.uhrzeit || "",
         art: item.raw.art,
         name: tpl?.name || "",
         uebungen: tpl?.uebungen || [],

@@ -5,6 +5,7 @@ function rowToEintrag(r) {
   return {
     id: r.id,
     datum: r.datum,
+    uhrzeit: r.uhrzeit || "",
     art: r.art,
     name: r.name || "",
     dauerMin: r.dauer_min,
@@ -50,6 +51,7 @@ export function useTrainingData(userId) {
       const row = {
         user_id: userId,
         datum: eintrag.datum,
+        uhrzeit: eintrag.uhrzeit || null,
         art: eintrag.art,
         name: eintrag.name || "",
         dauer_min: eintrag.dauerMin ? Number(eintrag.dauerMin) : null,

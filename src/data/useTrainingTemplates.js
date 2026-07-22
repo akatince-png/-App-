@@ -6,6 +6,7 @@ function rowToTemplate(r) {
     id: r.id,
     name: r.name,
     art: r.art,
+    uhrzeit: r.uhrzeit || "",
     uebungen: r.uebungen || [],
     dauerMin: r.dauer_min,
     distanzKm: r.distanz_km,
@@ -17,7 +18,7 @@ function rowToTemplate(r) {
 }
 
 function rowToWochenplan(r) {
-  return { id: r.id, wochentag: r.wochentag, art: r.art, templateId: r.template_id };
+  return { id: r.id, wochentag: r.wochentag, art: r.art, uhrzeit: r.uhrzeit || "", templateId: r.template_id };
 }
 
 export function useTrainingTemplates(userId) {
@@ -48,6 +49,7 @@ export function useTrainingTemplates(userId) {
         user_id: userId,
         name: vorlage.name.trim(),
         art: vorlage.art,
+        uhrzeit: vorlage.uhrzeit || null,
         uebungen: vorlage.uebungen || [],
         dauer_min: vorlage.dauerMin ? Number(vorlage.dauerMin) : null,
         distanz_km: vorlage.distanzKm ? Number(vorlage.distanzKm) : null,
@@ -75,10 +77,10 @@ export function useTrainingTemplates(userId) {
   }, []);
 
   const wochenplanSetzen = useCallback(
-    async (wochentag, { art, templateId }) => {
+    async (wochentag, { art, templateId, uhrzeit }) => {
       const { data, error } = await supabase
         .from("training_wochenplan")
-        .upsert({ user_id: userId, wochentag, art, template_id: templateId || null }, { onConflict: "user_id,wochentag" })
+        .upsert({ user_id: userId, wochentag, art, uhrzeit: uhrzeit || null, template_id: templateId || null }, { onConflict: "user_id,wochentag" })
         .select()
         .single();
       if (error) {

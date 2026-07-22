@@ -12,6 +12,7 @@ const LEERE_UEBUNG = { name: "", saetze: "", wiederholungen: "", gewicht: "", pa
 function leererEintrag() {
   return {
     datum: new Date().toISOString().slice(0, 10),
+    uhrzeit: "08:00",
     art: "",
     name: "",
     dauerMin: "",
@@ -198,7 +199,12 @@ function WochenplanEditor({ trainingWochenplan, trainingTemplates, wochenplanSet
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 <Pill label="Ruhetag" selected={!zuweisung} onClick={() => wochenplanEntfernen(tag)} />
                 {TRAININGSARTEN.map((a) => (
-                  <Pill key={a} label={a} selected={zuweisung?.art === a} onClick={() => wochenplanSetzen(tag, { art: a, templateId: null })} />
+                  <Pill
+                    key={a}
+                    label={a}
+                    selected={zuweisung?.art === a}
+                    onClick={() => wochenplanSetzen(tag, { art: a, templateId: null, uhrzeit: zuweisung?.uhrzeit || "08:00" })}
+                  />
                 ))}
               </div>
               {zuweisung && passendeVorlagen.length > 0 && (
@@ -208,9 +214,24 @@ function WochenplanEditor({ trainingWochenplan, trainingTemplates, wochenplanSet
                       key={t.id}
                       label={`📋 ${t.name}`}
                       selected={zuweisung.templateId === t.id}
-                      onClick={() => wochenplanSetzen(tag, { art: zuweisung.art, templateId: zuweisung.templateId === t.id ? null : t.id })}
+                      onClick={() =>
+                        wochenplanSetzen(tag, {
+                          art: zuweisung.art,
+                          templateId: zuweisung.templateId === t.id ? null : t.id,
+                          uhrzeit: zuweisung.uhrzeit,
+                        })
+                      }
                     />
                   ))}
+                </div>
+              )}
+              {zuweisung && (
+                <div style={{ marginTop: 8, maxWidth: 160 }}>
+                  <TextInput
+                    type="time"
+                    value={zuweisung.uhrzeit || "08:00"}
+                    onChange={(v) => wochenplanSetzen(tag, { art: zuweisung.art, templateId: zuweisung.templateId, uhrzeit: v })}
+                  />
                 </div>
               )}
             </div>
@@ -304,6 +325,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       ...p,
       art: tpl.art,
       name: tpl.name,
+      uhrzeit: tpl.uhrzeit || p.uhrzeit,
       uebungen: tpl.uebungen.length ? tpl.uebungen.map((u) => ({ ...u, pauseSekunden: String(u.pauseSekunden || 180) })) : [{ ...LEERE_UEBUNG }],
       dauerMin: tpl.dauerMin ? String(tpl.dauerMin) : "",
       distanzKm: tpl.distanzKm ? String(tpl.distanzKm) : "",
@@ -380,8 +402,16 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Training eintragen</div>
       <Card style={{ marginBottom: 14 }}>
-        <Label>Datum</Label>
-        <TextInput type="date" value={eintrag.datum} onChange={(v) => setFeld("datum", v)} />
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <Label>Datum</Label>
+            <TextInput type="date" value={eintrag.datum} onChange={(v) => setFeld("datum", v)} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Label>Uhrzeit</Label>
+            <TextInput type="time" value={eintrag.uhrzeit} onChange={(v) => setFeld("uhrzeit", v)} />
+          </div>
+        </div>
 
         <Label>Art</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
@@ -624,7 +654,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                     {e.name && <span style={{ fontWeight: 500 }}> · {e.name}</span>}
                   </div>
                   <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>
-                    {e.datum} · {zusammenfassung(e)}
+                    {e.datum}
+                    {e.uhrzeit && ` · ${e.uhrzeit}`} · {zusammenfassung(e)}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>

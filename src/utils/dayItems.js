@@ -129,8 +129,8 @@ export function buildDayItems(
       kategorie: "training",
       key: `t-${t.id}`,
       refId: t.id,
-      hour: null,
-      uhrzeit: "",
+      hour: t.uhrzeit ? t.uhrzeit.slice(0, 2) : null,
+      uhrzeit: t.uhrzeit || "",
       name: t.name ? `${t.art} · ${t.name}` : t.art,
       detail: trainingDetail(t),
       done: !!t.erledigt,
@@ -146,16 +146,17 @@ export function buildDayItems(
     const zuweisung = trainingWochenplan.find((w) => w.wochentag === wochentagLabel);
     if (zuweisung) {
       const template = trainingTemplates.find((tpl) => tpl.id === zuweisung.templateId) || null;
+      const uhrzeit = zuweisung.uhrzeit || template?.uhrzeit || "";
       items.push({
         kategorie: "training",
         key: `t-virtual-${tagStr}`,
         refId: null,
-        hour: null,
-        uhrzeit: "",
+        hour: uhrzeit ? uhrzeit.slice(0, 2) : null,
+        uhrzeit,
         name: template ? `${zuweisung.art} · ${template.name}` : zuweisung.art,
         detail: template ? trainingDetail(template) : "Laut Wochenplan",
         done: false,
-        raw: { virtuell: true, datum: tagStr, art: zuweisung.art, template },
+        raw: { virtuell: true, datum: tagStr, art: zuweisung.art, template, uhrzeit },
       });
     }
   }
