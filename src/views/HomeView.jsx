@@ -104,6 +104,11 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
             borderBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? "none" : `1px solid ${cardBorder}`,
           }}
         >
+          {tier.title && (
+            <div style={{ fontSize: 12, fontWeight: 800, color: textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>
+              {tier.title}
+            </div>
+          )}
           <div
             style={{
               display: "grid",

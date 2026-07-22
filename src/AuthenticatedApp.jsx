@@ -14,6 +14,7 @@ import SchlafView from "./views/SchlafView";
 import TrainingView from "./views/TrainingView";
 import NutritionView from "./views/NutritionView";
 import BlutzuckerView from "./views/BlutzuckerView";
+import ProtokolleView from "./views/ProtokolleView";
 
 function LoadingScreen() {
   return (
@@ -62,6 +63,10 @@ export default function AuthenticatedApp() {
 
   if (view === "tagesplan") {
     return <TagesplanView onHome={() => setView("home")} />;
+  }
+
+  if (view === "protokolle") {
+    return <ProtokolleView onHome={() => setView("home")} />;
   }
 
   if (view === "peptide") {

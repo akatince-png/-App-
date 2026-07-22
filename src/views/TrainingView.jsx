@@ -6,7 +6,7 @@ export default function TrainingView({ onHome }) {
   return (
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🏋️ Trainingsplan</div>
+        <div style={{ fontSize: 22, fontWeight: 800 }}>🏋️ Training</div>
         <button
           onClick={onHome}
           style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
