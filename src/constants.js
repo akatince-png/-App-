@@ -179,12 +179,21 @@ export const PIE_COLORS = ["#0FB8A3", "#5B9BF0", "#F5A623", "#F2596A", "#9B7EDE"
 // (Tagesplan zum Abhaken, Protokolle zum Nachschauen der Details), darunter
 // die einzelnen Protokoll-Tools, dann Auswertung/Austausch, unten Verwaltung.
 // HomeView rendert jede Gruppe mit eigenem Abstand und optionaler Überschrift.
+//
+// Farben bewusst auf 4 harmonische Familien reduziert (statt einer Kachel
+// pro Regenbogenfarbe): Smaragd (Marke/Substanzen), Schiefer-Blau (klinisch/
+// Analyse), warmes Terracotta (Ernährung/Energie), Pflaume (ruhig/Referenz).
+const F_EMERALD = ["#14917A", "#0A5F4F"];
+const F_SLATE = ["#5B7DAE", "#3A5A87"];
+const F_WARM = ["#C98A4A", "#A96B2E"];
+const F_PLUM = ["#9B85B8", "#786198"];
+
 export const DASHBOARD_TIERS = [
   {
     id: "haupt",
     kacheln: [
-      { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: ["#F2596A", "#C9394F"] },
-      { id: "protokolle", label: "Protokolle", desc: "Details zum Nachschauen", icon: "📋", grad: ["#3B6FD1", "#274F9E"] },
+      { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: F_EMERALD },
+      { id: "protokolle", label: "Protokolle", desc: "Details zum Nachschauen", icon: "📋", grad: F_SLATE },
     ],
   },
   {
@@ -193,34 +202,34 @@ export const DASHBOARD_TIERS = [
     kacheln: [
       // Grundlagen zuerst (Schlaf, Trinken, Ernährung, Training) — bevor
       // Substanzen dazukommen, sollten diese Basics im Griff sein.
-      { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: ["#7C8FE0", "#5567B8"] },
-      { id: "hydration", label: "Hydration", desc: "Trinkmenge tracken", icon: "💧", grad: ["#4FC3E0", "#2E9FBF"] },
-      { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: ["#6FBF6F", "#3F9E4D"] },
-      { id: "training", label: "Training", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: ["#FF9E5E", "#E1762E"] },
+      { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: F_PLUM },
+      { id: "hydration", label: "Hydration", desc: "Trinkmenge tracken", icon: "💧", grad: F_EMERALD },
+      { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: F_WARM },
+      { id: "training", label: "Training", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: F_WARM },
       // Danach Substanzen, aufsteigend nach Eingriffstiefe.
-      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Rezepte", icon: "🌿", grad: ["#4FA3D1", "#2E7BAA"] },
-      { id: "medikamente", label: "Medikamente", desc: "Hormone, Blutdruck & mehr", icon: "💊", grad: ["#5B9BF0", "#3B6FD1"] },
-      { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "🧬", grad: ["#0FB8A3", "#0A9384"] },
+      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Rezepte", icon: "🌿", grad: F_WARM },
+      { id: "medikamente", label: "Medikamente", desc: "Hormone, Blutdruck & mehr", icon: "💊", grad: F_SLATE },
+      { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "🧬", grad: F_EMERALD },
       // Monitoring/Referenz am Ende.
-      { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: ["#E0708C", "#C24A6B"] },
-      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🩺", grad: ["#9B7EDE", "#6E4FBF"] },
+      { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: F_SLATE },
+      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🩺", grad: F_PLUM },
     ],
   },
   {
     id: "auswertung",
     title: "Auswertung",
     kacheln: [
-      { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: ["#5B9BF0", "#3B6FD1"] },
-      { id: "community", label: "Community", desc: "Anonyme Insights", icon: "🌍", grad: ["#4FBF8F", "#2F9E71"] },
+      { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: F_SLATE },
+      { id: "community", label: "Community", desc: "Anonyme Insights", icon: "🌍", grad: F_EMERALD },
     ],
   },
   {
     id: "verwaltung",
     title: "Verwaltung",
     kacheln: [
-      { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: ["#F5A623", "#D98A0F"] },
-      { id: "lexikon", label: "Lexikon", desc: "Fragen zu Peptiden", icon: "📚", grad: ["#E0708C", "#C24A6B"] },
-      { id: "mehr", label: "Mehr", desc: "Datenschutz & Einstellungen", icon: "⚙️", grad: ["#7C8B87", "#5A6864"] },
+      { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: F_WARM },
+      { id: "lexikon", label: "Lexikon", desc: "Fragen zu Peptiden", icon: "📚", grad: F_PLUM },
+      { id: "mehr", label: "Mehr", desc: "Datenschutz & Einstellungen", icon: "⚙️", grad: ["#8A9089", "#6B716A"] },
     ],
   },
 ];
