@@ -9,12 +9,14 @@ import TagesplanView from "./views/TagesplanView";
 import ProtocolFormView from "./views/ProtocolFormView";
 import PlanView from "./views/plan/PlanView";
 import PeptidView from "./views/PeptidView";
-import HormonView from "./views/HormonView";
+import MedikamenteView from "./views/MedikamenteView";
 import SchlafView from "./views/SchlafView";
 import TrainingView from "./views/TrainingView";
 import NutritionView from "./views/NutritionView";
 import BlutzuckerView from "./views/BlutzuckerView";
+import HydrationView from "./views/HydrationView";
 import ProtokolleView from "./views/ProtokolleView";
+import WelcomeView from "./views/WelcomeView";
 
 function LoadingScreen() {
   return (
@@ -28,6 +30,7 @@ export default function AuthenticatedApp() {
   const { loading, onboardingComplete, completeOnboarding } = useAppData();
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | 'supplemente' | ...
   const [step, setStep] = useState(0);
+  const [welcomeSeen, setWelcomeSeen] = useState(false);
 
   useEffect(() => {
     if (!loading && view === null) {
@@ -41,6 +44,9 @@ export default function AuthenticatedApp() {
   }
 
   if (view === "form") {
+    if (!onboardingComplete && !welcomeSeen) {
+      return <WelcomeView onDone={() => setWelcomeSeen(true)} />;
+    }
     return (
       <ProtocolFormView
         step={step}
@@ -73,8 +79,8 @@ export default function AuthenticatedApp() {
     return <PeptidView onHome={() => setView("home")} />;
   }
 
-  if (view === "hormone") {
-    return <HormonView onHome={() => setView("home")} />;
+  if (view === "medikamente") {
+    return <MedikamenteView onHome={() => setView("home")} />;
   }
 
   if (view === "schlaf") {
@@ -91,6 +97,10 @@ export default function AuthenticatedApp() {
 
   if (view === "blutzucker") {
     return <BlutzuckerView onHome={() => setView("home")} />;
+  }
+
+  if (view === "hydration") {
+    return <HydrationView onHome={() => setView("home")} />;
   }
 
   if (view === "statistik" || view === "profil" || view === "community" || view === "archiv" || view === "mehr") {

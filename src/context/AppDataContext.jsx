@@ -6,6 +6,7 @@ import { usePeptideLogs } from "../data/usePeptideLogs";
 import { useHormoneData } from "../data/useHormoneData";
 import { useSupplementData } from "../data/useSupplementData";
 import { useDrinkRecipes } from "../data/useDrinkRecipes";
+import { useMealData } from "../data/useMealData";
 import { useCheckinData } from "../data/useCheckinData";
 import { useSleepData } from "../data/useSleepData";
 import { useBiomarkerData } from "../data/useBiomarkerData";
@@ -23,6 +24,7 @@ export function AppDataProvider({ children }) {
   const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer);
   const supplementData = useSupplementData(userId);
   const drinkData = useDrinkRecipes(userId);
+  const mealData = useMealData(userId);
   const checkinData = useCheckinData(userId);
   const sleepData = useSleepData(userId);
   const biomarkerData = useBiomarkerData(userId);
@@ -43,6 +45,7 @@ export function AppDataProvider({ children }) {
     hormonPlan: hormoneData.hormonPlan,
     ...supplementData,
     ...drinkData,
+    ...mealData,
     ...checkinData,
     ...sleepData,
     ...biomarkerData,

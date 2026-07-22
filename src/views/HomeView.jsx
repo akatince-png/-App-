@@ -9,6 +9,8 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
   const { plan, peptide, dauer, erledigt, supplemente, supplementErledigt, hormonPlan, hormonErledigt } = useAppData();
 
   const today = new Date();
+  const stunde = today.getHours();
+  const gruss = stunde < 12 ? "Guten Morgen" : stunde < 18 ? "Guten Tag" : "Guten Abend";
   const heuteDosen = plan.filter((d) => sameDay(d.date, today));
 
   const tagStr = toLocalISODate(today);
@@ -31,7 +33,7 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>Willkommen zurück 👋</div>
+          <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss} 👋</div>
           <div style={{ fontSize: 22, fontWeight: 800 }}>MyProtocols</div>
         </div>
         <div

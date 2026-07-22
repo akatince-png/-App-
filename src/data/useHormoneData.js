@@ -6,6 +6,7 @@ import { activeDoseDays } from "../utils/schedule";
 function rowToHormonDosierung(row) {
   return {
     menge: row.menge || "",
+    kategorie: row.kategorie || "Hormone",
     intervallTyp: row.intervall_mode || "fixed",
     intervallDays: row.intervall_days || 7,
     customDays: row.custom_days != null ? String(row.custom_days) : "",
@@ -25,6 +26,7 @@ function toRow(userId, neuesHormon) {
   return {
     user_id: userId,
     menge: neuesHormon.menge,
+    kategorie: neuesHormon.kategorie || "Hormone",
     intervall_mode: neuesHormon.intervallTyp || "fixed",
     intervall_days: !isCustom && !isCycle && !isWeekdays ? neuesHormon.intervallDays : null,
     custom_days: isCustom && neuesHormon.customDays ? Number(neuesHormon.customDays) : null,
@@ -92,6 +94,7 @@ export function useHormoneData(userId, startdatum, dauer) {
         ...prev,
         [name]: {
           menge: neuesHormon.menge,
+          kategorie: neuesHormon.kategorie || "Hormone",
           intervallTyp: neuesHormon.intervallTyp || "fixed",
           intervallDays: neuesHormon.intervallDays,
           customDays: neuesHormon.customDays,
@@ -136,6 +139,15 @@ export function useHormoneData(userId, startdatum, dauer) {
     [userId]
   );
 
+  const setHormonKategorie = useCallback(
+    async (name, kategorie) => {
+      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], kategorie } }));
+      const { error } = await supabase.from("hormones").update({ kategorie }).eq("user_id", userId).eq("name", name);
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
   const toggleHormonErledigt = useCallback(
     async (datumStr, name, uhrzeit) => {
       const k = `${datumStr}__${name}__${uhrzeit}`;
@@ -175,6 +187,7 @@ export function useHormoneData(userId, startdatum, dauer) {
     hormonHinzufuegen,
     hormonEntfernen,
     setHormonFoto,
+    setHormonKategorie,
     hormonErledigt,
     toggleHormonErledigt,
     hormonPlan,

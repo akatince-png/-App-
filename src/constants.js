@@ -54,6 +54,10 @@ export const PEPTIDE_OPTIONEN = [
 // Nasenspray oder zum Schlucken (z. B. BPC-157 oral).
 export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Nasenspray"];
 
+// Kategorien innerhalb von "Medikamente" — fasst Hormone/Off-Label mit
+// anderen verschreibungspflichtigen/rezeptfreien Medikamenten zusammen.
+export const MEDIKAMENTE_KATEGORIEN = ["Hormone", "Blutdruck", "Diabetes", "Cholesterin", "Schmerzmittel", "Sonstige"];
+
 // Feste Intervall-Presets: mode ist immer "fixed", days die Anzahl Tage zwischen zwei Dosen.
 export const INTERVALL_OPTIONEN = [
   { label: "Täglich", mode: "fixed", days: 1 },
@@ -187,14 +191,19 @@ export const DASHBOARD_TIERS = [
     id: "tracker",
     title: "Protokolle",
     kacheln: [
-      { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "💉", grad: ["#0FB8A3", "#0A9384"] },
-      { id: "hormone", label: "Hormone / Off-Label", desc: "Dein Hormon-Protokoll", icon: "⚗️", grad: ["#5B9BF0", "#3B6FD1"] },
-      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Rezepte", icon: "💊", grad: ["#4FA3D1", "#2E7BAA"] },
+      // Grundlagen zuerst (Schlaf, Trinken, Ernährung, Training) — bevor
+      // Substanzen dazukommen, sollten diese Basics im Griff sein.
       { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: ["#7C8FE0", "#5567B8"] },
-      { id: "training", label: "Training", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: ["#FF9E5E", "#E1762E"] },
+      { id: "hydration", label: "Hydration", desc: "Trinkmenge tracken", icon: "💧", grad: ["#4FC3E0", "#2E9FBF"] },
       { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: ["#6FBF6F", "#3F9E4D"] },
+      { id: "training", label: "Training", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: ["#FF9E5E", "#E1762E"] },
+      // Danach Substanzen, aufsteigend nach Eingriffstiefe.
+      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Rezepte", icon: "🌿", grad: ["#4FA3D1", "#2E7BAA"] },
+      { id: "medikamente", label: "Medikamente", desc: "Hormone, Blutdruck & mehr", icon: "💊", grad: ["#5B9BF0", "#3B6FD1"] },
+      { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "🧬", grad: ["#0FB8A3", "#0A9384"] },
+      // Monitoring/Referenz am Ende.
       { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: ["#E0708C", "#C24A6B"] },
-      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🧬", grad: ["#9B7EDE", "#6E4FBF"] },
+      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🩺", grad: ["#9B7EDE", "#6E4FBF"] },
     ],
   },
   {

@@ -9,6 +9,7 @@ const KATEGORIE = {
   peptid: { bg: "#E3FBF6", text: "#0A9384", dot: "#0FB8A3", label: "Peptid" },
   hormon: { bg: "#F1EAFB", text: "#6E4FBF", dot: "#9B7EDE", label: "Hormon" },
   supplement: { bg: "#EAF2FF", text: "#2E7BAA", dot: "#4FA3D1", label: "Supplement" },
+  mahlzeit: { bg: "#EAF7E9", text: "#3F9E4D", dot: "#6FBF6F", label: "Mahlzeit" },
 };
 
 // Feste Tageszeiten bekommen eine repräsentative Stunde, damit sie sich sinnvoll
@@ -32,6 +33,9 @@ export default function TagesplanView({ onHome }) {
     supplemente,
     supplementErledigt,
     toggleSupplementErledigt,
+    mahlzeiten,
+    mahlzeitErledigt,
+    toggleMahlzeitErledigt,
   } = useAppData();
 
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
@@ -115,6 +119,22 @@ export default function TagesplanView({ onHome }) {
       });
     });
 
+    mahlzeiten.forEach((m) => {
+      m.tageszeiten.forEach((zeit) => {
+        const k = `${tagStr}__${m.id}__${zeit}`;
+        items.push({
+          kategorie: "mahlzeit",
+          key: `m-${k}`,
+          hour: TAGESZEIT_STUNDE[zeit] || null,
+          uhrzeit: zeit,
+          name: m.name,
+          detail: m.hinweis,
+          done: !!mahlzeitErledigt[k],
+          onConfirm: () => toggleMahlzeitErledigt(tagStr, m.id, zeit),
+        });
+      });
+    });
+
     items.sort((a, b) => {
       const ha = a.hour ?? "99";
       const hb = b.hour ?? "99";
@@ -123,7 +143,19 @@ export default function TagesplanView({ onHome }) {
     });
       return items;
     },
-    [plan, erledigt, hormonPlan, hormonErledigt, toggleHormonErledigt, supplemente, supplementErledigt, toggleSupplementErledigt]
+    [
+      plan,
+      erledigt,
+      hormonPlan,
+      hormonErledigt,
+      toggleHormonErledigt,
+      supplemente,
+      supplementErledigt,
+      toggleSupplementErledigt,
+      mahlzeiten,
+      mahlzeitErledigt,
+      toggleMahlzeitErledigt,
+    ]
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
@@ -338,7 +370,7 @@ export default function TagesplanView({ onHome }) {
           {wochentage.map((d) => {
             const items = itemsForDate(d);
             const done = items.filter((i) => i.done).length;
-            const perKategorie = ["peptid", "hormon", "supplement"].map((kat) => ({
+            const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit"].map((kat) => ({
               kat,
               count: items.filter((i) => i.kategorie === kat).length,
             }));
