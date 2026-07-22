@@ -2,7 +2,13 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
-import { NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN, WOCHENTAGE } from "../constants";
+import {
+  NEBENWIRKUNGEN_OPTIONEN,
+  STAERKE_OPTIONEN,
+  VERTRAEGLICHKEIT_OPTIONEN,
+  WIRKUNG_OPTIONEN,
+  WOCHENTAGE,
+} from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE } from "../utils/dayItems";
@@ -12,45 +18,86 @@ function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
 }
 
-function FeedbackPanel({ item, draftFeedback, setDraftFeedback, toggleDraftNebenwirkung, onSkip, onSave }) {
+const FEEDBACK_HEADER = {
+  peptid: "Wie war es seit der letzten Injektion?",
+  hormon: "Wie war die Einnahme?",
+  supplement: "Wie war's?",
+};
+
+function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggleDraftNebenwirkung, onSkip, onSave }) {
   return (
     <div style={{ marginTop: 14, padding: 16, borderRadius: 16, background: accentSoft, border: `1px solid ${cardBorder}` }}>
-      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Wie war es seit der letzten Injektion?</div>
+      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{FEEDBACK_HEADER[kategorie]}</div>
+
+      {kategorie === "hormon" && (
+        <>
+          <Label>Verträglichkeit</Label>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {VERTRAEGLICHKEIT_OPTIONEN.map((v) => (
+              <Pill key={v} label={v} selected={draftFeedback.vertraeglichkeit === v} onClick={() => setDraftFeedback((p) => ({ ...p, vertraeglichkeit: v }))} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {(kategorie === "hormon" || kategorie === "supplement") && (
+        <>
+          <Label>Wirkung bemerkt?</Label>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {WIRKUNG_OPTIONEN.map((w) => (
+              <Pill key={w} label={w} selected={draftFeedback.wirkung === w} onClick={() => setDraftFeedback((p) => ({ ...p, wirkung: w }))} />
+            ))}
+          </div>
+        </>
+      )}
+
       <Label>Welche Nebenwirkungen hattest du?</Label>
       <div style={{ display: "flex", flexWrap: "wrap" }}>
         {NEBENWIRKUNGEN_OPTIONEN.map((n) => (
           <Pill key={n} label={n} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
         ))}
       </div>
-      <Label>Wie stark?</Label>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {STAERKE_OPTIONEN.map((s) => (
-          <Pill key={s} label={s} selected={draftFeedback.staerke === s} onClick={() => setDraftFeedback((p) => ({ ...p, staerke: s }))} />
-        ))}
-      </div>
+
+      {kategorie === "peptid" && (
+        <>
+          <Label>Wie stark?</Label>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {STAERKE_OPTIONEN.map((s) => (
+              <Pill key={s} label={s} selected={draftFeedback.staerke === s} onClick={() => setDraftFeedback((p) => ({ ...p, staerke: s }))} />
+            ))}
+          </div>
+        </>
+      )}
+
       <Label>Notizen (optional)</Label>
       <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Hier kannst du alles aufschreiben..." />
-      <Label>Foto (optional) — z. B. Rötung oder Knubbel an der Einstichstelle</Label>
-      <input
-        type="file"
-        accept="image/*"
-        id={`tagesplan-nebenwirkung-foto-${item.key}`}
-        style={{ display: "none" }}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          setDraftFeedback((p) => ({ ...p, fotoFile: file, fotoPreview: URL.createObjectURL(file) }));
-        }}
-      />
-      <label
-        htmlFor={`tagesplan-nebenwirkung-foto-${item.key}`}
-        style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
-      >
-        📷 Foto aufnehmen
-      </label>
-      {draftFeedback.fotoPreview && (
-        <img src={draftFeedback.fotoPreview} alt="Nebenwirkung" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, marginTop: 6 }} />
+
+      {kategorie === "peptid" && (
+        <>
+          <Label>Foto (optional) — z. B. Rötung oder Knubbel an der Einstichstelle</Label>
+          <input
+            type="file"
+            accept="image/*"
+            id={`tagesplan-nebenwirkung-foto-${item.key}`}
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setDraftFeedback((p) => ({ ...p, fotoFile: file, fotoPreview: URL.createObjectURL(file) }));
+            }}
+          />
+          <label
+            htmlFor={`tagesplan-nebenwirkung-foto-${item.key}`}
+            style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
+          >
+            📷 Foto aufnehmen
+          </label>
+          {draftFeedback.fotoPreview && (
+            <img src={draftFeedback.fotoPreview} alt="Nebenwirkung" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, marginTop: 6 }} />
+          )}
+        </>
       )}
+
       <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
         <div style={{ flex: 1 }}>
           <PrimaryButton onClick={onSkip} variant="ghost">
@@ -77,10 +124,12 @@ export default function TagesplanView({ onHome }) {
     hormonPlan,
     hormonErledigt,
     hormonDosierung,
-    toggleHormonErledigt,
+    saveHormonFeedback,
+    skipHormonFeedback,
     supplemente,
     supplementErledigt,
-    toggleSupplementErledigt,
+    saveSupplementFeedback,
+    skipSupplementFeedback,
     mahlzeiten,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
@@ -92,17 +141,27 @@ export default function TagesplanView({ onHome }) {
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [feedbackOpen, setFeedbackOpen] = useState(null);
-  const [draftFeedback, setDraftFeedback] = useState({ nebenwirkungen: [], staerke: "Keine", notizen: "", fotoPreview: null, fotoFile: null });
+  const [feedbackKategorie, setFeedbackKategorie] = useState(null);
+  const [draftFeedback, setDraftFeedback] = useState({
+    nebenwirkungen: [],
+    staerke: "Keine",
+    vertraeglichkeit: "Gut",
+    wirkung: "Ja",
+    notizen: "",
+    fotoPreview: null,
+    fotoFile: null,
+  });
   // Wenn eine Routine mit noch offenem Peptid-Anteil bestätigt wird: merkt sich,
   // welche Routine (an welchem Tag) nach dem Ausfüllen/Überspringen des
   // Nebenwirkungen-Formulars als erledigt markiert werden soll.
   const [pendingRoutineConfirm, setPendingRoutineConfirm] = useState(null);
 
-  const openFeedback = (dose, key) => {
+  const openFeedback = (dose, key, kategorie) => {
     setFeedbackOpen(key);
-    // "Keine" vorausgewählt statt leer — der häufigste Fall (keine
-    // Nebenwirkung) ist damit mit einem Tap auf "Speichern" erledigt.
-    setDraftFeedback({ nebenwirkungen: [], staerke: "Keine", notizen: "", fotoPreview: null, fotoFile: null });
+    setFeedbackKategorie(kategorie);
+    // Positive Standardwerte vorausgewählt statt leer — der häufigste Fall
+    // (alles in Ordnung) ist damit mit einem Tap auf "Speichern" erledigt.
+    setDraftFeedback({ nebenwirkungen: [], staerke: "Keine", vertraeglichkeit: "Gut", wirkung: "Ja", notizen: "", fotoPreview: null, fotoFile: null });
   };
   const toggleDraftNebenwirkung = (n) =>
     setDraftFeedback((prev) => ({
@@ -115,14 +174,27 @@ export default function TagesplanView({ onHome }) {
       setPendingRoutineConfirm(null);
     }
   };
+  // Springt je nach Kategorie des offenen Feedback-Formulars zur richtigen
+  // Speicher-/Überspringen-Funktion — jede Kategorie hat ihre eigene Log-Tabelle.
+  const skipItemFeedback = (item) => {
+    if (item.kategorie === "peptid") skipFeedback(item.doseRef);
+    else if (item.kategorie === "hormon") skipHormonFeedback(item.doseRef);
+    else if (item.kategorie === "supplement") skipSupplementFeedback(item.doseRef);
+  };
   const handleSaveFeedback = (dose) => {
-    saveFeedback(dose, draftFeedback);
+    if (feedbackKategorie === "peptid") saveFeedback(dose, draftFeedback);
+    else if (feedbackKategorie === "hormon") saveHormonFeedback(dose, draftFeedback);
+    else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, draftFeedback);
     setFeedbackOpen(null);
+    setFeedbackKategorie(null);
     finishPendingRoutine();
   };
   const handleSkipFeedback = (dose) => {
-    skipFeedback(dose);
+    if (feedbackKategorie === "peptid") skipFeedback(dose);
+    else if (feedbackKategorie === "hormon") skipHormonFeedback(dose);
+    else if (feedbackKategorie === "supplement") skipSupplementFeedback(dose);
     setFeedbackOpen(null);
+    setFeedbackKategorie(null);
     finishPendingRoutine();
   };
 
@@ -146,9 +218,12 @@ export default function TagesplanView({ onHome }) {
         mahlzeitErledigt,
       });
       return items.map((item) => {
-        if (item.kategorie === "peptid") return { ...item, onConfirm: () => openFeedback(item.raw, item.key) };
-        if (item.kategorie === "hormon") return { ...item, onConfirm: () => toggleHormonErledigt(tagStr, item.name, item.uhrzeit) };
-        if (item.kategorie === "supplement") return { ...item, onConfirm: () => toggleSupplementErledigt(tagStr, item.raw.id, item.uhrzeit) };
+        if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
+        if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "hormon") };
+        if (item.kategorie === "supplement") {
+          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
+          return { ...item, doseRef, onConfirm: () => openFeedback(doseRef, item.key, "supplement") };
+        }
         return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.uhrzeit) };
       });
     },
@@ -159,10 +234,8 @@ export default function TagesplanView({ onHome }) {
       hormonPlan,
       hormonErledigt,
       hormonDosierung,
-      toggleHormonErledigt,
       supplemente,
       supplementErledigt,
-      toggleSupplementErledigt,
       mahlzeiten,
       mahlzeitErledigt,
       toggleMahlzeitErledigt,
@@ -172,31 +245,33 @@ export default function TagesplanView({ onHome }) {
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
   const tagStr = toLocalISODate(selectedDate);
 
-  // Bestätigt eine Routine als Ganzes: alle nicht-peptid Bestandteile werden
-  // sofort und ohne weitere Rückfrage im Hintergrund dokumentiert. Enthält die
-  // Routine ein noch offenes Peptid, öffnet sich dafür weiterhin das
-  // Nebenwirkungen-Formular (das war dir wichtig) — die Routine gilt danach
-  // als erledigt. Ein zweites offenes Peptid in derselben Routine (seltener
-  // Sonderfall) wird automatisch ohne Nebenwirkungen übersprungen, damit
-  // nicht mehrere Formulare nacheinander aufgehen.
+  // Bestätigt eine Routine als Ganzes: Mahlzeiten (kein Feedback-Formular)
+  // werden sofort und ohne Rückfrage im Hintergrund dokumentiert. Enthält die
+  // Routine ein noch offenes Peptid/Medikament/Supplement, öffnet sich dafür
+  // weiterhin das passende Feedback-Formular (das war dir wichtig) — die
+  // Routine gilt danach als erledigt. Weitere offene Feedback-Items in
+  // derselben Routine (seltener Sonderfall) werden automatisch ohne Angaben
+  // übersprungen, damit nicht mehrere Formulare nacheinander aufgehen.
   const confirmRoutine = (routine, matchedItems) => {
-    const offenePeptide = [];
+    const brauchtFeedback = (item) => ["peptid", "hormon", "supplement"].includes(item.kategorie);
+    const offeneMitFeedback = [];
     matchedItems.forEach((item) => {
       if (item.done) return;
-      if (item.kategorie === "peptid") {
-        offenePeptide.push(item);
+      if (brauchtFeedback(item)) {
+        offeneMitFeedback.push(item);
         return;
       }
       item.onConfirm();
     });
 
-    if (offenePeptide.length === 0) {
+    if (offeneMitFeedback.length === 0) {
       toggleRoutineErledigt(tagStr, routine.id);
       return;
     }
-    offenePeptide.slice(1).forEach((item) => skipFeedback(item.raw));
+    offeneMitFeedback.slice(1).forEach(skipItemFeedback);
     setPendingRoutineConfirm({ tagStr, routineId: routine.id });
-    openFeedback(offenePeptide[0].raw, offenePeptide[0].key);
+    const erstes = offeneMitFeedback[0];
+    openFeedback(erstes.doseRef, erstes.key, erstes.kategorie);
   };
 
   // Fasst Einträge, die zu einer Routine gehören, zu einem einzigen Punkt
@@ -360,7 +435,9 @@ export default function TagesplanView({ onHome }) {
               <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
                 {entries.map((entry, i) => {
                   if (entry.kind === "routine") {
-                    const offenesPeptid = entry.matchedItems.find((m) => m.kategorie === "peptid" && feedbackOpen === m.key);
+                    const offenesFeedbackItem = entry.matchedItems.find(
+                      (m) => ["peptid", "hormon", "supplement"].includes(m.kategorie) && feedbackOpen === m.key
+                    );
                     return (
                       <div key={entry.key} style={{ padding: "12px 0", borderBottom: i < entries.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -385,14 +462,15 @@ export default function TagesplanView({ onHome }) {
                             </button>
                           )}
                         </div>
-                        {offenesPeptid && (
+                        {offenesFeedbackItem && (
                           <FeedbackPanel
-                            item={offenesPeptid}
+                            item={offenesFeedbackItem}
+                            kategorie={offenesFeedbackItem.kategorie}
                             draftFeedback={draftFeedback}
                             setDraftFeedback={setDraftFeedback}
                             toggleDraftNebenwirkung={toggleDraftNebenwirkung}
-                            onSkip={() => handleSkipFeedback(offenesPeptid.raw)}
-                            onSave={() => handleSaveFeedback(offenesPeptid.raw)}
+                            onSkip={() => handleSkipFeedback(offenesFeedbackItem.doseRef)}
+                            onSave={() => handleSaveFeedback(offenesFeedbackItem.doseRef)}
                           />
                         )}
                       </div>
@@ -430,14 +508,15 @@ export default function TagesplanView({ onHome }) {
                         )}
                       </div>
 
-                      {item.kategorie === "peptid" && isOpen && (
+                      {["peptid", "hormon", "supplement"].includes(item.kategorie) && isOpen && (
                         <FeedbackPanel
                           item={item}
+                          kategorie={item.kategorie}
                           draftFeedback={draftFeedback}
                           setDraftFeedback={setDraftFeedback}
                           toggleDraftNebenwirkung={toggleDraftNebenwirkung}
-                          onSkip={() => handleSkipFeedback(item.raw)}
-                          onSave={() => handleSaveFeedback(item.raw)}
+                          onSkip={() => handleSkipFeedback(item.doseRef)}
+                          onSave={() => handleSaveFeedback(item.doseRef)}
                         />
                       )}
                     </div>

@@ -10,7 +10,7 @@ const LEERES_REZEPT = { name: "", hinweis: "", zutaten: [{ name: "", menge: "" }
 
 const UNTERTABS = [
   { id: "supplemente", label: "Supplemente" },
-  { id: "rezepte", label: "Rezepte" },
+  { id: "rezepte", label: "Mischungen" },
 ];
 
 export default function SupplementeView({ onHome }) {

@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, PrimaryButton, TextInput } from "../ui/primitives";
+import { Shell, Card, Label, Pill, PrimaryButton, TextArea, TextInput, CheckRow } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import { accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
+import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+
+const heute = () => new Date().toISOString().slice(0, 10);
 
 const SCHNELLAUSWAHL = [
   { label: "Glas", ml: 200 },
@@ -21,9 +24,23 @@ function motivationsText(heuteMl, zielMl) {
 }
 
 export default function HydrationView({ onHome }) {
-  const { hydrationEintraege, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen, hydrationZielSetzen } = useAppData();
+  const {
+    hydrationEintraege,
+    hydrationHeuteMl,
+    hydrationZielMl,
+    hydrationHinzufuegen,
+    hydrationZielSetzen,
+    hydrationCheckinSpeichern,
+  } = useAppData();
   const [zielEntwurf, setZielEntwurf] = useState(String(hydrationZielMl));
   const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
+
+  const heutigerEintrag = hydrationEintraege.find((e) => e.datum === heute());
+  const [elektrolyte, setElektrolyte] = useState(heutigerEintrag?.elektrolyte || false);
+  const [durstgefuehl, setDurstgefuehl] = useState(heutigerEintrag?.durstgefuehl || "");
+  const [bemerkung, setBemerkung] = useState(heutigerEintrag?.bemerkung || "");
+
+  const checkinSpeichern = (felder) => hydrationCheckinSpeichern(felder);
 
   const zielSpeichern = () => hydrationZielSetzen(zielEntwurf);
 
@@ -98,6 +115,40 @@ export default function HydrationView({ onHome }) {
               Setzen
             </PrimaryButton>
           </div>
+        </div>
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Tages-Check-in (optional)</div>
+      <Card style={{ marginBottom: 14 }}>
+        <CheckRow
+          label="Elektrolyte genommen"
+          checked={elektrolyte}
+          onToggle={() => {
+            const next = !elektrolyte;
+            setElektrolyte(next);
+            checkinSpeichern({ elektrolyte: next });
+          }}
+        />
+        <Label>Durstgefühl heute</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {DURSTGEFUEHL_OPTIONEN.map((d) => (
+            <Pill
+              key={d}
+              label={d}
+              selected={durstgefuehl === d}
+              onClick={() => {
+                setDurstgefuehl(d);
+                checkinSpeichern({ durstgefuehl: d });
+              }}
+            />
+          ))}
+        </div>
+        <Label>Bemerkungen (optional)</Label>
+        <TextArea value={bemerkung} onChange={setBemerkung} placeholder="z. B. heute viel geschwitzt" />
+        <div style={{ marginTop: 10 }}>
+          <PrimaryButton variant="ghost" onClick={() => checkinSpeichern({ bemerkung })}>
+            Bemerkung speichern
+          </PrimaryButton>
         </div>
       </Card>
 

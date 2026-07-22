@@ -12,11 +12,24 @@ export function useHydrationData(userId) {
     let cancelled = false;
     (async () => {
       const [{ data: logs }, { data: settings }] = await Promise.all([
-        supabase.from("hydration_logs").select("datum, menge_ml").eq("user_id", userId).order("datum"),
+        supabase
+          .from("hydration_logs")
+          .select("datum, menge_ml, elektrolyte, durstgefuehl, bemerkung")
+          .eq("user_id", userId)
+          .order("datum"),
         supabase.from("hydration_settings").select("ziel_ml").eq("user_id", userId).maybeSingle(),
       ]);
       if (cancelled) return;
-      if (logs) setHydrationEintraege(logs.map((r) => ({ datum: r.datum, mengeMl: r.menge_ml })));
+      if (logs)
+        setHydrationEintraege(
+          logs.map((r) => ({
+            datum: r.datum,
+            mengeMl: r.menge_ml,
+            elektrolyte: r.elektrolyte || false,
+            durstgefuehl: r.durstgefuehl || "",
+            bemerkung: r.bemerkung || "",
+          }))
+        );
       if (settings) setHydrationZielMl(settings.ziel_ml);
     })();
     return () => {
@@ -41,9 +54,12 @@ export function useHydrationData(userId) {
         console.error(error);
         return;
       }
-      setHydrationEintraege((prev) =>
-        [...prev.filter((e) => e.datum !== datum), { datum, mengeMl: neueMenge }].sort((a, b) => a.datum.localeCompare(b.datum))
-      );
+      setHydrationEintraege((prev) => {
+        const bestehend = prev.find((e) => e.datum === datum) || {};
+        return [...prev.filter((e) => e.datum !== datum), { ...bestehend, datum, mengeMl: neueMenge }].sort((a, b) =>
+          a.datum.localeCompare(b.datum)
+        );
+      });
     },
     [userId, hydrationEintraege]
   );
@@ -58,11 +74,30 @@ export function useHydrationData(userId) {
     [userId]
   );
 
+  // Optionaler Tages-Check-in (Elektrolyte/Durstgefühl/Bemerkung) — unabhängig
+  // von der Trinkmenge, deshalb ein eigenes partielles Upsert auf dieselbe Zeile.
+  const hydrationCheckinSpeichern = useCallback(
+    async (felder) => {
+      const datum = heute();
+      const { error } = await supabase.from("hydration_logs").upsert({ user_id: userId, datum, ...felder }, { onConflict: "user_id,datum" });
+      if (error) {
+        console.error(error);
+        return;
+      }
+      setHydrationEintraege((prev) => {
+        const bestehend = prev.find((e) => e.datum === datum) || { mengeMl: 0 };
+        return [...prev.filter((e) => e.datum !== datum), { ...bestehend, datum, ...felder }].sort((a, b) => a.datum.localeCompare(b.datum));
+      });
+    },
+    [userId]
+  );
+
   return {
     hydrationEintraege,
     hydrationHeuteMl,
     hydrationZielMl,
     hydrationHinzufuegen,
     hydrationZielSetzen,
+    hydrationCheckinSpeichern,
   };
 }

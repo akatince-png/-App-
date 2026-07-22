@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { activeDoseDays } from "../utils/schedule";
+import { toLocalISODate } from "../utils/dates";
 
 function rowToHormonDosierung(row) {
   return {
@@ -45,6 +46,7 @@ export function useHormoneData(userId, startdatum, dauer) {
   const [hormone, setHormone] = useState([]);
   const [hormonDosierung, setHormonDosierung] = useState({});
   const [hormonErledigt, setHormonErledigt] = useState({});
+  const [hormonFeedback, setHormonFeedback] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -61,10 +63,19 @@ export function useHormoneData(userId, startdatum, dauer) {
       setHormonDosierung(nextDosierung);
 
       const nextErledigt = {};
+      const nextFeedback = {};
       (logs || []).forEach((row) => {
-        nextErledigt[`${row.dose_date}__${row.hormone_name}__${row.uhrzeit}`] = row.erledigt;
+        const k = `${row.dose_date}__${row.hormone_name}__${row.uhrzeit}`;
+        nextErledigt[k] = row.erledigt;
+        nextFeedback[k] = {
+          vertraeglichkeit: row.vertraeglichkeit || "",
+          wirkung: row.wirkung || "",
+          nebenwirkungen: row.nebenwirkungen || [],
+          notizen: row.notizen || "",
+        };
       });
       setHormonErledigt(nextErledigt);
+      setHormonFeedback(nextFeedback);
     })();
     return () => {
       cancelled = true;
@@ -177,6 +188,51 @@ export function useHormoneData(userId, startdatum, dauer) {
     [hormonErledigt, userId]
   );
 
+  const saveHormonFeedback = useCallback(
+    async (dose, draftFeedback) => {
+      const datumStr = toLocalISODate(dose.date);
+      const k = `${datumStr}__${dose.name}__${dose.uhrzeit}`;
+      const nowIso = new Date().toISOString();
+      const record = {
+        vertraeglichkeit: draftFeedback.vertraeglichkeit,
+        wirkung: draftFeedback.wirkung,
+        nebenwirkungen: draftFeedback.nebenwirkungen,
+        notizen: draftFeedback.notizen,
+      };
+      setHormonErledigt((prev) => ({ ...prev, [k]: true }));
+      setHormonFeedback((prev) => ({ ...prev, [k]: record }));
+      const { error } = await supabase.from("hormone_logs").upsert(
+        {
+          user_id: userId,
+          hormone_name: dose.name,
+          dose_date: datumStr,
+          uhrzeit: dose.uhrzeit,
+          erledigt: true,
+          erledigt_at: nowIso,
+          ...record,
+        },
+        { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
+      );
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
+  const skipHormonFeedback = useCallback(
+    async (dose) => {
+      const datumStr = toLocalISODate(dose.date);
+      const k = `${datumStr}__${dose.name}__${dose.uhrzeit}`;
+      const nowIso = new Date().toISOString();
+      setHormonErledigt((prev) => ({ ...prev, [k]: true }));
+      const { error } = await supabase.from("hormone_logs").upsert(
+        { user_id: userId, hormone_name: dose.name, dose_date: datumStr, uhrzeit: dose.uhrzeit, erledigt: true, erledigt_at: nowIso },
+        { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
+      );
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
   const hormonPlan = useMemo(() => {
     const totalDays = (parseInt(dauer, 10) || 12) * 7;
     const dosen = [];
@@ -205,6 +261,9 @@ export function useHormoneData(userId, startdatum, dauer) {
     setHormonEinnahmeart,
     hormonErledigt,
     toggleHormonErledigt,
+    hormonFeedback,
+    saveHormonFeedback,
+    skipHormonFeedback,
     hormonPlan,
   };
 }

@@ -5,6 +5,7 @@ export function useSupplementData(userId) {
   const [supplemente, setSupplemente] = useState([]);
   const [supplementErledigt, setSupplementErledigt] = useState({});
   const [supplementErledigtAt, setSupplementErledigtAt] = useState({});
+  const [supplementFeedback, setSupplementFeedback] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -20,13 +21,20 @@ export function useSupplementData(userId) {
       );
       const nextErledigt = {};
       const nextErledigtAt = {};
+      const nextFeedback = {};
       (logs || []).forEach((row) => {
         const k = `${row.log_date}__${row.supplement_id}__${row.tageszeit}`;
         nextErledigt[k] = row.erledigt;
         nextErledigtAt[k] = row.erledigt_at || null;
+        nextFeedback[k] = {
+          wirkung: row.wirkung || "",
+          nebenwirkungen: row.nebenwirkungen || [],
+          notizen: row.notizen || "",
+        };
       });
       setSupplementErledigt(nextErledigt);
       setSupplementErledigtAt(nextErledigtAt);
+      setSupplementFeedback(nextFeedback);
     })();
     return () => {
       cancelled = true;
@@ -79,6 +87,38 @@ export function useSupplementData(userId) {
     [supplementErledigt, userId]
   );
 
+  const saveSupplementFeedback = useCallback(
+    async (dose, draftFeedback) => {
+      const k = `${dose.datum}__${dose.id}__${dose.zeit}`;
+      const nowIso = new Date().toISOString();
+      const record = { wirkung: draftFeedback.wirkung, nebenwirkungen: draftFeedback.nebenwirkungen, notizen: draftFeedback.notizen };
+      setSupplementErledigt((prev) => ({ ...prev, [k]: true }));
+      setSupplementErledigtAt((prev) => ({ ...prev, [k]: nowIso }));
+      setSupplementFeedback((prev) => ({ ...prev, [k]: record }));
+      const { error } = await supabase.from("supplement_logs").upsert(
+        { user_id: userId, supplement_id: dose.id, log_date: dose.datum, tageszeit: dose.zeit, erledigt: true, erledigt_at: nowIso, ...record },
+        { onConflict: "supplement_id,log_date,tageszeit" }
+      );
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
+  const skipSupplementFeedback = useCallback(
+    async (dose) => {
+      const k = `${dose.datum}__${dose.id}__${dose.zeit}`;
+      const nowIso = new Date().toISOString();
+      setSupplementErledigt((prev) => ({ ...prev, [k]: true }));
+      setSupplementErledigtAt((prev) => ({ ...prev, [k]: nowIso }));
+      const { error } = await supabase.from("supplement_logs").upsert(
+        { user_id: userId, supplement_id: dose.id, log_date: dose.datum, tageszeit: dose.zeit, erledigt: true, erledigt_at: nowIso },
+        { onConflict: "supplement_id,log_date,tageszeit" }
+      );
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
   // Bestätigt alle noch offenen Supplemente einer Tageszeit an einem Tag auf einmal
   // (z. B. "Morgens" komplett abhaken), ohne bereits erledigte anzufassen.
   const confirmAlleTageszeit = useCallback(
@@ -113,5 +153,8 @@ export function useSupplementData(userId) {
     supplementErledigtAt,
     toggleSupplementErledigt,
     confirmAlleTageszeit,
+    supplementFeedback,
+    saveSupplementFeedback,
+    skipSupplementFeedback,
   };
 }

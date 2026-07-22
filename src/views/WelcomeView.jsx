@@ -11,7 +11,7 @@ const SLIDES = [
   {
     icon: "🗓️",
     titel: "So funktioniert's",
-    text: "Dein Tagesplan zeigt dir jeden Tag genau, was ansteht — einmal antippen und abgehakt. Alle Details (Menge, Einnahmeart, Rezepte) findest du übersichtlich in Protokolle, wann immer du sie brauchst.",
+    text: "Dein Tagesplan zeigt dir jeden Tag genau, was ansteht — einmal antippen und abgehakt. Alle Details (Menge, Einnahmeart, Mischungen) findest du übersichtlich in Protokolle, wann immer du sie brauchst.",
   },
   {
     icon: "🚀",

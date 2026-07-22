@@ -97,6 +97,11 @@ export const NEBENWIRKUNGEN_OPTIONEN = [
 
 export const STAERKE_OPTIONEN = ["Keine", "Leicht", "Mittel", "Stark"];
 
+export const VERTRAEGLICHKEIT_OPTIONEN = ["Gut", "Mittel", "Schlecht"];
+export const WIRKUNG_OPTIONEN = ["Ja", "Etwas", "Nein"];
+export const DURSTGEFUEHL_OPTIONEN = ["Kein Durst", "Leicht", "Stark"];
+export const SCHLAFQUALITAET_OPTIONEN = ["Sehr gut", "Gut", "Mittel", "Schlecht"];
+
 export const WEITERE_BIOMARKER = ["Testosteron", "Cortisol", "Östradiol", "SHBG", "Vitamin D", "CRP", "HbA1c"];
 
 export const ENERGIELEVEL_OPTIONEN = ["😩", "😐", "🙂", "⚡"];
@@ -209,7 +214,7 @@ export const DASHBOARD_TIERS = [
       { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: F_WARM },
       { id: "training", label: "Training", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: F_WARM },
       // Danach Substanzen, aufsteigend nach Eingriffstiefe.
-      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Rezepte", icon: "🌿", grad: F_WARM },
+      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Mischungen", icon: "🌿", grad: F_WARM },
       { id: "medikamente", label: "Medikamente", desc: "Hormone, Blutdruck & mehr", icon: "💊", grad: F_SLATE },
       { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "🧬", grad: F_EMERALD },
       // Monitoring/Referenz am Ende.

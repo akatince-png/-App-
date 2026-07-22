@@ -1,16 +1,30 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, PrimaryButton, TextInput } from "../ui/primitives";
+import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextArea, TextInput } from "../ui/primitives";
 import { SimpleLineChart } from "../ui/charts";
 import { accentDark, blue, cardBorder, textMuted } from "../ui/theme";
+import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+
+const LEERER_EINTRAG = {
+  datum: new Date().toISOString().slice(0, 10),
+  stunden: "",
+  schlafqualitaet: "",
+  einschlafzeit: "",
+  durchgeschlafen: null,
+  erholt: null,
+  traeume: "",
+  bemerkungen: "",
+};
 
 export default function SchlafView({ onHome }) {
   const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage } = useAppData();
-  const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState({ datum: new Date().toISOString().slice(0, 10), stunden: "" });
+  const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState(LEERER_EINTRAG);
+  const [detailsOffen, setDetailsOffen] = useState(false);
 
   const submit = () => {
     schlafHinzufuegen(neuerSchlafEintrag);
-    setNeuerSchlafEintrag({ datum: new Date().toISOString().slice(0, 10), stunden: "" });
+    setNeuerSchlafEintrag(LEERER_EINTRAG);
+    setDetailsOffen(false);
   };
 
   return (
@@ -39,6 +53,63 @@ export default function SchlafView({ onHome }) {
             <TextInput type="number" value={neuerSchlafEintrag.stunden} onChange={(v) => setNeuerSchlafEintrag((p) => ({ ...p, stunden: v }))} placeholder="7,2" />
           </div>
         </div>
+
+        {!detailsOffen ? (
+          <button
+            onClick={() => setDetailsOffen(true)}
+            style={{
+              marginTop: 12,
+              width: "100%",
+              padding: "9px",
+              borderRadius: 10,
+              border: `1px dashed ${cardBorder}`,
+              background: "transparent",
+              color: textMuted,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            + Mehr Details (optional)
+          </button>
+        ) : (
+          <>
+            <Label>Schlafqualität</Label>
+            <div style={{ display: "flex", flexWrap: "wrap" }}>
+              {SCHLAFQUALITAET_OPTIONEN.map((q) => (
+                <Pill
+                  key={q}
+                  label={q}
+                  selected={neuerSchlafEintrag.schlafqualitaet === q}
+                  onClick={() => setNeuerSchlafEintrag((p) => ({ ...p, schlafqualitaet: q }))}
+                />
+              ))}
+            </div>
+            <Label>Einschlafzeit</Label>
+            <TextInput
+              type="time"
+              value={neuerSchlafEintrag.einschlafzeit}
+              onChange={(v) => setNeuerSchlafEintrag((p) => ({ ...p, einschlafzeit: v }))}
+            />
+            <div style={{ marginTop: 10 }}>
+              <CheckRow
+                label="Durchgeschlafen"
+                checked={!!neuerSchlafEintrag.durchgeschlafen}
+                onToggle={() => setNeuerSchlafEintrag((p) => ({ ...p, durchgeschlafen: !p.durchgeschlafen }))}
+              />
+              <CheckRow
+                label="Erholt aufgewacht"
+                checked={!!neuerSchlafEintrag.erholt}
+                onToggle={() => setNeuerSchlafEintrag((p) => ({ ...p, erholt: !p.erholt }))}
+              />
+            </div>
+            <Label>Träume (optional)</Label>
+            <TextArea value={neuerSchlafEintrag.traeume} onChange={(v) => setNeuerSchlafEintrag((p) => ({ ...p, traeume: v }))} placeholder="Woran erinnerst du dich?" />
+            <Label>Bemerkungen (optional)</Label>
+            <TextArea value={neuerSchlafEintrag.bemerkungen} onChange={(v) => setNeuerSchlafEintrag((p) => ({ ...p, bemerkungen: v }))} placeholder="Sonst noch was?" />
+          </>
+        )}
+
         <div style={{ marginTop: 12 }}>
           <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
         </div>
