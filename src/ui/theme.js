@@ -1,13 +1,17 @@
-export const bg = "#F3FBF8";
+// Ruhige, hochwertige Palette mit wenigen Farben: ein warmneutraler Grund,
+// ein einziger kräftiger Marken-Akzent (dient auch als "erledigt"-Signal,
+// damit nicht noch eine zweite Grün-Variante dazukommt), und Blau/Rot nur
+// dort, wo "geplant" bzw. "verpasst/Achtung" wirklich etwas anderes bedeuten.
+export const bg = "#F7F7F5";
 export const card = "#FFFFFF";
-export const cardBorder = "#E3EFEA";
-export const accent = "#0FB8A3"; // Mint/Teal
-export const accentDark = "#0A9384";
-export const accentSoft = "#E3FBF6";
-export const blue = "#5B9BF0"; // sekundäre Akzentfarbe
-export const blueSoft = "#EAF2FF";
-export const success = "#33C481";
-export const danger = "#F2596A";
-export const textMain = "#1E2B29";
-export const textMuted = "#7C8B87";
-export const shadow = "0 2px 10px rgba(24, 60, 51, 0.06)";
+export const cardBorder = "#EAEAE5";
+export const accent = "#0E7C66"; // Tiefes Smaragd/Petrol — Marke + "erledigt"
+export const accentDark = "#0A5F4F";
+export const accentSoft = "#E6F3EF";
+export const blue = "#4A6FA5"; // "geplant" / sekundäre Infos
+export const blueSoft = "#EAF0F8";
+export const success = accent;
+export const danger = "#C24545";
+export const textMain = "#15181A";
+export const textMuted = "#6B7178";
+export const shadow = "0 8px 24px rgba(20, 23, 26, 0.06)";

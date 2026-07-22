@@ -1,15 +1,18 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
-import { accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
+import { accent, accentDark, accentSoft, blue, cardBorder, textMain, textMuted } from "../ui/theme";
 import { NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, keyOf, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
+// Eine kleine, harmonische Farbfamilie statt eines Regenbogens: zwei kühle
+// Töne (Peptide/Medikamente) und zwei warme (Supplemente/Mahlzeiten) — so
+// bleibt jede Kategorie auf einen Blick unterscheidbar, ohne unruhig zu wirken.
 const KATEGORIE = {
-  peptid: { bg: "#E3FBF6", text: "#0A9384", dot: "#0FB8A3", label: "Peptid" },
-  hormon: { bg: "#F1EAFB", text: "#6E4FBF", dot: "#9B7EDE", label: "Hormon" },
-  supplement: { bg: "#EAF2FF", text: "#2E7BAA", dot: "#4FA3D1", label: "Supplement" },
-  mahlzeit: { bg: "#EAF7E9", text: "#3F9E4D", dot: "#6FBF6F", label: "Mahlzeit" },
+  peptid: { bg: accentSoft, text: accentDark, dot: accent, label: "Peptid" },
+  hormon: { bg: "#EAF0F8", text: "#3A5A87", dot: blue, label: "Medikament" },
+  supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
+  mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
 };
 
 // Feste Tageszeiten bekommen eine repräsentative Stunde, damit sie sich sinnvoll
@@ -19,6 +22,43 @@ const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
+}
+
+function statusText(done, total) {
+  if (total === 0) return "Für heute steht nichts an. 🌿";
+  if (done === total) return "Alles erledigt — stark! 🎉";
+  if (done === 0) return "Auf geht's — der erste Punkt wartet.";
+  if (done / total >= 0.66) return "Fast geschafft, weiter so!";
+  return `${total - done} von ${total} stehen noch an.`;
+}
+
+function ProgressRing({ done, total }) {
+  const pct = total > 0 ? done / total : 0;
+  const size = 76;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={cardBorder} strokeWidth={stroke} />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={accent}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference * (1 - pct)}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: "stroke-dashoffset 0.4s ease" }}
+      />
+      <text x="50%" y="53%" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="800" fill={textMain}>
+        {total > 0 ? `${Math.round(pct * 100)}%` : "—"}
+      </text>
+    </svg>
+  );
 }
 
 export default function TagesplanView({ onHome }) {
@@ -67,80 +107,80 @@ export default function TagesplanView({ onHome }) {
 
   const itemsForDate = useCallback(
     (date) => {
-    const tagStr = toLocalISODate(date);
-    const items = [];
+      const tagStr = toLocalISODate(date);
+      const items = [];
 
-    plan
-      .filter((d) => sameDay(d.date, date))
-      .forEach((d) => {
-        const k = keyOf(d.date, d.peptid, d.uhrzeit);
-        items.push({
-          kategorie: "peptid",
-          key: `p-${k}`,
-          hour: d.uhrzeit.slice(0, 2),
-          uhrzeit: d.uhrzeit,
-          name: d.peptid,
-          detail: d.menge,
-          done: !!erledigt[k],
-          raw: d,
-          onConfirm: () => openFeedback(d, `p-${k}`),
+      plan
+        .filter((d) => sameDay(d.date, date))
+        .forEach((d) => {
+          const k = keyOf(d.date, d.peptid, d.uhrzeit);
+          items.push({
+            kategorie: "peptid",
+            key: `p-${k}`,
+            hour: d.uhrzeit.slice(0, 2),
+            uhrzeit: d.uhrzeit,
+            name: d.peptid,
+            detail: d.menge,
+            done: !!erledigt[k],
+            raw: d,
+            onConfirm: () => openFeedback(d, `p-${k}`),
+          });
+        });
+
+      hormonPlan
+        .filter((d) => sameDay(d.date, date))
+        .forEach((d) => {
+          const k = `${tagStr}__${d.name}__${d.uhrzeit}`;
+          items.push({
+            kategorie: "hormon",
+            key: `h-${k}`,
+            hour: d.uhrzeit.slice(0, 2),
+            uhrzeit: d.uhrzeit,
+            name: d.name,
+            detail: d.menge,
+            done: !!hormonErledigt[k],
+            onConfirm: () => toggleHormonErledigt(tagStr, d.name, d.uhrzeit),
+          });
+        });
+
+      supplemente.forEach((s) => {
+        s.tageszeiten.forEach((zeit) => {
+          const k = `${tagStr}__${s.id}__${zeit}`;
+          items.push({
+            kategorie: "supplement",
+            key: `s-${k}`,
+            hour: TAGESZEIT_STUNDE[zeit] || null,
+            uhrzeit: zeit,
+            name: s.name,
+            detail: s.hinweis,
+            done: !!supplementErledigt[k],
+            onConfirm: () => toggleSupplementErledigt(tagStr, s.id, zeit),
+          });
         });
       });
 
-    hormonPlan
-      .filter((d) => sameDay(d.date, date))
-      .forEach((d) => {
-        const k = `${tagStr}__${d.name}__${d.uhrzeit}`;
-        items.push({
-          kategorie: "hormon",
-          key: `h-${k}`,
-          hour: d.uhrzeit.slice(0, 2),
-          uhrzeit: d.uhrzeit,
-          name: d.name,
-          detail: d.menge,
-          done: !!hormonErledigt[k],
-          onConfirm: () => toggleHormonErledigt(tagStr, d.name, d.uhrzeit),
+      mahlzeiten.forEach((m) => {
+        m.tageszeiten.forEach((zeit) => {
+          const k = `${tagStr}__${m.id}__${zeit}`;
+          items.push({
+            kategorie: "mahlzeit",
+            key: `m-${k}`,
+            hour: TAGESZEIT_STUNDE[zeit] || null,
+            uhrzeit: zeit,
+            name: m.name,
+            detail: m.hinweis,
+            done: !!mahlzeitErledigt[k],
+            onConfirm: () => toggleMahlzeitErledigt(tagStr, m.id, zeit),
+          });
         });
       });
 
-    supplemente.forEach((s) => {
-      s.tageszeiten.forEach((zeit) => {
-        const k = `${tagStr}__${s.id}__${zeit}`;
-        items.push({
-          kategorie: "supplement",
-          key: `s-${k}`,
-          hour: TAGESZEIT_STUNDE[zeit] || null,
-          uhrzeit: zeit,
-          name: s.name,
-          detail: s.hinweis,
-          done: !!supplementErledigt[k],
-          onConfirm: () => toggleSupplementErledigt(tagStr, s.id, zeit),
-        });
+      items.sort((a, b) => {
+        const ha = a.hour ?? "99";
+        const hb = b.hour ?? "99";
+        if (ha !== hb) return ha.localeCompare(hb);
+        return a.uhrzeit.localeCompare(b.uhrzeit);
       });
-    });
-
-    mahlzeiten.forEach((m) => {
-      m.tageszeiten.forEach((zeit) => {
-        const k = `${tagStr}__${m.id}__${zeit}`;
-        items.push({
-          kategorie: "mahlzeit",
-          key: `m-${k}`,
-          hour: TAGESZEIT_STUNDE[zeit] || null,
-          uhrzeit: zeit,
-          name: m.name,
-          detail: m.hinweis,
-          done: !!mahlzeitErledigt[k],
-          onConfirm: () => toggleMahlzeitErledigt(tagStr, m.id, zeit),
-        });
-      });
-    });
-
-    items.sort((a, b) => {
-      const ha = a.hour ?? "99";
-      const hb = b.hour ?? "99";
-      if (ha !== hb) return ha.localeCompare(hb);
-      return a.uhrzeit.localeCompare(b.uhrzeit);
-    });
       return items;
     },
     [
@@ -174,33 +214,48 @@ export default function TagesplanView({ onHome }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <div style={{ fontSize: 22, fontWeight: 800 }}>🗓️ Tagesplan</div>
         <button
+          className="mp-tap"
           onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+          style={{ width: 40, height: 40, borderRadius: 13, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 16, cursor: "pointer" }}
           title="Zum Dashboard"
         >
           ⌂
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+      {modus === "tag" && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <ProgressRing done={erledigtCount} total={tagesItems.length} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 3 }}>{fmtDate(selectedDate)}</div>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>{statusText(erledigtCount, tagesItems.length)}</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {[
           { id: "tag", label: "Tag" },
           { id: "woche", label: "Woche" },
         ].map((t) => (
           <button
             key={t.id}
+            className="mp-tap"
             onClick={() => setModus(t.id)}
             style={{
               flex: 1,
+              minHeight: 44,
               padding: "9px 0",
-              borderRadius: 10,
-              border: `1px solid ${modus === t.id ? "#0FB8A3" : cardBorder}`,
-              background: modus === t.id ? "#0FB8A3" : "#fff",
+              borderRadius: 13,
+              border: `1px solid ${modus === t.id ? accent : cardBorder}`,
+              background: modus === t.id ? accent : "#fff",
               color: modus === t.id ? "#fff" : textMuted,
-              fontSize: 13,
+              fontSize: 13.5,
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -210,35 +265,37 @@ export default function TagesplanView({ onHome }) {
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: 5, marginBottom: 14, overflowX: "auto" }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto" }}>
         {wochentage.map((d, i) => {
           const active = sameDay(d, selectedDate);
           return (
             <button
               key={i}
+              className="mp-tap"
               onClick={() => {
                 setSelectedDate(d);
                 setModus("tag");
               }}
               style={{
-                flex: "1 0 42px",
+                flex: "1 0 44px",
+                minHeight: 52,
                 padding: "8px 4px",
-                borderRadius: 10,
-                border: `1px solid ${active ? "#0FB8A3" : cardBorder}`,
-                background: active ? "#0FB8A3" : "#fff",
+                borderRadius: 13,
+                border: `1px solid ${active ? accent : cardBorder}`,
+                background: active ? accent : "#fff",
                 color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
                 cursor: "pointer",
                 textAlign: "center",
               }}
             >
               <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[d.getDay()]}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>{d.getDate()}</div>
+              <div style={{ fontSize: 14, fontWeight: 800 }}>{d.getDate()}</div>
             </button>
           );
         })}
       </div>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 14, fontSize: 11, color: textMuted }}>
+      <div style={{ display: "flex", gap: 14, marginBottom: 18, fontSize: 11, color: textMuted, flexWrap: "wrap" }}>
         {Object.entries(KATEGORIE).map(([key, k]) => (
           <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot }} />
@@ -249,15 +306,6 @@ export default function TagesplanView({ onHome }) {
 
       {modus === "tag" && (
         <>
-          <Card style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtDate(selectedDate)}</div>
-              <div style={{ fontSize: 13, color: textMuted }}>
-                {erledigtCount}/{tagesItems.length} erledigt
-              </div>
-            </div>
-          </Card>
-
           {tagesItems.length === 0 && (
             <Card>
               <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>Für diesen Tag steht nichts an. 🌿</div>
@@ -266,8 +314,8 @@ export default function TagesplanView({ onHome }) {
 
           {buckets.map(([hour, items]) => (
             <React.Fragment key={hour || "sonstige"}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>{hourLabel(hour)}</div>
-              <Card style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 8 }}>{hourLabel(hour)}</div>
+              <Card style={{ marginBottom: 16 }}>
                 {items.map((item, i) => {
                   const k = KATEGORIE[item.kategorie];
                   const isOpen = feedbackOpen === item.key;
@@ -275,19 +323,19 @@ export default function TagesplanView({ onHome }) {
                     <div
                       key={item.key}
                       style={{
-                        padding: "10px 0",
+                        padding: "12px 0",
                         borderBottom: i < items.length - 1 ? `1px solid ${cardBorder}` : "none",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                           <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
                           <div>
-                            <div style={{ fontSize: 14, fontWeight: 700 }}>
+                            <div style={{ fontSize: 14.5, fontWeight: 700 }}>
                               {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>
                             </div>
-                            {item.detail && <div style={{ fontSize: 12, color: textMuted }}>{item.detail}</div>}
-                            <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "1px 7px", borderRadius: 8, marginTop: 3 }}>
+                            {item.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
+                            <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "2px 8px", borderRadius: 8, marginTop: 4 }}>
                               {k.label}
                             </div>
                           </div>
@@ -296,8 +344,9 @@ export default function TagesplanView({ onHome }) {
                           <StatusBadge status="erledigt" />
                         ) : (
                           <button
+                            className="mp-tap"
                             onClick={item.onConfirm}
-                            style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: k.dot, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                            style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
                           >
                             Bestätigen
                           </button>
@@ -305,7 +354,7 @@ export default function TagesplanView({ onHome }) {
                       </div>
 
                       {item.kategorie === "peptid" && isOpen && (
-                        <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
+                        <div style={{ marginTop: 14, padding: 16, borderRadius: 16, background: accentSoft, border: `1px solid ${cardBorder}` }}>
                           <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Wie war es seit der letzten Injektion?</div>
                           <Label>Welche Nebenwirkungen hattest du?</Label>
                           <div style={{ display: "flex", flexWrap: "wrap" }}>
@@ -335,7 +384,7 @@ export default function TagesplanView({ onHome }) {
                           />
                           <label
                             htmlFor={`tagesplan-nebenwirkung-foto-${item.key}`}
-                            style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed #0FB8A3`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
+                            style={{ display: "block", textAlign: "center", padding: "10px", borderRadius: 12, border: `1.5px dashed ${accent}`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
                           >
                             📷 Foto aufnehmen
                           </label>
@@ -377,6 +426,7 @@ export default function TagesplanView({ onHome }) {
             return (
               <button
                 key={d.toDateString()}
+                className="mp-tap"
                 onClick={() => {
                   setSelectedDate(d);
                   setModus("tag");
@@ -384,10 +434,10 @@ export default function TagesplanView({ onHome }) {
                 style={{
                   width: "100%",
                   textAlign: "left",
-                  border: `1px solid ${sameDay(d, today) ? "#0FB8A3" : cardBorder}`,
-                  borderRadius: 14,
+                  border: `1px solid ${sameDay(d, today) ? accent : cardBorder}`,
+                  borderRadius: 18,
                   background: "#fff",
-                  padding: "12px 16px",
+                  padding: "14px 18px",
                   marginBottom: 10,
                   cursor: "pointer",
                 }}
@@ -399,7 +449,7 @@ export default function TagesplanView({ onHome }) {
                   </div>
                 </div>
                 {items.length > 0 && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                  <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
                     {perKategorie
                       .filter((p) => p.count > 0)
                       .map((p) => (

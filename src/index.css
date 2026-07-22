@@ -6,6 +6,23 @@ body {
   margin: 0;
 }
 
+/* Sanftes, spürbares Tap-Feedback für Buttons/Karten — kleine, sofortige
+   Rückmeldung statt eines stummen Klicks. Deaktiviert für alle, die
+   reduzierte Bewegung eingestellt haben. */
+@media (prefers-reduced-motion: no-preference) {
+  .mp-btn,
+  .mp-tap {
+    transition: transform 0.12s ease, opacity 0.12s ease;
+  }
+  .mp-btn:active:not(:disabled),
+  .mp-tap:active {
+    transform: scale(0.97);
+  }
+  .mp-card {
+    transition: box-shadow 0.2s ease;
+  }
+}
+
 /* iOS Safari rendert den Inhalt von <input type="date"/time"> intern
    rechtsbündig und mit eigenem Innenabstand, wodurch leere/gefüllte Felder
    optisch verschoben und größer wirken als normale Textfelder. */

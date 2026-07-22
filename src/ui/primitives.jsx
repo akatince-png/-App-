@@ -1,5 +1,5 @@
 import React from "react";
-import { accent, accentSoft, blue, blueSoft, bg, card, cardBorder, danger, shadow, success, textMain, textMuted } from "./theme";
+import { accent, accentDark, accentSoft, blue, blueSoft, bg, card, cardBorder, danger, shadow, success, textMain, textMuted } from "./theme";
 import { STEP_TITLES } from "../constants";
 
 export function Shell({ children }) {
@@ -7,7 +7,7 @@ export function Shell({ children }) {
     <div
       style={{
         minHeight: "100vh",
-        background: `linear-gradient(180deg, #EAF9F3 0%, ${bg} 220px)`,
+        background: bg,
         color: textMain,
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         display: "flex",
@@ -42,11 +42,12 @@ export function Stepper({ step }) {
 export function Card({ children, style }) {
   return (
     <div
+      className="mp-card"
       style={{
         background: card,
         border: `1px solid ${cardBorder}`,
-        borderRadius: 18,
-        padding: 20,
+        borderRadius: 24,
+        padding: 22,
         boxShadow: shadow,
         ...style,
       }}
@@ -58,18 +59,20 @@ export function Card({ children, style }) {
 
 export function PrimaryButton({ children, onClick, disabled, variant = "accent" }) {
   const styles = {
-    accent: { background: disabled ? "#CDEAE3" : accent, color: "#fff" },
-    success: { background: disabled ? "#CDEAE3" : success, color: "#fff" },
+    accent: { background: disabled ? "#B7D8D1" : accent, color: "#fff" },
+    success: { background: disabled ? "#B7D8D1" : success, color: "#fff" },
     ghost: { background: "transparent", color: textMuted, border: `1px solid ${cardBorder}` },
   };
   return (
     <button
+      className="mp-btn"
       onClick={onClick}
       disabled={disabled}
       style={{
         width: "100%",
-        padding: "13px 16px",
-        borderRadius: 12,
+        minHeight: 52,
+        padding: "14px 18px",
+        borderRadius: 16,
         border: "none",
         fontSize: 15,
         fontWeight: 700,
@@ -85,32 +88,35 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent" 
 export function CheckRow({ label, checked, onToggle }) {
   return (
     <div
+      className="mp-tap"
       onClick={onToggle}
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "11px 12px",
-        borderRadius: 10,
-        marginBottom: 6,
-        background: checked ? accentSoft : "#FAFEFC",
+        padding: "13px 14px",
+        borderRadius: 14,
+        marginBottom: 8,
+        minHeight: 48,
+        background: checked ? accentSoft : "#FAFBFA",
         cursor: "pointer",
-        border: `1px solid ${checked ? accent : "#EDF5F2"}`,
+        border: `1px solid ${checked ? accent : cardBorder}`,
       }}
     >
       <span style={{ fontSize: 14, fontWeight: checked ? 600 : 500 }}>{label}</span>
       <div
         style={{
-          width: 20,
-          height: 20,
-          borderRadius: 6,
-          border: `2px solid ${checked ? accent : "#C7D8D2"}`,
+          width: 22,
+          height: 22,
+          borderRadius: 7,
+          border: `2px solid ${checked ? accent : "#C6CBCF"}`,
           background: checked ? accent : "transparent",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 12,
           color: "#fff",
+          flexShrink: 0,
         }}
       >
         {checked ? "✓" : ""}
@@ -122,14 +128,16 @@ export function CheckRow({ label, checked, onToggle }) {
 export function Pill({ label, selected, onClick }) {
   return (
     <button
+      className="mp-tap"
       onClick={onClick}
       style={{
-        padding: "7px 12px",
+        padding: "9px 14px",
         borderRadius: 20,
-        fontSize: 12,
+        fontSize: 12.5,
         fontWeight: 600,
+        minHeight: 38,
         border: `1px solid ${selected ? accent : cardBorder}`,
-        background: selected ? accent : "#FAFEFC",
+        background: selected ? accent : "#FAFBFA",
         color: selected ? "#fff" : textMuted,
         cursor: "pointer",
         marginRight: 6,
@@ -150,6 +158,7 @@ export function Label({ children }) {
 export function TextInput({ value, onChange, placeholder, type = "text" }) {
   return (
     <input
+      className="mp-input"
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -157,12 +166,13 @@ export function TextInput({ value, onChange, placeholder, type = "text" }) {
       style={{
         width: "100%",
         boxSizing: "border-box",
-        padding: "10px 12px",
-        borderRadius: 10,
+        minHeight: 46,
+        padding: "12px 14px",
+        borderRadius: 14,
         border: `1px solid ${cardBorder}`,
-        background: "#FAFEFC",
+        background: "#FAFBFA",
         color: textMain,
-        fontSize: 14,
+        fontSize: 14.5,
         outline: "none",
       }}
     />
@@ -172,6 +182,7 @@ export function TextInput({ value, onChange, placeholder, type = "text" }) {
 export function TextArea({ value, onChange, placeholder }) {
   return (
     <textarea
+      className="mp-input"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
@@ -179,12 +190,12 @@ export function TextArea({ value, onChange, placeholder }) {
       style={{
         width: "100%",
         boxSizing: "border-box",
-        padding: "10px 12px",
-        borderRadius: 10,
+        padding: "12px 14px",
+        borderRadius: 14,
         border: `1px solid ${cardBorder}`,
-        background: "#FAFEFC",
+        background: "#FAFBFA",
         color: textMain,
-        fontSize: 14,
+        fontSize: 14.5,
         outline: "none",
         resize: "vertical",
         fontFamily: "inherit",
@@ -195,13 +206,13 @@ export function TextArea({ value, onChange, placeholder }) {
 
 export function StatusBadge({ status }) {
   const map = {
-    erledigt: { c: success, bg: "#E5F8EE", l: "Erledigt" },
+    erledigt: { c: accentDark, bg: accentSoft, l: "Erledigt" },
     geplant: { c: blue, bg: blueSoft, l: "Geplant" },
-    verpasst: { c: danger, bg: "#FDE9EC", l: "Verpasst" },
+    verpasst: { c: danger, bg: "#F9E9E9", l: "Verpasst" },
   };
   const s = map[status];
   return (
-    <span style={{ fontSize: 11, padding: "3px 9px", borderRadius: 12, background: s.bg, color: s.c, fontWeight: 700 }}>
+    <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 12, background: s.bg, color: s.c, fontWeight: 700 }}>
       {s.l}
     </span>
   );
