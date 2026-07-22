@@ -92,7 +92,7 @@ export default function TagesplanView({ onHome }) {
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [feedbackOpen, setFeedbackOpen] = useState(null);
-  const [draftFeedback, setDraftFeedback] = useState({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
+  const [draftFeedback, setDraftFeedback] = useState({ nebenwirkungen: [], staerke: "Keine", notizen: "", fotoPreview: null, fotoFile: null });
   // Wenn eine Routine mit noch offenem Peptid-Anteil bestätigt wird: merkt sich,
   // welche Routine (an welchem Tag) nach dem Ausfüllen/Überspringen des
   // Nebenwirkungen-Formulars als erledigt markiert werden soll.
@@ -100,7 +100,9 @@ export default function TagesplanView({ onHome }) {
 
   const openFeedback = (dose, key) => {
     setFeedbackOpen(key);
-    setDraftFeedback({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
+    // "Keine" vorausgewählt statt leer — der häufigste Fall (keine
+    // Nebenwirkung) ist damit mit einem Tap auf "Speichern" erledigt.
+    setDraftFeedback({ nebenwirkungen: [], staerke: "Keine", notizen: "", fotoPreview: null, fotoFile: null });
   };
   const toggleDraftNebenwirkung = (n) =>
     setDraftFeedback((prev) => ({
@@ -237,6 +239,17 @@ export default function TagesplanView({ onHome }) {
     return Array.from(map.entries()).sort(([a], [b]) => (a || "99").localeCompare(b || "99"));
   }, [tagesEntries]);
 
+  // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick
+  // erkennbar, ohne die ganze Liste durchgehen zu müssen. Nur relevant, wenn
+  // der ausgewählte Tag heute ist; der nächste noch offene Block ab jetzt.
+  const jetztHour = useMemo(() => {
+    if (!sameDay(selectedDate, today)) return null;
+    const nowStr = String(new Date().getHours()).padStart(2, "0");
+    const kommend = buckets.map(([hour]) => hour).filter((hour) => hour && hour >= nowStr);
+    return kommend.length ? kommend.sort()[0] : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, buckets]);
+
   const erledigtCount = tagesItems.filter((i) => i.done).length;
 
   return (
@@ -292,47 +305,37 @@ export default function TagesplanView({ onHome }) {
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto" }}>
-        {wochentage.map((d, i) => {
-          const active = sameDay(d, selectedDate);
-          return (
-            <button
-              key={i}
-              className="mp-tap"
-              onClick={() => {
-                setSelectedDate(d);
-                setModus("tag");
-              }}
-              style={{
-                flex: "1 0 44px",
-                minHeight: 52,
-                padding: "8px 4px",
-                borderRadius: 13,
-                border: `1px solid ${active ? accent : cardBorder}`,
-                background: active ? accent : "#fff",
-                color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
-                cursor: "pointer",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[d.getDay()]}</div>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>{d.getDate()}</div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ display: "flex", gap: 14, marginBottom: 18, fontSize: 11, color: textMuted, flexWrap: "wrap" }}>
-        {Object.entries(KATEGORIE).map(([key, k]) => (
-          <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot }} />
-            {k.label}
-          </div>
-        ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span>⭐</span> Routine
+      {modus === "tag" && (
+        <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto" }}>
+          {wochentage.map((d, i) => {
+            const active = sameDay(d, selectedDate);
+            return (
+              <button
+                key={i}
+                className="mp-tap"
+                onClick={() => {
+                  setSelectedDate(d);
+                  setModus("tag");
+                }}
+                style={{
+                  flex: "1 0 44px",
+                  minHeight: 52,
+                  padding: "8px 4px",
+                  borderRadius: 13,
+                  border: `1px solid ${active ? accent : cardBorder}`,
+                  background: active ? accent : "#fff",
+                  color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
+                  cursor: "pointer",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[d.getDay()]}</div>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>{d.getDate()}</div>
+              </button>
+            );
+          })}
         </div>
-      </div>
+      )}
 
       {modus === "tag" && (
         <>
@@ -342,10 +345,19 @@ export default function TagesplanView({ onHome }) {
             </Card>
           )}
 
-          {buckets.map(([hour, entries]) => (
+          {buckets.map(([hour, entries]) => {
+            const istJetzt = hour === jetztHour;
+            return (
             <React.Fragment key={hour || "sonstige"}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 8 }}>{hourLabel(hour)}</div>
-              <Card style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
+                {istJetzt && (
+                  <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: accent, padding: "2px 8px", borderRadius: 8 }}>
+                    JETZT
+                  </span>
+                )}
+              </div>
+              <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
                 {entries.map((entry, i) => {
                   if (entry.kind === "routine") {
                     const offenesPeptid = entry.matchedItems.find((m) => m.kategorie === "peptid" && feedbackOpen === m.key);
@@ -433,7 +445,8 @@ export default function TagesplanView({ onHome }) {
                 })}
               </Card>
             </React.Fragment>
-          ))}
+            );
+          })}
         </>
       )}
 
