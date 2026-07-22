@@ -169,12 +169,12 @@ export default function ProtokolleView({ onHome }) {
     <Shell>
       <style>{"@media print { .no-print { display: none !important; } }"}</style>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>📋 Protokolle</div>
+        <div style={{ fontSize: 22, fontWeight: 800 }}>🗂️ Pläne</div>
         <div className="no-print" style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => window.print()}
             style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-            title="Protokoll drucken"
+            title="Plan drucken"
           >
             🖨️
           </button>
@@ -188,7 +188,7 @@ export default function ProtokolleView({ onHome }) {
         </div>
       </div>
       <div className="no-print" style={{ fontSize: 12, color: textMuted, marginBottom: 20 }}>
-        Nur zum Nachschauen — Änderungen machst du in den einzelnen Bereichen.
+        Dein wiederkehrender Rhythmus, zum Nachschauen — was du wirklich gemacht hast, steht unter Protokolle.
       </div>
 
       <Card style={{ marginBottom: 14 }}>

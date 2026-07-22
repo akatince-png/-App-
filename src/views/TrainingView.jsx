@@ -3,6 +3,7 @@ import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInp
 import Timer from "../ui/Timer";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN, WOCHENTAGE } from "../constants";
+import { trainingDetail } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 
 const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
@@ -31,13 +32,7 @@ function leererEintrag() {
 }
 
 function zusammenfassung(e) {
-  const teile = [];
-  if (e.art === "Krafttraining") {
-    const anzahl = (e.uebungen || []).filter((u) => u.name).length;
-    if (anzahl) teile.push(`${anzahl} Übung${anzahl === 1 ? "" : "en"}`);
-  }
-  if (e.dauerMin) teile.push(`${e.dauerMin} min`);
-  if (e.distanzKm) teile.push(`${e.distanzKm} km`);
+  const teile = [trainingDetail(e)].filter(Boolean);
   if (e.puls) teile.push(`Ø ${e.puls} bpm`);
   if (e.runden && e.art !== "Krafttraining") teile.push(`${e.runden} Runden`);
   if (e.rpe) teile.push(`RPE ${e.rpe}`);
@@ -51,27 +46,33 @@ function zusammenfassung(e) {
 function LiveWorkout({ session, onFertig, onSchliessen }) {
   const [uebungIndex, setUebungIndex] = useState(0);
   const [satzAktuell, setSatzAktuell] = useState(1);
-  const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' (Kraft)
+  const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' | 'bestaetigen' (Kraft)
   const [fertig, setFertig] = useState(!!session.erledigt);
+  // Tatsächlich durchgeführte Werte pro Übung — startet als Kopie des Plans,
+  // wird aber pro Übung nach dem letzten Satz bestätigt/angepasst, damit das
+  // Protokoll später zeigt, was wirklich gemacht wurde, nicht nur den Plan.
+  const [tatsaechlich, setTatsaechlich] = useState(() => (session.uebungen || []).map((u) => ({ ...u })));
+  const [entwurf, setEntwurf] = useState(null);
 
   const uebungen = session.uebungen || [];
   const aktuelleUebung = uebungen[uebungIndex];
 
-  const beenden = (dauerMin) => {
-    onFertig(session.id, dauerMin != null ? { dauerMin } : {});
+  useEffect(() => {
+    if (phase === "bestaetigen" && aktuelleUebung) {
+      setEntwurf({ saetze: aktuelleUebung.saetze, wiederholungen: aktuelleUebung.wiederholungen, gewicht: aktuelleUebung.gewicht });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, uebungIndex]);
+
+  const beenden = (felder = {}) => {
+    onFertig(session.id, felder);
     setFertig(true);
   };
 
   const satzFertig = () => {
     const gesamtSaetze = Number(aktuelleUebung?.saetze) || 1;
     if (satzAktuell >= gesamtSaetze) {
-      if (uebungIndex + 1 < uebungen.length) {
-        setUebungIndex((i) => i + 1);
-        setSatzAktuell(1);
-        setPhase("uebung");
-      } else {
-        beenden();
-      }
+      setPhase("bestaetigen");
     } else {
       setPhase("pause");
     }
@@ -80,6 +81,18 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   const pauseFertig = () => {
     setSatzAktuell((s) => s + 1);
     setPhase("uebung");
+  };
+
+  const uebungBestaetigen = () => {
+    const naechste = tatsaechlich.map((u, i) => (i === uebungIndex ? { ...u, ...entwurf } : u));
+    setTatsaechlich(naechste);
+    if (uebungIndex + 1 < uebungen.length) {
+      setUebungIndex((i) => i + 1);
+      setSatzAktuell(1);
+      setPhase("uebung");
+    } else {
+      beenden({ uebungen: naechste });
+    }
   };
 
   return (
@@ -127,7 +140,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
                     </div>
                     <PrimaryButton onClick={satzFertig}>Satz fertig</PrimaryButton>
                   </>
-                ) : (
+                ) : phase === "pause" ? (
                   <>
                     <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>Pause</div>
                     <Timer
@@ -142,6 +155,37 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
                       </PrimaryButton>
                     </div>
                   </>
+                ) : (
+                  entwurf && (
+                    <div style={{ textAlign: "left" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, textAlign: "center" }}>
+                        Tatsächlich durchgeführt:
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <div style={{ flex: 1 }}>
+                          <Label>Sätze</Label>
+                          <TextInput type="number" value={entwurf.saetze} onChange={(v) => setEntwurf((p) => ({ ...p, saetze: v }))} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <Label>Wdh.</Label>
+                          <TextInput
+                            type="number"
+                            value={entwurf.wiederholungen}
+                            onChange={(v) => setEntwurf((p) => ({ ...p, wiederholungen: v }))}
+                          />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <Label>Gewicht</Label>
+                          <TextInput value={entwurf.gewicht} onChange={(v) => setEntwurf((p) => ({ ...p, gewicht: v }))} />
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <PrimaryButton onClick={uebungBestaetigen}>
+                          {uebungIndex + 1 < uebungen.length ? "Stimmt, weiter" : "Stimmt, Training beenden"}
+                        </PrimaryButton>
+                      </div>
+                    </div>
+                  )
                 )}
               </Card>
             </>
@@ -170,7 +214,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
       ) : (
         <Card style={{ textAlign: "center" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>Stoppuhr</div>
-          <Timer mode="stopwatch" onFertig={(sek) => beenden(Math.round(sek / 60))} />
+          <Timer mode="stopwatch" onFertig={(sek) => beenden({ dauerMin: Math.round(sek / 60) })} />
         </Card>
       )}
     </Shell>

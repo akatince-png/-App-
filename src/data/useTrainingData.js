@@ -96,10 +96,16 @@ export function useTrainingData(userId) {
   // tatsächlich gestoppte Dauer (z. B. von der Cardio-Stoppuhr).
   const trainingAbschliessen = useCallback(async (id, felder = {}) => {
     const patch = { erledigt: true };
-    if (felder.dauerMin != null) patch.dauer_min = felder.dauerMin;
-    setTrainingEintraege((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, erledigt: true, ...(felder.dauerMin != null ? { dauerMin: felder.dauerMin } : {}) } : e))
-    );
+    const lokalePatch = { erledigt: true };
+    if (felder.dauerMin != null) {
+      patch.dauer_min = felder.dauerMin;
+      lokalePatch.dauerMin = felder.dauerMin;
+    }
+    if (felder.uebungen != null) {
+      patch.uebungen = felder.uebungen;
+      lokalePatch.uebungen = felder.uebungen;
+    }
+    setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? { ...e, ...lokalePatch } : e)));
     const { error } = await supabase.from("training_sessions").update(patch).eq("id", id);
     if (error) console.error(error);
   }, []);

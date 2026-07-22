@@ -19,13 +19,17 @@ export const KATEGORIE_META = {
   training: { bg: "#F1EDF8", text: "#786198", dot: "#9B85B8", label: "Training" },
 };
 
-// Kurze Zusammenfassung einer Trainingseinheit für die Tagesplan-/Home-Zeile.
-function trainingDetail(t) {
-  const teile = [];
+// Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —
+// bei Krafttraining mit echten Übungsnamen + Sätzen×Wiederholungen statt nur
+// einer Anzahl, damit auf einen Blick erkennbar ist, was konkret ansteht.
+export function trainingDetail(t) {
   if (t.art === "Krafttraining") {
-    const n = (t.uebungen || []).filter((u) => u.name).length;
-    if (n) teile.push(`${n} Übung${n === 1 ? "" : "en"}`);
+    return (t.uebungen || [])
+      .filter((u) => u.name)
+      .map((u) => `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${u.gewicht ? ` ${u.gewicht}` : ""}`)
+      .join(", ");
   }
+  const teile = [];
   if (t.dauerMin) teile.push(`${t.dauerMin} min`);
   if (t.distanzKm) teile.push(`${t.distanzKm} km`);
   return teile.join(" · ");

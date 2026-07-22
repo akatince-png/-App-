@@ -16,6 +16,7 @@ import NutritionView from "./views/NutritionView";
 import BlutzuckerView from "./views/BlutzuckerView";
 import HydrationView from "./views/HydrationView";
 import ProtokolleView from "./views/ProtokolleView";
+import ProtokollLogView from "./views/ProtokollLogView";
 import WelcomeView from "./views/WelcomeView";
 import RoutinenView from "./views/RoutinenView";
 
@@ -85,6 +86,10 @@ export default function AuthenticatedApp() {
 
   if (view === "protokolle") {
     return <ProtokolleView onHome={() => setView("home")} />;
+  }
+
+  if (view === "verlauf") {
+    return <ProtokollLogView onHome={() => setView("home")} />;
   }
 
   if (view === "routinen") {
