@@ -17,13 +17,24 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
     supplementErledigt,
     mahlzeiten,
     mahlzeitErledigt,
+    trainingEintraege,
   } = useAppData();
 
   const today = new Date();
   const stunde = today.getHours();
   const gruss = stunde < 12 ? "Guten Morgen" : stunde < 18 ? "Guten Tag" : "Guten Abend";
 
-  const heuteItems = buildDayItems(today, { plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt, mahlzeiten, mahlzeitErledigt });
+  const heuteItems = buildDayItems(today, {
+    plan,
+    erledigt,
+    hormonPlan,
+    hormonErledigt,
+    supplemente,
+    supplementErledigt,
+    mahlzeiten,
+    mahlzeitErledigt,
+    trainingEintraege,
+  });
   const erledigtCount = heuteItems.filter((i) => i.done).length;
   const offeneItems = heuteItems.filter((i) => !i.done);
 

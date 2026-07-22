@@ -13,14 +13,39 @@ export const KATEGORIE_META = {
   hormon: { bg: "#EAF0F8", text: "#3A5A87", dot: blue, label: "Medikament" },
   supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
+  training: { bg: "#F1EDF8", text: "#786198", dot: "#9B85B8", label: "Training" },
 };
+
+// Kurze Zusammenfassung einer Trainingseinheit für die Tagesplan-/Home-Zeile.
+function trainingDetail(t) {
+  const teile = [];
+  if (t.art === "Krafttraining") {
+    const n = (t.uebungen || []).filter((u) => u.name).length;
+    if (n) teile.push(`${n} Übung${n === 1 ? "" : "en"}`);
+  }
+  if (t.dauerMin) teile.push(`${t.dauerMin} min`);
+  if (t.distanzKm) teile.push(`${t.distanzKm} km`);
+  return teile.join(" · ");
+}
 
 // Baut die reine Datenliste eines Tages aus allen Trackern zusammen — ohne
 // Bestätigen-Callbacks, damit Tagesplan und Startseite dieselbe Grundlage
 // nutzen können, aber jeweils ihr eigenes Bestätigen-Verhalten anhängen.
 export function buildDayItems(
   date,
-  { plan, erledigt, dosierung, hormonPlan, hormonErledigt, hormonDosierung, supplemente, supplementErledigt, mahlzeiten, mahlzeitErledigt }
+  {
+    plan,
+    erledigt,
+    dosierung,
+    hormonPlan,
+    hormonErledigt,
+    hormonDosierung,
+    supplemente,
+    supplementErledigt,
+    mahlzeiten,
+    mahlzeitErledigt,
+    trainingEintraege = [],
+  }
 ) {
   const tagStr = toLocalISODate(date);
   const items = [];
@@ -92,6 +117,22 @@ export function buildDayItems(
       });
     });
   });
+
+  trainingEintraege
+    .filter((t) => t.datum === tagStr)
+    .forEach((t) => {
+      items.push({
+        kategorie: "training",
+        key: `t-${t.id}`,
+        refId: t.id,
+        hour: null,
+        uhrzeit: "",
+        name: t.name ? `${t.art} · ${t.name}` : t.art,
+        detail: trainingDetail(t),
+        done: !!t.erledigt,
+        raw: t,
+      });
+    });
 
   items.sort((a, b) => {
     const ha = a.hour ?? "99";

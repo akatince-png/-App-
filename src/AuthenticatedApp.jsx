@@ -32,6 +32,9 @@ export default function AuthenticatedApp() {
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | 'supplemente' | ...
   const [step, setStep] = useState(0);
   const [welcomeSeen, setWelcomeSeen] = useState(false);
+  // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
+  // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
+  const [offenesTrainingId, setOffenesTrainingId] = useState(null);
 
   useEffect(() => {
     if (!loading && view === null) {
@@ -69,7 +72,15 @@ export default function AuthenticatedApp() {
   }
 
   if (view === "tagesplan") {
-    return <TagesplanView onHome={() => setView("home")} />;
+    return (
+      <TagesplanView
+        onHome={() => setView("home")}
+        onOpenTraining={(id) => {
+          setOffenesTrainingId(id);
+          setView("training");
+        }}
+      />
+    );
   }
 
   if (view === "protokolle") {
@@ -93,7 +104,13 @@ export default function AuthenticatedApp() {
   }
 
   if (view === "training") {
-    return <TrainingView onHome={() => setView("home")} />;
+    return (
+      <TrainingView
+        onHome={() => setView("home")}
+        initialSessionId={offenesTrainingId}
+        onConsumedInitialSession={() => setOffenesTrainingId(null)}
+      />
+    );
   }
 
   if (view === "ernaehrung") {

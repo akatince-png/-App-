@@ -114,7 +114,7 @@ function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggl
   );
 }
 
-export default function TagesplanView({ onHome }) {
+export default function TagesplanView({ onHome, onOpenTraining }) {
   const {
     plan,
     erledigt,
@@ -133,6 +133,7 @@ export default function TagesplanView({ onHome }) {
     mahlzeiten,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
+    trainingEintraege,
     routinen,
     routineErledigt,
     toggleRoutineErledigt,
@@ -216,6 +217,7 @@ export default function TagesplanView({ onHome }) {
         supplementErledigt,
         mahlzeiten,
         mahlzeitErledigt,
+        trainingEintraege,
       });
       return items.map((item) => {
         if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
@@ -224,6 +226,7 @@ export default function TagesplanView({ onHome }) {
           const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
           return { ...item, doseRef, onConfirm: () => openFeedback(doseRef, item.key, "supplement") };
         }
+        if (item.kategorie === "training") return { ...item, onConfirm: () => onOpenTraining(item.raw.id) };
         return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.uhrzeit) };
       });
     },
@@ -239,6 +242,8 @@ export default function TagesplanView({ onHome }) {
       mahlzeiten,
       mahlzeitErledigt,
       toggleMahlzeitErledigt,
+      trainingEintraege,
+      onOpenTraining,
     ]
   );
 
@@ -487,7 +492,7 @@ export default function TagesplanView({ onHome }) {
                           <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
                           <div>
                             <div style={{ fontSize: 14.5, fontWeight: 700 }}>
-                              {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>
+                              {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>}
                             </div>
                             {item.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                             <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "2px 8px", borderRadius: 8, marginTop: 4 }}>
@@ -503,7 +508,7 @@ export default function TagesplanView({ onHome }) {
                             onClick={item.onConfirm}
                             style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
                           >
-                            Bestätigen
+                            {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
                           </button>
                         )}
                       </div>
@@ -534,7 +539,7 @@ export default function TagesplanView({ onHome }) {
           {wochentage.map((d) => {
             const items = itemsForDate(d);
             const done = items.filter((i) => i.done).length;
-            const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit"].map((kat) => ({
+            const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit", "training"].map((kat) => ({
               kat,
               count: items.filter((i) => i.kategorie === kat).length,
             }));

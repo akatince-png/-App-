@@ -17,6 +17,9 @@ function rowToEintrag(r) {
     energielevel: r.energielevel || "",
     schmerzen: r.schmerzen || "",
     bemerkungen: r.bemerkungen || "",
+    erledigt: r.erledigt,
+    intervallArbeitSek: r.intervall_arbeit_sek,
+    intervallPauseSek: r.intervall_pause_sek,
   };
 }
 
@@ -59,14 +62,18 @@ export function useTrainingData(userId) {
         energielevel: eintrag.energielevel || null,
         schmerzen: eintrag.schmerzen || null,
         bemerkungen: eintrag.bemerkungen || "",
+        erledigt: eintrag.erledigt !== false,
+        intervall_arbeit_sek: eintrag.intervallArbeitSek ? Number(eintrag.intervallArbeitSek) : null,
+        intervall_pause_sek: eintrag.intervallPauseSek ? Number(eintrag.intervallPauseSek) : null,
       };
       const { data, error } = await supabase.from("training_sessions").insert(row).select().single();
       if (error) {
         console.error(error);
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
-      setTrainingEintraege((prev) => [rowToEintrag(data), ...prev]);
-      return { ok: true };
+      const neu = rowToEintrag(data);
+      setTrainingEintraege((prev) => [neu, ...prev]);
+      return { ok: true, eintrag: neu };
     },
     [userId]
   );
@@ -77,5 +84,23 @@ export function useTrainingData(userId) {
     if (error) console.error(error);
   }, []);
 
-  return { trainingEintraege, trainingHinzufuegen, trainingEntfernen };
+  const trainingErledigtSetzen = useCallback(async (id, erledigt) => {
+    setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? { ...e, erledigt } : e)));
+    const { error } = await supabase.from("training_sessions").update({ erledigt }).eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
+  // Schließt ein Live-Workout ab: markiert erledigt und übernimmt optional die
+  // tatsächlich gestoppte Dauer (z. B. von der Cardio-Stoppuhr).
+  const trainingAbschliessen = useCallback(async (id, felder = {}) => {
+    const patch = { erledigt: true };
+    if (felder.dauerMin != null) patch.dauer_min = felder.dauerMin;
+    setTrainingEintraege((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, erledigt: true, ...(felder.dauerMin != null ? { dauerMin: felder.dauerMin } : {}) } : e))
+    );
+    const { error } = await supabase.from("training_sessions").update(patch).eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
+  return { trainingEintraege, trainingHinzufuegen, trainingEntfernen, trainingErledigtSetzen, trainingAbschliessen };
 }
