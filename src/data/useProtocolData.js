@@ -16,6 +16,8 @@ function rowToDosierung(row) {
     eigenerStart: row.eigener_start || "",
     uhrzeiten: row.uhrzeiten?.length ? row.uhrzeiten.map((t) => t.slice(0, 5)) : ["20:00"],
     fotoPath: row.foto_path || null,
+    bacWasser: row.bac_wasser_ml != null ? String(row.bac_wasser_ml) : "",
+    spruehstoesse: row.spruehstoesse != null ? String(row.spruehstoesse) : "",
   };
 }
 
@@ -27,9 +29,11 @@ const DOSE_FELD_TO_COLUMN = {
   eigenerStart: "eigener_start",
   weekdays: "weekdays",
   uhrzeiten: "uhrzeiten",
+  bacWasser: "bac_wasser_ml",
+  spruehstoesse: "spruehstoesse",
 };
 
-const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays"]);
+const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays", "bacWasser", "spruehstoesse"]);
 
 const DEFAULT_DOSIERUNG = {
   menge: "",
@@ -42,6 +46,8 @@ const DEFAULT_DOSIERUNG = {
   eigenerStart: "",
   uhrzeiten: ["20:00"],
   fotoPath: null,
+  bacWasser: "",
+  spruehstoesse: "",
 };
 
 export function useProtocolData(userId) {

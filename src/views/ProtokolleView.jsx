@@ -25,13 +25,17 @@ function buildTimeline({ peptide, dosierung, einnahmeart, hormone, hormonDosieru
 
   peptide.forEach((p) => {
     const d = dosierung[p] || {};
+    const zusatz = [
+      d.bacWasser ? `${d.bacWasser} ml BAC-Wasser` : null,
+      d.spruehstoesse ? `${d.spruehstoesse} Sprühstöße` : null,
+    ].filter(Boolean);
     (d.uhrzeiten || []).forEach((zeit) => {
       items.push({
         hour: zeit.slice(0, 2),
         zeit,
         kategorie: "peptid",
         name: p,
-        detail: `${d.menge || "—"} · ${einnahmeart[p] || "—"} · ${describeInterval(d)}`,
+        detail: [`${d.menge || "—"} · ${einnahmeart[p] || "—"} · ${describeInterval(d)}`, ...zusatz].join(" · "),
       });
     });
   });
@@ -44,7 +48,7 @@ function buildTimeline({ peptide, dosierung, einnahmeart, hormone, hormonDosieru
         zeit,
         kategorie: "medikament",
         name: h,
-        detail: `${d.menge || "—"} · ${d.kategorie || "Hormone"} · ${describeInterval(d)}`,
+        detail: `${d.menge || "—"} · ${d.einnahmeart || "Injektion"} · ${d.kategorie || "Hormone"} · ${describeInterval(d)}`,
       });
     });
   });

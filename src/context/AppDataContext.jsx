@@ -43,6 +43,7 @@ export function AppDataProvider({ children }) {
     hormonEntfernen: hormoneData.hormonEntfernen,
     setHormonFoto: hormoneData.setHormonFoto,
     setHormonKategorie: hormoneData.setHormonKategorie,
+    setHormonEinnahmeart: hormoneData.setHormonEinnahmeart,
     hormonErledigt: hormoneData.hormonErledigt,
     toggleHormonErledigt: hormoneData.toggleHormonErledigt,
     hormonPlan: hormoneData.hormonPlan,

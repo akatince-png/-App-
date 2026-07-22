@@ -18,7 +18,10 @@ export const KATEGORIE_META = {
 // Baut die reine Datenliste eines Tages aus allen Trackern zusammen — ohne
 // Bestätigen-Callbacks, damit Tagesplan und Startseite dieselbe Grundlage
 // nutzen können, aber jeweils ihr eigenes Bestätigen-Verhalten anhängen.
-export function buildDayItems(date, { plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt, mahlzeiten, mahlzeitErledigt }) {
+export function buildDayItems(
+  date,
+  { plan, erledigt, dosierung, hormonPlan, hormonErledigt, hormonDosierung, supplemente, supplementErledigt, mahlzeiten, mahlzeitErledigt }
+) {
   const tagStr = toLocalISODate(date);
   const items = [];
 
@@ -29,6 +32,7 @@ export function buildDayItems(date, { plan, erledigt, hormonPlan, hormonErledigt
       items.push({
         kategorie: "peptid",
         key: `p-${k}`,
+        refId: dosierung?.[d.peptid]?.id ?? null,
         hour: d.uhrzeit.slice(0, 2),
         uhrzeit: d.uhrzeit,
         name: d.peptid,
@@ -45,6 +49,7 @@ export function buildDayItems(date, { plan, erledigt, hormonPlan, hormonErledigt
       items.push({
         kategorie: "hormon",
         key: `h-${k}`,
+        refId: hormonDosierung?.[d.name]?.id ?? null,
         hour: d.uhrzeit.slice(0, 2),
         uhrzeit: d.uhrzeit,
         name: d.name,
@@ -60,6 +65,7 @@ export function buildDayItems(date, { plan, erledigt, hormonPlan, hormonErledigt
       items.push({
         kategorie: "supplement",
         key: `s-${k}`,
+        refId: s.id,
         hour: TAGESZEIT_STUNDE[zeit] || null,
         uhrzeit: zeit,
         name: s.name,
@@ -76,6 +82,7 @@ export function buildDayItems(date, { plan, erledigt, hormonPlan, hormonErledigt
       items.push({
         kategorie: "mahlzeit",
         key: `m-${k}`,
+        refId: m.id,
         hour: TAGESZEIT_STUNDE[zeit] || null,
         uhrzeit: zeit,
         name: m.name,

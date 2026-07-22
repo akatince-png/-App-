@@ -49,10 +49,11 @@ export const PEPTIDE_OPTIONEN = [
   "Snap-8",
 ];
 
-// Einnahmearten speziell für Peptide — Injektion ist der Standard, die meisten
-// Peptide werden subkutan gespritzt; einige gibt es alternativ auch als
-// Nasenspray oder zum Schlucken (z. B. BPC-157 oral).
-export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Nasenspray"];
+// Einnahmearten für Peptide & Medikamente — Injektion ist der Standard, die
+// meisten Peptide werden subkutan gespritzt; viele Präparate (Peptide wie
+// Medikamente) gibt es aber auch als Tablette, Kapsel, Pulver, Tropfen oder
+// Nasenspray.
+export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Kapsel", "Pulver", "Tropfen", "Nasenspray"];
 
 // Kategorien innerhalb von "Medikamente" — fasst Hormone/Off-Label mit
 // anderen verschreibungspflichtigen/rezeptfreien Medikamenten zusammen.

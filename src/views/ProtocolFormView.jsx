@@ -131,6 +131,30 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
 
                 <DosierungFields value={dosierung[p]} onChange={(feld, val) => setDose(p, feld, val)} />
 
+                {(einnahmeart[p] || "Injektion") === "Injektion" && (
+                  <>
+                    <Label>BAC-Wasser zum Anmischen (ml, optional)</Label>
+                    <TextInput
+                      type="number"
+                      value={dosierung[p]?.bacWasser || ""}
+                      onChange={(val) => setDose(p, "bacWasser", val)}
+                      placeholder="z. B. 2"
+                    />
+                  </>
+                )}
+
+                {einnahmeart[p] === "Nasenspray" && (
+                  <>
+                    <Label>Sprühstöße pro Gabe (optional)</Label>
+                    <TextInput
+                      type="number"
+                      value={dosierung[p]?.spruehstoesse || ""}
+                      onChange={(val) => setDose(p, "spruehstoesse", val)}
+                      placeholder="z. B. 2"
+                    />
+                  </>
+                )}
+
                 <Label>Foto des Präparats (optional) — hilft, Hersteller/Charge auseinanderzuhalten</Label>
                 <input type="file" accept="image/*" id={`praeparat-foto-${p}`} style={{ display: "none" }} onChange={(e) => handlePeptidFoto(p, e)} />
                 <label

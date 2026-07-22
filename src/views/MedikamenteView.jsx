@@ -3,7 +3,7 @@ import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextInput } from 
 import DosierungFields from "../ui/DosierungFields";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { cardBorder, danger, textMuted } from "../ui/theme";
-import { MEDIKAMENTE_KATEGORIEN } from "../constants";
+import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -12,6 +12,7 @@ const NEUES_MEDIKAMENT_LEER = {
   name: "",
   menge: "",
   kategorie: "Hormone",
+  einnahmeart: "Injektion",
   intervallTyp: "fixed",
   intervallDays: 7,
   customDays: "",
@@ -37,6 +38,7 @@ export default function MedikamenteView({ onHome }) {
     hormonEntfernen,
     setHormonFoto,
     setHormonKategorie,
+    setHormonEinnahmeart,
     hormonErledigt,
     toggleHormonErledigt,
     hormonPlan,
@@ -99,6 +101,13 @@ export default function MedikamenteView({ onHome }) {
           ))}
         </div>
 
+        <Label>Einnahmeart</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {EINNAHMEARTEN.map((a) => (
+            <Pill key={a} label={a} selected={neuesMedikament.einnahmeart === a} onClick={() => handleChange("einnahmeart", a)} />
+          ))}
+        </div>
+
         <DosierungFields value={neuesMedikament} onChange={handleChange} mengePlaceholder="z. B. 100 mg" />
 
         {medikamentError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{medikamentError}</div>}
@@ -129,7 +138,9 @@ export default function MedikamenteView({ onHome }) {
                       <div style={{ fontSize: 14, fontWeight: 700 }}>
                         {dose.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {dose.uhrzeit}</span>
                       </div>
-                      <div style={{ fontSize: 12, color: textMuted }}>{dose.menge}</div>
+                      <div style={{ fontSize: 12, color: textMuted }}>
+                        {dose.menge} · {dose.einnahmeart}
+                      </div>
                     </div>
                     {done ? (
                       <StatusBadge status="erledigt" />
@@ -176,19 +187,33 @@ export default function MedikamenteView({ onHome }) {
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700 }}>{h}</div>
                         <div style={{ fontSize: 11, color: textMuted }}>
-                          {hormonDosierung[h]?.menge} · {describeInterval(hormonDosierung[h])} · {(hormonDosierung[h]?.uhrzeiten || []).join(" & ")}
+                          {hormonDosierung[h]?.menge} · {hormonDosierung[h]?.einnahmeart || "Injektion"} · {describeInterval(hormonDosierung[h])} ·{" "}
+                          {(hormonDosierung[h]?.uhrzeiten || []).join(" & ")}
                         </div>
-                        <select
-                          value={hormonDosierung[h]?.kategorie || "Hormone"}
-                          onChange={(e) => setHormonKategorie(h, e.target.value)}
-                          style={{ marginTop: 4, fontSize: 11, border: `1px solid ${cardBorder}`, borderRadius: 6, padding: "2px 4px", color: textMuted }}
-                        >
-                          {MEDIKAMENTE_KATEGORIEN.map((kat) => (
-                            <option key={kat} value={kat}>
-                              {kat}
-                            </option>
-                          ))}
-                        </select>
+                        <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                          <select
+                            value={hormonDosierung[h]?.kategorie || "Hormone"}
+                            onChange={(e) => setHormonKategorie(h, e.target.value)}
+                            style={{ fontSize: 11, border: `1px solid ${cardBorder}`, borderRadius: 6, padding: "2px 4px", color: textMuted }}
+                          >
+                            {MEDIKAMENTE_KATEGORIEN.map((kat) => (
+                              <option key={kat} value={kat}>
+                                {kat}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={hormonDosierung[h]?.einnahmeart || "Injektion"}
+                            onChange={(e) => setHormonEinnahmeart(h, e.target.value)}
+                            style={{ fontSize: 11, border: `1px solid ${cardBorder}`, borderRadius: 6, padding: "2px 4px", color: textMuted }}
+                          >
+                            {EINNAHMEARTEN.map((a) => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

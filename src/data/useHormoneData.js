@@ -8,6 +8,7 @@ function rowToHormonDosierung(row) {
     id: row.id,
     menge: row.menge || "",
     kategorie: row.kategorie || "Hormone",
+    einnahmeart: row.einnahmeart || "Injektion",
     intervallTyp: row.intervall_mode || "fixed",
     intervallDays: row.intervall_days || 7,
     customDays: row.custom_days != null ? String(row.custom_days) : "",
@@ -28,6 +29,7 @@ function toRow(userId, neuesHormon) {
     user_id: userId,
     menge: neuesHormon.menge,
     kategorie: neuesHormon.kategorie || "Hormone",
+    einnahmeart: neuesHormon.einnahmeart || "Injektion",
     intervall_mode: neuesHormon.intervallTyp || "fixed",
     intervall_days: !isCustom && !isCycle && !isWeekdays ? neuesHormon.intervallDays : null,
     custom_days: isCustom && neuesHormon.customDays ? Number(neuesHormon.customDays) : null,
@@ -97,6 +99,7 @@ export function useHormoneData(userId, startdatum, dauer) {
           id: data.id,
           menge: neuesHormon.menge,
           kategorie: neuesHormon.kategorie || "Hormone",
+          einnahmeart: neuesHormon.einnahmeart || "Injektion",
           intervallTyp: neuesHormon.intervallTyp || "fixed",
           intervallDays: neuesHormon.intervallDays,
           customDays: neuesHormon.customDays,
@@ -150,6 +153,15 @@ export function useHormoneData(userId, startdatum, dauer) {
     [userId]
   );
 
+  const setHormonEinnahmeart = useCallback(
+    async (name, einnahmeart) => {
+      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], einnahmeart } }));
+      const { error } = await supabase.from("hormones").update({ einnahmeart }).eq("user_id", userId).eq("name", name);
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
   const toggleHormonErledigt = useCallback(
     async (datumStr, name, uhrzeit) => {
       const k = `${datumStr}__${name}__${uhrzeit}`;
@@ -175,7 +187,7 @@ export function useHormoneData(userId, startdatum, dauer) {
       const zeiten = d.uhrzeiten?.length ? d.uhrzeiten : ["20:00"];
       dates.forEach((date) => {
         zeiten.forEach((uhrzeit) => {
-          dosen.push({ date, name: h, menge: d.menge || "", uhrzeit });
+          dosen.push({ date, name: h, menge: d.menge || "", einnahmeart: d.einnahmeart || "Injektion", uhrzeit });
         });
       });
     });
@@ -190,6 +202,7 @@ export function useHormoneData(userId, startdatum, dauer) {
     hormonEntfernen,
     setHormonFoto,
     setHormonKategorie,
+    setHormonEinnahmeart,
     hormonErledigt,
     toggleHormonErledigt,
     hormonPlan,
