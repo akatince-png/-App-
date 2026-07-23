@@ -17,8 +17,9 @@ const ERWEITERUNGEN = [
 
 export default function MehrTab() {
   const { signOut, user } = useAuth();
-  const { resetOnboarding } = useAppData();
+  const { resetOnboarding, pushUnterstuetzt, pushAktiv, pushLadend, pushFehler, pushAktivieren, pushDeaktivieren, pushTestSenden } = useAppData();
   const [resetMsg, setResetMsg] = useState(null);
+  const [testMsg, setTestMsg] = useState(null);
 
   const handleResetOnboarding = async () => {
     setResetMsg(null);
@@ -26,8 +27,60 @@ export default function MehrTab() {
     setResetMsg(result?.ok ? "Erledigt — beim nächsten Anmelden siehst du wieder die Willkommens-Seiten." : result?.error || "Zurücksetzen fehlgeschlagen.");
   };
 
+  const handleTestSenden = async () => {
+    setTestMsg(null);
+    const result = await pushTestSenden();
+    setTestMsg(result?.ok ? "Gesendet — sollte gleich als Benachrichtigung ankommen." : result?.error || "Senden fehlgeschlagen.");
+  };
+
   return (
     <>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>
+      <Card style={{ marginBottom: 14 }}>
+        {!pushUnterstuetzt ? (
+          <div style={{ fontSize: 13, color: textMuted }}>
+            Echte Erinnerungen werden auf diesem Gerät/Browser nicht unterstützt. Auf dem iPad: erst über „Teilen“ →
+            „Zum Home-Bildschirm“ als App hinzufügen, dann von dort aus öffnen — hier funktioniert es dann.
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
+              Erinnert dich per Benachrichtigung, auch wenn die App gerade nicht geöffnet ist — ganz ohne Mac oder
+              Xcode, direkt über den Browser.
+            </div>
+            <button
+              onClick={pushAktiv ? pushDeaktivieren : pushAktivieren}
+              disabled={pushLadend}
+              style={{
+                width: "100%",
+                padding: "13px 16px",
+                borderRadius: 12,
+                border: pushAktiv ? `1px solid ${danger}` : "none",
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: pushLadend ? "not-allowed" : "pointer",
+                background: pushAktiv ? "#fff" : accentDark,
+                color: pushAktiv ? danger : "#fff",
+              }}
+            >
+              {pushLadend ? "Einen Moment..." : pushAktiv ? "Erinnerungen deaktivieren" : "Erinnerungen aktivieren"}
+            </button>
+            {pushFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{pushFehler}</div>}
+            {pushAktiv && (
+              <div style={{ marginTop: 10 }}>
+                <button
+                  onClick={handleTestSenden}
+                  style={{ width: "100%", padding: "11px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
+                >
+                  Test-Erinnerung senden
+                </button>
+                {testMsg && <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>{testMsg}</div>}
+              </div>
+            )}
+          </>
+        )}
+      </Card>
+
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Datenschutz & Sicherheit</div>
       <Card style={{ marginBottom: 14 }}>
         {DATENSCHUTZ.map((item) => (
