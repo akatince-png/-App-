@@ -72,7 +72,7 @@ export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }
           marginTop: 4,
         }}
       >
-        Zurück zum Protokoll bearbeiten
+        Zu deinem Peptid-Protokoll
       </button>
     </Shell>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
+import GrundEingabe from "../ui/GrundEingabe";
 import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { TAGESZEITEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
@@ -7,8 +8,71 @@ import { useAppData } from "../context/AppDataContext";
 
 const LEERE_MAHLZEIT = { name: "", tageszeiten: [], hinweis: "", zutaten: [{ name: "", menge: "" }] };
 
+function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
+  const [offen, setOffen] = useState(false);
+  const [entwurf, setEntwurf] = useState({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
+  const [grund, setGrund] = useState("");
+
+  const toggleZeit = (z) =>
+    setEntwurf((p) => ({ ...p, tageszeiten: p.tageszeiten.includes(z) ? p.tageszeiten.filter((x) => x !== z) : [...p.tageszeiten, z] }));
+
+  const speichern = () => {
+    onAendern(m, entwurf, grund);
+    setGrund("");
+    setOffen(false);
+  };
+
+  return (
+    <div style={{ padding: "8px 0", borderBottom: istLetzte ? "none" : `1px solid ${cardBorder}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
+          <div style={{ fontSize: 11, color: textMuted }}>
+            {m.tageszeiten.join(", ")} {m.hinweis && `· ${m.hinweis}`}
+          </div>
+          {m.zutaten.length > 0 && (
+            <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>
+              {m.zutaten.map((z) => `${z.name}${z.menge ? ` (${z.menge})` : ""}`).join(" · ")}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => setOffen((v) => !v)}
+          style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", marginRight: 12 }}
+        >
+          {offen ? "Zu" : "Bearbeiten"}
+        </button>
+        <button onClick={() => onEntfernen(m)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>
+          ×
+        </button>
+      </div>
+      {offen && (
+        <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+          <Label>Name</Label>
+          <TextInput value={entwurf.name} onChange={(v) => setEntwurf((p) => ({ ...p, name: v }))} />
+          <Label>Tageszeit(en)</Label>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {TAGESZEITEN.map((z) => (
+              <Pill key={z} label={z} selected={entwurf.tageszeiten.includes(z)} onClick={() => toggleZeit(z)} />
+            ))}
+          </div>
+          <Label>Hinweis</Label>
+          <TextInput value={entwurf.hinweis} onChange={(v) => setEntwurf((p) => ({ ...p, hinweis: v }))} placeholder="optional" />
+          <GrundEingabe grund={grund} onChange={setGrund} />
+          <div style={{ marginTop: 10 }}>
+            <PrimaryButton onClick={speichern} disabled={!entwurf.name.trim() || entwurf.tageszeiten.length === 0}>
+              Speichern
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function NutritionView({ onHome }) {
-  const { mahlzeiten, mahlzeitHinzufuegen, mahlzeitEntfernen, mahlzeitErledigt, toggleMahlzeitErledigt } = useAppData();
+  const { mahlzeiten, mahlzeitHinzufuegen, mahlzeitAendern, mahlzeitEntfernen, mahlzeitErledigt, toggleMahlzeitErledigt, aenderungVermerken } =
+    useAppData();
   const [neueMahlzeit, setNeueMahlzeit] = useState(LEERE_MAHLZEIT);
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
   const [eigeneZeit, setEigeneZeit] = useState("");
@@ -44,7 +108,31 @@ export default function NutritionView({ onHome }) {
       setMahlzeitError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    aenderungVermerken({
+      kategorie: "mahlzeit",
+      itemName: neueMahlzeit.name,
+      aktion: "hinzugefügt",
+      detail: neueMahlzeit.tageszeiten.join(", "),
+    });
     setNeueMahlzeit(LEERE_MAHLZEIT);
+  };
+
+  const handleAendern = (m, entwurf, grund) => {
+    const aenderungen = [];
+    if (entwurf.name !== m.name) aenderungen.push(`Name: ${m.name} → ${entwurf.name}`);
+    if (entwurf.tageszeiten.join(",") !== m.tageszeiten.join(",")) {
+      aenderungen.push(`Tageszeiten: ${m.tageszeiten.join(", ") || "–"} → ${entwurf.tageszeiten.join(", ") || "–"}`);
+    }
+    if (entwurf.hinweis !== m.hinweis) aenderungen.push(`Hinweis: ${m.hinweis || "–"} → ${entwurf.hinweis || "–"}`);
+    if (aenderungen.length > 0) {
+      aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: aenderungen.join("; "), grund });
+    }
+    mahlzeitAendern(m.id, entwurf);
+  };
+
+  const handleEntfernen = (m) => {
+    aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "entfernt", detail: m.tageszeiten.join(", ") });
+    mahlzeitEntfernen(m.id);
   };
 
   const today = new Date();
@@ -245,34 +333,7 @@ export default function NutritionView({ onHome }) {
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Deinen Ernährungsplan verwalten</div>
           <Card>
             {mahlzeiten.map((m, i) => (
-              <div
-                key={m.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  padding: "8px 0",
-                  borderBottom: i < mahlzeiten.length - 1 ? `1px solid ${cardBorder}` : "none",
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
-                  <div style={{ fontSize: 11, color: textMuted }}>
-                    {m.tageszeiten.join(", ")} {m.hinweis && `· ${m.hinweis}`}
-                  </div>
-                  {m.zutaten.length > 0 && (
-                    <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>
-                      {m.zutaten.map((z) => `${z.name}${z.menge ? ` (${z.menge})` : ""}`).join(" · ")}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => mahlzeitEntfernen(m.id)}
-                  style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}
-                >
-                  ×
-                </button>
-              </div>
+              <MahlzeitZeile key={m.id} m={m} istLetzte={i === mahlzeiten.length - 1} onAendern={handleAendern} onEntfernen={handleEntfernen} />
             ))}
           </Card>
         </>

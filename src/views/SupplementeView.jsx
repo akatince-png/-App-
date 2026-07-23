@@ -1,9 +1,71 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
+import GrundEingabe from "../ui/GrundEingabe";
 import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { HINWEISE, TAGESZEITEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+
+function SupplementZeile({ s, istLetzte, onAendern, onEntfernen }) {
+  const [offen, setOffen] = useState(false);
+  const [entwurf, setEntwurf] = useState({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis });
+  const [grund, setGrund] = useState("");
+
+  const toggleZeit = (z) =>
+    setEntwurf((p) => ({ ...p, tageszeiten: p.tageszeiten.includes(z) ? p.tageszeiten.filter((x) => x !== z) : [...p.tageszeiten, z] }));
+
+  const speichern = () => {
+    onAendern(s, entwurf, grund);
+    setGrund("");
+    setOffen(false);
+  };
+
+  return (
+    <div style={{ padding: "8px 0", borderBottom: istLetzte ? "none" : `1px solid ${cardBorder}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>{s.name}</div>
+          <div style={{ fontSize: 11, color: textMuted }}>
+            {s.tageszeiten.join(", ")} {s.hinweis && `· ${s.hinweis}`}
+          </div>
+        </div>
+        <button
+          onClick={() => setOffen((v) => !v)}
+          style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", marginRight: 12 }}
+        >
+          {offen ? "Zu" : "Bearbeiten"}
+        </button>
+        <button onClick={() => onEntfernen(s)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>
+          ×
+        </button>
+      </div>
+      {offen && (
+        <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+          <Label>Name</Label>
+          <TextInput value={entwurf.name} onChange={(v) => setEntwurf((p) => ({ ...p, name: v }))} />
+          <Label>Tageszeit(en)</Label>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {TAGESZEITEN.map((z) => (
+              <Pill key={z} label={z} selected={entwurf.tageszeiten.includes(z)} onClick={() => toggleZeit(z)} />
+            ))}
+          </div>
+          <Label>Hinweis</Label>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {HINWEISE.map((h) => (
+              <Pill key={h} label={h} selected={entwurf.hinweis === h} onClick={() => setEntwurf((p) => ({ ...p, hinweis: p.hinweis === h ? "" : h }))} />
+            ))}
+          </div>
+          <GrundEingabe grund={grund} onChange={setGrund} />
+          <div style={{ marginTop: 10 }}>
+            <PrimaryButton onClick={speichern} disabled={!entwurf.name.trim() || entwurf.tageszeiten.length === 0}>
+              Speichern
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const LEERES_SUPPLEMENT = { name: "", tageszeiten: [], hinweis: "" };
 const LEERES_REZEPT = { name: "", hinweis: "", zutaten: [{ name: "", menge: "" }] };
@@ -57,8 +119,16 @@ export default function SupplementeView({ onHome }) {
 }
 
 function SupplementeSection() {
-  const { supplemente, supplementHinzufuegen, supplementEntfernen, supplementErledigt, toggleSupplementErledigt, confirmAlleTageszeit } =
-    useAppData();
+  const {
+    supplemente,
+    supplementHinzufuegen,
+    supplementAendern,
+    supplementEntfernen,
+    supplementErledigt,
+    toggleSupplementErledigt,
+    confirmAlleTageszeit,
+    aenderungVermerken,
+  } = useAppData();
   const [neuesSupplement, setNeuesSupplement] = useState(LEERES_SUPPLEMENT);
   const [supplementTag, setSupplementTag] = useState(new Date());
   const [eigeneZeit, setEigeneZeit] = useState("");
@@ -86,8 +156,32 @@ function SupplementeSection() {
       setSupplementError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    aenderungVermerken({
+      kategorie: "supplement",
+      itemName: neuesSupplement.name,
+      aktion: "hinzugefügt",
+      detail: neuesSupplement.tageszeiten.join(", "),
+    });
     setNeuesSupplement(LEERES_SUPPLEMENT);
     setCustomHinweis("");
+  };
+
+  const handleAendern = (s, entwurf, grund) => {
+    const aenderungen = [];
+    if (entwurf.name !== s.name) aenderungen.push(`Name: ${s.name} → ${entwurf.name}`);
+    if (entwurf.tageszeiten.join(",") !== s.tageszeiten.join(",")) {
+      aenderungen.push(`Tageszeiten: ${s.tageszeiten.join(", ") || "–"} → ${entwurf.tageszeiten.join(", ") || "–"}`);
+    }
+    if (entwurf.hinweis !== s.hinweis) aenderungen.push(`Hinweis: ${s.hinweis || "–"} → ${entwurf.hinweis || "–"}`);
+    if (aenderungen.length > 0) {
+      aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "geändert", detail: aenderungen.join("; "), grund });
+    }
+    supplementAendern(s.id, entwurf);
+  };
+
+  const handleEntfernen = (s) => {
+    aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "entfernt", detail: s.tageszeiten.join(", ") });
+    supplementEntfernen(s.id);
   };
 
   const today = new Date();
@@ -273,29 +367,7 @@ function SupplementeSection() {
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Plan verwalten</div>
           <Card>
             {supplemente.map((s, i) => (
-              <div
-                key={s.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "8px 0",
-                  borderBottom: i < supplemente.length - 1 ? `1px solid ${cardBorder}` : "none",
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{s.name}</div>
-                  <div style={{ fontSize: 11, color: textMuted }}>
-                    {s.tageszeiten.join(", ")} {s.hinweis && `· ${s.hinweis}`}
-                  </div>
-                </div>
-                <button
-                  onClick={() => supplementEntfernen(s.id)}
-                  style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}
-                >
-                  ×
-                </button>
-              </div>
+              <SupplementZeile key={s.id} s={s} istLetzte={i === supplemente.length - 1} onAendern={handleAendern} onEntfernen={handleEntfernen} />
             ))}
           </Card>
         </>

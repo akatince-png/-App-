@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Shell, Card } from "../ui/primitives";
 import { accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
+import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 
 function datumLabel(datumStr) {
@@ -70,8 +71,23 @@ function TrainingProtokollKarte({ e }) {
   );
 }
 
+function AenderungKarte({ e }) {
+  const k = KATEGORIE_META[e.kategorie] || { dot: cardBorder, text: textMuted };
+  return (
+    <div style={{ padding: "10px 0", borderBottom: `1px solid ${cardBorder}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
+        <div style={{ fontSize: 13, fontWeight: 700 }}>{e.itemName}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: k.text }}>{e.aktion}</div>
+      </div>
+      {e.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16 }}>{e.detail}</div>}
+      {e.grund && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16, fontStyle: "italic" }}>„{e.grund}“</div>}
+    </div>
+  );
+}
+
 export default function ProtokollLogView({ onHome }) {
-  const { trainingEintraege } = useAppData();
+  const { trainingEintraege, protokollEintraege } = useAppData();
 
   const gruppen = useMemo(() => {
     const erledigte = trainingEintraege.filter((e) => e.erledigt);
@@ -82,6 +98,16 @@ export default function ProtokollLogView({ onHome }) {
     });
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [trainingEintraege]);
+
+  const aenderungGruppen = useMemo(() => {
+    const map = new Map();
+    protokollEintraege.forEach((e) => {
+      const datum = e.erstelltAm.slice(0, 10);
+      if (!map.has(datum)) map.set(datum, []);
+      map.get(datum).push(e);
+    });
+    return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
+  }, [protokollEintraege]);
 
   return (
     <Shell>
@@ -98,6 +124,26 @@ export default function ProtokollLogView({ onHome }) {
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 20 }}>
         Was du wirklich gemacht hast — nicht der Plan, sondern das tatsächliche Ergebnis.
       </div>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>📝 Änderungen</div>
+      {aenderungGruppen.length === 0 ? (
+        <Card style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
+            Noch keine Änderungen protokolliert — sobald du etwas an einem aktiven Plan anpasst, erscheint es hier.
+          </div>
+        </Card>
+      ) : (
+        aenderungGruppen.map(([datum, eintraege]) => (
+          <div key={datum} style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: textMain, marginBottom: 8 }}>{datumLabel(datum)}</div>
+            <Card>
+              {eintraege.map((e) => (
+                <AenderungKarte key={e.id} e={e} />
+              ))}
+            </Card>
+          </div>
+        ))
+      )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🏋️ Training</div>
       {gruppen.length === 0 ? (

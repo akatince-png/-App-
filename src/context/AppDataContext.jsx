@@ -15,6 +15,7 @@ import { useCheckinData } from "../data/useCheckinData";
 import { useSleepData } from "../data/useSleepData";
 import { useBiomarkerData } from "../data/useBiomarkerData";
 import { usePushNotifications } from "../data/usePushNotifications";
+import { useAenderungsprotokoll } from "../data/useAenderungsprotokoll";
 import { useLexikon } from "../data/useLexikon";
 
 const AppDataContext = createContext(null);
@@ -38,6 +39,7 @@ export function AppDataProvider({ children }) {
   const sleepData = useSleepData(userId);
   const biomarkerData = useBiomarkerData(userId);
   const pushData = usePushNotifications(userId);
+  const aenderungsprotokollData = useAenderungsprotokoll(userId);
   const lexikon = useLexikon();
 
   const value = {
@@ -52,6 +54,7 @@ export function AppDataProvider({ children }) {
     setHormonFoto: hormoneData.setHormonFoto,
     setHormonKategorie: hormoneData.setHormonKategorie,
     setHormonEinnahmeart: hormoneData.setHormonEinnahmeart,
+    setHormonDose: hormoneData.setHormonDose,
     hormonErledigt: hormoneData.hormonErledigt,
     toggleHormonErledigt: hormoneData.toggleHormonErledigt,
     hormonFeedback: hormoneData.hormonFeedback,
@@ -69,6 +72,7 @@ export function AppDataProvider({ children }) {
     ...sleepData,
     ...biomarkerData,
     ...pushData,
+    ...aenderungsprotokollData,
     ...lexikon,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.

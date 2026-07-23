@@ -1,9 +1,29 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
-import { accentSoft, accentDark, cardBorder, textMuted } from "../ui/theme";
-import { NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../constants";
+import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
+import DosierungFields from "../ui/DosierungFields";
+import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
+import { SignedPhoto } from "../ui/SignedPhoto";
+import { accentSoft, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { EINNAHMEARTEN, NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../constants";
+import { describeInterval } from "../utils/schedule";
 import { fmtDate, keyOf, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+
+const NEUES_PEPTID_LEER = {
+  name: "",
+  einnahmeart: "Injektion",
+  menge: "",
+  intervallTyp: "fixed",
+  intervallDays: 7,
+  customDays: "",
+  onDays: "",
+  offDays: "",
+  weekdays: [],
+  eigenerStart: "",
+  uhrzeiten: ["20:00"],
+};
+
+const DOSIS_FELDER = ["menge", "customDays", "onDays", "offDays", "eigenerStart", "weekdays", "uhrzeiten"];
 
 function formatZeitpunkt(iso) {
   if (!iso) return null;
@@ -12,9 +32,92 @@ function formatZeitpunkt(iso) {
 }
 
 export default function PeptidView({ onHome }) {
-  const { plan, erledigt, feedback, saveFeedback, skipFeedback } = useAppData();
+  const {
+    plan,
+    erledigt,
+    feedback,
+    saveFeedback,
+    skipFeedback,
+    peptide,
+    dosierung,
+    einnahmeart,
+    addCustomPreparat,
+    togglePeptid,
+    setEinnahmeart,
+    setDose,
+    setPeptidFoto,
+    aenderungVermerken,
+  } = useAppData();
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
+  const [neuesPeptid, setNeuesPeptid] = useState(NEUES_PEPTID_LEER);
+  const [peptidError, setPeptidError] = useState(null);
+  const [dosisEditOffen, setDosisEditOffen] = useState(null);
+
+  const handleNeuesPeptidChange = (feld, val) =>
+    setNeuesPeptid((p) => (feld === "intervallPreset" ? { ...p, intervallTyp: "fixed", intervallDays: val } : { ...p, [feld]: val }));
+
+  const submitNeuesPeptid = async () => {
+    setPeptidError(null);
+    const name = neuesPeptid.name.trim();
+    const result = await addCustomPreparat(name, neuesPeptid.einnahmeart);
+    if (!result?.ok) {
+      setPeptidError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    setDose(name, "menge", neuesPeptid.menge);
+    setDose(name, "uhrzeiten", neuesPeptid.uhrzeiten);
+    if (neuesPeptid.intervallTyp === "fixed") setDose(name, "intervallPreset", neuesPeptid.intervallDays);
+    else {
+      setDose(name, "intervallTyp", neuesPeptid.intervallTyp);
+      DOSIS_FELDER.forEach((feld) => {
+        if (feld !== "menge" && feld !== "uhrzeiten") setDose(name, feld, neuesPeptid[feld]);
+      });
+    }
+    aenderungVermerken({
+      kategorie: "peptid",
+      itemName: name,
+      aktion: "hinzugefügt",
+      detail: `${neuesPeptid.einnahmeart} · ${neuesPeptid.menge || "–"}`,
+    });
+    setNeuesPeptid(NEUES_PEPTID_LEER);
+  };
+
+  const handleEntfernen = (p) => {
+    aenderungVermerken({ kategorie: "peptid", itemName: p, aktion: "entfernt", detail: dosierung[p]?.menge || "" });
+    togglePeptid(p);
+  };
+
+  const handleDosisSpeichern = (p, entwurf, grund) => {
+    const vorher = dosierung[p];
+    const aenderungen = [];
+    if (entwurf.menge !== vorher.menge) aenderungen.push(`Menge: ${vorher.menge || "–"} → ${entwurf.menge || "–"}`);
+    if (entwurf.intervallTyp !== vorher.intervallTyp || entwurf.intervallDays !== vorher.intervallDays) {
+      aenderungen.push(`Intervall: ${describeInterval(vorher)} → ${describeInterval(entwurf)}`);
+    }
+    if (JSON.stringify(entwurf.uhrzeiten) !== JSON.stringify(vorher.uhrzeiten)) {
+      aenderungen.push(`Uhrzeit: ${(vorher.uhrzeiten || []).join(", ")} → ${(entwurf.uhrzeiten || []).join(", ")}`);
+    }
+    if (aenderungen.length > 0) {
+      aenderungVermerken({ kategorie: "peptid", itemName: p, aktion: "geändert", detail: aenderungen.join("; "), grund });
+    }
+    DOSIS_FELDER.forEach((feld) => {
+      if (JSON.stringify(entwurf[feld]) !== JSON.stringify(vorher[feld])) setDose(p, feld, entwurf[feld]);
+    });
+    if (entwurf.intervallTyp === "fixed" && (entwurf.intervallTyp !== vorher.intervallTyp || entwurf.intervallDays !== vorher.intervallDays)) {
+      setDose(p, "intervallPreset", entwurf.intervallDays);
+    } else if (entwurf.intervallTyp !== vorher.intervallTyp) {
+      setDose(p, "intervallTyp", entwurf.intervallTyp);
+    }
+    setDosisEditOffen(null);
+  };
+
+  const handleFoto = (name, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPeptidFoto(name, file);
+    e.target.value = "";
+  };
 
   const today = new Date();
   const heuteDosen = plan.filter((d) => sameDay(d.date, today));
@@ -58,6 +161,28 @@ export default function PeptidView({ onHome }) {
           ⌂
         </button>
       </div>
+
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Peptid hinzufügen</div>
+        <Label>Name</Label>
+        <TextInput value={neuesPeptid.name} onChange={(v) => handleNeuesPeptidChange("name", v)} placeholder="z. B. BPC-157" />
+
+        <Label>Einnahmeart</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {EINNAHMEARTEN.map((a) => (
+            <Pill key={a} label={a} selected={neuesPeptid.einnahmeart === a} onClick={() => handleNeuesPeptidChange("einnahmeart", a)} />
+          ))}
+        </div>
+
+        <DosierungFields value={neuesPeptid} onChange={handleNeuesPeptidChange} mengePlaceholder="z. B. 0,25 mg" />
+
+        {peptidError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{peptidError}</div>}
+        <div style={{ marginTop: 10 }}>
+          <PrimaryButton onClick={submitNeuesPeptid} disabled={!neuesPeptid.name.trim()}>
+            + Zum Protokoll hinzufügen
+          </PrimaryButton>
+        </div>
+      </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Heute</div>
       <Card style={{ marginBottom: 14 }}>
@@ -179,6 +304,68 @@ export default function PeptidView({ onHome }) {
                 </div>
                 <div style={{ fontSize: 12, color: textMuted }}>
                   {fb.staerke && fb.staerke !== "Keine" ? `${fb.nebenwirkungen.join(", ") || "—"} (${fb.staerke})` : "Keine Nebenwirkungen"}
+                </div>
+              </div>
+            ))}
+          </Card>
+        </>
+      )}
+
+      {peptide.length > 0 && (
+        <>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Peptid-Protokoll verwalten</div>
+          <Card>
+            {peptide.map((p, i) => (
+              <div
+                key={p}
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "8px 0", borderBottom: i < peptide.length - 1 ? `1px solid ${cardBorder}` : "none" }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, flex: 1 }}>
+                  {dosierung[p]?.fotoPath && <SignedPhoto path={dosierung[p].fotoPath} alt={p} size={34} />}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{p}</div>
+                    <div style={{ fontSize: 11, color: textMuted }}>
+                      {dosierung[p]?.menge} · {einnahmeart[p] || "Injektion"} · {describeInterval(dosierung[p])} ·{" "}
+                      {(dosierung[p]?.uhrzeiten || []).join(" & ")}
+                    </div>
+                    <div style={{ marginTop: 4 }}>
+                      <select
+                        value={einnahmeart[p] || "Injektion"}
+                        onChange={(e) => {
+                          const vorher = einnahmeart[p] || "Injektion";
+                          if (e.target.value !== vorher) {
+                            aenderungVermerken({ kategorie: "peptid", itemName: p, aktion: "geändert", detail: `Einnahmeart: ${vorher} → ${e.target.value}` });
+                          }
+                          setEinnahmeart(p, e.target.value);
+                        }}
+                        style={{ fontSize: 11, border: `1px solid ${cardBorder}`, borderRadius: 6, padding: "2px 4px", color: textMuted }}
+                      >
+                        {EINNAHMEARTEN.map((a) => (
+                          <option key={a} value={a}>
+                            {a}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={() => setDosisEditOffen(dosisEditOffen === p ? null : p)}
+                      style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0, marginTop: 6 }}
+                    >
+                      {dosisEditOffen === p ? "Dosis-Bearbeitung schließen" : "Dosis bearbeiten"}
+                    </button>
+                    {dosisEditOffen === p && (
+                      <DosisBearbeitenPanel dosierung={dosierung[p]} onSpeichern={(entwurf, grund) => handleDosisSpeichern(p, entwurf, grund)} />
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input type="file" accept="image/*" id={`peptid-foto-${p}`} style={{ display: "none" }} onChange={(e) => handleFoto(p, e)} />
+                  <label htmlFor={`peptid-foto-${p}`} style={{ cursor: "pointer", fontSize: 16 }} title="Foto hinzufügen">
+                    📷
+                  </label>
+                  <button onClick={() => handleEntfernen(p)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>
+                    ×
+                  </button>
                 </div>
               </div>
             ))}

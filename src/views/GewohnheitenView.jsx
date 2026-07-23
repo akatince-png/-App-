@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../ui/primitives";
+import GrundEingabe from "../ui/GrundEingabe";
 import { accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 
@@ -19,6 +20,7 @@ function Fortschrittsbalken({ tage, ziel }) {
 function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielAendern, gesamtTage, aktuelleSerie }) {
   const [zielEditOpen, setZielEditOpen] = useState(false);
   const [zielEntwurf, setZielEntwurf] = useState(g.zielTage ? String(g.zielTage) : "");
+  const [zielGrund, setZielGrund] = useState("");
   const tage = gesamtTage(g.id);
   const serie = aktuelleSerie(g.id);
 
@@ -33,7 +35,7 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
           </div>
         </div>
         <button
-          onClick={() => onEntfernen(g.id)}
+          onClick={() => onEntfernen(g)}
           style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer" }}
           title="Gewohnheit löschen"
         >
@@ -66,7 +68,8 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
           </div>
           <button
             onClick={() => {
-              onZielAendern(g.id, zielEntwurf ? Number(zielEntwurf) : null);
+              onZielAendern(g, zielEntwurf ? Number(zielEntwurf) : null, zielGrund);
+              setZielGrund("");
               setZielEditOpen(false);
             }}
             style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: accentDark, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
@@ -80,7 +83,9 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
             Abbrechen
           </button>
         </div>
-      ) : (
+      ) : null}
+      {zielEditOpen && <GrundEingabe grund={zielGrund} onChange={setZielGrund} />}
+      {!zielEditOpen && (
         <button
           onClick={() => setZielEditOpen(true)}
           style={{ marginTop: 8, border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
@@ -108,6 +113,7 @@ export default function GewohnheitenView({ onHome }) {
     toggleGewohnheitErledigt,
     gesamtTage,
     aktuelleSerie,
+    aenderungVermerken,
   } = useAppData();
 
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
@@ -121,7 +127,34 @@ export default function GewohnheitenView({ onHome }) {
       setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    aenderungVermerken({
+      kategorie: "gewohnheit",
+      itemName: neu.name,
+      aktion: "hinzugefügt",
+      detail: neu.uhrzeit ? `Uhrzeit: ${neu.uhrzeit}` : "",
+    });
     setNeu(LEERE_GEWOHNHEIT);
+  };
+
+  const handleEntfernen = (g) => {
+    aenderungVermerken({
+      kategorie: "gewohnheit",
+      itemName: g.name,
+      aktion: "entfernt",
+      detail: g.zielTage ? `Ziel war: ${g.zielTage} Tage` : "",
+    });
+    gewohnheitEntfernen(g.id);
+  };
+
+  const handleZielAendern = (g, neuesZiel, grund) => {
+    aenderungVermerken({
+      kategorie: "gewohnheit",
+      itemName: g.name,
+      aktion: "geändert",
+      detail: `Ziel: ${g.zielTage ?? "offen"} → ${neuesZiel ?? "offen"} Tage`,
+      grund,
+    });
+    gewohnheitZielAktualisieren(g.id, neuesZiel);
   };
 
   return (
@@ -183,8 +216,8 @@ export default function GewohnheitenView({ onHome }) {
             g={g}
             heuteErledigt={!!gewohnheitErledigt[`${heute}__${g.id}`]}
             onToggleHeute={() => toggleGewohnheitErledigt(heute, g.id)}
-            onEntfernen={gewohnheitEntfernen}
-            onZielAendern={gewohnheitZielAktualisieren}
+            onEntfernen={handleEntfernen}
+            onZielAendern={handleZielAendern}
             gesamtTage={gesamtTage}
             aktuelleSerie={aktuelleSerie}
           />

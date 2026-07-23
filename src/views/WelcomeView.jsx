@@ -6,7 +6,7 @@ const SLIDES = [
   {
     icon: "🧬",
     titel: "Hi, herzlich willkommen bei MyProtocols!",
-    text: "Schön, dass du dich für uns entschieden hast. Wir helfen dir dabei, Peptide, Medikamente, Supplemente, Schlaf, Ernährung und Training an einem Ort zu protokollieren — statt in Notizzetteln und deinem Kopf.",
+    text: "Schön, dass du dich für uns entschieden hast. Wir helfen dir dabei, Peptide, Medikamente, Supplemente, Gewohnheiten, Schlaf, Hydration, Ernährung und Training an einem Ort zu protokollieren — statt in Notizzetteln und deinem Kopf.",
   },
   {
     icon: "🗓️",
@@ -16,7 +16,7 @@ const SLIDES = [
   {
     icon: "🚀",
     titel: "Einmal kurz investieren, langfristig Ruhe haben",
-    text: "Ein paar Minuten heute, um dein Protokoll einzurichten — und danach hast du alles im Griff, ohne nachdenken zu müssen. Los geht's!",
+    text: "Ein paar Minuten heute, um dein Protokoll einzurichten — und danach hast du alles im Griff, ohne nachdenken zu müssen. Jeden Bereich kannst du einzeln jetzt einrichten oder überspringen und später nachholen. Los geht's!",
   },
 ];
 

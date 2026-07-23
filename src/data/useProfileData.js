@@ -16,6 +16,7 @@ export function useProfileData(userId) {
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const [aktiveMesswerte, setAktiveMesswerte] = useState(DEFAULT_AKTIVE);
   const [customMesswerte, setCustomMesswerte] = useState([]);
+  const [categoryZiele, setCategoryZieleState] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -37,6 +38,7 @@ export function useProfileData(userId) {
         setDatenteilungState(!!profile.datenteilung);
         setOnboardingCompleteState(!!profile.onboarding_complete);
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
+        setCategoryZieleState(profile.category_ziele || {});
       }
       setCustomMesswerte(
         (custom || []).map((c) => ({ id: c.key, label: c.label, unit: c.unit || "", numeric: true }))
@@ -86,14 +88,34 @@ export function useProfileData(userId) {
   // Zum wiederholten Testen des Willkommens-/Einrichtungs-Ablaufs mit
   // demselben Account, ohne jedes Mal ein neues Konto anzulegen.
   const resetOnboarding = useCallback(async () => {
-    const { error } = await supabase.from("profiles").update({ onboarding_complete: false }).eq("id", userId);
+    const { error } = await supabase.from("profiles").update({ onboarding_complete: false, category_ziele: {} }).eq("id", userId);
     if (error) {
       console.error(error);
       return { ok: false, error: error.message };
     }
     setOnboardingCompleteState(false);
+    setCategoryZieleState({});
     return { ok: true };
   }, [userId]);
+
+  // Zieldauer (offen/zeitlich begrenzt) je Pläne-Kategorie ohne eigene
+  // "eine Zeile pro Nutzer"-Tabelle (Schlaf, Hydration, Ernährung, Training,
+  // Supplemente, Medikamente) — Peptide/Gewohnheiten haben dafür eigene
+  // Spalten (protocols.dauer_wochen bzw. routines.ziel_tage).
+  const setCategoryZiel = useCallback(
+    (kategorie, patch) => {
+      setCategoryZieleState((prev) => {
+        const next = { ...prev, [kategorie]: patch };
+        supabase
+          .from("profiles")
+          .update({ category_ziele: next })
+          .eq("id", userId)
+          .then(({ error }) => error && console.error(error));
+        return next;
+      });
+    },
+    [userId]
+  );
 
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
@@ -153,5 +175,7 @@ export function useProfileData(userId) {
     customMesswerte,
     combinedMesswertDefs,
     addCustomMesswert,
+    categoryZiele,
+    setCategoryZiel,
   };
 }

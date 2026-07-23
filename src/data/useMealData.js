@@ -87,6 +87,12 @@ export function useMealData(userId) {
     [userId]
   );
 
+  const mahlzeitAendern = useCallback(async (id, felder) => {
+    setMahlzeiten((prev) => prev.map((m) => (m.id === id ? { ...m, ...felder } : m)));
+    const { error } = await supabase.from("meals").update(felder).eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
   const mahlzeitEntfernen = useCallback(async (id) => {
     setMahlzeiten((prev) => prev.filter((m) => m.id !== id));
     const { error } = await supabase.from("meals").delete().eq("id", id);
@@ -112,6 +118,7 @@ export function useMealData(userId) {
   return {
     mahlzeiten,
     mahlzeitHinzufuegen,
+    mahlzeitAendern,
     mahlzeitEntfernen,
     mahlzeitErledigt,
     mahlzeitErledigtAt,

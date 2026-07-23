@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextInput } from "../ui/primitives";
 import DosierungFields from "../ui/DosierungFields";
+import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { cardBorder, danger, textMuted } from "../ui/theme";
+import { accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+
+const DOSIS_FELDER = ["menge", "customDays", "onDays", "offDays", "eigenerStart", "weekdays", "uhrzeiten"];
 
 const NEUES_MEDIKAMENT_LEER = {
   name: "",
@@ -39,12 +42,15 @@ export default function MedikamenteView({ onHome }) {
     setHormonFoto,
     setHormonKategorie,
     setHormonEinnahmeart,
+    setHormonDose,
     hormonErledigt,
     toggleHormonErledigt,
     hormonPlan,
+    aenderungVermerken,
   } = useAppData();
   const [neuesMedikament, setNeuesMedikament] = useState(NEUES_MEDIKAMENT_LEER);
   const [medikamentError, setMedikamentError] = useState(null);
+  const [dosisEditOffen, setDosisEditOffen] = useState(null);
   const today = new Date();
 
   const handleChange = (feld, val) => {
@@ -61,6 +67,12 @@ export default function MedikamenteView({ onHome }) {
       setMedikamentError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    aenderungVermerken({
+      kategorie: "hormon",
+      itemName: neuesMedikament.name,
+      aktion: "hinzugefügt",
+      detail: `${neuesMedikament.kategorie} · ${neuesMedikament.menge || "–"}`,
+    });
     setNeuesMedikament(NEUES_MEDIKAMENT_LEER);
   };
 
@@ -69,6 +81,40 @@ export default function MedikamenteView({ onHome }) {
     if (!file) return;
     setHormonFoto(name, file);
     e.target.value = "";
+  };
+
+  const handleEntfernen = (h) => {
+    aenderungVermerken({
+      kategorie: "hormon",
+      itemName: h,
+      aktion: "entfernt",
+      detail: `${hormonDosierung[h]?.menge || "–"}`,
+    });
+    hormonEntfernen(h);
+  };
+
+  const handleDosisSpeichern = (h, entwurf, grund) => {
+    const vorher = hormonDosierung[h];
+    const aenderungen = [];
+    if (entwurf.menge !== vorher.menge) aenderungen.push(`Menge: ${vorher.menge || "–"} → ${entwurf.menge || "–"}`);
+    if (entwurf.intervallTyp !== vorher.intervallTyp || entwurf.intervallDays !== vorher.intervallDays) {
+      aenderungen.push(`Intervall: ${describeInterval(vorher)} → ${describeInterval(entwurf)}`);
+    }
+    if (JSON.stringify(entwurf.uhrzeiten) !== JSON.stringify(vorher.uhrzeiten)) {
+      aenderungen.push(`Uhrzeit: ${(vorher.uhrzeiten || []).join(", ")} → ${(entwurf.uhrzeiten || []).join(", ")}`);
+    }
+    if (aenderungen.length > 0) {
+      aenderungVermerken({ kategorie: "hormon", itemName: h, aktion: "geändert", detail: aenderungen.join("; "), grund });
+    }
+    DOSIS_FELDER.forEach((feld) => {
+      if (JSON.stringify(entwurf[feld]) !== JSON.stringify(vorher[feld])) setHormonDose(h, feld, entwurf[feld]);
+    });
+    if (entwurf.intervallTyp === "fixed" && (entwurf.intervallTyp !== vorher.intervallTyp || entwurf.intervallDays !== vorher.intervallDays)) {
+      setHormonDose(h, "intervallPreset", entwurf.intervallDays);
+    } else if (entwurf.intervallTyp !== vorher.intervallTyp) {
+      setHormonDose(h, "intervallTyp", entwurf.intervallTyp);
+    }
+    setDosisEditOffen(null);
   };
 
   const nachKategorie = MEDIKAMENTE_KATEGORIEN.map((kat) => ({
@@ -181,7 +227,7 @@ export default function MedikamenteView({ onHome }) {
               <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>{gruppe.kat}</div>
               <Card style={{ marginBottom: 14 }}>
                 {gruppe.namen.map((h, i) => (
-                  <div key={h} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < gruppe.namen.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
+                  <div key={h} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "8px 0", borderBottom: i < gruppe.namen.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       {hormonDosierung[h]?.fotoPath && <SignedPhoto path={hormonDosierung[h].fotoPath} alt={h} size={34} />}
                       <div>
@@ -193,7 +239,13 @@ export default function MedikamenteView({ onHome }) {
                         <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
                           <select
                             value={hormonDosierung[h]?.kategorie || "Hormone"}
-                            onChange={(e) => setHormonKategorie(h, e.target.value)}
+                            onChange={(e) => {
+                              const vorher = hormonDosierung[h]?.kategorie || "Hormone";
+                              if (e.target.value !== vorher) {
+                                aenderungVermerken({ kategorie: "hormon", itemName: h, aktion: "geändert", detail: `Kategorie: ${vorher} → ${e.target.value}` });
+                              }
+                              setHormonKategorie(h, e.target.value);
+                            }}
                             style={{ fontSize: 11, border: `1px solid ${cardBorder}`, borderRadius: 6, padding: "2px 4px", color: textMuted }}
                           >
                             {MEDIKAMENTE_KATEGORIEN.map((kat) => (
@@ -204,7 +256,13 @@ export default function MedikamenteView({ onHome }) {
                           </select>
                           <select
                             value={hormonDosierung[h]?.einnahmeart || "Injektion"}
-                            onChange={(e) => setHormonEinnahmeart(h, e.target.value)}
+                            onChange={(e) => {
+                              const vorher = hormonDosierung[h]?.einnahmeart || "Injektion";
+                              if (e.target.value !== vorher) {
+                                aenderungVermerken({ kategorie: "hormon", itemName: h, aktion: "geändert", detail: `Einnahmeart: ${vorher} → ${e.target.value}` });
+                              }
+                              setHormonEinnahmeart(h, e.target.value);
+                            }}
                             style={{ fontSize: 11, border: `1px solid ${cardBorder}`, borderRadius: 6, padding: "2px 4px", color: textMuted }}
                           >
                             {EINNAHMEARTEN.map((a) => (
@@ -214,6 +272,15 @@ export default function MedikamenteView({ onHome }) {
                             ))}
                           </select>
                         </div>
+                        <button
+                          onClick={() => setDosisEditOffen(dosisEditOffen === h ? null : h)}
+                          style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0, marginTop: 6 }}
+                        >
+                          {dosisEditOffen === h ? "Dosis-Bearbeitung schließen" : "Dosis bearbeiten"}
+                        </button>
+                        {dosisEditOffen === h && (
+                          <DosisBearbeitenPanel dosierung={hormonDosierung[h]} onSpeichern={(entwurf, grund) => handleDosisSpeichern(h, entwurf, grund)} />
+                        )}
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -221,7 +288,7 @@ export default function MedikamenteView({ onHome }) {
                       <label htmlFor={`medikament-foto-${h}`} style={{ cursor: "pointer", fontSize: 16 }} title="Foto hinzufügen">
                         📷
                       </label>
-                      <button onClick={() => hormonEntfernen(h)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>
+                      <button onClick={() => handleEntfernen(h)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>
                         ×
                       </button>
                     </div>

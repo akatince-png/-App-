@@ -65,6 +65,12 @@ export function useSupplementData(userId) {
     [userId]
   );
 
+  const supplementAendern = useCallback(async (id, felder) => {
+    setSupplemente((prev) => prev.map((s) => (s.id === id ? { ...s, ...felder } : s)));
+    const { error } = await supabase.from("supplements").update(felder).eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
   const supplementEntfernen = useCallback(async (id) => {
     setSupplemente((prev) => prev.filter((s) => s.id !== id));
     const { error } = await supabase.from("supplements").delete().eq("id", id);
@@ -148,6 +154,7 @@ export function useSupplementData(userId) {
   return {
     supplemente,
     supplementHinzufuegen,
+    supplementAendern,
     supplementEntfernen,
     supplementErledigt,
     supplementErledigtAt,

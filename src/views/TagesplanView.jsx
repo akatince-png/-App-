@@ -114,7 +114,7 @@ function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggl
   );
 }
 
-export default function TagesplanView({ onHome, onOpenTraining }) {
+export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   const {
     plan,
     erledigt,
@@ -424,17 +424,29 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
                             </div>
                           </div>
                         </div>
-                        {item.done ? (
-                          <StatusBadge status="erledigt" />
-                        ) : (
-                          <button
-                            className="mp-tap"
-                            onClick={item.onConfirm}
-                            style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
-                          >
-                            {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
-                          </button>
-                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          {item.kategorie !== "training" && onEditItem && (
+                            <button
+                              className="mp-tap"
+                              onClick={() => onEditItem(item.kategorie, item.refId)}
+                              title="Bearbeiten"
+                              style={{ width: 32, height: 32, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 13, cursor: "pointer" }}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                          {item.done ? (
+                            <StatusBadge status="erledigt" />
+                          ) : (
+                            <button
+                              className="mp-tap"
+                              onClick={item.onConfirm}
+                              style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                            >
+                              {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {["peptid", "hormon", "supplement"].includes(item.kategorie) && isOpen && (

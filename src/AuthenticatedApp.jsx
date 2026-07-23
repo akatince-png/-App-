@@ -16,8 +16,19 @@ import NutritionView from "./views/NutritionView";
 import BlutzuckerView from "./views/BlutzuckerView";
 import HydrationView from "./views/HydrationView";
 import ProtokollLogView from "./views/ProtokollLogView";
-import WelcomeView from "./views/WelcomeView";
 import GewohnheitenView from "./views/GewohnheitenView";
+import OnboardingFlow from "./views/onboarding/OnboardingFlow";
+
+// Übersetzt die Kategorie eines Tagesplan-Eintrags in die zuständige View —
+// für den ✏️-Bearbeiten-Kurzweg direkt aus dem Tagesplan.
+const KATEGORIE_TO_VIEW = {
+  peptid: "peptide",
+  hormon: "medikamente",
+  supplement: "supplemente",
+  gewohnheit: "routinen",
+  hydration: "hydration",
+  mahlzeit: "ernaehrung",
+};
 
 function LoadingScreen() {
   return (
@@ -31,7 +42,6 @@ export default function AuthenticatedApp() {
   const { loading, onboardingComplete, completeOnboarding } = useAppData();
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | 'supplemente' | ...
   const [step, setStep] = useState(0);
-  const [welcomeSeen, setWelcomeSeen] = useState(false);
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
   // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
   const [offenesTrainingId, setOffenesTrainingId] = useState(null);
@@ -48,17 +58,23 @@ export default function AuthenticatedApp() {
   }
 
   if (view === "form") {
-    if (!onboardingComplete && !welcomeSeen) {
-      return <WelcomeView onDone={() => setWelcomeSeen(true)} />;
+    if (!onboardingComplete) {
+      return (
+        <OnboardingFlow
+          onDone={() => {
+            completeOnboarding();
+            setView("home");
+          }}
+        />
+      );
     }
+    // Bestehendes Konto startet hier ein zusätzliches, komplett neues
+    // Protokoll — kein erneutes Durchlaufen des Einrichtungs-Abschlusses.
     return (
       <ProtocolFormView
         step={step}
         setStep={setStep}
-        onFinish={() => {
-          completeOnboarding();
-          setView("home");
-        }}
+        onFinish={() => setView("home")}
       />
     );
   }
@@ -78,6 +94,10 @@ export default function AuthenticatedApp() {
         onOpenTraining={(id) => {
           setOffenesTrainingId(id);
           setView("training");
+        }}
+        onEditItem={(kategorie) => {
+          const ziel = KATEGORIE_TO_VIEW[kategorie];
+          if (ziel) setView(ziel);
         }}
       />
     );
@@ -131,7 +151,7 @@ export default function AuthenticatedApp() {
         planTab={view}
         setPlanTab={setView}
         onHome={() => setView("home")}
-        onEditProtocol={() => setView("form")}
+        onEditProtocol={() => setView("peptide")}
       />
     );
   }

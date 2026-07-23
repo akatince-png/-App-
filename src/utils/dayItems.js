@@ -18,6 +18,7 @@ export const KATEGORIE_META = {
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
   training: { bg: "#F1EDF8", text: "#786198", dot: "#9B85B8", label: "Training" },
   gewohnheit: { bg: "#EAF3EA", text: "#3F6B46", dot: "#5E9468", label: "Gewohnheit" },
+  hydration: { bg: "#EAF3F8", text: "#2F6E8C", dot: "#4A93B8", label: "Hydration" },
 };
 
 // Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —

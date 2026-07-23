@@ -300,6 +300,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     trainingWochenplan,
     wochenplanSetzen,
     wochenplanEntfernen,
+    aenderungVermerken,
   } = useAppData();
   const [eintrag, setEintrag] = useState(leererEintrag());
   const [wochenplanOffen, setWochenplanOffen] = useState(false);
@@ -355,13 +356,49 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
   const submit = async (erledigt) => {
     setFehler(null);
-    const result = await trainingHinzufuegen(bauePayload(erledigt));
+    const payload = bauePayload(erledigt);
+    const result = await trainingHinzufuegen(payload);
     if (!result?.ok) {
       setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    aenderungVermerken({
+      kategorie: "training",
+      itemName: payload.name ? `${payload.art} · ${payload.name}` : payload.art,
+      aktion: "hinzugefügt",
+      detail: payload.uhrzeit ? `Uhrzeit: ${payload.uhrzeit}` : "",
+    });
     setEintrag(leererEintrag());
     if (!erledigt && result.eintrag) setLiveSessionId(result.eintrag.id);
+  };
+
+  const handleWochenplanSetzen = (tag, zuweisung) => {
+    const vorher = trainingWochenplan.find((w) => w.wochentag === tag);
+    let detail;
+    if (!vorher) detail = `Art: ${zuweisung.art}`;
+    else if (vorher.art !== zuweisung.art) detail = `Art: ${vorher.art} → ${zuweisung.art}`;
+    else if (vorher.uhrzeit !== zuweisung.uhrzeit) detail = `Uhrzeit: ${vorher.uhrzeit || "–"} → ${zuweisung.uhrzeit || "–"}`;
+    else detail = "Vorlage geändert";
+    aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[tag], aktion: "geändert", detail });
+    wochenplanSetzen(tag, zuweisung);
+  };
+
+  const handleWochenplanEntfernen = (tag) => {
+    const vorher = trainingWochenplan.find((w) => w.wochentag === tag);
+    if (vorher) {
+      aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[tag], aktion: "entfernt", detail: `Art: ${vorher.art}` });
+    }
+    wochenplanEntfernen(tag);
+  };
+
+  const handleTrainingEntfernen = (e) => {
+    aenderungVermerken({
+      kategorie: "training",
+      itemName: e.name ? `${e.art} · ${e.name}` : e.art,
+      aktion: "entfernt",
+      detail: e.datum,
+    });
+    trainingEntfernen(e.id);
   };
 
   const vorlageLaden = (tpl) => {
@@ -417,8 +454,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
         <WochenplanEditor
           trainingWochenplan={trainingWochenplan}
           trainingTemplates={trainingTemplates}
-          wochenplanSetzen={wochenplanSetzen}
-          wochenplanEntfernen={wochenplanEntfernen}
+          wochenplanSetzen={handleWochenplanSetzen}
+          wochenplanEntfernen={handleWochenplanEntfernen}
         />
       )}
 
@@ -707,7 +744,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                   <button
                     onClick={(ev) => {
                       ev.stopPropagation();
-                      trainingEntfernen(e.id);
+                      handleTrainingEntfernen(e);
                     }}
                     style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}
                   >

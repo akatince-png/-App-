@@ -22,6 +22,18 @@ function rowToHormonDosierung(row) {
   };
 }
 
+const DOSE_FELD_TO_COLUMN = {
+  menge: "menge",
+  customDays: "custom_days",
+  onDays: "on_days",
+  offDays: "off_days",
+  eigenerStart: "eigener_start",
+  weekdays: "weekdays",
+  uhrzeiten: "uhrzeiten",
+};
+
+const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays"]);
+
 function toRow(userId, neuesHormon) {
   const isCustom = neuesHormon.intervallTyp === "custom";
   const isCycle = neuesHormon.intervallTyp === "cycle";
@@ -173,6 +185,50 @@ export function useHormoneData(userId, startdatum, dauer) {
     [userId]
   );
 
+  // Ändert ein einzelnes Dosierungsfeld eines bestehenden Medikaments —
+  // spiegelt useProtocolData.setDose für Peptide, nur direkt gegen die
+  // hormones-Tabelle statt über protocol_id/protocol_peptide.
+  const setHormonDose = useCallback(
+    (name, feld, val) => {
+      if (feld === "intervallPreset") {
+        setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], intervallTyp: "fixed", intervallDays: val } }));
+        supabase
+          .from("hormones")
+          .update({ intervall_mode: "fixed", intervall_days: val })
+          .eq("user_id", userId)
+          .eq("name", name)
+          .then(({ error }) => error && console.error(error));
+        return;
+      }
+
+      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], [feld]: val } }));
+
+      if (feld === "intervallTyp") {
+        supabase
+          .from("hormones")
+          .update({ intervall_mode: val })
+          .eq("user_id", userId)
+          .eq("name", name)
+          .then(({ error }) => error && console.error(error));
+        return;
+      }
+
+      const column = DOSE_FELD_TO_COLUMN[feld];
+      if (!column) return;
+      let value = val;
+      if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
+      else if (feld === "eigenerStart") value = val === "" ? null : val;
+
+      supabase
+        .from("hormones")
+        .update({ [column]: value })
+        .eq("user_id", userId)
+        .eq("name", name)
+        .then(({ error }) => error && console.error(error));
+    },
+    [userId]
+  );
+
   const toggleHormonErledigt = useCallback(
     async (datumStr, name, uhrzeit) => {
       const k = `${datumStr}__${name}__${uhrzeit}`;
@@ -259,6 +315,7 @@ export function useHormoneData(userId, startdatum, dauer) {
     setHormonFoto,
     setHormonKategorie,
     setHormonEinnahmeart,
+    setHormonDose,
     hormonErledigt,
     toggleHormonErledigt,
     hormonFeedback,

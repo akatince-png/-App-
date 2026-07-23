@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextArea, TextInput, CheckRow } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
+import GrundEingabe from "../ui/GrundEingabe";
 import { accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
@@ -31,9 +32,11 @@ export default function HydrationView({ onHome }) {
     hydrationHinzufuegen,
     hydrationZielSetzen,
     hydrationCheckinSpeichern,
+    aenderungVermerken,
   } = useAppData();
   const [zielEntwurf, setZielEntwurf] = useState(String(hydrationZielMl));
   const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
+  const [zielGrund, setZielGrund] = useState("");
 
   const heutigerEintrag = hydrationEintraege.find((e) => e.datum === heute());
   const [elektrolyte, setElektrolyte] = useState(heutigerEintrag?.elektrolyte || false);
@@ -42,7 +45,19 @@ export default function HydrationView({ onHome }) {
 
   const checkinSpeichern = (felder) => hydrationCheckinSpeichern(felder);
 
-  const zielSpeichern = () => hydrationZielSetzen(zielEntwurf);
+  const zielSpeichern = () => {
+    if (Number(zielEntwurf) !== hydrationZielMl) {
+      aenderungVermerken({
+        kategorie: "hydration",
+        itemName: "Trinkziel",
+        aktion: "geändert",
+        detail: `Ziel: ${hydrationZielMl} ml → ${zielEntwurf} ml`,
+        grund: zielGrund,
+      });
+    }
+    hydrationZielSetzen(zielEntwurf);
+    setZielGrund("");
+  };
 
   const korrekturSetzen = () => {
     if (korrekturEntwurf === "") return;
@@ -165,6 +180,7 @@ export default function HydrationView({ onHome }) {
             </PrimaryButton>
           </div>
         </div>
+        <GrundEingabe grund={zielGrund} onChange={setZielGrund} />
       </Card>
 
       {hydrationEintraege.length > 0 && (

@@ -20,10 +20,10 @@ export function Shell({ children }) {
   );
 }
 
-export function Stepper({ step }) {
+export function Stepper({ step, total = STEP_TITLES.length }) {
   return (
     <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
-      {STEP_TITLES.map((_, i) => (
+      {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
           style={{
