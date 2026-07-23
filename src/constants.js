@@ -102,7 +102,26 @@ export const WIRKUNG_OPTIONEN = ["Ja", "Etwas", "Nein"];
 export const DURSTGEFUEHL_OPTIONEN = ["Kein Durst", "Leicht", "Stark"];
 export const SCHLAFQUALITAET_OPTIONEN = ["Sehr gut", "Gut", "Mittel", "Schlecht"];
 
-export const WEITERE_BIOMARKER = ["Testosteron", "Cortisol", "Östradiol", "SHBG", "Vitamin D", "CRP", "HbA1c"];
+// Kategorisierte Laborwerte, damit auch ausgefallene Werte dokumentiert werden
+// können, ohne dass die Liste als eine lange, unübersichtliche Wand aus
+// Eingabefeldern wirkt (ProfilTab zeigt jede Kategorie einklappbar an).
+export const LABORWERTE_KATEGORIEN = [
+  { kategorie: "Blutbild", werte: ["Hämoglobin", "Hämatokrit", "Erythrozyten", "Leukozyten", "Thrombozyten", "MCV", "MCH", "MCHC", "RDW"] },
+  { kategorie: "Elektrolyte", werte: ["Natrium", "Kalium", "Calcium", "Magnesium", "Chlorid", "Phosphat"] },
+  { kategorie: "Nierenwerte", werte: ["Kreatinin", "Harnstoff", "eGFR", "Cystatin C", "Harnsäure"] },
+  { kategorie: "Leberwerte", werte: ["ALT (GPT)", "AST (GOT)", "GGT", "Bilirubin gesamt", "Alkalische Phosphatase", "Albumin"] },
+  { kategorie: "Lipidprofil", werte: ["Gesamtcholesterin", "LDL-Cholesterin", "HDL-Cholesterin", "Triglyceride", "Lipoprotein(a)", "ApoB"] },
+  { kategorie: "Blutzucker & Stoffwechsel", werte: ["Nüchternglukose", "HbA1c", "Insulin (nüchtern)", "HOMA-IR", "C-Peptid"] },
+  { kategorie: "Schilddrüse", werte: ["TSH", "fT3", "fT4", "Anti-TPO", "Anti-TG"] },
+  { kategorie: "Hormone", werte: ["Testosteron", "Testosteron frei", "Östradiol", "Progesteron", "SHBG", "Cortisol", "DHEA-S", "LH", "FSH", "Prolaktin", "IGF-1"] },
+  { kategorie: "Vitamine", werte: ["Vitamin D", "Vitamin B12", "Folsäure", "Vitamin B6", "Vitamin B1", "Vitamin A", "Vitamin E", "Vitamin K"] },
+  { kategorie: "Mineralstoffe & Spurenelemente", werte: ["Eisen", "Ferritin", "Transferrin", "Transferrinsättigung", "Zink", "Selen", "Kupfer", "Jod"] },
+  { kategorie: "Entzündung & Immunsystem", werte: ["CRP", "hs-CRP", "BSG", "Homocystein", "Fibrinogen", "IL-6", "IgA", "IgG", "IgM"] },
+  { kategorie: "Gerinnung", werte: ["Quick / INR", "PTT", "D-Dimere"] },
+  { kategorie: "Herz", werte: ["Troponin", "NT-proBNP", "CK", "CK-MB"] },
+];
+
+export const LABORWERTE_ALLE = LABORWERTE_KATEGORIEN.flatMap((k) => k.werte);
 
 export const TRAININGSARTEN = ["Krafttraining", "Cardio", "HIIT / Bodyweight", "Sonstiges"];
 export const TRAINING_ENERGIELEVEL_OPTIONEN = ["Niedrig", "Mittel", "Hoch"];
@@ -117,6 +136,10 @@ export const MESSWERT_DEFS = [
   { id: "armumfang", label: "Armumfang", unit: "cm", numeric: true, foto: "Arme" },
   { id: "blutdruck", label: "Blutdruck", unit: "", numeric: false },
   { id: "ruhepuls", label: "Ruhepuls", unit: "bpm", numeric: true },
+  { id: "bmi", label: "BMI", unit: "", numeric: true },
+  { id: "koerperwasser", label: "Körperwasser", unit: "%", numeric: true },
+  { id: "muskelanteil", label: "Muskelanteil", unit: "%", numeric: true },
+  { id: "knochenanteil", label: "Knochenanteil", unit: "%", numeric: true },
   { id: "energie", label: "Energielevel", unit: "", numeric: false, emoji: true },
 ];
 
@@ -203,17 +226,16 @@ export const DASHBOARD_TIERS = [
     id: "haupt",
     kacheln: [
       { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: F_EMERALD },
-      { id: "routinen", label: "Routinen", desc: "Mehrere Einträge bündeln", icon: "⭐", grad: F_WARM },
-      { id: "protokolle", label: "Pläne", desc: "Wiederkehrender Rhythmus", icon: "🗂️", grad: F_SLATE },
       { id: "verlauf", label: "Protokolle", desc: "Was du wirklich gemacht hast", icon: "📖", grad: F_SLATE },
     ],
   },
   {
     id: "tracker",
-    title: "Protokolle",
+    title: "Pläne",
     kacheln: [
-      // Grundlagen zuerst (Schlaf, Trinken, Ernährung, Training) — bevor
-      // Substanzen dazukommen, sollten diese Basics im Griff sein.
+      // Grundlagen zuerst (Gewohnheiten, Schlaf, Trinken, Ernährung, Training) —
+      // bevor Substanzen dazukommen, sollten diese Basics im Griff sein.
+      { id: "routinen", label: "Gewohnheiten", desc: "Neue Routinen aufbauen", icon: "🌱", grad: F_EMERALD },
       { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: F_PLUM },
       { id: "hydration", label: "Hydration", desc: "Trinkmenge tracken", icon: "💧", grad: F_EMERALD },
       { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: F_WARM },

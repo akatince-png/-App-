@@ -20,6 +20,8 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
     trainingEintraege,
     trainingWochenplan,
     trainingTemplates,
+    gewohnheiten,
+    gewohnheitErledigt,
   } = useAppData();
 
   const today = new Date();
@@ -38,6 +40,8 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
     trainingEintraege,
     trainingWochenplan,
     trainingTemplates,
+    gewohnheiten,
+    gewohnheitErledigt,
   });
   const erledigtCount = heuteItems.filter((i) => i.done).length;
   const offeneItems = heuteItems.filter((i) => !i.done);

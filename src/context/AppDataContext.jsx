@@ -7,7 +7,7 @@ import { useHormoneData } from "../data/useHormoneData";
 import { useSupplementData } from "../data/useSupplementData";
 import { useDrinkRecipes } from "../data/useDrinkRecipes";
 import { useMealData } from "../data/useMealData";
-import { useRoutines } from "../data/useRoutines";
+import { useGewohnheitenData } from "../data/useGewohnheitenData";
 import { useHydrationData } from "../data/useHydrationData";
 import { useTrainingData } from "../data/useTrainingData";
 import { useTrainingTemplates } from "../data/useTrainingTemplates";
@@ -29,7 +29,7 @@ export function AppDataProvider({ children }) {
   const supplementData = useSupplementData(userId);
   const drinkData = useDrinkRecipes(userId);
   const mealData = useMealData(userId);
-  const routineData = useRoutines(userId);
+  const gewohnheitenData = useGewohnheitenData(userId);
   const hydrationData = useHydrationData(userId);
   const trainingData = useTrainingData(userId);
   const trainingTemplates = useTrainingTemplates(userId);
@@ -59,7 +59,7 @@ export function AppDataProvider({ children }) {
     ...supplementData,
     ...drinkData,
     ...mealData,
-    ...routineData,
+    ...gewohnheitenData,
     ...hydrationData,
     ...trainingData,
     ...trainingTemplates,

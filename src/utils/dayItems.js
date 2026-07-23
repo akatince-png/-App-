@@ -17,6 +17,7 @@ export const KATEGORIE_META = {
   supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
   training: { bg: "#F1EDF8", text: "#786198", dot: "#9B85B8", label: "Training" },
+  gewohnheit: { bg: "#EAF3EA", text: "#3F6B46", dot: "#5E9468", label: "Gewohnheit" },
 };
 
 // Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —
@@ -54,6 +55,8 @@ export function buildDayItems(
     trainingEintraege = [],
     trainingWochenplan = [],
     trainingTemplates = [],
+    gewohnheiten = [],
+    gewohnheitErledigt = {},
   }
 ) {
   const tagStr = toLocalISODate(date);
@@ -164,6 +167,21 @@ export function buildDayItems(
       });
     }
   }
+
+  gewohnheiten.forEach((g) => {
+    const k = `${tagStr}__${g.id}`;
+    items.push({
+      kategorie: "gewohnheit",
+      key: `g-${k}`,
+      refId: g.id,
+      hour: g.uhrzeit ? g.uhrzeit.slice(0, 2) : null,
+      uhrzeit: g.uhrzeit || "",
+      name: g.name,
+      detail: "",
+      done: !!gewohnheitErledigt[k],
+      raw: g,
+    });
+  });
 
   items.sort((a, b) => {
     const ha = a.hour ?? "99";

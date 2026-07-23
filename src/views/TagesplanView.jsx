@@ -137,9 +137,9 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
     trainingWochenplan,
     trainingTemplates,
     trainingHinzufuegen,
-    routinen,
-    routineErledigt,
-    toggleRoutineErledigt,
+    gewohnheiten,
+    gewohnheitErledigt,
+    toggleGewohnheitErledigt,
   } = useAppData();
 
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
@@ -155,11 +155,6 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
     fotoPreview: null,
     fotoFile: null,
   });
-  // Wenn eine Routine mit noch offenem Peptid-Anteil bestätigt wird: merkt sich,
-  // welche Routine (an welchem Tag) nach dem Ausfüllen/Überspringen des
-  // Nebenwirkungen-Formulars als erledigt markiert werden soll.
-  const [pendingRoutineConfirm, setPendingRoutineConfirm] = useState(null);
-
   const openFeedback = (dose, key, kategorie) => {
     setFeedbackOpen(key);
     setFeedbackKategorie(kategorie);
@@ -172,26 +167,12 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
       ...prev,
       nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
     }));
-  const finishPendingRoutine = () => {
-    if (pendingRoutineConfirm) {
-      toggleRoutineErledigt(pendingRoutineConfirm.tagStr, pendingRoutineConfirm.routineId);
-      setPendingRoutineConfirm(null);
-    }
-  };
-  // Springt je nach Kategorie des offenen Feedback-Formulars zur richtigen
-  // Speicher-/Überspringen-Funktion — jede Kategorie hat ihre eigene Log-Tabelle.
-  const skipItemFeedback = (item) => {
-    if (item.kategorie === "peptid") skipFeedback(item.doseRef);
-    else if (item.kategorie === "hormon") skipHormonFeedback(item.doseRef);
-    else if (item.kategorie === "supplement") skipSupplementFeedback(item.doseRef);
-  };
   const handleSaveFeedback = (dose) => {
     if (feedbackKategorie === "peptid") saveFeedback(dose, draftFeedback);
     else if (feedbackKategorie === "hormon") saveHormonFeedback(dose, draftFeedback);
     else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, draftFeedback);
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
-    finishPendingRoutine();
   };
   const handleSkipFeedback = (dose) => {
     if (feedbackKategorie === "peptid") skipFeedback(dose);
@@ -199,7 +180,6 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
     else if (feedbackKategorie === "supplement") skipSupplementFeedback(dose);
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
-    finishPendingRoutine();
   };
 
   const today = new Date();
@@ -258,6 +238,8 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
         trainingEintraege,
         trainingWochenplan,
         trainingTemplates,
+        gewohnheiten,
+        gewohnheitErledigt,
       });
       return items.map((item) => {
         if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
@@ -267,6 +249,7 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
           return { ...item, doseRef, onConfirm: () => openFeedback(doseRef, item.key, "supplement") };
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
+        if (item.kategorie === "gewohnheit") return { ...item, onConfirm: () => toggleGewohnheitErledigt(tagStr, item.raw.id) };
         return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.uhrzeit) };
       });
     },
@@ -285,81 +268,24 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
       trainingEintraege,
       trainingWochenplan,
       trainingTemplates,
+      gewohnheiten,
+      gewohnheitErledigt,
+      toggleGewohnheitErledigt,
       starteTraining,
     ]
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
-  const tagStr = toLocalISODate(selectedDate);
-
-  // Bestätigt eine Routine als Ganzes: Mahlzeiten (kein Feedback-Formular)
-  // werden sofort und ohne Rückfrage im Hintergrund dokumentiert. Enthält die
-  // Routine ein noch offenes Peptid/Medikament/Supplement, öffnet sich dafür
-  // weiterhin das passende Feedback-Formular (das war dir wichtig) — die
-  // Routine gilt danach als erledigt. Weitere offene Feedback-Items in
-  // derselben Routine (seltener Sonderfall) werden automatisch ohne Angaben
-  // übersprungen, damit nicht mehrere Formulare nacheinander aufgehen.
-  const confirmRoutine = (routine, matchedItems) => {
-    const brauchtFeedback = (item) => ["peptid", "hormon", "supplement"].includes(item.kategorie);
-    const offeneMitFeedback = [];
-    matchedItems.forEach((item) => {
-      if (item.done) return;
-      if (brauchtFeedback(item)) {
-        offeneMitFeedback.push(item);
-        return;
-      }
-      item.onConfirm();
-    });
-
-    if (offeneMitFeedback.length === 0) {
-      toggleRoutineErledigt(tagStr, routine.id);
-      return;
-    }
-    offeneMitFeedback.slice(1).forEach(skipItemFeedback);
-    setPendingRoutineConfirm({ tagStr, routineId: routine.id });
-    const erstes = offeneMitFeedback[0];
-    openFeedback(erstes.doseRef, erstes.key, erstes.kategorie);
-  };
-
-  // Fasst Einträge, die zu einer Routine gehören, zu einem einzigen Punkt
-  // zusammen; alles andere bleibt einzeln sichtbar wie bisher.
-  const tagesEntries = useMemo(() => {
-    const consumed = new Set();
-    const routineEntries = [];
-    routinen.forEach((routine) => {
-      const refIds = new Set(routine.items.map((i) => `${i.type}:${i.refId}`));
-      const matchedItems = tagesItems.filter((item) => refIds.has(`${item.kategorie}:${item.refId}`));
-      if (matchedItems.length === 0) return;
-      matchedItems.forEach((item) => consumed.add(item.key));
-      const hours = matchedItems.map((i) => i.hour).filter(Boolean);
-      const hour = routine.uhrzeit ? routine.uhrzeit.slice(0, 2) : hours.length ? hours.sort()[0] : null;
-      const done = !!routineErledigt[`${tagStr}__${routine.id}`];
-      routineEntries.push({
-        kind: "routine",
-        key: `routine-${routine.id}`,
-        hour,
-        uhrzeit: routine.uhrzeit || "",
-        icon: routine.icon,
-        name: routine.name,
-        matchedItems,
-        done,
-        onConfirm: () => confirmRoutine(routine, matchedItems),
-      });
-    });
-    const ungrouped = tagesItems.filter((item) => !consumed.has(item.key)).map((item) => ({ kind: "item", ...item }));
-    return [...ungrouped, ...routineEntries].sort((a, b) => (a.hour ?? "99").localeCompare(b.hour ?? "99"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tagesItems, routinen, routineErledigt, tagStr]);
 
   const buckets = useMemo(() => {
     const map = new Map();
-    tagesEntries.forEach((entry) => {
-      const key = entry.hour || "";
+    tagesItems.forEach((item) => {
+      const key = item.hour || "";
       if (!map.has(key)) map.set(key, []);
-      map.get(key).push(entry);
+      map.get(key).push(item);
     });
     return Array.from(map.entries()).sort(([a], [b]) => (a || "99").localeCompare(b || "99"));
-  }, [tagesEntries]);
+  }, [tagesItems]);
 
   // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick
   // erkennbar, ohne die ganze Liste durchgehen zu müssen. Nur relevant, wenn
@@ -461,7 +387,7 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
 
       {modus === "tag" && (
         <>
-          {tagesEntries.length === 0 && (
+          {tagesItems.length === 0 && (
             <Card>
               <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>Für diesen Tag steht nichts an. 🌿</div>
             </Card>
@@ -480,51 +406,7 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
                 )}
               </div>
               <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
-                {entries.map((entry, i) => {
-                  if (entry.kind === "routine") {
-                    const offenesFeedbackItem = entry.matchedItems.find(
-                      (m) => ["peptid", "hormon", "supplement"].includes(m.kategorie) && feedbackOpen === m.key
-                    );
-                    return (
-                      <div key={entry.key} style={{ padding: "12px 0", borderBottom: i < entries.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                            <div style={{ fontSize: 18, flexShrink: 0 }}>{entry.icon}</div>
-                            <div>
-                              <div style={{ fontSize: 14.5, fontWeight: 700 }}>
-                                {entry.name} {entry.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {entry.uhrzeit}</span>}
-                              </div>
-                              <div style={{ fontSize: 12, color: textMuted, marginTop: 1 }}>{entry.matchedItems.map((m) => m.name).join(", ")}</div>
-                            </div>
-                          </div>
-                          {entry.done ? (
-                            <StatusBadge status="erledigt" />
-                          ) : (
-                            <button
-                              className="mp-tap"
-                              onClick={entry.onConfirm}
-                              style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: accentDark, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
-                            >
-                              Bestätigen
-                            </button>
-                          )}
-                        </div>
-                        {offenesFeedbackItem && (
-                          <FeedbackPanel
-                            item={offenesFeedbackItem}
-                            kategorie={offenesFeedbackItem.kategorie}
-                            draftFeedback={draftFeedback}
-                            setDraftFeedback={setDraftFeedback}
-                            toggleDraftNebenwirkung={toggleDraftNebenwirkung}
-                            onSkip={() => handleSkipFeedback(offenesFeedbackItem.doseRef)}
-                            onSave={() => handleSaveFeedback(offenesFeedbackItem.doseRef)}
-                          />
-                        )}
-                      </div>
-                    );
-                  }
-
-                  const item = entry;
+                {entries.map((item, i) => {
                   const k = KATEGORIE[item.kategorie];
                   const isOpen = feedbackOpen === item.key;
                   return (
@@ -581,7 +463,7 @@ export default function TagesplanView({ onHome, onOpenTraining }) {
           {wochentage.map((d) => {
             const items = itemsForDate(d);
             const done = items.filter((i) => i.done).length;
-            const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit", "training"].map((kat) => ({
+            const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit", "training", "gewohnheit"].map((kat) => ({
               kat,
               count: items.filter((i) => i.kategorie === kat).length,
             }));
