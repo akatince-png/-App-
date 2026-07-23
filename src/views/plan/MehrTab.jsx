@@ -7,7 +7,6 @@ import { useAppData } from "../../context/AppDataContext";
 const DATENSCHUTZ = ["Ende-zu-Ende Verschlüsselung", "DSGVO konform", "Daten gehören dir", "Du entscheidest, was geteilt wird", "Kein Verkauf deiner Daten"];
 
 const ERWEITERUNGEN = [
-  "PDF-Export für Arzt / Therapiegespräch",
   "Dunkelmodus & Design-Anpassung",
   "Wearable-Integration (Oura, Whoop)",
   "Siri / Google Assistant Shortcuts",

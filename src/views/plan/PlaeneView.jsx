@@ -9,6 +9,7 @@ import TrainingView from "../TrainingView";
 import SupplementeView from "../SupplementeView";
 import MedikamenteView from "../MedikamenteView";
 import PeptidView from "../PeptidView";
+import WochenuebersichtView from "../WochenuebersichtView";
 
 const VIEWS = {
   schlaf: SchlafView,
@@ -18,6 +19,7 @@ const VIEWS = {
   supplemente: SupplementeView,
   medikamente: MedikamenteView,
   peptide: PeptidView,
+  wochenuebersicht: WochenuebersichtView,
 };
 
 // "Alle Pläne"-Hub — bündelt die 7 Kategorien, die aktiv mit Zeiten/Zielen

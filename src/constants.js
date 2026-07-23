@@ -227,4 +227,5 @@ export const PLAENE_TABS = [
   { id: "supplemente", label: "Supplemente", icon: "🌿", grad: F_WARM },
   { id: "medikamente", label: "Medikamente", icon: "💊", grad: F_SLATE },
   { id: "peptide", label: "Peptide", icon: "🧬", grad: F_EMERALD },
+  { id: "wochenuebersicht", label: "Wochenübersicht", icon: "🗓️", grad: F_SLATE },
 ];
