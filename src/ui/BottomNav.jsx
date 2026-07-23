@@ -1,12 +1,13 @@
 import React from "react";
+import Icon from "./Icon";
 import { accent, accentDark, card, cardBorder, textMuted } from "./theme";
 
 const ITEMS = [
-  { id: "home", label: "Übersicht", icon: "🗓️" },
-  { id: "tagesplan", label: "Tagesplan", icon: "📅" },
+  { id: "home", label: "Übersicht", icon: "grid" },
+  { id: "tagesplan", label: "Tagesplan", icon: "calendarCheck" },
   { id: "__fab__", label: "", icon: "+" },
-  { id: "routinen", label: "Gewohnheiten", icon: "🌱" },
-  { id: "mehr", label: "Mehr", icon: "⚙️" },
+  { id: "routinen", label: "Gewohnheiten", icon: "target" },
+  { id: "mehr", label: "Mehr", icon: "sliders" },
 ];
 
 // Feste untere Tab-Leiste (Konzept-4B-Redesign) — ersetzt das bisherige
@@ -85,7 +86,7 @@ export default function BottomNav({ active, onNavigate, onFab }) {
                 minWidth: 56,
               }}
             >
-              <span style={{ fontSize: 18, opacity: isActive ? 1 : 0.55 }}>{item.icon}</span>
+              <Icon name={item.icon} size={20} color={isActive ? accent : textMuted} strokeWidth={isActive ? 2.1 : 1.8} />
               <span style={{ fontSize: 10, fontWeight: 700, color: isActive ? accent : textMuted }}>{item.label}</span>
             </button>
           );

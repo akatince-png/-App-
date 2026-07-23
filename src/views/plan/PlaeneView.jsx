@@ -2,6 +2,7 @@ import React from "react";
 import { Shell } from "../../ui/primitives";
 import { accent, cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
+import Icon from "../../ui/Icon";
 import SchlafView from "../SchlafView";
 import HydrationView from "../HydrationView";
 import NutritionView from "../NutritionView";
@@ -59,9 +60,14 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
               fontWeight: 700,
               cursor: "pointer",
               whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
             }}
           >
-            {t.icon} {t.label}
+            <Icon name={t.icon} size={14} />
+            {t.label}
           </button>
         ))}
       </div>

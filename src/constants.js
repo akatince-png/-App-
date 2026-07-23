@@ -220,12 +220,12 @@ export const F_PLUM = ["#9B85B8", "#786198"];
 // Substanzen aufsteigend nach Eingriffstiefe). Ersetzt die frühere
 // DASHBOARD_TIERS-"tracker"-Gruppe, jetzt als Reiter statt Dashboard-Kacheln.
 export const PLAENE_TABS = [
-  { id: "schlaf", label: "Schlaf", icon: "😴", grad: F_PLUM },
-  { id: "hydration", label: "Hydration", icon: "💧", grad: F_EMERALD },
-  { id: "ernaehrung", label: "Ernährung", icon: "🥗", grad: F_WARM },
-  { id: "training", label: "Training", icon: "🏋️", grad: F_WARM },
-  { id: "supplemente", label: "Supplemente", icon: "🌿", grad: F_WARM },
-  { id: "medikamente", label: "Medikamente", icon: "💊", grad: F_SLATE },
-  { id: "peptide", label: "Peptide", icon: "🧬", grad: F_EMERALD },
-  { id: "wochenuebersicht", label: "Wochenübersicht", icon: "🗓️", grad: F_SLATE },
+  { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
+  { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },
+  { id: "ernaehrung", label: "Ernährung", icon: "utensils", grad: F_WARM },
+  { id: "training", label: "Training", icon: "dumbbell", grad: F_WARM },
+  { id: "supplemente", label: "Supplemente", icon: "capsule", grad: F_WARM },
+  { id: "medikamente", label: "Medikamente", icon: "cross", grad: F_SLATE },
+  { id: "peptide", label: "Peptide", icon: "dna", grad: F_EMERALD },
+  { id: "wochenuebersicht", label: "Wochenübersicht", icon: "calendarWeek", grad: F_SLATE },
 ];

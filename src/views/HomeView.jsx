@@ -2,6 +2,7 @@ import React from "react";
 import { Shell, Card } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
+import Icon from "../ui/Icon";
 import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
@@ -12,9 +13,9 @@ import { useAppData } from "../context/AppDataContext";
 // aus 17 Einzelkacheln — jede Kategorie liegt jetzt hinter einem Reiter
 // innerhalb dieser Ordner (siehe PlaeneView.jsx / PlanView.jsx).
 const ORDNER = [
-  { id: "schlaf", label: "Alle Pläne", desc: "Deine Bereiche", icon: "📂" },
-  { id: "archiv", label: "Archiv", desc: "Vergangene Daten", icon: "🗂️" },
-  { id: "mehr", label: "Mehr", desc: "Einstellungen & mehr", icon: "⚙️" },
+  { id: "schlaf", label: "Alle Pläne", desc: "Deine Bereiche", icon: "folder" },
+  { id: "archiv", label: "Archiv", desc: "Vergangene Daten", icon: "archive" },
+  { id: "mehr", label: "Mehr", desc: "Einstellungen & mehr", icon: "sliders" },
 ];
 
 export default function HomeView({ onOpenView }) {
@@ -62,8 +63,8 @@ export default function HomeView({ onOpenView }) {
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss} 👋</div>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>MyProtocols</div>
+          <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss}</div>
+          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.2 }}>MyProtocols</div>
         </div>
         <Logo size={42} />
       </div>
@@ -84,7 +85,7 @@ export default function HomeView({ onOpenView }) {
         >
           <div style={{ fontSize: 12, fontWeight: 700, color: blue, marginBottom: 10 }}>Gewohnheiten</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 26 }}>🌱</div>
+            <Icon name="target" size={24} color={blue} />
             <div>
               <div style={{ fontSize: 18, fontWeight: 800 }}>{gewohnheiten.length}</div>
               <div style={{ fontSize: 11, color: textMuted, fontWeight: 700 }}>{gewohnheiten.length === 1 ? "aktiv" : "aktiv"}</div>
@@ -155,7 +156,7 @@ export default function HomeView({ onOpenView }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ fontSize: 22 }}>🌱</div>
+          <Icon name="target" size={22} color={accentDark} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>Gewohnheiten</div>
             <div style={{ fontSize: 12, color: accentDark, opacity: 0.8 }}>Neue Routinen aufbauen</div>
@@ -180,7 +181,9 @@ export default function HomeView({ onOpenView }) {
               border: `1px solid ${cardBorder}`,
             }}
           >
-            <div style={{ fontSize: 22, marginBottom: 8 }}>{o.icon}</div>
+            <div style={{ marginBottom: 8 }}>
+              <Icon name={o.icon} size={22} color={accentDark} />
+            </div>
             <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{o.label}</div>
             <div style={{ fontSize: 10.5, color: textMuted }}>{o.desc}</div>
           </button>
