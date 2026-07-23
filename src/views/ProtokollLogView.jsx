@@ -86,7 +86,7 @@ function AenderungKarte({ e }) {
   );
 }
 
-export default function ProtokollLogView({ onHome }) {
+export default function ProtokollLogView({ onHome, embedded = false }) {
   const { trainingEintraege, protokollEintraege } = useAppData();
 
   const gruppen = useMemo(() => {
@@ -109,18 +109,20 @@ export default function ProtokollLogView({ onHome }) {
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [protokollEintraege]);
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>📖 Protokolle</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>📖 Protokolle</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 20 }}>
         Was du wirklich gemacht hast — nicht der Plan, sondern das tatsächliche Ergebnis.
       </div>
@@ -162,6 +164,7 @@ export default function ProtokollLogView({ onHome }) {
           </div>
         ))
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

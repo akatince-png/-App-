@@ -4,23 +4,23 @@ import { textMuted } from "./ui/theme";
 import { useAppData } from "./context/AppDataContext";
 import HomeView from "./views/HomeView";
 import LexikonView from "./views/LexikonView";
-import SupplementeView from "./views/SupplementeView";
 import TagesplanView from "./views/TagesplanView";
 import ProtocolFormView from "./views/ProtocolFormView";
 import PlanView from "./views/plan/PlanView";
-import PeptidView from "./views/PeptidView";
-import MedikamenteView from "./views/MedikamenteView";
-import SchlafView from "./views/SchlafView";
-import TrainingView from "./views/TrainingView";
-import NutritionView from "./views/NutritionView";
-import BlutzuckerView from "./views/BlutzuckerView";
-import HydrationView from "./views/HydrationView";
-import ProtokollLogView from "./views/ProtokollLogView";
+import PlaeneView from "./views/plan/PlaeneView";
+import MehrView from "./views/plan/MehrView";
 import GewohnheitenView from "./views/GewohnheitenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
+import BottomNav from "./ui/BottomNav";
+import { PLAENE_TABS } from "./constants";
+
+const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
+const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "profil", "blutzucker", "community"];
 
 // Übersetzt die Kategorie eines Tagesplan-Eintrags in die zuständige View —
-// für den ✏️-Bearbeiten-Kurzweg direkt aus dem Tagesplan.
+// für den ✏️-Bearbeiten-Kurzweg direkt aus dem Tagesplan. Die Pläne-
+// Kategorien landen jetzt alle im "Alle Pläne"-Hub (PlaeneView), der
+// jeweilige `view`-Wert dient dort direkt als aktiver Reiter.
 const KATEGORIE_TO_VIEW = {
   peptid: "peptide",
   hormon: "medikamente",
@@ -40,7 +40,7 @@ function LoadingScreen() {
 
 export default function AuthenticatedApp() {
   const { loading, onboardingComplete, completeOnboarding } = useAppData();
-  const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | 'supplemente' | ...
+  const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   const [step, setStep] = useState(0);
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
   // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
@@ -57,38 +57,30 @@ export default function AuthenticatedApp() {
     return <LoadingScreen />;
   }
 
+  const neuesProtokoll = () => {
+    setView("form");
+    setStep(0);
+  };
+
+  let screen;
+
   if (view === "form") {
-    if (!onboardingComplete) {
-      return (
-        <OnboardingFlow
-          onDone={() => {
-            completeOnboarding();
-            setView("home");
-          }}
-        />
-      );
-    }
-    // Bestehendes Konto startet hier ein zusätzliches, komplett neues
-    // Protokoll — kein erneutes Durchlaufen des Einrichtungs-Abschlusses.
-    return (
-      <ProtocolFormView
-        step={step}
-        setStep={setStep}
-        onFinish={() => setView("home")}
+    screen = !onboardingComplete ? (
+      <OnboardingFlow
+        onDone={() => {
+          completeOnboarding();
+          setView("home");
+        }}
       />
+    ) : (
+      // Bestehendes Konto startet hier ein zusätzliches, komplett neues
+      // Protokoll — kein erneutes Durchlaufen des Einrichtungs-Abschlusses.
+      <ProtocolFormView step={step} setStep={setStep} onFinish={() => setView("home")} />
     );
-  }
-
-  if (view === "lexikon") {
-    return <LexikonView onHome={() => setView("home")} />;
-  }
-
-  if (view === "supplemente") {
-    return <SupplementeView onHome={() => setView("home")} />;
-  }
-
-  if (view === "tagesplan") {
-    return (
+  } else if (view === "lexikon") {
+    screen = <LexikonView onHome={() => setView("home")} />;
+  } else if (view === "tagesplan") {
+    screen = (
       <TagesplanView
         onHome={() => setView("home")}
         onOpenTraining={(id) => {
@@ -101,68 +93,39 @@ export default function AuthenticatedApp() {
         }}
       />
     );
-  }
-
-  if (view === "verlauf") {
-    return <ProtokollLogView onHome={() => setView("home")} />;
-  }
-
-  if (view === "routinen") {
-    return <GewohnheitenView onHome={() => setView("home")} />;
-  }
-
-  if (view === "peptide") {
-    return <PeptidView onHome={() => setView("home")} />;
-  }
-
-  if (view === "medikamente") {
-    return <MedikamenteView onHome={() => setView("home")} />;
-  }
-
-  if (view === "schlaf") {
-    return <SchlafView onHome={() => setView("home")} />;
-  }
-
-  if (view === "training") {
-    return (
-      <TrainingView
+  } else if (view === "routinen") {
+    screen = <GewohnheitenView onHome={() => setView("home")} />;
+  } else if (PLAENE_VIEW_IDS.includes(view)) {
+    screen = (
+      <PlaeneView
+        planeTab={view}
+        setPlaneTab={setView}
         onHome={() => setView("home")}
         initialSessionId={offenesTrainingId}
         onConsumedInitialSession={() => setOffenesTrainingId(null)}
       />
     );
+  } else if (ARCHIV_VIEW_IDS.includes(view)) {
+    screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("peptide")} />;
+  } else if (view === "mehr") {
+    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} />;
+  } else {
+    screen = <HomeView onOpenView={(id) => setView(id)} />;
   }
 
-  if (view === "ernaehrung") {
-    return <NutritionView onHome={() => setView("home")} />;
-  }
-
-  if (view === "blutzucker") {
-    return <BlutzuckerView onHome={() => setView("home")} />;
-  }
-
-  if (view === "hydration") {
-    return <HydrationView onHome={() => setView("home")} />;
-  }
-
-  if (view === "statistik" || view === "profil" || view === "community" || view === "archiv" || view === "mehr") {
-    return (
-      <PlanView
-        planTab={view}
-        setPlanTab={setView}
-        onHome={() => setView("home")}
-        onEditProtocol={() => setView("peptide")}
-      />
-    );
-  }
+  const zeigeBottomNav = view !== "form";
+  const aktiverTab = ["home", "tagesplan", "routinen", "mehr"].includes(view) ? view : null;
 
   return (
-    <HomeView
-      onOpenView={(id) => setView(id)}
-      onNewProtocol={() => {
-        setView("form");
-        setStep(0);
-      }}
-    />
+    <>
+      <div style={{ paddingBottom: zeigeBottomNav ? 76 : 0 }}>{screen}</div>
+      {zeigeBottomNav && (
+        <BottomNav
+          active={aktiverTab}
+          onNavigate={(id) => setView(id)}
+          onFab={neuesProtokoll}
+        />
+      )}
+    </>
   );
 }

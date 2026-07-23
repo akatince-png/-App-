@@ -2,19 +2,21 @@ import React from "react";
 import { Shell, Card } from "../ui/primitives";
 import { cardBorder, textMuted } from "../ui/theme";
 
-export default function BlutzuckerView({ onHome }) {
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🩸 Blutzucker / CGM</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+export default function BlutzuckerView({ onHome, embedded = false }) {
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>🩸 Blutzucker / CGM</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <Card style={{ textAlign: "center" }}>
         <div style={{ fontSize: 26, marginBottom: 8 }}>🚧</div>
@@ -24,6 +26,7 @@ export default function BlutzuckerView({ onHome }) {
           Zeitverlauf zu erfassen und auszuwerten.
         </div>
       </Card>
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

@@ -70,7 +70,7 @@ function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
   );
 }
 
-export default function NutritionView({ onHome }) {
+export default function NutritionView({ onHome, embedded = false }) {
   const { mahlzeiten, mahlzeitHinzufuegen, mahlzeitAendern, mahlzeitEntfernen, mahlzeitErledigt, toggleMahlzeitErledigt, aenderungVermerken } =
     useAppData();
   const [neueMahlzeit, setNeueMahlzeit] = useState(LEERE_MAHLZEIT);
@@ -150,18 +150,20 @@ export default function NutritionView({ onHome }) {
     ...Array.from(new Set(mahlzeiten.flatMap((m) => m.tageszeiten))).filter((z) => !TAGESZEITEN.includes(z)),
   ];
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🥗 Ernährungsplan</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>🥗 Ernährungsplan</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
       <Card style={{ marginBottom: 14 }}>
@@ -338,6 +340,7 @@ export default function NutritionView({ onHome }) {
           </Card>
         </>
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

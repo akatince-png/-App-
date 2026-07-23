@@ -16,7 +16,7 @@ const LEERER_EINTRAG = {
   bemerkungen: "",
 };
 
-export default function SchlafView({ onHome }) {
+export default function SchlafView({ onHome, embedded = false }) {
   const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage } = useAppData();
   const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState(LEERER_EINTRAG);
   const [detailsOffen, setDetailsOffen] = useState(false);
@@ -27,18 +27,20 @@ export default function SchlafView({ onHome }) {
     setDetailsOffen(false);
   };
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>😴 Schlaf</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>😴 Schlaf</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>🌙 Und, wie hast du geschlafen?</div>
@@ -146,6 +148,7 @@ export default function SchlafView({ onHome }) {
           </Card>
         </>
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

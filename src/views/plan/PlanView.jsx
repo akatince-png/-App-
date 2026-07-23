@@ -5,21 +5,27 @@ import StatistikTab from "./StatistikTab";
 import ProfilTab from "./ProfilTab";
 import CommunityTab from "./CommunityTab";
 import ArchivTab from "./ArchivTab";
-import MehrTab from "./MehrTab";
+import ProtokollLogView from "../ProtokollLogView";
+import BlutzuckerView from "../BlutzuckerView";
 
 const TABS = [
+  { id: "verlauf", label: "Protokolle" },
+  { id: "archiv", label: "Archiv" },
   { id: "statistik", label: "Statistik" },
   { id: "profil", label: "Profil" },
+  { id: "blutzucker", label: "Blutzucker" },
   { id: "community", label: "Community" },
-  { id: "archiv", label: "Archiv" },
-  { id: "mehr", label: "Mehr" },
 ];
 
+// "Archiv"-Hub — bündelt alles, was der Rückschau/Dokumentation dient
+// (Protokolle, Archiv, Statistik, Profil/Biomarker, Blutzucker, Community)
+// unter einem gemeinsamen Reiter-Kopf. "Mehr" ist bewusst kein Reiter mehr
+// hier, sondern ein eigenständiges Ziel der unteren Tab-Leiste (MehrView.jsx).
 export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }) {
   return (
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>Statistik & mehr</div>
+        <div style={{ fontSize: 22, fontWeight: 800 }}>Archiv</div>
         <button
           onClick={onHome}
           style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
@@ -51,11 +57,12 @@ export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }
         ))}
       </div>
 
+      {planTab === "verlauf" && <ProtokollLogView embedded />}
       {planTab === "statistik" && <StatistikTab />}
       {planTab === "profil" && <ProfilTab />}
       {planTab === "community" && <CommunityTab />}
       {planTab === "archiv" && <ArchivTab />}
-      {planTab === "mehr" && <MehrTab />}
+      {planTab === "blutzucker" && <BlutzuckerView embedded />}
 
       <button
         onClick={onEditProtocol}

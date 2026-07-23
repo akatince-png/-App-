@@ -31,7 +31,7 @@ function formatZeitpunkt(iso) {
   return d.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function PeptidView({ onHome }) {
+export default function PeptidView({ onHome, embedded = false }) {
   const {
     plan,
     erledigt,
@@ -149,18 +149,20 @@ export default function PeptidView({ onHome }) {
     setFeedbackOpen(null);
   };
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>💉 Peptide</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>💉 Peptide</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Peptid hinzufügen</div>
@@ -372,6 +374,7 @@ export default function PeptidView({ onHome }) {
           </Card>
         </>
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

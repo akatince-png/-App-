@@ -33,7 +33,7 @@ function intervallGueltig(d) {
   return true;
 }
 
-export default function MedikamenteView({ onHome }) {
+export default function MedikamenteView({ onHome, embedded = false }) {
   const {
     hormone,
     hormonDosierung,
@@ -122,18 +122,20 @@ export default function MedikamenteView({ onHome }) {
     namen: hormone.filter((h) => (hormonDosierung[h]?.kategorie || "Hormone") === kat),
   })).filter((g) => g.namen.length > 0);
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Medikamente</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Medikamente</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen</div>
@@ -299,6 +301,7 @@ export default function MedikamenteView({ onHome }) {
           ))}
         </>
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

@@ -75,21 +75,23 @@ const UNTERTABS = [
   { id: "rezepte", label: "Mischungen" },
 ];
 
-export default function SupplementeView({ onHome }) {
+export default function SupplementeView({ onHome, embedded = false }) {
   const [tab, setTab] = useState("supplemente");
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Supplemente</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Supplemente</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
         {UNTERTABS.map((t) => (
@@ -114,8 +116,9 @@ export default function SupplementeView({ onHome }) {
       </div>
 
       {tab === "supplemente" ? <SupplementeSection /> : <RezepteSection />}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }
 
 function SupplementeSection() {

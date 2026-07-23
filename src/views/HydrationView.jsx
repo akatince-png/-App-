@@ -24,7 +24,7 @@ function motivationsText(heuteMl, zielMl) {
   return `Noch ${rest} ml bis zum Ziel.`;
 }
 
-export default function HydrationView({ onHome }) {
+export default function HydrationView({ onHome, embedded = false }) {
   const {
     hydrationEintraege,
     hydrationHeuteMl,
@@ -65,18 +65,20 @@ export default function HydrationView({ onHome }) {
     setKorrekturEntwurf("");
   };
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>💧 Hydration</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>💧 Hydration</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
@@ -203,6 +205,7 @@ export default function HydrationView({ onHome }) {
           </Card>
         </>
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

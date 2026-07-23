@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card } from "../../ui/primitives";
-import { accentDark, danger, success, textMuted } from "../../ui/theme";
+import { accentDark, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
 import { useAppData } from "../../context/AppDataContext";
 
@@ -15,7 +15,7 @@ const ERWEITERUNGEN = [
   "Mehr Sprachen",
 ];
 
-export default function MehrTab() {
+export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
   const { resetOnboarding, pushUnterstuetzt, pushAktiv, pushLadend, pushFehler, pushAktivieren, pushDeaktivieren, pushTestSenden } = useAppData();
   const [resetMsg, setResetMsg] = useState(null);
@@ -35,6 +35,28 @@ export default function MehrTab() {
 
   return (
     <>
+      {onOpenLexikon && (
+        <button
+          onClick={onOpenLexikon}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${cardBorder}`,
+            background: "#fff",
+            marginBottom: 20,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 700 }}>📚 Lexikon</span>
+          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+        </button>
+      )}
+
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>
       <Card style={{ marginBottom: 14 }}>
         {!pushUnterstuetzt ? (

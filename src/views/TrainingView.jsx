@@ -289,7 +289,7 @@ function WochenplanEditor({ trainingWochenplan, trainingTemplates, wochenplanSet
 // ---------------------------------------------------------------------------
 // Formular zum Planen/Eintragen + Verlauf + Kurz-Timer.
 // ---------------------------------------------------------------------------
-export default function TrainingView({ onHome, initialSessionId, onConsumedInitialSession }) {
+export default function TrainingView({ onHome, initialSessionId, onConsumedInitialSession, embedded = false }) {
   const {
     trainingEintraege,
     trainingHinzufuegen,
@@ -431,18 +431,20 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
   const vorlagenFuerArt = trainingTemplates.filter((t) => t.art === eintrag.art);
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🏋️ Training</div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+  const content = (
+    <>
+      {!embedded && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>🏋️ Training</div>
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+            title="Zum Dashboard"
+          >
+            ⌂
+          </button>
+        </div>
+      )}
 
       <div style={{ marginBottom: 14 }}>
         <PrimaryButton variant="ghost" onClick={() => setWochenplanOffen((o) => !o)}>
@@ -756,6 +758,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           </Card>
         </>
       )}
-    </Shell>
+    </>
   );
+  return embedded ? content : <Shell>{content}</Shell>;
 }

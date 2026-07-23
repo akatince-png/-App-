@@ -2,13 +2,22 @@ import React from "react";
 import { Shell, Card } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
-import { cardBorder, shadow, textMuted } from "../ui/theme";
-import { DASHBOARD_TIERS } from "../constants";
+import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
 import { useAppData } from "../context/AppDataContext";
 
-export default function HomeView({ onOpenView, onNewProtocol }) {
+// Konzept 4B: die Startseite ist ein knapper Tagesassistent + drei
+// Ordner-Kacheln (Alle Pläne / Archiv / Mehr) statt einer langen Liste
+// aus 17 Einzelkacheln — jede Kategorie liegt jetzt hinter einem Reiter
+// innerhalb dieser Ordner (siehe PlaeneView.jsx / PlanView.jsx).
+const ORDNER = [
+  { id: "schlaf", label: "Alle Pläne", desc: "Deine Bereiche", icon: "📂" },
+  { id: "archiv", label: "Archiv", desc: "Vergangene Daten", icon: "🗂️" },
+  { id: "mehr", label: "Mehr", desc: "Einstellungen & mehr", icon: "⚙️" },
+];
+
+export default function HomeView({ onOpenView }) {
   const {
     plan,
     erledigt,
@@ -58,17 +67,31 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
       </div>
 
       {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü. */}
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <ProgressRing done={erledigtCount} total={heuteItems.length} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 3 }}>Heute</div>
-            <div style={{ fontSize: 15, fontWeight: 800 }}>{statusText(erledigtCount, heuteItems.length)}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+        <Card>
+          <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>Tagesfortschritt</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <ProgressRing done={erledigtCount} total={heuteItems.length} size={54} />
+            <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{statusText(erledigtCount, heuteItems.length)}</div>
           </div>
-        </div>
-      </Card>
+        </Card>
+        <Card
+          className="mp-tap"
+          style={{ cursor: "pointer", background: blueSoft, border: "none" }}
+          onClick={() => onOpenView("routinen")}
+        >
+          <div style={{ fontSize: 12, fontWeight: 700, color: blue, marginBottom: 10 }}>Gewohnheiten</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 26 }}>🌱</div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>{gewohnheiten.length}</div>
+              <div style={{ fontSize: 11, color: textMuted, fontWeight: 700 }}>{gewohnheiten.length === 1 ? "aktiv" : "aktiv"}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-      {/* Dann die heute offenen Aufgaben — erst danach die Module. */}
+      {/* Dann die heute offenen Aufgaben — erst danach die Ordner. */}
       {offeneItems.length > 0 && (
         <>
           <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 10 }}>Als Nächstes</div>
@@ -111,125 +134,56 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
         </>
       )}
 
-      {DASHBOARD_TIERS.map((tier, tierIdx) => (
-        <div
-          key={tier.id}
-          style={{
-            marginBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? 0 : 26,
-            paddingBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? 0 : 22,
-            borderBottom: tierIdx === DASHBOARD_TIERS.length - 1 ? "none" : `1px solid ${cardBorder}`,
-          }}
-        >
-          {tier.title && (
-            <div style={{ fontSize: 12, fontWeight: 800, color: textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>
-              {tier.title}
-            </div>
-          )}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: tier.id === "haupt" ? "1fr" : "1fr 1fr",
-              gap: tier.id === "haupt" ? 10 : 12,
-            }}
-          >
-            {tier.kacheln.map((k) =>
-              tier.id === "haupt" ? (
-                <button
-                  key={k.id}
-                  className="mp-tap"
-                  onClick={() => onOpenView(k.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    textAlign: "left",
-                    borderRadius: 22,
-                    padding: "14px 16px",
-                    cursor: "pointer",
-                    background: "#fff",
-                    boxShadow: shadow,
-                    border: `1px solid ${cardBorder}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 46,
-                      height: 46,
-                      flexShrink: 0,
-                      borderRadius: 16,
-                      background: `linear-gradient(135deg, ${k.grad[0]}, ${k.grad[1]})`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 20,
-                    }}
-                  >
-                    {k.icon}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>{k.label}</div>
-                    <div style={{ fontSize: 12, color: textMuted }}>{k.desc}</div>
-                  </div>
-                </button>
-              ) : (
-                <button
-                  key={k.id}
-                  className="mp-tap"
-                  onClick={() => onOpenView(k.id)}
-                  style={{
-                    textAlign: "left",
-                    borderRadius: 20,
-                    padding: 16,
-                    cursor: "pointer",
-                    background: "#fff",
-                    boxShadow: shadow,
-                    border: `1px solid ${cardBorder}`,
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 13,
-                      background: `linear-gradient(135deg, ${k.grad[0]}, ${k.grad[1]})`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 17,
-                      marginBottom: 10,
-                    }}
-                  >
-                    {k.icon}
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2 }}>{k.label}</div>
-                  <div style={{ fontSize: 11, color: textMuted }}>{k.desc}</div>
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      ))}
-
       <button
         className="mp-tap"
-        onClick={onNewProtocol}
+        onClick={() => onOpenView("routinen")}
         style={{
           width: "100%",
-          padding: "12px",
-          borderRadius: 16,
-          border: `1px dashed ${cardBorder}`,
-          background: "transparent",
-          color: textMuted,
-          fontSize: 13,
-          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "16px 18px",
+          borderRadius: 18,
+          border: "none",
+          background: accentSoft,
           cursor: "pointer",
-          marginTop: 4,
+          marginBottom: 20,
+          textAlign: "left",
         }}
       >
-        + Neues Protokoll erstellen
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 22 }}>🌱</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>Gewohnheiten</div>
+            <div style={{ fontSize: 12, color: accentDark, opacity: 0.8 }}>Neue Routinen aufbauen</div>
+          </div>
+        </div>
+        <span style={{ color: accentDark, fontSize: 18 }}>›</span>
       </button>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        {ORDNER.map((o) => (
+          <button
+            key={o.label}
+            className="mp-tap"
+            onClick={() => onOpenView(o.id)}
+            style={{
+              textAlign: "left",
+              borderRadius: 18,
+              padding: "14px 10px",
+              cursor: "pointer",
+              background: "#fff",
+              boxShadow: shadow,
+              border: `1px solid ${cardBorder}`,
+            }}
+          >
+            <div style={{ fontSize: 22, marginBottom: 8 }}>{o.icon}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{o.label}</div>
+            <div style={{ fontSize: 10.5, color: textMuted }}>{o.desc}</div>
+          </button>
+        ))}
+      </div>
     </Shell>
   );
 }

@@ -207,72 +207,24 @@ export const LEXIKON_BEISPIELE = {
 
 export const PIE_COLORS = ["#0FB8A3", "#5B9BF0", "#F5A623", "#F2596A", "#9B7EDE", "#4FBF8F"];
 
-// Kacheln sind in Gruppen ("Tiers") organisiert, damit das Dashboard nicht
-// wie eine flache Liste wirkt und die Sortierung eine klare inhaltliche
-// Bedeutung hat, statt nur "oben = wichtig" — gruppiert nach Denkmodus:
-// - haupt: die beiden täglich aktiv bearbeiteten Einstiegspunkte (Tagesplan
-//   zum Abhaken, Gewohnheiten zum Aufbauen) — beides "heute dran", deshalb
-//   ohne Überschrift ganz oben.
-// - tracker ("Pläne"): ausschließlich Dinge, die aktiv mit Zeiten/Zielen
-//   geplant werden (Schlaf, Trinken, Ernährung, Training, Substanzen).
-//   Reine Beobachtungswerte ohne Ziel (Blutzucker, Biomarker) gehören NICHT
-//   hierher, sondern in die Auswertung.
-// - auswertung ("Auswertung"): alles, was der Rückschau/Dokumentation dient
-//   — Protokolle (was wirklich passiert ist), Archiv, Statistik, Profil/
-//   Biomarker (inkl. Blutdruck als Messwert), Blutzucker/CGM, Community.
-// - verwaltung ("Verwaltung"): reine Einstellungen/Referenz.
-// HomeView rendert jede Gruppe mit eigenem Abstand und optionaler Überschrift.
-//
 // Farben bewusst auf 4 harmonische Familien reduziert (statt einer Kachel
 // pro Regenbogenfarbe): Smaragd (Marke/Substanzen), Schiefer-Blau (klinisch/
 // Analyse), warmes Terracotta (Ernährung/Energie), Pflaume (ruhig/Referenz).
-const F_EMERALD = ["#14917A", "#0A5F4F"];
-const F_SLATE = ["#5B7DAE", "#3A5A87"];
-const F_WARM = ["#C98A4A", "#A96B2E"];
-const F_PLUM = ["#9B85B8", "#786198"];
+export const F_EMERALD = ["#14917A", "#0A5F4F"];
+export const F_SLATE = ["#5B7DAE", "#3A5A87"];
+export const F_WARM = ["#C98A4A", "#A96B2E"];
+export const F_PLUM = ["#9B85B8", "#786198"];
 
-export const DASHBOARD_TIERS = [
-  {
-    id: "haupt",
-    kacheln: [
-      { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: F_EMERALD },
-      { id: "routinen", label: "Gewohnheiten", desc: "Neue Routinen aufbauen", icon: "🌱", grad: F_EMERALD },
-    ],
-  },
-  {
-    id: "tracker",
-    title: "Pläne",
-    kacheln: [
-      // Grundlagen zuerst (Schlaf, Trinken, Ernährung, Training) — bevor
-      // Substanzen dazukommen, sollten diese Basics im Griff sein.
-      { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: F_PLUM },
-      { id: "hydration", label: "Hydration", desc: "Trinkmenge tracken", icon: "💧", grad: F_EMERALD },
-      { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: F_WARM },
-      { id: "training", label: "Training", desc: "Kraft, Cardio & mehr", icon: "🏋️", grad: F_WARM },
-      // Danach Substanzen, aufsteigend nach Eingriffstiefe.
-      { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Mischungen", icon: "🌿", grad: F_WARM },
-      { id: "medikamente", label: "Medikamente", desc: "Hormone, Blutdruck & mehr", icon: "💊", grad: F_SLATE },
-      { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "🧬", grad: F_EMERALD },
-    ],
-  },
-  {
-    id: "auswertung",
-    title: "Auswertung",
-    kacheln: [
-      { id: "verlauf", label: "Protokolle", desc: "Was du wirklich gemacht hast", icon: "📖", grad: F_SLATE },
-      { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: F_WARM },
-      { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: F_SLATE },
-      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🩺", grad: F_PLUM },
-      { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: F_SLATE },
-      { id: "community", label: "Community", desc: "Anonyme Insights", icon: "🌍", grad: F_EMERALD },
-    ],
-  },
-  {
-    id: "verwaltung",
-    title: "Verwaltung",
-    kacheln: [
-      { id: "lexikon", label: "Lexikon", desc: "Fragen zu Peptiden", icon: "📚", grad: F_PLUM },
-      { id: "mehr", label: "Mehr", desc: "Datenschutz & Einstellungen", icon: "⚙️", grad: ["#8A9089", "#6B716A"] },
-    ],
-  },
+// Metadaten für die 7 Reiter im "Alle Pläne"-Hub (PlaeneView.jsx) — alles,
+// was aktiv mit Zeiten/Zielen geplant wird (Grundlagen zuerst, dann
+// Substanzen aufsteigend nach Eingriffstiefe). Ersetzt die frühere
+// DASHBOARD_TIERS-"tracker"-Gruppe, jetzt als Reiter statt Dashboard-Kacheln.
+export const PLAENE_TABS = [
+  { id: "schlaf", label: "Schlaf", icon: "😴", grad: F_PLUM },
+  { id: "hydration", label: "Hydration", icon: "💧", grad: F_EMERALD },
+  { id: "ernaehrung", label: "Ernährung", icon: "🥗", grad: F_WARM },
+  { id: "training", label: "Training", icon: "🏋️", grad: F_WARM },
+  { id: "supplemente", label: "Supplemente", icon: "🌿", grad: F_WARM },
+  { id: "medikamente", label: "Medikamente", icon: "💊", grad: F_SLATE },
+  { id: "peptide", label: "Peptide", icon: "🧬", grad: F_EMERALD },
 ];
