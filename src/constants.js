@@ -208,9 +208,19 @@ export const LEXIKON_BEISPIELE = {
 export const PIE_COLORS = ["#0FB8A3", "#5B9BF0", "#F5A623", "#F2596A", "#9B7EDE", "#4FBF8F"];
 
 // Kacheln sind in Gruppen ("Tiers") organisiert, damit das Dashboard nicht
-// wie eine flache Liste wirkt: ganz oben die zwei zentralen Einstiegspunkte
-// (Tagesplan zum Abhaken, Protokolle zum Nachschauen der Details), darunter
-// die einzelnen Protokoll-Tools, dann Auswertung/Austausch, unten Verwaltung.
+// wie eine flache Liste wirkt und die Sortierung eine klare inhaltliche
+// Bedeutung hat, statt nur "oben = wichtig" — gruppiert nach Denkmodus:
+// - haupt: die beiden täglich aktiv bearbeiteten Einstiegspunkte (Tagesplan
+//   zum Abhaken, Gewohnheiten zum Aufbauen) — beides "heute dran", deshalb
+//   ohne Überschrift ganz oben.
+// - tracker ("Pläne"): ausschließlich Dinge, die aktiv mit Zeiten/Zielen
+//   geplant werden (Schlaf, Trinken, Ernährung, Training, Substanzen).
+//   Reine Beobachtungswerte ohne Ziel (Blutzucker, Biomarker) gehören NICHT
+//   hierher, sondern in die Auswertung.
+// - auswertung ("Auswertung"): alles, was der Rückschau/Dokumentation dient
+//   — Protokolle (was wirklich passiert ist), Archiv, Statistik, Profil/
+//   Biomarker (inkl. Blutdruck als Messwert), Blutzucker/CGM, Community.
+// - verwaltung ("Verwaltung"): reine Einstellungen/Referenz.
 // HomeView rendert jede Gruppe mit eigenem Abstand und optionaler Überschrift.
 //
 // Farben bewusst auf 4 harmonische Familien reduziert (statt einer Kachel
@@ -226,16 +236,15 @@ export const DASHBOARD_TIERS = [
     id: "haupt",
     kacheln: [
       { id: "tagesplan", label: "Tagesplan", desc: "Alles auf einen Blick", icon: "🗓️", grad: F_EMERALD },
-      { id: "verlauf", label: "Protokolle", desc: "Was du wirklich gemacht hast", icon: "📖", grad: F_SLATE },
+      { id: "routinen", label: "Gewohnheiten", desc: "Neue Routinen aufbauen", icon: "🌱", grad: F_EMERALD },
     ],
   },
   {
     id: "tracker",
     title: "Pläne",
     kacheln: [
-      // Grundlagen zuerst (Gewohnheiten, Schlaf, Trinken, Ernährung, Training) —
-      // bevor Substanzen dazukommen, sollten diese Basics im Griff sein.
-      { id: "routinen", label: "Gewohnheiten", desc: "Neue Routinen aufbauen", icon: "🌱", grad: F_EMERALD },
+      // Grundlagen zuerst (Schlaf, Trinken, Ernährung, Training) — bevor
+      // Substanzen dazukommen, sollten diese Basics im Griff sein.
       { id: "schlaf", label: "Schlaf", desc: "Routine & Auswertung", icon: "😴", grad: F_PLUM },
       { id: "hydration", label: "Hydration", desc: "Trinkmenge tracken", icon: "💧", grad: F_EMERALD },
       { id: "ernaehrung", label: "Ernährungsplan", desc: "Kalorien & Mahlzeiten", icon: "🥗", grad: F_WARM },
@@ -244,16 +253,17 @@ export const DASHBOARD_TIERS = [
       { id: "supplemente", label: "Supplemente", desc: "Wochenplan & Mischungen", icon: "🌿", grad: F_WARM },
       { id: "medikamente", label: "Medikamente", desc: "Hormone, Blutdruck & mehr", icon: "💊", grad: F_SLATE },
       { id: "peptide", label: "Peptide", desc: "Dein Peptid-Protokoll", icon: "🧬", grad: F_EMERALD },
-      // Monitoring/Referenz am Ende.
-      { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: F_SLATE },
-      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🩺", grad: F_PLUM },
     ],
   },
   {
     id: "auswertung",
     title: "Auswertung",
     kacheln: [
+      { id: "verlauf", label: "Protokolle", desc: "Was du wirklich gemacht hast", icon: "📖", grad: F_SLATE },
+      { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: F_WARM },
       { id: "statistik", label: "Statistik", desc: "Verlauf & Trends", icon: "📊", grad: F_SLATE },
+      { id: "profil", label: "Profil & Biomarker", desc: "Check-ins, Laborwerte", icon: "🩺", grad: F_PLUM },
+      { id: "blutzucker", label: "Blutzucker / CGM", desc: "Messwerte im Verlauf", icon: "🩸", grad: F_SLATE },
       { id: "community", label: "Community", desc: "Anonyme Insights", icon: "🌍", grad: F_EMERALD },
     ],
   },
@@ -261,7 +271,6 @@ export const DASHBOARD_TIERS = [
     id: "verwaltung",
     title: "Verwaltung",
     kacheln: [
-      { id: "archiv", label: "Archiv", desc: "Alte Protokolle & Werte", icon: "🗂️", grad: F_WARM },
       { id: "lexikon", label: "Lexikon", desc: "Fragen zu Peptiden", icon: "📚", grad: F_PLUM },
       { id: "mehr", label: "Mehr", desc: "Datenschutz & Einstellungen", icon: "⚙️", grad: ["#8A9089", "#6B716A"] },
     ],
