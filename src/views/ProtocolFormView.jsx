@@ -62,7 +62,10 @@ export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
   return (
     <Shell>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
-        <div style={{ fontSize: 12, color: "#0A9384", fontWeight: 700 }}>Schritt {step + 1} / 5</div>
+        <div>
+          <div style={{ fontSize: 11, color: textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Peptid-Protokoll</div>
+          <div style={{ fontSize: 12, color: "#0A9384", fontWeight: 700 }}>Schritt {step + 1} / 5</div>
+        </div>
         <button
           onClick={onHome}
           style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer", flexShrink: 0 }}
@@ -77,7 +80,10 @@ export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
       <Card style={{ marginBottom: 14 }}>
         {step === 0 && (
           <>
-            <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>Warum beginnst du dieses Protokoll?</div>
+            <div style={{ fontSize: 13, color: textMuted, marginBottom: 4 }}>Warum beginnst du dieses Protokoll?</div>
+            <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 12 }}>
+              Schlaf, Hydration, Ernährung, Training, Supplemente & Medikamente richtest du separat unter "Alle Pläne" ein.
+            </div>
             {ZIELE.map((z) => (
               <CheckRow key={z} label={z} checked={ziele.includes(z)} onToggle={() => toggleZiel(z)} />
             ))}

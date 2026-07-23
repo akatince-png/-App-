@@ -49,7 +49,7 @@ export default function BottomNav({ active, onNavigate, onFab }) {
                 key="fab"
                 className="mp-tap"
                 onClick={onFab}
-                aria-label="Neues Protokoll"
+                aria-label="Neues Peptid-Protokoll"
                 style={{
                   width: 48,
                   height: 48,
