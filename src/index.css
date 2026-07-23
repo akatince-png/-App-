@@ -37,3 +37,18 @@ input[type="time"]::-webkit-date-and-time-value {
   margin: 0;
   min-height: 1.2em;
 }
+
+/* WheelPicker: Scrollbar ausblenden, damit es wie ein echtes iOS-Rad wirkt
+   statt wie eine Scroll-Liste mit sichtbarer Leiste. */
+.mp-wheel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.mp-wheel::-webkit-scrollbar {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mp-wheel-item {
+    transition: font-size 0.1s ease, opacity 0.1s ease, color 0.1s ease;
+  }
+}

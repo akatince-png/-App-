@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
 import Timer from "../ui/Timer";
+import NumberWheelField from "../ui/NumberWheelField";
+import TimeWheelField from "../ui/TimeWheelField";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN, WOCHENTAGE } from "../constants";
 import { trainingDetail } from "../utils/dayItems";
@@ -492,7 +494,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           </div>
           <div style={{ flex: 1 }}>
             <Label>Uhrzeit</Label>
-            <TextInput type="time" value={eintrag.uhrzeit} onChange={(v) => setFeld("uhrzeit", v)} />
+            <TimeWheelField value={eintrag.uhrzeit} onChange={(v) => setFeld("uhrzeit", v)} />
           </div>
         </div>
 
@@ -541,17 +543,17 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                   <div style={{ flex: 1 }}>
-                    <TextInput type="number" value={u.saetze} onChange={(v) => uebungAendern(i, "saetze", v)} placeholder="Sätze" />
+                    <NumberWheelField value={u.saetze} onChange={(v) => uebungAendern(i, "saetze", v)} min={1} max={20} placeholder="Sätze" />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <TextInput type="number" value={u.wiederholungen} onChange={(v) => uebungAendern(i, "wiederholungen", v)} placeholder="Wdh." />
+                    <NumberWheelField value={u.wiederholungen} onChange={(v) => uebungAendern(i, "wiederholungen", v)} min={1} max={50} placeholder="Wdh." />
                   </div>
                   <div style={{ flex: 1 }}>
                     <TextInput value={u.gewicht} onChange={(v) => uebungAendern(i, "gewicht", v)} placeholder="Gewicht" />
                   </div>
                 </div>
                 <Label>Pause zwischen Sätzen (Sek.)</Label>
-                <TextInput type="number" value={u.pauseSekunden} onChange={(v) => uebungAendern(i, "pauseSekunden", v)} placeholder="180" />
+                <NumberWheelField value={u.pauseSekunden} onChange={(v) => uebungAendern(i, "pauseSekunden", v)} min={0} max={600} step={15} placeholder="180" />
               </div>
             ))}
             <button
@@ -599,7 +601,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
               </div>
               <div style={{ flex: 1 }}>
-                <TextInput type="number" value={eintrag.runden} onChange={(v) => setFeld("runden", v)} placeholder="Runden" />
+                <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Runden" />
               </div>
             </div>
             <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>Leer lassen = beim Live-Start läuft stattdessen eine einfache Stoppuhr.</div>
@@ -617,7 +619,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
               </div>
               <div style={{ flex: 1 }}>
-                <TextInput type="number" value={eintrag.runden} onChange={(v) => setFeld("runden", v)} placeholder="Runden" />
+                <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Runden" />
               </div>
             </div>
           </>
