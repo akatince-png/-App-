@@ -8,7 +8,7 @@ import { describeInterval } from "../utils/schedule";
 import { useAppData } from "../context/AppDataContext";
 import NumberWheelField from "../ui/NumberWheelField";
 
-export default function ProtocolFormView({ step, setStep, onFinish }) {
+export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
   const {
     ziele,
     toggleZiel,
@@ -61,7 +61,16 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
 
   return (
     <Shell>
-      <div style={{ fontSize: 12, color: "#0A9384", marginBottom: 4, fontWeight: 700 }}>Schritt {step + 1} / 5</div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
+        <div style={{ fontSize: 12, color: "#0A9384", fontWeight: 700 }}>Schritt {step + 1} / 5</div>
+        <button
+          onClick={onHome}
+          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer", flexShrink: 0 }}
+          title="Abbrechen"
+        >
+          ⌂
+        </button>
+      </div>
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 14 }}>{STEP_TITLES[step]}</div>
       <Stepper step={step} />
 

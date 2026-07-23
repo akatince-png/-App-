@@ -41,7 +41,18 @@ function LoadingScreen() {
 
 export default function AuthenticatedApp() {
   const appData = useAppData();
-  const { loading, onboardingComplete, completeOnboarding, protocolId, startdatum, wochenprotokollSnapshots, wochenprotokollSnapshotErzeugen } = appData;
+  const {
+    loading,
+    onboardingComplete,
+    completeOnboarding,
+    protocolId,
+    startdatum,
+    wochenprotokollSnapshots,
+    wochenprotokollSnapshotErzeugen,
+    ziele,
+    peptide,
+    protokollArchivieren,
+  } = appData;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   const [step, setStep] = useState(0);
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
@@ -70,7 +81,16 @@ export default function AuthenticatedApp() {
     return <LoadingScreen />;
   }
 
-  const neuesProtokoll = () => {
+  // "Neues Protokoll" muss wirklich leer starten. Die Formularfelder hängen
+  // direkt am aktiven Protokoll (useProtocolData) — ohne diesen Schritt
+  // würde der FAB einfach das laufende Protokoll mit alten Werten zum
+  // Bearbeiten öffnen (bestätigter Bug: alte Auswahl blieb stehen). Ist das
+  // aktive Protokoll schon leer (z. B. direkt nach dem Archivieren), ist
+  // nichts zu tun.
+  const neuesProtokoll = async () => {
+    if (ziele.length > 0 || peptide.length > 0) {
+      await protokollArchivieren();
+    }
     setView("form");
     setStep(0);
   };
@@ -88,7 +108,7 @@ export default function AuthenticatedApp() {
     ) : (
       // Bestehendes Konto startet hier ein zusätzliches, komplett neues
       // Protokoll — kein erneutes Durchlaufen des Einrichtungs-Abschlusses.
-      <ProtocolFormView step={step} setStep={setStep} onFinish={() => setView("home")} />
+      <ProtocolFormView step={step} setStep={setStep} onFinish={() => setView("home")} onHome={() => setView("home")} />
     );
   } else if (view === "lexikon") {
     screen = <LexikonView onHome={() => setView("home")} />;
