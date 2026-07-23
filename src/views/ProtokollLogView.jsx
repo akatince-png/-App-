@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Shell, Card } from "../ui/primitives";
-import { accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
+import { accent, accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
+import ProtokollSeitenView from "./plan/ProtokollSeitenView";
 
 function datumLabel(datumStr) {
   const [y, m, d] = datumStr.split("-");
@@ -87,7 +88,9 @@ function AenderungKarte({ e }) {
 }
 
 export default function ProtokollLogView({ onHome, embedded = false }) {
-  const { trainingEintraege, protokollEintraege } = useAppData();
+  const { trainingEintraege, protokollEintraege, wochenprotokollSnapshots } = useAppData();
+  const [seitenOffen, setSeitenOffen] = useState(false);
+  const ersteWoche = wochenprotokollSnapshots.find((s) => s.wochenNummer === 1);
 
   const gruppen = useMemo(() => {
     const erledigte = trainingEintraege.filter((e) => e.erledigt);
@@ -109,6 +112,10 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [protokollEintraege]);
 
+  if (seitenOffen && ersteWoche) {
+    return <ProtokollSeitenView snapshot={ersteWoche} onHome={() => setSeitenOffen(false)} />;
+  }
+
   const content = (
     <>
       {!embedded && (
@@ -123,6 +130,35 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
           </button>
         </div>
       )}
+
+      {ersteWoche && (
+        <button
+          onClick={() => setSeitenOffen(true)}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            padding: "14px 16px",
+            borderRadius: 16,
+            border: "none",
+            background: `linear-gradient(135deg, ${accent}, ${accentDark})`,
+            color: "#fff",
+            cursor: "pointer",
+            marginBottom: 20,
+            textAlign: "left",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>🎉 Dein erstes Wochen-Protokoll</div>
+            <div style={{ fontSize: 11.5, opacity: 0.9 }}>Fertig zum Ansehen — 4 Seiten</div>
+          </div>
+          <span style={{ fontSize: 18 }}>›</span>
+        </button>
+      )}
+
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 20 }}>
         Was du wirklich gemacht hast — nicht der Plan, sondern das tatsächliche Ergebnis.
       </div>

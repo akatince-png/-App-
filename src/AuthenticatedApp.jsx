@@ -13,6 +13,7 @@ import GewohnheitenView from "./views/GewohnheitenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import BottomNav from "./ui/BottomNav";
 import { PLAENE_TABS } from "./constants";
+import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "profil", "blutzucker", "community"];
@@ -39,7 +40,8 @@ function LoadingScreen() {
 }
 
 export default function AuthenticatedApp() {
-  const { loading, onboardingComplete, completeOnboarding } = useAppData();
+  const appData = useAppData();
+  const { loading, onboardingComplete, completeOnboarding, protocolId, startdatum, wochenprotokollSnapshots, wochenprotokollSnapshotErzeugen } = appData;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   const [step, setStep] = useState(0);
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
@@ -52,6 +54,17 @@ export default function AuthenticatedApp() {
       setView(onboardingComplete ? "home" : "form");
     }
   }, [loading, onboardingComplete, view]);
+
+  // "Automatisch" heißt hier: beim nächsten App-Öffnen nach Ablauf der
+  // ersten 7 Tage seit Protokoll-Start prüfen, ob schon ein Erste-Woche-
+  // Snapshot existiert — falls nicht, einmalig erzeugen (siehe
+  // src/utils/wochenprotokollSnapshot.js).
+  useEffect(() => {
+    if (loading || !onboardingComplete || !protocolId) return;
+    if (!wochenprotokollFaellig({ startdatum, wochenprotokollSnapshots })) return;
+    wochenprotokollSnapshotErzeugen(protocolId, 1, baueWochenprotokollDaten(appData));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, onboardingComplete, protocolId, startdatum, wochenprotokollSnapshots]);
 
   if (loading || view === null) {
     return <LoadingScreen />;

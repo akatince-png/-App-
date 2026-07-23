@@ -16,6 +16,7 @@ import { useSleepData } from "../data/useSleepData";
 import { useBiomarkerData } from "../data/useBiomarkerData";
 import { usePushNotifications } from "../data/usePushNotifications";
 import { useAenderungsprotokoll } from "../data/useAenderungsprotokoll";
+import { useWochenprotokollMeilenstein } from "../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../data/useLexikon";
 
 const AppDataContext = createContext(null);
@@ -40,6 +41,7 @@ export function AppDataProvider({ children }) {
   const biomarkerData = useBiomarkerData(userId);
   const pushData = usePushNotifications(userId);
   const aenderungsprotokollData = useAenderungsprotokoll(userId);
+  const wochenprotokollMeilenstein = useWochenprotokollMeilenstein(userId);
   const lexikon = useLexikon();
 
   const value = {
@@ -73,6 +75,7 @@ export function AppDataProvider({ children }) {
     ...biomarkerData,
     ...pushData,
     ...aenderungsprotokollData,
+    ...wochenprotokollMeilenstein,
     ...lexikon,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
