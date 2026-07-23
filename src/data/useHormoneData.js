@@ -84,6 +84,7 @@ export function useHormoneData(userId, startdatum, dauer) {
           wirkung: row.wirkung || "",
           nebenwirkungen: row.nebenwirkungen || [],
           notizen: row.notizen || "",
+          menge: row.menge || null,
         };
       });
       setHormonErledigt(nextErledigt);
@@ -234,14 +235,20 @@ export function useHormoneData(userId, startdatum, dauer) {
       const k = `${datumStr}__${name}__${uhrzeit}`;
       const nextVal = !hormonErledigt[k];
       const nowIso = new Date().toISOString();
+      const payload = { user_id: userId, hormone_name: name, dose_date: datumStr, uhrzeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null };
       setHormonErledigt((prev) => ({ ...prev, [k]: nextVal }));
-      const { error } = await supabase.from("hormone_logs").upsert(
-        { user_id: userId, hormone_name: name, dose_date: datumStr, uhrzeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null },
-        { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
-      );
+      if (nextVal) {
+        // Menge wird als Schnappschuss der gerade gültigen Dosierung
+        // gespeichert, damit sie erhalten bleibt, falls die Dosierung
+        // später geändert wird — Historie darf sich nicht rückwirkend ändern.
+        const menge = hormonDosierung[name]?.menge || null;
+        payload.menge = menge;
+        setHormonFeedback((prev) => ({ ...prev, [k]: { ...prev[k], menge } }));
+      }
+      const { error } = await supabase.from("hormone_logs").upsert(payload, { onConflict: "user_id,hormone_name,dose_date,uhrzeit" });
       if (error) console.error(error);
     },
-    [hormonErledigt, userId]
+    [hormonErledigt, userId, hormonDosierung]
   );
 
   const saveHormonFeedback = useCallback(
@@ -254,6 +261,7 @@ export function useHormoneData(userId, startdatum, dauer) {
         wirkung: draftFeedback.wirkung,
         nebenwirkungen: draftFeedback.nebenwirkungen,
         notizen: draftFeedback.notizen,
+        menge: dose.menge || null,
       };
       setHormonErledigt((prev) => ({ ...prev, [k]: true }));
       setHormonFeedback((prev) => ({ ...prev, [k]: record }));
@@ -280,8 +288,9 @@ export function useHormoneData(userId, startdatum, dauer) {
       const k = `${datumStr}__${dose.name}__${dose.uhrzeit}`;
       const nowIso = new Date().toISOString();
       setHormonErledigt((prev) => ({ ...prev, [k]: true }));
+      setHormonFeedback((prev) => ({ ...prev, [k]: { ...prev[k], menge: dose.menge || null } }));
       const { error } = await supabase.from("hormone_logs").upsert(
-        { user_id: userId, hormone_name: dose.name, dose_date: datumStr, uhrzeit: dose.uhrzeit, erledigt: true, erledigt_at: nowIso },
+        { user_id: userId, hormone_name: dose.name, dose_date: datumStr, uhrzeit: dose.uhrzeit, erledigt: true, erledigt_at: nowIso, menge: dose.menge || null },
         { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
       );
       if (error) console.error(error);

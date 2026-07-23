@@ -24,6 +24,7 @@ export function usePeptideLogs(userId, protocolId) {
           notizen: row.notizen || "",
           foto: row.foto_path || null,
           erledigtAt: row.erledigt_at || null,
+          menge: row.menge || null,
         };
       });
       setErledigt(nextErledigt);
@@ -52,6 +53,7 @@ export function usePeptideLogs(userId, protocolId) {
         notizen: draftFeedback.notizen,
         foto: fotoPath,
         erledigtAt: nowIso,
+        menge: dose.menge || null,
       };
       setFeedback((prev) => ({ ...prev, [k]: record }));
       setErledigt((prev) => ({ ...prev, [k]: true }));
@@ -69,6 +71,7 @@ export function usePeptideLogs(userId, protocolId) {
           staerke: draftFeedback.staerke || null,
           notizen: draftFeedback.notizen,
           foto_path: fotoPath,
+          menge: dose.menge || null,
         },
         { onConflict: "protocol_id,peptid_name,dose_date,uhrzeit" }
       );
@@ -82,7 +85,7 @@ export function usePeptideLogs(userId, protocolId) {
       const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
       const nowIso = new Date().toISOString();
       setErledigt((prev) => ({ ...prev, [k]: true }));
-      setFeedback((prev) => ({ ...prev, [k]: { ...prev[k], erledigtAt: nowIso } }));
+      setFeedback((prev) => ({ ...prev, [k]: { ...prev[k], erledigtAt: nowIso, menge: dose.menge || null } }));
       const { error } = await supabase.from("peptide_logs").upsert(
         {
           protocol_id: protocolId,
@@ -92,6 +95,7 @@ export function usePeptideLogs(userId, protocolId) {
           uhrzeit: dose.uhrzeit,
           erledigt: true,
           erledigt_at: nowIso,
+          menge: dose.menge || null,
         },
         { onConflict: "protocol_id,peptid_name,dose_date,uhrzeit" }
       );

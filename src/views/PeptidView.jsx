@@ -201,7 +201,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                   <div style={{ fontSize: 14, fontWeight: 700 }}>
                     {dose.peptid} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {dose.uhrzeit}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: textMuted }}>{dose.menge}</div>
+                  <div style={{ fontSize: 12, color: textMuted }}>{st === "erledigt" ? fb?.menge ?? dose.menge : dose.menge}</div>
                 </div>
                 {st === "erledigt" ? (
                   <StatusBadge status="erledigt" />

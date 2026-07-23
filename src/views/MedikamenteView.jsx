@@ -44,6 +44,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
     setHormonEinnahmeart,
     setHormonDose,
     hormonErledigt,
+    hormonFeedback,
     toggleHormonErledigt,
     hormonPlan,
     aenderungVermerken,
@@ -180,6 +181,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
               .map((dose, i, arr) => {
                 const k = `${toLocalISODate(dose.date)}__${dose.name}__${dose.uhrzeit}`;
                 const done = !!hormonErledigt[k];
+                const angezeigteMenge = done ? hormonFeedback[k]?.menge ?? dose.menge : dose.menge;
                 return (
                   <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
                     <div>
@@ -187,7 +189,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
                         {dose.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {dose.uhrzeit}</span>
                       </div>
                       <div style={{ fontSize: 12, color: textMuted }}>
-                        {dose.menge} · {dose.einnahmeart}
+                        {angezeigteMenge} · {dose.einnahmeart}
                       </div>
                     </div>
                     {done ? (
