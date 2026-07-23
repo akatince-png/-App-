@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, PrimaryButton } from "../ui/primitives";
-import { accent, blue, danger, success, textMuted } from "../ui/theme";
+import { danger, success, textMuted } from "../ui/theme";
+import Logo from "../ui/Logo";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginView() {
@@ -38,26 +39,9 @@ export default function LoginView() {
   return (
     <Shell>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 40, marginBottom: 32 }}>
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 20,
-            background: `linear-gradient(135deg, ${accent}, ${blue})`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 28,
-            marginBottom: 16,
-            boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
-          }}
-        >
-          🧬
-        </div>
-        <div style={{ fontSize: 22, fontWeight: 800, textAlign: "center" }}>MyProtocols</div>
-        <div style={{ fontSize: 13, color: textMuted, marginTop: 4, textAlign: "center" }}>
-          Protokollieren. Verstehen. Optimieren.
-        </div>
+        <Logo size={64} />
+        <div style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginTop: 16 }}>MyProtocols</div>
+        <div style={{ fontSize: 13, color: textMuted, marginTop: 4, textAlign: "center" }}>Health. Organized.</div>
       </div>
 
       <div

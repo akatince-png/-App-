@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import { accent, blue, cardBorder, textMuted } from "../ui/theme";
+import Logo from "../ui/Logo";
 
 const SLIDES = [
   {
@@ -37,22 +38,28 @@ export default function WelcomeView({ onDone }) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20, marginBottom: 28 }}>
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 22,
-            background: `linear-gradient(135deg, ${accent}, ${blue})`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 32,
-            marginBottom: 20,
-            boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
-          }}
-        >
-          {slide.icon}
-        </div>
+        {index === 0 ? (
+          <div style={{ marginBottom: 20 }}>
+            <Logo size={72} />
+          </div>
+        ) : (
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 22,
+              background: `linear-gradient(135deg, ${accent}, ${blue})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 32,
+              marginBottom: 20,
+              boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
+            }}
+          >
+            {slide.icon}
+          </div>
+        )}
         <div style={{ fontSize: 20, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>{slide.titel}</div>
         <div style={{ fontSize: 14, color: textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>{slide.text}</div>
       </div>

@@ -1,7 +1,8 @@
 import React from "react";
 import { Shell, Card } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, blue, cardBorder, shadow, textMuted } from "../ui/theme";
+import Logo from "../ui/Logo";
+import { cardBorder, shadow, textMuted } from "../ui/theme";
 import { DASHBOARD_TIERS } from "../constants";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
@@ -53,21 +54,7 @@ export default function HomeView({ onOpenView, onNewProtocol }) {
           <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss} 👋</div>
           <div style={{ fontSize: 22, fontWeight: 800 }}>MyProtocols</div>
         </div>
-        <div
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: 14,
-            background: `linear-gradient(135deg, ${accent}, ${blue})`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            boxShadow: "0 6px 14px rgba(14, 124, 102, 0.25)",
-          }}
-        >
-          🧬
-        </div>
+        <Logo size={42} />
       </div>
 
       {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü. */}
