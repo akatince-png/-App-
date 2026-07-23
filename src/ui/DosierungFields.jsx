@@ -2,6 +2,7 @@ import React from "react";
 import { Label, Pill, TextInput } from "./primitives";
 import { danger, textMuted } from "./theme";
 import { INTERVALL_TYPEN, WOCHENTAGE } from "../constants";
+import TimeWheelField from "./TimeWheelField";
 
 /**
  * Wiederverwendbare Dosierungs-Felder: Menge, Intervall (fest/individuell/
@@ -90,7 +91,7 @@ export default function DosierungFields({ value, onChange, showMenge = true, men
       {uhrzeiten.map((zeit, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <div style={{ flex: 1 }}>
-            <TextInput type="time" value={zeit} onChange={(val) => setUhrzeit(i, val)} />
+            <TimeWheelField value={zeit} onChange={(val) => setUhrzeit(i, val)} />
           </div>
           {uhrzeiten.length > 1 && (
             <button

@@ -6,6 +6,7 @@ import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/the
 import { EINNAHMEARTEN, PEPTIDE_OPTIONEN, STEP_TITLES, ZIELE } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { useAppData } from "../context/AppDataContext";
+import NumberWheelField from "../ui/NumberWheelField";
 
 export default function ProtocolFormView({ step, setStep, onFinish }) {
   const {
@@ -146,10 +147,11 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
                 {einnahmeart[p] === "Nasenspray" && (
                   <>
                     <Label>Sprühstöße pro Gabe (optional)</Label>
-                    <TextInput
-                      type="number"
+                    <NumberWheelField
                       value={dosierung[p]?.spruehstoesse || ""}
                       onChange={(val) => setDose(p, "spruehstoesse", val)}
+                      min={1}
+                      max={20}
                       placeholder="z. B. 2"
                     />
                   </>
@@ -184,7 +186,7 @@ export default function ProtocolFormView({ step, setStep, onFinish }) {
             <Label>Startdatum</Label>
             <TextInput type="date" value={startdatum} onChange={setStartdatum} />
             <Label>Dauer (Wochen)</Label>
-            <TextInput type="number" value={dauer} onChange={setDauer} placeholder="12" />
+            <NumberWheelField value={dauer} onChange={setDauer} min={1} max={52} placeholder="12" />
             <Label>Notizen & Details (optional)</Label>
             <TextArea value={notizen} onChange={setNotizen} placeholder="Persönliche Notizen zum Protokoll..." />
           </>

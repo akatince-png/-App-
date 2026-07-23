@@ -4,6 +4,7 @@ import { SignedPhoto } from "../../ui/SignedPhoto";
 import { accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { ENERGIELEVEL_OPTIONEN, FOTO_KATEGORIEN, LABORWERTE_ALLE, LABORWERTE_KATEGORIEN } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
+import NumberWheelField from "../../ui/NumberWheelField";
 
 function leererEintrag(aktiveMesswerte) {
   const base = { datum: new Date().toISOString().slice(0, 10) };
@@ -95,7 +96,7 @@ export default function ProfilTab() {
         <Label>Geburtsdatum</Label>
         <TextInput type="date" value={personalData.geburtsdatum} onChange={(v) => setPersonal("geburtsdatum", v)} />
         <Label>Größe (cm)</Label>
-        <TextInput type="number" value={personalData.groesse} onChange={(v) => setPersonal("groesse", v)} placeholder="175" />
+        <NumberWheelField value={personalData.groesse} onChange={(v) => setPersonal("groesse", v)} min={100} max={220} placeholder="175" />
         <Label>Gewicht Start (kg)</Label>
         <TextInput type="number" value={personalData.gewichtStart} onChange={(v) => setPersonal("gewichtStart", v)} placeholder="85" />
       </Card>

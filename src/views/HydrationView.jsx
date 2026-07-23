@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, Pill, PrimaryButton, TextArea, TextInput, CheckRow } from "../ui/primitives";
+import { Shell, Card, Label, Pill, PrimaryButton, TextArea, CheckRow } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
 import { accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+import NumberWheelField from "../ui/NumberWheelField";
 
 const heute = () => new Date().toISOString().slice(0, 10);
 
@@ -125,7 +126,7 @@ export default function HydrationView({ onHome, embedded = false }) {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <div style={{ flex: 1 }}>
-            <TextInput type="number" value={korrekturEntwurf} onChange={setKorrekturEntwurf} placeholder={`z. B. ${hydrationHeuteMl}`} />
+            <NumberWheelField value={korrekturEntwurf} onChange={setKorrekturEntwurf} min={0} max={5000} step={50} placeholder={`z. B. ${hydrationHeuteMl}`} />
           </div>
           <div style={{ width: 110 }}>
             <PrimaryButton variant="ghost" onClick={korrekturSetzen}>
@@ -174,7 +175,7 @@ export default function HydrationView({ onHome, embedded = false }) {
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <div style={{ flex: 1 }}>
             <Label>Ziel in ml</Label>
-            <TextInput type="number" value={zielEntwurf} onChange={setZielEntwurf} placeholder="2500" />
+            <NumberWheelField value={zielEntwurf} onChange={setZielEntwurf} min={500} max={5000} step={50} placeholder="2500" />
           </div>
           <div style={{ width: 110 }}>
             <PrimaryButton variant="ghost" onClick={zielSpeichern}>

@@ -4,6 +4,7 @@ import { SimpleLineChart } from "../ui/charts";
 import { accentDark, blue, cardBorder, textMuted } from "../ui/theme";
 import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+import TimeWheelField from "../ui/TimeWheelField";
 
 const LEERER_EINTRAG = {
   datum: new Date().toISOString().slice(0, 10),
@@ -88,8 +89,7 @@ export default function SchlafView({ onHome, embedded = false }) {
               ))}
             </div>
             <Label>Einschlafzeit</Label>
-            <TextInput
-              type="time"
+            <TimeWheelField
               value={neuerSchlafEintrag.einschlafzeit}
               onChange={(v) => setNeuerSchlafEintrag((p) => ({ ...p, einschlafzeit: v }))}
             />
