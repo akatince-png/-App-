@@ -1,19 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+function rowToWochenplan(r) {
+  return { id: r.id, wochentag: r.wochentag, mealId: r.meal_id, tageszeit: r.tageszeit || "", uhrzeit: r.uhrzeit || "", sortOrder: r.sort_order };
+}
+
 export function useMealData(userId) {
   const [mahlzeiten, setMahlzeiten] = useState([]);
   const [mahlzeitErledigt, setMahlzeitErledigt] = useState({});
   const [mahlzeitErledigtAt, setMahlzeitErledigtAt] = useState({});
+  const [mealWochenplan, setMealWochenplan] = useState([]);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: meals }, { data: ingredients }, { data: logs }] = await Promise.all([
+      const [{ data: meals }, { data: ingredients }, { data: logs }, { data: wochenplan }] = await Promise.all([
         supabase.from("meals").select("*").eq("user_id", userId).order("created_at"),
         supabase.from("meal_ingredients").select("*").eq("user_id", userId).order("sort_order"),
         supabase.from("meal_logs").select("*").eq("user_id", userId),
+        supabase.from("meal_wochenplan").select("*").eq("user_id", userId),
       ]);
       if (cancelled) return;
       setMahlzeiten(
@@ -24,7 +30,7 @@ export function useMealData(userId) {
           hinweis: m.hinweis || "",
           zutaten: (ingredients || [])
             .filter((i) => i.meal_id === m.id)
-            .map((i) => ({ id: i.id, name: i.name, menge: i.menge || "" })),
+            .map((i) => ({ id: i.id, name: i.name, menge: i.menge || "", mengeGramm: i.menge_gramm ?? "", kcalPro100g: i.kcal_pro_100g ?? "" })),
         }))
       );
       const nextErledigt = {};
@@ -36,6 +42,7 @@ export function useMealData(userId) {
       });
       setMahlzeitErledigt(nextErledigt);
       setMahlzeitErledigtAt(nextErledigtAt);
+      setMealWochenplan((wochenplan || []).map(rowToWochenplan));
     })();
     return () => {
       cancelled = true;
@@ -46,12 +53,11 @@ export function useMealData(userId) {
     async (neueMahlzeit) => {
       const name = neueMahlzeit.name.trim();
       if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
-      if (!neueMahlzeit.tageszeiten?.length) return { ok: false, error: "Bitte mindestens eine Tageszeit wählen." };
       const zutaten = (neueMahlzeit.zutaten || []).filter((z) => z.name.trim());
 
       const { data: meal, error } = await supabase
         .from("meals")
-        .insert({ user_id: userId, name, tageszeiten: neueMahlzeit.tageszeiten, hinweis: neueMahlzeit.hinweis || "" })
+        .insert({ user_id: userId, name, tageszeiten: neueMahlzeit.tageszeiten || [], hinweis: neueMahlzeit.hinweis || "" })
         .select()
         .single();
       if (error) {
@@ -63,7 +69,17 @@ export function useMealData(userId) {
       if (zutaten.length > 0) {
         const { data, error: zutatenError } = await supabase
           .from("meal_ingredients")
-          .insert(zutaten.map((z, i) => ({ meal_id: meal.id, user_id: userId, name: z.name.trim(), menge: z.menge || "", sort_order: i })))
+          .insert(
+            zutaten.map((z, i) => ({
+              meal_id: meal.id,
+              user_id: userId,
+              name: z.name.trim(),
+              menge: z.menge || "",
+              menge_gramm: z.mengeGramm ? Number(z.mengeGramm) : null,
+              kcal_pro_100g: z.kcalPro100g ? Number(z.kcalPro100g) : null,
+              sort_order: i,
+            }))
+          )
           .select();
         if (zutatenError) {
           console.error(zutatenError);
@@ -79,10 +95,10 @@ export function useMealData(userId) {
           name: meal.name,
           tageszeiten: meal.tageszeiten,
           hinweis: meal.hinweis,
-          zutaten: insertedZutaten.map((z) => ({ id: z.id, name: z.name, menge: z.menge })),
+          zutaten: insertedZutaten.map((z) => ({ id: z.id, name: z.name, menge: z.menge, mengeGramm: z.menge_gramm ?? "", kcalPro100g: z.kcal_pro_100g ?? "" })),
         },
       ]);
-      return { ok: true };
+      return { ok: true, meal: { id: meal.id, name: meal.name } };
     },
     [userId]
   );
@@ -95,7 +111,23 @@ export function useMealData(userId) {
 
   const mahlzeitEntfernen = useCallback(async (id) => {
     setMahlzeiten((prev) => prev.filter((m) => m.id !== id));
+    setMealWochenplan((prev) => prev.filter((w) => w.mealId !== id));
     const { error } = await supabase.from("meals").delete().eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
+  // Zutaten werden nur beim Anlegen einer Mahlzeit geschrieben — zum
+  // nachträglichen Bearbeiten von Gramm/Kcal einzelner Zutaten fehlte
+  // bisher ein eigener Update-Pfad.
+  const zutatAendern = useCallback(async (mealId, zutatId, felder) => {
+    setMahlzeiten((prev) =>
+      prev.map((m) => (m.id === mealId ? { ...m, zutaten: m.zutaten.map((z) => (z.id === zutatId ? { ...z, ...felder } : z)) } : m))
+    );
+    const patch = {};
+    if ("menge" in felder) patch.menge = felder.menge;
+    if ("mengeGramm" in felder) patch.menge_gramm = felder.mengeGramm ? Number(felder.mengeGramm) : null;
+    if ("kcalPro100g" in felder) patch.kcal_pro_100g = felder.kcalPro100g ? Number(felder.kcalPro100g) : null;
+    const { error } = await supabase.from("meal_ingredients").update(patch).eq("id", zutatId);
     if (error) console.error(error);
   }, []);
 
@@ -115,13 +147,45 @@ export function useMealData(userId) {
     [mahlzeitErledigt, userId]
   );
 
+  // Weist eine Mahlzeit einem Wochentag zu — bewusst ein einfacher Insert
+  // statt Upsert-auf-Einzelplatz wie beim Training-Wochenplan: mehrere
+  // Mahlzeiten am selben Tag (auch mit derselben Tageszeit-Kennung) sind
+  // hier der Normalfall, nicht die Ausnahme.
+  const wochenplanMahlzeitSetzen = useCallback(
+    async (wochentag, { mealId, tageszeit, uhrzeit }) => {
+      const { data, error } = await supabase
+        .from("meal_wochenplan")
+        .insert({ user_id: userId, wochentag, meal_id: mealId, tageszeit: tageszeit || null, uhrzeit: uhrzeit || null })
+        .select()
+        .single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      const neu = rowToWochenplan(data);
+      setMealWochenplan((prev) => [...prev, neu]);
+      return { ok: true };
+    },
+    [userId]
+  );
+
+  const wochenplanMahlzeitEntfernen = useCallback(async (id) => {
+    setMealWochenplan((prev) => prev.filter((w) => w.id !== id));
+    const { error } = await supabase.from("meal_wochenplan").delete().eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
   return {
     mahlzeiten,
     mahlzeitHinzufuegen,
     mahlzeitAendern,
     mahlzeitEntfernen,
+    zutatAendern,
     mahlzeitErledigt,
     mahlzeitErledigtAt,
     toggleMahlzeitErledigt,
+    mealWochenplan,
+    wochenplanMahlzeitSetzen,
+    wochenplanMahlzeitEntfernen,
   };
 }

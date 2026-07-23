@@ -1,17 +1,55 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
+import WochentagPills from "../ui/WochentagPills";
 import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { TAGESZEITEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
-const LEERE_MAHLZEIT = { name: "", tageszeiten: [], hinweis: "", zutaten: [{ name: "", menge: "" }] };
+const LEERE_MAHLZEIT = { name: "", tageszeiten: [], wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
-function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
+function kcalFuerZutat(z) {
+  const g = Number(z.mengeGramm);
+  const k = Number(z.kcalPro100g);
+  if (!g || !k) return 0;
+  return (g / 100) * k;
+}
+
+function ZutatKcalFelder({ zutat, onChange }) {
+  const [offen, setOffen] = useState(false);
+  const kcal = kcalFuerZutat(zutat);
+  return (
+    <div style={{ marginBottom: 6 }}>
+      {!offen ? (
+        <button
+          onClick={() => setOffen(true)}
+          style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "2px 0" }}
+        >
+          + Menge in Gramm {kcal > 0 && `(≈ ${Math.round(kcal)} kcal)`}
+        </button>
+      ) : (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <TextInput type="number" value={zutat.mengeGramm} onChange={(v) => onChange("mengeGramm", v)} placeholder="Gramm" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <TextInput type="number" value={zutat.kcalPro100g} onChange={(v) => onChange("kcalPro100g", v)} placeholder="kcal/100g" />
+          </div>
+          <div style={{ fontSize: 11, color: textMuted, whiteSpace: "nowrap" }}>{kcal > 0 ? `≈ ${Math.round(kcal)} kcal` : ""}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle }) {
   const [offen, setOffen] = useState(false);
   const [entwurf, setEntwurf] = useState({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
   const [grund, setGrund] = useState("");
+
+  const zugewieseneTage = wochenplanEintraege.map((w) => w.wochentag);
+  const gesamtKcal = m.zutaten.reduce((sum, z) => sum + kcalFuerZutat(z), 0);
 
   const toggleZeit = (z) =>
     setEntwurf((p) => ({ ...p, tageszeiten: p.tageszeiten.includes(z) ? p.tageszeiten.filter((x) => x !== z) : [...p.tageszeiten, z] }));
@@ -28,7 +66,9 @@ function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
           <div style={{ fontSize: 11, color: textMuted }}>
-            {m.tageszeiten.join(", ")} {m.hinweis && `· ${m.hinweis}`}
+            {zugewieseneTage.length > 0 ? zugewieseneTage.join(", ") : "Keinem Wochentag zugewiesen"}
+            {m.hinweis && ` · ${m.hinweis}`}
+            {gesamtKcal > 0 && ` · ≈ ${Math.round(gesamtKcal)} kcal gesamt`}
           </div>
           {m.zutaten.length > 0 && (
             <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>
@@ -50,6 +90,8 @@ function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
         <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
           <Label>Name</Label>
           <TextInput value={entwurf.name} onChange={(v) => setEntwurf((p) => ({ ...p, name: v }))} />
+          <Label>Wochentage</Label>
+          <WochentagPills selected={zugewieseneTage} onToggle={(tag) => onWochentagToggle(m, tag, zugewieseneTage.includes(tag))} />
           <Label>Tageszeit(en)</Label>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {TAGESZEITEN.map((z) => (
@@ -60,7 +102,7 @@ function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
           <TextInput value={entwurf.hinweis} onChange={(v) => setEntwurf((p) => ({ ...p, hinweis: v }))} placeholder="optional" />
           <GrundEingabe grund={grund} onChange={setGrund} />
           <div style={{ marginTop: 10 }}>
-            <PrimaryButton onClick={speichern} disabled={!entwurf.name.trim() || entwurf.tageszeiten.length === 0}>
+            <PrimaryButton onClick={speichern} disabled={!entwurf.name.trim()}>
               Speichern
             </PrimaryButton>
           </div>
@@ -71,8 +113,18 @@ function MahlzeitZeile({ m, istLetzte, onAendern, onEntfernen }) {
 }
 
 export default function NutritionView({ onHome, embedded = false }) {
-  const { mahlzeiten, mahlzeitHinzufuegen, mahlzeitAendern, mahlzeitEntfernen, mahlzeitErledigt, toggleMahlzeitErledigt, aenderungVermerken } =
-    useAppData();
+  const {
+    mahlzeiten,
+    mahlzeitHinzufuegen,
+    mahlzeitAendern,
+    mahlzeitEntfernen,
+    mahlzeitErledigt,
+    toggleMahlzeitErledigt,
+    mealWochenplan,
+    wochenplanMahlzeitSetzen,
+    wochenplanMahlzeitEntfernen,
+    aenderungVermerken,
+  } = useAppData();
   const [neueMahlzeit, setNeueMahlzeit] = useState(LEERE_MAHLZEIT);
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
   const [eigeneZeit, setEigeneZeit] = useState("");
@@ -84,6 +136,12 @@ export default function NutritionView({ onHome, embedded = false }) {
       tageszeiten: prev.tageszeiten.includes(z) ? prev.tageszeiten.filter((x) => x !== z) : [...prev.tageszeiten, z],
     }));
 
+  const toggleNeueMahlzeitWochentag = (tag) =>
+    setNeueMahlzeit((prev) => ({
+      ...prev,
+      wochentage: prev.wochentage.includes(tag) ? prev.wochentage.filter((t) => t !== tag) : [...prev.wochentage, tag],
+    }));
+
   const eigeneZeitHinzufuegen = () => {
     const z = eigeneZeit.trim();
     if (!z || neueMahlzeit.tageszeiten.includes(z)) return;
@@ -91,15 +149,17 @@ export default function NutritionView({ onHome, embedded = false }) {
     setEigeneZeit("");
   };
 
-  const zutatAendern = (index, feld, wert) => {
+  const entwurfZutatAendern = (index, feld, wert) => {
     setNeueMahlzeit((prev) => ({ ...prev, zutaten: prev.zutaten.map((z, i) => (i === index ? { ...z, [feld]: wert } : z)) }));
   };
   const zutatHinzufuegen = () => {
-    setNeueMahlzeit((prev) => ({ ...prev, zutaten: [...prev.zutaten, { name: "", menge: "" }] }));
+    setNeueMahlzeit((prev) => ({ ...prev, zutaten: [...prev.zutaten, { name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] }));
   };
   const zutatEntfernen = (index) => {
     setNeueMahlzeit((prev) => ({ ...prev, zutaten: prev.zutaten.filter((_, i) => i !== index) }));
   };
+
+  const neueMahlzeitKcal = neueMahlzeit.zutaten.reduce((sum, z) => sum + kcalFuerZutat(z), 0);
 
   const submit = async () => {
     setMahlzeitError(null);
@@ -108,11 +168,16 @@ export default function NutritionView({ onHome, embedded = false }) {
       setMahlzeitError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    await Promise.all(
+      neueMahlzeit.wochentage.map((tag) =>
+        wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: neueMahlzeit.tageszeiten[0] || null, uhrzeit: null })
+      )
+    );
     aenderungVermerken({
       kategorie: "mahlzeit",
       itemName: neueMahlzeit.name,
       aktion: "hinzugefügt",
-      detail: neueMahlzeit.tageszeiten.join(", "),
+      detail: neueMahlzeit.wochentage.length > 0 ? neueMahlzeit.wochentage.join(", ") : "noch keinem Tag zugewiesen",
     });
     setNeueMahlzeit(LEERE_MAHLZEIT);
   };
@@ -131,24 +196,40 @@ export default function NutritionView({ onHome, embedded = false }) {
   };
 
   const handleEntfernen = (m) => {
-    aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "entfernt", detail: m.tageszeiten.join(", ") });
+    const tage = mealWochenplan.filter((w) => w.mealId === m.id).map((w) => w.wochentag);
+    aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "entfernt", detail: tage.join(", ") });
     mahlzeitEntfernen(m.id);
+  };
+
+  const handleWochentagToggle = async (m, tag, warZugewiesen) => {
+    if (warZugewiesen) {
+      const zeilen = mealWochenplan.filter((w) => w.mealId === m.id && w.wochentag === tag);
+      await Promise.all(zeilen.map((w) => wochenplanMahlzeitEntfernen(w.id)));
+      aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: `${tag} entfernt` });
+    } else {
+      await wochenplanMahlzeitSetzen(tag, { mealId: m.id, tageszeit: m.tageszeiten[0] || null, uhrzeit: null });
+      aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: `${tag} hinzugefügt` });
+    }
   };
 
   const today = new Date();
   const montag = addDays(today, -((today.getDay() + 6) % 7));
   const wochentage = Array.from({ length: 7 }, (_, i) => addDays(montag, i));
   const tagStr = toLocalISODate(mahlzeitTag);
-  const heuteAnzahl = mahlzeiten.reduce((sum, m) => sum + m.tageszeiten.length, 0);
-  const heuteErledigtAnzahl = mahlzeiten.reduce(
-    (sum, m) => sum + m.tageszeiten.filter((z) => mahlzeitErledigt[`${tagStr}__${m.id}__${z}`]).length,
-    0
-  );
+  const wochentagLabel = WOCHENTAGE[(mahlzeitTag.getDay() + 6) % 7];
 
-  const alleZeiten = [
-    ...TAGESZEITEN,
-    ...Array.from(new Set(mahlzeiten.flatMap((m) => m.tageszeiten))).filter((z) => !TAGESZEITEN.includes(z)),
-  ];
+  // Nur Mahlzeiten, die diesem Wochentag tatsächlich zugewiesen sind — nicht
+  // mehr jede Mahlzeit an jedem Tag (siehe dayItems.js für dieselbe Logik
+  // im Tagesplan).
+  const tagesEintraege = mealWochenplan
+    .filter((w) => w.wochentag === wochentagLabel)
+    .map((w) => ({ ...w, mahlzeit: mahlzeiten.find((m) => m.id === w.mealId) }))
+    .filter((e) => e.mahlzeit);
+
+  const heuteAnzahl = tagesEintraege.length;
+  const heuteErledigtAnzahl = tagesEintraege.filter((e) => mahlzeitErledigt[`${tagStr}__${e.mealId}__${e.tageszeit || "Mahlzeit"}`]).length;
+
+  const zeitGruppen = Array.from(new Set(tagesEintraege.map((e) => e.tageszeit || "Mahlzeit")));
 
   const content = (
     <>
@@ -170,7 +251,13 @@ export default function NutritionView({ onHome, embedded = false }) {
         <Label>Name</Label>
         <TextInput value={neueMahlzeit.name} onChange={(v) => setNeueMahlzeit((p) => ({ ...p, name: v }))} placeholder="z. B. Erste Mahlzeit / Proteinmahlzeit" />
 
-        <Label>Tageszeit(en)</Label>
+        <Label>Wann in der Woche?</Label>
+        <WochentagPills selected={neueMahlzeit.wochentage} onToggle={toggleNeueMahlzeitWochentag} />
+        <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>
+          Leer lassen = die Mahlzeit wird angelegt, taucht aber noch in keinem Tagesplan auf — Tage kannst du jederzeit später anpassen.
+        </div>
+
+        <Label>Tageszeit (optional, nur zur Beschriftung)</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
           {TAGESZEITEN.map((z) => (
             <Pill key={z} label={z} selected={neueMahlzeit.tageszeiten.includes(z)} onClick={() => toggleNeueMahlzeitZeit(z)} />
@@ -195,21 +282,24 @@ export default function NutritionView({ onHome, embedded = false }) {
 
         <Label>Zutaten (optional)</Label>
         {neueMahlzeit.zutaten.map((z, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-            <div style={{ flex: 2 }}>
-              <TextInput value={z.name} onChange={(v) => zutatAendern(i, "name", v)} placeholder="Zutat, z. B. Reis" />
+          <div key={i}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+              <div style={{ flex: 2 }}>
+                <TextInput value={z.name} onChange={(v) => entwurfZutatAendern(i, "name", v)} placeholder="Zutat, z. B. Reis" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <TextInput value={z.menge} onChange={(v) => entwurfZutatAendern(i, "menge", v)} placeholder="Menge" />
+              </div>
+              {neueMahlzeit.zutaten.length > 1 && (
+                <button
+                  onClick={() => zutatEntfernen(i)}
+                  style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
+                >
+                  ×
+                </button>
+              )}
             </div>
-            <div style={{ flex: 1 }}>
-              <TextInput value={z.menge} onChange={(v) => zutatAendern(i, "menge", v)} placeholder="Menge" />
-            </div>
-            {neueMahlzeit.zutaten.length > 1 && (
-              <button
-                onClick={() => zutatEntfernen(i)}
-                style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
-              >
-                ×
-              </button>
-            )}
+            <ZutatKcalFelder zutat={z} onChange={(feld, wert) => entwurfZutatAendern(i, feld, wert)} />
           </div>
         ))}
         <button
@@ -229,13 +319,16 @@ export default function NutritionView({ onHome, embedded = false }) {
         >
           + weitere Zutat
         </button>
+        {neueMahlzeitKcal > 0 && (
+          <div style={{ fontSize: 12, color: textMuted, fontWeight: 700, marginBottom: 6 }}>≈ {Math.round(neueMahlzeitKcal)} kcal gesamt</div>
+        )}
 
         <Label>Hinweis (optional)</Label>
         <TextInput value={neueMahlzeit.hinweis} onChange={(v) => setNeueMahlzeit((p) => ({ ...p, hinweis: v }))} placeholder="z. B. Ohne Zucker" />
 
         {mahlzeitError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{mahlzeitError}</div>}
         <div style={{ marginTop: 10 }}>
-          <PrimaryButton onClick={submit} disabled={!neueMahlzeit.name.trim() || neueMahlzeit.tageszeiten.length === 0}>
+          <PrimaryButton onClick={submit} disabled={!neueMahlzeit.name.trim()}>
             + Zum Plan hinzufügen
           </PrimaryButton>
         </div>
@@ -282,26 +375,33 @@ export default function NutritionView({ onHome, embedded = false }) {
                     textAlign: "center",
                   }}
                 >
-                  <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[d.getDay()]}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[(d.getDay() + 6) % 7]}</div>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>{d.getDate()}</div>
                 </button>
               );
             })}
           </div>
 
-          {alleZeiten.map((zeit) => {
-            const items = mahlzeiten.filter((m) => m.tageszeiten.includes(zeit));
+          {zeitGruppen.length === 0 && (
+            <Card style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>Für diesen Tag sind keine Mahlzeiten eingeplant.</div>
+            </Card>
+          )}
+
+          {zeitGruppen.map((zeit) => {
+            const items = tagesEintraege.filter((e) => (e.tageszeit || "Mahlzeit") === zeit);
             if (items.length === 0) return null;
             return (
               <React.Fragment key={zeit}>
                 <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{zeit}</div>
                 <Card style={{ marginBottom: 14 }}>
-                  {items.map((m, i) => {
+                  {items.map((e, i) => {
+                    const m = e.mahlzeit;
                     const k = `${tagStr}__${m.id}__${zeit}`;
                     const done = !!mahlzeitErledigt[k];
                     return (
                       <div
-                        key={m.id}
+                        key={e.id}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -335,7 +435,15 @@ export default function NutritionView({ onHome, embedded = false }) {
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Deinen Ernährungsplan verwalten</div>
           <Card>
             {mahlzeiten.map((m, i) => (
-              <MahlzeitZeile key={m.id} m={m} istLetzte={i === mahlzeiten.length - 1} onAendern={handleAendern} onEntfernen={handleEntfernen} />
+              <MahlzeitZeile
+                key={m.id}
+                m={m}
+                istLetzte={i === mahlzeiten.length - 1}
+                wochenplanEintraege={mealWochenplan.filter((w) => w.mealId === m.id)}
+                onAendern={handleAendern}
+                onEntfernen={handleEntfernen}
+                onWochentagToggle={handleWochentagToggle}
+              />
             ))}
           </Card>
         </>

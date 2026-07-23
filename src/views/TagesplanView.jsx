@@ -133,6 +133,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     mahlzeiten,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
+    mealWochenplan,
     trainingEintraege,
     trainingWochenplan,
     trainingTemplates,
@@ -235,6 +236,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         supplementErledigt,
         mahlzeiten,
         mahlzeitErledigt,
+        mealWochenplan,
         trainingEintraege,
         trainingWochenplan,
         trainingTemplates,
@@ -250,7 +252,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
         if (item.kategorie === "gewohnheit") return { ...item, onConfirm: () => toggleGewohnheitErledigt(tagStr, item.raw.id) };
-        return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.uhrzeit) };
+        return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit) };
       });
     },
     [
@@ -265,6 +267,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
       mahlzeiten,
       mahlzeitErledigt,
       toggleMahlzeitErledigt,
+      mealWochenplan,
       trainingEintraege,
       trainingWochenplan,
       trainingTemplates,

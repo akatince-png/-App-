@@ -53,6 +53,7 @@ export function buildDayItems(
     supplementErledigt,
     mahlzeiten,
     mahlzeitErledigt,
+    mealWochenplan = [],
     trainingEintraege = [],
     trainingWochenplan = [],
     trainingTemplates = [],
@@ -114,22 +115,33 @@ export function buildDayItems(
     });
   });
 
-  mahlzeiten.forEach((m) => {
-    m.tageszeiten.forEach((zeit) => {
-      const k = `${tagStr}__${m.id}__${zeit}`;
-      items.push({
-        kategorie: "mahlzeit",
-        key: `m-${k}`,
-        refId: m.id,
-        hour: TAGESZEIT_STUNDE[zeit] || null,
-        uhrzeit: zeit,
-        name: m.name,
-        detail: m.hinweis,
-        done: !!mahlzeitErledigt[k],
-        raw: m,
+  // Mahlzeiten erscheinen nur an den Wochentagen, denen sie im
+  // Ernährungsplan tatsächlich zugewiesen wurden (meal_wochenplan) — nicht
+  // mehr bedingungslos an jedem Tag. `meals.tageszeiten` dient nur noch als
+  // Anzeige-Vorbelegung, nicht mehr als Quelle für "wann".
+  {
+    const wochentagLabel = GETDAY_TO_LABEL[date.getDay()];
+    mealWochenplan
+      .filter((w) => w.wochentag === wochentagLabel)
+      .forEach((w) => {
+        const m = mahlzeiten.find((mm) => mm.id === w.mealId);
+        if (!m) return;
+        const zeit = w.tageszeit || "Mahlzeit";
+        const k = `${tagStr}__${m.id}__${zeit}`;
+        items.push({
+          kategorie: "mahlzeit",
+          key: `m-${w.id}`,
+          refId: m.id,
+          hour: w.uhrzeit ? w.uhrzeit.slice(0, 2) : TAGESZEIT_STUNDE[zeit] || null,
+          uhrzeit: w.uhrzeit || zeit,
+          logZeit: zeit,
+          name: m.name,
+          detail: m.hinweis,
+          done: !!mahlzeitErledigt[k],
+          raw: m,
+        });
       });
-    });
-  });
+  }
 
   const heutigeTrainings = trainingEintraege.filter((t) => t.datum === tagStr);
   heutigeTrainings.forEach((t) => {
