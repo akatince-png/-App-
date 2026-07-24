@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
-import { accentDark, danger, textMuted } from "../../ui/theme";
+import WochenplanEditor from "../../ui/WochenplanEditor";
+import { accentDark, cardBorder, danger, textMuted } from "../../ui/theme";
 import { TAGESZEITEN, EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS } from "./categorySteps";
@@ -21,13 +22,26 @@ function toggleInArray(arr, val) {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 }
 
-// Ein Kurz-Screen pro "Pläne"-Bereich (Gewohnheiten, Schlaf, Hydration,
-// Ernährung, Training, Supplemente, Medikamente) — jeweils "Später" vs.
+// Ein Kurz-Screen pro "Pläne"-Bereich, in der Reihenfolge natürlichster bis
+// unnatürlichster/klinischster Tracking-Punkt (Schlaf, Hydration, Ernährung,
+// Training, Gewohnheiten, Supplemente, Medikamente) — jeweils "Später" vs.
 // "Jetzt einrichten", bei Jetzt 2–4 Felder plus Zieldauer. Peptide sind hier
-// bewusst nicht dabei, die laufen schon über ProtocolFormView davor.
-export default function OnboardingCategoriesView({ onFinished }) {
-  const { gewohnheitHinzufuegen, hydrationZielMl, hydrationZielSetzen, mahlzeitHinzufuegen, supplementHinzufuegen, hormonHinzufuegen, setCategoryZiel } =
-    useAppData();
+// bewusst nicht dabei, die laufen erst danach über ProtocolFormView (siehe
+// OnboardingFlow.jsx) — als klinischster Tracking-Punkt ganz am Ende.
+export default function OnboardingCategoriesView({ onFinished, onCancel }) {
+  const {
+    gewohnheitHinzufuegen,
+    hydrationZielMl,
+    hydrationZielSetzen,
+    mahlzeitHinzufuegen,
+    supplementHinzufuegen,
+    hormonHinzufuegen,
+    setCategoryZiel,
+    trainingWochenplan,
+    trainingTemplates,
+    wochenplanSetzen,
+    wochenplanEntfernen,
+  } = useAppData();
 
   const [index, setIndex] = useState(0);
   const [modus, setModus] = useState(null); // null | "jetzt"
@@ -42,7 +56,6 @@ export default function OnboardingCategoriesView({ onFinished }) {
   const [hydrationMl, setHydrationMl] = useState(String(hydrationZielMl || 2500));
   const [mahlName, setMahlName] = useState("");
   const [mahlZeiten, setMahlZeiten] = useState([]);
-  const [trainingProWoche, setTrainingProWoche] = useState("3");
   const [suppName, setSuppName] = useState("");
   const [suppZeiten, setSuppZeiten] = useState([]);
   const [medName, setMedName] = useState("");
@@ -63,7 +76,6 @@ export default function OnboardingCategoriesView({ onFinished }) {
     setHydrationMl(String(hydrationZielMl || 2500));
     setMahlName("");
     setMahlZeiten([]);
-    setTrainingProWoche("3");
     setSuppName("");
     setSuppZeiten([]);
     setMedName("");
@@ -119,7 +131,10 @@ export default function OnboardingCategoriesView({ onFinished }) {
       result = await mahlzeitHinzufuegen({ name: mahlName, tageszeiten: mahlZeiten, hinweis: "" });
       if (result?.ok) setCategoryZiel("ernaehrung", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "training") {
-      setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen, proWoche: trainingProWoche });
+      // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
+      // gespeichert (wochenplanSetzen/-Entfernen, wie in TrainingView) —
+      // hier wird nur noch die Zieldauer festgehalten.
+      setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "supplemente") {
       if (!suppName.trim()) {
         setError("Bitte einen Namen eingeben.");
@@ -170,8 +185,19 @@ export default function OnboardingCategoriesView({ onFinished }) {
         <div style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>
           {index + 1} von {CATEGORY_STEPS.length}
         </div>
-        <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 12, fontWeight: 700, color: accentDark, cursor: "pointer" }}>
-          Alles überspringen
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 12, fontWeight: 700, color: accentDark, cursor: "pointer" }}>
+            Alles überspringen
+          </div>
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              style={{ width: 30, height: 30, borderRadius: 9, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, cursor: "pointer", flexShrink: 0 }}
+              title="Abbrechen"
+            >
+              ⌂
+            </button>
+          )}
         </div>
       </div>
       <Stepper step={index} total={CATEGORY_STEPS.length} />
@@ -236,8 +262,14 @@ export default function OnboardingCategoriesView({ onFinished }) {
 
           {step.key === "training" && (
             <>
-              <Label>Wie oft pro Woche?</Label>
-              <TextInput type="number" value={trainingProWoche} onChange={setTrainingProWoche} placeholder="z. B. 3" />
+              <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>Was trainierst du an welchen Tagen?</div>
+              <WochenplanEditor
+                trainingWochenplan={trainingWochenplan}
+                trainingTemplates={trainingTemplates}
+                wochenplanSetzen={wochenplanSetzen}
+                wochenplanEntfernen={wochenplanEntfernen}
+                titel={null}
+              />
             </>
           )}
 

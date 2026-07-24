@@ -104,10 +104,10 @@ export default function AuthenticatedApp() {
       />
     ) : (
       // Bestehendes Konto durchläuft hier denselben Fragebogen-Ablauf wie
-      // beim Erst-Onboarding (Peptid-Protokoll + alle Kategorien, jede
+      // beim Erst-Onboarding (alle Kategorien + Peptid-Protokoll, jede
       // einzeln überspringbar) — nur ohne die Willkommens-Folien und mit
       // einem echten Abbrechen-Knopf.
-      <OnboardingFlow startPhase="protocol" onCancel={() => setView("home")} onDone={() => setView("home")} />
+      <OnboardingFlow startPhase="categories" onCancel={() => setView("home")} onDone={() => setView("home")} />
     );
   } else if (view === "lexikon") {
     screen = <LexikonView onHome={() => setView("home")} />;
