@@ -6,7 +6,51 @@ import Icon from "../ui/Icon";
 import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
+import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+
+// Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
+// bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
+// einer Zeile zusammen — Einzeleinträge bleiben unverändert, sobald nur
+// ein Eintrag der jeweiligen Gruppe angehört.
+function gruppiereFuerAlsNaechstes(items) {
+  const angezeigt = [];
+  const supplementSlots = {};
+  let trainingSlot = null;
+
+  items.forEach((item) => {
+    if (item.kategorie === "supplement") {
+      let slot = supplementSlots[item.uhrzeit];
+      if (!slot) {
+        slot = { ...item, _ids: [item.refId], _namen: [item.name] };
+        supplementSlots[item.uhrzeit] = slot;
+        angezeigt.push(slot);
+      } else {
+        slot._ids.push(item.refId);
+        slot._namen.push(item.name);
+      }
+    } else if (item.kategorie === "training") {
+      if (!trainingSlot) {
+        trainingSlot = { ...item, _traininganzahl: 1 };
+        angezeigt.push(trainingSlot);
+      } else {
+        trainingSlot._traininganzahl += 1;
+      }
+    } else {
+      angezeigt.push(item);
+    }
+  });
+
+  return angezeigt.map((it) => {
+    if (it.kategorie === "supplement" && it._ids.length > 1) {
+      return { ...it, name: `${it.uhrzeit}-Supplemente`, detail: it._namen.join(", "), bundleIds: it._ids };
+    }
+    if (it.kategorie === "training" && it._traininganzahl > 1) {
+      return { ...it, name: "Trainingseinheit" };
+    }
+    return it;
+  });
+}
 
 // Konzept 4B: die Startseite ist ein knapper Tagesassistent + drei
 // Ordner-Kacheln (Alle Pläne / Archiv / Mehr) statt einer langen Liste
@@ -34,6 +78,7 @@ export default function HomeView({ onOpenView }) {
     trainingTemplates,
     gewohnheiten,
     gewohnheitErledigt,
+    confirmAlleTageszeit,
   } = useAppData();
 
   const today = new Date();
@@ -58,6 +103,8 @@ export default function HomeView({ onOpenView }) {
   });
   const erledigtCount = heuteItems.filter((i) => i.done).length;
   const offeneItems = heuteItems.filter((i) => !i.done);
+  const angezeigteItems = gruppiereFuerAlsNaechstes(offeneItems);
+  const tagStr = toLocalISODate(today);
 
   return (
     <Shell>
@@ -95,17 +142,15 @@ export default function HomeView({ onOpenView }) {
       </div>
 
       {/* Dann die heute offenen Aufgaben — erst danach die Ordner. */}
-      {offeneItems.length > 0 && (
+      {angezeigteItems.length > 0 && (
         <>
           <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 10 }}>Als Nächstes</div>
           <Card style={{ marginBottom: 20, padding: 8 }}>
-            {offeneItems.slice(0, 4).map((item, i, arr) => {
+            {angezeigteItems.slice(0, 4).map((item, i, arr) => {
               const k = KATEGORIE_META[item.kategorie];
               return (
-                <button
+                <div
                   key={item.key}
-                  className="mp-tap"
-                  onClick={() => onOpenView("tagesplan")}
                   style={{
                     width: "100%",
                     display: "flex",
@@ -113,24 +158,64 @@ export default function HomeView({ onOpenView }) {
                     justifyContent: "space-between",
                     gap: 10,
                     padding: "12px 12px",
-                    background: "transparent",
-                    border: "none",
                     borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
-                    textAlign: "left",
-                    cursor: "pointer",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <button
+                    className="mp-tap"
+                    onClick={() => onOpenView("tagesplan")}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      background: "transparent",
+                      border: "none",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      padding: 0,
+                      minWidth: 0,
+                    }}
+                  >
                     <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700 }}>
                         {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>
                       </div>
                       {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                     </div>
-                  </div>
-                  <span style={{ color: textMuted, fontSize: 16, flexShrink: 0 }}>›</span>
-                </button>
+                  </button>
+                  {item.bundleIds ? (
+                    <button
+                      className="mp-tap"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        padding: "7px 12px",
+                        borderRadius: 10,
+                        border: "none",
+                        background: accentSoft,
+                        color: accentDark,
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✓ Alle
+                    </button>
+                  ) : (
+                    <button
+                      className="mp-tap"
+                      onClick={() => onOpenView("tagesplan")}
+                      style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
+                    >
+                      ›
+                    </button>
+                  )}
+                </div>
               );
             })}
           </Card>
