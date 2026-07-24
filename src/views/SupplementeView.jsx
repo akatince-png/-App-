@@ -297,7 +297,7 @@ function SupplementeSection() {
                     textAlign: "center",
                   }}
                 >
-                  <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[d.getDay()]}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[(d.getDay() + 6) % 7]}</div>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>{d.getDate()}</div>
                 </button>
               );
