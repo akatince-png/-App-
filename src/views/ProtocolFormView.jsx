@@ -131,7 +131,9 @@ export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
           <>
             <div style={{ fontSize: 13, color: textMuted, marginBottom: 4 }}>Lege Dosierung und Intervall fest</div>
             {peptide.length === 0 && (
-              <div style={{ fontSize: 13, color: textMuted, marginTop: 12 }}>Kein Peptid ausgewählt — geh einen Schritt zurück.</div>
+              <div style={{ fontSize: 13, color: textMuted, marginTop: 12 }}>
+                Kein Peptid ausgewählt — geh einen Schritt zurück oder überspringe die Peptid-Einrichtung.
+              </div>
             )}
             {peptide.map((p) => (
               <div key={p} style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${cardBorder}` }}>
@@ -257,6 +259,17 @@ export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
           )}
         </div>
       </div>
+
+      {(step === 1 || step === 2) && (
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <button
+            onClick={onFinish}
+            style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
+          >
+            Peptide überspringen — ich möchte hier nichts protokollieren
+          </button>
+        </div>
+      )}
     </Shell>
   );
 }

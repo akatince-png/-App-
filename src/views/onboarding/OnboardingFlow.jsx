@@ -3,6 +3,7 @@ import WelcomeView from "../WelcomeView";
 import ProtocolFormView from "../ProtocolFormView";
 import OnboardingCategoriesView from "./OnboardingCategoriesView";
 import OnboardingCompletionView from "./OnboardingCompletionView";
+import { useAppData } from "../../context/AppDataContext";
 
 // Koordiniert den einmaligen Einrichtungs-Ablauf nach der Registrierung:
 // Willkommens-Folien → Protokoll-Fragebogen (Peptide) → Kategorien
@@ -11,6 +12,7 @@ import OnboardingCompletionView from "./OnboardingCompletionView";
 // kein Weg mehr zurück in diesen Ablauf — spätere Änderungen an laufenden
 // Plänen passieren direkt in den jeweiligen Kategorie-Ansichten.
 export default function OnboardingFlow({ onDone }) {
+  const { ziele, peptide } = useAppData();
   const [phase, setPhase] = useState("welcome"); // welcome | protocol | categories | celebration
   const [protocolStep, setProtocolStep] = useState(0);
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
@@ -40,9 +42,12 @@ export default function OnboardingFlow({ onDone }) {
     );
   }
 
+  const peptidProtokollEingerichtet = ziele.length > 0 || peptide.length > 0;
   return (
     <OnboardingCompletionView
-      eingerichteteBereiche={[{ icon: "💊", label: "Peptid-Protokoll" }, ...eingerichteteBereiche]}
+      eingerichteteBereiche={
+        peptidProtokollEingerichtet ? [{ icon: "💊", label: "Peptid-Protokoll" }, ...eingerichteteBereiche] : eingerichteteBereiche
+      }
       onDone={onDone}
     />
   );
