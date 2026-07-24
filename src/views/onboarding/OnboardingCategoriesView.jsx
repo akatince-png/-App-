@@ -23,6 +23,12 @@ const neuerSchlafblock = (wochentage) => ({
 });
 const neueZutat = () => ({ name: "", menge: "" });
 
+// Ältere gespeicherte Erinnerungen kannten "zeiten" noch als reine
+// Uhrzeit-Strings ohne Menge — hier auf das neue {zeit, menge}-Format heben,
+// damit bereits gespeicherte Profile nicht abstürzen.
+const normalisiereHydrationZeiten = (zeiten) =>
+  Array.isArray(zeiten) ? zeiten.map((z) => (typeof z === "string" ? { zeit: z, menge: "" } : z)) : [];
+
 function berechneSchlafstunden(bett, auf) {
   if (!bett || !auf) return "–";
   const [bh, bm] = bett.split(":").map(Number);
@@ -122,10 +128,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
   // Hydration
   const [hydrationMl, setHydrationMl] = useState(String(hydrationZielMl || 2500));
-  const [hydrationZeiten, setHydrationZeiten] = useState(
-    Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : []
-  );
+  const [hydrationZeiten, setHydrationZeiten] = useState(normalisiereHydrationZeiten(erinnerungen?.hydration?.zeiten));
   const [hydrationNeueZeit, setHydrationNeueZeit] = useState("12:00");
+  const [hydrationNeueMenge, setHydrationNeueMenge] = useState("300");
 
   // Ernährung
   const [mahlName, setMahlName] = useState("");
@@ -156,8 +161,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     setGZielTage("");
     setSchlafBloecke([neuerSchlafblock([...WOCHENTAGE])]);
     setHydrationMl(String(hydrationZielMl || 2500));
-    setHydrationZeiten(Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : []);
+    setHydrationZeiten(normalisiereHydrationZeiten(erinnerungen?.hydration?.zeiten));
     setHydrationNeueZeit("12:00");
+    setHydrationNeueMenge("300");
     setMahlName("");
     setMahlZeiten([]);
     setMahlZutaten([neueZutat()]);
@@ -257,13 +263,13 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
   };
   const hydrationZeitHinzufuegen = () => {
     const z = hydrationNeueZeit;
-    if (!z || hydrationZeiten.includes(z)) return;
-    const next = [...hydrationZeiten, z].sort();
+    if (!z || hydrationZeiten.some((e) => e.zeit === z)) return;
+    const next = [...hydrationZeiten, { zeit: z, menge: hydrationNeueMenge }].sort((a, b) => a.zeit.localeCompare(b.zeit));
     setHydrationZeiten(next);
     setErinnerung("hydration", { aktiv: true, zeiten: next });
   };
-  const hydrationZeitAendern = (i, val) => {
-    const next = hydrationZeiten.map((z, idx) => (idx === i ? val : z));
+  const hydrationZeitFeldAendern = (i, feld, val) => {
+    const next = hydrationZeiten.map((e, idx) => (idx === i ? { ...e, [feld]: val } : e));
     setHydrationZeiten(next);
     setErinnerung("hydration", { aktiv: true, zeiten: next });
   };
@@ -468,37 +474,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
           </div>
           <div style={{ marginBottom: 16 }}>
             <ErinnerungField value={erinnerungen[step.key]} onChange={handleErinnerungChange} />
-            {step.key === "hydration" && erinnerungen.hydration && (
-              <div style={{ marginTop: 10 }}>
-                <Label>{t("onboarding.hydration.erinnerungszeiten.label")}</Label>
-                {hydrationZeiten.map((zeit, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <div style={{ flex: 1 }}>
-                      <TextInput type="time" value={zeit} onChange={(v) => hydrationZeitAendern(i, v)} />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => hydrationZeitEntfernen(i)}
-                      style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 6px" }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                <div style={{ display: "flex", gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <TextInput type="time" value={hydrationNeueZeit} onChange={setHydrationNeueZeit} />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={hydrationZeitHinzufuegen}
-                    style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
           {step.key !== "peptide" && (
             <div style={{ marginBottom: 16 }}>
@@ -582,8 +557,51 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
           {step.key === "hydration" && (
             <>
+              {erinnerungen.hydration && (
+                <div style={{ marginBottom: 18 }}>
+                  <Label>{t("onboarding.hydration.erinnerungszeiten.label")}</Label>
+                  {hydrationZeiten.map((eintrag, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <div style={{ flex: 1 }}>
+                        <TextInput type="time" value={eintrag.zeit} onChange={(v) => hydrationZeitFeldAendern(i, "zeit", v)} />
+                      </div>
+                      <div style={{ width: 88 }}>
+                        <TextInput
+                          type="number"
+                          value={eintrag.menge}
+                          onChange={(v) => hydrationZeitFeldAendern(i, "menge", v)}
+                          placeholder={t("onboarding.hydration.menge.placeholder")}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => hydrationZeitEntfernen(i)}
+                        style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 6px" }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <TextInput type="time" value={hydrationNeueZeit} onChange={setHydrationNeueZeit} />
+                    </div>
+                    <div style={{ width: 88 }}>
+                      <TextInput type="number" value={hydrationNeueMenge} onChange={setHydrationNeueMenge} placeholder={t("onboarding.hydration.menge.placeholder")} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={hydrationZeitHinzufuegen}
+                      style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
               <Label>{t("onboarding.hydration.tagesziel.label")}</Label>
               <TextInput type="number" value={hydrationMl} onChange={setHydrationMl} placeholder={t("onboarding.hydration.tagesziel.placeholder")} />
+              <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>{t("onboarding.hydration.tagesziel.hinweis")}</div>
             </>
           )}
 

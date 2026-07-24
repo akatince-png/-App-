@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../../ui/primitives";
-import { accent, blue, danger, textMuted } from "../../ui/theme";
+import { accent, blue, cardBorder, danger, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
 import { toLocalISODate } from "../../utils/dates";
@@ -20,9 +20,9 @@ const BEISPIELE = [
 // Teilprotokoll (Schlaf, Ernährung, ...) eingerichtet wird. Dieses Startdatum
 // ist danach die Vorbelegung für jedes Teilprotokoll, falls dort kein
 // eigenes, abweichendes Startdatum gewählt wird.
-export default function HauptprotokollErstellenView({ onDone }) {
+export default function HauptprotokollErstellenView({ onDone, onCancel }) {
   const { hauptprotokollErstellen } = useAppData();
-  const { t } = useT();
+  const { t, tLabel } = useT();
   const [name, setName] = useState("");
   const [startdatum, setStartdatum] = useState(toLocalISODate(new Date()));
   const [saving, setSaving] = useState(false);
@@ -46,6 +46,18 @@ export default function HauptprotokollErstellenView({ onDone }) {
 
   return (
     <Shell>
+      {onCancel && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{ width: 30, height: 30, borderRadius: 9, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, cursor: "pointer", flexShrink: 0 }}
+            title={tLabel("Abbrechen")}
+          >
+            ⌂
+          </button>
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 12, marginBottom: 24 }}>
         <div
           style={{

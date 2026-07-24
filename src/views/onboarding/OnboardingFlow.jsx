@@ -29,7 +29,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   }
 
   if (phase === "hauptprotokoll") {
-    return <HauptprotokollErstellenView onDone={() => setPhase("categories")} />;
+    return <HauptprotokollErstellenView onDone={() => setPhase("categories")} onCancel={onCancel} />;
   }
 
   if (phase === "categories") {
