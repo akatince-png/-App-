@@ -3,13 +3,33 @@ import { INTERVALL_OPTIONEN } from "../constants";
 
 export const WEEKDAY_INDEX = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
 
-/** Menschlich lesbare Beschreibung eines Intervalls, unabhängig vom Modus. */
-export function describeInterval(d) {
+const INTERVALL_LABEL_EN = {
+  "Täglich": "Daily",
+  "Jeden 2. Tag": "Every 2nd day",
+  "2x pro Woche": "2x per week",
+  "1x pro Woche": "1x per week",
+};
+const WEEKDAY_EN = { Mo: "Mon", Di: "Tue", Mi: "Wed", Do: "Thu", Fr: "Fri", Sa: "Sat", So: "Sun" };
+
+/**
+ * Menschlich lesbare Beschreibung eines Intervalls, unabhängig vom Modus.
+ * `lang` kommt vom Aufrufer (aus useT()), da diese Funktion selbst kein Hook
+ * ist und daher nicht direkt auf den Sprachkontext zugreifen kann.
+ */
+export function describeInterval(d, lang = "de") {
   if (!d) return "?";
-  if (d.intervallTyp === "custom") return `Alle ${d.customDays || "?"} Tage`;
-  if (d.intervallTyp === "cycle") return `${d.onDays || "?"} Tage on / ${d.offDays ?? "?"} Tage off`;
-  if (d.intervallTyp === "weekdays") return d.weekdays?.length ? d.weekdays.join(", ") : "Wochentage wählen";
-  return INTERVALL_OPTIONEN.find((o) => o.days === d.intervallDays)?.label || "?";
+  const en = lang === "en";
+  if (d.intervallTyp === "custom") return en ? `Every ${d.customDays || "?"} days` : `Alle ${d.customDays || "?"} Tage`;
+  if (d.intervallTyp === "cycle") {
+    return en ? `${d.onDays || "?"} days on / ${d.offDays ?? "?"} days off` : `${d.onDays || "?"} Tage on / ${d.offDays ?? "?"} Tage off`;
+  }
+  if (d.intervallTyp === "weekdays") {
+    if (!d.weekdays?.length) return en ? "Choose weekdays" : "Wochentage wählen";
+    return en ? d.weekdays.map((w) => WEEKDAY_EN[w] || w).join(", ") : d.weekdays.join(", ");
+  }
+  const label = INTERVALL_OPTIONEN.find((o) => o.days === d.intervallDays)?.label;
+  if (!label) return "?";
+  return en ? INTERVALL_LABEL_EN[label] || label : label;
 }
 
 /**
