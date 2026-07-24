@@ -34,7 +34,7 @@ export function useSleepData(userId) {
 
   const schlafHinzufuegen = useCallback(
     async (eintrag) => {
-      if (!eintrag.stunden) return;
+      if (!eintrag.stunden) return { ok: false, error: "Bitte die Stunden eintragen." };
       const stunden = Number(eintrag.stunden);
       // Detailfelder sind optional (progressive disclosure) — nur mitschicken,
       // was der Nutzer tatsächlich ausgefüllt hat, statt leere Werte zu überschreiben.
@@ -51,13 +51,14 @@ export function useSleepData(userId) {
         .upsert({ user_id: userId, datum: eintrag.datum, stunden, ...details }, { onConflict: "user_id,datum" });
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setSchlafEintraege((prev) =>
         [...prev.filter((e) => e.datum !== eintrag.datum), { datum: eintrag.datum, stunden, ...details }].sort((a, b) =>
           a.datum.localeCompare(b.datum)
         )
       );
+      return { ok: true };
     },
     [userId]
   );

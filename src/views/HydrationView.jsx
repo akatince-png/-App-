@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextArea, CheckRow } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
-import { accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
+import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import NumberWheelField from "../ui/NumberWheelField";
@@ -38,15 +38,27 @@ export default function HydrationView({ onHome, embedded = false }) {
   const [zielEntwurf, setZielEntwurf] = useState(String(hydrationZielMl));
   const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
   const [zielGrund, setZielGrund] = useState("");
+  const [hydrationError, setHydrationError] = useState(null);
 
   const heutigerEintrag = hydrationEintraege.find((e) => e.datum === heute());
   const [elektrolyte, setElektrolyte] = useState(heutigerEintrag?.elektrolyte || false);
   const [durstgefuehl, setDurstgefuehl] = useState(heutigerEintrag?.durstgefuehl || "");
   const [bemerkung, setBemerkung] = useState(heutigerEintrag?.bemerkung || "");
 
-  const checkinSpeichern = (felder) => hydrationCheckinSpeichern(felder);
+  const schnellHinzufuegen = async (ml) => {
+    setHydrationError(null);
+    const result = await hydrationHinzufuegen(ml);
+    if (!result?.ok) setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+  };
 
-  const zielSpeichern = () => {
+  const checkinSpeichern = async (felder) => {
+    setHydrationError(null);
+    const result = await hydrationCheckinSpeichern(felder);
+    if (!result?.ok) setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+  };
+
+  const zielSpeichern = async () => {
+    setHydrationError(null);
     if (Number(zielEntwurf) !== hydrationZielMl) {
       aenderungVermerken({
         kategorie: "hydration",
@@ -56,13 +68,22 @@ export default function HydrationView({ onHome, embedded = false }) {
         grund: zielGrund,
       });
     }
-    hydrationZielSetzen(zielEntwurf);
+    const result = await hydrationZielSetzen(zielEntwurf);
+    if (!result?.ok) {
+      setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
     setZielGrund("");
   };
 
-  const korrekturSetzen = () => {
+  const korrekturSetzen = async () => {
     if (korrekturEntwurf === "") return;
-    hydrationHinzufuegen(Number(korrekturEntwurf) - hydrationHeuteMl);
+    setHydrationError(null);
+    const result = await hydrationHinzufuegen(Number(korrekturEntwurf) - hydrationHeuteMl);
+    if (!result?.ok) {
+      setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
     setKorrekturEntwurf("");
   };
 
@@ -91,6 +112,10 @@ export default function HydrationView({ onHome, embedded = false }) {
         <div style={{ fontSize: 12.5, color: textMuted, marginTop: 4 }}>{motivationsText(hydrationHeuteMl, hydrationZielMl)}</div>
       </Card>
 
+      {hydrationError && (
+        <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{hydrationError}</div>
+      )}
+
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Schnell hinzufügen</div>
       <Card style={{ marginBottom: 14 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -98,7 +123,7 @@ export default function HydrationView({ onHome, embedded = false }) {
             <button
               key={opt.label}
               className="mp-btn"
-              onClick={() => hydrationHinzufuegen(opt.ml)}
+              onClick={() => schnellHinzufuegen(opt.ml)}
               style={{
                 minHeight: 64,
                 borderRadius: 16,

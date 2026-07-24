@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextArea, TextInput } from "../ui/primitives";
 import { SimpleLineChart } from "../ui/charts";
-import { accentDark, blue, cardBorder, textMuted } from "../ui/theme";
+import { accentDark, blue, cardBorder, danger, textMuted } from "../ui/theme";
 import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
@@ -21,9 +21,15 @@ export default function SchlafView({ onHome, embedded = false }) {
   const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage } = useAppData();
   const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState(LEERER_EINTRAG);
   const [detailsOffen, setDetailsOffen] = useState(false);
+  const [schlafError, setSchlafError] = useState(null);
 
-  const submit = () => {
-    schlafHinzufuegen(neuerSchlafEintrag);
+  const submit = async () => {
+    setSchlafError(null);
+    const result = await schlafHinzufuegen(neuerSchlafEintrag);
+    if (!result?.ok) {
+      setSchlafError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
     setNeuerSchlafEintrag(LEERER_EINTRAG);
     setDetailsOffen(false);
   };
@@ -112,6 +118,7 @@ export default function SchlafView({ onHome, embedded = false }) {
           </>
         )}
 
+        {schlafError && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{schlafError}</div>}
         <div style={{ marginTop: 12 }}>
           <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
         </div>

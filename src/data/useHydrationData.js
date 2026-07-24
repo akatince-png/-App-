@@ -52,7 +52,7 @@ export function useHydrationData(userId) {
         .upsert({ user_id: userId, datum, menge_ml: neueMenge }, { onConflict: "user_id,datum" });
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setHydrationEintraege((prev) => {
         const bestehend = prev.find((e) => e.datum === datum) || {};
@@ -60,6 +60,7 @@ export function useHydrationData(userId) {
           a.datum.localeCompare(b.datum)
         );
       });
+      return { ok: true };
     },
     [userId, hydrationEintraege]
   );
@@ -69,7 +70,11 @@ export function useHydrationData(userId) {
       const wert = Math.max(0, Number(zielMl) || 0);
       setHydrationZielMl(wert);
       const { error } = await supabase.from("hydration_settings").upsert({ user_id: userId, ziel_ml: wert }, { onConflict: "user_id" });
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
     },
     [userId]
   );
@@ -82,12 +87,13 @@ export function useHydrationData(userId) {
       const { error } = await supabase.from("hydration_logs").upsert({ user_id: userId, datum, ...felder }, { onConflict: "user_id,datum" });
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setHydrationEintraege((prev) => {
         const bestehend = prev.find((e) => e.datum === datum) || { mengeMl: 0 };
         return [...prev.filter((e) => e.datum !== datum), { ...bestehend, datum, ...felder }].sort((a, b) => a.datum.localeCompare(b.datum));
       });
+      return { ok: true };
     },
     [userId]
   );
