@@ -8,6 +8,7 @@ import { accentSoft, textMain, textMuted } from "./theme";
 export default function WheelPicker({ values, value, onChange, itemHeight = 40, visibleCount = 5 }) {
   const scrollRef = useRef(null);
   const settleTimer = useRef(null);
+  const justClickedRef = useRef(false);
   const padCount = Math.floor(visibleCount / 2);
   const height = itemHeight * visibleCount;
   const index = Math.max(0, values.indexOf(value));
@@ -25,6 +26,14 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 40, 
   const handleScroll = () => {
     if (settleTimer.current) clearTimeout(settleTimer.current);
     settleTimer.current = setTimeout(() => {
+      // Ein Tap hat onChange bereits mit dem korrekten Wert aufgerufen —
+      // das Scroll-Snapping, das der Tap selbst über scrollTo auslöst, darf
+      // diesen Wert nicht mit einem (durch Snap-Verhalten abweichenden)
+      // Scroll-Endpunkt überschreiben.
+      if (justClickedRef.current) {
+        justClickedRef.current = false;
+        return;
+      }
       const el = scrollRef.current;
       if (!el) return;
       const nextIndex = Math.round(el.scrollTop / itemHeight);
@@ -67,6 +76,7 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 40, 
               key={v}
               className="mp-wheel-item"
               onClick={() => {
+                justClickedRef.current = true;
                 const el = scrollRef.current;
                 if (el) el.scrollTo({ top: i * itemHeight, behavior: "smooth" });
                 if (v !== value) onChange(v);
