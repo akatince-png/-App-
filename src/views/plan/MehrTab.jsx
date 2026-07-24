@@ -1,30 +1,27 @@
 import React, { useState } from "react";
-import { Card } from "../../ui/primitives";
+import { Card, Pill } from "../../ui/primitives";
 import { accentDark, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
 import { useAppData } from "../../context/AppDataContext";
-
-const DATENSCHUTZ = ["Ende-zu-Ende Verschlüsselung", "DSGVO konform", "Daten gehören dir", "Du entscheidest, was geteilt wird", "Kein Verkauf deiner Daten"];
-
-const ERWEITERUNGEN = [
-  "Dunkelmodus & Design-Anpassung",
-  "Wearable-Integration (Oura, Whoop)",
-  "Siri / Google Assistant Shortcuts",
-  "Offline-Modus",
-  "Mehr Sprachen",
-];
+import { useLanguage } from "../../i18n/LanguageContext";
+import { useT } from "../../i18n/translate";
 
 export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
   const { resetOnboarding, pushUnterstuetzt, pushAktiv, pushLadend, pushFehler, pushAktivieren, pushDeaktivieren, pushTestSenden } = useAppData();
+  const { lang, setLang } = useLanguage();
+  const { t } = useT();
   const [resetMsg, setResetMsg] = useState(null);
   const [testMsg, setTestMsg] = useState(null);
+
+  const DATENSCHUTZ = ["mehr.datenschutz.1", "mehr.datenschutz.2", "mehr.datenschutz.3", "mehr.datenschutz.4", "mehr.datenschutz.5"];
+  const ERWEITERUNGEN = ["mehr.erweiterungen.1", "mehr.erweiterungen.2", "mehr.erweiterungen.3", "mehr.erweiterungen.4"];
 
   const handleResetOnboarding = async () => {
     setResetMsg(null);
     const result = await resetOnboarding();
     if (!result?.ok) {
-      setResetMsg(result?.error || "Zurücksetzen fehlgeschlagen.");
+      setResetMsg(result?.error || t("mehr.testen.reset.error"));
       return;
     }
     // Setzt u. a. Peptid-Protokoll, Gewohnheiten, Mahlzeiten, Supplemente
@@ -37,7 +34,7 @@ export default function MehrTab({ onOpenLexikon }) {
   const handleTestSenden = async () => {
     setTestMsg(null);
     const result = await pushTestSenden();
-    setTestMsg(result?.ok ? "Gesendet — sollte gleich als Benachrichtigung ankommen." : result?.error || "Senden fehlgeschlagen.");
+    setTestMsg(result?.ok ? t("mehr.push.test.success") : result?.error || t("mehr.push.test.error"));
   };
 
   return (
@@ -59,24 +56,26 @@ export default function MehrTab({ onOpenLexikon }) {
             cursor: "pointer",
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 700 }}>📚 Lexikon</span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>{t("mehr.lexikon")}</span>
           <span style={{ color: textMuted, fontSize: 16 }}>›</span>
         </button>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.sprache")}</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex" }}>
+          <Pill label={t("common.language.de")} selected={lang === "de"} onClick={() => setLang("de")} />
+          <Pill label={t("common.language.en")} selected={lang === "en"} onClick={() => setLang("en")} />
+        </div>
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erinnerungen")}</div>
       <Card style={{ marginBottom: 14 }}>
         {!pushUnterstuetzt ? (
-          <div style={{ fontSize: 13, color: textMuted }}>
-            Echte Erinnerungen werden auf diesem Gerät/Browser nicht unterstützt. Auf dem iPad: erst über „Teilen“ →
-            „Zum Home-Bildschirm“ als App hinzufügen, dann von dort aus öffnen — hier funktioniert es dann.
-          </div>
+          <div style={{ fontSize: 13, color: textMuted }}>{t("mehr.push.unsupported")}</div>
         ) : (
           <>
-            <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
-              Erinnert dich per Benachrichtigung, auch wenn die App gerade nicht geöffnet ist — ganz ohne Mac oder
-              Xcode, direkt über den Browser.
-            </div>
+            <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.push.intro")}</div>
             <button
               onClick={pushAktiv ? pushDeaktivieren : pushAktivieren}
               disabled={pushLadend}
@@ -92,7 +91,7 @@ export default function MehrTab({ onOpenLexikon }) {
                 color: pushAktiv ? danger : "#fff",
               }}
             >
-              {pushLadend ? "Einen Moment..." : pushAktiv ? "Erinnerungen deaktivieren" : "Erinnerungen aktivieren"}
+              {pushLadend ? t("mehr.push.loading") : pushAktiv ? t("mehr.push.deaktivieren") : t("mehr.push.aktivieren")}
             </button>
             {pushFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{pushFehler}</div>}
             {pushAktiv && (
@@ -101,7 +100,7 @@ export default function MehrTab({ onOpenLexikon }) {
                   onClick={handleTestSenden}
                   style={{ width: "100%", padding: "11px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
                 >
-                  Test-Erinnerung senden
+                  {t("mehr.push.test")}
                 </button>
                 {testMsg && <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>{testMsg}</div>}
               </div>
@@ -110,47 +109,44 @@ export default function MehrTab({ onOpenLexikon }) {
         )}
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Datenschutz & Sicherheit</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.datenschutz")}</div>
       <Card style={{ marginBottom: 14 }}>
-        {DATENSCHUTZ.map((item) => (
-          <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
+        {DATENSCHUTZ.map((key) => (
+          <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
             <span style={{ color: success, fontWeight: 700 }}>✓</span>
-            <span style={{ fontSize: 13 }}>{item}</span>
+            <span style={{ fontSize: 13 }}>{t(key)}</span>
           </div>
         ))}
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Zukünftige Erweiterungen</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erweiterungen")}</div>
       <Card style={{ marginBottom: 14 }}>
-        {ERWEITERUNGEN.map((item) => (
-          <div key={item} style={{ fontSize: 13, padding: "5px 0", color: textMuted }}>
-            • {item}
+        {ERWEITERUNGEN.map((key) => (
+          <div key={key} style={{ fontSize: 13, padding: "5px 0", color: textMuted }}>
+            • {t(key)}
           </div>
         ))}
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Konto</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.konto")}</div>
       <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>Angemeldet als {user?.email}</div>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.konto.angemeldet", { email: user?.email })}</div>
         <button
           onClick={signOut}
           style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: "#FDE9EC", color: danger }}
         >
-          Abmelden
+          {t("mehr.konto.abmelden")}
         </button>
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Zum Testen</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.testen")}</div>
       <Card>
-        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
-          Setzt diesen Account zurück in den Erstanmelde-Zustand — nützlich, um die Willkommens-Seiten und den
-          Einrichtungs-Assistenten wiederholt mit demselben Konto durchzugehen.
-        </div>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.testen.intro")}</div>
         <button
           onClick={handleResetOnboarding}
           style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
         >
-          Onboarding erneut durchlaufen
+          {t("mehr.testen.reset")}
         </button>
         {resetMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetMsg}</div>}
       </Card>
