@@ -7,6 +7,7 @@ import { accentDark, cardBorder, danger, textMuted } from "../../ui/theme";
 import { TAGESZEITEN, EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS } from "./categorySteps";
+import { useT } from "../../i18n/translate";
 
 const ZIEL_LEER = { modus: "offen", wochen: "" };
 
@@ -44,6 +45,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     wochenplanSetzen,
     wochenplanEntfernen,
   } = useAppData();
+  const { t, tLabel } = useT();
 
   const [index, setIndex] = useState(0);
   const [modus, setModus] = useState(null); // null | "jetzt"
@@ -106,7 +108,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
     if (step.key === "gewohnheiten") {
       if (!gName.trim()) {
-        setError("Bitte einen Namen eingeben.");
+        setError(t("onboarding.error.name"));
         setSaving(false);
         return;
       }
@@ -123,12 +125,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
       setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "ernaehrung") {
       if (!mahlName.trim()) {
-        setError("Bitte einen Namen eingeben.");
+        setError(t("onboarding.error.name"));
         setSaving(false);
         return;
       }
       if (mahlZeiten.length === 0) {
-        setError("Bitte mindestens eine Tageszeit wählen.");
+        setError(t("onboarding.error.tageszeit"));
         setSaving(false);
         return;
       }
@@ -141,12 +143,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
       setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "supplemente") {
       if (!suppName.trim()) {
-        setError("Bitte einen Namen eingeben.");
+        setError(t("onboarding.error.name"));
         setSaving(false);
         return;
       }
       if (suppZeiten.length === 0) {
-        setError("Bitte mindestens eine Tageszeit wählen.");
+        setError(t("onboarding.error.tageszeit"));
         setSaving(false);
         return;
       }
@@ -154,7 +156,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
       if (result?.ok) setCategoryZiel("supplemente", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "medikamente") {
       if (!medName.trim()) {
-        setError("Bitte einen Namen eingeben.");
+        setError(t("onboarding.error.name"));
         setSaving(false);
         return;
       }
@@ -177,7 +179,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
     setSaving(false);
     if (!result?.ok) {
-      setError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      setError(result?.error || t("onboarding.error.speichern"));
       return;
     }
     weiter(true);
@@ -195,17 +197,17 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     <Shell>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>
-          {index + 1} von {CATEGORY_STEPS.length}
+          {t("onboarding.categories.progress", { current: index + 1, total: CATEGORY_STEPS.length })}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 12, fontWeight: 700, color: accentDark, cursor: "pointer" }}>
-            Alles überspringen
+            {tLabel("Alles überspringen")}
           </div>
           {onCancel && (
             <button
               onClick={onCancel}
               style={{ width: 30, height: 30, borderRadius: 9, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, cursor: "pointer", flexShrink: 0 }}
-              title="Abbrechen"
+              title={tLabel("Abbrechen")}
             >
               ⌂
             </button>
@@ -216,18 +218,18 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
         <div style={{ fontSize: 28 }}>{step.icon}</div>
-        <div style={{ fontSize: 19, fontWeight: 800 }}>{step.label} einrichten?</div>
+        <div style={{ fontSize: 19, fontWeight: 800 }}>{t("onboarding.gate.title", { label: tLabel(step.label) })}</div>
       </div>
 
       {modus === null && (
         <Card>
           <div style={{ fontSize: 13, color: textMuted, marginBottom: 16, lineHeight: 1.5 }}>
-            Du kannst diesen Bereich jetzt kurz einrichten oder später jederzeit über das Dashboard nachholen.
+            {t("onboarding.gate.instructions")}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <PrimaryButton onClick={() => setModus("jetzt")}>Jetzt einrichten</PrimaryButton>
+            <PrimaryButton onClick={() => setModus("jetzt")}>{tLabel("Jetzt einrichten")}</PrimaryButton>
             <PrimaryButton variant="ghost" onClick={() => weiter(false)}>
-              Später einrichten
+              {tLabel("Später einrichten")}
             </PrimaryButton>
           </div>
         </Card>

@@ -3,9 +3,11 @@ import { Shell, Card, Label, TextInput, PrimaryButton } from "../ui/primitives";
 import { danger, success, textMuted } from "../ui/theme";
 import Logo from "../ui/Logo";
 import { useAuth } from "../context/AuthContext";
+import { useT } from "../i18n/translate";
 
 export default function LoginView() {
   const { signIn, signUp } = useAuth();
+  const { t } = useT();
   const [mode, setMode] = useState("login"); // 'login' | 'register'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,11 +28,11 @@ export default function LoginView() {
         const { error: err, data } = await signUp(email.trim(), password);
         if (err) throw err;
         if (data.user && !data.session) {
-          setInfo("Fast geschafft — bitte bestätige deine E-Mail-Adresse über den Link, den wir dir geschickt haben.");
+          setInfo(t("login.info.confirmEmail"));
         }
       }
     } catch (err) {
-      setError(mapAuthError(err.message));
+      setError(mapAuthError(err.message, t));
     } finally {
       setLoading(false);
     }
@@ -55,8 +57,8 @@ export default function LoginView() {
         }}
       >
         {[
-          { id: "login", label: "Anmelden" },
-          { id: "register", label: "Registrieren" },
+          { id: "login", label: t("login.tab.anmelden") },
+          { id: "register", label: t("login.tab.registrieren") },
         ].map((m) => (
           <button
             key={m.id}
@@ -84,17 +86,17 @@ export default function LoginView() {
       </div>
 
       <Card style={{ marginBottom: 14 }}>
-        <Label>E-Mail</Label>
-        <TextInput type="email" value={email} onChange={setEmail} placeholder="deine@email.de" />
-        <Label>Passwort</Label>
-        <TextInput type="password" value={password} onChange={setPassword} placeholder="Passwort" />
+        <Label>{t("login.email.label")}</Label>
+        <TextInput type="email" value={email} onChange={setEmail} placeholder={t("login.email.placeholder")} />
+        <Label>{t("login.password.label")}</Label>
+        <TextInput type="password" value={password} onChange={setPassword} placeholder={t("login.password.label")} />
 
         {error && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{error}</div>}
         {info && <div style={{ fontSize: 12, color: success, marginTop: 10 }}>{info}</div>}
 
         <div style={{ marginTop: 20 }}>
           <PrimaryButton onClick={submit} disabled={loading || !email.trim() || !password}>
-            {loading ? "Bitte warten..." : mode === "login" ? "Anmelden" : "Registrieren"}
+            {loading ? t("login.button.loading") : mode === "login" ? t("login.tab.anmelden") : t("login.tab.registrieren")}
           </PrimaryButton>
         </div>
       </Card>
@@ -102,10 +104,10 @@ export default function LoginView() {
   );
 }
 
-function mapAuthError(message) {
-  if (!message) return "Unerwarteter Fehler. Bitte erneut versuchen.";
-  if (message.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
-  if (message.includes("User already registered")) return "Für diese E-Mail existiert bereits ein Konto.";
-  if (message.includes("Password should be at least")) return "Das Passwort muss mindestens 6 Zeichen lang sein.";
+function mapAuthError(message, t) {
+  if (!message) return t("login.error.unexpected");
+  if (message.includes("Invalid login credentials")) return t("login.error.invalidCredentials");
+  if (message.includes("User already registered")) return t("login.error.alreadyRegistered");
+  if (message.includes("Password should be at least")) return t("login.error.passwordTooShort");
   return message;
 }

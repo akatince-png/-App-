@@ -2,26 +2,28 @@ import React, { useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import { accent, blue, cardBorder, textMuted } from "../ui/theme";
 import Logo from "../ui/Logo";
+import { useT } from "../i18n/translate";
 
 const SLIDES = [
   {
     icon: "🧬",
-    titel: "Hi, herzlich willkommen bei MyProtocols!",
-    text: "Schön, dass du dich für uns entschieden hast. Wir helfen dir dabei, Peptide, Medikamente, Supplemente, Gewohnheiten, Schlaf, Hydration, Ernährung und Training an einem Ort zu protokollieren — statt in Notizzetteln und deinem Kopf.",
+    titelKey: "welcome.slide1.titel",
+    textKey: "welcome.slide1.text",
   },
   {
     icon: "🗓️",
-    titel: "So funktioniert's",
-    text: "Dein Tagesplan zeigt dir jeden Tag genau, was ansteht — einmal antippen und abgehakt. Alle Details (Menge, Einnahmeart, Mischungen) findest du übersichtlich in Protokolle, wann immer du sie brauchst.",
+    titelKey: "welcome.slide2.titel",
+    textKey: "welcome.slide2.text",
   },
   {
     icon: "🚀",
-    titel: "Einmal kurz investieren, langfristig Ruhe haben",
-    text: "Ein paar Minuten heute, um dein Protokoll einzurichten — und danach hast du alles im Griff, ohne nachdenken zu müssen. Jeden Bereich kannst du einzeln jetzt einrichten oder überspringen und später nachholen. Los geht's!",
+    titelKey: "welcome.slide3.titel",
+    textKey: "welcome.slide3.text",
   },
 ];
 
 export default function WelcomeView({ onDone }) {
+  const { t, tLabel } = useT();
   const [index, setIndex] = useState(0);
   const slide = SLIDES[index];
   const isLast = index === SLIDES.length - 1;
@@ -33,7 +35,7 @@ export default function WelcomeView({ onDone }) {
           onClick={onDone}
           style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
         >
-          Überspringen
+          {t("welcome.skip")}
         </button>
       </div>
 
@@ -60,8 +62,8 @@ export default function WelcomeView({ onDone }) {
             {slide.icon}
           </div>
         )}
-        <div style={{ fontSize: 20, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>{slide.titel}</div>
-        <div style={{ fontSize: 14, color: textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>{slide.text}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>{t(slide.titelKey)}</div>
+        <div style={{ fontSize: 14, color: textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>{t(slide.textKey)}</div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 24 }}>
@@ -80,7 +82,7 @@ export default function WelcomeView({ onDone }) {
       </div>
 
       <Card>
-        <PrimaryButton onClick={() => (isLast ? onDone() : setIndex((i) => i + 1))}>{isLast ? "Los geht's" : "Weiter"}</PrimaryButton>
+        <PrimaryButton onClick={() => (isLast ? onDone() : setIndex((i) => i + 1))}>{isLast ? t("welcome.button.los") : tLabel("Weiter")}</PrimaryButton>
       </Card>
     </Shell>
   );
