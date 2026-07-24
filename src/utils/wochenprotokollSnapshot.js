@@ -82,8 +82,15 @@ export function baueWochenprotokollDaten(appData) {
     };
   });
 
+  // Schlaf wird seit mehreren Schlafblöcken (unterschiedliche Bett-/
+  // Aufwachzeit je Wochentag-Gruppe) nicht mehr als einzelnes bettzeit/
+  // aufwachzeit-Paar gespeichert, sondern als categoryZiele.schlaf.bloecke —
+  // ältere, vor diesem Umbau gespeicherte Profile haben noch die alte flache
+  // Form, deshalb hier beide Formen abfangen.
+  const ersterSchlafblock = categoryZiele?.schlaf?.bloecke?.[0] || (categoryZiele?.schlaf?.bettzeit ? categoryZiele.schlaf : null);
+
   const routinenZiele = [
-    categoryZiele?.schlaf?.bettzeit && { icon: "😴", label: "Schlaf", ziel: `${categoryZiele.schlaf.bettzeit}–${categoryZiele.schlaf.aufwachzeit || "?"}` },
+    ersterSchlafblock && { icon: "😴", label: "Schlaf", ziel: `${ersterSchlafblock.bettzeit}–${ersterSchlafblock.aufwachzeit || "?"}` },
     hydrationZielMl && { icon: "💧", label: "Hydration", ziel: `Ø ${hydrationZielMl} ml/Tag` },
     categoryZiele?.training?.proWoche && { icon: "🏋️", label: "Training", ziel: `${categoryZiele.training.proWoche}× pro Woche` },
   ].filter(Boolean);

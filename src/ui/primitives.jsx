@@ -65,6 +65,7 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent" 
   };
   return (
     <button
+      type="button"
       className="mp-btn"
       onClick={onClick}
       disabled={disabled}
@@ -128,6 +129,7 @@ export function CheckRow({ label, checked, onToggle }) {
 export function Pill({ label, selected, onClick }) {
   return (
     <button
+      type="button"
       className="mp-tap"
       onClick={onClick}
       style={{

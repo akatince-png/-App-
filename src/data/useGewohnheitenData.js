@@ -23,6 +23,7 @@ export function useGewohnheitenData(userId) {
         icon: r.icon || "🌱",
         uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
         zielTage: r.ziel_tage ?? null,
+        menge: r.menge || "",
       }))
     );
     const nextErledigt = {};
@@ -42,7 +43,7 @@ export function useGewohnheitenData(userId) {
       if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
       const { data, error } = await supabase
         .from("routines")
-        .insert({ user_id: userId, name, icon: neu.icon || "🌱", uhrzeit: neu.uhrzeit || null, ziel_tage: neu.zielTage || null })
+        .insert({ user_id: userId, name, icon: neu.icon || "🌱", uhrzeit: neu.uhrzeit || null, ziel_tage: neu.zielTage || null, menge: neu.menge || "" })
         .select()
         .single();
       if (error) {
@@ -51,7 +52,7 @@ export function useGewohnheitenData(userId) {
       }
       setGewohnheiten((prev) => [
         ...prev,
-        { id: data.id, name: data.name, icon: data.icon, uhrzeit: data.uhrzeit?.slice(0, 5) || "", zielTage: data.ziel_tage ?? null },
+        { id: data.id, name: data.name, icon: data.icon, uhrzeit: data.uhrzeit?.slice(0, 5) || "", zielTage: data.ziel_tage ?? null, menge: data.menge || "" },
       ]);
       return { ok: true, id: data.id };
     },

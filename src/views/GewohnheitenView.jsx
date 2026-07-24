@@ -6,7 +6,7 @@ import { useAppData } from "../context/AppDataContext";
 
 const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭"];
 
-const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", zielTage: "" };
+const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", zielTage: "", menge: "" };
 
 function Fortschrittsbalken({ tage, ziel }) {
   const pct = ziel ? Math.min(100, Math.round((tage / ziel) * 100)) : 0;
@@ -30,7 +30,10 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontSize: 20 }}>{g.icon}</div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>{g.name}</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>
+              {g.name}
+              {g.menge && <span style={{ fontWeight: 600, color: textMuted }}> · {g.menge}</span>}
+            </div>
             {g.uhrzeit && <div style={{ fontSize: 11, color: textMuted }}>{g.uhrzeit} Uhr</div>}
           </div>
         </div>
@@ -185,6 +188,9 @@ export default function GewohnheitenView({ onHome }) {
             <Pill key={icon} label={icon} selected={neu.icon === icon} onClick={() => setNeu((p) => ({ ...p, icon }))} />
           ))}
         </div>
+
+        <Label>Menge / Umfang (optional)</Label>
+        <TextInput value={neu.menge} onChange={(v) => setNeu((p) => ({ ...p, menge: v }))} placeholder="z. B. 20 Seiten, 10 Minuten" />
 
         <Label>Uhrzeit (optional — für den Tagesplan)</Label>
         <TextInput type="time" value={neu.uhrzeit} onChange={(v) => setNeu((p) => ({ ...p, uhrzeit: v }))} />

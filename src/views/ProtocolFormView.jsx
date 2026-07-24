@@ -8,7 +8,7 @@ import { describeInterval } from "../utils/schedule";
 import { useAppData } from "../context/AppDataContext";
 import NumberWheelField from "../ui/NumberWheelField";
 
-export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
+export default function ProtocolFormView({ step, setStep, onFinish, onSkip, onHome }) {
   const {
     ziele,
     toggleZiel,
@@ -263,7 +263,8 @@ export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
       {(step === 1 || step === 2) && (
         <div style={{ textAlign: "center", marginTop: 12 }}>
           <button
-            onClick={onFinish}
+            type="button"
+            onClick={onSkip || onFinish}
             style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
           >
             Peptide überspringen — ich möchte hier nichts protokollieren
