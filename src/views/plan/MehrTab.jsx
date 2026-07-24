@@ -66,6 +66,7 @@ export default function MehrTab({ onOpenLexikon }) {
         <div style={{ display: "flex" }}>
           <Pill label={t("common.language.de")} selected={lang === "de"} onClick={() => setLang("de")} />
           <Pill label={t("common.language.en")} selected={lang === "en"} onClick={() => setLang("en")} />
+          <Pill label={t("common.language.tr")} selected={lang === "tr"} onClick={() => setLang("tr")} />
         </div>
       </Card>
 

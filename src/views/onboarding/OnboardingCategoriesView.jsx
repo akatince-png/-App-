@@ -239,36 +239,38 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
         <Card>
           {step.key === "gewohnheiten" && (
             <>
-              <Label>Name der Gewohnheit</Label>
-              <TextInput value={gName} onChange={setGName} placeholder="z. B. 10 Minuten Spaziergang" />
+              <Label>{t("onboarding.gewohnheiten.name.label")}</Label>
+              <TextInput value={gName} onChange={setGName} placeholder={t("onboarding.gewohnheiten.name.placeholder")} />
             </>
           )}
 
           {step.key === "schlaf" && (
             <>
-              <Label>Bettzeit</Label>
+              <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
               <TextInput type="time" value={schlafBett} onChange={setSchlafBett} />
-              <Label>Aufwachzeit</Label>
+              <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
               <TextInput type="time" value={schlafAuf} onChange={setSchlafAuf} />
-              <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>→ Ziel: {berechneSchlafstunden(schlafBett, schlafAuf)} Std. Schlaf</div>
+              <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
+                {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(schlafBett, schlafAuf) })}
+              </div>
             </>
           )}
 
           {step.key === "hydration" && (
             <>
-              <Label>Tagesziel (ml)</Label>
-              <TextInput type="number" value={hydrationMl} onChange={setHydrationMl} placeholder="z. B. 2500" />
+              <Label>{t("onboarding.hydration.tagesziel.label")}</Label>
+              <TextInput type="number" value={hydrationMl} onChange={setHydrationMl} placeholder={t("onboarding.hydration.tagesziel.placeholder")} />
             </>
           )}
 
           {step.key === "ernaehrung" && (
             <>
-              <Label>Name der Mahlzeit</Label>
-              <TextInput value={mahlName} onChange={setMahlName} placeholder="z. B. Frühstück" />
-              <Label>Tageszeiten</Label>
+              <Label>{t("onboarding.ernaehrung.name.label")}</Label>
+              <TextInput value={mahlName} onChange={setMahlName} placeholder={t("onboarding.ernaehrung.name.placeholder")} />
+              <Label>{t("onboarding.ernaehrung.tageszeiten.label")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
-                {TAGESZEITEN.map((t) => (
-                  <Pill key={t} label={t} selected={mahlZeiten.includes(t)} onClick={() => setMahlZeiten((prev) => toggleInArray(prev, t))} />
+                {TAGESZEITEN.map((zeit) => (
+                  <Pill key={zeit} label={tLabel(zeit)} selected={mahlZeiten.includes(zeit)} onClick={() => setMahlZeiten((prev) => toggleInArray(prev, zeit))} />
                 ))}
               </div>
             </>
@@ -276,7 +278,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
           {step.key === "training" && (
             <>
-              <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>Was trainierst du an welchen Tagen?</div>
+              <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("onboarding.training.frage")}</div>
               <WochenplanEditor
                 trainingWochenplan={trainingWochenplan}
                 trainingTemplates={trainingTemplates}
@@ -289,33 +291,33 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
           {step.key === "supplemente" && (
             <>
-              <Label>Zu welchen Tageszeiten?</Label>
+              <Label>{t("onboarding.supplemente.tageszeiten.label")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
-                {TAGESZEITEN.map((t) => (
-                  <Pill key={t} label={t} selected={suppZeiten.includes(t)} onClick={() => setSuppZeiten((prev) => toggleInArray(prev, t))} />
+                {TAGESZEITEN.map((zeit) => (
+                  <Pill key={zeit} label={tLabel(zeit)} selected={suppZeiten.includes(zeit)} onClick={() => setSuppZeiten((prev) => toggleInArray(prev, zeit))} />
                 ))}
               </div>
-              <Label>Name des Supplements</Label>
-              <TextInput value={suppName} onChange={setSuppName} placeholder="z. B. Vitamin D" />
+              <Label>{t("onboarding.supplemente.name.label")}</Label>
+              <TextInput value={suppName} onChange={setSuppName} placeholder={t("onboarding.supplemente.name.placeholder")} />
             </>
           )}
 
           {step.key === "medikamente" && (
             <>
-              <Label>Name</Label>
-              <TextInput value={medName} onChange={setMedName} placeholder="z. B. Metformin" />
-              <Label>Dosis</Label>
-              <TextInput value={medMenge} onChange={setMedMenge} placeholder="z. B. 500mg" />
-              <Label>Kategorie</Label>
+              <Label>{tLabel("Name")}</Label>
+              <TextInput value={medName} onChange={setMedName} placeholder={t("onboarding.medikamente.name.placeholder")} />
+              <Label>{tLabel("Dosis")}</Label>
+              <TextInput value={medMenge} onChange={setMedMenge} placeholder={t("onboarding.medikamente.dosis.placeholder")} />
+              <Label>{tLabel("Kategorie")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {MEDIKAMENTE_KATEGORIEN.map((k) => (
-                  <Pill key={k} label={k} selected={medKategorie === k} onClick={() => setMedKategorie(k)} />
+                  <Pill key={k} label={tLabel(k)} selected={medKategorie === k} onClick={() => setMedKategorie(k)} />
                 ))}
               </div>
-              <Label>Einnahmeart</Label>
+              <Label>{tLabel("Einnahmeart")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {EINNAHMEARTEN.map((a) => (
-                  <Pill key={a} label={a} selected={medEinnahmeart === a} onClick={() => setMedEinnahmeart(a)} />
+                  <Pill key={a} label={tLabel(a)} selected={medEinnahmeart === a} onClick={() => setMedEinnahmeart(a)} />
                 ))}
               </div>
             </>
@@ -329,10 +331,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
             <PrimaryButton onClick={uebernehmen} disabled={saving}>
-              {saving ? "Speichert..." : "Speichern & weiter"}
+              {saving ? t("onboarding.saving") : tLabel("Speichern & weiter")}
             </PrimaryButton>
             <PrimaryButton variant="ghost" onClick={() => weiter(false)}>
-              Doch überspringen
+              {tLabel("Doch überspringen")}
             </PrimaryButton>
           </div>
         </Card>

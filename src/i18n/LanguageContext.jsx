@@ -1,20 +1,22 @@
 import React, { createContext, useContext, useState } from "react";
 
 const STORAGE_KEY = "myprotocols_lang";
+export const SUPPORTED_LANGS = ["de", "en", "tr"];
 
 export const LanguageContext = createContext(null);
 
-// Sprachwahl fürs UI (Deutsch/Englisch) — unabhängig vom eigentlichen Login,
-// deshalb in localStorage statt in der Datenbank: gilt pro Gerät, nicht pro
-// Konto, und ist so auch schon vor dem Login (LoginView) verfügbar.
+// Sprachwahl fürs UI (Deutsch/Englisch/Türkisch) — unabhängig vom
+// eigentlichen Login, deshalb in localStorage statt in der Datenbank: gilt
+// pro Gerät, nicht pro Konto, und ist so auch schon vor dem Login
+// (LoginView) verfügbar.
 export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-    return stored === "en" ? "en" : "de";
+    return SUPPORTED_LANGS.includes(stored) ? stored : "de";
   });
 
   const setLang = (next) => {
-    const val = next === "en" ? "en" : "de";
+    const val = SUPPORTED_LANGS.includes(next) ? next : "de";
     setLangState(val);
     if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, val);
   };

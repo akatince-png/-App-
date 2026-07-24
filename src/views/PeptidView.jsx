@@ -8,6 +8,7 @@ import { EINNAHMEARTEN, NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../con
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, keyOf, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+import { useT } from "../i18n/translate";
 
 const NEUES_PEPTID_LEER = {
   name: "",
@@ -48,6 +49,7 @@ export default function PeptidView({ onHome, embedded = false }) {
     setPeptidFoto,
     aenderungVermerken,
   } = useAppData();
+  const { t, tLabel, lang } = useT();
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({ nebenwirkungen: [], staerke: "", notizen: "", fotoPreview: null, fotoFile: null });
   const [neuesPeptid, setNeuesPeptid] = useState(NEUES_PEPTID_LEER);
@@ -62,7 +64,7 @@ export default function PeptidView({ onHome, embedded = false }) {
     const name = neuesPeptid.name.trim();
     const result = await addCustomPreparat(name, neuesPeptid.einnahmeart);
     if (!result?.ok) {
-      setPeptidError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      setPeptidError(result?.error || t("peptid.error.save.generic"));
       return;
     }
     setDose(name, "menge", neuesPeptid.menge);
@@ -153,11 +155,11 @@ export default function PeptidView({ onHome, embedded = false }) {
     <>
       {!embedded && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>💉 Peptide</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>{t("peptid.header.title")}</div>
           <button
             onClick={onHome}
             style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
-            title="Zum Dashboard"
+            title={t("peptid.header.dashboard")}
           >
             ⌂
           </button>
@@ -165,30 +167,30 @@ export default function PeptidView({ onHome, embedded = false }) {
       )}
 
       <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Peptid hinzufügen</div>
-        <Label>Name</Label>
-        <TextInput value={neuesPeptid.name} onChange={(v) => handleNeuesPeptidChange("name", v)} placeholder="z. B. BPC-157" />
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{t("peptid.new.title")}</div>
+        <Label>{tLabel("Name")}</Label>
+        <TextInput value={neuesPeptid.name} onChange={(v) => handleNeuesPeptidChange("name", v)} placeholder={t("peptid.new.name.placeholder")} />
 
-        <Label>Einnahmeart</Label>
+        <Label>{tLabel("Einnahmeart")}</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
           {EINNAHMEARTEN.map((a) => (
-            <Pill key={a} label={a} selected={neuesPeptid.einnahmeart === a} onClick={() => handleNeuesPeptidChange("einnahmeart", a)} />
+            <Pill key={a} label={tLabel(a)} selected={neuesPeptid.einnahmeart === a} onClick={() => handleNeuesPeptidChange("einnahmeart", a)} />
           ))}
         </div>
 
-        <DosierungFields value={neuesPeptid} onChange={handleNeuesPeptidChange} mengePlaceholder="z. B. 0,25 mg" />
+        <DosierungFields value={neuesPeptid} onChange={handleNeuesPeptidChange} mengePlaceholder={t("peptid.new.dose.placeholder")} />
 
         {peptidError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{peptidError}</div>}
         <div style={{ marginTop: 10 }}>
           <PrimaryButton onClick={submitNeuesPeptid} disabled={!neuesPeptid.name.trim()}>
-            + Zum Protokoll hinzufügen
+            {t("peptid.new.submit")}
           </PrimaryButton>
         </div>
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Heute</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("peptid.today.heading")}</div>
       <Card style={{ marginBottom: 14 }}>
-        {heuteDosen.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Heute steht nichts an. 🌿</div>}
+        {heuteDosen.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>{t("peptid.today.empty")}</div>}
         {heuteDosen.map((dose, i) => {
           const st = statusOf(dose);
           const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
@@ -210,36 +212,38 @@ export default function PeptidView({ onHome, embedded = false }) {
                     onClick={() => openFeedback(dose)}
                     style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#0FB8A3", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                   >
-                    Injizieren
+                    {t("peptid.action.inject")}
                   </button>
                 )}
               </div>
 
               {st === "erledigt" && fb && (
                 <div style={{ fontSize: 11, color: textMuted, marginTop: 6 }}>
-                  {formatZeitpunkt(fb.erledigtAt) && <>Injiziert am {formatZeitpunkt(fb.erledigtAt)} · </>}
-                  {fb.staerke && fb.staerke !== "Keine" ? <>Nebenwirkungen: {fb.nebenwirkungen.join(", ") || "—"} ({fb.staerke})</> : "Keine Nebenwirkungen gemeldet"}
+                  {formatZeitpunkt(fb.erledigtAt) && <>{t("peptid.feedback.injectedAt", { time: formatZeitpunkt(fb.erledigtAt) })}</>}
+                  {fb.staerke && fb.staerke !== "Keine"
+                    ? <>{t("peptid.feedback.sideeffects", { list: fb.nebenwirkungen.join(", ") || "—", staerke: tLabel(fb.staerke) })}</>
+                    : t("peptid.feedback.none")}
                 </div>
               )}
 
               {isOpen && (
                 <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Wie war es seit der letzten Injektion?</div>
-                  <Label>Welche Nebenwirkungen hattest du?</Label>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{t("peptid.feedback.question")}</div>
+                  <Label>{t("peptid.feedback.sideeffects.label")}</Label>
                   <div style={{ display: "flex", flexWrap: "wrap" }}>
                     {NEBENWIRKUNGEN_OPTIONEN.map((n) => (
-                      <Pill key={n} label={n} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
+                      <Pill key={n} label={tLabel(n)} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
                     ))}
                   </div>
-                  <Label>Wie stark?</Label>
+                  <Label>{t("peptid.feedback.severity.label")}</Label>
                   <div style={{ display: "flex", flexWrap: "wrap" }}>
                     {STAERKE_OPTIONEN.map((s) => (
-                      <Pill key={s} label={s} selected={draftFeedback.staerke === s} onClick={() => setDraftFeedback((p) => ({ ...p, staerke: s }))} />
+                      <Pill key={s} label={tLabel(s)} selected={draftFeedback.staerke === s} onClick={() => setDraftFeedback((p) => ({ ...p, staerke: s }))} />
                     ))}
                   </div>
-                  <Label>Notizen (optional)</Label>
-                  <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Hier kannst du alles aufschreiben..." />
-                  <Label>Foto (optional) — z. B. Rötung oder Knubbel an der Einstichstelle</Label>
+                  <Label>{t("peptid.feedback.notes.label")}</Label>
+                  <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder={t("peptid.feedback.notes.placeholder")} />
+                  <Label>{t("peptid.feedback.photo.label")}</Label>
                   <input
                     type="file"
                     accept="image/*"
@@ -255,20 +259,20 @@ export default function PeptidView({ onHome, embedded = false }) {
                     htmlFor={`nebenwirkung-foto-${k}`}
                     style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed #0FB8A3`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
                   >
-                    📷 Foto aufnehmen
+                    {t("peptid.feedback.photo.cta")}
                   </label>
                   {draftFeedback.fotoPreview && (
-                    <img src={draftFeedback.fotoPreview} alt="Nebenwirkung" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, marginTop: 6 }} />
+                    <img src={draftFeedback.fotoPreview} alt={t("peptid.feedback.photo.alt")} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, marginTop: 6 }} />
                   )}
                   <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
                     <div style={{ flex: 1 }}>
                       <PrimaryButton onClick={() => handleSkip(dose)} variant="ghost">
-                        Überspringen
+                        {t("peptid.feedback.skip")}
                       </PrimaryButton>
                     </div>
                     <div style={{ flex: 1 }}>
                       <PrimaryButton onClick={() => handleSave(dose)} variant="success">
-                        Speichern
+                        {tLabel("Speichern")}
                       </PrimaryButton>
                     </div>
                   </div>
@@ -279,9 +283,9 @@ export default function PeptidView({ onHome, embedded = false }) {
         })}
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Nächste Tage</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("peptid.upcoming.heading")}</div>
       <Card style={{ marginBottom: 14 }}>
-        {kommendeDosen.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Keine weiteren Termine.</div>}
+        {kommendeDosen.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>{t("peptid.upcoming.empty")}</div>}
         {kommendeDosen.map((dose, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: i < kommendeDosen.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
             <div>
@@ -297,7 +301,7 @@ export default function PeptidView({ onHome, embedded = false }) {
 
       {Object.keys(feedback).length > 0 && (
         <>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Feedback</div>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("peptid.feedback.heading")}</div>
           <Card style={{ marginBottom: 14 }}>
             {Object.entries(feedback).map(([k, fb], i, arr) => (
               <div key={k} style={{ padding: "8px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
@@ -305,7 +309,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                   {k.split("__")[1]} {formatZeitpunkt(fb.erledigtAt) && <span style={{ fontWeight: 500, color: textMuted }}>· {formatZeitpunkt(fb.erledigtAt)}</span>}
                 </div>
                 <div style={{ fontSize: 12, color: textMuted }}>
-                  {fb.staerke && fb.staerke !== "Keine" ? `${fb.nebenwirkungen.join(", ") || "—"} (${fb.staerke})` : "Keine Nebenwirkungen"}
+                  {fb.staerke && fb.staerke !== "Keine" ? `${fb.nebenwirkungen.join(", ") || "—"} (${tLabel(fb.staerke)})` : t("peptid.feedback.none.short")}
                 </div>
               </div>
             ))}
@@ -315,7 +319,7 @@ export default function PeptidView({ onHome, embedded = false }) {
 
       {peptide.length > 0 && (
         <>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Peptid-Protokoll verwalten</div>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("peptid.manage.heading")}</div>
           <Card>
             {peptide.map((p, i) => (
               <div
@@ -327,7 +331,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{p}</div>
                     <div style={{ fontSize: 11, color: textMuted }}>
-                      {dosierung[p]?.menge} · {einnahmeart[p] || "Injektion"} · {describeInterval(dosierung[p])} ·{" "}
+                      {dosierung[p]?.menge} · {tLabel(einnahmeart[p] || "Injektion")} · {describeInterval(dosierung[p], lang)} ·{" "}
                       {(dosierung[p]?.uhrzeiten || []).join(" & ")}
                     </div>
                     <div style={{ marginTop: 4 }}>
@@ -344,7 +348,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                       >
                         {EINNAHMEARTEN.map((a) => (
                           <option key={a} value={a}>
-                            {a}
+                            {tLabel(a)}
                           </option>
                         ))}
                       </select>
@@ -353,7 +357,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                       onClick={() => setDosisEditOffen(dosisEditOffen === p ? null : p)}
                       style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0, marginTop: 6 }}
                     >
-                      {dosisEditOffen === p ? "Dosis-Bearbeitung schließen" : "Dosis bearbeiten"}
+                      {dosisEditOffen === p ? t("peptid.dose.edit.close") : t("peptid.dose.edit.open")}
                     </button>
                     {dosisEditOffen === p && (
                       <DosisBearbeitenPanel dosierung={dosierung[p]} onSpeichern={(entwurf, grund) => handleDosisSpeichern(p, entwurf, grund)} />
@@ -362,7 +366,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <input type="file" accept="image/*" id={`peptid-foto-${p}`} style={{ display: "none" }} onChange={(e) => handleFoto(p, e)} />
-                  <label htmlFor={`peptid-foto-${p}`} style={{ cursor: "pointer", fontSize: 16 }} title="Foto hinzufügen">
+                  <label htmlFor={`peptid-foto-${p}`} style={{ cursor: "pointer", fontSize: 16 }} title={t("peptid.photo.add.title")}>
                     📷
                   </label>
                   <button onClick={() => handleEntfernen(p)} style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}>

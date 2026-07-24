@@ -8,12 +8,13 @@ import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+import { useT } from "../i18n/translate";
 
 // Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
 // bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
 // einer Zeile zusammen — Einzeleinträge bleiben unverändert, sobald nur
 // ein Eintrag der jeweiligen Gruppe angehört.
-function gruppiereFuerAlsNaechstes(items) {
+function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
   const supplementSlots = {};
   let trainingSlot = null;
@@ -43,10 +44,10 @@ function gruppiereFuerAlsNaechstes(items) {
 
   return angezeigt.map((it) => {
     if (it.kategorie === "supplement" && it._ids.length > 1) {
-      return { ...it, name: `${it.uhrzeit}-Supplemente`, detail: it._namen.join(", "), bundleIds: it._ids };
+      return { ...it, name: t("home.list.supplementBundle", { uhrzeit: tLabel(it.uhrzeit) }), detail: it._namen.join(", "), bundleIds: it._ids };
     }
     if (it.kategorie === "training" && it._traininganzahl > 1) {
-      return { ...it, name: "Trainingseinheit" };
+      return { ...it, name: t("home.list.trainingseinheit") };
     }
     return it;
   });
@@ -57,12 +58,13 @@ function gruppiereFuerAlsNaechstes(items) {
 // aus 17 Einzelkacheln — jede Kategorie liegt jetzt hinter einem Reiter
 // innerhalb dieser Ordner (siehe PlaeneView.jsx / PlanView.jsx).
 const ORDNER = [
-  { id: "schlaf", label: "Alle Pläne", desc: "Deine Bereiche", icon: "folder" },
-  { id: "archiv", label: "Archiv", desc: "Vergangene Daten", icon: "archive" },
-  { id: "mehr", label: "Mehr", desc: "Einstellungen & mehr", icon: "sliders" },
+  { id: "schlaf", labelKey: "home.ordner.plaene.label", descKey: "home.ordner.plaene.desc", icon: "folder" },
+  { id: "archiv", labelKey: "home.ordner.archiv.label", descKey: "home.ordner.archiv.desc", icon: "archive" },
+  { id: "mehr", labelKey: "home.ordner.mehr.label", descKey: "home.ordner.mehr.desc", icon: "sliders" },
 ];
 
 export default function HomeView({ onOpenView }) {
+  const { t, tLabel, lang } = useT();
   const {
     plan,
     erledigt,
@@ -83,7 +85,7 @@ export default function HomeView({ onOpenView }) {
 
   const today = new Date();
   const stunde = today.getHours();
-  const gruss = stunde < 12 ? "Guten Morgen" : stunde < 18 ? "Guten Tag" : "Guten Abend";
+  const gruss = stunde < 12 ? t("home.greeting.morgen") : stunde < 18 ? t("home.greeting.tag") : t("home.greeting.abend");
 
   const heuteItems = buildDayItems(today, {
     plan,
@@ -105,7 +107,7 @@ export default function HomeView({ onOpenView }) {
   const gewohnheitHeuteItems = heuteItems.filter((i) => i.kategorie === "gewohnheit");
   const gewohnheitErledigtHeute = gewohnheitHeuteItems.filter((i) => i.done).length;
   const offeneItems = heuteItems.filter((i) => !i.done);
-  const angezeigteItems = gruppiereFuerAlsNaechstes(offeneItems);
+  const angezeigteItems = gruppiereFuerAlsNaechstes(offeneItems, t, tLabel);
   const tagStr = toLocalISODate(today);
 
   return (
@@ -121,10 +123,10 @@ export default function HomeView({ onOpenView }) {
       {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü. */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
         <Card>
-          <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>Tagesfortschritt</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>{t("home.tagesfortschritt")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <ProgressRing done={erledigtCount} total={heuteItems.length} size={72} stroke={9} color={accentDark} />
-            <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{statusText(erledigtCount, heuteItems.length)}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
           </div>
         </Card>
         <Card
@@ -132,13 +134,13 @@ export default function HomeView({ onOpenView }) {
           style={{ cursor: "pointer", background: blueSoft, border: "none" }}
           onClick={() => onOpenView("routinen")}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: blue, marginBottom: 10 }}>Gewohnheiten</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: blue, marginBottom: 10 }}>{tLabel("Gewohnheiten")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={72} stroke={9} color={blue} />
             <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3, color: blue }}>
               {gewohnheitHeuteItems.length === 0
-                ? "Noch keine Gewohnheiten angelegt."
-                : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length)}
+                ? t("home.gewohnheiten.leer")
+                : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length, lang)}
             </div>
           </div>
         </Card>
@@ -162,14 +164,14 @@ export default function HomeView({ onOpenView }) {
         }}
       >
         <Icon name="calendarCheck" size={18} color={accentDark} />
-        <span style={{ fontSize: 13, fontWeight: 800, color: accentDark }}>Tagesplan</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: accentDark }}>{t("home.tagesplan")}</span>
         <span style={{ marginLeft: "auto", color: textMuted, fontSize: 14 }}>›</span>
       </button>
 
       {/* Dann die heute offenen Aufgaben — erst danach die Ordner. */}
       {angezeigteItems.length > 0 && (
         <>
-          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 10 }}>Als Nächstes</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 10 }}>{t("home.alsNaechstes")}</div>
           <Card style={{ marginBottom: 20, padding: 8 }}>
             {angezeigteItems.slice(0, 4).map((item, i, arr) => {
               const k = KATEGORIE_META[item.kategorie];
@@ -205,7 +207,7 @@ export default function HomeView({ onOpenView }) {
                     <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700 }}>
-                        {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>
+                        {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {tLabel(item.uhrzeit)}</span>
                       </div>
                       {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                     </div>
@@ -229,7 +231,7 @@ export default function HomeView({ onOpenView }) {
                         cursor: "pointer",
                       }}
                     >
-                      ✓ Alle
+                      {t("home.list.confirmAll")}
                     </button>
                   ) : (
                     <button
@@ -268,8 +270,8 @@ export default function HomeView({ onOpenView }) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Icon name="target" size={22} color={accentDark} />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>Gewohnheiten</div>
-            <div style={{ fontSize: 12, color: accentDark, opacity: 0.8 }}>Neue Routinen aufbauen</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>{tLabel("Gewohnheiten")}</div>
+            <div style={{ fontSize: 12, color: accentDark, opacity: 0.8 }}>{t("home.gewohnheiten.cta.desc")}</div>
           </div>
         </div>
         <span style={{ color: accentDark, fontSize: 18 }}>›</span>
@@ -278,7 +280,7 @@ export default function HomeView({ onOpenView }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         {ORDNER.map((o) => (
           <button
-            key={o.label}
+            key={o.id}
             className="mp-tap"
             onClick={() => onOpenView(o.id)}
             style={{
@@ -294,8 +296,8 @@ export default function HomeView({ onOpenView }) {
             <div style={{ marginBottom: 8 }}>
               <Icon name={o.icon} size={22} color={accentDark} />
             </div>
-            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{o.label}</div>
-            <div style={{ fontSize: 10.5, color: textMuted }}>{o.desc}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{t(o.labelKey)}</div>
+            <div style={{ fontSize: 10.5, color: textMuted }}>{t(o.descKey)}</div>
           </button>
         ))}
       </div>

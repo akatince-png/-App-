@@ -7,6 +7,7 @@ export const common = {
     "common.language": "Sprache",
     "common.language.de": "Deutsch",
     "common.language.en": "English",
+    "common.language.tr": "Türkçe",
   },
   en: {
     "common.loading": "Loading...",
@@ -14,5 +15,6 @@ export const common = {
     "common.language": "Language",
     "common.language.de": "Deutsch",
     "common.language.en": "English",
+    "common.language.tr": "Türkçe",
   },
 };
