@@ -127,6 +127,41 @@ export const TRAININGSARTEN = ["Krafttraining", "Cardio", "HIIT / Bodyweight", "
 export const TRAINING_ENERGIELEVEL_OPTIONEN = ["Niedrig", "Mittel", "Hoch"];
 export const SCHMERZEN_OPTIONEN = ["Keine", "Leicht", "Stark"];
 
+export const KRAFTUEBUNGEN = [
+  // Brust
+  "Bankdrücken", "Schrägbankdrücken", "Negativbankdrücken", "Kurzhantel-Bankdrücken",
+  "Butterfly", "Fliegende (Kurzhantel)", "Dips", "Cable Crossover", "Liegestütze",
+  // Rücken
+  "Klimmzüge", "Latzug", "Rudern vorgebeugt", "Kurzhantelrudern", "Kabelzug sitzend",
+  "T-Bar-Rudern", "Kreuzheben", "Rumänisches Kreuzheben", "Sumo-Kreuzheben",
+  "Good Mornings", "Hyperextensions", "Klimmzüge eng", "Klimmzüge weit",
+  // Schulter
+  "Schulterdrücken", "Kurzhantel-Schulterdrücken", "Seitheben", "Frontheben",
+  "Reverse Butterfly", "Aufrechtes Rudern", "Arnold Press", "Shrugs (Nackenheben)",
+  // Arme
+  "Bizepscurls", "Hammercurls", "Konzentrationscurls", "Kabelcurls", "SZ-Curls",
+  "Trizepsdrücken", "French Press", "Trizeps-Kickback", "Enges Bankdrücken",
+  "Trizepsdrücken am Kabel",
+  // Beine
+  "Kniebeuge", "Frontkniebeuge", "Beinpresse", "Ausfallschritte", "Bulgarian Split Squat",
+  "Beinstrecker", "Beinbeuger", "Wadenheben stehend", "Wadenheben sitzend",
+  "Hip Thrust", "Kreuzheben gestreckte Beine", "Goblet Squat", "Step-ups",
+  // Bauch/Core
+  "Crunches", "Sit-ups", "Beinheben hängend", "Plank", "Russian Twist",
+  "Cable Crunch", "Ab Wheel Rollout",
+  // Ganzkörper
+  "Kettlebell Swing", "Farmer's Walk", "Clean and Press", "Snatch",
+];
+
+export const BODYWEIGHT_UEBUNGEN = [
+  "Liegestütze", "Diamant-Liegestütze", "Archer Push-ups", "Klimmzüge", "Chin-ups",
+  "Muscle-up", "Dips", "Ring Dips", "Pistol Squat", "Air Squats", "Ausfallschritte",
+  "Plank", "Side Plank", "L-Sit", "Handstand", "Handstand-Liegestütze",
+  "Wandliegestütze (Handstand)", "Burpees", "Mountain Climbers", "Beinheben hängend",
+  "Superman", "Hollow Body Hold", "Jumping Jacks", "Bear Crawl", "Australian Pull-ups",
+  "Skater Jumps", "Box Jumps", "Wall Sit", "Glute Bridge", "Nordic Curls",
+];
+
 export const ENERGIELEVEL_OPTIONEN = ["😩", "😐", "🙂", "⚡"];
 
 export const MESSWERT_DEFS = [

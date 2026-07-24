@@ -3,8 +3,9 @@ import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInp
 import Timer from "../ui/Timer";
 import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
+import AutocompleteInput from "../ui/AutocompleteInput";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
-import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN, WOCHENTAGE } from "../constants";
+import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN, WOCHENTAGE, KRAFTUEBUNGEN } from "../constants";
 import { trainingDetail } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 
@@ -530,7 +531,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
               <div key={i} style={{ marginBottom: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
                 <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                   <div style={{ flex: 1 }}>
-                    <TextInput value={u.name} onChange={(v) => uebungAendern(i, "name", v)} placeholder="Übung, z. B. Bankdrücken" />
+                    <AutocompleteInput value={u.name} onChange={(v) => uebungAendern(i, "name", v)} options={KRAFTUEBUNGEN} placeholder="Übung, z. B. Bankdrücken" />
                   </div>
                   {eintrag.uebungen.length > 1 && (
                     <button
