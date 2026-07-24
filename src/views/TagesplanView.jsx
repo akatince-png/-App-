@@ -130,6 +130,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     supplementErledigt,
     saveSupplementFeedback,
     skipSupplementFeedback,
+    confirmAlleTageszeit,
     mahlzeiten,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
@@ -398,14 +399,32 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
 
           {buckets.map(([hour, entries]) => {
             const istJetzt = hour === jetztHour;
+            const offeneSupplemente = entries.filter((e) => e.kategorie === "supplement" && !e.done);
             return (
             <React.Fragment key={hour || "sonstige"}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
-                {istJetzt && (
-                  <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: accent, padding: "2px 8px", borderRadius: 8 }}>
-                    JETZT
-                  </span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
+                  {istJetzt && (
+                    <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: accent, padding: "2px 8px", borderRadius: 8 }}>
+                      JETZT
+                    </span>
+                  )}
+                </div>
+                {offeneSupplemente.length > 1 && (
+                  <button
+                    className="mp-tap"
+                    onClick={() =>
+                      confirmAlleTageszeit(
+                        toLocalISODate(selectedDate),
+                        offeneSupplemente[0].uhrzeit,
+                        offeneSupplemente.map((e) => e.refId)
+                      )
+                    }
+                    style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    Alle bestätigen
+                  </button>
                 )}
               </div>
               <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
