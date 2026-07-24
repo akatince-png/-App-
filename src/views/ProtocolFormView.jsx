@@ -66,13 +66,15 @@ export default function ProtocolFormView({ step, setStep, onFinish, onHome }) {
           <div style={{ fontSize: 11, color: textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Peptid-Protokoll</div>
           <div style={{ fontSize: 12, color: "#0A9384", fontWeight: 700 }}>Schritt {step + 1} / 5</div>
         </div>
-        <button
-          onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer", flexShrink: 0 }}
-          title="Abbrechen"
-        >
-          ⌂
-        </button>
+        {onHome && (
+          <button
+            onClick={onHome}
+            style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer", flexShrink: 0 }}
+            title="Abbrechen"
+          >
+            ⌂
+          </button>
+        )}
       </div>
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 14 }}>{STEP_TITLES[step]}</div>
       <Stepper step={step} />

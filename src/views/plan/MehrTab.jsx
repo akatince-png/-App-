@@ -23,7 +23,15 @@ export default function MehrTab({ onOpenLexikon }) {
   const handleResetOnboarding = async () => {
     setResetMsg(null);
     const result = await resetOnboarding();
-    setResetMsg(result?.ok ? "Erledigt — beim nächsten Anmelden siehst du wieder die Willkommens-Seiten." : result?.error || "Zurücksetzen fehlgeschlagen.");
+    if (!result?.ok) {
+      setResetMsg(result?.error || "Zurücksetzen fehlgeschlagen.");
+      return;
+    }
+    // Setzt u. a. Peptid-Protokoll, Gewohnheiten, Mahlzeiten, Supplemente
+    // und Medikamente serverseitig zurück — ein voller Reload lädt die App
+    // komplett neu und landet dadurch direkt wieder im Willkommens-Flow,
+    // statt dass der Nutzer sich extra ab- und wieder anmelden muss.
+    window.location.reload();
   };
 
   const handleTestSenden = async () => {
@@ -144,7 +152,7 @@ export default function MehrTab({ onOpenLexikon }) {
         >
           Onboarding erneut durchlaufen
         </button>
-        {resetMsg && <div style={{ fontSize: 12, color: textMuted, marginTop: 10 }}>{resetMsg}</div>}
+        {resetMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetMsg}</div>}
       </Card>
     </>
   );

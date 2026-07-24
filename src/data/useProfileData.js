@@ -86,8 +86,27 @@ export function useProfileData(userId) {
   }, [userId]);
 
   // Zum wiederholten Testen des Willkommens-/Einrichtungs-Ablaufs mit
-  // demselben Account, ohne jedes Mal ein neues Konto anzulegen.
+  // demselben Account, ohne jedes Mal ein neues Konto anzulegen. Muss
+  // wirklich blank zurücksetzen, sonst zeigt der erneute Durchlauf die
+  // alten Peptide/Gewohnheiten/Mahlzeiten/Supplemente/Medikamente wieder
+  // an (identische Fehlerklasse wie der frühere "Neues Protokoll"-Bug).
+  // Löscht nur, was das Onboarding selbst anlegen kann (je ein Beispiel
+  // pro Kategorie) — Trainings-/Schlaf-/Hydration-Log-Historie bleibt
+  // unangetastet, das Onboarding schreibt dort nur ein Ziel, keine Logs.
   const resetOnboarding = useCallback(async () => {
+    const results = await Promise.all([
+      supabase.from("protocols").delete().eq("user_id", userId),
+      supabase.from("routines").delete().eq("user_id", userId),
+      supabase.from("meals").delete().eq("user_id", userId),
+      supabase.from("supplements").delete().eq("user_id", userId),
+      supabase.from("hormones").delete().eq("user_id", userId),
+      supabase.from("hydration_settings").delete().eq("user_id", userId),
+    ]);
+    const failed = results.find((r) => r.error);
+    if (failed) {
+      console.error(failed.error);
+      return { ok: false, error: failed.error.message };
+    }
     const { error } = await supabase.from("profiles").update({ onboarding_complete: false, category_ziele: {} }).eq("id", userId);
     if (error) {
       console.error(error);
