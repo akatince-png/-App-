@@ -5,13 +5,12 @@ import { useAppData } from "./context/AppDataContext";
 import HomeView from "./views/HomeView";
 import LexikonView from "./views/LexikonView";
 import TagesplanView from "./views/TagesplanView";
-import ProtocolFormView from "./views/ProtocolFormView";
 import PlanView from "./views/plan/PlanView";
 import PlaeneView from "./views/plan/PlaeneView";
 import MehrView from "./views/plan/MehrView";
 import GewohnheitenView from "./views/GewohnheitenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
-import BottomNav from "./ui/BottomNav";
+import Fab from "./ui/Fab";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 
@@ -54,7 +53,6 @@ export default function AuthenticatedApp() {
     protokollArchivieren,
   } = appData;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
-  const [step, setStep] = useState(0);
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
   // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
   const [offenesTrainingId, setOffenesTrainingId] = useState(null);
@@ -92,7 +90,6 @@ export default function AuthenticatedApp() {
       await protokollArchivieren();
     }
     setView("form");
-    setStep(0);
   };
 
   let screen;
@@ -106,9 +103,11 @@ export default function AuthenticatedApp() {
         }}
       />
     ) : (
-      // Bestehendes Konto startet hier ein zusätzliches, komplett neues
-      // Protokoll — kein erneutes Durchlaufen des Einrichtungs-Abschlusses.
-      <ProtocolFormView step={step} setStep={setStep} onFinish={() => setView("home")} onHome={() => setView("home")} />
+      // Bestehendes Konto durchläuft hier denselben Fragebogen-Ablauf wie
+      // beim Erst-Onboarding (Peptid-Protokoll + alle Kategorien, jede
+      // einzeln überspringbar) — nur ohne die Willkommens-Folien und mit
+      // einem echten Abbrechen-Knopf.
+      <OnboardingFlow startPhase="protocol" onCancel={() => setView("home")} onDone={() => setView("home")} />
     );
   } else if (view === "lexikon") {
     screen = <LexikonView onHome={() => setView("home")} />;
@@ -141,20 +140,17 @@ export default function AuthenticatedApp() {
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
     screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("peptide")} />;
   } else if (view === "mehr") {
-    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} onNeuesProtokoll={neuesProtokoll} />;
+    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} />;
   } else {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }
 
-  const zeigeBottomNav = view !== "form";
-  const aktiverTab = ["home", "tagesplan", "routinen", "mehr"].includes(view) ? view : null;
+  const zeigeFab = view !== "form";
 
   return (
     <>
-      <div style={{ paddingBottom: zeigeBottomNav ? 76 : 0 }}>{screen}</div>
-      {zeigeBottomNav && (
-        <BottomNav active={aktiverTab} onNavigate={(id) => setView(id)} />
-      )}
+      <div style={{ paddingBottom: zeigeFab ? 90 : 0 }}>{screen}</div>
+      {zeigeFab && <Fab onClick={neuesProtokoll} />}
     </>
   );
 }

@@ -3,10 +3,10 @@ import { Shell } from "../../ui/primitives";
 import { cardBorder } from "../../ui/theme";
 import MehrTab from "./MehrTab";
 
-// Dünner Shell/Header-Wrapper um MehrTab.jsx — "Mehr" ist jetzt ein
-// eigenständiges Ziel der unteren Tab-Leiste statt ein Reiter innerhalb
-// des Archiv-Hubs (PlanView.jsx).
-export default function MehrView({ onHome, onOpenLexikon, onNeuesProtokoll }) {
+// Dünner Shell/Header-Wrapper um MehrTab.jsx — "Mehr" ist eine der
+// Ordner-Kacheln auf der Startseite (siehe HomeView.jsx), kein Reiter
+// innerhalb des Archiv-Hubs (PlanView.jsx).
+export default function MehrView({ onHome, onOpenLexikon }) {
   return (
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -19,7 +19,7 @@ export default function MehrView({ onHome, onOpenLexikon, onNeuesProtokoll }) {
           ⌂
         </button>
       </div>
-      <MehrTab onOpenLexikon={onOpenLexikon} onNeuesProtokoll={onNeuesProtokoll} />
+      <MehrTab onOpenLexikon={onOpenLexikon} />
     </Shell>
   );
 }

@@ -8,12 +8,16 @@ import { useAppData } from "../../context/AppDataContext";
 // Koordiniert den einmaligen Einrichtungs-Ablauf nach der Registrierung:
 // Willkommens-Folien → Protokoll-Fragebogen (Peptide) → Kategorien
 // (Gewohnheiten/Schlaf/Hydration/Ernährung/Training/Supplemente/
-// Medikamente, je einzeln überspringbar) → Abschluss-Screen. Danach führt
-// kein Weg mehr zurück in diesen Ablauf — spätere Änderungen an laufenden
-// Plänen passieren direkt in den jeweiligen Kategorie-Ansichten.
-export default function OnboardingFlow({ onDone }) {
+// Medikamente, je einzeln überspringbar) → Abschluss-Screen.
+//
+// Derselbe Ablauf wird auch für den "+"-Button bei bestehenden Konten
+// wiederverwendet ("Neues Protokoll") — dort startet er per `startPhase`
+// direkt bei "protocol" (die Willkommens-Folien sind nur für echte
+// Erstanmeldungen sinnvoll) und bekommt über `onCancel` einen echten
+// Abbrechen-Knopf, den es beim ursprünglichen Erst-Onboarding nicht gibt.
+export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
   const { ziele, peptide } = useAppData();
-  const [phase, setPhase] = useState("welcome"); // welcome | protocol | categories | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | protocol | categories | celebration
   const [protocolStep, setProtocolStep] = useState(0);
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
 
@@ -27,6 +31,7 @@ export default function OnboardingFlow({ onDone }) {
         step={protocolStep}
         setStep={setProtocolStep}
         onFinish={() => setPhase("categories")}
+        onHome={onCancel}
       />
     );
   }

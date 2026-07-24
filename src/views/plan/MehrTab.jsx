@@ -14,7 +14,7 @@ const ERWEITERUNGEN = [
   "Mehr Sprachen",
 ];
 
-export default function MehrTab({ onOpenLexikon, onNeuesProtokoll }) {
+export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
   const { resetOnboarding, pushUnterstuetzt, pushAktiv, pushLadend, pushFehler, pushAktivieren, pushDeaktivieren, pushTestSenden } = useAppData();
   const [resetMsg, setResetMsg] = useState(null);
@@ -42,28 +42,6 @@ export default function MehrTab({ onOpenLexikon, onNeuesProtokoll }) {
 
   return (
     <>
-      {onNeuesProtokoll && (
-        <button
-          onClick={onNeuesProtokoll}
-          className="mp-tap"
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "13px 16px",
-            borderRadius: 14,
-            border: `1px solid ${cardBorder}`,
-            background: "#fff",
-            marginBottom: 12,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 700 }}>💊 Neues Peptid-Protokoll</span>
-          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
-        </button>
-      )}
-
       {onOpenLexikon && (
         <button
           onClick={onOpenLexikon}

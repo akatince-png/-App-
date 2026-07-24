@@ -108,12 +108,12 @@ export default function HomeView({ onOpenView }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <div>
-          <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss}</div>
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.2 }}>MyProtocols</div>
+          <Logo size={56} />
         </div>
-        <Logo size={42} />
       </div>
 
       {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü. */}
