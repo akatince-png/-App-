@@ -32,6 +32,7 @@ export function trainingDetail(t) {
       .join(", ");
   }
   const teile = [];
+  if (t.art === "Cardio" && t.cardioArt) teile.push(t.cardioArt);
   if (t.dauerMin) teile.push(`${t.dauerMin} min`);
   if (t.distanzKm) teile.push(`${t.distanzKm} km`);
   return teile.join(" · ");

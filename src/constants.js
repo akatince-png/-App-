@@ -127,6 +127,10 @@ export const TRAININGSARTEN = ["Krafttraining", "Cardio", "HIIT / Bodyweight", "
 export const TRAINING_ENERGIELEVEL_OPTIONEN = ["Niedrig", "Mittel", "Hoch"];
 export const SCHMERZEN_OPTIONEN = ["Keine", "Leicht", "Stark"];
 
+export const CARDIO_ARTEN = ["Laufen", "Fahrradfahren", "Springseilspringen", "Sonstiges Cardio"];
+export const CARDIO_MODI_STRECKE = ["Strecke", "Intervall", "Sprints"];
+export const CARDIO_MODI_SPRUNGSEIL = ["Dauer", "Intervall"];
+
 export const KRAFTUEBUNGEN = [
   // Brust
   "Bankdrücken", "Schrägbankdrücken", "Negativbankdrücken", "Kurzhantel-Bankdrücken",

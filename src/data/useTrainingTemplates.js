@@ -12,6 +12,8 @@ function rowToTemplate(r) {
     distanzKm: r.distanz_km,
     puls: r.puls,
     runden: r.runden,
+    cardioArt: r.cardio_art || "",
+    cardioModus: r.cardio_modus || "",
     intervallArbeitSek: r.intervall_arbeit_sek,
     intervallPauseSek: r.intervall_pause_sek,
   };
@@ -55,6 +57,8 @@ export function useTrainingTemplates(userId) {
         distanz_km: vorlage.distanzKm ? Number(vorlage.distanzKm) : null,
         puls: vorlage.puls ? Number(vorlage.puls) : null,
         runden: vorlage.runden ? Number(vorlage.runden) : null,
+        cardio_art: vorlage.cardioArt || null,
+        cardio_modus: vorlage.cardioModus || null,
         intervall_arbeit_sek: vorlage.intervallArbeitSek ? Number(vorlage.intervallArbeitSek) : null,
         intervall_pause_sek: vorlage.intervallPauseSek ? Number(vorlage.intervallPauseSek) : null,
       };

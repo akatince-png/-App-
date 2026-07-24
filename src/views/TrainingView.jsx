@@ -5,7 +5,16 @@ import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
 import AutocompleteInput from "../ui/AutocompleteInput";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
-import { TRAININGSARTEN, TRAINING_ENERGIELEVEL_OPTIONEN, SCHMERZEN_OPTIONEN, WOCHENTAGE, KRAFTUEBUNGEN } from "../constants";
+import {
+  TRAININGSARTEN,
+  TRAINING_ENERGIELEVEL_OPTIONEN,
+  SCHMERZEN_OPTIONEN,
+  WOCHENTAGE,
+  KRAFTUEBUNGEN,
+  CARDIO_ARTEN,
+  CARDIO_MODI_STRECKE,
+  CARDIO_MODI_SPRUNGSEIL,
+} from "../constants";
 import { trainingDetail } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 
@@ -24,6 +33,8 @@ function leererEintrag() {
     distanzKm: "",
     puls: "",
     runden: "5",
+    cardioArt: "",
+    cardioModus: "",
     rpe: "",
     kalorien: "",
     energielevel: "",
@@ -439,6 +450,10 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       payload.intervallArbeitSek = "";
       payload.intervallPauseSek = "";
     }
+    if (payload.art !== "Cardio") {
+      payload.cardioArt = "";
+      payload.cardioModus = "";
+    }
     return payload;
   };
 
@@ -501,6 +516,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       distanzKm: tpl.distanzKm ? String(tpl.distanzKm) : "",
       puls: tpl.puls ? String(tpl.puls) : "",
       runden: tpl.runden ? String(tpl.runden) : p.runden,
+      cardioArt: tpl.cardioArt || "",
+      cardioModus: tpl.cardioModus || "",
       intervallArbeitSek: tpl.intervallArbeitSek ? String(tpl.intervallArbeitSek) : p.intervallArbeitSek,
       intervallPauseSek: tpl.intervallPauseSek ? String(tpl.intervallPauseSek) : p.intervallPauseSek,
     }));
@@ -667,33 +684,65 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
         {eintrag.art === "Cardio" && (
           <>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <Label>Dauer (min)</Label>
-                <TextInput type="number" value={eintrag.dauerMin} onChange={(v) => setFeld("dauerMin", v)} placeholder="30" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Label>Distanz (km)</Label>
-                <TextInput type="number" value={eintrag.distanzKm} onChange={(v) => setFeld("distanzKm", v)} placeholder="5" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Label>Ø Puls</Label>
-                <TextInput type="number" value={eintrag.puls} onChange={(v) => setFeld("puls", v)} placeholder="140" />
-              </div>
+            <Label>Welches Cardio?</Label>
+            <div style={{ display: "flex", flexWrap: "wrap" }}>
+              {CARDIO_ARTEN.map((a) => (
+                <Pill
+                  key={a}
+                  label={a}
+                  selected={eintrag.cardioArt === a}
+                  onClick={() => setEintrag((p) => ({ ...p, cardioArt: a, cardioModus: "" }))}
+                />
+              ))}
             </div>
-            <Label>Intervalle laufen? (optional — z. B. Sprints)</Label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <TextInput type="number" value={eintrag.intervallArbeitSek} onChange={(v) => setFeld("intervallArbeitSek", v)} placeholder="Arbeit (Sek.)" />
+
+            {eintrag.cardioArt && (
+              <>
+                <Label>Modus</Label>
+                <div style={{ display: "flex", flexWrap: "wrap" }}>
+                  {(eintrag.cardioArt === "Springseilspringen" ? CARDIO_MODI_SPRUNGSEIL : CARDIO_MODI_STRECKE).map((m) => (
+                    <Pill key={m} label={m} selected={eintrag.cardioModus === m} onClick={() => setFeld("cardioModus", m)} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {(eintrag.cardioModus === "Strecke" || eintrag.cardioModus === "Dauer") && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <Label>Dauer (min)</Label>
+                  <TextInput type="number" value={eintrag.dauerMin} onChange={(v) => setFeld("dauerMin", v)} placeholder="30" />
+                </div>
+                {eintrag.cardioModus === "Strecke" && (
+                  <div style={{ flex: 1 }}>
+                    <Label>Distanz (km)</Label>
+                    <TextInput type="number" value={eintrag.distanzKm} onChange={(v) => setFeld("distanzKm", v)} placeholder="5" />
+                  </div>
+                )}
+                <div style={{ flex: 1 }}>
+                  <Label>Ø Puls</Label>
+                  <TextInput type="number" value={eintrag.puls} onChange={(v) => setFeld("puls", v)} placeholder="140" />
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Runden" />
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>Leer lassen = beim Live-Start läuft stattdessen eine einfache Stoppuhr.</div>
+            )}
+
+            {(eintrag.cardioModus === "Intervall" || eintrag.cardioModus === "Sprints") && (
+              <>
+                <Label>{eintrag.cardioModus === "Sprints" ? "Sprints" : "Intervall"}</Label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <TextInput type="number" value={eintrag.intervallArbeitSek} onChange={(v) => setFeld("intervallArbeitSek", v)} placeholder="Arbeit (Sek.)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Runden" />
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>Leer lassen = beim Live-Start läuft stattdessen eine einfache Stoppuhr.</div>
+              </>
+            )}
           </>
         )}
 
