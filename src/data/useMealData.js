@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { uploadPhoto } from "../lib/storage";
 
 function rowToWochenplan(r) {
   return { id: r.id, wochentag: r.wochentag, mealId: r.meal_id, tageszeit: r.tageszeit || "", uhrzeit: r.uhrzeit || "", sortOrder: r.sort_order };
@@ -28,6 +29,7 @@ export function useMealData(userId) {
           name: m.name,
           tageszeiten: m.tageszeiten || [],
           hinweis: m.hinweis || "",
+          fotoPath: m.foto_path || null,
           zutaten: (ingredients || [])
             .filter((i) => i.meal_id === m.id)
             .map((i) => ({ id: i.id, name: i.name, menge: i.menge || "", mengeGramm: i.menge_gramm ?? "", kcalPro100g: i.kcal_pro_100g ?? "" })),
@@ -95,6 +97,7 @@ export function useMealData(userId) {
           name: meal.name,
           tageszeiten: meal.tageszeiten,
           hinweis: meal.hinweis,
+          fotoPath: meal.foto_path || null,
           zutaten: insertedZutaten.map((z) => ({ id: z.id, name: z.name, menge: z.menge, mengeGramm: z.menge_gramm ?? "", kcalPro100g: z.kcal_pro_100g ?? "" })),
         },
       ]);
@@ -134,6 +137,26 @@ export function useMealData(userId) {
     }
     return { ok: true };
   }, []);
+
+  const setMahlzeitFoto = useCallback(
+    async (mealId, file) => {
+      let path;
+      try {
+        path = await uploadPhoto(userId, file, "mahlzeiten");
+      } catch (err) {
+        console.error(err);
+        return { ok: false, error: `Foto-Upload fehlgeschlagen: ${err.message}` };
+      }
+      setMahlzeiten((prev) => prev.map((m) => (m.id === mealId ? { ...m, fotoPath: path } : m)));
+      const { error } = await supabase.from("meals").update({ foto_path: path }).eq("id", mealId);
+      if (error) {
+        console.error(error);
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
+    },
+    [userId]
+  );
 
   const toggleMahlzeitErledigt = useCallback(
     async (datum, id, zeit) => {
@@ -185,6 +208,7 @@ export function useMealData(userId) {
     mahlzeitAendern,
     mahlzeitEntfernen,
     zutatAendern,
+    setMahlzeitFoto,
     mahlzeitErledigt,
     mahlzeitErledigtAt,
     toggleMahlzeitErledigt,

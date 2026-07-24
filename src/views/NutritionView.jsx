@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
 import WochentagPills from "../ui/WochentagPills";
+import { SignedPhoto } from "../ui/SignedPhoto";
 import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { TAGESZEITEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
@@ -43,12 +44,22 @@ function ZutatKcalFelder({ zutat, onChange }) {
   );
 }
 
-function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle, onZutatAendern }) {
+function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle, onZutatAendern, onFotoAendern }) {
   const [offen, setOffen] = useState(false);
   const [entwurf, setEntwurf] = useState({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
   const [zutatenEntwurf, setZutatenEntwurf] = useState(() => m.zutaten.map((z) => ({ ...z })));
   const [grund, setGrund] = useState("");
   const [fehler, setFehler] = useState(null);
+  const [fotoFehler, setFotoFehler] = useState(null);
+
+  const fotoAuswaehlen = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setFotoFehler(null);
+    const result = await onFotoAendern(m.id, file);
+    if (!result?.ok) setFotoFehler(result?.error || "Foto speichern fehlgeschlagen.");
+  };
 
   const zugewieseneTage = wochenplanEintraege.map((w) => w.wochentag);
   const gesamtKcal = m.zutaten.reduce((sum, z) => sum + kcalFuerZutat(z), 0);
@@ -87,6 +98,11 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
   return (
     <div style={{ padding: "8px 0", borderBottom: istLetzte ? "none" : `1px solid ${cardBorder}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        {m.fotoPath && (
+          <div style={{ marginRight: 10, flexShrink: 0 }}>
+            <SignedPhoto path={m.fotoPath} alt={m.name} size={40} />
+          </div>
+        )}
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
           <div style={{ fontSize: 11, color: textMuted }}>
@@ -124,6 +140,26 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           </div>
           <Label>Hinweis</Label>
           <TextInput value={entwurf.hinweis} onChange={(v) => setEntwurf((p) => ({ ...p, hinweis: v }))} placeholder="optional" />
+          <Label>Foto</Label>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {m.fotoPath && <SignedPhoto path={m.fotoPath} alt={m.name} size={44} />}
+            <input type="file" accept="image/*" id={`mahlzeit-foto-${m.id}`} style={{ display: "none" }} onChange={fotoAuswaehlen} />
+            <label
+              htmlFor={`mahlzeit-foto-${m.id}`}
+              style={{
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 700,
+                color: accentDark,
+                border: `1px dashed ${cardBorder}`,
+                borderRadius: 10,
+                padding: "8px 12px",
+              }}
+            >
+              📷 {m.fotoPath ? "Foto ersetzen" : "Foto hinzufügen"}
+            </label>
+          </div>
+          {fotoFehler && <div style={{ fontSize: 12, color: danger, marginTop: 4 }}>{fotoFehler}</div>}
           {zutatenEntwurf.length > 0 && (
             <>
               <Label>Zutaten</Label>
@@ -162,6 +198,7 @@ export default function NutritionView({ onHome, embedded = false }) {
     mahlzeitAendern,
     mahlzeitEntfernen,
     zutatAendern,
+    setMahlzeitFoto,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
     mealWochenplan,
@@ -494,6 +531,7 @@ export default function NutritionView({ onHome, embedded = false }) {
                 onEntfernen={handleEntfernen}
                 onWochentagToggle={handleWochentagToggle}
                 onZutatAendern={zutatAendern}
+                onFotoAendern={setMahlzeitFoto}
               />
             ))}
           </Card>
