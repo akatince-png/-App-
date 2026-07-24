@@ -3,6 +3,7 @@ import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, Stepper }
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
+import LaborwerteFelder from "../../ui/LaborwerteFelder";
 import ProtocolFormView from "../ProtocolFormView";
 import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { TAGESZEITEN, EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "../../constants";
@@ -92,6 +93,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     setErinnerung,
     aktivesHauptprotokoll,
     teilprotokollSpeichern,
+    biomarker,
+    setBiomarkerWert,
   } = useAppData();
   const { t, tLabel } = useT();
 
@@ -658,6 +661,13 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
                   <Pill key={a} label={tLabel(a)} selected={medEinnahmeart === a} onClick={() => setMedEinnahmeart(a)} />
                 ))}
               </div>
+            </>
+          )}
+
+          {step.key === "biomarker" && (
+            <>
+              <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("onboarding.biomarker.intro")}</div>
+              <LaborwerteFelder biomarker={biomarker} setBiomarkerWert={setBiomarkerWert} />
             </>
           )}
 

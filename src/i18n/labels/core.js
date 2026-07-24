@@ -298,6 +298,18 @@ export const LABELS = {
     "Wochenübersicht": "Weekly overview",
     "Gewohnheiten": "Habits",
     "Peptid-Protokoll": "Peptide protocol",
+
+    // --- CATEGORY_STEPS (Onboarding/Hauptprotokoll) — Labels enden auf "-Plan" ---
+    "Schlafplan": "Sleep plan",
+    "Hydrationsplan": "Hydration plan",
+    "Ernährungsplan": "Nutrition plan",
+    "Trainingsplan": "Training plan",
+    "Gewohnheitenplan": "Habit plan",
+    "Supplementplan": "Supplement plan",
+    "Medikamentenplan": "Medication plan",
+    "Peptid-Plan": "Peptide plan",
+    "Biomarker-Plan": "Biomarker plan",
+
     "Peptid": "Peptide",
     "Medikament": "Medication",
     "Supplement": "Supplement",

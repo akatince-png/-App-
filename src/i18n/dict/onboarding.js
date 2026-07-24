@@ -49,6 +49,7 @@ export const onboarding = {
     "onboarding.ernaehrung.zutat.hinzufuegen": "+ weitere Zutat",
     "onboarding.eigenesStartdatum.checkbox": "Dieses Protokoll soll später beginnen als mein Hauptprotokoll.",
     "onboarding.eigenesStartdatum.label": "Wann soll dieses Protokoll beginnen?",
+    "onboarding.biomarker.intro": "Trag ein, was du schon weißt — z. B. aus deinem letzten Laborbericht. Nichts ist Pflicht, du kannst jederzeit später ergänzen.",
   },
   en: {
     "onboarding.categories.progress": "{{current}} of {{total}}",
@@ -100,5 +101,6 @@ export const onboarding = {
     "onboarding.ernaehrung.zutat.hinzufuegen": "+ another ingredient",
     "onboarding.eigenesStartdatum.checkbox": "This protocol should start later than my main protocol.",
     "onboarding.eigenesStartdatum.label": "When should this protocol start?",
+    "onboarding.biomarker.intro": "Enter what you already know — e.g. from your last lab report. Nothing is required, you can always add more later.",
   },
 };
