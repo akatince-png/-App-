@@ -43,6 +43,80 @@ function zusammenfassung(e) {
 }
 
 // ---------------------------------------------------------------------------
+// Nachbereitung: RPE/Kalorien/Energielevel/Schmerzen/Bemerkungen lassen sich
+// erst NACH dem Training sinnvoll einschätzen — deshalb ein eigener, rein
+// optionaler Schritt nach dem Speichern statt Pflichtfelder vorab.
+// ---------------------------------------------------------------------------
+function TrainingFeedbackPanel({ trainingId, onDone }) {
+  const { trainingFeedbackSpeichern } = useAppData();
+  const [rpe, setRpe] = useState("");
+  const [kalorien, setKalorien] = useState("");
+  const [energielevel, setEnergielevel] = useState("");
+  const [schmerzen, setSchmerzen] = useState("");
+  const [bemerkungen, setBemerkungen] = useState("");
+  const [fehler, setFehler] = useState(null);
+  const [speichertGerade, setSpeichertGerade] = useState(false);
+
+  const speichern = async () => {
+    setFehler(null);
+    setSpeichertGerade(true);
+    const result = await trainingFeedbackSpeichern(trainingId, { rpe, kalorien, energielevel, schmerzen, bemerkungen });
+    setSpeichertGerade(false);
+    if (!result?.ok) {
+      setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    onDone();
+  };
+
+  return (
+    <Card style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2, textAlign: "center" }}>Wie ist es gelaufen?</div>
+      <div style={{ fontSize: 12, color: textMuted, marginBottom: 12, textAlign: "center" }}>
+        Optional — hilft dir, deinen Fortschritt nachzuvollziehen.
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <Label>RPE (1–10)</Label>
+          <TextInput type="number" value={rpe} onChange={setRpe} placeholder="7" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <Label>Kalorien</Label>
+          <TextInput type="number" value={kalorien} onChange={setKalorien} placeholder="300" />
+        </div>
+      </div>
+      <Label>Energielevel</Label>
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
+        {TRAINING_ENERGIELEVEL_OPTIONEN.map((o) => (
+          <Pill key={o} label={o} selected={energielevel === o} onClick={() => setEnergielevel(o)} />
+        ))}
+      </div>
+      <Label>Schmerzen</Label>
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
+        {SCHMERZEN_OPTIONEN.map((o) => (
+          <Pill key={o} label={o} selected={schmerzen === o} onClick={() => setSchmerzen(o)} />
+        ))}
+      </div>
+      <Label>Bemerkungen</Label>
+      <TextArea value={bemerkungen} onChange={setBemerkungen} placeholder="Wie hat es sich angefühlt?" />
+      {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
+      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+        <div style={{ flex: 1 }}>
+          <PrimaryButton onClick={speichern} disabled={speichertGerade}>
+            Speichern
+          </PrimaryButton>
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrimaryButton onClick={onDone} variant="ghost">
+            Überspringen
+          </PrimaryButton>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Live-Workout: Satz-für-Satz-Begleiter für Kraft, Intervall-/Stoppuhr-Timer
 // für Cardio/HIIT.
 // ---------------------------------------------------------------------------
@@ -51,6 +125,11 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   const [satzAktuell, setSatzAktuell] = useState(1);
   const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' | 'bestaetigen' (Kraft)
   const [fertig, setFertig] = useState(!!session.erledigt);
+  // Nur direkt nach dem Beenden DIESER Live-Session soll die Nachbereitung
+  // erscheinen — beim erneuten Öffnen einer bereits erledigten Session
+  // (z. B. aus dem Verlauf) nicht wieder abfragen.
+  const [justFinished, setJustFinished] = useState(false);
+  const [feedbackErledigt, setFeedbackErledigt] = useState(false);
   // Tatsächlich durchgeführte Werte pro Übung — startet als Kopie des Plans,
   // wird aber pro Übung nach dem letzten Satz bestätigt/angepasst, damit das
   // Protokoll später zeigt, was wirklich gemacht wurde, nicht nur den Plan.
@@ -70,6 +149,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   const beenden = (felder = {}) => {
     onFertig(session.id, felder);
     setFertig(true);
+    setJustFinished(true);
   };
 
   const satzFertig = () => {
@@ -112,12 +192,16 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
       </div>
 
       {fertig ? (
-        <Card style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 26, marginBottom: 8 }}>🎉</div>
-          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Training abgeschlossen!</div>
-          <div style={{ fontSize: 12, color: textMuted, marginBottom: 14 }}>Stark gemacht — bis zum nächsten Mal.</div>
-          <PrimaryButton onClick={onSchliessen}>Zurück zum Training</PrimaryButton>
-        </Card>
+        justFinished && !feedbackErledigt ? (
+          <TrainingFeedbackPanel trainingId={session.id} onDone={() => setFeedbackErledigt(true)} />
+        ) : (
+          <Card style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 26, marginBottom: 8 }}>🎉</div>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Training abgeschlossen!</div>
+            <div style={{ fontSize: 12, color: textMuted, marginBottom: 14 }}>Stark gemacht — bis zum nächsten Mal.</div>
+            <PrimaryButton onClick={onSchliessen}>Zurück zum Training</PrimaryButton>
+          </Card>
+        )
       ) : session.art === "Krafttraining" ? (
         <>
           {!aktuelleUebung ? (
@@ -313,6 +397,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [fehler, setFehler] = useState(null);
   const [liveSessionId, setLiveSessionId] = useState(null);
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
+  const [feedbackFuerId, setFeedbackFuerId] = useState(null);
 
   useEffect(() => {
     if (initialSessionId) {
@@ -373,6 +458,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     });
     setEintrag(leererEintrag());
     if (!erledigt && result.eintrag) setLiveSessionId(result.eintrag.id);
+    else if (erledigt && result.eintrag) setFeedbackFuerId(result.eintrag.id);
   };
 
   const handleWochenplanSetzen = (tag, zuweisung) => {
@@ -448,6 +534,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           </button>
         </div>
       )}
+
+      {feedbackFuerId && <TrainingFeedbackPanel trainingId={feedbackFuerId} onDone={() => setFeedbackFuerId(null)} />}
 
       <div style={{ marginBottom: 14 }}>
         <PrimaryButton variant="ghost" onClick={() => setWochenplanOffen((o) => !o)}>
@@ -635,34 +723,6 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
         {eintrag.art && (
           <>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <Label>RPE (1–10, optional)</Label>
-                <TextInput type="number" value={eintrag.rpe} onChange={(v) => setFeld("rpe", v)} placeholder="7" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Label>Kalorien (optional)</Label>
-                <TextInput type="number" value={eintrag.kalorien} onChange={(v) => setFeld("kalorien", v)} placeholder="300" />
-              </div>
-            </div>
-
-            <Label>Energielevel</Label>
-            <div style={{ display: "flex", flexWrap: "wrap" }}>
-              {TRAINING_ENERGIELEVEL_OPTIONEN.map((o) => (
-                <Pill key={o} label={o} selected={eintrag.energielevel === o} onClick={() => setFeld("energielevel", o)} />
-              ))}
-            </div>
-
-            <Label>Schmerzen</Label>
-            <div style={{ display: "flex", flexWrap: "wrap" }}>
-              {SCHMERZEN_OPTIONEN.map((o) => (
-                <Pill key={o} label={o} selected={eintrag.schmerzen === o} onClick={() => setFeld("schmerzen", o)} />
-              ))}
-            </div>
-
-            <Label>Bemerkungen (optional)</Label>
-            <TextArea value={eintrag.bemerkungen} onChange={(v) => setFeld("bemerkungen", v)} placeholder="Wie ist es gelaufen?" />
-
             {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <div style={{ flex: 1 }}>

@@ -110,5 +110,32 @@ export function useTrainingData(userId) {
     if (error) console.error(error);
   }, []);
 
-  return { trainingEintraege, trainingHinzufuegen, trainingEntfernen, trainingErledigtSetzen, trainingAbschliessen };
+  // Nachträgliche, rein optionale Rückmeldung (RPE/Kalorien/Energielevel/
+  // Schmerzen/Bemerkungen) — getrennt von trainingAbschliessen, weil sie erst
+  // NACH dem Training sinnvoll ausfüllbar ist, nicht beim Anlegen/Abschließen.
+  const trainingFeedbackSpeichern = useCallback(async (id, felder) => {
+    const patch = {
+      rpe: felder.rpe ? Number(felder.rpe) : null,
+      kalorien: felder.kalorien ? Number(felder.kalorien) : null,
+      energielevel: felder.energielevel || null,
+      schmerzen: felder.schmerzen || null,
+      bemerkungen: felder.bemerkungen || "",
+    };
+    setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? { ...e, ...felder } : e)));
+    const { error } = await supabase.from("training_sessions").update(patch).eq("id", id);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+    }
+    return { ok: true };
+  }, []);
+
+  return {
+    trainingEintraege,
+    trainingHinzufuegen,
+    trainingEntfernen,
+    trainingErledigtSetzen,
+    trainingAbschliessen,
+    trainingFeedbackSpeichern,
+  };
 }
