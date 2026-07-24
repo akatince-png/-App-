@@ -43,10 +43,12 @@ function ZutatKcalFelder({ zutat, onChange }) {
   );
 }
 
-function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle }) {
+function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle, onZutatAendern }) {
   const [offen, setOffen] = useState(false);
   const [entwurf, setEntwurf] = useState({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
+  const [zutatenEntwurf, setZutatenEntwurf] = useState(() => m.zutaten.map((z) => ({ ...z })));
   const [grund, setGrund] = useState("");
+  const [fehler, setFehler] = useState(null);
 
   const zugewieseneTage = wochenplanEintraege.map((w) => w.wochentag);
   const gesamtKcal = m.zutaten.reduce((sum, z) => sum + kcalFuerZutat(z), 0);
@@ -54,7 +56,29 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
   const toggleZeit = (z) =>
     setEntwurf((p) => ({ ...p, tageszeiten: p.tageszeiten.includes(z) ? p.tageszeiten.filter((x) => x !== z) : [...p.tageszeiten, z] }));
 
-  const speichern = () => {
+  const zutatEntwurfAendern = (id, feld, wert) =>
+    setZutatenEntwurf((prev) => prev.map((z) => (z.id === id ? { ...z, [feld]: wert } : z)));
+
+  const oeffnen = () => {
+    setEntwurf({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
+    setZutatenEntwurf(m.zutaten.map((z) => ({ ...z })));
+    setFehler(null);
+    setOffen(true);
+  };
+
+  const speichern = async () => {
+    setFehler(null);
+    const geaenderteZutaten = zutatenEntwurf.filter((z) => {
+      const original = m.zutaten.find((oz) => oz.id === z.id);
+      return original && (String(original.mengeGramm ?? "") !== String(z.mengeGramm ?? "") || String(original.kcalPro100g ?? "") !== String(z.kcalPro100g ?? ""));
+    });
+    for (const z of geaenderteZutaten) {
+      const result = await onZutatAendern(m.id, z.id, { mengeGramm: z.mengeGramm, kcalPro100g: z.kcalPro100g });
+      if (!result?.ok) {
+        setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+        return;
+      }
+    }
     onAendern(m, entwurf, grund);
     setGrund("");
     setOffen(false);
@@ -77,7 +101,7 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           )}
         </div>
         <button
-          onClick={() => setOffen((v) => !v)}
+          onClick={() => (offen ? setOffen(false) : oeffnen())}
           style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", marginRight: 12 }}
         >
           {offen ? "Zu" : "Bearbeiten"}
@@ -100,7 +124,26 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           </div>
           <Label>Hinweis</Label>
           <TextInput value={entwurf.hinweis} onChange={(v) => setEntwurf((p) => ({ ...p, hinweis: v }))} placeholder="optional" />
+          {zutatenEntwurf.length > 0 && (
+            <>
+              <Label>Zutaten</Label>
+              {zutatenEntwurf.map((z) => (
+                <div key={z.id} style={{ marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{z.name}</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <TextInput type="number" value={z.mengeGramm ?? ""} onChange={(v) => zutatEntwurfAendern(z.id, "mengeGramm", v)} placeholder="Gramm" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <TextInput type="number" value={z.kcalPro100g ?? ""} onChange={(v) => zutatEntwurfAendern(z.id, "kcalPro100g", v)} placeholder="kcal/100g" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
           <GrundEingabe grund={grund} onChange={setGrund} />
+          {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
           <div style={{ marginTop: 10 }}>
             <PrimaryButton onClick={speichern} disabled={!entwurf.name.trim()}>
               Speichern
@@ -118,6 +161,7 @@ export default function NutritionView({ onHome, embedded = false }) {
     mahlzeitHinzufuegen,
     mahlzeitAendern,
     mahlzeitEntfernen,
+    zutatAendern,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
     mealWochenplan,
@@ -168,11 +212,17 @@ export default function NutritionView({ onHome, embedded = false }) {
       setMahlzeitError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
-    await Promise.all(
+    const wochentagErgebnisse = await Promise.all(
       neueMahlzeit.wochentage.map((tag) =>
         wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: neueMahlzeit.tageszeiten[0] || null, uhrzeit: null })
       )
     );
+    const fehlgeschlagen = wochentagErgebnisse.find((r) => !r?.ok);
+    if (fehlgeschlagen) {
+      setMahlzeitError(
+        `Mahlzeit wurde angelegt, aber nicht allen Wochentagen zugewiesen: ${fehlgeschlagen.error || "Speichern fehlgeschlagen."}`
+      );
+    }
     aenderungVermerken({
       kategorie: "mahlzeit",
       itemName: neueMahlzeit.name,
@@ -443,6 +493,7 @@ export default function NutritionView({ onHome, embedded = false }) {
                 onAendern={handleAendern}
                 onEntfernen={handleEntfernen}
                 onWochentagToggle={handleWochentagToggle}
+                onZutatAendern={zutatAendern}
               />
             ))}
           </Card>

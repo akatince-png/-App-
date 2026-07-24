@@ -128,7 +128,11 @@ export function useMealData(userId) {
     if ("mengeGramm" in felder) patch.menge_gramm = felder.mengeGramm ? Number(felder.mengeGramm) : null;
     if ("kcalPro100g" in felder) patch.kcal_pro_100g = felder.kcalPro100g ? Number(felder.kcalPro100g) : null;
     const { error } = await supabase.from("meal_ingredients").update(patch).eq("id", zutatId);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+    }
+    return { ok: true };
   }, []);
 
   const toggleMahlzeitErledigt = useCallback(
