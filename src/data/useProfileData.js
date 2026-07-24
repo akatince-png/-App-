@@ -17,6 +17,7 @@ export function useProfileData(userId) {
   const [aktiveMesswerte, setAktiveMesswerte] = useState(DEFAULT_AKTIVE);
   const [customMesswerte, setCustomMesswerte] = useState([]);
   const [categoryZiele, setCategoryZieleState] = useState({});
+  const [erinnerungen, setErinnerungenState] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -39,6 +40,7 @@ export function useProfileData(userId) {
         setOnboardingCompleteState(!!profile.onboarding_complete);
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
         setCategoryZieleState(profile.category_ziele || {});
+        setErinnerungenState(profile.erinnerungen || {});
       }
       setCustomMesswerte(
         (custom || []).map((c) => ({ id: c.key, label: c.label, unit: c.unit || "", numeric: true }))
@@ -136,6 +138,24 @@ export function useProfileData(userId) {
     [userId]
   );
 
+  // Erinnerungs-Präferenz je Pläne-Kategorie (Ja/Nein) — steuert, ob der
+  // serverseitige Erinnerungs-Versand diese Kategorie für den Nutzer
+  // berücksichtigt. Gleiches jsonb-Muster wie setCategoryZiel.
+  const setErinnerung = useCallback(
+    (kategorie, aktiv) => {
+      setErinnerungenState((prev) => {
+        const next = { ...prev, [kategorie]: aktiv };
+        supabase
+          .from("profiles")
+          .update({ erinnerungen: next })
+          .eq("id", userId)
+          .then(({ error }) => error && console.error(error));
+        return next;
+      });
+    },
+    [userId]
+  );
+
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
   const toggleMesswert = useCallback(
@@ -196,5 +216,7 @@ export function useProfileData(userId) {
     addCustomMesswert,
     categoryZiele,
     setCategoryZiel,
+    erinnerungen,
+    setErinnerung,
   };
 }

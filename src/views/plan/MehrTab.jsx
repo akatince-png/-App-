@@ -5,12 +5,24 @@ import { useAuth } from "../../context/AuthContext";
 import { useAppData } from "../../context/AppDataContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
+import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 
 export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
-  const { resetOnboarding, pushUnterstuetzt, pushAktiv, pushLadend, pushFehler, pushAktivieren, pushDeaktivieren, pushTestSenden } = useAppData();
+  const {
+    resetOnboarding,
+    pushUnterstuetzt,
+    pushAktiv,
+    pushLadend,
+    pushFehler,
+    pushAktivieren,
+    pushDeaktivieren,
+    pushTestSenden,
+    erinnerungen,
+    setErinnerung,
+  } = useAppData();
   const { lang, setLang } = useLanguage();
-  const { t } = useT();
+  const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
   const [testMsg, setTestMsg] = useState(null);
 
@@ -108,6 +120,33 @@ export default function MehrTab({ onOpenLexikon }) {
             )}
           </>
         )}
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>{t("mehr.erinnerungen.kategorien.intro")}</div>
+        {CATEGORY_STEPS.map((step, i) => (
+          <div
+            key={step.key}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              padding: "10px 0",
+              borderBottom: i < CATEGORY_STEPS.length - 1 ? `1px solid ${cardBorder}` : "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 700 }}>
+              <span>{step.icon}</span>
+              <span>{tLabel(step.label)}</span>
+            </div>
+            <Pill
+              label={erinnerungen[step.key] ? t("common.erinnerung.ja") : t("common.erinnerung.nein")}
+              selected={!!erinnerungen[step.key]}
+              onClick={() => setErinnerung(step.key, !erinnerungen[step.key])}
+            />
+          </div>
+        ))}
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.datenschutz")}</div>

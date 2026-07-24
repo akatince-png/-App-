@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
+import ErinnerungField from "../../ui/ErinnerungField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
 import ProtocolFormView from "../ProtocolFormView";
 import { accentDark, cardBorder, danger, textMuted } from "../../ui/theme";
@@ -44,6 +45,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     trainingTemplates,
     wochenplanSetzen,
     wochenplanEntfernen,
+    erinnerungen,
+    setErinnerung,
   } = useAppData();
   const { t, tLabel } = useT();
 
@@ -225,6 +228,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
         <Card>
           <div style={{ fontSize: 13, color: textMuted, marginBottom: 16, lineHeight: 1.5 }}>
             {t("onboarding.gate.instructions")}
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <ErinnerungField value={erinnerungen[step.key]} onChange={(v) => setErinnerung(step.key, v)} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <PrimaryButton onClick={() => setModus("jetzt")}>{tLabel("Jetzt einrichten")}</PrimaryButton>
