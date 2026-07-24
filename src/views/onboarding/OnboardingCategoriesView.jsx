@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
+import ProtocolFormView from "../ProtocolFormView";
 import { accentDark, cardBorder, danger, textMuted } from "../../ui/theme";
 import { TAGESZEITEN, EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
@@ -24,10 +25,11 @@ function toggleInArray(arr, val) {
 
 // Ein Kurz-Screen pro "Pläne"-Bereich, in der Reihenfolge natürlichster bis
 // unnatürlichster/klinischster Tracking-Punkt (Schlaf, Hydration, Ernährung,
-// Training, Gewohnheiten, Supplemente, Medikamente) — jeweils "Später" vs.
-// "Jetzt einrichten", bei Jetzt 2–4 Felder plus Zieldauer. Peptide sind hier
-// bewusst nicht dabei, die laufen erst danach über ProtocolFormView (siehe
-// OnboardingFlow.jsx) — als klinischster Tracking-Punkt ganz am Ende.
+// Training, Gewohnheiten, Supplemente, Medikamente, Peptid-Protokoll ganz am
+// Ende) — jeweils dieselbe "Jetzt einrichten?"-Gate-Seite. Beim
+// Peptid-Protokoll führt "Jetzt einrichten" zum bestehenden mehrstufigen
+// ProtocolFormView statt zu eigenen Feldern hier — die Gate-Seite davor sieht
+// aber genauso aus wie bei jedem anderen Bereich.
 export default function OnboardingCategoriesView({ onFinished, onCancel }) {
   const {
     gewohnheitHinzufuegen,
@@ -62,6 +64,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
   const [medMenge, setMedMenge] = useState("");
   const [medKategorie, setMedKategorie] = useState("Hormone");
   const [medEinnahmeart, setMedEinnahmeart] = useState("Injektion");
+  const [protocolStep, setProtocolStep] = useState(0);
 
   const step = CATEGORY_STEPS[index];
   const istLetzter = index === CATEGORY_STEPS.length - 1;
@@ -82,6 +85,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     setMedMenge("");
     setMedKategorie("Hormone");
     setMedEinnahmeart("Injektion");
+    setProtocolStep(0);
   };
 
   const weiter = (wurdeEingerichtet) => {
@@ -179,6 +183,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     weiter(true);
   };
 
+  // Peptid-Protokoll ist der einzige Bereich mit einem eigenen mehrstufigen
+  // Formular statt 2–4 Feldern — bekommt trotzdem dieselbe Gate-Seite wie
+  // jeder andere Bereich (unten), nur dass "Jetzt einrichten" hier zum
+  // bestehenden ProtocolFormView führt statt zu Feldern in dieser Ansicht.
+  if (step.key === "peptide" && modus === "jetzt") {
+    return <ProtocolFormView step={protocolStep} setStep={setProtocolStep} onFinish={() => weiter(true)} onHome={onCancel} />;
+  }
+
   return (
     <Shell>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -275,14 +287,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
           {step.key === "supplemente" && (
             <>
-              <Label>Name des Supplements</Label>
-              <TextInput value={suppName} onChange={setSuppName} placeholder="z. B. Vitamin D" />
-              <Label>Tageszeiten</Label>
+              <Label>Zu welchen Tageszeiten?</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {TAGESZEITEN.map((t) => (
                   <Pill key={t} label={t} selected={suppZeiten.includes(t)} onClick={() => setSuppZeiten((prev) => toggleInArray(prev, t))} />
                 ))}
               </div>
+              <Label>Name des Supplements</Label>
+              <TextInput value={suppName} onChange={setSuppName} placeholder="z. B. Vitamin D" />
             </>
           )}
 
