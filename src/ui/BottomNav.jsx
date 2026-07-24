@@ -1,11 +1,10 @@
 import React from "react";
 import Icon from "./Icon";
-import { accent, accentDark, card, cardBorder, textMuted } from "./theme";
+import { accent, card, cardBorder, textMuted } from "./theme";
 
 const ITEMS = [
   { id: "home", label: "Übersicht", icon: "grid" },
   { id: "tagesplan", label: "Tagesplan", icon: "calendarCheck" },
-  { id: "__fab__", label: "", icon: "+" },
   { id: "routinen", label: "Gewohnheiten", icon: "target" },
   { id: "mehr", label: "Mehr", icon: "sliders" },
 ];
@@ -15,7 +14,10 @@ const ITEMS = [
 // jedem authentifizierten Screen sichtbar (außer im Onboarding-Assistenten),
 // auch innerhalb der Pläne-/Archiv-Hubs, damit man jederzeit direkt zu
 // einem der 4 Hauptbereiche zurück kann statt über "Zuhause" umzuwegen.
-export default function BottomNav({ active, onNavigate, onFab }) {
+// Der frühere "+"-FAB (Neues Protokoll) ist entfernt — der Einstiegspunkt
+// liegt jetzt als normaler Menüpunkt in "Mehr", und der Tagesplan hat einen
+// eigenen Schnellzugriff direkt auf der Startseite.
+export default function BottomNav({ active, onNavigate }) {
   return (
     <div
       style={{
@@ -43,31 +45,6 @@ export default function BottomNav({ active, onNavigate, onFab }) {
         }}
       >
         {ITEMS.map((item) => {
-          if (item.id === "__fab__") {
-            return (
-              <button
-                key="fab"
-                className="mp-tap"
-                onClick={onFab}
-                aria-label="Neues Peptid-Protokoll"
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  border: "none",
-                  background: accentDark,
-                  color: "#fff",
-                  fontSize: 24,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  boxShadow: "0 6px 14px rgba(10, 95, 79, 0.35)",
-                  marginTop: -20,
-                }}
-              >
-                +
-              </button>
-            );
-          }
           const isActive = active === item.id;
           return (
             <button

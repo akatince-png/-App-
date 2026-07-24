@@ -6,7 +6,7 @@ import MehrTab from "./MehrTab";
 // Dünner Shell/Header-Wrapper um MehrTab.jsx — "Mehr" ist jetzt ein
 // eigenständiges Ziel der unteren Tab-Leiste statt ein Reiter innerhalb
 // des Archiv-Hubs (PlanView.jsx).
-export default function MehrView({ onHome, onOpenLexikon }) {
+export default function MehrView({ onHome, onOpenLexikon, onNeuesProtokoll }) {
   return (
     <Shell>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -19,7 +19,7 @@ export default function MehrView({ onHome, onOpenLexikon }) {
           ⌂
         </button>
       </div>
-      <MehrTab onOpenLexikon={onOpenLexikon} />
+      <MehrTab onOpenLexikon={onOpenLexikon} onNeuesProtokoll={onNeuesProtokoll} />
     </Shell>
   );
 }

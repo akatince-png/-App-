@@ -83,7 +83,7 @@ export default function AuthenticatedApp() {
 
   // "Neues Protokoll" muss wirklich leer starten. Die Formularfelder hängen
   // direkt am aktiven Protokoll (useProtocolData) — ohne diesen Schritt
-  // würde der FAB einfach das laufende Protokoll mit alten Werten zum
+  // würde der Aufruf einfach das laufende Protokoll mit alten Werten zum
   // Bearbeiten öffnen (bestätigter Bug: alte Auswahl blieb stehen). Ist das
   // aktive Protokoll schon leer (z. B. direkt nach dem Archivieren), ist
   // nichts zu tun.
@@ -141,7 +141,7 @@ export default function AuthenticatedApp() {
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
     screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("peptide")} />;
   } else if (view === "mehr") {
-    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} />;
+    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} onNeuesProtokoll={neuesProtokoll} />;
   } else {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }
@@ -153,11 +153,7 @@ export default function AuthenticatedApp() {
     <>
       <div style={{ paddingBottom: zeigeBottomNav ? 76 : 0 }}>{screen}</div>
       {zeigeBottomNav && (
-        <BottomNav
-          active={aktiverTab}
-          onNavigate={(id) => setView(id)}
-          onFab={neuesProtokoll}
-        />
+        <BottomNav active={aktiverTab} onNavigate={(id) => setView(id)} />
       )}
     </>
   );

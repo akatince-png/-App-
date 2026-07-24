@@ -141,6 +141,28 @@ export default function HomeView({ onOpenView }) {
         </Card>
       </div>
 
+      {/* Schnellzugriff auf den Tagesplan — ersetzt den früheren "+"-FAB in
+          der unteren Navigation, direkt über den heute offenen Aufgaben. */}
+      <button
+        className="mp-tap"
+        onClick={() => onOpenView("tagesplan")}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          padding: "0 0 10px 0",
+          textAlign: "left",
+        }}
+      >
+        <Icon name="calendarCheck" size={18} color={accentDark} />
+        <span style={{ fontSize: 13, fontWeight: 800, color: accentDark }}>Tagesplan</span>
+        <span style={{ marginLeft: "auto", color: textMuted, fontSize: 14 }}>›</span>
+      </button>
+
       {/* Dann die heute offenen Aufgaben — erst danach die Ordner. */}
       {angezeigteItems.length > 0 && (
         <>
