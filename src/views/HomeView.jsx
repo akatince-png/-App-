@@ -102,6 +102,8 @@ export default function HomeView({ onOpenView }) {
     gewohnheitErledigt,
   });
   const erledigtCount = heuteItems.filter((i) => i.done).length;
+  const gewohnheitHeuteItems = heuteItems.filter((i) => i.kategorie === "gewohnheit");
+  const gewohnheitErledigtHeute = gewohnheitHeuteItems.filter((i) => i.done).length;
   const offeneItems = heuteItems.filter((i) => !i.done);
   const angezeigteItems = gruppiereFuerAlsNaechstes(offeneItems);
   const tagStr = toLocalISODate(today);
@@ -121,7 +123,7 @@ export default function HomeView({ onOpenView }) {
         <Card>
           <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>Tagesfortschritt</div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <ProgressRing done={erledigtCount} total={heuteItems.length} size={54} />
+            <ProgressRing done={erledigtCount} total={heuteItems.length} size={72} stroke={9} color={accentDark} />
             <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{statusText(erledigtCount, heuteItems.length)}</div>
           </div>
         </Card>
@@ -131,11 +133,12 @@ export default function HomeView({ onOpenView }) {
           onClick={() => onOpenView("routinen")}
         >
           <div style={{ fontSize: 12, fontWeight: 700, color: blue, marginBottom: 10 }}>Gewohnheiten</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Icon name="target" size={24} color={blue} />
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 800 }}>{gewohnheiten.length}</div>
-              <div style={{ fontSize: 11, color: textMuted, fontWeight: 700 }}>{gewohnheiten.length === 1 ? "aktiv" : "aktiv"}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={72} stroke={9} color={blue} />
+            <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3, color: blue }}>
+              {gewohnheitHeuteItems.length === 0
+                ? "Noch keine Gewohnheiten angelegt."
+                : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length)}
             </div>
           </div>
         </Card>

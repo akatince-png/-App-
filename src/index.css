@@ -38,6 +38,27 @@ input[type="time"]::-webkit-date-and-time-value {
   min-height: 1.2em;
 }
 
+/* ProgressRing: pulsierender Punkt am aktuellen Stand, damit die Ringe (die
+   einzigen kräftig farbigen Elemente der App) auch im Stillstand spürbar
+   lebendig statt starr wirken. */
+@media (prefers-reduced-motion: no-preference) {
+  .mp-ring-dot {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: mp-ring-pulse 1.8s ease-in-out infinite;
+  }
+}
+@keyframes mp-ring-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.45);
+  }
+}
+
 /* WheelPicker: Scrollbar ausblenden, damit es wie ein echtes iOS-Rad wirkt
    statt wie eine Scroll-Liste mit sichtbarer Leiste. */
 .mp-wheel {
