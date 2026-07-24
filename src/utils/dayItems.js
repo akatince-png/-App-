@@ -25,7 +25,7 @@ export const KATEGORIE_META = {
 // bei Krafttraining mit echten Übungsnamen + Sätzen×Wiederholungen statt nur
 // einer Anzahl, damit auf einen Blick erkennbar ist, was konkret ansteht.
 export function trainingDetail(t) {
-  if (t.art === "Krafttraining") {
+  if (t.art === "Krafttraining" || (t.art === "Bodyweight" && (t.uebungen || []).length > 0)) {
     return (t.uebungen || [])
       .filter((u) => u.name)
       .map((u) => `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${u.gewicht ? ` ${u.gewicht}` : ""}`)

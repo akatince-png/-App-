@@ -123,7 +123,7 @@ export const LABORWERTE_KATEGORIEN = [
 
 export const LABORWERTE_ALLE = LABORWERTE_KATEGORIEN.flatMap((k) => k.werte);
 
-export const TRAININGSARTEN = ["Krafttraining", "Cardio", "HIIT / Bodyweight", "Sonstiges"];
+export const TRAININGSARTEN = ["Krafttraining", "Cardio", "Bodyweight", "Sonstiges"];
 export const TRAINING_ENERGIELEVEL_OPTIONEN = ["Niedrig", "Mittel", "Hoch"];
 export const SCHMERZEN_OPTIONEN = ["Keine", "Leicht", "Stark"];
 

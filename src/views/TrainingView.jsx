@@ -11,6 +11,7 @@ import {
   SCHMERZEN_OPTIONEN,
   WOCHENTAGE,
   KRAFTUEBUNGEN,
+  BODYWEIGHT_UEBUNGEN,
   CARDIO_ARTEN,
   CARDIO_MODI_STRECKE,
   CARDIO_MODI_SPRUNGSEIL,
@@ -35,6 +36,7 @@ function leererEintrag() {
     runden: "5",
     cardioArt: "",
     cardioModus: "",
+    bodyweightModus: "",
     rpe: "",
     kalorien: "",
     energielevel: "",
@@ -51,6 +53,66 @@ function zusammenfassung(e) {
   if (e.runden && e.art !== "Krafttraining") teile.push(`${e.runden} Runden`);
   if (e.rpe) teile.push(`RPE ${e.rpe}`);
   return teile.join(" · ") || "—";
+}
+
+// ---------------------------------------------------------------------------
+// Übungsliste (Name + Sätze/Wdh/Gewicht + Pause) — wird sowohl für
+// Krafttraining als auch für Bodyweight im "Übungen"-Modus verwendet, da
+// beide dieselbe Datenstruktur (eintrag.uebungen) nutzen.
+// ---------------------------------------------------------------------------
+function UebungenEditor({ uebungen, optionen, gewichtPlatzhalter, onAendern, onEntfernen, onHinzufuegen }) {
+  return (
+    <>
+      <Label>Übungen</Label>
+      {uebungen.map((u, i) => (
+        <div key={i} style={{ marginBottom: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+            <div style={{ flex: 1 }}>
+              <AutocompleteInput value={u.name} onChange={(v) => onAendern(i, "name", v)} options={optionen} placeholder="Übung" />
+            </div>
+            {uebungen.length > 1 && (
+              <button
+                onClick={() => onEntfernen(i)}
+                style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+            <div style={{ flex: 1 }}>
+              <NumberWheelField value={u.saetze} onChange={(v) => onAendern(i, "saetze", v)} min={1} max={20} placeholder="Sätze" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <NumberWheelField value={u.wiederholungen} onChange={(v) => onAendern(i, "wiederholungen", v)} min={1} max={50} placeholder="Wdh." />
+            </div>
+            <div style={{ flex: 1 }}>
+              <TextInput value={u.gewicht} onChange={(v) => onAendern(i, "gewicht", v)} placeholder={gewichtPlatzhalter} />
+            </div>
+          </div>
+          <Label>Pause zwischen Sätzen (Sek.)</Label>
+          <NumberWheelField value={u.pauseSekunden} onChange={(v) => onAendern(i, "pauseSekunden", v)} min={0} max={600} step={15} placeholder="180" />
+        </div>
+      ))}
+      <button
+        onClick={onHinzufuegen}
+        style={{
+          width: "100%",
+          padding: "8px",
+          borderRadius: 10,
+          border: `1px dashed ${cardBorder}`,
+          background: "transparent",
+          color: accentDark,
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: "pointer",
+          marginBottom: 6,
+        }}
+      >
+        + weitere Übung
+      </button>
+    </>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -213,7 +275,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             <PrimaryButton onClick={onSchliessen}>Zurück zum Training</PrimaryButton>
           </Card>
         )
-      ) : session.art === "Krafttraining" ? (
+      ) : session.art === "Krafttraining" || (session.art === "Bodyweight" && uebungen.length > 0) ? (
         <>
           {!aktuelleUebung ? (
             <Card style={{ textAlign: "center" }}>
@@ -273,7 +335,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
                           />
                         </div>
                         <div style={{ flex: 1 }}>
-                          <Label>Gewicht</Label>
+                          <Label>{session.art === "Bodyweight" ? "Zusatzgewicht" : "Gewicht"}</Label>
                           <TextInput value={entwurf.gewicht} onChange={(v) => setEntwurf((p) => ({ ...p, gewicht: v }))} />
                         </div>
                       </div>
@@ -289,7 +351,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             </>
           )}
         </>
-      ) : session.art === "HIIT / Bodyweight" ? (
+      ) : session.art === "Bodyweight" ? (
         <Card style={{ textAlign: "center" }}>
           <Timer
             mode="interval"
@@ -441,18 +503,23 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
   const bauePayload = (erledigt) => {
     const payload = { ...eintrag, erledigt };
-    if (payload.art === "Krafttraining") {
+    const bodyweightMitUebungen = payload.art === "Bodyweight" && payload.bodyweightModus === "Übungen";
+    const bodyweightMitIntervall = payload.art === "Bodyweight" && payload.bodyweightModus === "Intervall";
+    if (payload.art === "Krafttraining" || bodyweightMitUebungen) {
       payload.uebungen = payload.uebungen.filter((u) => u.name.trim());
     } else {
       payload.uebungen = [];
     }
-    if (payload.art !== "Cardio" && payload.art !== "HIIT / Bodyweight") {
+    if (payload.art !== "Cardio" && !bodyweightMitIntervall) {
       payload.intervallArbeitSek = "";
       payload.intervallPauseSek = "";
     }
     if (payload.art !== "Cardio") {
       payload.cardioArt = "";
       payload.cardioModus = "";
+    }
+    if (payload.art !== "Bodyweight") {
+      payload.bodyweightModus = "";
     }
     return payload;
   };
@@ -518,6 +585,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       runden: tpl.runden ? String(tpl.runden) : p.runden,
       cardioArt: tpl.cardioArt || "",
       cardioModus: tpl.cardioModus || "",
+      bodyweightModus: tpl.art === "Bodyweight" ? (tpl.uebungen.length ? "Übungen" : "Intervall") : "",
       intervallArbeitSek: tpl.intervallArbeitSek ? String(tpl.intervallArbeitSek) : p.intervallArbeitSek,
       intervallPauseSek: tpl.intervallPauseSek ? String(tpl.intervallPauseSek) : p.intervallPauseSek,
     }));
@@ -630,56 +698,14 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
         )}
 
         {eintrag.art === "Krafttraining" && (
-          <>
-            <Label>Übungen</Label>
-            {eintrag.uebungen.map((u, i) => (
-              <div key={i} style={{ marginBottom: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
-                <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                  <div style={{ flex: 1 }}>
-                    <AutocompleteInput value={u.name} onChange={(v) => uebungAendern(i, "name", v)} options={KRAFTUEBUNGEN} placeholder="Übung, z. B. Bankdrücken" />
-                  </div>
-                  {eintrag.uebungen.length > 1 && (
-                    <button
-                      onClick={() => uebungEntfernen(i)}
-                      style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                  <div style={{ flex: 1 }}>
-                    <NumberWheelField value={u.saetze} onChange={(v) => uebungAendern(i, "saetze", v)} min={1} max={20} placeholder="Sätze" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <NumberWheelField value={u.wiederholungen} onChange={(v) => uebungAendern(i, "wiederholungen", v)} min={1} max={50} placeholder="Wdh." />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <TextInput value={u.gewicht} onChange={(v) => uebungAendern(i, "gewicht", v)} placeholder="Gewicht" />
-                  </div>
-                </div>
-                <Label>Pause zwischen Sätzen (Sek.)</Label>
-                <NumberWheelField value={u.pauseSekunden} onChange={(v) => uebungAendern(i, "pauseSekunden", v)} min={0} max={600} step={15} placeholder="180" />
-              </div>
-            ))}
-            <button
-              onClick={uebungHinzufuegen}
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: 10,
-                border: `1px dashed ${cardBorder}`,
-                background: "transparent",
-                color: accentDark,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                marginBottom: 6,
-              }}
-            >
-              + weitere Übung
-            </button>
-          </>
+          <UebungenEditor
+            uebungen={eintrag.uebungen}
+            optionen={KRAFTUEBUNGEN}
+            gewichtPlatzhalter="Gewicht"
+            onAendern={uebungAendern}
+            onEntfernen={uebungEntfernen}
+            onHinzufuegen={uebungHinzufuegen}
+          />
         )}
 
         {eintrag.art === "Cardio" && (
@@ -746,20 +772,41 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           </>
         )}
 
-        {eintrag.art === "HIIT / Bodyweight" && (
+        {eintrag.art === "Bodyweight" && (
           <>
-            <Label>Intervall</Label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <TextInput type="number" value={eintrag.intervallArbeitSek} onChange={(v) => setFeld("intervallArbeitSek", v)} placeholder="Arbeit (Sek.)" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Runden" />
-              </div>
+            <Label>Wie trackst du das?</Label>
+            <div style={{ display: "flex", flexWrap: "wrap" }}>
+              <Pill label="Übungen eintragen" selected={eintrag.bodyweightModus === "Übungen"} onClick={() => setFeld("bodyweightModus", "Übungen")} />
+              <Pill label="Intervall-Timer" selected={eintrag.bodyweightModus === "Intervall"} onClick={() => setFeld("bodyweightModus", "Intervall")} />
             </div>
+
+            {eintrag.bodyweightModus === "Übungen" && (
+              <UebungenEditor
+                uebungen={eintrag.uebungen}
+                optionen={BODYWEIGHT_UEBUNGEN}
+                gewichtPlatzhalter="Zusatzgewicht (optional)"
+                onAendern={uebungAendern}
+                onEntfernen={uebungEntfernen}
+                onHinzufuegen={uebungHinzufuegen}
+              />
+            )}
+
+            {eintrag.bodyweightModus === "Intervall" && (
+              <>
+                <Label>Intervall</Label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <TextInput type="number" value={eintrag.intervallArbeitSek} onChange={(v) => setFeld("intervallArbeitSek", v)} placeholder="Arbeit (Sek.)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Runden" />
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
 
