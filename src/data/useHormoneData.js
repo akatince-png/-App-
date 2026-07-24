@@ -34,12 +34,13 @@ const DOSE_FELD_TO_COLUMN = {
 
 const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays"]);
 
-function toRow(userId, neuesHormon) {
+function toRow(userId, neuesHormon, hauptprotokollId) {
   const isCustom = neuesHormon.intervallTyp === "custom";
   const isCycle = neuesHormon.intervallTyp === "cycle";
   const isWeekdays = neuesHormon.intervallTyp === "weekdays";
   return {
     user_id: userId,
+    hauptprotokoll_id: hauptprotokollId || null,
     menge: neuesHormon.menge,
     kategorie: neuesHormon.kategorie || "Hormone",
     einnahmeart: neuesHormon.einnahmeart || "Injektion",
@@ -54,7 +55,7 @@ function toRow(userId, neuesHormon) {
   };
 }
 
-export function useHormoneData(userId, startdatum, dauer) {
+export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
   const [hormone, setHormone] = useState([]);
   const [hormonDosierung, setHormonDosierung] = useState({});
   const [hormonErledigt, setHormonErledigt] = useState({});
@@ -100,7 +101,7 @@ export function useHormoneData(userId, startdatum, dauer) {
       const name = neuesHormon.name.trim();
       if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
       if (hormone.includes(name)) return { ok: false, error: "Dieses Präparat ist schon in deinem Protokoll." };
-      const { data, error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon) }).select().single();
+      const { data, error } = await supabase.from("hormones").insert({ name, ...toRow(userId, neuesHormon, hauptprotokollId) }).select().single();
       if (error) {
         console.error(error);
         if (error.code === "23505") {
@@ -137,7 +138,7 @@ export function useHormoneData(userId, startdatum, dauer) {
       }));
       return { ok: true };
     },
-    [hormone, userId]
+    [hormone, userId, hauptprotokollId]
   );
 
   const hormonEntfernen = useCallback(

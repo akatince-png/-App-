@@ -18,6 +18,7 @@ import { usePushNotifications } from "../data/usePushNotifications";
 import { useAenderungsprotokoll } from "../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../data/useLexikon";
+import { useHauptprotokollData } from "../data/useHauptprotokollData";
 
 const AppDataContext = createContext(null);
 
@@ -27,12 +28,14 @@ export function AppDataProvider({ children }) {
 
   const profileData = useProfileData(userId);
   const protocolData = useProtocolData(userId);
+  const hauptprotokollData = useHauptprotokollData(userId);
+  const hauptprotokollId = hauptprotokollData.aktivesHauptprotokoll?.id || null;
   const peptideLogs = usePeptideLogs(userId, protocolData.protocolId);
-  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer);
-  const supplementData = useSupplementData(userId);
+  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId);
+  const supplementData = useSupplementData(userId, hauptprotokollId);
   const drinkData = useDrinkRecipes(userId);
-  const mealData = useMealData(userId);
-  const gewohnheitenData = useGewohnheitenData(userId);
+  const mealData = useMealData(userId, hauptprotokollId);
+  const gewohnheitenData = useGewohnheitenData(userId, hauptprotokollId);
   const hydrationData = useHydrationData(userId);
   const trainingData = useTrainingData(userId);
   const trainingTemplates = useTrainingTemplates(userId);
@@ -77,6 +80,7 @@ export function AppDataProvider({ children }) {
     ...aenderungsprotokollData,
     ...wochenprotokollMeilenstein,
     ...lexikon,
+    ...hauptprotokollData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,

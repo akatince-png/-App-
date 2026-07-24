@@ -6,7 +6,7 @@ function rowToWochenplan(r) {
   return { id: r.id, wochentag: r.wochentag, mealId: r.meal_id, tageszeit: r.tageszeit || "", uhrzeit: r.uhrzeit || "", sortOrder: r.sort_order };
 }
 
-export function useMealData(userId) {
+export function useMealData(userId, hauptprotokollId) {
   const [mahlzeiten, setMahlzeiten] = useState([]);
   const [mahlzeitErledigt, setMahlzeitErledigt] = useState({});
   const [mahlzeitErledigtAt, setMahlzeitErledigtAt] = useState({});
@@ -59,7 +59,7 @@ export function useMealData(userId) {
 
       const { data: meal, error } = await supabase
         .from("meals")
-        .insert({ user_id: userId, name, tageszeiten: neueMahlzeit.tageszeiten || [], hinweis: neueMahlzeit.hinweis || "" })
+        .insert({ user_id: userId, hauptprotokoll_id: hauptprotokollId || null, name, tageszeiten: neueMahlzeit.tageszeiten || [], hinweis: neueMahlzeit.hinweis || "" })
         .select()
         .single();
       if (error) {
@@ -103,7 +103,7 @@ export function useMealData(userId) {
       ]);
       return { ok: true, meal: { id: meal.id, name: meal.name } };
     },
-    [userId]
+    [userId, hauptprotokollId]
   );
 
   const mahlzeitAendern = useCallback(async (id, felder) => {

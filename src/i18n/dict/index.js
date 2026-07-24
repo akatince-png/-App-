@@ -1,4 +1,5 @@
 import { common } from "./common";
+import { hauptprotokoll } from "./hauptprotokoll";
 import { home } from "./home";
 import { login } from "./login";
 import { mehr } from "./mehr";
@@ -10,7 +11,7 @@ import { welcome } from "./welcome";
 // Datei, damit mehrere Bereiche parallel bearbeitet werden können, ohne
 // sich gegenseitig in derselben Datei zu blockieren). Neue Bereiche hier
 // ergänzen, sobald ihre dict/-Datei existiert.
-const NAMESPACES = [common, home, login, mehr, onboarding, peptid, welcome];
+const NAMESPACES = [common, hauptprotokoll, home, login, mehr, onboarding, peptid, welcome];
 
 function merge(lang) {
   return NAMESPACES.reduce((acc, ns) => ({ ...acc, ...ns[lang] }), {});

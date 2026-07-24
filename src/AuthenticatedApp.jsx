@@ -107,7 +107,7 @@ export default function AuthenticatedApp() {
       // beim Erst-Onboarding (alle Kategorien + Peptid-Protokoll, jede
       // einzeln überspringbar) — nur ohne die Willkommens-Folien und mit
       // einem echten Abbrechen-Knopf.
-      <OnboardingFlow startPhase="categories" onCancel={() => setView("home")} onDone={() => setView("home")} />
+      <OnboardingFlow startPhase="hauptprotokoll" onCancel={() => setView("home")} onDone={() => setView("home")} />
     );
   } else if (view === "lexikon") {
     screen = <LexikonView onHome={() => setView("home")} />;

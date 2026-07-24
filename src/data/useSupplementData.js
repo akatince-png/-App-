@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-export function useSupplementData(userId) {
+export function useSupplementData(userId, hauptprotokollId) {
   const [supplemente, setSupplemente] = useState([]);
   const [supplementErledigt, setSupplementErledigt] = useState({});
   const [supplementErledigtAt, setSupplementErledigtAt] = useState({});
@@ -49,6 +49,7 @@ export function useSupplementData(userId) {
         .from("supplements")
         .insert({
           user_id: userId,
+          hauptprotokoll_id: hauptprotokollId || null,
           name: neuesSupplement.name,
           tageszeiten: neuesSupplement.tageszeiten,
           hinweis: neuesSupplement.hinweis,
@@ -62,7 +63,7 @@ export function useSupplementData(userId) {
       setSupplemente((prev) => [...prev, { id: data.id, name: data.name, tageszeiten: data.tageszeiten, hinweis: data.hinweis }]);
       return { ok: true };
     },
-    [userId]
+    [userId, hauptprotokollId]
   );
 
   const supplementAendern = useCallback(async (id, felder) => {

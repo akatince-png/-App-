@@ -6,7 +6,7 @@ import { toLocalISODate } from "../utils/dates";
 // Bündelfunktion) — jetzt als einfacher, eigenständiger Gewohnheiten-Tracker:
 // eine Gewohnheit pro Zeile, täglich im Tagesplan abhakbar, mit optionalem
 // eigenem Tage-Ziel statt einer festen Vorgabe.
-export function useGewohnheitenData(userId) {
+export function useGewohnheitenData(userId, hauptprotokollId) {
   const [gewohnheiten, setGewohnheiten] = useState([]);
   const [gewohnheitErledigt, setGewohnheitErledigt] = useState({});
 
@@ -43,7 +43,7 @@ export function useGewohnheitenData(userId) {
       if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
       const { data, error } = await supabase
         .from("routines")
-        .insert({ user_id: userId, name, icon: neu.icon || "🌱", uhrzeit: neu.uhrzeit || null, ziel_tage: neu.zielTage || null, menge: neu.menge || "" })
+        .insert({ user_id: userId, hauptprotokoll_id: hauptprotokollId || null, name, icon: neu.icon || "🌱", uhrzeit: neu.uhrzeit || null, ziel_tage: neu.zielTage || null, menge: neu.menge || "" })
         .select()
         .single();
       if (error) {
@@ -56,7 +56,7 @@ export function useGewohnheitenData(userId) {
       ]);
       return { ok: true, id: data.id };
     },
-    [userId]
+    [userId, hauptprotokollId]
   );
 
   const gewohnheitEntfernen = useCallback(async (id) => {

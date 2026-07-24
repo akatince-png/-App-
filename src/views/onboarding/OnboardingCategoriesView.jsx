@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, Pill, PrimaryButton, TextInput, Stepper } from "../../ui/primitives";
+import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
@@ -9,6 +9,7 @@ import { TAGESZEITEN, EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "
 import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS } from "./categorySteps";
 import { useT } from "../../i18n/translate";
+import { toLocalISODate } from "../../utils/dates";
 
 const ZIEL_LEER = { modus: "offen", wochen: "" };
 const MULTI_ADD_KEYS = ["gewohnheiten", "ernaehrung", "supplemente", "medikamente"];
@@ -89,6 +90,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     wochenplanEntfernen,
     erinnerungen,
     setErinnerung,
+    aktivesHauptprotokoll,
+    teilprotokollSpeichern,
   } = useAppData();
   const { t, tLabel } = useT();
 
@@ -99,6 +102,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
   const [hinzugefuegt, setHinzugefuegt] = useState([]); // Namen, die in diesem Bereich schon gespeichert wurden
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // Eigenes Startdatum je Teilprotokoll (weicht optional vom Hauptprotokoll ab)
+  const [eigenesStartdatumAktiv, setEigenesStartdatumAktiv] = useState(false);
+  const [eigenesStartdatum, setEigenesStartdatum] = useState(toLocalISODate(new Date()));
 
   // Gewohnheiten
   const [gName, setGName] = useState("");
@@ -158,6 +165,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     setMedKategorie("Hormone");
     setMedEinnahmeart("Injektion");
     setProtocolStep(0);
+    setEigenesStartdatumAktiv(false);
+    setEigenesStartdatum(toLocalISODate(new Date()));
   };
 
   const resetLokal = () => {
@@ -171,6 +180,16 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
   const weiter = (wurdeEingerichtet) => {
     const ohneAktuellen = eingerichtet.filter((e) => e.key !== step.key);
     const naechsteListe = wurdeEingerichtet ? [...ohneAktuellen, { key: step.key, icon: step.icon, label: step.label }] : ohneAktuellen;
+    // Teilprotokoll-Zuordnung (aktiv/inaktiv, eigenes Startdatum, Laufzeit)
+    // — eine Zeile je Kategorie unter dem aktuellen Hauptprotokoll, egal ob
+    // gerade eingerichtet oder übersprungen wurde.
+    if (aktivesHauptprotokoll?.id) {
+      teilprotokollSpeichern(aktivesHauptprotokoll.id, step.key, {
+        aktiv: wurdeEingerichtet,
+        eigenerStartdatum: eigenesStartdatumAktiv ? eigenesStartdatum : null,
+        laufzeitWochen: ziel.modus === "wochen" && ziel.wochen ? Number(ziel.wochen) : null,
+      });
+    }
     if (istLetzter) {
       onFinished(naechsteListe);
       return;
@@ -478,6 +497,21 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
               </div>
             )}
           </div>
+          {step.key !== "peptide" && (
+            <div style={{ marginBottom: 16 }}>
+              <CheckRow
+                label={t("onboarding.eigenesStartdatum.checkbox")}
+                checked={eigenesStartdatumAktiv}
+                onToggle={() => setEigenesStartdatumAktiv((v) => !v)}
+              />
+              {eigenesStartdatumAktiv && (
+                <div style={{ marginTop: 8 }}>
+                  <Label>{t("onboarding.eigenesStartdatum.label")}</Label>
+                  <TextInput type="date" value={eigenesStartdatum} onChange={setEigenesStartdatum} />
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <PrimaryButton onClick={() => setModus("jetzt")}>{tLabel("Jetzt einrichten")}</PrimaryButton>
             <PrimaryButton variant="ghost" onClick={() => weiter(false)}>

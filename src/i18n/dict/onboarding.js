@@ -47,6 +47,8 @@ export const onboarding = {
     "onboarding.ernaehrung.zutat.placeholder": "Zutat, z. B. Reis",
     "onboarding.ernaehrung.zutatmenge.placeholder": "Menge",
     "onboarding.ernaehrung.zutat.hinzufuegen": "+ weitere Zutat",
+    "onboarding.eigenesStartdatum.checkbox": "Dieses Protokoll soll später beginnen als mein Hauptprotokoll.",
+    "onboarding.eigenesStartdatum.label": "Wann soll dieses Protokoll beginnen?",
   },
   en: {
     "onboarding.categories.progress": "{{current}} of {{total}}",
@@ -96,5 +98,7 @@ export const onboarding = {
     "onboarding.ernaehrung.zutat.placeholder": "Ingredient, e.g. Rice",
     "onboarding.ernaehrung.zutatmenge.placeholder": "Amount",
     "onboarding.ernaehrung.zutat.hinzufuegen": "+ another ingredient",
+    "onboarding.eigenesStartdatum.checkbox": "This protocol should start later than my main protocol.",
+    "onboarding.eigenesStartdatum.label": "When should this protocol start?",
   },
 };
