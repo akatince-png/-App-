@@ -120,28 +120,30 @@ export default function HomeView({ onOpenView }) {
         </div>
       </div>
 
-      {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü. */}
+      {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü.
+          Vertikal gestapelt (Label über Ring über Text) statt nebeneinander:
+          bei nebeneinander lag der Ring je nach Textlänge/Zeilenumbruch der
+          Statuszeile in den beiden Karten auf unterschiedlicher Höhe, wirkte
+          "verschoben" — im Stapel bleibt der Ring immer direkt unter dem
+          (kurzen, garantiert einzeiligen) Label, unabhängig davon, wie viele
+          Zeilen der Text darunter braucht. */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-        <Card>
-          <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>{t("home.tagesfortschritt")}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <ProgressRing done={erledigtCount} total={heuteItems.length} size={72} stroke={9} color={accentDark} />
-            <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
-          </div>
+        <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 14 }}>{t("home.tagesfortschritt")}</div>
+          <ProgressRing done={erledigtCount} total={heuteItems.length} size={84} stroke={10} color={accentDark} />
+          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 14 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
         </Card>
         <Card
           className="mp-tap"
-          style={{ cursor: "pointer", background: blueSoft, border: "none" }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer", background: blueSoft, border: "none" }}
           onClick={() => onOpenView("routinen")}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: blue, marginBottom: 10 }}>{tLabel("Gewohnheiten")}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={72} stroke={9} color={blue} />
-            <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3, color: blue }}>
-              {gewohnheitHeuteItems.length === 0
-                ? t("home.gewohnheiten.leer")
-                : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length, lang)}
-            </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: blue, marginBottom: 14 }}>{tLabel("Gewohnheiten")}</div>
+          <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={84} stroke={10} color={blue} />
+          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 14, color: blue }}>
+            {gewohnheitHeuteItems.length === 0
+              ? t("home.gewohnheiten.leer")
+              : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length, lang)}
           </div>
         </Card>
       </div>
