@@ -65,3 +65,41 @@ export function activeDoseDays(d, startdatum, totalDays) {
   for (let n = 0; n < totalDays; n += days) dates.push(addDays(start, n));
   return dates;
 }
+
+/**
+ * Fällt dieser Eintrag an einem bestimmten Tag an? Gleiche Intervall-Logik
+ * wie activeDoseDays, aber für eine einzelne Tagesabfrage statt einer
+ * vorberechneten Liste — gedacht für Bereiche ohne eigenen Plan-Vorlauf
+ * (z. B. Supplemente im Tagesplan).
+ *
+ * Ohne Startdatum gilt der Eintrag als dauerhaft aktiv, damit ein
+ * unvollständig ausgefüllter Eintrag nicht stillschweigend aus dem
+ * Tagesplan verschwindet.
+ */
+export function faelltAnTag(d, date, startdatum) {
+  const mode = d?.intervallTyp || "fixed";
+  const tag = new Date(date);
+  tag.setHours(0, 0, 0, 0);
+
+  if (mode === "weekdays") {
+    const wanted = new Set((d?.weekdays || []).map((w) => WEEKDAY_INDEX[w]));
+    return wanted.size === 0 || wanted.has(tag.getDay());
+  }
+
+  const startRaw = d?.eigenerStart || startdatum;
+  if (!startRaw) return true;
+  const start = new Date(startRaw);
+  start.setHours(0, 0, 0, 0);
+  if (tag < start) return false;
+
+  const n = Math.round((tag - start) / 86400000);
+
+  if (mode === "cycle") {
+    const on = Math.max(1, Number(d.onDays) || 1);
+    const off = Math.max(0, Number(d.offDays) || 0);
+    return n % (on + off) < on;
+  }
+
+  const days = mode === "custom" ? Math.max(1, Number(d.customDays) || 1) : Math.max(1, Number(d?.intervallDays) || 1);
+  return n % days === 0;
+}

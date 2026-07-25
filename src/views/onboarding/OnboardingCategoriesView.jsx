@@ -17,6 +17,39 @@ import { toLocalISODate } from "../../utils/dates";
 const ZIEL_LEER = { modus: "offen", wochen: "" };
 const MULTI_ADD_KEYS = ["gewohnheiten", "ernaehrung", "supplemente", "medikamente"];
 
+// Startwerte für die geteilte Dosierungs-Maske (Supplemente/Medikamente) —
+// "täglich um 20:00" ist der häufigste Fall und lässt sich mit einem Tipp
+// ändern.
+const LEERE_DOSIERUNG = {
+  menge: "",
+  intervallTyp: "fixed",
+  intervallDays: 1,
+  customDays: "",
+  onDays: "",
+  offDays: "",
+  weekdays: [],
+  uhrzeiten: ["20:00"],
+  eigenerStart: "",
+};
+
+// DosierungFields meldet "intervallPreset" als kombinierte Änderung
+// (Modus + Tage in einem Schritt); alle anderen Felder gehen 1:1 durch.
+function anwendenDosierungsFeld(prev, feld, val) {
+  if (feld === "intervallPreset") return { ...prev, intervallTyp: "fixed", intervallDays: val };
+  return { ...prev, [feld]: val };
+}
+
+// Dieselbe Prüfung wie intervallGueltig() für Peptide: die Modi mit
+// Zusatzangaben (alle X Tage / Zyklus / feste Wochentage) sind erst
+// vollständig, wenn diese Angaben auch ausgefüllt sind.
+function dosierungVollstaendig(d) {
+  const typ = d?.intervallTyp || "fixed";
+  if (typ === "custom") return !!d.customDays;
+  if (typ === "cycle") return !!d.onDays && !!d.offDays;
+  if (typ === "weekdays") return (d.weekdays || []).length > 0;
+  return true;
+}
+
 const neuerSchlafblock = (wochentage) => ({
   id: Math.random().toString(36).slice(2),
   wochentage,
@@ -154,15 +187,23 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const [mahlzeitenListe, setMahlzeitenListe] = useState([]); // bereits in diesem Durchlauf hinzugefügte Mahlzeiten
   const [ernaehrungAnsicht, setErnaehrungAnsicht] = useState("alle");
 
-  // Supplemente
+  // Supplemente und Medikamente teilen sich dieselbe Dosierungs-Maske wie
+  // Peptide (DosierungFields): Menge, Intervall inkl. fester Wochentage,
+  // konkrete Uhrzeiten, eigenes Startdatum. Ohne Uhrzeit lässt sich keine
+  // Erinnerung timen — deshalb hier dieselbe Detailtiefe wie bei Peptiden
+  // statt der früheren groben Morgens/Mittags/Abends-Auswahl.
   const [suppName, setSuppName] = useState("");
-  const [suppZeiten, setSuppZeiten] = useState([]);
+  const [suppEinnahmeart, setSuppEinnahmeart] = useState("Kapsel");
+  const [suppDosierung, setSuppDosierung] = useState(LEERE_DOSIERUNG);
 
   // Medikamente
   const [medName, setMedName] = useState("");
-  const [medMenge, setMedMenge] = useState("");
   const [medKategorie, setMedKategorie] = useState("Hormone");
   const [medEinnahmeart, setMedEinnahmeart] = useState("Injektion");
+  const [medDosierung, setMedDosierung] = useState(LEERE_DOSIERUNG);
+
+  const setSuppDosierungFeld = (feld, val) => setSuppDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
+  const setMedDosierungFeld = (feld, val) => setMedDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
 
   // Peptid-Plan — Auswahl und Dosierung stehen jetzt gemeinsam auf dieser
   // Seite (früher: eigener fünfstufiger Assistent), deshalb hier nur noch
@@ -189,11 +230,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setMahlUhrzeit("08:00");
     setMahlZutaten([neueZutat()]);
     setSuppName("");
-    setSuppZeiten([]);
+    setSuppEinnahmeart("Kapsel");
+    setSuppDosierung(LEERE_DOSIERUNG);
     setMedName("");
-    setMedMenge("");
     setMedKategorie("Hormone");
     setMedEinnahmeart("Injektion");
+    setMedDosierung(LEERE_DOSIERUNG);
     setCustomPeptidName("");
     setCustomPeptidArt("Injektion");
     setEigenesStartdatumAktiv(false);
@@ -424,16 +466,23 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         setSaving(false);
         return;
       }
-      if (suppZeiten.length === 0) {
-        setError(t("onboarding.error.tageszeit"));
+      if (!dosierungVollstaendig(suppDosierung)) {
+        setError(t("onboarding.error.dosierung"));
         setSaving(false);
         return;
       }
       label = suppName.trim();
-      result = await supplementHinzufuegen({ name: suppName, tageszeiten: suppZeiten, hinweis: "" });
+      result = await supplementHinzufuegen({
+        name: suppName,
+        tageszeiten: [],
+        hinweis: "",
+        einnahmeart: suppEinnahmeart,
+        ...suppDosierung,
+      });
       if (result?.ok) {
         setSuppName("");
-        setSuppZeiten([]);
+        setSuppEinnahmeart("Kapsel");
+        setSuppDosierung(LEERE_DOSIERUNG);
       }
     } else if (step.key === "medikamente") {
       if (!medName.trim()) {
@@ -441,26 +490,23 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         setSaving(false);
         return;
       }
+      if (!dosierungVollstaendig(medDosierung)) {
+        setError(t("onboarding.error.dosierung"));
+        setSaving(false);
+        return;
+      }
       label = medName.trim();
       result = await hormonHinzufuegen({
         name: medName,
-        menge: medMenge,
         kategorie: medKategorie,
         einnahmeart: medEinnahmeart,
-        intervallTyp: "fixed",
-        intervallDays: 7,
-        customDays: "",
-        onDays: "",
-        offDays: "",
-        weekdays: [],
-        eigenerStart: "",
-        uhrzeiten: ["20:00"],
+        ...medDosierung,
       });
       if (result?.ok) {
         setMedName("");
-        setMedMenge("");
         setMedKategorie("Hormone");
         setMedEinnahmeart("Injektion");
+        setMedDosierung(LEERE_DOSIERUNG);
       }
     }
 
@@ -771,14 +817,19 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
 
           {step.key === "supplemente" && (
             <>
-              <Label>{t("onboarding.supplemente.tageszeiten.label")}</Label>
-              <div style={{ display: "flex", flexWrap: "wrap" }}>
-                {TAGESZEITEN.map((zeit) => (
-                  <Pill key={zeit} label={tLabel(zeit)} selected={suppZeiten.includes(zeit)} onClick={() => setSuppZeiten((prev) => toggleInArray(prev, zeit))} />
-                ))}
-              </div>
               <Label>{t("onboarding.supplemente.name.label")}</Label>
               <TextInput value={suppName} onChange={setSuppName} placeholder={t("onboarding.supplemente.name.placeholder")} />
+              <Label>{tLabel("Einnahmeart")}</Label>
+              <div style={{ display: "flex", flexWrap: "wrap" }}>
+                {EINNAHMEARTEN.map((a) => (
+                  <Pill key={a} label={tLabel(a)} selected={suppEinnahmeart === a} onClick={() => setSuppEinnahmeart(a)} />
+                ))}
+              </div>
+              <DosierungFields
+                value={suppDosierung}
+                onChange={(feld, val) => setSuppDosierungFeld(feld, val)}
+                mengePlaceholder={t("onboarding.supplemente.menge.placeholder")}
+              />
             </>
           )}
 
@@ -786,8 +837,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             <>
               <Label>{tLabel("Name")}</Label>
               <TextInput value={medName} onChange={setMedName} placeholder={t("onboarding.medikamente.name.placeholder")} />
-              <Label>{tLabel("Dosis")}</Label>
-              <TextInput value={medMenge} onChange={setMedMenge} placeholder={t("onboarding.medikamente.dosis.placeholder")} />
               <Label>{tLabel("Kategorie")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {MEDIKAMENTE_KATEGORIEN.map((k) => (
@@ -800,6 +849,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   <Pill key={a} label={tLabel(a)} selected={medEinnahmeart === a} onClick={() => setMedEinnahmeart(a)} />
                 ))}
               </div>
+              <DosierungFields
+                value={medDosierung}
+                onChange={(feld, val) => setMedDosierungFeld(feld, val)}
+                mengePlaceholder={t("onboarding.medikamente.dosis.placeholder")}
+              />
             </>
           )}
 

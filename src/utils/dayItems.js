@@ -1,4 +1,5 @@
 import { keyOf, sameDay, toLocalISODate } from "./dates";
+import { faelltAnTag } from "./schedule";
 import { accent, accentDark, accentSoft, blue } from "../ui/theme";
 
 // getDay()-indexiert (0 = Sonntag), passend zu JS' Date#getDay().
@@ -99,8 +100,32 @@ export function buildDayItems(
       });
     });
 
+  // Supplemente kennen seit Migration 0029 dasselbe Intervall-/Uhrzeit-
+  // Modell wie Medikamente und Peptide. Einträge mit konkreten Uhrzeiten
+  // laufen darüber (inkl. Wochentag-/Zyklus-Prüfung); ältere Einträge ohne
+  // Uhrzeiten fallen weiterhin auf die groben Tageszeiten zurück, damit sie
+  // nicht aus dem Tagesplan verschwinden.
   supplemente.forEach((s) => {
-    s.tageszeiten.forEach((zeit) => {
+    const uhrzeiten = s.uhrzeiten || [];
+    if (uhrzeiten.length > 0) {
+      if (!faelltAnTag(s, date, s.eigenerStart)) return;
+      uhrzeiten.forEach((zeit) => {
+        const k = `${tagStr}__${s.id}__${zeit}`;
+        items.push({
+          kategorie: "supplement",
+          key: `s-${k}`,
+          refId: s.id,
+          hour: zeit.slice(0, 2),
+          uhrzeit: zeit,
+          name: s.name,
+          detail: s.menge || s.hinweis,
+          done: !!supplementErledigt[k],
+          raw: s,
+        });
+      });
+      return;
+    }
+    (s.tageszeiten || []).forEach((zeit) => {
       const k = `${tagStr}__${s.id}__${zeit}`;
       items.push({
         kategorie: "supplement",

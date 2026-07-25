@@ -73,6 +73,8 @@ export const onboarding = {
     "onboarding.peptide.foto.label": "Foto des Präparats (optional) — hilft, Hersteller/Charge auseinanderzuhalten",
     "onboarding.error.peptid": "Bitte mindestens ein Peptid wählen.",
     "onboarding.error.intervall": "Bitte das Intervall für {{peptid}} vollständig ausfüllen.",
+    "onboarding.error.dosierung": "Bitte das Intervall vollständig ausfüllen.",
+    "onboarding.supplemente.menge.placeholder": "z. B. 5000 IE, 2 Kapseln",
   },
   en: {
     "onboarding.categories.progress": "{{current}} of {{total}}",
@@ -148,5 +150,7 @@ export const onboarding = {
     "onboarding.peptide.foto.label": "Photo of the preparation (optional) — helps tell manufacturers/batches apart",
     "onboarding.error.peptid": "Please choose at least one peptide.",
     "onboarding.error.intervall": "Please complete the interval for {{peptid}}.",
+    "onboarding.error.dosierung": "Please complete the interval.",
+    "onboarding.supplemente.menge.placeholder": "e.g. 5000 IU, 2 capsules",
   },
 };

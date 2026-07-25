@@ -26,7 +26,11 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen }) {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700 }}>{s.name}</div>
           <div style={{ fontSize: 11, color: textMuted }}>
-            {s.tageszeiten.join(", ")} {s.hinweis && `· ${s.hinweis}`}
+            {/* Im Onboarding angelegte Supplemente haben konkrete Uhrzeiten
+                statt der groben Tageszeiten — sonst stünde hier nichts. */}
+            {(s.uhrzeiten?.length ? s.uhrzeiten : s.tageszeiten).join(", ")}
+            {s.menge && ` · ${s.menge}`}
+            {s.hinweis && ` · ${s.hinweis}`}
           </div>
         </div>
         <button
@@ -191,17 +195,21 @@ function SupplementeSection() {
   const montag = addDays(today, -((today.getDay() + 6) % 7));
   const wochentage = Array.from({ length: 7 }, (_, i) => addDays(montag, i));
   const tagStr = toLocalISODate(supplementTag);
-  const heuteAnzahl = supplemente.reduce((sum, s) => sum + s.tageszeiten.length, 0);
+  // Ein Supplement wird über konkrete Uhrzeiten geführt (im Onboarding
+  // angelegt) ODER über die groben Tageszeiten (ältere Einträge) — beide
+  // Varianten zählen hier gleichwertig.
+  const zeitenVon = (s) => (s.uhrzeiten?.length ? s.uhrzeiten : s.tageszeiten || []);
+  const heuteAnzahl = supplemente.reduce((sum, s) => sum + zeitenVon(s).length, 0);
   const heuteErledigtAnzahl = supplemente.reduce(
-    (sum, s) => sum + s.tageszeiten.filter((z) => supplementErledigt[`${tagStr}__${s.id}__${z}`]).length,
+    (sum, s) => sum + zeitenVon(s).filter((z) => supplementErledigt[`${tagStr}__${s.id}__${z}`]).length,
     0
   );
 
-  // Feste Tageszeiten zuerst, danach alle frei benannten Zeiten/Anlässe, die
-  // irgendein Supplement tatsächlich benutzt (z. B. "Vor dem Training").
+  // Feste Tageszeiten zuerst, danach alle frei benannten Zeiten/Anlässe und
+  // konkreten Uhrzeiten, die irgendein Supplement tatsächlich benutzt.
   const alleZeiten = [
     ...TAGESZEITEN,
-    ...Array.from(new Set(supplemente.flatMap((s) => s.tageszeiten))).filter((z) => !TAGESZEITEN.includes(z)),
+    ...Array.from(new Set(supplemente.flatMap(zeitenVon))).filter((z) => !TAGESZEITEN.includes(z)),
   ];
 
   return (
@@ -305,7 +313,7 @@ function SupplementeSection() {
           </div>
 
           {alleZeiten.map((zeit) => {
-            const items = supplemente.filter((s) => s.tageszeiten.includes(zeit));
+            const items = supplemente.filter((s) => zeitenVon(s).includes(zeit));
             if (items.length === 0) return null;
             const offeneIds = items.filter((s) => !supplementErledigt[`${tagStr}__${s.id}__${zeit}`]).map((s) => s.id);
             return (

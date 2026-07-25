@@ -1,6 +1,43 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+// Supplemente folgen seit Migration 0029 demselben Dosierungs-/Intervall-
+// modell wie Medikamente und Peptide (Wochentage, konkrete Uhrzeiten,
+// Intervall-Modus, eigenes Startdatum). `tageszeiten` bleibt daneben
+// erhalten — ältere Einträge nutzen nur dieses Feld, und der Tagesplan
+// fällt darauf zurück, wenn keine Uhrzeiten hinterlegt sind.
+function rowToSupplement(r) {
+  return {
+    id: r.id,
+    name: r.name,
+    tageszeiten: r.tageszeiten || [],
+    hinweis: r.hinweis || "",
+    menge: r.menge || "",
+    intervallTyp: r.intervall_mode || "fixed",
+    intervallDays: r.intervall_days ?? 1,
+    customDays: r.custom_days ?? "",
+    onDays: r.on_days ?? "",
+    offDays: r.off_days ?? "",
+    weekdays: r.weekdays || [],
+    uhrzeiten: r.uhrzeiten || [],
+    eigenerStart: r.eigener_start || "",
+  };
+}
+
+function supplementToRow(neu) {
+  return {
+    menge: neu.menge || "",
+    intervall_mode: neu.intervallTyp || "fixed",
+    intervall_days: neu.intervallDays ? Number(neu.intervallDays) : null,
+    custom_days: neu.customDays ? Number(neu.customDays) : null,
+    on_days: neu.onDays ? Number(neu.onDays) : null,
+    off_days: neu.offDays ? Number(neu.offDays) : null,
+    weekdays: neu.weekdays || [],
+    uhrzeiten: neu.uhrzeiten || [],
+    eigener_start: neu.eigenerStart || null,
+  };
+}
+
 export function useSupplementData(userId, hauptprotokollId) {
   const [supplemente, setSupplemente] = useState([]);
   const [supplementErledigt, setSupplementErledigt] = useState({});
@@ -16,9 +53,7 @@ export function useSupplementData(userId, hauptprotokollId) {
         supabase.from("supplement_logs").select("*").eq("user_id", userId),
       ]);
       if (cancelled) return;
-      setSupplemente(
-        (rows || []).map((r) => ({ id: r.id, name: r.name, tageszeiten: r.tageszeiten || [], hinweis: r.hinweis || "" }))
-      );
+      setSupplemente((rows || []).map(rowToSupplement));
       const nextErledigt = {};
       const nextErledigtAt = {};
       const nextFeedback = {};
@@ -44,15 +79,20 @@ export function useSupplementData(userId, hauptprotokollId) {
   const supplementHinzufuegen = useCallback(
     async (neuesSupplement) => {
       if (!neuesSupplement.name.trim()) return { ok: false, error: "Bitte einen Namen eingeben." };
-      if (neuesSupplement.tageszeiten.length === 0) return { ok: false, error: "Bitte mindestens eine Tageszeit wählen." };
+      // Ein Supplement braucht mindestens eine Zeitangabe, damit es im
+      // Tagesplan auftauchen kann — entweder konkrete Uhrzeiten (neu) oder
+      // die groben Tageszeiten (bestehende Einträge/ältere Masken).
+      const hatZeitangabe = (neuesSupplement.uhrzeiten || []).length > 0 || (neuesSupplement.tageszeiten || []).length > 0;
+      if (!hatZeitangabe) return { ok: false, error: "Bitte mindestens eine Uhrzeit oder Tageszeit wählen." };
       const { data, error } = await supabase
         .from("supplements")
         .insert({
           user_id: userId,
           hauptprotokoll_id: hauptprotokollId || null,
           name: neuesSupplement.name,
-          tageszeiten: neuesSupplement.tageszeiten,
-          hinweis: neuesSupplement.hinweis,
+          tageszeiten: neuesSupplement.tageszeiten || [],
+          hinweis: neuesSupplement.hinweis || "",
+          ...supplementToRow(neuesSupplement),
         })
         .select()
         .single();
@@ -60,7 +100,7 @@ export function useSupplementData(userId, hauptprotokollId) {
         console.error(error);
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
-      setSupplemente((prev) => [...prev, { id: data.id, name: data.name, tageszeiten: data.tageszeiten, hinweis: data.hinweis }]);
+      setSupplemente((prev) => [...prev, rowToSupplement(data)]);
       return { ok: true };
     },
     [userId, hauptprotokollId]
