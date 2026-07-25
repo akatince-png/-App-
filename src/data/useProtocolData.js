@@ -407,6 +407,24 @@ export function useProtocolData(userId) {
     await loadArchived();
   }, [protocolId, plan.length, userId, loadArchived]);
 
+  // Verknüpft das aktuell aktive Peptid-Protokoll nachträglich mit einem
+  // neu angelegten Hauptprotokoll. Bewusst kein Feld im Insert der aktiven
+  // Protokoll-Zeile (die entsteht oft schon vor der Hauptprotokoll-Auswahl,
+  // z. B. direkt nach dem Login) — stattdessen ruft
+  // HauptprotokollErstellenView dies direkt nach hauptprotokollErstellen auf.
+  const verknuepfeMitHauptprotokoll = useCallback(
+    async (hauptprotokollId) => {
+      if (!protocolId) return { ok: true };
+      const { error } = await supabase.from("protocols").update({ hauptprotokoll_id: hauptprotokollId }).eq("id", protocolId);
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
+    },
+    [protocolId]
+  );
+
   const intervallGueltig = useCallback(
     (p) => {
       const d = dosierung[p];
@@ -442,5 +460,6 @@ export function useProtocolData(userId) {
     intervallGueltig,
     abgeschlosseneProtokolle,
     protokollArchivieren,
+    verknuepfeMitHauptprotokoll,
   };
 }

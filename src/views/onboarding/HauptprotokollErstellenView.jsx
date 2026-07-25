@@ -21,7 +21,7 @@ const BEISPIELE = [
 // ist danach die Vorbelegung für jedes Teilprotokoll, falls dort kein
 // eigenes, abweichendes Startdatum gewählt wird.
 export default function HauptprotokollErstellenView({ onDone, onCancel }) {
-  const { hauptprotokollErstellen } = useAppData();
+  const { hauptprotokollErstellen, verknuepfeMitHauptprotokoll } = useAppData();
   const { t, tLabel } = useT();
   const [name, setName] = useState("");
   const [startdatum, setStartdatum] = useState(toLocalISODate(new Date()));
@@ -40,6 +40,13 @@ export default function HauptprotokollErstellenView({ onDone, onCancel }) {
     if (!result?.ok) {
       setError(result?.error || t("hauptprotokoll.error.speichern"));
       return;
+    }
+    // Peptid-Protokoll (protocols) ist die einzige Kategorie mit eigenem
+    // "ein aktives Protokoll"-Modell statt einer einfachen Katalogtabelle —
+    // wird deshalb hier nachträglich verknüpft statt schon bei seiner
+    // eigenen (oft früheren) Erstellung.
+    if (result.hauptprotokoll?.id) {
+      verknuepfeMitHauptprotokoll(result.hauptprotokoll.id);
     }
     onDone();
   };

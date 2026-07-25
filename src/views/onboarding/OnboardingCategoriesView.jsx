@@ -4,6 +4,7 @@ import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
 import LaborwerteFelder from "../../ui/LaborwerteFelder";
+import TimeWheelField from "../../ui/TimeWheelField";
 import ProtocolFormView from "../ProtocolFormView";
 import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { TAGESZEITEN, EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "../../constants";
@@ -88,6 +89,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     hydrationZielMl,
     hydrationZielSetzen,
     mahlzeitHinzufuegen,
+    wochenplanMahlzeitSetzen,
     supplementHinzufuegen,
     hormonHinzufuegen,
     setCategoryZiel,
@@ -132,10 +134,16 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
   const [hydrationNeueZeit, setHydrationNeueZeit] = useState("12:00");
   const [hydrationNeueMenge, setHydrationNeueMenge] = useState("300");
 
-  // Ernährung
+  // Ernährung — Wochentage (an welchen Tagen gilt diese Mahlzeit) + eine
+  // einzelne Uhrzeit statt der pauschalen Morgens/Mittags/Abends-Auswahl,
+  // damit sie später wie jede andere Mahlzeit über meal_wochenplan
+  // tagesgenau im Tagesplan erscheint (siehe wochenplanMahlzeitSetzen).
   const [mahlName, setMahlName] = useState("");
-  const [mahlZeiten, setMahlZeiten] = useState([]);
+  const [mahlTage, setMahlTage] = useState([...WOCHENTAGE]);
+  const [mahlUhrzeit, setMahlUhrzeit] = useState("08:00");
   const [mahlZutaten, setMahlZutaten] = useState([neueZutat()]);
+  const [mahlzeitenListe, setMahlzeitenListe] = useState([]); // bereits in diesem Durchlauf hinzugefügte Mahlzeiten
+  const [ernaehrungAnsicht, setErnaehrungAnsicht] = useState("alle");
 
   // Supplemente
   const [suppName, setSuppName] = useState("");
@@ -165,7 +173,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     setHydrationNeueZeit("12:00");
     setHydrationNeueMenge("300");
     setMahlName("");
-    setMahlZeiten([]);
+    setMahlTage([...WOCHENTAGE]);
+    setMahlUhrzeit("08:00");
     setMahlZutaten([neueZutat()]);
     setSuppName("");
     setSuppZeiten([]);
@@ -183,6 +192,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     setZiel(ZIEL_LEER);
     setError(null);
     setHinzugefuegt([]);
+    setMahlzeitenListe([]);
+    setErnaehrungAnsicht("alle");
     resetEingabeFelder();
   };
 
@@ -347,17 +358,30 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
         setSaving(false);
         return;
       }
-      if (mahlZeiten.length === 0) {
-        setError(t("onboarding.error.tageszeit"));
+      if (mahlTage.length === 0) {
+        setError(t("onboarding.error.wochentag"));
         setSaving(false);
         return;
       }
       label = mahlName.trim();
-      result = await mahlzeitHinzufuegen({ name: mahlName, tageszeiten: mahlZeiten, hinweis: "", zutaten: mahlZutaten });
+      result = await mahlzeitHinzufuegen({ name: mahlName, tageszeiten: [], hinweis: "", zutaten: mahlZutaten });
       if (result?.ok) {
-        setMahlName("");
-        setMahlZeiten([]);
-        setMahlZutaten([neueZutat()]);
+        const zuweisungen = await Promise.all(
+          mahlTage.map((tag) => wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: null, uhrzeit: mahlUhrzeit }))
+        );
+        const fehlgeschlagen = zuweisungen.find((z) => !z?.ok);
+        if (fehlgeschlagen) {
+          result = { ok: false, error: fehlgeschlagen.error || t("onboarding.error.speichern") };
+        } else {
+          setMahlzeitenListe((prev) => [
+            ...prev,
+            { name: mahlName.trim(), tage: mahlTage, uhrzeit: mahlUhrzeit, zutaten: mahlZutaten.filter((z) => z.name.trim()) },
+          ]);
+          setMahlName("");
+          setMahlTage([...WOCHENTAGE]);
+          setMahlUhrzeit("08:00");
+          setMahlZutaten([neueZutat()]);
+        }
       }
     } else if (step.key === "supplemente") {
       if (!suppName.trim()) {
@@ -431,6 +455,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
     );
   }
 
+  // Hydration bekommt keine eigene "Jetzt einrichten?"-Gate-Seite mehr —
+  // Tagesziel, Erinnerung und Uhrzeiten gehörten für den Nutzer erkennbar
+  // zusammen und sollen nicht auf zwei Seiten aufgeteilt sein.
+  const effectiveModus = step.key === "hydration" ? "jetzt" : modus;
+
   return (
     <Shell>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -467,7 +496,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
         <div style={{ fontSize: 19, fontWeight: 800 }}>{t("onboarding.gate.title", { label: tLabel(step.label) })}</div>
       </div>
 
-      {modus === null && (
+      {effectiveModus === null && (
         <Card>
           <div style={{ fontSize: 13, color: textMuted, marginBottom: 16, lineHeight: 1.5 }}>
             {t("onboarding.gate.instructions")}
@@ -499,9 +528,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
         </Card>
       )}
 
-      {modus === "jetzt" && (
+      {effectiveModus === "jetzt" && (
         <Card>
-          {istMultiAdd && hinzugefuegt.length > 0 && (
+          {istMultiAdd && step.key !== "ernaehrung" && hinzugefuegt.length > 0 && (
             <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 12, background: accentSoft, fontSize: 12.5, fontWeight: 600 }}>
               {t("onboarding.hinzugefuegt.label")}: {hinzugefuegt.join(", ")}
             </div>
@@ -557,13 +586,21 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
 
           {step.key === "hydration" && (
             <>
+              <Label>{t("onboarding.hydration.tagesziel.label")}</Label>
+              <TextInput type="number" value={hydrationMl} onChange={setHydrationMl} placeholder={t("onboarding.hydration.tagesziel.placeholder")} />
+              <div style={{ fontSize: 11, color: textMuted, marginTop: 4, marginBottom: 18 }}>{t("onboarding.hydration.tagesziel.hinweis")}</div>
+
+              <div style={{ marginBottom: 16 }}>
+                <ErinnerungField value={erinnerungen.hydration} onChange={handleErinnerungChange} />
+              </div>
+
               {erinnerungen.hydration && (
                 <div style={{ marginBottom: 18 }}>
                   <Label>{t("onboarding.hydration.erinnerungszeiten.label")}</Label>
                   {hydrationZeiten.map((eintrag, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                       <div style={{ flex: 1 }}>
-                        <TextInput type="time" value={eintrag.zeit} onChange={(v) => hydrationZeitFeldAendern(i, "zeit", v)} />
+                        <TimeWheelField value={eintrag.zeit} onChange={(v) => hydrationZeitFeldAendern(i, "zeit", v)} />
                       </div>
                       <div style={{ width: 88 }}>
                         <TextInput
@@ -584,7 +621,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
                   ))}
                   <div style={{ display: "flex", gap: 8 }}>
                     <div style={{ flex: 1 }}>
-                      <TextInput type="time" value={hydrationNeueZeit} onChange={setHydrationNeueZeit} />
+                      <TimeWheelField value={hydrationNeueZeit} onChange={setHydrationNeueZeit} />
                     </div>
                     <div style={{ width: 88 }}>
                       <TextInput type="number" value={hydrationNeueMenge} onChange={setHydrationNeueMenge} placeholder={t("onboarding.hydration.menge.placeholder")} />
@@ -599,9 +636,18 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
                   </div>
                 </div>
               )}
-              <Label>{t("onboarding.hydration.tagesziel.label")}</Label>
-              <TextInput type="number" value={hydrationMl} onChange={setHydrationMl} placeholder={t("onboarding.hydration.tagesziel.placeholder")} />
-              <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>{t("onboarding.hydration.tagesziel.hinweis")}</div>
+
+              <CheckRow
+                label={t("onboarding.eigenesStartdatum.checkbox")}
+                checked={eigenesStartdatumAktiv}
+                onToggle={() => setEigenesStartdatumAktiv((v) => !v)}
+              />
+              {eigenesStartdatumAktiv && (
+                <div style={{ marginTop: 8, marginBottom: 8 }}>
+                  <Label>{t("onboarding.eigenesStartdatum.label")}</Label>
+                  <TextInput type="date" value={eigenesStartdatum} onChange={setEigenesStartdatum} />
+                </div>
+              )}
             </>
           )}
 
@@ -609,12 +655,19 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
             <>
               <Label>{t("onboarding.ernaehrung.name.label")}</Label>
               <TextInput value={mahlName} onChange={setMahlName} placeholder={t("onboarding.ernaehrung.name.placeholder")} />
-              <Label>{t("onboarding.ernaehrung.tageszeiten.label")}</Label>
+              <Label>{t("onboarding.ernaehrung.wochentage.label")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
-                {TAGESZEITEN.map((zeit) => (
-                  <Pill key={zeit} label={tLabel(zeit)} selected={mahlZeiten.includes(zeit)} onClick={() => setMahlZeiten((prev) => toggleInArray(prev, zeit))} />
+                <Pill
+                  label={t("onboarding.schlaf.alle")}
+                  selected={WOCHENTAGE.every((tag) => mahlTage.includes(tag))}
+                  onClick={() => setMahlTage((prev) => (WOCHENTAGE.every((tag) => prev.includes(tag)) ? [] : [...WOCHENTAGE]))}
+                />
+                {WOCHENTAGE.map((tag) => (
+                  <Pill key={tag} label={tag} selected={mahlTage.includes(tag)} onClick={() => setMahlTage((prev) => toggleInArray(prev, tag))} />
                 ))}
               </div>
+              <Label>{t("onboarding.ernaehrung.uhrzeit.label")}</Label>
+              <TimeWheelField value={mahlUhrzeit} onChange={setMahlUhrzeit} />
               <Label>{t("onboarding.ernaehrung.zutaten.label")}</Label>
               {mahlZutaten.map((z, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
@@ -632,6 +685,35 @@ export default function OnboardingCategoriesView({ onFinished, onCancel }) {
                 </div>
               ))}
               <AddZeile label={t("onboarding.ernaehrung.zutat.hinzufuegen")} onClick={zutatHinzufuegen} />
+
+              {mahlzeitenListe.length > 0 && (
+                <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+                  <Label>{t("onboarding.ernaehrung.uebersicht.label")}</Label>
+                  <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 10 }}>
+                    <Pill
+                      label={t("onboarding.ernaehrung.ansicht.alle")}
+                      selected={ernaehrungAnsicht === "alle"}
+                      onClick={() => setErnaehrungAnsicht("alle")}
+                    />
+                    {WOCHENTAGE.map((tag) => (
+                      <Pill key={tag} label={tag} selected={ernaehrungAnsicht === tag} onClick={() => setErnaehrungAnsicht(tag)} />
+                    ))}
+                  </div>
+                  {mahlzeitenListe
+                    .filter((m) => ernaehrungAnsicht === "alle" || m.tage.includes(ernaehrungAnsicht))
+                    .map((m, i) => (
+                      <div key={i} style={{ padding: "10px 12px", borderRadius: 12, background: accentSoft, marginBottom: 8 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>
+                          {m.name} · {m.uhrzeit}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2 }}>
+                          {m.tage.length === WOCHENTAGE.length ? t("onboarding.schlaf.alle") : m.tage.join(", ")}
+                          {m.zutaten.length > 0 ? ` · ${m.zutaten.map((z) => z.name).join(", ")}` : ""}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </>
           )}
 
