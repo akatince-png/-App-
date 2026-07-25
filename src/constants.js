@@ -76,14 +76,6 @@ export const INTERVALL_TYPEN = [
   { label: "Feste Wochentage", mode: "weekdays" },
 ];
 
-export const STEP_TITLES = [
-  "Ziel & Grund",
-  "Peptide & Stack",
-  "Dosierung & Intervall",
-  "Notizen & Details",
-  "Übersicht & Bestätigung",
-];
-
 export const NEBENWIRKUNGEN_OPTIONEN = [
   "Übelkeit",
   "Kopfschmerzen",

@@ -1,6 +1,5 @@
 import React from "react";
 import { accent, accentDark, accentSoft, blue, blueSoft, bg, card, cardBorder, danger, shadow, success, textMain, textMuted } from "./theme";
-import { STEP_TITLES } from "../constants";
 
 export function Shell({ children }) {
   return (
@@ -20,7 +19,7 @@ export function Shell({ children }) {
   );
 }
 
-export function Stepper({ step, total = STEP_TITLES.length }) {
+export function Stepper({ step, total }) {
   return (
     <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
       {Array.from({ length: total }).map((_, i) => (
