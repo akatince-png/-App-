@@ -30,10 +30,10 @@ export default function WelcomeView({ onDone }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, paddingTop: 4, paddingBottom: 4 }}>
         <button
           onClick={onDone}
-          style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+          style={{ border: "none", background: "transparent", color: textMuted, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: "8px 12px" }}
         >
           {t("welcome.skip")}
         </button>

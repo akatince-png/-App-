@@ -16,23 +16,23 @@ export default function OnboardingZieleView({ onDone, onBack, onCancel }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, paddingTop: 8, paddingBottom: 8 }}>
         {onBack ? (
-          <div className="mp-tap" onClick={onBack} style={{ fontSize: 12, fontWeight: 700, color: textMuted, cursor: "pointer" }}>
+          <div className="mp-tap" onClick={onBack} style={{ fontSize: 15, fontWeight: 700, color: textMuted, cursor: "pointer", padding: "8px 12px" }}>
             {t("onboarding.zurueck")}
           </div>
         ) : (
           <div />
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div className="mp-tap" onClick={onDone} style={{ fontSize: 12, fontWeight: 700, color: accentDark, cursor: "pointer" }}>
+          <div className="mp-tap" onClick={onDone} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
             {tLabel("Überspringen")}
           </div>
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              style={{ width: 30, height: 30, borderRadius: 9, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, cursor: "pointer", flexShrink: 0 }}
+              style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
               title={tLabel("Abbrechen")}
             >
               ⌂

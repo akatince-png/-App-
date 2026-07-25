@@ -167,7 +167,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const [gZielTage, setGZielTage] = useState("");
 
   // Schlaf — mehrere Blöcke, jeweils mit eigenen Wochentagen (z. B. Woche
-  // anders als Wochenende), damit auch als Wecker nutzbar.
+  // anders als Wochenende), damit auch als Wecker nutzbar. Zusätzlich
+  // Intervall-Modi für mehr Flexibilität wie bei Supplementen/Medikamenten.
+  const [schlafIntervallTyp, setSchlafIntervallTyp] = useState("weekdays"); // "fixed" | "weekdays"
   const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
 
   // Hydration
@@ -180,7 +182,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // einzelne Uhrzeit statt der pauschalen Morgens/Mittags/Abends-Auswahl,
   // damit sie später wie jede andere Mahlzeit über meal_wochenplan
   // tagesgenau im Tagesplan erscheint (siehe wochenplanMahlzeitSetzen).
+  // Zusätzlich nun auch Intervall-Modi (täglich, bestimmte Wochentage) für
+  // mehr Flexibilität wie bei Supplementen/Medikamenten.
   const [mahlName, setMahlName] = useState("");
+  const [mahlIntervallTyp, setMahlIntervallTyp] = useState("weekdays"); // "fixed" | "weekdays"
   const [mahlTage, setMahlTage] = useState([...WOCHENTAGE]);
   const [mahlUhrzeit, setMahlUhrzeit] = useState("08:00");
   const [mahlZutaten, setMahlZutaten] = useState([neueZutat()]);
@@ -220,12 +225,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setGMenge("");
     setGUhrzeit("");
     setGZielTage("");
+    setSchlafIntervallTyp("weekdays");
     setSchlafBloecke([neuerSchlafblock([...WOCHENTAGE])]);
     setHydrationMl(String(hydrationZielMl || 2500));
     setHydrationZeiten(normalisiereHydrationZeiten(erinnerungen?.hydration?.zeiten));
     setHydrationNeueZeit("12:00");
     setHydrationNeueMenge("300");
     setMahlName("");
+    setMahlIntervallTyp("weekdays");
     setMahlTage([...WOCHENTAGE]);
     setMahlUhrzeit("08:00");
     setMahlZutaten([neueZutat()]);
@@ -435,7 +442,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         setSaving(false);
         return;
       }
-      if (mahlTage.length === 0) {
+      const tageZuweisen = mahlIntervallTyp === "fixed" ? [...WOCHENTAGE] : mahlTage;
+      if (tageZuweisen.length === 0) {
         setError(t("onboarding.error.wochentag"));
         setSaving(false);
         return;
@@ -444,7 +452,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       result = await mahlzeitHinzufuegen({ name: mahlName, tageszeiten: [], hinweis: "", zutaten: mahlZutaten });
       if (result?.ok) {
         const zuweisungen = await Promise.all(
-          mahlTage.map((tag) => wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: null, uhrzeit: mahlUhrzeit }))
+          tageZuweisen.map((tag) => wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: null, uhrzeit: mahlUhrzeit }))
         );
         const fehlgeschlagen = zuweisungen.find((z) => !z?.ok);
         if (fehlgeschlagen) {
@@ -452,12 +460,13 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         } else {
           setMahlzeitenListe((prev) => [
             ...prev,
-            { name: mahlName.trim(), tage: mahlTage, uhrzeit: mahlUhrzeit, zutaten: mahlZutaten.filter((z) => z.name.trim()) },
+            { name: mahlName.trim(), tage: tageZuweisen, uhrzeit: mahlUhrzeit, zutaten: mahlZutaten.filter((z) => z.name.trim()) },
           ]);
           setMahlName("");
           setMahlTage([...WOCHENTAGE]);
           setMahlUhrzeit("08:00");
           setMahlZutaten([neueZutat()]);
+          setMahlIntervallTyp("weekdays");
         }
       }
     } else if (step.key === "supplemente") {
@@ -549,26 +558,26 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
 
   return (
     <Shell>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>
             {t("onboarding.categories.progress", { current: index + 1, total: CATEGORY_STEPS.length })}
           </div>
           {(index > 0 || onBackToStart) && (
-            <div className="mp-tap" onClick={zurueck} style={{ fontSize: 12, fontWeight: 700, color: textMuted, cursor: "pointer" }}>
+            <div className="mp-tap" onClick={zurueck} style={{ fontSize: 15, fontWeight: 700, color: textMuted, cursor: "pointer", padding: "8px 12px" }}>
               {t("onboarding.zurueck")}
             </div>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 12, fontWeight: 700, color: accentDark, cursor: "pointer" }}>
+          <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
             {tLabel("Alles überspringen")}
           </div>
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              style={{ width: 30, height: 30, borderRadius: 9, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, cursor: "pointer", flexShrink: 0 }}
+              style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
               title={tLabel("Abbrechen")}
             >
               ⌂
@@ -616,8 +625,15 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       {effectiveModus === "jetzt" && (
         <Card>
           {istMultiAdd && step.key !== "ernaehrung" && hinzugefuegt.length > 0 && (
-            <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 12, background: accentSoft, fontSize: 12.5, fontWeight: 600 }}>
-              {t("onboarding.hinzugefuegt.label")}: {hinzugefuegt.join(", ")}
+            <div style={{ marginBottom: 18, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+              <Label>{t("onboarding.hinzugefuegt.label")}</Label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {hinzugefuegt.map((item, i) => (
+                  <div key={i} style={{ padding: "10px 12px", borderRadius: 12, background: accentSoft, fontSize: 13, fontWeight: 600 }}>
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -636,36 +652,65 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
 
           {step.key === "schlaf" && (
             <>
-              {schlafBloecke.map((block, idx) => (
-                <div key={block.id} style={{ marginBottom: idx < schlafBloecke.length - 1 ? 20 : 0, paddingBottom: idx < schlafBloecke.length - 1 ? 16 : 0, borderBottom: idx < schlafBloecke.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                  <Label>{t("onboarding.schlaf.tage.label")}</Label>
-                  <div style={{ display: "flex", flexWrap: "wrap" }}>
-                    <Pill label={t("onboarding.schlaf.alle")} selected={verfuegbareTage(idx).length > 0 && verfuegbareTage(idx).every((t2) => block.wochentage.includes(t2))} onClick={() => blockAlleUmschalten(idx)} />
-                    {verfuegbareTage(idx).map((tag) => (
-                      <Pill key={tag} label={tag} selected={block.wochentage.includes(tag)} onClick={() => toggleBlockTag(idx, tag)} />
-                    ))}
-                  </div>
-                  <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
-                  <TextInput type="time" value={block.bettzeit} onChange={(v) => setBlockFeld(idx, "bettzeit", v)} />
-                  <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
-                  <TextInput type="time" value={block.aufwachzeit} onChange={(v) => setBlockFeld(idx, "aufwachzeit", v)} />
-                  <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
-                    {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(block.bettzeit, block.aufwachzeit) })}
-                  </div>
-                  {schlafBloecke.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => schlafblockEntfernen(idx)}
-                      style={{ marginTop: 8, border: "none", background: "transparent", color: danger, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 0 }}
-                    >
-                      {t("onboarding.schlaf.block.entfernen")}
-                    </button>
-                  )}
-                </div>
-              ))}
-              <div style={{ marginTop: 12 }}>
-                <AddZeile label={t("onboarding.schlaf.block.hinzufuegen")} onClick={schlafblockHinzufuegen} disabled={alleTageVergeben} />
+              <Label>{tLabel("Intervall")}</Label>
+              <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 16 }}>
+                <Pill
+                  label={tLabel("Täglich")}
+                  selected={schlafIntervallTyp === "fixed"}
+                  onClick={() => setSchlafIntervallTyp("fixed")}
+                />
+                <Pill
+                  label={tLabel("Bestimmte Wochentage")}
+                  selected={schlafIntervallTyp === "weekdays"}
+                  onClick={() => setSchlafIntervallTyp("weekdays")}
+                />
               </div>
+              {schlafIntervallTyp === "fixed" ? (
+                <>
+                  <div style={{ padding: "12px", borderRadius: 12, background: accentSoft, marginBottom: 14 }}>
+                    <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
+                    <TextInput type="time" value={schlafBloecke[0]?.bettzeit || "22:30"} onChange={(v) => setBlockFeld(0, "bettzeit", v)} />
+                    <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
+                    <TextInput type="time" value={schlafBloecke[0]?.aufwachzeit || "06:30"} onChange={(v) => setBlockFeld(0, "aufwachzeit", v)} />
+                    <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
+                      {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(schlafBloecke[0]?.bettzeit, schlafBloecke[0]?.aufwachzeit) })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {schlafBloecke.map((block, idx) => (
+                    <div key={block.id} style={{ marginBottom: idx < schlafBloecke.length - 1 ? 20 : 0, paddingBottom: idx < schlafBloecke.length - 1 ? 16 : 0, borderBottom: idx < schlafBloecke.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
+                      <Label>{t("onboarding.schlaf.tage.label")}</Label>
+                      <div style={{ display: "flex", flexWrap: "wrap" }}>
+                        <Pill label={t("onboarding.schlaf.alle")} selected={verfuegbareTage(idx).length > 0 && verfuegbareTage(idx).every((t2) => block.wochentage.includes(t2))} onClick={() => blockAlleUmschalten(idx)} />
+                        {verfuegbareTage(idx).map((tag) => (
+                          <Pill key={tag} label={tag} selected={block.wochentage.includes(tag)} onClick={() => toggleBlockTag(idx, tag)} />
+                        ))}
+                      </div>
+                      <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
+                      <TextInput type="time" value={block.bettzeit} onChange={(v) => setBlockFeld(idx, "bettzeit", v)} />
+                      <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
+                      <TextInput type="time" value={block.aufwachzeit} onChange={(v) => setBlockFeld(idx, "aufwachzeit", v)} />
+                      <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
+                        {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(block.bettzeit, block.aufwachzeit) })}
+                      </div>
+                      {schlafBloecke.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => schlafblockEntfernen(idx)}
+                          style={{ marginTop: 8, border: "none", background: "transparent", color: danger, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 0 }}
+                        >
+                          {t("onboarding.schlaf.block.entfernen")}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 12 }}>
+                    <AddZeile label={t("onboarding.schlaf.block.hinzufuegen")} onClick={schlafblockHinzufuegen} disabled={alleTageVergeben} />
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -740,17 +785,34 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             <>
               <Label>{t("onboarding.ernaehrung.name.label")}</Label>
               <TextInput value={mahlName} onChange={setMahlName} placeholder={t("onboarding.ernaehrung.name.placeholder")} />
-              <Label>{t("onboarding.ernaehrung.wochentage.label")}</Label>
-              <div style={{ display: "flex", flexWrap: "wrap" }}>
+              <Label>{tLabel("Intervall")}</Label>
+              <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 12 }}>
                 <Pill
-                  label={t("onboarding.schlaf.alle")}
-                  selected={WOCHENTAGE.every((tag) => mahlTage.includes(tag))}
-                  onClick={() => setMahlTage((prev) => (WOCHENTAGE.every((tag) => prev.includes(tag)) ? [] : [...WOCHENTAGE]))}
+                  label={tLabel("Täglich")}
+                  selected={mahlIntervallTyp === "fixed"}
+                  onClick={() => setMahlIntervallTyp("fixed")}
                 />
-                {WOCHENTAGE.map((tag) => (
-                  <Pill key={tag} label={tag} selected={mahlTage.includes(tag)} onClick={() => setMahlTage((prev) => toggleInArray(prev, tag))} />
-                ))}
+                <Pill
+                  label={tLabel("Bestimmte Wochentage")}
+                  selected={mahlIntervallTyp === "weekdays"}
+                  onClick={() => setMahlIntervallTyp("weekdays")}
+                />
               </div>
+              {mahlIntervallTyp === "weekdays" && (
+                <>
+                  <Label>{t("onboarding.ernaehrung.wochentage.label")}</Label>
+                  <div style={{ display: "flex", flexWrap: "wrap" }}>
+                    <Pill
+                      label={t("onboarding.schlaf.alle")}
+                      selected={WOCHENTAGE.every((tag) => mahlTage.includes(tag))}
+                      onClick={() => setMahlTage((prev) => (WOCHENTAGE.every((tag) => prev.includes(tag)) ? [] : [...WOCHENTAGE]))}
+                    />
+                    {WOCHENTAGE.map((tag) => (
+                      <Pill key={tag} label={tag} selected={mahlTage.includes(tag)} onClick={() => setMahlTage((prev) => toggleInArray(prev, tag))} />
+                    ))}
+                  </div>
+                </>
+              )}
               <Label>{t("onboarding.ernaehrung.uhrzeit.label")}</Label>
               <TimeWheelField value={mahlUhrzeit} onChange={setMahlUhrzeit} />
               <Label>{t("onboarding.ernaehrung.zutaten.label")}</Label>

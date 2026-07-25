@@ -54,11 +54,11 @@ export default function HauptprotokollErstellenView({ onDone, onCancel }) {
   return (
     <Shell>
       {onCancel && (
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 8, paddingBottom: 8, marginBottom: 8 }}>
           <button
             type="button"
             onClick={onCancel}
-            style={{ width: 30, height: 30, borderRadius: 9, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, cursor: "pointer", flexShrink: 0 }}
+            style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
             title={tLabel("Abbrechen")}
           >
             ⌂
