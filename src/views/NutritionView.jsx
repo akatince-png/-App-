@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
+import { Shell, Card, Label, TextInput, PrimaryButton, StatusBadge } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
 import WochentagPills from "../ui/WochentagPills";
+import TimeWheelField from "../ui/TimeWheelField";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
-import { TAGESZEITEN, WOCHENTAGE } from "../constants";
+import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { TAGESZEIT_STUNDE } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 
-const LEERE_MAHLZEIT = { name: "", tageszeiten: [], wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
+const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
 function kcalFuerZutat(z) {
   const g = Number(z.mengeGramm);
@@ -44,9 +46,10 @@ function ZutatKcalFelder({ zutat, onChange }) {
   );
 }
 
-function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle, onZutatAendern, onFotoAendern }) {
+function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfernen, onWochentagToggle, onUhrzeitAendern, onZutatAendern, onFotoAendern }) {
   const [offen, setOffen] = useState(false);
-  const [entwurf, setEntwurf] = useState({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
+  const [entwurf, setEntwurf] = useState({ name: m.name, hinweis: m.hinweis });
+  const [entwurfUhrzeit, setEntwurfUhrzeit] = useState(wochenplanEintraege[0]?.uhrzeit || "");
   const [zutatenEntwurf, setZutatenEntwurf] = useState(() => m.zutaten.map((z) => ({ ...z })));
   const [grund, setGrund] = useState("");
   const [fehler, setFehler] = useState(null);
@@ -63,15 +66,14 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
 
   const zugewieseneTage = wochenplanEintraege.map((w) => w.wochentag);
   const gesamtKcal = m.zutaten.reduce((sum, z) => sum + kcalFuerZutat(z), 0);
-
-  const toggleZeit = (z) =>
-    setEntwurf((p) => ({ ...p, tageszeiten: p.tageszeiten.includes(z) ? p.tageszeiten.filter((x) => x !== z) : [...p.tageszeiten, z] }));
+  const aktuelleUhrzeit = wochenplanEintraege[0]?.uhrzeit || "";
 
   const zutatEntwurfAendern = (id, feld, wert) =>
     setZutatenEntwurf((prev) => prev.map((z) => (z.id === id ? { ...z, [feld]: wert } : z)));
 
   const oeffnen = () => {
-    setEntwurf({ name: m.name, tageszeiten: m.tageszeiten, hinweis: m.hinweis });
+    setEntwurf({ name: m.name, hinweis: m.hinweis });
+    setEntwurfUhrzeit(aktuelleUhrzeit);
     setZutatenEntwurf(m.zutaten.map((z) => ({ ...z })));
     setFehler(null);
     setOffen(true);
@@ -90,6 +92,9 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
         return;
       }
     }
+    if (entwurfUhrzeit !== aktuelleUhrzeit) {
+      await onUhrzeitAendern(m, entwurfUhrzeit);
+    }
     onAendern(m, entwurf, grund);
     setGrund("");
     setOffen(false);
@@ -107,6 +112,7 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
           <div style={{ fontSize: 11, color: textMuted }}>
             {zugewieseneTage.length > 0 ? zugewieseneTage.join(", ") : "Keinem Wochentag zugewiesen"}
+            {aktuelleUhrzeit && ` · ${aktuelleUhrzeit}`}
             {m.hinweis && ` · ${m.hinweis}`}
             {gesamtKcal > 0 && ` · ≈ ${Math.round(gesamtKcal)} kcal gesamt`}
           </div>
@@ -131,13 +137,12 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           <Label>Name</Label>
           <TextInput value={entwurf.name} onChange={(v) => setEntwurf((p) => ({ ...p, name: v }))} />
           <Label>Wochentage</Label>
-          <WochentagPills selected={zugewieseneTage} onToggle={(tag) => onWochentagToggle(m, tag, zugewieseneTage.includes(tag))} />
-          <Label>Tageszeit(en)</Label>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {TAGESZEITEN.map((z) => (
-              <Pill key={z} label={z} selected={entwurf.tageszeiten.includes(z)} onClick={() => toggleZeit(z)} />
-            ))}
-          </div>
+          <WochentagPills
+            selected={zugewieseneTage}
+            onToggle={(tag) => onWochentagToggle(m, tag, zugewieseneTage.includes(tag), wochenplanEintraege)}
+          />
+          <Label>Uhrzeit</Label>
+          <TimeWheelField value={entwurfUhrzeit} onChange={setEntwurfUhrzeit} />
           <Label>Hinweis</Label>
           <TextInput value={entwurf.hinweis} onChange={(v) => setEntwurf((p) => ({ ...p, hinweis: v }))} placeholder="optional" />
           <Label>Foto</Label>
@@ -208,27 +213,13 @@ export default function NutritionView({ onHome, embedded = false }) {
   } = useAppData();
   const [neueMahlzeit, setNeueMahlzeit] = useState(LEERE_MAHLZEIT);
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
-  const [eigeneZeit, setEigeneZeit] = useState("");
   const [mahlzeitError, setMahlzeitError] = useState(null);
-
-  const toggleNeueMahlzeitZeit = (z) =>
-    setNeueMahlzeit((prev) => ({
-      ...prev,
-      tageszeiten: prev.tageszeiten.includes(z) ? prev.tageszeiten.filter((x) => x !== z) : [...prev.tageszeiten, z],
-    }));
 
   const toggleNeueMahlzeitWochentag = (tag) =>
     setNeueMahlzeit((prev) => ({
       ...prev,
       wochentage: prev.wochentage.includes(tag) ? prev.wochentage.filter((t) => t !== tag) : [...prev.wochentage, tag],
     }));
-
-  const eigeneZeitHinzufuegen = () => {
-    const z = eigeneZeit.trim();
-    if (!z || neueMahlzeit.tageszeiten.includes(z)) return;
-    setNeueMahlzeit((prev) => ({ ...prev, tageszeiten: [...prev.tageszeiten, z] }));
-    setEigeneZeit("");
-  };
 
   const entwurfZutatAendern = (index, feld, wert) => {
     setNeueMahlzeit((prev) => ({ ...prev, zutaten: prev.zutaten.map((z, i) => (i === index ? { ...z, [feld]: wert } : z)) }));
@@ -251,7 +242,7 @@ export default function NutritionView({ onHome, embedded = false }) {
     }
     const wochentagErgebnisse = await Promise.all(
       neueMahlzeit.wochentage.map((tag) =>
-        wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: neueMahlzeit.tageszeiten[0] || null, uhrzeit: null })
+        wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: null, uhrzeit: neueMahlzeit.uhrzeit || null })
       )
     );
     const fehlgeschlagen = wochentagErgebnisse.find((r) => !r?.ok);
@@ -272,9 +263,6 @@ export default function NutritionView({ onHome, embedded = false }) {
   const handleAendern = (m, entwurf, grund) => {
     const aenderungen = [];
     if (entwurf.name !== m.name) aenderungen.push(`Name: ${m.name} → ${entwurf.name}`);
-    if (entwurf.tageszeiten.join(",") !== m.tageszeiten.join(",")) {
-      aenderungen.push(`Tageszeiten: ${m.tageszeiten.join(", ") || "–"} → ${entwurf.tageszeiten.join(", ") || "–"}`);
-    }
     if (entwurf.hinweis !== m.hinweis) aenderungen.push(`Hinweis: ${m.hinweis || "–"} → ${entwurf.hinweis || "–"}`);
     if (aenderungen.length > 0) {
       aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: aenderungen.join("; "), grund });
@@ -288,15 +276,23 @@ export default function NutritionView({ onHome, embedded = false }) {
     mahlzeitEntfernen(m.id);
   };
 
-  const handleWochentagToggle = async (m, tag, warZugewiesen) => {
+  const handleWochentagToggle = async (m, tag, warZugewiesen, wochenplanEintraege) => {
     if (warZugewiesen) {
       const zeilen = mealWochenplan.filter((w) => w.mealId === m.id && w.wochentag === tag);
       await Promise.all(zeilen.map((w) => wochenplanMahlzeitEntfernen(w.id)));
       aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: `${tag} entfernt` });
     } else {
-      await wochenplanMahlzeitSetzen(tag, { mealId: m.id, tageszeit: m.tageszeiten[0] || null, uhrzeit: null });
+      const uhrzeit = wochenplanEintraege?.[0]?.uhrzeit || null;
+      await wochenplanMahlzeitSetzen(tag, { mealId: m.id, tageszeit: null, uhrzeit });
       aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: `${tag} hinzugefügt` });
     }
+  };
+
+  const handleUhrzeitAendern = async (m, neueUhrzeit) => {
+    const zeilen = mealWochenplan.filter((w) => w.mealId === m.id);
+    await Promise.all(zeilen.map((w) => wochenplanMahlzeitEntfernen(w.id)));
+    await Promise.all(zeilen.map((w) => wochenplanMahlzeitSetzen(w.wochentag, { mealId: m.id, tageszeit: null, uhrzeit: neueUhrzeit || null })));
+    aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "geändert", detail: `Uhrzeit → ${neueUhrzeit || "–"}` });
   };
 
   const today = new Date();
@@ -308,15 +304,19 @@ export default function NutritionView({ onHome, embedded = false }) {
   // Nur Mahlzeiten, die diesem Wochentag tatsächlich zugewiesen sind — nicht
   // mehr jede Mahlzeit an jedem Tag (siehe dayItems.js für dieselbe Logik
   // im Tagesplan).
+  const zeitVon = (e) => e.uhrzeit || e.tageszeit || "Mahlzeit";
+  const stundeVon = (e) => (e.uhrzeit ? e.uhrzeit : e.tageszeit ? `${TAGESZEIT_STUNDE[e.tageszeit] || "99"}:00` : "99:99");
+
   const tagesEintraege = mealWochenplan
     .filter((w) => w.wochentag === wochentagLabel)
     .map((w) => ({ ...w, mahlzeit: mahlzeiten.find((m) => m.id === w.mealId) }))
-    .filter((e) => e.mahlzeit);
+    .filter((e) => e.mahlzeit)
+    .sort((a, b) => stundeVon(a).localeCompare(stundeVon(b)));
 
   const heuteAnzahl = tagesEintraege.length;
-  const heuteErledigtAnzahl = tagesEintraege.filter((e) => mahlzeitErledigt[`${tagStr}__${e.mealId}__${e.tageszeit || "Mahlzeit"}`]).length;
+  const heuteErledigtAnzahl = tagesEintraege.filter((e) => mahlzeitErledigt[`${tagStr}__${e.mealId}__${zeitVon(e)}`]).length;
 
-  const zeitGruppen = Array.from(new Set(tagesEintraege.map((e) => e.tageszeit || "Mahlzeit")));
+  const zeitGruppen = Array.from(new Set(tagesEintraege.map(zeitVon)));
 
   const content = (
     <>
@@ -344,28 +344,8 @@ export default function NutritionView({ onHome, embedded = false }) {
           Leer lassen = die Mahlzeit wird angelegt, taucht aber noch in keinem Tagesplan auf — Tage kannst du jederzeit später anpassen.
         </div>
 
-        <Label>Tageszeit (optional, nur zur Beschriftung)</Label>
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {TAGESZEITEN.map((z) => (
-            <Pill key={z} label={z} selected={neueMahlzeit.tageszeiten.includes(z)} onClick={() => toggleNeueMahlzeitZeit(z)} />
-          ))}
-          {neueMahlzeit.tageszeiten
-            .filter((z) => !TAGESZEITEN.includes(z))
-            .map((z) => (
-              <Pill key={z} label={z} selected onClick={() => toggleNeueMahlzeitZeit(z)} />
-            ))}
-        </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-          <div style={{ flex: 1 }}>
-            <TextInput value={eigeneZeit} onChange={setEigeneZeit} placeholder="Eigene Zeit/Anlass, z. B. Vor dem Training" />
-          </div>
-          <button
-            onClick={eigeneZeitHinzufuegen}
-            style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
-          >
-            +
-          </button>
-        </div>
+        <Label>Uhrzeit (optional)</Label>
+        <TimeWheelField value={neueMahlzeit.uhrzeit} onChange={(v) => setNeueMahlzeit((p) => ({ ...p, uhrzeit: v }))} />
 
         <Label>Zutaten (optional)</Label>
         {neueMahlzeit.zutaten.map((z, i) => (
@@ -476,7 +456,7 @@ export default function NutritionView({ onHome, embedded = false }) {
           )}
 
           {zeitGruppen.map((zeit) => {
-            const items = tagesEintraege.filter((e) => (e.tageszeit || "Mahlzeit") === zeit);
+            const items = tagesEintraege.filter((e) => zeitVon(e) === zeit);
             if (items.length === 0) return null;
             return (
               <React.Fragment key={zeit}>
@@ -530,6 +510,7 @@ export default function NutritionView({ onHome, embedded = false }) {
                 onAendern={handleAendern}
                 onEntfernen={handleEntfernen}
                 onWochentagToggle={handleWochentagToggle}
+                onUhrzeitAendern={handleUhrzeitAendern}
                 onZutatAendern={zutatAendern}
                 onFotoAendern={setMahlzeitFoto}
               />
