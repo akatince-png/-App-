@@ -13,6 +13,7 @@ import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
+import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 
 // Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
 // bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
@@ -87,15 +88,27 @@ export default function HomeView({ onOpenView }) {
     confirmAlleTageszeit,
     hydrationHeuteMl,
     hydrationZielMl,
+    hydrationHinzufuegen,
   } = useAppData();
 
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
+  // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
+  // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
+  const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
 
   const handleToggleEmergencyMode = (newState) => {
     setIsEmergencyMode(newState);
     saveADHSMode(newState);
+  };
+
+  const handleToggleAlleWidgets = () => {
+    setAlleWidgetsAnzeigen((prev) => {
+      const next = !prev;
+      saveMiniWidgetsAlleAnzeigen(next);
+      return next;
+    });
   };
 
   const handleToggleSoundEnabled = (newState) => {
@@ -157,12 +170,17 @@ export default function HomeView({ onOpenView }) {
     },
   }));
 
-  // Mini-Widget-Daten für alle Kategorien
+  // Mini-Widget-Daten für alle Kategorien — erscheinen jetzt IMMER (auch ohne
+  // eigene Daten, dann grau/"aktiv: false"), damit jede Kategorie als
+  // Einstiegspunkt sichtbar bleibt. Das "alleWidgetsAnzeigen"-Präferenz
+  // blendet unbenutzte Kategorien optional aus (siehe Toggle unten) — der
+  // Notfallmodus-Filter bleibt davon unberührt und funktioniert exakt wie
+  // zuvor (nur essenzielle UND tatsächlich genutzte Kategorien).
   const miniWidgetData = useMemo(() => {
     const widgets = [];
 
     // Peptide/Hormone
-    if (plan.length > 0) {
+    {
       const todayCount = plan.filter((d) => {
         const key = `${toLocalISODate(d.date)}__${d.peptid}__${d.uhrzeit}`;
         return erledigt[key];
@@ -180,6 +198,8 @@ export default function HomeView({ onOpenView }) {
       widgets.push({
         name: tLabel("Peptide"),
         kategorie: "peptid",
+        viewId: "peptide",
+        aktiv: plan.length > 0,
         dailyCount: todayCount,
         dailyTotal: plan.filter((d) => sameDay(d.date, today)).length || 1,
         weeklyCount: weekCount,
@@ -188,7 +208,7 @@ export default function HomeView({ onOpenView }) {
       });
     }
 
-    if (hormonPlan.length > 0) {
+    {
       const todayCount = hormonPlan.filter((d) => {
         const key = `${toLocalISODate(d.date)}__${d.name}__${d.uhrzeit}`;
         return hormonErledigt[key];
@@ -206,6 +226,8 @@ export default function HomeView({ onOpenView }) {
       widgets.push({
         name: tLabel("Hormone"),
         kategorie: "hormon",
+        viewId: "medikamente",
+        aktiv: hormonPlan.length > 0,
         dailyCount: todayCount,
         dailyTotal: hormonPlan.filter((d) => sameDay(d.date, today)).length || 1,
         weeklyCount: weekCount,
@@ -215,7 +237,7 @@ export default function HomeView({ onOpenView }) {
     }
 
     // Supplemente
-    if (supplemente.length > 0) {
+    {
       const supplementItems = heuteItems.filter((i) => i.kategorie === "supplement");
       const todayCount = supplementItems.filter((i) => i.done).length;
       const weekItems = [];
@@ -231,6 +253,8 @@ export default function HomeView({ onOpenView }) {
       widgets.push({
         name: tLabel("Supplemente"),
         kategorie: "supplement",
+        viewId: "supplemente",
+        aktiv: supplemente.length > 0,
         dailyCount: todayCount,
         dailyTotal: Math.max(supplementItems.length, 1),
         weeklyCount: weekItems.length,
@@ -240,7 +264,7 @@ export default function HomeView({ onOpenView }) {
     }
 
     // Mahlzeiten
-    if (mahlzeiten.length > 0) {
+    {
       const mealItems = heuteItems.filter((i) => i.kategorie === "mahlzeit");
       const todayCount = mealItems.filter((i) => i.done).length;
       const weekItems = [];
@@ -256,6 +280,8 @@ export default function HomeView({ onOpenView }) {
       widgets.push({
         name: tLabel("Mahlzeiten"),
         kategorie: "mahlzeit",
+        viewId: "ernaehrung",
+        aktiv: mahlzeiten.length > 0,
         dailyCount: todayCount,
         dailyTotal: Math.max(mealItems.length, 1),
         weeklyCount: weekItems.length,
@@ -265,7 +291,7 @@ export default function HomeView({ onOpenView }) {
     }
 
     // Training
-    if (trainingEintraege.length > 0 || trainingWochenplan.length > 0) {
+    {
       const trainingItems = heuteItems.filter((i) => i.kategorie === "training");
       const todayCount = trainingItems.filter((i) => i.done).length;
       const weekItems = [];
@@ -281,6 +307,8 @@ export default function HomeView({ onOpenView }) {
       widgets.push({
         name: tLabel("Training"),
         kategorie: "training",
+        viewId: "training",
+        aktiv: trainingEintraege.length > 0 || trainingWochenplan.length > 0,
         dailyCount: todayCount,
         dailyTotal: Math.max(trainingItems.length, 1),
         weeklyCount: weekItems.length,
@@ -292,28 +320,32 @@ export default function HomeView({ onOpenView }) {
     // Hydration wird als laufende Trinkmenge geführt, nicht als Liste
     // einzelner Zeit-Items (siehe useHydrationData) — deshalb hier direkt aus
     // hydrationHeuteMl/-ZielMl berechnet statt aus heuteItems gefiltert, wo
-    // nie ein "hydration"-Eintrag existiert.
-    if (hydrationZielMl > 0) {
-      widgets.push({
-        name: tLabel("Hydration"),
-        kategorie: "hydration",
-        dailyCount: Math.min(hydrationHeuteMl, hydrationZielMl),
-        dailyTotal: hydrationZielMl,
-        weeklyCount: 0,
-        weeklyTotal: 1,
-        isEssential: true,
-        unit: "ml",
-      });
-    }
+    // nie ein "hydration"-Eintrag existiert. Gilt als "aktiv", sobald
+    // überhaupt schon etwas getrunken wurde oder ein Ziel abweichend vom
+    // Standard gesetzt wurde.
+    widgets.push({
+      name: tLabel("Hydration"),
+      kategorie: "hydration",
+      viewId: "hydration",
+      aktiv: hydrationHeuteMl > 0 || hydrationZielMl !== 2500,
+      dailyCount: Math.min(hydrationHeuteMl, hydrationZielMl),
+      dailyTotal: hydrationZielMl || 1,
+      weeklyCount: 0,
+      weeklyTotal: 1,
+      isEssential: true,
+      unit: "ml",
+      actionLabel: "+200ml",
+      onAction: () => hydrationHinzufuegen(200),
+    });
 
-    // Im Notfallmodus nur essenzielle Kategorien (Medikamente/Hormone,
-    // Hydration) zeigen — unabhängig davon, ob zusätzlich ein Peptid-Protokoll
-    // existiert (der vorherige "plan.length + hormonPlan.length > 0"-Zusatz
-    // hat sonst z. B. Hydration ausgeblendet, sobald kein Peptid-Plan lief).
-    return isEmergencyMode ? widgets.filter((w) => w.isEssential) : widgets;
-  }, [isEmergencyMode, plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+    // Im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
+    // Kategorien. Sonst: je nach Präferenz entweder alle (unbenutzte grau)
+    // oder nur die tatsächlich genutzten.
+    if (isEmergencyMode) return widgets.filter((w) => w.isEssential && w.aktiv);
+    return alleWidgetsAnzeigen ? widgets : widgets.filter((w) => w.aktiv);
+  }, [isEmergencyMode, alleWidgetsAnzeigen, plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
       mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan, trainingTemplates,
-      gewohnheiten, gewohnheitErledigt, hydrationHeuteMl, hydrationZielMl, heuteItems, today, tLabel]);
+      gewohnheiten, gewohnheitErledigt, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen, heuteItems, today, tLabel]);
 
   return (
     <Shell>
@@ -380,7 +412,28 @@ export default function HomeView({ onOpenView }) {
       {/* Mini-Widgets für alle Pläne */}
       {miniWidgetData.length > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 12 }}>📊 Alle Pläne im Überblick</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>📊 Alle Pläne im Überblick</div>
+            {!isEmergencyMode && (
+              <button
+                type="button"
+                onClick={handleToggleAlleWidgets}
+                className="mp-tap"
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  color: accentDark,
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  padding: "4px 6px",
+                }}
+                title="Unabhängig vom ADHS-Notfallmodus"
+              >
+                {alleWidgetsAnzeigen ? "Nur genutzte zeigen" : "Alle zeigen"}
+              </button>
+            )}
+          </div>
           <div
             style={{
               display: "grid",
@@ -398,6 +451,10 @@ export default function HomeView({ onOpenView }) {
                 weeklyTotal={widget.weeklyTotal}
                 kategorie={widget.kategorie}
                 unit={widget.unit}
+                aktiv={widget.aktiv}
+                onClick={() => onOpenView(widget.viewId)}
+                actionLabel={widget.actionLabel}
+                onAction={widget.onAction}
               />
             ))}
           </div>

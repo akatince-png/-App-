@@ -12,13 +12,31 @@ import { KATEGORIE_META } from "../utils/dayItems";
  * - weeklyCount: number - Wochenerfüllung (z.B. 4)
  * - weeklyTotal: number - Wochenziel (z.B. 7)
  * - kategorie: string - Kategorie für Farbe (z.B. "peptid", "hormon")
+ * - aktiv: boolean - false = Kategorie noch nicht eingerichtet, erscheint
+ *   grau/entsättigt statt farbig (bleibt aber antippbar, um sie einzurichten)
+ * - onClick: () => void - springt ins zugehörige Menü (auch wenn inaktiv)
+ * - actionLabel/onAction: optionaler Schnellzugriff (z. B. "+200ml"), oben
+ *   rechts als kleiner Button — für Aktionen, die keinen vollen
+ *   Seitenwechsel brauchen (siehe Hydration-Widget in HomeView)
  */
-export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCount, weeklyTotal, kategorie, unit = "" }) {
+export default function MiniPlanWidget({
+  name,
+  dailyCount,
+  dailyTotal,
+  weeklyCount,
+  weeklyTotal,
+  kategorie,
+  unit = "",
+  aktiv = true,
+  onClick,
+  actionLabel,
+  onAction,
+}) {
   // KATEGORIE_META-Einträge haben kein "color"-Feld (nur bg/text/dot/label) —
   // ein vorheriger Zugriff auf meta.color war deshalb immer undefined und
   // ließ die Ring-Striche unsichtbar werden (SVG-Default für stroke: "none").
   const meta = KATEGORIE_META[kategorie] || { dot: "#999" };
-  const baseColor = meta.dot;
+  const baseColor = aktiv ? meta.dot : "#B5B5B5";
 
   // Berechne Prozentsätze
   const dailyPercent = dailyTotal > 0 ? (dailyCount / dailyTotal) * 100 : 0;
@@ -38,7 +56,10 @@ export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCou
 
   return (
     <div
+      className={onClick ? "mp-tap" : undefined}
+      onClick={onClick}
       style={{
+        position: "relative",
         background: "#fff",
         border: "1px solid #e5e7eb",
         borderRadius: "12px",
@@ -49,8 +70,37 @@ export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCou
         flexDirection: "column",
         alignItems: "center",
         gap: "10px",
+        cursor: onClick ? "pointer" : "default",
+        opacity: aktiv ? 1 : 0.6,
+        filter: aktiv ? "none" : "grayscale(1)",
       }}
     >
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAction();
+          }}
+          className="mp-tap"
+          style={{
+            position: "absolute",
+            top: 6,
+            right: 6,
+            border: "none",
+            borderRadius: 8,
+            background: meta.dot,
+            color: "#fff",
+            fontSize: 9,
+            fontWeight: 700,
+            padding: "3px 6px",
+            cursor: "pointer",
+          }}
+        >
+          {actionLabel}
+        </button>
+      )}
+
       <div
         style={{
           fontSize: "11px",
@@ -134,7 +184,7 @@ export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCou
           marginTop: "4px",
         }}
       >
-        {dailyCount}{unit}/{dailyTotal}{unit} heute
+        {aktiv ? `${dailyCount}${unit}/${dailyTotal}${unit} heute` : "Noch nicht eingerichtet"}
       </div>
     </div>
   );
