@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, Stepper } from "../../ui/primitives";
+import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, TextArea, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import HydrationErinnerungenCard from "../../ui/HydrationErinnerungenCard";
@@ -17,6 +17,27 @@ import { toLocalISODate } from "../../utils/dates";
 
 const ZIEL_LEER = { modus: "offen", wochen: "" };
 const MULTI_ADD_KEYS = ["gewohnheiten", "ernaehrung", "supplemente", "medikamente"];
+// Kategorien, für die vor der zukünftigen Zielplanung erst der aktuelle
+// Ist-Zustand erfragt wird (Peptide/Hormone/Medikamente/Supplemente bewusst
+// ausgenommen — dort deckt Grund/Ziel des Hauptprotokolls das schon ab).
+// Die Antworten landen in categoryZiele[kategorie].istZustand und werden auf
+// dem Abschluss-Screen neben Ziel und Plan angezeigt.
+export const ISTZUSTAND_FRAGEN = {
+  schlaf: [{ key: "aktuell", frage: "Wie ist dein aktueller Schlaf?", placeholder: "z. B. unruhig, zu wenig, wache oft auf …" }],
+  hydration: [
+    { key: "menge", frage: "Wie viel trinkst Du aktuell am Tag?", placeholder: "z. B. ca. 1 Liter" },
+    { key: "getraenke", frage: "Was trinkst Du außer Wasser?", placeholder: "z. B. Kaffee, Saft, Limonade …" },
+  ],
+  ernaehrung: [{ key: "aktuell", frage: "Wie ernährst Du dich aktuell?", placeholder: "z. B. unregelmäßig, viel Fast Food …" }],
+  training: [{ key: "aktuell", frage: "Wie sieht dein aktuelles Training/Sport aus?", placeholder: "z. B. 1x pro Woche, gar nicht, unregelmäßig …" }],
+  gewohnheiten: [
+    { key: "warum", frage: "Warum möchtest Du diese Gewohnheit aufbauen?", placeholder: "" },
+    { key: "schwierigkeiten", frage: "Hast Du grundsätzlich Schwierigkeiten mit Gewohnheiten?", placeholder: "" },
+    { key: "schwer", frage: "Welche Arten von Gewohnheiten fallen Dir schwer?", placeholder: "" },
+    { key: "leicht", frage: "Welche Arten von Gewohnheiten fallen Dir leicht?", placeholder: "" },
+  ],
+};
+const MULTI_ADD_ISTZUSTAND_KEYS = ["gewohnheiten", "ernaehrung"];
 
 // Startwerte für die geteilte Dosierungs-Maske (Supplemente/Medikamente) —
 // "täglich um 20:00" ist der häufigste Fall und lässt sich mit einem Tipp
@@ -154,6 +175,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const [eigenesStartdatumAktiv, setEigenesStartdatumAktiv] = useState(false);
   const [eigenesStartdatum, setEigenesStartdatum] = useState(toLocalISODate(new Date()));
 
+  // Ist-Zustand-Antworten des aktuellen Schritts (siehe ISTZUSTAND_FRAGEN)
+  const [istZustand, setIstZustand] = useState({});
+  const setIstZustandFeld = (feld, val) => setIstZustand((prev) => ({ ...prev, [feld]: val }));
+
   // Gewohnheiten
   const [gName, setGName] = useState("");
   const [gMenge, setGMenge] = useState("");
@@ -245,6 +270,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setCustomPeptidArt("Injektion");
     setEigenesStartdatumAktiv(false);
     setEigenesStartdatum(toLocalISODate(new Date()));
+    setIstZustand({});
   };
 
   const resetLokal = () => {
@@ -258,6 +284,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   };
 
   const weiter = (wurdeEingerichtet) => {
+    // Gewohnheiten/Ernährung speichern ihre Kategorie-Zieldauer nirgendwo
+    // sonst (Mehrfach-Hinzufügen statt einer einzelnen setCategoryZiel-
+    // Speicherung wie bei Schlaf/Hydration/Training) — deshalb hier die
+    // Ist-Zustand-Antworten separat sichern, statt in speichernUndWeiter.
+    if (wurdeEingerichtet && MULTI_ADD_ISTZUSTAND_KEYS.includes(step.key)) {
+      const hatAntwort = Object.values(istZustand).some((v) => (v || "").trim());
+      if (hatAntwort) setCategoryZiel(step.key, { istZustand });
+    }
     const ohneAktuellen = eingerichtet.filter((e) => e.key !== step.key);
     const naechsteListe = wurdeEingerichtet ? [...ohneAktuellen, { key: step.key, icon: step.icon, label: step.label }] : ohneAktuellen;
     // Teilprotokoll-Zuordnung (aktiv/inaktiv, eigenes Startdatum, Laufzeit)
@@ -353,6 +387,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         bloecke: schlafBloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
         modus: ziel.modus,
         wochen: ziel.wochen,
+        istZustand,
       });
     } else if (step.key === "hydration") {
       // Leer gelassen (bewusst nicht vorbefüllt) heißt "unverändert lassen",
@@ -360,12 +395,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       // bestehende Ziel überschreiben.
       const neuesZiel = hydrationMl.trim() === "" ? hydrationZielMl : Math.max(0, Number(hydrationMl) || 0);
       await hydrationZielSetzen(neuesZiel);
-      setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen });
+      setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
       // gespeichert (wochenplanHinzufuegen/-Entfernen, wie in TrainingView) —
       // hier wird nur noch die Zieldauer festgehalten.
-      setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen });
+      setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "peptide") {
       // Peptid-Auswahl und Dosierung wurden bereits beim Antippen
       // gespeichert — hier nur noch prüfen, dass überhaupt etwas gewählt
@@ -608,6 +643,18 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
 
       {effectiveModus === "jetzt" && (
         <Card>
+          {ISTZUSTAND_FRAGEN[step.key] && (
+            <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${cardBorder}` }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: accentDark, marginBottom: 10 }}>{tLabel("Dein aktueller Stand")}</div>
+              {ISTZUSTAND_FRAGEN[step.key].map((f) => (
+                <div key={f.key} style={{ marginBottom: 10 }}>
+                  <Label>{tLabel(f.frage)}</Label>
+                  <TextArea value={istZustand[f.key] || ""} onChange={(v) => setIstZustandFeld(f.key, v)} placeholder={f.placeholder} />
+                </div>
+              ))}
+            </div>
+          )}
+
           {istMultiAdd && step.key !== "ernaehrung" && hinzugefuegt.length > 0 && (
             <div style={{ marginBottom: 18, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
               <Label>{t("onboarding.hinzugefuegt.label")}</Label>
