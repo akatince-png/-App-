@@ -3,6 +3,7 @@ import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, Stepper }
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
+import OnboardingTrainingSetupView from "./OnboardingTrainingSetupView";
 import TimeWheelField from "../../ui/TimeWheelField";
 import NumberWheelField from "../../ui/NumberWheelField";
 import DosierungFields from "../../ui/DosierungFields";
@@ -907,24 +908,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           )}
 
           {step.key === "training" && (
-            <>
-              <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("onboarding.training.frage")}</div>
-              <WochenplanEditor
-                trainingWochenplan={trainingWochenplan}
-                trainingTemplates={trainingTemplates}
-                wochenplanSetzen={wochenplanSetzen}
-                wochenplanEntfernen={wochenplanEntfernen}
-                titel={null}
-              />
-              <div style={{ marginTop: 16, padding: 12, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}`, fontSize: 12, color: textMuted, lineHeight: 1.5 }}>
-                <div style={{ fontWeight: 700, marginBottom: 6, color: accentDark }}>💡 {tLabel("Tipp")}</div>
-                <div>
-                  {t("onboarding.training.hinweis", {
-                    defaultValue: "Lege jetzt fest, an welchen Tagen du trainieren möchtest. Die genauen Übungen (Sätze, Wiederholungen, Gewicht, Dauer) kannst du später im Trainings-Bereich hinzufügen — dort kannst du auch Cardio, Kraft, HIIT und Bodyweight kombinieren.",
-                  })}
-                </div>
-              </div>
-            </>
+            <OnboardingTrainingSetupView
+              trainingWochenplan={trainingWochenplan}
+              wochenplanSetzen={wochenplanSetzen}
+              wochenplanEntfernen={wochenplanEntfernen}
+              trainingTemplates={trainingTemplates}
+              onDone={() => handleStepDone()}
+              onBack={() => handleStepSkipped()}
+            />
           )}
 
           {step.key === "supplemente" && (
