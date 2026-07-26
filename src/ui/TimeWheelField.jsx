@@ -24,13 +24,14 @@ export default function TimeWheelField({ value, onChange }) {
         style={{
           width: "100%",
           boxSizing: "border-box",
-          minHeight: 46,
-          padding: "12px 14px",
-          borderRadius: 14,
-          border: `1px solid ${offen ? textMain : cardBorder}`,
+          minHeight: 56,
+          padding: "14px 18px",
+          borderRadius: 16,
+          border: `1.5px solid ${offen ? textMain : cardBorder}`,
           background: "#FAFBFA",
           color: value ? textMain : textMuted,
-          fontSize: 14.5,
+          fontSize: 18,
+          fontWeight: 700,
           textAlign: "left",
           cursor: "pointer",
           display: "flex",
@@ -39,24 +40,24 @@ export default function TimeWheelField({ value, onChange }) {
         }}
       >
         <span>{value || "Uhrzeit wählen"}</span>
-        <span style={{ fontSize: 12, color: textMuted }}>{offen ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 14, color: textMuted }}>{offen ? "▲" : "▼"}</span>
       </button>
       {offen && (
         <div
           style={{
-            marginTop: 6,
+            marginTop: 8,
             border: `1px solid ${cardBorder}`,
-            borderRadius: 14,
+            borderRadius: 16,
             background: "#fff",
-            padding: "4px 10px",
+            padding: "4px 14px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 4,
+            gap: 8,
           }}
         >
           <WheelPicker values={STUNDEN} value={h || "20"} onChange={setStunde} />
-          <div style={{ fontSize: 18, fontWeight: 800, color: textMuted }}>:</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: textMuted }}>:</div>
           <WheelPicker values={MINUTEN} value={m || "00"} onChange={setMinute} />
         </div>
       )}

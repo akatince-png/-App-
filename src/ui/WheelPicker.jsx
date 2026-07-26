@@ -5,7 +5,15 @@ import { accentSoft, textMain, textMuted } from "./theme";
 // tippen öffnet das Feld inline, hochscrollen wählt den Wert, loslassen
 // rastet ein. Ersetzt getippte Zahlen-/Zeit-Felder, wo die Werte aus
 // einem kleinen, festen Bereich stammen (siehe NumberWheelField/TimeWheelField).
-export default function WheelPicker({ values, value, onChange, itemHeight = 40, visibleCount = 5 }) {
+// tippt/vibriert kurz bei jeder Wertänderung — ersetzt das fehlende
+// haptische Feedback eines nativen Pickers, wo die Plattform es unterstützt.
+function hapticTick() {
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    navigator.vibrate(8);
+  }
+}
+
+export default function WheelPicker({ values, value, onChange, itemHeight = 54, visibleCount = 5 }) {
   const scrollRef = useRef(null);
   const settleTimer = useRef(null);
   const justClickedRef = useRef(false);
@@ -39,7 +47,10 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 40, 
       const nextIndex = Math.round(el.scrollTop / itemHeight);
       const clamped = Math.min(values.length - 1, Math.max(0, nextIndex));
       el.scrollTo({ top: clamped * itemHeight, behavior: "smooth" });
-      if (values[clamped] !== value) onChange(values[clamped]);
+      if (values[clamped] !== value) {
+        onChange(values[clamped]);
+        hapticTick();
+      }
     }, 120);
   };
 
@@ -79,7 +90,10 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 40, 
                 justClickedRef.current = true;
                 const el = scrollRef.current;
                 if (el) el.scrollTo({ top: i * itemHeight, behavior: "smooth" });
-                if (v !== value) onChange(v);
+                if (v !== value) {
+                  onChange(v);
+                  hapticTick();
+                }
               }}
               style={{
                 height: itemHeight,
@@ -87,7 +101,7 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 40, 
                 alignItems: "center",
                 justifyContent: "center",
                 scrollSnapAlign: "center",
-                fontSize: dist === 0 ? 18 : 15,
+                fontSize: dist === 0 ? 24 : 18,
                 fontWeight: dist === 0 ? 800 : 600,
                 color: dist === 0 ? textMain : textMuted,
                 opacity: dist === 0 ? 1 : Math.max(0.35, 1 - dist * 0.3),

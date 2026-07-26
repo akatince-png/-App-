@@ -3,7 +3,14 @@ import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 
 function rowToWochenplan(r) {
-  return { id: r.id, wochentag: r.wochentag, mealId: r.meal_id, tageszeit: r.tageszeit || "", uhrzeit: r.uhrzeit || "", sortOrder: r.sort_order };
+  return {
+    id: r.id,
+    wochentag: r.wochentag,
+    mealId: r.meal_id,
+    tageszeit: r.tageszeit || "",
+    uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
+    sortOrder: r.sort_order,
+  };
 }
 
 export function useMealData(userId, hauptprotokollId) {

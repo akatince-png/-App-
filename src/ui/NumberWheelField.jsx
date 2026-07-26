@@ -21,13 +21,14 @@ export default function NumberWheelField({ value, onChange, min, max, step = 1, 
         style={{
           width: "100%",
           boxSizing: "border-box",
-          minHeight: 46,
-          padding: "12px 14px",
-          borderRadius: 14,
-          border: `1px solid ${offen ? textMain : cardBorder}`,
+          minHeight: 56,
+          padding: "14px 18px",
+          borderRadius: 16,
+          border: `1.5px solid ${offen ? textMain : cardBorder}`,
           background: "#FAFBFA",
           color: aktuell ? textMain : textMuted,
-          fontSize: 14.5,
+          fontSize: 18,
+          fontWeight: 700,
           textAlign: "left",
           cursor: "pointer",
           display: "flex",
@@ -36,10 +37,10 @@ export default function NumberWheelField({ value, onChange, min, max, step = 1, 
         }}
       >
         <span>{aktuell || placeholder || "Wählen"}</span>
-        <span style={{ fontSize: 12, color: textMuted }}>{offen ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 14, color: textMuted }}>{offen ? "▲" : "▼"}</span>
       </button>
       {offen && (
-        <div style={{ marginTop: 6, border: `1px solid ${cardBorder}`, borderRadius: 14, background: "#fff", padding: "4px 10px" }}>
+        <div style={{ marginTop: 8, border: `1px solid ${cardBorder}`, borderRadius: 16, background: "#fff", padding: "4px 14px" }}>
           <WheelPicker values={values} value={aktuell || values[0]} onChange={onChange} />
         </div>
       )}

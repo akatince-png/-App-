@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
+import TimeWheelField from "../ui/TimeWheelField";
 import { accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 
@@ -213,15 +214,15 @@ export default function GewohnheitenView({ onHome }) {
         {neu.urzeitVon ? (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <div style={{ flex: 1 }}>
-              <TextInput type="time" value={neu.urzeitVon} onChange={(v) => setNeu((p) => ({ ...p, urzeitVon: v }))} placeholder="Von" />
+              <TimeWheelField value={neu.urzeitVon} onChange={(v) => setNeu((p) => ({ ...p, urzeitVon: v }))} />
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
             <div style={{ flex: 1 }}>
-              <TextInput type="time" value={neu.urzeitBis} onChange={(v) => setNeu((p) => ({ ...p, urzeitBis: v }))} placeholder="Bis" />
+              <TimeWheelField value={neu.urzeitBis} onChange={(v) => setNeu((p) => ({ ...p, urzeitBis: v }))} />
             </div>
           </div>
         ) : (
-          <TextInput type="time" value={neu.uhrzeit} onChange={(v) => setNeu((p) => ({ ...p, uhrzeit: v }))} />
+          <TimeWheelField value={neu.uhrzeit} onChange={(v) => setNeu((p) => ({ ...p, uhrzeit: v }))} />
         )}
 
         <Label>Eigenes Ziel in Tagen (optional)</Label>

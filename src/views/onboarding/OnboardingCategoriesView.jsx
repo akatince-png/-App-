@@ -3,7 +3,6 @@ import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, Stepper }
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import WochenplanEditor from "../../ui/WochenplanEditor";
-import OnboardingTrainingSetupView from "./OnboardingTrainingSetupView";
 import TimeWheelField from "../../ui/TimeWheelField";
 import NumberWheelField from "../../ui/NumberWheelField";
 import DosierungFields from "../../ui/DosierungFields";
@@ -130,8 +129,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     hormonHinzufuegen,
     setCategoryZiel,
     trainingWochenplan,
-    trainingTemplates,
-    wochenplanSetzen,
+    wochenplanHinzufuegen,
     wochenplanEntfernen,
     erinnerungen,
     setErinnerung,
@@ -394,7 +392,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
-      // gespeichert (wochenplanSetzen/-Entfernen, wie in TrainingView) —
+      // gespeichert (wochenplanHinzufuegen/-Entfernen, wie in TrainingView) —
       // hier wird nur noch die Zieldauer festgehalten.
       setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "peptide") {
@@ -674,15 +672,15 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               {gUrzeitModus === "fenster" ? (
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <div style={{ flex: 1 }}>
-                    <TextInput type="time" value={gUrzeitVon} onChange={setGUrzeitVon} placeholder="Von" />
+                    <TimeWheelField value={gUrzeitVon} onChange={setGUrzeitVon} />
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
                   <div style={{ flex: 1 }}>
-                    <TextInput type="time" value={gUrzeitBis} onChange={setGUrzeitBis} placeholder="Bis" />
+                    <TimeWheelField value={gUrzeitBis} onChange={setGUrzeitBis} />
                   </div>
                 </div>
               ) : (
-                <TextInput type="time" value={gUhrzeit} onChange={setGUhrzeit} />
+                <TimeWheelField value={gUhrzeit} onChange={setGUhrzeit} />
               )}
               <Label>{t("onboarding.gewohnheiten.zieltage.label")}</Label>
               <TextInput type="number" value={gZielTage} onChange={setGZielTage} placeholder={t("onboarding.gewohnheiten.zieltage.placeholder")} />
@@ -712,9 +710,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                 <>
                   <div style={{ padding: "12px", borderRadius: 12, background: accentSoft, marginBottom: 14 }}>
                     <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
-                    <TextInput type="time" value={schlafBloecke[0]?.bettzeit || "22:30"} onChange={(v) => setBlockFeld(0, "bettzeit", v)} />
+                    <TimeWheelField value={schlafBloecke[0]?.bettzeit || "22:30"} onChange={(v) => setBlockFeld(0, "bettzeit", v)} />
                     <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
-                    <TextInput type="time" value={schlafBloecke[0]?.aufwachzeit || "06:30"} onChange={(v) => setBlockFeld(0, "aufwachzeit", v)} />
+                    <TimeWheelField value={schlafBloecke[0]?.aufwachzeit || "06:30"} onChange={(v) => setBlockFeld(0, "aufwachzeit", v)} />
                     <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
                       {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(schlafBloecke[0]?.bettzeit, schlafBloecke[0]?.aufwachzeit) })}
                     </div>
@@ -732,9 +730,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                         ))}
                       </div>
                       <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
-                      <TextInput type="time" value={block.bettzeit} onChange={(v) => setBlockFeld(idx, "bettzeit", v)} />
+                      <TimeWheelField value={block.bettzeit} onChange={(v) => setBlockFeld(idx, "bettzeit", v)} />
                       <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
-                      <TextInput type="time" value={block.aufwachzeit} onChange={(v) => setBlockFeld(idx, "aufwachzeit", v)} />
+                      <TimeWheelField value={block.aufwachzeit} onChange={(v) => setBlockFeld(idx, "aufwachzeit", v)} />
                       <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
                         {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(block.bettzeit, block.aufwachzeit) })}
                       </div>
@@ -908,14 +906,15 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           )}
 
           {step.key === "training" && (
-            <OnboardingTrainingSetupView
-              trainingWochenplan={trainingWochenplan}
-              wochenplanSetzen={wochenplanSetzen}
-              wochenplanEntfernen={wochenplanEntfernen}
-              trainingTemplates={trainingTemplates}
-              onDone={() => handleStepDone()}
-              onBack={() => handleStepSkipped()}
-            />
+            <>
+              <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("onboarding.training.frage")}</div>
+              <WochenplanEditor
+                trainingWochenplan={trainingWochenplan}
+                wochenplanHinzufuegen={wochenplanHinzufuegen}
+                wochenplanEntfernen={wochenplanEntfernen}
+                titel={null}
+              />
+            </>
           )}
 
           {step.key === "supplemente" && (

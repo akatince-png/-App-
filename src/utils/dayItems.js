@@ -58,7 +58,6 @@ export function buildDayItems(
     mealWochenplan = [],
     trainingEintraege = [],
     trainingWochenplan = [],
-    trainingTemplates = [],
     gewohnheiten = [],
     gewohnheitErledigt = {},
   }
@@ -185,26 +184,34 @@ export function buildDayItems(
   });
 
   // Noch kein echter Eintrag für heute? Dann zeigt der Wochenplan (falls für
-  // diesen Wochentag etwas hinterlegt ist) ein virtuelles, noch nicht
-  // gespeichertes Training — wird erst beim Antippen zu einer echten Zeile.
+  // diesen Wochentag etwas hinterlegt ist) je Einheit ein virtuelles, noch
+  // nicht gespeichertes Training — wird erst beim Antippen zu einer echten
+  // Zeile. Mehrere Einheiten am selben Tag zu unterschiedlichen Uhrzeiten
+  // sind möglich (siehe WochenplanEditor).
   if (heutigeTrainings.length === 0) {
     const wochentagLabel = GETDAY_TO_LABEL[date.getDay()];
-    const zuweisung = trainingWochenplan.find((w) => w.wochentag === wochentagLabel);
-    if (zuweisung) {
-      const template = trainingTemplates.find((tpl) => tpl.id === zuweisung.templateId) || null;
-      const uhrzeit = zuweisung.uhrzeit || template?.uhrzeit || "";
-      items.push({
-        kategorie: "training",
-        key: `t-virtual-${tagStr}`,
-        refId: null,
-        hour: uhrzeit ? uhrzeit.slice(0, 2) : null,
-        uhrzeit,
-        name: template ? `${zuweisung.art} · ${template.name}` : zuweisung.art,
-        detail: template ? trainingDetail(template) : "Laut Wochenplan",
-        done: false,
-        raw: { virtuell: true, datum: tagStr, art: zuweisung.art, template, uhrzeit },
+    trainingWochenplan
+      .filter((w) => w.wochentag === wochentagLabel)
+      .forEach((zuweisung) => {
+        const uhrzeit = zuweisung.uhrzeit || "";
+        const detailTeile = [
+          zuweisung.uebungen,
+          zuweisung.saetze && zuweisung.wiederholungen ? `${zuweisung.saetze}×${zuweisung.wiederholungen}` : "",
+          zuweisung.warmup?.aktiv ? `Warm-up${zuweisung.warmup.dauerMin ? ` ${zuweisung.warmup.dauerMin} Min.` : ""}` : "",
+          zuweisung.cooldown?.aktiv ? `Cool-down${zuweisung.cooldown.dauerMin ? ` ${zuweisung.cooldown.dauerMin} Min.` : ""}` : "",
+        ].filter(Boolean);
+        items.push({
+          kategorie: "training",
+          key: `t-virtual-${tagStr}-${zuweisung.id}`,
+          refId: null,
+          hour: uhrzeit ? uhrzeit.slice(0, 2) : null,
+          uhrzeit,
+          name: zuweisung.arten?.length ? zuweisung.arten.join(" + ") : "Training",
+          detail: detailTeile.length ? detailTeile.join(" · ") : "Laut Wochenplan",
+          done: false,
+          raw: { virtuell: true, datum: tagStr, arten: zuweisung.arten, uhrzeit },
+        });
       });
-    }
   }
 
   gewohnheiten.forEach((g) => {

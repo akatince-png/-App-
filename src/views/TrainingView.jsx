@@ -149,7 +149,7 @@ function TrainingFeedbackPanel({ trainingId, onDone }) {
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ flex: 1 }}>
           <Label>RPE (1–10)</Label>
-          <TextInput type="number" value={rpe} onChange={setRpe} placeholder="7" />
+          <NumberWheelField value={rpe} onChange={setRpe} min={1} max={10} placeholder="7" />
         </div>
         <div style={{ flex: 1 }}>
           <Label>Kalorien</Label>
@@ -322,14 +322,15 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
                       <div style={{ display: "flex", gap: 8 }}>
                         <div style={{ flex: 1 }}>
                           <Label>Sätze</Label>
-                          <TextInput type="number" value={entwurf.saetze} onChange={(v) => setEntwurf((p) => ({ ...p, saetze: v }))} />
+                          <NumberWheelField value={entwurf.saetze} onChange={(v) => setEntwurf((p) => ({ ...p, saetze: v }))} min={1} max={20} />
                         </div>
                         <div style={{ flex: 1 }}>
                           <Label>Wdh.</Label>
-                          <TextInput
-                            type="number"
+                          <NumberWheelField
                             value={entwurf.wiederholungen}
                             onChange={(v) => setEntwurf((p) => ({ ...p, wiederholungen: v }))}
+                            min={1}
+                            max={50}
                           />
                         </div>
                         <div style={{ flex: 1 }}>
@@ -391,7 +392,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     trainingTemplates,
     templateSpeichern,
     trainingWochenplan,
-    wochenplanSetzen,
+    wochenplanHinzufuegen,
     wochenplanEntfernen,
     aenderungVermerken,
   } = useAppData();
@@ -476,23 +477,19 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     else if (erledigt && result.eintrag) setFeedbackFuerId(result.eintrag.id);
   };
 
-  const handleWochenplanSetzen = (tag, zuweisung) => {
-    const vorher = trainingWochenplan.find((w) => w.wochentag === tag);
-    let detail;
-    if (!vorher) detail = `Art: ${zuweisung.art}`;
-    else if (vorher.art !== zuweisung.art) detail = `Art: ${vorher.art} → ${zuweisung.art}`;
-    else if (vorher.uhrzeit !== zuweisung.uhrzeit) detail = `Uhrzeit: ${vorher.uhrzeit || "–"} → ${zuweisung.uhrzeit || "–"}`;
-    else detail = "Vorlage geändert";
-    aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[tag], aktion: "geändert", detail });
-    wochenplanSetzen(tag, zuweisung);
+  const handleWochenplanHinzufuegen = async (einheit) => {
+    const detail = [einheit.uhrzeit, einheit.arten.join(" + ")].filter(Boolean).join(" · ");
+    aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[einheit.wochentag], aktion: "hinzugefügt", detail });
+    return wochenplanHinzufuegen(einheit);
   };
 
-  const handleWochenplanEntfernen = (tag) => {
-    const vorher = trainingWochenplan.find((w) => w.wochentag === tag);
+  const handleWochenplanEntfernen = (id) => {
+    const vorher = trainingWochenplan.find((w) => w.id === id);
     if (vorher) {
-      aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[tag], aktion: "entfernt", detail: `Art: ${vorher.art}` });
+      const detail = [vorher.uhrzeit, vorher.arten.join(" + ")].filter(Boolean).join(" · ");
+      aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[vorher.wochentag], aktion: "entfernt", detail });
     }
-    wochenplanEntfernen(tag);
+    wochenplanEntfernen(id);
   };
 
   const handleTrainingEntfernen = (e) => {
@@ -564,8 +561,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       {wochenplanOffen && (
         <WochenplanEditor
           trainingWochenplan={trainingWochenplan}
-          trainingTemplates={trainingTemplates}
-          wochenplanSetzen={handleWochenplanSetzen}
+          wochenplanHinzufuegen={handleWochenplanHinzufuegen}
           wochenplanEntfernen={handleWochenplanEntfernen}
         />
       )}

@@ -20,7 +20,17 @@ function rowToTemplate(r) {
 }
 
 function rowToWochenplan(r) {
-  return { id: r.id, wochentag: r.wochentag, art: r.art, uhrzeit: r.uhrzeit || "", templateId: r.template_id };
+  return {
+    id: r.id,
+    wochentag: r.wochentag,
+    uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
+    arten: Array.isArray(r.arten) ? r.arten : [],
+    saetze: r.saetze || "",
+    wiederholungen: r.wiederholungen || "",
+    uebungen: r.uebungen || "",
+    warmup: { aktiv: !!r.warmup_aktiv, dauerMin: r.warmup_dauer_min ? String(r.warmup_dauer_min) : "", beschreibung: r.warmup_beschreibung || "" },
+    cooldown: { aktiv: !!r.cooldown_aktiv, dauerMin: r.cooldown_dauer_min ? String(r.cooldown_dauer_min) : "", beschreibung: r.cooldown_beschreibung || "" },
+  };
 }
 
 export function useTrainingTemplates(userId) {
@@ -80,38 +90,50 @@ export function useTrainingTemplates(userId) {
     if (error) console.error(error);
   }, []);
 
-  const wochenplanSetzen = useCallback(
-    async (wochentag, { art, templateId, uhrzeit }) => {
-      const { data, error } = await supabase
-        .from("training_wochenplan")
-        .upsert({ user_id: userId, wochentag, art, uhrzeit: uhrzeit || null, template_id: templateId || null }, { onConflict: "user_id,wochentag" })
-        .select()
-        .single();
+  // Fügt eine weitere Trainingseinheit hinzu, statt die Zuweisung eines
+  // Wochentags zu ersetzen — dadurch sind mehrere Einheiten am selben Tag zu
+  // unterschiedlichen Uhrzeiten möglich (siehe 0030_training_wochenplan_einheiten).
+  const wochenplanHinzufuegen = useCallback(
+    async (einheit) => {
+      const row = {
+        user_id: userId,
+        wochentag: einheit.wochentag,
+        uhrzeit: einheit.uhrzeit || null,
+        arten: einheit.arten || [],
+        saetze: einheit.saetze || null,
+        wiederholungen: einheit.wiederholungen || null,
+        uebungen: einheit.uebungen || null,
+        warmup_aktiv: !!einheit.warmup?.aktiv,
+        warmup_dauer_min: einheit.warmup?.dauerMin ? Number(einheit.warmup.dauerMin) : null,
+        warmup_beschreibung: einheit.warmup?.beschreibung || null,
+        cooldown_aktiv: !!einheit.cooldown?.aktiv,
+        cooldown_dauer_min: einheit.cooldown?.dauerMin ? Number(einheit.cooldown.dauerMin) : null,
+        cooldown_beschreibung: einheit.cooldown?.beschreibung || null,
+      };
+      const { data, error } = await supabase.from("training_wochenplan").insert(row).select().single();
       if (error) {
         console.error(error);
-        return;
+        return { ok: false, error: error.message };
       }
       const neu = rowToWochenplan(data);
-      setWochenplan((prev) => [...prev.filter((w) => w.wochentag !== wochentag), neu]);
+      setWochenplan((prev) => [...prev, neu]);
+      return { ok: true, einheit: neu };
     },
     [userId]
   );
 
-  const wochenplanEntfernen = useCallback(
-    async (wochentag) => {
-      setWochenplan((prev) => prev.filter((w) => w.wochentag !== wochentag));
-      const { error } = await supabase.from("training_wochenplan").delete().eq("user_id", userId).eq("wochentag", wochentag);
-      if (error) console.error(error);
-    },
-    [userId]
-  );
+  const wochenplanEntfernen = useCallback(async (id) => {
+    setWochenplan((prev) => prev.filter((w) => w.id !== id));
+    const { error } = await supabase.from("training_wochenplan").delete().eq("id", id);
+    if (error) console.error(error);
+  }, []);
 
   return {
     trainingTemplates: templates,
     templateSpeichern,
     templateEntfernen,
     trainingWochenplan: wochenplan,
-    wochenplanSetzen,
+    wochenplanHinzufuegen,
     wochenplanEntfernen,
   };
 }
