@@ -41,6 +41,20 @@ export function useProfileData(userId) {
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
         setCategoryZieleState(profile.category_ziele || {});
         setErinnerungenState(profile.erinnerungen || {});
+
+        // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und
+        // muss wissen, in welcher Zeitzone eine eingetragene Uhrzeit
+        // ("08:00") gemeint ist — deshalb hier einmalig aus dem Browser
+        // übernehmen, falls noch nicht gesetzt oder der Nutzer inzwischen in
+        // einer anderen Zeitzone ist.
+        const erkannteZeitzone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (erkannteZeitzone && profile.zeitzone !== erkannteZeitzone) {
+          supabase
+            .from("profiles")
+            .update({ zeitzone: erkannteZeitzone })
+            .eq("id", userId)
+            .then(({ error }) => error && console.error(error));
+        }
       }
       setCustomMesswerte(
         (custom || []).map((c) => ({ id: c.key, label: c.label, unit: c.unit || "", numeric: true }))
