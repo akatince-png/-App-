@@ -7,9 +7,22 @@ import { LABORWERTE_ALLE, LABORWERTE_KATEGORIEN } from "../constants";
 // (laufende Pflege, inkl. Kamera-Erfassung dort) und dem Biomarker-Plan im
 // Onboarding (Ersteingabe). Reine Werteingabe ohne Foto/OCR, damit beide
 // Stellen dieselbe Basis benutzen statt eigene Kopien zu pflegen.
-export default function LaborwerteFelder({ biomarker, setBiomarkerWert }) {
+//
+// `frisch`: im Onboarding sollen die Felder leer wirken statt Laborwerte aus
+// einem früheren Durchlauf zu zeigen — ohne bestehende Werte zu löschen
+// (bleiben unangetastet, solange nicht erneut eingetragen). Der ProfilTab
+// zeigt weiterhin ganz normal die echten, zuletzt erfassten Werte.
+export default function LaborwerteFelder({ biomarker, setBiomarkerWert, frisch = false }) {
   const [offeneKategorien, setOffeneKategorien] = useState(() => new Set());
   const [neuerLaborwertName, setNeuerLaborwertName] = useState("");
+  const [lokal, setLokal] = useState({});
+
+  const anzeige = frisch ? lokal : biomarker;
+
+  const wertAendern = (name, val) => {
+    if (frisch) setLokal((prev) => ({ ...prev, [name]: val }));
+    setBiomarkerWert(name, val);
+  };
 
   const toggleKategorie = (name) =>
     setOffeneKategorien((prev) => {
@@ -22,17 +35,17 @@ export default function LaborwerteFelder({ biomarker, setBiomarkerWert }) {
   const laborwertHinzufuegen = () => {
     const name = neuerLaborwertName.trim();
     if (!name) return;
-    setBiomarkerWert(name, "");
+    wertAendern(name, "");
     setNeuerLaborwertName("");
   };
 
-  const eigeneWerte = Object.keys(biomarker).filter((k) => !LABORWERTE_ALLE.includes(k));
+  const eigeneWerte = Object.keys(anzeige).filter((k) => !LABORWERTE_ALLE.includes(k));
 
   return (
     <>
       {LABORWERTE_KATEGORIEN.map((kat) => {
         const offen = offeneKategorien.has(kat.kategorie);
-        const erfasst = kat.werte.filter((w) => biomarker[w]).length;
+        const erfasst = kat.werte.filter((w) => anzeige[w]).length;
         return (
           <div key={kat.kategorie}>
             <button
@@ -62,7 +75,7 @@ export default function LaborwerteFelder({ biomarker, setBiomarkerWert }) {
                   <div key={b} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
                     <span style={{ fontSize: 13 }}>{b}</span>
                     <div style={{ width: 100 }}>
-                      <TextInput value={biomarker[b] || ""} onChange={(v) => setBiomarkerWert(b, v)} placeholder="—" />
+                      <TextInput value={anzeige[b] || ""} onChange={(v) => wertAendern(b, v)} placeholder="—" />
                     </div>
                   </div>
                 ))}
@@ -79,7 +92,7 @@ export default function LaborwerteFelder({ biomarker, setBiomarkerWert }) {
             <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}` }}>
               <span style={{ fontSize: 13 }}>{k}</span>
               <div style={{ width: 100 }}>
-                <TextInput value={biomarker[k] || ""} onChange={(v) => setBiomarkerWert(k, v)} placeholder="—" />
+                <TextInput value={anzeige[k] || ""} onChange={(v) => wertAendern(k, v)} placeholder="—" />
               </div>
             </div>
           ))}

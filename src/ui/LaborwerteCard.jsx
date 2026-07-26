@@ -8,7 +8,7 @@ import LaborwerteFelder from "./LaborwerteFelder";
 // geteilt zwischen ProfilTab (laufende Pflege) und dem Laborwerte-Schritt im
 // Onboarding (Ersteingabe) — LaborwerteFelder allein deckt nur die reine
 // Werteingabe ab, ohne den Foto-/OCR-Teil.
-export default function LaborwerteCard({ titel = "Laborwerte (optional)", inputId = "blutwerte-foto" }) {
+export default function LaborwerteCard({ titel = "Laborwerte (optional)", inputId = "blutwerte-foto", frisch = false }) {
   const { biomarker, setBiomarkerWert, handleBlutwertFoto, ocrLoading, ocrError, ocrSuccessCount } = useAppData();
 
   const handleBlutwertInput = (e) => {
@@ -54,7 +54,7 @@ export default function LaborwerteCard({ titel = "Laborwerte (optional)", inputI
           <div style={{ fontSize: 12, color: success, marginBottom: 10 }}>{ocrSuccessCount} Werte automatisch übernommen ✓</div>
         )}
 
-        <LaborwerteFelder biomarker={biomarker} setBiomarkerWert={setBiomarkerWert} />
+        <LaborwerteFelder biomarker={biomarker} setBiomarkerWert={setBiomarkerWert} frisch={frisch} />
       </Card>
     </>
   );

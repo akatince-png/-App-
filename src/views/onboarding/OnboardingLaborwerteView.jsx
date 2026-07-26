@@ -35,7 +35,7 @@ export default function OnboardingLaborwerteView({ onDone, onBack, onCancel }) {
       </div>
       <div style={{ fontSize: 13, color: textMuted, marginBottom: 18, lineHeight: 1.5 }}>{t("onboarding.biomarker.intro")}</div>
 
-      <LaborwerteCard titel={null} inputId="onboarding-blutwerte-foto" />
+      <LaborwerteCard titel={null} inputId="onboarding-blutwerte-foto" frisch />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
         <PrimaryButton onClick={onDone}>{tLabel("Weiter")}</PrimaryButton>
