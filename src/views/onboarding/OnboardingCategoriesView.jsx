@@ -175,7 +175,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
 
   // Hydration
-  const [hydrationMl, setHydrationMl] = useState(String(hydrationZielMl || 2500));
+  // Bewusst leer statt mit dem bestehenden Ziel vorbelegt — bei "Neues
+  // Protokoll" (+) sollen die Onboarding-Masken frisch wirken. Bleibt das
+  // Feld leer, greift beim Speichern trotzdem der bisherige Wert (siehe
+  // speichernUndWeiter), damit ein reines Durchklicken nichts überschreibt.
+  const [hydrationMl, setHydrationMl] = useState("");
   const [hydrationZeiten, setHydrationZeiten] = useState(normalisiereHydrationZeiten(erinnerungen?.hydration?.zeiten));
   const [hydrationNeueZeit, setHydrationNeueZeit] = useState("12:00");
   const [hydrationNeueMenge, setHydrationNeueMenge] = useState("300");
@@ -232,7 +236,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setGZielTage("");
     setSchlafIntervallTyp("weekdays");
     setSchlafBloecke([neuerSchlafblock([...WOCHENTAGE])]);
-    setHydrationMl(String(hydrationZielMl || 2500));
+    setHydrationMl("");
     setHydrationZeiten(normalisiereHydrationZeiten(erinnerungen?.hydration?.zeiten));
     setHydrationNeueZeit("12:00");
     setHydrationNeueMenge("300");
@@ -388,7 +392,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         wochen: ziel.wochen,
       });
     } else if (step.key === "hydration") {
-      await hydrationZielSetzen(Math.max(0, Number(hydrationMl) || 0));
+      // Leer gelassen (bewusst nicht vorbefüllt) heißt "unverändert lassen",
+      // nicht "auf 0 setzen" — sonst würde reines Durchklicken das
+      // bestehende Ziel überschreiben.
+      const neuesZiel = hydrationMl.trim() === "" ? hydrationZielMl : Math.max(0, Number(hydrationMl) || 0);
+      await hydrationZielSetzen(neuesZiel);
       setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
@@ -758,7 +766,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           {step.key === "hydration" && (
             <>
               <Label>{t("onboarding.hydration.tagesziel.label")}</Label>
-              <TextInput type="number" value={hydrationMl} onChange={setHydrationMl} placeholder={t("onboarding.hydration.tagesziel.placeholder")} />
+              <TextInput
+                type="number"
+                value={hydrationMl}
+                onChange={setHydrationMl}
+                placeholder={hydrationZielMl ? String(hydrationZielMl) : t("onboarding.hydration.tagesziel.placeholder")}
+              />
               <div style={{ fontSize: 11, color: textMuted, marginTop: 4, marginBottom: 18 }}>{t("onboarding.hydration.tagesziel.hinweis")}</div>
 
               <div style={{ marginBottom: 16 }}>

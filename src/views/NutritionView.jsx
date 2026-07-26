@@ -8,6 +8,7 @@ import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { TAGESZEIT_STUNDE } from "../utils/dayItems";
+import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
 
 const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
@@ -210,6 +211,10 @@ export default function NutritionView({ onHome, embedded = false }) {
     wochenplanMahlzeitSetzen,
     wochenplanMahlzeitEntfernen,
     aenderungVermerken,
+    personalData,
+    gewichtsEintraege,
+    categoryZiele,
+    setCategoryZiel,
   } = useAppData();
   const [neueMahlzeit, setNeueMahlzeit] = useState(LEERE_MAHLZEIT);
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
@@ -316,6 +321,25 @@ export default function NutritionView({ onHome, embedded = false }) {
   const heuteAnzahl = tagesEintraege.length;
   const heuteErledigtAnzahl = tagesEintraege.filter((e) => mahlzeitErledigt[`${tagStr}__${e.mealId}__${zeitVon(e)}`]).length;
 
+  // Kalorien-Übersicht: "Ist" wird automatisch nach Mifflin-St-Jeor aus
+  // Profil-Angaben berechnet, "Ziel" ist eine manuelle Prozent-Abweichung
+  // davon (z. B. -15% für ein Kaloriendefizit) — beide zusammen sollen hier
+  // immer sichtbar sein, damit der Ernährungsplan bewusst danach ausgerichtet
+  // werden kann. Makros/weitere Details folgen später.
+  const aktuellesGewicht = gewichtsEintraege?.length ? gewichtsEintraege[gewichtsEintraege.length - 1].gewicht : personalData.gewichtStart;
+  const kalorienIst = berechneGrundumsatz({
+    geschlecht: personalData.geschlecht,
+    geburtsdatum: personalData.geburtsdatum,
+    groesse: personalData.groesse,
+    gewicht: aktuellesGewicht,
+  });
+  const kalorienZiel = categoryZiele?.ernaehrung?.kalorienZiel ?? "";
+  const kalorienZielAendern = (val) => {
+    setCategoryZiel("ernaehrung", { ...(categoryZiele?.ernaehrung || {}), kalorienZiel: val === "" ? null : Number(val) });
+  };
+  const kalorienZielProzent =
+    kalorienIst && kalorienZiel ? Math.round(((Number(kalorienZiel) - kalorienIst) / kalorienIst) * 100) : null;
+
   const zeitGruppen = Array.from(new Set(tagesEintraege.map(zeitVon)));
 
   const content = (
@@ -331,6 +355,28 @@ export default function NutritionView({ onHome, embedded = false }) {
             ⌂
           </button>
         </div>
+      )}
+
+      {kalorienIst && (
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Kalorien-Übersicht</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ flex: 1 }}>
+              <Label>Ist (berechnet)</Label>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>{kalorienIst} kcal</div>
+              <div style={{ fontSize: 10.5, color: textMuted }}>Mifflin-St-Jeor, aktueller Zustand</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <Label>Ziel (optional)</Label>
+              <TextInput type="number" value={kalorienZiel} onChange={kalorienZielAendern} placeholder={String(kalorienIst)} />
+              {kalorienZielProzent !== null && (
+                <div style={{ fontSize: 10.5, color: textMuted, marginTop: 2 }}>
+                  {kalorienZielProzent > 0 ? `+${kalorienZielProzent}` : kalorienZielProzent}% ggü. Ist
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
       )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
