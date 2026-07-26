@@ -3,6 +3,7 @@ import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import { accent, blue, cardBorder, textMuted } from "../ui/theme";
 import Logo from "../ui/Logo";
 import { useT } from "../i18n/translate";
+import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 
 const SLIDES = [
   {
@@ -23,14 +24,36 @@ const SLIDES = [
 ];
 
 export default function WelcomeView({ onDone }) {
-  const { t, tLabel } = useT();
+  const { t, tLabel, lang } = useT();
+  const { setLang } = useLanguage();
   const [index, setIndex] = useState(0);
   const slide = SLIDES[index];
   const isLast = index === SLIDES.length - 1;
 
   return (
     <Shell>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, paddingTop: 4, paddingBottom: 4 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, paddingTop: 4, paddingBottom: 4 }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          {SUPPORTED_LANGS.map((langCode) => (
+            <button
+              key={langCode}
+              onClick={() => setLang(langCode)}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 6,
+                border: "1px solid #E5E7EB",
+                background: lang === langCode ? "#1E2B29" : "#fff",
+                color: lang === langCode ? "#fff" : "#6B7280",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {langCode.toUpperCase()}
+            </button>
+          ))}
+        </div>
         <button
           onClick={onDone}
           style={{ border: "none", background: "transparent", color: textMuted, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: "8px 12px" }}

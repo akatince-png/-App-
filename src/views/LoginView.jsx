@@ -4,10 +4,12 @@ import { danger, success, textMuted } from "../ui/theme";
 import Logo from "../ui/Logo";
 import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/translate";
+import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 
 export default function LoginView() {
   const { signIn, signUp } = useAuth();
-  const { t } = useT();
+  const { t, lang } = useT();
+  const { setLang } = useLanguage();
   const [mode, setMode] = useState("login"); // 'login' | 'register'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +42,30 @@ export default function LoginView() {
 
   return (
     <Shell>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          {SUPPORTED_LANGS.map((langCode) => (
+            <button
+              key={langCode}
+              onClick={() => setLang(langCode)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #E5E7EB",
+                background: lang === langCode ? "#1E2B29" : "#fff",
+                color: lang === langCode ? "#fff" : "#6B7280",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {langCode.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 40, marginBottom: 32 }}>
         <Logo size={64} />
         <div style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginTop: 16 }}>MyProtocols</div>
