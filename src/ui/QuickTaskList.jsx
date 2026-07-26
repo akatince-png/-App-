@@ -60,7 +60,7 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {displayItems.map((item) => (
         <button
           key={item.key}
@@ -68,47 +68,54 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            padding: "12px 14px",
-            borderRadius: 10,
-            border: "1px solid #E5E7EB",
-            background: item.done ? "#F0FDF4" : "#fff",
+            gap: 14,
+            padding: "16px 16px",
+            borderRadius: 14,
+            border: item.done ? "none" : "2px solid #E5E7EB",
+            background: item.done
+              ? "linear-gradient(135deg, #F0FDF4, #DBEAFE)"
+              : "#fff",
             cursor: "pointer",
-            transition: "all 150ms ease-out",
-            minHeight: "44px",
+            transition: "all 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+            minHeight: "56px",
             textAlign: "left",
-            transform: completingKey === item.key ? "scale(0.98)" : "scale(1)",
+            transform: completingKey === item.key ? "scale(0.96)" : "scale(1)",
+            boxShadow: item.done
+              ? "0 4px 12px rgba(16, 185, 129, 0.15)"
+              : "0 2px 4px rgba(0, 0, 0, 0.05)",
             animation: completingKey === item.key ? "slideInSuccess 0.6s ease-out" : "none",
           }}
         >
           {/* Checkbox */}
           <div
             style={{
-              width: 20,
-              height: 20,
-              minWidth: 20,
-              borderRadius: 6,
-              border: `2px solid ${item.done ? "#16A34A" : "#D1D5DB"}`,
-              background: item.done ? "#16A34A" : "transparent",
+              width: 28,
+              height: 28,
+              minWidth: 28,
+              borderRadius: 8,
+              border: `2px solid ${item.done ? "#10B981" : "#D1D5DB"}`,
+              background: item.done ? "linear-gradient(135deg, #10B981, #059669)" : "transparent",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transition: "all 150ms ease-out",
+              transition: "all 200ms cubic-bezier(0.4, 0, 0.2, 1)",
               animation: item.done && completingKey === item.key ? "successPulse 0.6s ease-out" : "none",
+              boxShadow: item.done ? "0 4px 12px rgba(16, 185, 129, 0.3)" : "none",
             }}
           >
-            {item.done && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+            {item.done && <span style={{ color: "#fff", fontSize: 16, fontWeight: 700 }}>✓</span>}
           </div>
 
           {/* Text content */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: item.done ? "#6B7280" : "#1F2937",
+                fontSize: 15,
+                fontWeight: 700,
+                color: item.done ? "#9CA3AF" : "#1F2937",
                 textDecoration: item.done ? "line-through" : "none",
-                transition: "all 150ms ease-out",
+                transition: "all 200ms ease-out",
+                lineHeight: 1.3,
               }}
             >
               {item.name}
@@ -116,9 +123,10 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
             {item.detail && (
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   color: "#9CA3AF",
-                  marginTop: 2,
+                  marginTop: 4,
+                  fontWeight: 500,
                 }}
               >
                 {item.detail}
@@ -130,13 +138,14 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
           {item.kategorie && (
             <div
               style={{
-                fontSize: 10,
-                fontWeight: 600,
-                padding: "4px 8px",
-                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "6px 10px",
+                borderRadius: 6,
                 background: getCategoryColor(item.kategorie),
                 color: "#fff",
                 whiteSpace: "nowrap",
+                transition: "all 200ms ease-out",
               }}
             >
               {getCategoryLabel(item.kategorie)}
