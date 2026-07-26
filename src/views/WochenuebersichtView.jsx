@@ -30,7 +30,8 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
   } = appData;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("day"); // "day" | "week"
+  const [viewMode, setViewMode] = useState("day"); // "day" | "week" | "month"
+  const [monthDate, setMonthDate] = useState(new Date());
   const [exportLaeuft, setExportLaeuft] = useState(false);
   const [vorschauUrl, setVorschauUrl] = useState(null);
   const exportRef = useRef(null);
@@ -155,6 +156,22 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
         >
           Woche
         </button>
+        <button
+          onClick={() => setViewMode("month")}
+          style={{
+            flex: 1,
+            padding: "8px 12px",
+            borderRadius: 10,
+            border: `1px solid ${viewMode === "month" ? accent : cardBorder}`,
+            background: viewMode === "month" ? accent : "#fff",
+            color: viewMode === "month" ? "#fff" : textMuted,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Monat
+        </button>
       </div>
 
       {viewMode === "day" && (
@@ -223,6 +240,99 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
             })}
           </div>
         </div>
+      )}
+
+      {viewMode === "month" && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <button
+              onClick={() => setMonthDate(addDays(monthDate, -30))}
+              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
+            >
+              ‹
+            </button>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>
+              {monthDate.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}
+            </div>
+            <button
+              onClick={() => setMonthDate(addDays(monthDate, 30))}
+              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
+            >
+              ›
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+            {WOCHENTAG_KURZ.map((day) => (
+              <div key={day} style={{ fontSize: 10, fontWeight: 700, textAlign: "center", color: textMuted, paddingBottom: 4 }}>
+                {day}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+            {(() => {
+              const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+              const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+              const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+              const days = [];
+
+              for (let i = 0; i < startOffset; i++) {
+                days.push(null);
+              }
+              for (let d = 1; d <= lastDay.getDate(); d++) {
+                days.push(new Date(monthDate.getFullYear(), monthDate.getMonth(), d));
+              }
+
+              return days.map((d, idx) => {
+                if (!d) return <div key={`empty-${idx}`}></div>;
+
+                const items = buildDayItems(d, appData);
+                const dotsToShow = items
+                  .filter((item) => ["peptide", "hormon", "supplement", "medikament"].includes(item.kategorie))
+                  .slice(0, 5);
+
+                return (
+                  <div
+                    key={d.toISOString()}
+                    style={{
+                      aspectRatio: "1 / 1",
+                      borderRadius: 8,
+                      border: `1px solid ${cardBorder}`,
+                      padding: 4,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      background: sameDay(d, today) ? accentSoft : "#fff",
+                    }}
+                  >
+                    <div style={{ color: textMuted }}>{d.getDate()}</div>
+                    <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                      {dotsToShow.map((item, i) => {
+                        const meta = KATEGORIE_META[item.kategorie];
+                        return (
+                          <div
+                            key={item.key}
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: 3,
+                              background: meta.dot,
+                              title: item.name,
+                            }}
+                            title={item.name}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </Card>
       )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dosierintervalle</div>
