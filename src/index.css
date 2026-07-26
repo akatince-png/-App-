@@ -73,3 +73,75 @@ input[type="time"]::-webkit-date-and-time-value {
     transition: font-size 0.1s ease, opacity 0.1s ease, color 0.1s ease;
   }
 }
+
+/* === ADHS-OPTIMIERTE ANIMATIONS === */
+/* Slide-in Animation für Task-Items (QuickTaskList) */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes slideInSuccess {
+    0% {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+    60% {
+      transform: translateX(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Success Pulse für Checkboxen (Dopamin-Belohnung) */
+  @keyframes successPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+
+  /* Sanftes Pulse für Sparkles/Success-Icons */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Soft Bounce für CTA-Buttons */
+  @keyframes softBounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+
+  /* Fade In + Slide für GraceDayCard */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Respektiere User-Präference für weniger Bewegung */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
