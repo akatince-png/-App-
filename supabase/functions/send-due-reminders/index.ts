@@ -5,8 +5,10 @@
 // dem Service-Role-Key statt einem Nutzer-JWT.
 //
 // Deckt aktuell nur Hydration ab (profiles.erinnerungen.hydration =
-// { aktiv, zeiten: [{ zeit: "HH:MM", menge }] }) — das einzige Erinnerungs-
-// Feld mit einer eigenen, festen Uhrzeitliste. Andere Kategorien
+// { aktiv, zeiten: [{ zeit: "HH:MM", menge, startDatum? }] }) — das einzige
+// Erinnerungs-Feld mit einer eigenen, festen Uhrzeitliste. "startDatum"
+// (optional, "YYYY-MM-DD") lässt eine Erinnerung erst ab einem gewählten Tag
+// dauerhaft losgehen, statt sofort ab dem Anlegen. Andere Kategorien
 // (Gewohnheiten/Supplemente/Medikamente/Peptide/Training) haben ihre
 // Uhrzeiten noch verteilt in eigenen Tabellen mit eigener Intervall-Logik
 // (siehe schedule.ts/dayItems.js) — deren serverseitige Nachbildung ist ein
@@ -39,6 +41,26 @@ function lokaleUhrzeit(zeitzone: string): string | null {
     return `${stunde}:${minute}`;
   } catch {
     return null; // Unbekannte/ungültige Zeitzone
+  }
+}
+
+// Liefert das aktuelle lokale Datum als "YYYY-MM-DD" — für den Abgleich mit
+// einem optionalen "startDatum" je Erinnerungszeit.
+function lokalesDatum(zeitzone: string): string | null {
+  try {
+    const teile = new Intl.DateTimeFormat("en-CA", {
+      timeZone: zeitzone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const jahr = teile.find((t) => t.type === "year")?.value;
+    const monat = teile.find((t) => t.type === "month")?.value;
+    const tag = teile.find((t) => t.type === "day")?.value;
+    if (!jahr || !monat || !tag) return null;
+    return `${jahr}-${monat}-${tag}`;
+  } catch {
+    return null;
   }
 }
 
@@ -75,9 +97,12 @@ Deno.serve(async (req) => {
       if (!hydration?.aktiv || !Array.isArray(hydration.zeiten) || hydration.zeiten.length === 0) continue;
 
       const jetzt = lokaleUhrzeit(zeitzone);
-      if (!jetzt) continue;
+      const heute = lokalesDatum(zeitzone);
+      if (!jetzt || !heute) continue;
 
-      const treffer = hydration.zeiten.filter((z: { zeit?: string }) => z.zeit === jetzt);
+      const treffer = hydration.zeiten.filter(
+        (z: { zeit?: string; startDatum?: string }) => z.zeit === jetzt && (!z.startDatum || z.startDatum <= heute)
+      );
       if (treffer.length === 0) continue;
 
       const mengen = treffer.map((z: { menge?: string }) => z.menge).filter(Boolean);
