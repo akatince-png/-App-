@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Shell, Card } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
@@ -6,11 +6,12 @@ import Icon from "../ui/Icon";
 import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
-import { toLocalISODate } from "../utils/dates";
+import { toLocalISODate, addDays, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
+import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 
 // Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
@@ -155,6 +156,161 @@ export default function HomeView({ onOpenView }) {
     },
   }));
 
+  // Mini-Widget-Daten für alle Kategorien
+  const miniWidgetData = useMemo(() => {
+    const widgets = [];
+    const essentialCategories = ["medikament", "hormon", "hydration"];
+
+    // Peptide/Hormone
+    if (plan.length > 0) {
+      const todayCount = plan.filter((d) => {
+        const key = `${toLocalISODate(d.date)}__${d.peptid}__${d.uhrzeit}`;
+        return erledigt[key];
+      }).length;
+      const weekStart = addDays(today, -((today.getDay() + 6) % 7));
+      const weekEnd = addDays(weekStart, 6);
+      const weekCount = plan.filter((d) => {
+        const key = `${toLocalISODate(d.date)}__${d.peptid}__${d.uhrzeit}`;
+        return (
+          erledigt[key] &&
+          d.date >= weekStart &&
+          d.date <= weekEnd
+        );
+      }).length;
+      widgets.push({
+        name: tLabel("Peptide"),
+        kategorie: "peptid",
+        dailyCount: todayCount,
+        dailyTotal: plan.filter((d) => sameDay(d.date, today)).length || 1,
+        weeklyCount: weekCount,
+        weeklyTotal: plan.length || 1,
+        isEssential: false,
+      });
+    }
+
+    if (hormonPlan.length > 0) {
+      const todayCount = hormonPlan.filter((d) => {
+        const key = `${toLocalISODate(d.date)}__${d.name}__${d.uhrzeit}`;
+        return hormonErledigt[key];
+      }).length;
+      const weekStart = addDays(today, -((today.getDay() + 6) % 7));
+      const weekEnd = addDays(weekStart, 6);
+      const weekCount = hormonPlan.filter((d) => {
+        const key = `${toLocalISODate(d.date)}__${d.name}__${d.uhrzeit}`;
+        return (
+          hormonErledigt[key] &&
+          d.date >= weekStart &&
+          d.date <= weekEnd
+        );
+      }).length;
+      widgets.push({
+        name: tLabel("Hormone"),
+        kategorie: "hormon",
+        dailyCount: todayCount,
+        dailyTotal: hormonPlan.filter((d) => sameDay(d.date, today)).length || 1,
+        weeklyCount: weekCount,
+        weeklyTotal: hormonPlan.length || 1,
+        isEssential: true,
+      });
+    }
+
+    // Supplemente
+    if (supplemente.length > 0) {
+      const supplementItems = heuteItems.filter((i) => i.kategorie === "supplement");
+      const todayCount = supplementItems.filter((i) => i.done).length;
+      const weekItems = [];
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(today, i);
+        const dayItems = buildDayItems(d, {
+          plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+          mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
+          trainingTemplates, gewohnheiten, gewohnheitErledigt,
+        });
+        weekItems.push(...dayItems.filter((it) => it.kategorie === "supplement" && it.done));
+      }
+      widgets.push({
+        name: tLabel("Supplemente"),
+        kategorie: "supplement",
+        dailyCount: todayCount,
+        dailyTotal: Math.max(supplementItems.length, 1),
+        weeklyCount: weekItems.length,
+        weeklyTotal: Math.max(supplemente.length * 7, 1),
+        isEssential: false,
+      });
+    }
+
+    // Mahlzeiten
+    if (mahlzeiten.length > 0) {
+      const mealItems = heuteItems.filter((i) => i.kategorie === "mahlzeit");
+      const todayCount = mealItems.filter((i) => i.done).length;
+      const weekItems = [];
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(today, i);
+        const dayItems = buildDayItems(d, {
+          plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+          mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
+          trainingTemplates, gewohnheiten, gewohnheitErledigt,
+        });
+        weekItems.push(...dayItems.filter((it) => it.kategorie === "mahlzeit" && it.done));
+      }
+      widgets.push({
+        name: tLabel("Mahlzeiten"),
+        kategorie: "mahlzeit",
+        dailyCount: todayCount,
+        dailyTotal: Math.max(mealItems.length, 1),
+        weeklyCount: weekItems.length,
+        weeklyTotal: Math.max(mahlzeiten.length * 7, 1),
+        isEssential: false,
+      });
+    }
+
+    // Training
+    if (trainingEintraege.length > 0 || trainingWochenplan.length > 0) {
+      const trainingItems = heuteItems.filter((i) => i.kategorie === "training");
+      const todayCount = trainingItems.filter((i) => i.done).length;
+      const weekItems = [];
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(today, i);
+        const dayItems = buildDayItems(d, {
+          plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+          mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
+          trainingTemplates, gewohnheiten, gewohnheitErledigt,
+        });
+        weekItems.push(...dayItems.filter((it) => it.kategorie === "training" && it.done));
+      }
+      widgets.push({
+        name: tLabel("Training"),
+        kategorie: "training",
+        dailyCount: todayCount,
+        dailyTotal: Math.max(trainingItems.length, 1),
+        weeklyCount: weekItems.length,
+        weeklyTotal: Math.max(trainingWochenplan.filter((w) => w.vorlage).length * 7, 1),
+        isEssential: false,
+      });
+    }
+
+    // Hydration
+    const hydrationItems = heuteItems.filter((i) => i.kategorie === "hydration");
+    if (hydrationItems.length > 0) {
+      const todayCount = hydrationItems.filter((i) => i.done).length;
+      widgets.push({
+        name: tLabel("Hydration"),
+        kategorie: "hydration",
+        dailyCount: todayCount,
+        dailyTotal: Math.max(hydrationItems.length, 1),
+        weeklyCount: 0,
+        weeklyTotal: 1,
+        isEssential: true,
+      });
+    }
+
+    // Nach Essentialität und Existenz filtern
+    return isEmergencyMode
+      ? widgets.filter((w) => w.isEssential && plan.length + hormonPlan.length > 0)
+      : widgets;
+  }, [isEmergencyMode, plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+      mahlzeiten, mahlzeitErledigt, trainingEintraege, trainingWochenplan, heuteItems, today, tLabel, buildDayItems]);
+
   return (
     <Shell>
       <div style={{ marginBottom: 24 }}>
@@ -216,6 +372,32 @@ export default function HomeView({ onOpenView }) {
           </div>
         </Card>
       </div>
+
+      {/* Mini-Widgets für alle Pläne */}
+      {miniWidgetData.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 12 }}>📊 Alle Pläne im Überblick</div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
+              gap: 10,
+            }}
+          >
+            {miniWidgetData.map((widget) => (
+              <MiniPlanWidget
+                key={widget.kategorie}
+                name={widget.name}
+                dailyCount={widget.dailyCount}
+                dailyTotal={widget.dailyTotal}
+                weeklyCount={widget.weeklyCount}
+                weeklyTotal={widget.weeklyTotal}
+                kategorie={widget.kategorie}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Schnellzugriff auf den Tagesplan — ersetzt den früheren "+"-FAB in
           der unteren Navigation, direkt über den heute offenen Aufgaben. */}
