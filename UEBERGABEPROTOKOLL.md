@@ -48,6 +48,14 @@ git checkout -b feature/xyz  # ❌ NICHT MACHEN!
    - Laborwerte (optional)
    - Kategorien einrichten (für jeden Plan einzeln konfigurierbar)
    - Abschluss-Screen
+   - **NEU: Training-Onboarding** - Zwei-Schritt-Setup:
+     1. Trainingstage wählen (WochenplanEditor)
+     2. Mehrere Trainingseinheiten pro Tag hinzufügen
+        - Wochentag + Uhrzeit wählen
+        - Optional: Trainingsart (Krafttraining, Cardio, Bodyweight, Sonstiges)
+        - Optional: Trainingsname (z.B. "Leg Day", "HIIT Session")
+     - Trainingseinheiten nach Wochentag gruppiert
+     - Lösch-Funktion für einzelne Einheiten
 
 2. **HomePage**
    - Begrüßung mit **Benutzernamen** aus localStorage
@@ -119,12 +127,13 @@ src/
 │   ├── TrainingView.jsx      # Trainingsplanung
 │   ├── onboarding/
 │   │   ├── OnboardingFlow.jsx  # Zentraler Onboarding-Orchestrator
-│   │   ├── OnboardingIntroView.jsx  # Namensingabe ⭐ NEU
+│   │   ├── OnboardingIntroView.jsx  # Namensingabe ⭐
 │   │   ├── HauptprotokollErstellenView.jsx
 │   │   ├── OnboardingZieleView.jsx
 │   │   ├── OnboardingProfilView.jsx
 │   │   ├── OnboardingLaborwerteView.jsx
-│   │   ├── OnboardingCategoriesView.jsx
+│   │   ├── OnboardingCategoriesView.jsx  # Nutzt OnboardingTrainingSetupView
+│   │   ├── OnboardingTrainingSetupView.jsx  # ⭐ NEU: Zwei-Schritt-Training-Setup
 │   │   └── OnboardingCompletionView.jsx
 │   └── ... (weitere Views für andere Kategorien)
 ├── ui/
@@ -217,6 +226,58 @@ KATEGORIE_META = {
 - Berechnet wöchentliche Erfüllung (z.B. 4 von 7 Tage)
 - Im Notfallmodus werden nur essenzielle Kategorien gezeigt
 - Lädt ALLE 7 Tage durch, um Wochenstatistik zu berechnen
+
+### 6. **OnboardingTrainingSetupView - Training-Zwei-Schritt-Setup** ⭐
+**Datei**: `src/views/onboarding/OnboardingTrainingSetupView.jsx`
+
+```javascript
+// Props:
+{
+  trainingWochenplan,        // array von {wochentag, ...}
+  wochenplanSetzen,          // callback(wochentag)
+  wochenplanEntfernen,       // callback(wochentag)
+  trainingTemplates,         // array
+  onDone,                    // callback()
+  onBack,                    // callback()
+}
+
+// State (intern):
+trainingsEinheiten = [
+  {
+    id: "Mo-08:00-timestamp",
+    wochentag: "Mo",
+    uhrzeit: "08:00",
+    art: "Krafttraining",     // optional
+    name: "Leg Day",          // optional
+  },
+  ...
+]
+```
+
+**Funktionalität**:
+1. **Schritt 1**: Wochentage auswählen (via WochenplanEditor)
+   - Nutzt bestehende Komponente
+   - Speichert in `trainingWochenplan`
+
+2. **Schritt 2**: Trainingseinheiten hinzufügen
+   - **Wochentag**: Pill-Auswahl (zeigt verfügbare Trainingstage)
+   - **Uhrzeit**: TimeInput (HH:MM)
+   - **Trainingsart** (optional): Pills von TRAININGSARTEN
+     - Werte: "Krafttraining", "Cardio", "Bodyweight", "Sonstiges"
+   - **Trainingsname** (optional): TextInput-Feld
+   - **Button**: "+ Trainingseinheit hinzufügen"
+     - Nur aktiv wenn wochentag + uhrzeit gesetzt
+
+3. **Anzeige der Einheiten**:
+   - Nach Wochentag gruppiert
+   - Nach Uhrzeit sortiert
+   - Jede Einheit zeigt: `08:00 Uhr · Leg Day` + Trainingsart
+   - Lösch-Button (×) für jede Einheit
+
+**Validierung**:
+- `wochentag` und `uhrzeit` sind required
+- `art` und `name` sind optional
+- Eindeutige IDs basierend auf wochentag + uhrzeit + timestamp
 
 ---
 
@@ -330,8 +391,9 @@ OnboardingCompletionView (Glückwunsch!)
 
 ### Sofort (von anderen Chats):
 1. ✅ Mini-Widgets implementieren (FERTIG)
-2. ⚠️ Weitere ADHS-Optimierungen möglich
-3. ⚠️ SQL-Schema-Änderungen können nötig sein (benötigt DBA-Zugriff)
+2. ✅ Training-Onboarding: Zwei-Schritt-Setup (FERTIG)
+3. ⚠️ Weitere ADHS-Optimierungen möglich
+4. ⚠️ SQL-Schema-Änderungen können nötig sein (benötigt DBA-Zugriff)
 
 ### Mittelfristig:
 - [ ] Mobile-Responsiveness optimieren
@@ -348,6 +410,7 @@ OnboardingCompletionView (Glückwunsch!)
 | accentSoft nicht importiert in WochenuebersichtView | ✅ BEHOBEN | Added `accentSoft` zu imports |
 | TextInput onKeyPress Handler fehlte | ✅ BEHOBEN | Added `onKeyPress` prop zu TextInput |
 | PrimaryButton style prop fehlte | ✅ BEHOBEN | Added `style` prop zu PrimaryButton |
+| KRAFT_UEBUNGEN falscher Import-Name | ✅ BEHOBEN | OnboardingTrainingSetupView nutzt nur TRAININGSARTEN |
 
 ---
 
@@ -355,11 +418,13 @@ OnboardingCompletionView (Glückwunsch!)
 
 1. **HomeView.jsx** - Startseite, Widgets, ADHS-Logik
 2. **OnboardingFlow.jsx** - Onboarding-Orchestration
-3. **WochenuebersichtView.jsx** - Wochenplan, Monatsplan
-4. **MiniPlanWidget.jsx** - Mini-Doppelring-Widgets ⭐
-5. **KATEGORIE_META in dayItems.ts** - Farben & Metadaten
-6. **LoginView.jsx** - Anmeldeseite & Sprachumstellung
-7. **i18n/LanguageContext.jsx** - Sprach-Management
+3. **OnboardingCategoriesView.jsx** - Kategorien-Setup mit Training ⭐
+4. **OnboardingTrainingSetupView.jsx** - ⭐ NEU: Training-Zwei-Schritt-Setup
+5. **WochenuebersichtView.jsx** - Wochenplan, Monatsplan
+6. **MiniPlanWidget.jsx** - Mini-Doppelring-Widgets
+7. **KATEGORIE_META in dayItems.ts** - Farben & Metadaten
+8. **LoginView.jsx** - Anmeldeseite & Sprachumstellung
+9. **i18n/LanguageContext.jsx** - Sprach-Management
 
 ---
 
@@ -423,7 +488,7 @@ git push origin main
 ---
 
 **Erstellt**: 26.07.2026  
-**Letzte Aktualisierung**: Mit Mini-Widgets & Doppelring-Visualisierung  
+**Letzte Aktualisierung**: Mit Training-Onboarding Zwei-Schritt-Setup  
 **Status**: Production-Ready ✅  
 **Vercel-URL**: https://myprotocolsapp.vercel.app/
 
