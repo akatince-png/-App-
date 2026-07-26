@@ -30,6 +30,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
   } = appData;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState("day"); // "day" | "week"
   const [exportLaeuft, setExportLaeuft] = useState(false);
   const [vorschauUrl, setVorschauUrl] = useState(null);
   const exportRef = useRef(null);
@@ -121,36 +122,108 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
         })}
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{fmtDate(selectedDate)}</div>
-      <Card style={{ marginBottom: 16, padding: 8 }}>
-        {tagesItems.length === 0 ? (
-          <div style={{ fontSize: 13, color: textMuted, textAlign: "center", padding: 12 }}>Für diesen Tag steht nichts an.</div>
-        ) : (
-          tagesItems.map((item, i, arr) => {
-            const k = KATEGORIE_META[item.kategorie];
-            return (
-              <div
-                key={item.key}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "10px 8px",
-                  borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
-                }}
-              >
-                <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-                    {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 11.5 }}>· {item.uhrzeit}</span>
+      <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+        <button
+          onClick={() => setViewMode("day")}
+          style={{
+            flex: 1,
+            padding: "8px 12px",
+            borderRadius: 10,
+            border: `1px solid ${viewMode === "day" ? accent : cardBorder}`,
+            background: viewMode === "day" ? accent : "#fff",
+            color: viewMode === "day" ? "#fff" : textMuted,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Tag
+        </button>
+        <button
+          onClick={() => setViewMode("week")}
+          style={{
+            flex: 1,
+            padding: "8px 12px",
+            borderRadius: 10,
+            border: `1px solid ${viewMode === "week" ? accent : cardBorder}`,
+            background: viewMode === "week" ? accent : "#fff",
+            color: viewMode === "week" ? "#fff" : textMuted,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Woche
+        </button>
+      </div>
+
+      {viewMode === "day" && (
+        <>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{fmtDate(selectedDate)}</div>
+          <Card style={{ marginBottom: 16, padding: 8 }}>
+            {tagesItems.length === 0 ? (
+              <div style={{ fontSize: 13, color: textMuted, textAlign: "center", padding: 12 }}>Für diesen Tag steht nichts an.</div>
+            ) : (
+              tagesItems.map((item, i, arr) => {
+                const k = KATEGORIE_META[item.kategorie];
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 8px",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
+                    }}
+                  >
+                    <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+                        {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 11.5 }}>· {item.uhrzeit}</span>
+                      </div>
+                      {item.detail && <div style={{ fontSize: 11, color: textMuted }}>{item.detail}</div>}
+                    </div>
                   </div>
-                  {item.detail && <div style={{ fontSize: 11, color: textMuted }}>{item.detail}</div>}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </Card>
+                );
+              })
+            )}
+          </Card>
+        </>
+      )}
+
+      {viewMode === "week" && (
+        <div style={{ overflowX: "auto", marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, minWidth: 800 }}>
+            {wochentage.map((d, i) => {
+              const items = buildDayItems(d, appData);
+              const k = KATEGORIE_META;
+              return (
+                <Card key={i} style={{ padding: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 8, paddingBottom: 6, borderBottom: `1px solid ${cardBorder}`, textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: textMuted }}>{WOCHENTAG_KURZ[i]}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800 }}>{d.getDate()}</div>
+                  </div>
+                  {items.length === 0 ? (
+                    <div style={{ fontSize: 10, color: textMuted, textAlign: "center" }}>–</div>
+                  ) : (
+                    items.map((item) => {
+                      const meta = k[item.kategorie];
+                      return (
+                        <div key={item.key} style={{ fontSize: 10, marginBottom: 6, paddingLeft: 6, borderLeft: `2px solid ${meta.dot}` }}>
+                          <div style={{ fontWeight: 700 }}>{item.uhrzeit}</div>
+                          <div style={{ fontSize: 9, color: textMuted }}>{item.name}</div>
+                          {item.detail && <div style={{ fontSize: 8.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
+                        </div>
+                      );
+                    })
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dosierintervalle</div>
       <Card style={{ marginBottom: 16 }}>
