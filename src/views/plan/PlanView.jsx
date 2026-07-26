@@ -28,7 +28,7 @@ export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }
         <div style={{ fontSize: 22, fontWeight: 800 }}>Archiv</div>
         <button
           onClick={onHome}
-          style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 15, cursor: "pointer" }}
+          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
           title="Zum Dashboard"
         >
           ⌂

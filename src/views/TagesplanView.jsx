@@ -311,7 +311,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         <button
           className="mp-tap"
           onClick={onHome}
-          style={{ width: 40, height: 40, borderRadius: 13, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 16, cursor: "pointer" }}
+          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
           title="Zum Dashboard"
         >
           ⌂
