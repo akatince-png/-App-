@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
-import { accent, accentDark, cardBorder, textMuted } from "../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { exportElementAsPdf } from "../utils/pdfExport";
 import { describeInterval, activeDoseDays } from "../utils/schedule";
