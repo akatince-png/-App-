@@ -26,4 +26,17 @@ export const login = {
     "login.error.alreadyRegistered": "An account already exists for this email.",
     "login.error.passwordTooShort": "The password must be at least 6 characters long.",
   },
+  tr: {
+    "login.tab.anmelden": "Oturum aç",
+    "login.tab.registrieren": "Kaydol",
+    "login.email.label": "E-Posta",
+    "login.email.placeholder": "senin@email.com",
+    "login.password.label": "Şifre",
+    "login.info.confirmEmail": "Neredeyse bitti — lütfen size gönderilen bağlantı ile e-posta adresinizi onaylayın.",
+    "login.button.loading": "Lütfen bekleyiniz...",
+    "login.error.unexpected": "Beklenmeyen hata. Lütfen tekrar deneyin.",
+    "login.error.invalidCredentials": "E-posta veya şifre yanlış.",
+    "login.error.alreadyRegistered": "Bu e-posta için zaten bir hesap var.",
+    "login.error.passwordTooShort": "Şifre en az 6 karakter uzunluğunda olmalıdır.",
+  },
 };

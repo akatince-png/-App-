@@ -8,4 +8,10 @@ export const LABELS = {
     "JETZT": "NOW",
     "Bestätigen": "Confirm",
   },
+  tr: {
+    "Tag": "Gün",
+    "Woche": "Hafta",
+    "JETZT": "ŞİMDİ",
+    "Bestätigen": "Onayla",
+  },
 };

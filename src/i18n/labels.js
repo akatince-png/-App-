@@ -15,4 +15,11 @@ export const LABELS = {
     ...tagesplan.en,
     ...training.en,
   },
+  tr: {
+    ...core.tr,
+    ...onboarding.tr,
+    ...substanzen.tr,
+    ...tagesplan.tr,
+    ...training.tr,
+  },
 };

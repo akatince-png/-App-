@@ -21,4 +21,15 @@ export const hauptprotokoll = {
     "hauptprotokoll.error.name": "Please enter a name for your protocol.",
     "hauptprotokoll.error.speichern": "Failed to save. Please try again.",
   },
+  tr: {
+    "hauptprotokoll.titel": "Yeni sağlık protokolünüze hoş geldiniz",
+    "hauptprotokoll.intro": "Şimdi kişisel protokolünüzü oluşturun. Tüm belgelenen veriler bu protokole atanacak ve daha sonra haftalık raporlarınızda ve analizlerinizde otomatik olarak kullanılacak.",
+    "hauptprotokoll.name.label": "Protokolünüz adı ne olmalı?",
+    "hauptprotokoll.name.placeholder": "örn. Yaz 2026",
+    "hauptprotokoll.startdatum.label": "Protokolünüz ne zaman başlamalı?",
+    "hauptprotokoll.startdatum.hinweis": "Bu tarih her alt protokol için varsayılan başlangıç tarihi — bunu alan bazında ayrı ayrı değiştirebilirsiniz.",
+    "hauptprotokoll.weiter": "Devam et",
+    "hauptprotokoll.error.name": "Lütfen protokolünüz için bir ad girin.",
+    "hauptprotokoll.error.speichern": "Kaydedilemedi. Lütfen tekrar deneyin.",
+  },
 };

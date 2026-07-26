@@ -26,4 +26,17 @@ export const welcome = {
       "A few minutes today to set up your protocol — and after that, everything's under control without having to think about it. You can set up each area now or skip it and come back later. Let's go!",
     "welcome.button.los": "Let's go",
   },
+  tr: {
+    "welcome.skip": "Atla",
+    "welcome.slide1.titel": "Merhaba, MyProtocols'e hoş geldiniz!",
+    "welcome.slide1.text":
+      "Bizi seçtiğiniz için mutluyuz. Peptidleri, ilaçları, takviyeleri, alışkanlıkları, uyku, hidrasyon, beslenme ve antrenmanı tek bir yerde protokolle tutmanıza yardımcı oluyoruz — dağınık notlar ve belleğiniz yerine.",
+    "welcome.slide2.titel": "Nasıl çalışır",
+    "welcome.slide2.text":
+      "Günlük planınız size her gün tam olarak neyin gerekli olduğunu gösterir — bir kez dokunun ve tamamlanır. Tüm ayrıntılar (miktar, alım yöntemi, karışımlar) ihtiyacınız olduğunda Protokollerde açıkça görüntülenir.",
+    "welcome.slide3.titel": "Şimdi biraz çaba, sonra huzur",
+    "welcome.slide3.text":
+      "Protokolünüzü ayarlamak için bugün birkaç dakika — ve sonrasında, üzerinde düşünmeden her şey kontrol altında olacak. Her alanı şimdi ayarlayabilir veya atlayabilir ve sonra tamamlayabilirsiniz. Başlayalım!",
+    "welcome.button.los": "Başlayalım",
+  },
 };

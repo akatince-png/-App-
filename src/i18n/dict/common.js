@@ -25,4 +25,16 @@ export const common = {
     "common.erinnerung.nein": "No thanks",
     "common.erinnerung.hinweis": "Only works on devices where you've activated push reminders under More.",
   },
+  tr: {
+    "common.loading": "Yükleniyor...",
+    "common.error.generic": "Bir şey yanlış gitti. Lütfen tekrar deneyin.",
+    "common.language": "Dil",
+    "common.language.de": "Deutsch",
+    "common.language.en": "English",
+    "common.language.tr": "Türkçe",
+    "common.erinnerung.label": "Hatırlatıcı",
+    "common.erinnerung.ja": "Evet, beni hatırlat",
+    "common.erinnerung.nein": "Hayır teşekkürler",
+    "common.erinnerung.hinweis": "Sadece 'Daha Fazla' bölümünde anında bildirimler etkinleştirdiğiniz cihazlarda çalışır.",
+  },
 };

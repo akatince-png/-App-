@@ -25,4 +25,27 @@ export const LABELS = {
     "Zum Dashboard": "To dashboard",
     "Überspringen": "Skip",
   },
+  tr: {
+    // --- TRAININGSARTEN (Rest, die core.js noch nicht abdeckt) ---
+    "Cardio": "Kardiyovaskülär",
+    "Sonstiges": "Diğer",
+
+    // --- Kurze, wiederkehrende Feldbezeichnungen ---
+    "Datum": "Tarih",
+    "Übungen": "Egzersizler",
+    "Modus": "Mod",
+    "Sätze": "Setler",
+    "Wdh.": "Tekrar",
+    "Pause": "Dinlenme",
+    "Stoppuhr": "Kronometre",
+    "Zusatzgewicht": "Eklenen ağırlık",
+    "Kalorien": "Kalori",
+    "Schmerzen": "Ağrı",
+    "Bemerkungen": "Açıklamalar",
+    "Arbeit (Sek.)": "İş (sn.)",
+    "Pause (Sek.)": "Dinlenme (sn.)",
+    "Runden": "Turlar",
+    "Zum Dashboard": "Panele",
+    "Überspringen": "Atla",
+  },
 };

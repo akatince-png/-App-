@@ -11,4 +11,12 @@ export const LABELS = {
     // --- WochenplanEditor.jsx: Ruhetag-Pille ---
     "Ruhetag": "Rest day",
   },
+  tr: {
+    // --- TRAININGSARTEN (WochenplanEditor.jsx) ---
+    "Cardio": "Kardiyovaskülär",
+    "Sonstiges": "Diğer",
+
+    // --- WochenplanEditor.jsx: Ruhetag-Pille ---
+    "Ruhetag": "Dinlenme günü",
+  },
 };

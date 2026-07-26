@@ -8,4 +8,9 @@ export const LABELS = {
     // spezifischere "Sonstiges Cardio"/"Sonstige" Varianten waren erfasst) ---
     "Sonstiges": "Other",
   },
+  tr: {
+    // --- constants.js: HINWEISE (in core.js fehlte "Sonstiges", nur die
+    // spezifischere "Sonstiges Cardio"/"Sonstige" Varianten waren erfasst) ---
+    "Sonstiges": "Diğer",
+  },
 };
