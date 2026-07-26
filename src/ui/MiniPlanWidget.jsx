@@ -13,9 +13,12 @@ import { KATEGORIE_META } from "../utils/dayItems";
  * - weeklyTotal: number - Wochenziel (z.B. 7)
  * - kategorie: string - Kategorie für Farbe (z.B. "peptid", "hormon")
  */
-export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCount, weeklyTotal, kategorie }) {
-  const meta = KATEGORIE_META[kategorie] || { color: "#666", dot: "#999" };
-  const baseColor = meta.color;
+export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCount, weeklyTotal, kategorie, unit = "" }) {
+  // KATEGORIE_META-Einträge haben kein "color"-Feld (nur bg/text/dot/label) —
+  // ein vorheriger Zugriff auf meta.color war deshalb immer undefined und
+  // ließ die Ring-Striche unsichtbar werden (SVG-Default für stroke: "none").
+  const meta = KATEGORIE_META[kategorie] || { dot: "#999" };
+  const baseColor = meta.dot;
 
   // Berechne Prozentsätze
   const dailyPercent = dailyTotal > 0 ? (dailyCount / dailyTotal) * 100 : 0;
@@ -131,7 +134,7 @@ export default function MiniPlanWidget({ name, dailyCount, dailyTotal, weeklyCou
           marginTop: "4px",
         }}
       >
-        {dailyCount}/{dailyTotal} heute
+        {dailyCount}{unit}/{dailyTotal}{unit} heute
       </div>
     </div>
   );

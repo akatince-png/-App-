@@ -85,6 +85,8 @@ export default function HomeView({ onOpenView }) {
     gewohnheiten,
     gewohnheitErledigt,
     confirmAlleTageszeit,
+    hydrationHeuteMl,
+    hydrationZielMl,
   } = useAppData();
 
   // ADHS Mode State
@@ -125,13 +127,12 @@ export default function HomeView({ onOpenView }) {
     gewohnheitErledigt,
   });
 
-  // Im Notfallmodus: nur Medikamente, Hormone und Hydration anzeigen
-  const displayItems = isEmergencyMode
-    ? heuteItems.filter((item) => {
-        const essentialCategories = ["medikament", "hormon", "hydration"];
-        return essentialCategories.includes(item.kategorie);
-      })
-    : heuteItems;
+  // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
+  // Kategorie heißt intern "hormon" (siehe KATEGORIE_META, label "Medikament"),
+  // "medikament" als Schlüssel existierte nirgends und ließ den Filter vorher
+  // leerlaufen. Hydration wird separat als Balken angezeigt (kein Item-Modell).
+  const ESSENTIAL_KATEGORIEN = ["hormon", "hydration"];
+  const displayItems = isEmergencyMode ? heuteItems.filter((item) => ESSENTIAL_KATEGORIEN.includes(item.kategorie)) : heuteItems;
 
   const erledigtCount = displayItems.filter((i) => i.done).length;
   const gewohnheitHeuteItems = displayItems.filter((i) => i.kategorie === "gewohnheit");
@@ -159,7 +160,6 @@ export default function HomeView({ onOpenView }) {
   // Mini-Widget-Daten für alle Kategorien
   const miniWidgetData = useMemo(() => {
     const widgets = [];
-    const essentialCategories = ["medikament", "hormon", "hydration"];
 
     // Peptide/Hormone
     if (plan.length > 0) {
@@ -289,27 +289,31 @@ export default function HomeView({ onOpenView }) {
       });
     }
 
-    // Hydration
-    const hydrationItems = heuteItems.filter((i) => i.kategorie === "hydration");
-    if (hydrationItems.length > 0) {
-      const todayCount = hydrationItems.filter((i) => i.done).length;
+    // Hydration wird als laufende Trinkmenge geführt, nicht als Liste
+    // einzelner Zeit-Items (siehe useHydrationData) — deshalb hier direkt aus
+    // hydrationHeuteMl/-ZielMl berechnet statt aus heuteItems gefiltert, wo
+    // nie ein "hydration"-Eintrag existiert.
+    if (hydrationZielMl > 0) {
       widgets.push({
         name: tLabel("Hydration"),
         kategorie: "hydration",
-        dailyCount: todayCount,
-        dailyTotal: Math.max(hydrationItems.length, 1),
+        dailyCount: Math.min(hydrationHeuteMl, hydrationZielMl),
+        dailyTotal: hydrationZielMl,
         weeklyCount: 0,
         weeklyTotal: 1,
         isEssential: true,
+        unit: "ml",
       });
     }
 
-    // Nach Essentialität und Existenz filtern
-    return isEmergencyMode
-      ? widgets.filter((w) => w.isEssential && plan.length + hormonPlan.length > 0)
-      : widgets;
+    // Im Notfallmodus nur essenzielle Kategorien (Medikamente/Hormone,
+    // Hydration) zeigen — unabhängig davon, ob zusätzlich ein Peptid-Protokoll
+    // existiert (der vorherige "plan.length + hormonPlan.length > 0"-Zusatz
+    // hat sonst z. B. Hydration ausgeblendet, sobald kein Peptid-Plan lief).
+    return isEmergencyMode ? widgets.filter((w) => w.isEssential) : widgets;
   }, [isEmergencyMode, plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
-      mahlzeiten, mahlzeitErledigt, trainingEintraege, trainingWochenplan, heuteItems, today, tLabel, buildDayItems]);
+      mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan, trainingTemplates,
+      gewohnheiten, gewohnheitErledigt, hydrationHeuteMl, hydrationZielMl, heuteItems, today, tLabel]);
 
   return (
     <Shell>
@@ -393,6 +397,7 @@ export default function HomeView({ onOpenView }) {
                 weeklyCount={widget.weeklyCount}
                 weeklyTotal={widget.weeklyTotal}
                 kategorie={widget.kategorie}
+                unit={widget.unit}
               />
             ))}
           </div>
