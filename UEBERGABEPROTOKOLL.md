@@ -1,497 +1,384 @@
 # 📋 ÜBERGABEPROTOKOLL: MyProtocols App
 
-## ⚠️ WICHTIG: GIT-WORKFLOW
+**Stand: 26.07.2026 (Ende Arbeitstag), Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
-**ALLE Arbeiten direkt auf dem `main`-Branch durchführen!** Keine Feature-Branches verwenden!
-
-```bash
-# Richtig:
-git checkout main
-git pull origin main
-# Mache Änderungen...
-git add -A
-git commit -m "Beschreibung"
-git push origin main
-
-# FALSCH:
-git checkout -b feature/xyz  # ❌ NICHT MACHEN!
-```
+> ⚠️ **Diese Fassung ersetzt eine ältere Version dieser Datei.** Die alte
+> Fassung beschrieb teils einen anderen, nicht mehr existierenden Codestand
+> (z. B. eine Datei `OnboardingTrainingSetupView.jsx`, die inzwischen
+> gelöscht wurde, TypeScript-Dateiendungen, wo tatsächlich reines
+> JavaScript verwendet wird, und Datenbank-Tabellennamen, die nicht mit dem
+> echten Schema übereinstimmten). Diese Fassung wurde direkt gegen den
+> aktuellen Code und die echten Migrationen geprüft. **Trotzdem gilt:**
+> Infrastruktur-Fakten wie die genaue Live-URL oder der Hosting-Anbieter
+> stehen nicht im Code selbst — die als "laut Nutzerin bestätigt"
+> markierten Punkte sind verifiziert, alles andere in diesem Bereich bitte
+> vor Gebrauch nochmal mit der Nutzerin abgleichen.
 
 ---
 
-## 🎯 Projekt-Übersicht
+## 1. Was ist diese App?
 
-**MyProtocols** ist eine Web-App zur Verwaltung von Gesundheitsprotokollen mit:
-- Peptid-Therapie (Injektionen)
-- Hormonelle Therapie
-- Supplementierung  
-- Trainingsplanung
-- Schlaf-Tracking
-- Ernährungsplanung
-- Hydration-Tracking
-- Gewohnheiten (Routinen)
+**MyProtocols** ist eine Web-App zur Selbstverwaltung von
+Gesundheits-/Biohacking-Protokollen, mit besonderem Fokus auf
+ADHS-Freundlichkeit (reduzierte Reizüberflutung, "Notfallmodus" mit nur den
+wichtigsten Aufgaben, große Bedienelemente, klare Sprache). Die Nutzerin,
+für die diese App gebaut wird, ist selbst nicht technisch versiert
+(kommuniziert per Spracheingabe, oft mit Transkriptionsfehlern) — die App
+muss entsprechend einfach bedienbar sein, und die Kommunikation mit ihr
+entsprechend geduldig und in einfacher Sprache erfolgen (siehe Abschnitt 8).
 
-**Live-URL**: https://myprotocolsapp.vercel.app/
+Abgedeckte Bereiche ("Kategorien", jede mit eigenem Plan/Protokoll):
 
----
+- **Schlaf** — Bett-/Aufwachzeiten, mehrere Blöcke möglich (z. B. Woche vs. Wochenende)
+- **Hydration** — Tagesziel in ml, mehrere Erinnerungszeiten mit Menge + optionalem Startdatum
+- **Ernährung** — Mahlzeiten mit Zutaten, Wochentag-Zuordnung, Kalorien-/Makro-Übersicht
+- **Training** — Mehrere Einheiten pro Wochentag möglich, mit Trainingsart(en), Sätzen/Wiederholungen, Übungen, Warm-up/Cool-down
+- **Gewohnheiten** — freie Routinen mit fester Uhrzeit oder Zeitfenster, Zieltage
+- **Supplemente** — Dosierung, Einnahmeart, Intervall (täglich/Zyklus/feste Wochentage)
+- **Medikamente/Hormone** — wie Supplemente, zusätzlich Kategorie (z. B. "Hormone")
+- **Peptide** — eigener Auswahl-Katalog + Dosierung, inkl. Foto der Präparate
 
-## 📊 Aktueller Stand (Session: 26.07.2026)
+Darüber liegt ein **Hauptprotokoll** (Name, Startdatum, Grund/Ziel), unter
+dem alle Kategorien als **Teilprotokolle** laufen (aktiv/inaktiv, eigenes
+Startdatum, Laufzeit). Es kann mehrere Hauptprotokolle geben (z. B. für
+verschiedene Phasen).
 
-### ✅ IMPLEMENTIERT
-
-1. **Onboarding-Flow**
-   - Welcome-Folien mit Sprachumstellung (DE/EN/TR)
-   - Hauptprotokoll erstellen (Name + Startdatum)
-   - **NEU: Intro-Phase** - Benutzer gibt seinen Namen ein (gespeichert in localStorage)
-   - Ziele auswählen (Warum mache ich das?)
-   - Profil & Ausgangslage (Persönliche Daten, Messwerte)
-   - Laborwerte (optional)
-   - Kategorien einrichten (für jeden Plan einzeln konfigurierbar)
-   - Abschluss-Screen
-   - **NEU: Training-Onboarding** - Zwei-Schritt-Setup:
-     1. Trainingstage wählen (WochenplanEditor)
-     2. Mehrere Trainingseinheiten pro Tag hinzufügen
-        - Wochentag + Uhrzeit wählen
-        - Optional: Trainingsart (Krafttraining, Cardio, Bodyweight, Sonstiges)
-        - Optional: Trainingsname (z.B. "Leg Day", "HIIT Session")
-     - Trainingseinheiten nach Wochentag gruppiert
-     - Lösch-Funktion für einzelne Einheiten
-
-2. **HomePage**
-   - Begrüßung mit **Benutzernamen** aus localStorage
-   - ADHS-Modus Toggle (Normalmodus ↔ Notfallmodus 🆘)
-   - Zwei große Fortschritts-Kästchen:
-     - Tagesfortschritt (ProgressRing)
-     - Gewohnheiten-Fortschritt (ProgressRing)
-   - **NEU: Mini-Plan-Widgets** - Symmetrisches Grid mit:
-     - Kleine Doppelring-Donuts für jeden Plan
-     - Innerer Ring: Tagesfortschritt (hellere Farbe)
-     - Äußerer Ring: Wochenfortschritt (dunklere Farbe)
-     - Kategoriefarben (violett/Peptide, rosa/Hormone, grün/Supplemente, etc.)
-     - Im Notfallmodus: Nur essenzielle Kategorien (Medikamente, Hormone, Hydration)
-   - Emergency-Mode-Banner (gelb)
-   - Quick-Task-List für offene Aufgaben
-   - "Als Nächstes"-Sektion
-
-3. **Gewohnheiten (Routinen)**
-   - **Zeit-Fenster-Unterstützung**: Feste Uhrzeit ODER Von-Bis Zeitraum
-   - Toggle zwischen Modus
-   - Speichert `uhrzeit` oder `urzeitVon`/`urzeitBis`
-
-4. **Wochenübersicht (Wochenuebersicht)**
-   - **Drei View-Modi**:
-     - Day: Einzelne Tag-Ansicht
-     - Week: Tabellraster Mo-So mit Items
-     - Month: Kalender mit farbigen Punkten (max. 5 pro Tag)
-   - Farb-codierte Kategorien
-   - Navigation für Monate (← Vorheriger Monat, › Nächster Monat)
-   - **BUG BEHOBEN**: accentSoft fehlte im import (fixed)
-
-5. **Sprachumstellung**
-   - **Auf LoginView** (Anmeldeseite) - oben rechts
-   - **Auf WelcomeView** (Willkommensfolien) - oben links
-   - Unterstützte Sprachen: DE (Deutsch), EN (English), TR (Türkçe)
-   - Persistiert in localStorage (`language`)
-   - **Translations für alle Screens** (common, login, welcome, onboarding, home, etc.)
-
-6. **ADHS/Emergency-Modus**
-   - Toggle-Button (blaue Farbverlauf = Normal, rote Farbverlauf = Notfall)
-   - Im Notfallmodus:
-     - Nur 3 essenzielle Kategorien anzeigen: Medikamente, Hormone, Hydration
-     - Warnen-Banner: "💛 Heute nur Basics: Medikamente + Wasser. Alles andere ist Bonus. Kein Druck!"
-     - Vereinfachte Task-Liste (QuickTaskList)
-     - Mini-Widgets filtern auf essenzielle Pläne
-   - Persistiert in localStorage (`adhs_mode`)
-
-7. **UI/UX-Verbesserungen**
-   - Alle Home-Buttons standardisiert: 44×44px (WCAG-konform)
-   - Cancel-Buttons in Onboarding (konsistentes Styling)
-   - ProgressRing-Größe: 110px
-   - Größere Fonts für bessere Lesbarkeit
-   - ADHS-freundliche Komponenten: ADHSModeToggle, QuickTaskList, GraceDayCard
+**Aktueller Zusatzbaustein (heute begonnen):** Ein optionales **KI-Coach-Modul**
+soll perspektivisch einen "Morgen-Impuls", KI-gestützte Trainingsplan- und
+Ernährungsvorschläge liefern — lokal über Ollama (Datenschutz/Kosten) mit der
+Option, später auf eine Cloud-API umzuschalten. Siehe Abschnitt 5.
 
 ---
 
-## 🏗️ Architektur & Dateistruktur
+## 2. Tech-Stack (verifiziert)
 
-### Wichtige Verzeichnisse
+- **Frontend:** React 19 + Vite 8, reines **JavaScript** (`.js`/`.jsx`,
+  **kein TypeScript** trotz `@types/react` in devDependencies — die sind
+  nur für Editor-Autovervollständigung, es gibt keine `.ts`/`.tsx`-Dateien
+  und kein `tsconfig.json`).
+- **Backend/Datenbank:** Supabase (Postgres, Auth, Storage, Row Level
+  Security, Edge Functions in Deno/TypeScript).
+- **Linting:** `oxlint` (`npm run lint`).
+- **Kein eigener Node-/Express-Server** — die App ist ein reiner statischer
+  Vite-Build, der direkt gegen Supabase spricht. Alles, was serverseitig
+  laufen muss (Cron-Jobs, geheime API-Keys), läuft über Supabase Edge
+  Functions, nicht über einen eigenen Server.
+- **Hosting/Deployment:** **Vercel**, laut Nutzerin heute bestätigt (Adresse
+  endet auf `.vercel.app`). Die genaue Live-URL wurde in dieser Session
+  nicht neu bestätigt (die alte Protokoll-Fassung nannte
+  `https://myprotocolsapp.vercel.app/` — plausibel, aber bitte einmal mit
+  der Nutzerin gegenchecken, bevor man sich darauf verlässt). Es liegt
+  zusätzlich eine `netlify.toml` im Repo (vermutlich Überbleibsel eines
+  früheren Versuchs, aktuell ungenutzt).
+  - Vercel baut automatisch bei jedem Push auf `main` neu — ABER: reine
+    Änderungen an Environment Variables lösen KEIN automatisches Rebuild
+    aus, dafür braucht es manuell "Redeploy" im Vercel-Dashboard.
+- **Supabase-Projekt-Ref:** `xdajxswaclukstteafnk` (aus einer früheren
+  Session bestätigt, als die Cron-Migration korrigiert wurde).
+
+---
+
+## 3. Architektur & wichtige Konzepte
+
+### Verzeichnisstruktur (verifiziert, Stand heute)
 
 ```
 src/
-├── views/                    # Haupt-Seiten-Komponenten
-│   ├── HomeView.jsx          # Startseite mit Widgets ⭐
-│   ├── LoginView.jsx         # Anmeldeseite mit Sprachumstellung
-│   ├── WelcomeView.jsx       # Willkommensfolien
-│   ├── WochenuebersichtView.jsx  # Wochenplan mit 3 Modi
-│   ├── GewohnheitenView.jsx  # Routinen mit Zeit-Fenster
-│   ├── TrainingView.jsx      # Trainingsplanung
+├── views/                        Haupt-Seiten
+│   ├── HomeView.jsx               Startseite, Mini-Widgets, ADHS-Modus
+│   ├── HydrationView.jsx, NutritionView.jsx, TrainingView.jsx, ...
 │   ├── onboarding/
-│   │   ├── OnboardingFlow.jsx  # Zentraler Onboarding-Orchestrator
-│   │   ├── OnboardingIntroView.jsx  # Namensingabe ⭐
+│   │   ├── OnboardingFlow.jsx           Orchestriert die Onboarding-Phasen
+│   │   ├── OnboardingIntroView.jsx
 │   │   ├── HauptprotokollErstellenView.jsx
 │   │   ├── OnboardingZieleView.jsx
-│   │   ├── OnboardingProfilView.jsx
+│   │   ├── OnboardingProfilView.jsx      inkl. Grundumsatz-Anzeige (Mifflin-St Jeor)
 │   │   ├── OnboardingLaborwerteView.jsx
-│   │   ├── OnboardingCategoriesView.jsx  # Nutzt OnboardingTrainingSetupView
-│   │   ├── OnboardingTrainingSetupView.jsx  # ⭐ NEU: Zwei-Schritt-Training-Setup
-│   │   └── OnboardingCompletionView.jsx
-│   └── ... (weitere Views für andere Kategorien)
-├── ui/
-│   ├── primitives.jsx        # Button, TextInput, Card, Label, etc.
-│   ├── MiniPlanWidget.jsx    # Neue Doppelring-Widgets ⭐
-│   ├── ProgressRing.jsx      # Großer Fortschritts-Ring
-│   ├── ADHSModeToggle.jsx    # ADHS-Modus-Schalter ⭐
-│   ├── QuickTaskList.jsx     # Task-Liste für Notfallmodus ⭐
-│   ├── GraceDayCard.jsx      # Grace-Day-Card ⭐
-│   └── ... (weitere UI-Komponenten)
+│   │   ├── OnboardingCategoriesView.jsx  Kategorien-Setup + Ist-Zustand-Fragen ⭐ heute erweitert
+│   │   ├── OnboardingCompletionView.jsx  Abschluss-Screen mit Detailanzeige ⭐ heute erweitert
+│   │   └── categorySteps.js              CATEGORY_STEPS-Reihenfolge (siehe unten)
+│   └── plan/                     Tabs für "Mehr"/Profil/Statistik/Archiv/Community
+├── ui/                            Wiederverwendbare Komponenten
+│   ├── primitives.jsx             Card, Label, TextInput, TextArea, PrimaryButton, Pill, ...
+│   ├── MiniPlanWidget.jsx          Doppelring-Widget, jetzt aktiv/inaktiv + Tap-Navigation
+│   ├── HydrationErinnerungenCard.jsx  Geteilt zwischen Onboarding & HydrationView
+│   ├── WochenplanEditor.jsx        Mehrfach-Trainingseinheiten-Builder
+│   ├── TimeWheelField.jsx          Native <input type="time">, groß gestylt
+│   ├── NumberWheelField.jsx / WheelPicker.jsx  Custom Scroll-Wheel (bewusst NICHT nativ)
+│   └── ...
 ├── context/
-│   ├── AppDataContext.jsx    # Zentrale Datenverwaltung
-│   └── AuthContext.jsx       # Authentifizierung (Supabase)
+│   ├── AppDataContext.jsx         Zentrale Datenverwaltung — kombiniert ALLE data/use*.js-Hooks
+│   └── AuthContext.jsx
+├── data/                          Ein Hook pro Datenbereich (useHydrationData.js, useMealData.js, ...)
+├── services/                      ⭐ NEU heute: aiProviders.js, aiService.js (KI-Coach)
 ├── i18n/
-│   ├── translate.ts          # useT() Hook + LanguageContext
-│   ├── LanguageContext.jsx   # Sprach-Provider
-│   └── dict/
-│       ├── common.js         # Gemeinsame Texte
-│       ├── login.js          # Login-Texte
-│       ├── welcome.js        # Welcome-Texte
-│       ├── onboarding.js     # Onboarding-Texte
-│       ├── home.js           # Homepage-Texte
-│       ├── mehr.js           # Mehr-Tab-Texte
-│       └── ... (weitere Sprachen)
+│   ├── translate.ts               useT() Hook (t() für dict/, tLabel() für labels/)
+│   ├── dict/                      Übersetzungstexte pro Screen (common, login, welcome, onboarding, home, ...)
+│   └── labels/                    Übersetzungen für Konstanten-Werte (core, onboarding, substanzen, tagesplan, training)
 ├── utils/
-│   ├── dates.ts              # Datums-Utilities (addDays, sameDay, etc.)
-│   ├── dayItems.ts           # buildDayItems() + KATEGORIE_META ⭐
-│   ├── adhsStorage.ts        # ADHS-Mode & Sound-Persistierung
-│   ├── schedule.ts           # Dosierungs-Intervalle
-│   ├── motivation.ts         # statusText() für Motivations-Meldungen
-│   └── ... (weitere Utilities)
-├── constants.ts              # Globale Konstanten (ZIELE, TRAININGSARTEN, etc.)
-└── index.css                 # Globale Styles + ADHS-Modus-Animationen
+│   ├── dayItems.js                 buildDayItems() + KATEGORIE_META (siehe unten)
+│   ├── adhsStorage.js               ADHS-Notfallmodus-Persistierung (localStorage)
+│   ├── widgetPrefs.js               ⭐ "Alle Widgets anzeigen"-Präferenz (localStorage)
+│   ├── kalorien.js                  ⭐ Mifflin-St-Jeor-Grundumsatz-Berechnung
+│   └── ...
+├── lib/                            supabaseClient.js, storage.js (Foto-Upload), pushConfig.js (VAPID Key)
+└── constants.js                    TRAININGSARTEN, WOCHENTAGE, PEPTIDE_OPTIONEN, ...
 ```
 
----
+Anmerkung: `src/i18n/translate.ts` ist tatsächlich eine `.ts`-Datei (einzige
+Ausnahme) — ändert nichts daran, dass der Rest reines JS ist.
 
-## 🎨 Kategorien & Farben (KATEGORIE_META)
+### Datenbank (Supabase Postgres) — echte Tabellen
 
-**Datei**: `src/utils/dayItems.ts`
+`profiles`, `protocols`, `protocol_peptide`, `peptide_logs`, `hormones`,
+`hormone_logs`, `supplements`, `supplement_logs`, `meals`,
+`meal_ingredients`, `meal_logs`, `meal_wochenplan`, `training_templates`,
+`training_wochenplan`, `training_sessions`, `routines`, `routine_logs`,
+`routine_peptide_items`, `routine_hormon_items`, `routine_supplement_items`,
+`routine_meal_items`, `hydration_settings`, `hydration_logs`,
+`drink_recipes`, `drink_recipe_ingredients`, `drink_logs`, `sleep_entries`,
+`biomarkers`, `blutwerte_archiv`, `checkins`, `custom_messwerte`,
+`aenderungsprotokoll`, `hauptprotokolle`, `teilprotokolle`,
+`wochenprotokoll_snapshots`, `push_subscriptions`.
 
-```javascript
-KATEGORIE_META = {
-  peptid: { color: "#8b5cf6", dot: "#a78bfa", name: "Peptide" },
-  hormon: { color: "#ec4899", dot: "#f472b6", name: "Hormone" },
-  medikament: { color: "#ef4444", dot: "#f87171", name: "Medikamente" },
-  supplement: { color: "#10b981", dot: "#6ee7b7", name: "Supplemente" },
-  mahlzeit: { color: "#f59e0b", dot: "#fbbf24", name: "Mahlzeiten" },
-  training: { color: "#ef4444", dot: "#f87171", name: "Training" },
-  schlaf: { color: "#6366f1", dot: "#a5b4fc", name: "Schlaf" },
-  hydration: { color: "#06b6d4", dot: "#67e8f9", name: "Hydration" },
-  gewohnheit: { color: "#0fb8a3", dot: "#5eead4", name: "Gewohnheiten" },
-}
-```
+Wiederkehrendes Muster: mehrere Kategorien speichern flexible
+Einstellungen nicht in eigenen Spalten, sondern als `jsonb` auf
+`profiles`: **`profiles.category_ziele`** (Zieldauer + jetzt auch
+Ist-Zustand-Antworten je Kategorie, siehe unten) und
+**`profiles.erinnerungen`** (Erinnerungs-Ein/Aus bzw. bei Hydration die
+konkrete Zeitenliste).
 
-**Wichtig**: Diese Farben werden überall verwendet - in Widgets, Punkte, Ringen, Borders!
+### Zentrale Konzepte
 
----
-
-## 🔑 Wichtige Konzepte & Funktionen
-
-### 1. **buildDayItems(date, appData)**
-- **Datei**: `src/utils/dayItems.ts`
-- Sammelt ALLE Items für einen Tag aus allen Kategorien
-- Kombiniert verschiedene Datenquellen (plan, hormonPlan, supplemente, etc.)
-- Fügt Status hinzu (`done`, `kategorie`, `name`, `uhrzeit`)
-- **Wird sehr häufig verwendet** - z.B. bei Home-Berechnung
-
-### 2. **useT() Hook**
-- **Datei**: `src/i18n/translate.ts`
-- Gibt `t()` + `tLabel()` + `lang` zurück
-- `t("key")` = Übersetzter Text aus `dict/*.js`
-- `tLabel("Wert")` = Übersetzter Label aus `labels/*.js` (für Konstanten)
-- **Alle Views müssen useT() verwenden!**
-
-### 3. **useLanguage() Context**
-- **Datei**: `src/i18n/LanguageContext.jsx`
-- Gibt `{ lang, setLang }` zurück
-- `lang` = aktuell Sprache (z.B. "de", "en", "tr")
-- `setLang("en")` = Wechselt Sprache (persistiert in localStorage)
-
-### 4. **ADHS-Modus-Persistierung**
-- **Datei**: `src/utils/adhsStorage.ts`
-- `getADHSMode()` = boolean aus localStorage
-- `saveADHSMode(bool)` = speichert in localStorage
-- Key: `adhs_mode`
-
-### 5. **Mini-Plan-Widget-Daten**
-- Berechnet tägliche Erfüllung (z.B. 3 von 5 Peptiden)
-- Berechnet wöchentliche Erfüllung (z.B. 4 von 7 Tage)
-- Im Notfallmodus werden nur essenzielle Kategorien gezeigt
-- Lädt ALLE 7 Tage durch, um Wochenstatistik zu berechnen
-
-### 6. **OnboardingTrainingSetupView - Training-Zwei-Schritt-Setup** ⭐
-**Datei**: `src/views/onboarding/OnboardingTrainingSetupView.jsx`
-
-```javascript
-// Props:
-{
-  trainingWochenplan,        // array von {wochentag, ...}
-  wochenplanSetzen,          // callback(wochentag)
-  wochenplanEntfernen,       // callback(wochentag)
-  trainingTemplates,         // array
-  onDone,                    // callback()
-  onBack,                    // callback()
-}
-
-// State (intern):
-trainingsEinheiten = [
-  {
-    id: "Mo-08:00-timestamp",
-    wochentag: "Mo",
-    uhrzeit: "08:00",
-    art: "Krafttraining",     // optional
-    name: "Leg Day",          // optional
-  },
-  ...
-]
-```
-
-**Funktionalität**:
-1. **Schritt 1**: Wochentage auswählen (via WochenplanEditor)
-   - Nutzt bestehende Komponente
-   - Speichert in `trainingWochenplan`
-
-2. **Schritt 2**: Trainingseinheiten hinzufügen
-   - **Wochentag**: Pill-Auswahl (zeigt verfügbare Trainingstage)
-   - **Uhrzeit**: TimeInput (HH:MM)
-   - **Trainingsart** (optional): Pills von TRAININGSARTEN
-     - Werte: "Krafttraining", "Cardio", "Bodyweight", "Sonstiges"
-   - **Trainingsname** (optional): TextInput-Feld
-   - **Button**: "+ Trainingseinheit hinzufügen"
-     - Nur aktiv wenn wochentag + uhrzeit gesetzt
-
-3. **Anzeige der Einheiten**:
-   - Nach Wochentag gruppiert
-   - Nach Uhrzeit sortiert
-   - Jede Einheit zeigt: `08:00 Uhr · Leg Day` + Trainingsart
-   - Lösch-Button (×) für jede Einheit
-
-**Validierung**:
-- `wochentag` und `uhrzeit` sind required
-- `art` und `name` sind optional
-- Eindeutige IDs basierend auf wochentag + uhrzeit + timestamp
+- **`AppDataContext` / `useAppData()`** (`src/context/AppDataContext.jsx`):
+  Ein einziger Context, der alle `data/use*.js`-Hooks zusammenführt
+  (`...profileData, ...protocolData, ...hydrationData, ...` usw.). Jede
+  View holt sich daraus, was sie braucht.
+- **`KATEGORIE_META`** (`src/utils/dayItems.js`): Farben/Labels pro
+  Kategorie — Felder sind `bg`, `text`, `dot`, `label` (**kein** `color`-Feld
+  — ein früherer Bug griff fälschlich auf `meta.color` zu, ist behoben).
+- **`useT()`** (`src/i18n/translate.ts`): `t("dict.key", {var})` für feste
+  Übersetzungstexte, `tLabel("Wert")` für freie/konstante Strings.
+  Sprachen: DE/EN/TR.
+- **ADHS-Notfallmodus** (`src/utils/adhsStorage.js`): Toggle, persistiert in
+  localStorage, blendet auf der Startseite alles bis auf die essenziellen
+  Kategorien aus.
+- **Mini-Widgets-Sichtbarkeit** (`src/utils/widgetPrefs.js`, ⭐ neu):
+  Unabhängig vom ADHS-Modus — ein zweiter Schalter, ob NICHT eingerichtete
+  Kategorien als graues, antippbares Widget trotzdem sichtbar sind (Default:
+  ja — relevant für künftige Freischaltung einzelner Bereiche/Monetarisierung).
+- **`categorySteps.js`** — echte, aktuelle Reihenfolge des
+  Onboarding-Kategorien-Schritts: `schlaf → hydration → ernaehrung →
+  training → gewohnheiten → supplemente → medikamente → peptide`. Biomarker
+  ist bewusst KEIN Kategorie-Schritt mehr (eigener Schritt vorher, da
+  "Ausgangslage" statt "Plan").
 
 ---
 
-## 🌐 Vercel-Deployment
+## 4. Was wurde in dieser Session-Reihe verändert? (chronologisch nach Thema)
 
-**Live URL**: https://myprotocolsapp.vercel.app/
+*(Diese Liste fasst nicht nur den heutigen Tag zusammen, sondern die
+gesamte Entwicklung seit der letzten funktionierenden Übergabe, soweit aus
+dem Gesprächsverlauf rekonstruierbar.)*
 
-- Vercel deployt automatisch bei Push zu `main`-Branch
-- Build-Kommando: `npm run build`
-- Deployment dauert typischerweise 2-5 Minuten
-- **WICHTIG**: Dev-Server (`npm run dev`) läuft auf localhost:5173 und ist NICHT die Live-App!
-
-### Häufige Deployment-Probleme:
-1. **Änderungen nicht sichtbar** → Browser-Cache leeren (Ctrl+Shift+R) oder Hard Refresh
-2. **Alte Version wird angezeigt** → `git push origin main` vergessen?
-3. **Build fehler** → `npm run build` lokal testen vor Push
-
----
-
-## 🔄 Onboarding-Flow (DetailView)
-
-```
-WelcomeView (3 Folien)
-  ↓
-HauptprotokollErstellenView (Name + Datum)
-  ↓
-OnboardingIntroView (Benutzername eingeben) ⭐ NEU
-  ↓
-OnboardingZieleView (Ziele auswählen)
-  ↓
-OnboardingProfilView (Geschlecht, Geburtsdatum, Größe, Startgewicht, Messungen)
-  ↓
-OnboardingLaborwerteView (Blutbild hochladen, optional)
-  ↓
-OnboardingCategoriesView (Für jede Kategorie: Einrichten oder überspringen)
-  ├─ Schlaf
-  ├─ Hydration
-  ├─ Ernährung
-  ├─ Training
-  ├─ Gewohnheiten
-  ├─ Supplemente
-  ├─ Medikamente
-  ├─ Peptid-Plan
-  ├─ Hormone
-  └─ Biomarker
-  ↓
-OnboardingCompletionView (Glückwunsch!)
-```
-
-**Wichtig**: `OnboardingFlow.jsx` orchestriert alles mit `phase`-State
-
----
-
-## 💾 Datenspeicherung
-
-### localStorage
-- `user_name` → Benutzername (aus OnboardingIntroView)
-- `language` → Sprache (DE/EN/TR)
-- `adhs_mode` → ADHS-Notfall-Modus (boolean)
-- `sound_enabled` → Sound-Einstellungen (boolean)
-
-### Supabase (Cloud-Datenbank)
-- **Tabellen**:
-  - `users` → Benutzer
-  - `protocols` → Hauptprotokolle
-  - `peptides` → Peptid-Pläne
-  - `hormones` → Hormon-Pläne
-  - `supplements` → Supplemente
-  - `training` → Trainingseinträge
-  - Und weitere...
-- **Auth**: Supabase Auth (Email/Passwort)
-
----
-
-## 🎯 Zeit-Fenster für Gewohnheiten
-
-**Implementierung in GewohnheitenView.jsx**:
-
-```javascript
-// LEERE_GEWOHNHEIT mit Zeit-Feldern:
-{
-  name: "",
-  urzeitModus: "fixed",        // "fixed" oder "range"
-  uhrzeit: "08:00",            // Für "fixed"-Modus
-  urzeitVon: "08:00",          // Für "range"-Modus
-  urzeitBis: "10:00",          // Für "range"-Modus
-  ...
-}
-```
-
-**UI**:
-- Toggle-Buttons: "Feste Uhrzeit" ↔ "Zeitfenster"
-- Bei "Feste Uhrzeit": Zeigt nur `uhrzeit`
-- Bei "Zeitfenster": Zeigt `urzeitVon` bis `urzeitBis`
-
----
-
-## ⚙️ ADHS-Modus - Was ändert sich?
-
-| Aspekt | Normal | Notfall 🆘 |
-|--------|--------|-----------|
-| **Angezeigter Banner** | Keine | "💛 Heute nur Basics..." |
-| **Kategorien sichtbar** | Alle | Nur Medikamente + Hormone + Hydration |
-| **Task-Liste** | Standard (angezeigt) | QuickTaskList (kompakt, visuell) |
-| **Mini-Widgets** | Alle Plans | Nur essenzielle |
-| **Farbe des Buttons** | Blau (✨) | Rot (🆘) |
+1. **Branch-Divergenz-Bereinigung:** Ein Merge-Versuch nach `main` deckte
+   24 unbekannte parallele Commits auf; der eigene Branch wurde komplett neu
+   gegen den echten `main`-Stand aufgebaut, alle bisherigen Änderungen neu
+   umgesetzt.
+2. **Trainings-Onboarding neu gebaut:** Alte, kaputte
+   `OnboardingTrainingSetupView.jsx` (rief nicht existierende Funktionen
+   auf) gelöscht. Neuer Mehrfach-Einheiten-Builder
+   (`WochenplanEditor.jsx` + `useTrainingTemplates.js`): pro Wochentag
+   mehrere Trainingseinheiten mit kombinierbaren Trainingsarten,
+   Sätzen/Wiederholungen, Übungen (Freitext), Warm-up/Cool-down. DB-Migration
+   `0030_training_wochenplan_einheiten.sql`.
+3. **Zeit-Eingabe vereinheitlicht:** `TimeWheelField.jsx` nutzt jetzt
+   überall ein natives, groß gestyltes `<input type="time">` (nach zwei
+   Kehrtwenden in der Abstimmung mit der Nutzerin — das war ein reines
+   Missverständnis, technisch unverändert seit der zweiten Umsetzung).
+   `NumberWheelField`/`WheelPicker` bleiben bewusst der Custom-Scroll-Wheel
+   für Zahlen (Sätze, Wiederholungen etc.), inkl. Haptik
+   (`navigator.vibrate`). Sekunden-Anzeige-Bug in `useMealData.js` behoben
+   (`.slice(0,5)` auf die Uhrzeit).
+4. **Mini-Widgets repariert & erweitert:** Drei echte Bugs behoben (falscher
+   `meta.color`-Zugriff statt `meta.dot`; kaputter Notfallmodus-Filter;
+   Hydration-Widget hydrierte nie wegen falscher Datenmodell-Annahme).
+   Danach erweitert: ALLE Kategorie-Widgets immer sichtbar (grau/entsättigt
+   wenn nicht eingerichtet), antippbar (springt ins jeweilige Menü), eigener
+   Sichtbarkeits-Schalter unabhängig vom ADHS-Modus
+   (`widgetPrefs.js`), Hydration-Widget mit "+200ml"-Schnellzugriff direkt
+   auf der Startseite.
+5. **Alte Formulardaten beim Onboarding geleert** (nicht-destruktiv — echte
+   Daten bleiben erhalten, nur die Eingabemasken starten leer): Hydration
+   ml, persönliche Daten, Laborwerte — via neuem `frisch`-Prop-Muster auf
+   `PersoenlicheDatenCard.jsx` / `LaborwerteFelder.jsx` / `LaborwerteCard.jsx`.
+6. **Kalorien-/Grundumsatz-Berechnung** (`src/utils/kalorien.js`,
+   Mifflin-St-Jeor-Formel): Anzeige im Profil-Onboarding-Schritt und in
+   `NutritionView.jsx` (editierbares Kalorienziel + Prozent-Abweichung,
+   gespeichert in `category_ziele.ernaehrung.kalorienZiel`).
+7. **Server-seitiges Push-Erinnerungssystem für Hydration** (funktioniert
+   auch bei geschlossener App/PWA):
+   - Neue Edge Function `supabase/functions/send-due-reminders/index.ts` —
+     per `x-cron-secret`-Header abgesichert, liest `profiles.zeitzone` +
+     `profiles.erinnerungen.hydration.zeiten` (`{zeit, menge, startDatum?}`),
+     vergleicht mit lokaler Uhrzeit/Datum der Nutzerin (via `Intl`), schickt
+     Web-Push.
+   - Migration `0031_profile_zeitzone.sql` (neue Spalte) +
+     `useProfileData.js` erfasst die Zeitzone automatisch beim Laden
+     (`Intl.DateTimeFormat().resolvedOptions().timeZone`).
+   - Migration `0032_erinnerungs_versand.sql` — `pg_cron`/`pg_net`,
+     minütlicher Aufruf der Edge Function.
+   - Manuelles Deployment über das Supabase-Dashboard wurde mit der
+     Nutzerin Schritt für Schritt durchgeführt (mehrere Stolpersteine:
+     Entry-Point musste `index.ts` heißen, Funktionsname musste exakt
+     `send-due-reminders` sein, Platzhalter in der Migration mussten durch
+     echte Projekt-Ref/Secret ersetzt werden).
+8. **Hydration-Erinnerungs-UI vereinheitlicht:** Neue geteilte Komponente
+   `HydrationErinnerungenCard.jsx` (vorher nur im Onboarding, jetzt auch in
+   `HydrationView.jsx`). Iterativ vereinfacht auf Wunsch der Nutzerin: pro
+   Zeile Uhrzeit + Menge (ml) + Datum + Löschen, darunter ein neuer Eintrag
+   mit explizitem **"Speichern"**-Button (kein reines "+"-Icon mehr, damit
+   das Abspeichern sich bestätigt anfühlt).
+   - **Offen/bekannte Lücke:** Der Code der Edge Function unterstützt
+     `startDatum` bereits, aber der letzte bekannte Stand ist, dass die
+     Nutzerin die aktualisierte Function noch **nicht neu deployt** hat —
+     unklar, ob das inzwischen nachgeholt wurde. Bitte im nächsten Gespräch
+     nachfragen bzw. prüfen.
+9. **Ist-Zustand-Fragen im Onboarding** (heute, ⭐):
+   - `OnboardingCategoriesView.jsx`: neue `ISTZUSTAND_FRAGEN`-Konfiguration
+     für genau 5 Kategorien — **Schlaf, Hydration, Ernährung, Training,
+     Gewohnheiten** (bewusst NICHT Peptide/Hormone/Medikamente/Supplemente —
+     Nutzerin-Entscheidung: das deckt sich schon mit Grund/Ziel des
+     Hauptprotokolls). Antworten werden in
+     `category_ziele[kategorie].istZustand` gespeichert.
+   - `OnboardingCompletionView.jsx`: Abschluss-Screen zeigt jetzt pro
+     Kategorie die Ist-Zustand-Antworten, die gewählte Zieldauer, und (wo
+     ohne Zusatzabfrage verfügbar, z. B. bei Schlaf) grobe Plan-Inhalte an.
+10. **KI-Coach-Servicemodul** (heute, ⭐ NEU, noch nicht in UI eingebunden):
+    - `src/services/aiProviders.js` — Low-Level-Anbindung an Ollama (lokal,
+      `/api/chat`, JSON-Mode via `format: "json"`), Groq (OpenAI-kompatibel,
+      Bearer-Token) und Google Gemini (eigenes Format), Provider-Wahl
+      ausschließlich über `VITE_AI_PROVIDER`-ENV-Variable.
+    - `src/services/aiService.js` — drei App-Funktionen:
+      `morgenImpuls()` (Fließtext-Motivationsimpuls),
+      `trainingsplanVorschlag()` (JSON, 1:1 kompatibel zu
+      `wochenplanHinzufuegen()`), `ernaehrungsplanVorschlag()` (JSON,
+      Zutaten-Struktur kompatibel zu `mahlzeitHinzufuegen()`). Robustes
+      JSON-Parsing auch ohne strikten Provider-JSON-Mode.
+    - `.env.example` um `VITE_AI_PROVIDER`/`VITE_AI_MODEL`/`VITE_AI_BASE_URL`/
+      `VITE_AI_API_KEY` erweitert.
+    - **Noch nicht erledigt:** Kein UI-Aufruf irgendwo eingebaut (nur das
+      Modul selbst, wie von der Nutzerin explizit gewünscht — "NUR das
+      Modul"). Die Umgebungsvariable ist im Vercel-Projekt der Nutzerin noch
+      nicht bestätigt gesetzt (siehe Abschnitt 6).
 
 ---
 
-## 🚀 Nächste Schritte (Roadmap)
+## 5. KI-Coach-Modul — technischer Kurzüberblick für den nächsten Agenten
 
-### Sofort (von anderen Chats):
-1. ✅ Mini-Widgets implementieren (FERTIG)
-2. ✅ Training-Onboarding: Zwei-Schritt-Setup (FERTIG)
-3. ⚠️ Weitere ADHS-Optimierungen möglich
-4. ⚠️ SQL-Schema-Änderungen können nötig sein (benötigt DBA-Zugriff)
-
-### Mittelfristig:
-- [ ] Mobile-Responsiveness optimieren
-- [ ] Export-Funktionalität erweitern
-- [ ] Statistiken & Reports
-- [ ] Benachrichtigungen
-
----
-
-## 🐛 Bekannte Bugs & Fixes
-
-| Bug | Status | Fix |
-|-----|--------|-----|
-| accentSoft nicht importiert in WochenuebersichtView | ✅ BEHOBEN | Added `accentSoft` zu imports |
-| TextInput onKeyPress Handler fehlte | ✅ BEHOBEN | Added `onKeyPress` prop zu TextInput |
-| PrimaryButton style prop fehlte | ✅ BEHOBEN | Added `style` prop zu PrimaryButton |
-| KRAFT_UEBUNGEN falscher Import-Name | ✅ BEHOBEN | OnboardingTrainingSetupView nutzt nur TRAININGSARTEN |
-
----
-
-## 📌 Wichtigste Files für Änderungen
-
-1. **HomeView.jsx** - Startseite, Widgets, ADHS-Logik
-2. **OnboardingFlow.jsx** - Onboarding-Orchestration
-3. **OnboardingCategoriesView.jsx** - Kategorien-Setup mit Training ⭐
-4. **OnboardingTrainingSetupView.jsx** - ⭐ NEU: Training-Zwei-Schritt-Setup
-5. **WochenuebersichtView.jsx** - Wochenplan, Monatsplan
-6. **MiniPlanWidget.jsx** - Mini-Doppelring-Widgets
-7. **KATEGORIE_META in dayItems.ts** - Farben & Metadaten
-8. **LoginView.jsx** - Anmeldeseite & Sprachumstellung
-9. **i18n/LanguageContext.jsx** - Sprach-Management
+- Datei-Layout: `src/services/aiProviders.js` (Transport) +
+  `src/services/aiService.js` (Domänenfunktionen + JSON-Parsing).
+- Provider-Wahl über `VITE_AI_PROVIDER` (`ollama` | `groq` | `gemini`),
+  Modellname über `VITE_AI_MODEL`, optional `VITE_AI_BASE_URL` (Standard je
+  Provider hinterlegt) und `VITE_AI_API_KEY` (nur Cloud-Provider).
+- **Sicherheitsaspekt, noch nicht gelöst:** Bei Cloud-Providern (Groq/Gemini)
+  würde ein clientseitig gesetzter `VITE_AI_API_KEY` im Browser-Bundle
+  landen und wäre für jeden einsehbar. Für den aktuellen lokalen
+  Ollama-Betrieb unkritisch (kein Key nötig), aber **bevor** die App auf
+  Groq/Gemini umgestellt wird, sollte der Aufruf stattdessen über eine
+  Supabase Edge Function laufen (Muster existiert schon:
+  `supabase/functions/lexikon`, `supabase/functions/blutwerte-scan` rufen
+  beide serverseitig die Anthropic API mit einem nur dort sichtbaren
+  Secret auf) — das ist noch nicht umgesetzt, nur als nächster Schritt
+  vorgemerkt.
+- **CORS bei Ollama:** Ollama blockt standardmäßig Browser-Anfragen von
+  fremden Origins. Die Nutzerin muss Ollama mit einer erlaubten Origin
+  starten (`OLLAMA_ORIGINS=<ihre-vercel-adresse> ollama serve` o. Ä.) — noch
+  nicht durchgeführt, siehe Abschnitt 6.
+- **Wichtige Einschränkung, die der Nutzerin erklärt wurde:** Damit die
+  Live-Seite Ollama erreichen kann, muss sie im Browser auf **demselben
+  Computer** geöffnet werden, auf dem Ollama gerade läuft — "localhost"
+  bedeutet immer "dieses Gerät", nicht irgendein Server im Internet. Von
+  einem anderen Gerät (Handy, anderer PC) aus wird das nicht funktionieren.
 
 ---
 
-## 📚 TypeScript/JavaScript Notes
+## 6. Offene Punkte — konkret, mit nächstem Schritt
 
-- **Nutzt React Hooks**: `useState`, `useContext`, `useMemo`, `useCallback`
-- **Utilities sind .ts/.tsx-Dateien** (TypeScript)
-- **Views sind .jsx-Dateien** (JavaScript mit JSX)
-- **CSS**: Inline-Styles (keine separate CSS-Dateien außer index.css)
-- **Build-Tool**: Vite (schneller als Webpack)
+| # | Thema | Status | Nächster Schritt |
+|---|-------|--------|-------------------|
+| 1 | KI-Coach: `VITE_AI_PROVIDER=ollama` bei Vercel eintragen | Anleitung gegeben, Ausführung durch Nutzerin nicht bestätigt | Bei Nutzerin nachfragen, ob erledigt; ggf. Redeploy in Vercel anstoßen (Env-Var-Änderung baut NICHT automatisch neu) |
+| 2 | Ollama-CORS (`OLLAMA_ORIGINS`) für die Vercel-Adresse freigeben | Noch nicht begonnen | Der Nutzerin sehr konkret zeigen, wie sie Ollama mit dieser Einstellung startet (vermutlich Terminal nötig — vorher klären, ob sie das schon mal gemacht hat) |
+| 3 | KI-Coach-Modul in echte UI einbinden (Morgen-Widget, Trainings-/Ernährungs-Vorschlag-Button) | Bewusst noch nicht gemacht (Nutzerin wollte nur das Modul zuerst) | Auf Wunsch der Nutzerin als nächstes angehen |
+| 4 | `send-due-reminders` Edge Function mit `startDatum`-Unterstützung neu deployen | Code ist im Repo, Deployment-Status bei der Nutzerin unklar | Nachfragen/prüfen, ggf. Deployment-Schritte erneut gemeinsam durchgehen |
+| 5 | Push-Erinnerungen auf andere Kategorien ausweiten (Gewohnheiten/Supplemente/Medikamente/Peptide/Training) | Von der Nutzerin bewusst zurückgestellt, kein aktueller Auftrag | Nur nach explizitem Wunsch angehen — größerer Umbau |
+| 6 | "Speichern dauert manchmal lange" | Untersucht, kein eindeutiger Bug gefunden (vermutlich Netzwerklatenz), Optimistic-UI als mögliche Abhilfe vorgeschlagen, nicht umgesetzt | Nur bei erneuter Beschwerde vertiefen |
+| 7 | Live-URL/Hosting-Fakten in diesem Dokument nochmal mit Nutzerin bestätigen | Vercel als Anbieter heute bestätigt, genaue URL nicht neu verifiziert | Bei Gelegenheit einmal kurz fragen/prüfen und hier eintragen |
 
----
-
-## ✅ Checkliste für nächsten Chat
-
-Wenn Du diesen Prompt in einem neuen Chat öffnest:
-
-- [ ] Dieses Protokoll komplett lesen
-- [ ] **Git-Workflow verstanden**: IMMER auf `main` arbeiten!
-- [ ] KATEGORIE_META verstehen (Farben, Metadaten)
-- [ ] useT() Hook & Sprach-System verstehen
-- [ ] ADHS-Modus-Filterung verstehen
-- [ ] buildDayItems() Funktion verstehen
-- [ ] Vercel-Deployment-Prozess verstehen
-- [ ] localStorage-Keys kennen
-- [ ] MiniPlanWidget-Komponent kennen
+*(Ältere, generische Roadmap-Punkte aus der vorherigen Protokoll-Fassung —
+Mobile-Responsiveness, Export-Funktionalität, Statistiken/Reports,
+allgemeine Benachrichtigungen — wurden in dieser Session nicht erneut mit
+der Nutzerin bestätigt und daher hier nicht als aktueller Auftrag
+übernommen. Falls relevant, bei ihr nachfragen statt sie als gegeben
+anzunehmen.)*
 
 ---
 
-## 🎓 Für den nächsten Agent
+## 7. Ziele / Gesamtvision (so weit erkennbar)
 
-Arbeite IMMER so:
-
-```bash
-# 1. Repo klonen/aktualisiieren
-git fetch origin main
-git checkout main
-git pull origin main
-
-# 2. Änderungen machen
-# (edit files...)
-
-# 3. Build testen
-npm run build
-
-# 4. Committen & Pushen
-git add -A
-git commit -m "Klare Beschreibung der Änderung"
-git push origin main
-
-# 5. Auf Vercel-Deployment warten (2-5 Min)
-# 6. Live-URL testen: https://myprotocolsapp.vercel.app/
-```
-
-**NIEMALS**:
-- ❌ Feature-Branches erstellen
-- ❌ Auf anderen Branches arbeiten
-- ❌ `git push --force` verwenden
-- ❌ Commits ohne Tests amenden
+- Eine für ADHS-Betroffene alltagstaugliche, reizarme App zur Verwaltung
+  komplexer Gesundheitsprotokolle (Peptide/Hormone/Supplemente/Training/
+  Schlaf/Ernährung/Hydration/Gewohnheiten) — mit Notfallmodus für
+  überforderte Tage.
+- Jüngerer Schwerpunkt: **Ist-Zustand + Zielzustand** sauber trennen und
+  beides sichtbar machen (Onboarding-Fragen + Abschluss-Übersicht), damit
+  später echte Verbesserungen messbar sind — nicht nur Einnahme-Tracking.
+- Hinweise auf künftige **Monetarisierungs-/Freischaltungs-Stufen**: Das
+  "immer alle Widgets sichtbar, aber grau wenn nicht eingerichtet"-Muster
+  wurde bewusst so gebaut, dass es sich für eine spätere Freischaltung
+  einzelner Bereiche eignet.
+- Neuer Baustein: ein **KI-Coach** ("Roboter") für Motivation
+  (Morgen-Impuls) und strukturierte Plan-Vorschläge (Training, Ernährung),
+  aus Datenschutz-/Kostengründen zunächst lokal über Ollama, mit späterer
+  Cloud-Option.
 
 ---
 
-**Erstellt**: 26.07.2026  
-**Letzte Aktualisierung**: Mit Training-Onboarding Zwei-Schritt-Setup  
-**Status**: Production-Ready ✅  
-**Vercel-URL**: https://myprotocolsapp.vercel.app/
+## 8. Wichtige Hinweise für den nächsten Agenten — Arbeitsweise
+
+- **Die Nutzerin ist nicht technisch versiert** und tippt/spricht oft per
+  Spracherkennung (auf einem iPad o. Ä.) — das führt zu Transkriptionsfehlern
+  bei Fachbegriffen (Beispiele aus dieser Session: "Obama" = Ollama,
+  "Nettify" = Netlify, "Feed AI Provide gleich Ullamann" =
+  "VITE_AI_PROVIDER=ollama"). Wohlwollend interpretieren, bei Unklarheit
+  lieber kurz nachfragen als falsch raten.
+- **Alles außerhalb von Code (Dashboards, Einstellungsseiten) sehr
+  kleinschrittig erklären** — keine Fachbegriffe ohne Erklärung, echte
+  Klick-für-Klick-Anleitungen, keine Annahmen über Vorwissen (z. B. weiß
+  sie nicht automatisch, was "Terminal" oder "Environment Variable"
+  bedeutet).
+- **Keine Infrastruktur-Fakten erfinden oder aus altem Kontext übernehmen,
+  ohne sie zu kennzeichnen.** Genau dieser Fehler (altes Protokoll behauptete
+  Fakten, die nicht mehr stimmten) war der Auslöser für dieses neue
+  Dokument. Hosting-Anbieter, Live-URL, Konten-Zugänge etc. stehen nicht im
+  Code — im Zweifel nachfragen statt vermuten als Fakt darstellen.
+- **Git-Workflow dieser Session-Reihe:** Arbeit erfolgt auf einem von der
+  Umgebung vorgegebenen Branch (aktuell
+  `claude/app-uebergabeprotokoll-improvements-03r3b3`), NICHT direkt auf
+  `main`. Ein Merge/Push nach `main` erfolgt nur nach expliziter Freigabe
+  der Nutzerin in der jeweiligen Sitzung — eine ältere Anweisung in der
+  Vorversion dieses Dokuments ("immer direkt auf main arbeiten") ist damit
+  überholt und sollte nicht mehr befolgt werden.
+- **Die Nutzerin setzt gelegentlich harte Zeitlimits** (z. B. "25 Minuten",
+  "bis 18:50 Uhr") — sobald der Auftrag klar ist, direkt umsetzen statt
+  weitere Rückfragen zu stellen.
+- **Dieses Dokument aktuell halten:** Am Ende größerer Arbeitsblöcke lohnt
+  es sich, dieses Protokoll neu zu erzeugen (nicht nur zu ergänzen), damit
+  es nicht wieder wie die Vorversion langsam von der Realität abweicht.
 
 ---
 
-**Viel Erfolg beim Weitermachen! 🚀**
+**Letzte Aktualisierung:** 26.07.2026, direkt vor Feierabend der Nutzerin.
+**Nächster offener Punkt laut letztem Gespräch:** Vercel-Environment-Variable
+für den KI-Coach eintragen (Abschnitt 6, Punkt 1) und danach Ollama-CORS
+einrichten (Punkt 2).
