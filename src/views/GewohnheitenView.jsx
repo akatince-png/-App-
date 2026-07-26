@@ -6,7 +6,7 @@ import { useAppData } from "../context/AppDataContext";
 
 const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭"];
 
-const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", zielTage: "", menge: "" };
+const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", urzeitVon: "", urzeitBis: "", zielTage: "", menge: "" };
 
 function Fortschrittsbalken({ tage, ziel }) {
   const pct = ziel ? Math.min(100, Math.round((tage / ziel) * 100)) : 0;
@@ -34,7 +34,11 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
               {g.name}
               {g.menge && <span style={{ fontWeight: 600, color: textMuted }}> · {g.menge}</span>}
             </div>
-            {g.uhrzeit && <div style={{ fontSize: 11, color: textMuted }}>{g.uhrzeit} Uhr</div>}
+            {(g.uhrzeit || g.urzeitVon) && (
+              <div style={{ fontSize: 11, color: textMuted }}>
+                {g.urzeitVon && g.urzeitBis ? `${g.urzeitVon}–${g.urzeitBis} Uhr` : g.uhrzeit ? `${g.uhrzeit} Uhr` : ""}
+              </div>
+            )}
           </div>
         </div>
         <button
@@ -130,11 +134,12 @@ export default function GewohnheitenView({ onHome }) {
       setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
       return;
     }
+    const timeDetail = neu.urzeitVon && neu.urzeitBis ? `Zeitfenster: ${neu.urzeitVon}–${neu.urzeitBis}` : neu.uhrzeit ? `Uhrzeit: ${neu.uhrzeit}` : "";
     aenderungVermerken({
       kategorie: "gewohnheit",
       itemName: neu.name,
       aktion: "hinzugefügt",
-      detail: neu.uhrzeit ? `Uhrzeit: ${neu.uhrzeit}` : "",
+      detail: timeDetail,
     });
     setNeu(LEERE_GEWOHNHEIT);
   };
@@ -193,7 +198,31 @@ export default function GewohnheitenView({ onHome }) {
         <TextInput value={neu.menge} onChange={(v) => setNeu((p) => ({ ...p, menge: v }))} placeholder="z. B. 20 Seiten, 10 Minuten" />
 
         <Label>Uhrzeit (optional — für den Tagesplan)</Label>
-        <TextInput type="time" value={neu.uhrzeit} onChange={(v) => setNeu((p) => ({ ...p, uhrzeit: v }))} />
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <Pill
+            label="Feste Uhrzeit"
+            selected={!neu.urzeitVon && neu.uhrzeit}
+            onClick={() => setNeu((p) => ({ ...p, urzeitVon: "", urzeitBis: "", uhrzeit: neu.uhrzeit || "12:00" }))}
+          />
+          <Pill
+            label="Zeitfenster"
+            selected={!!neu.urzeitVon}
+            onClick={() => setNeu((p) => ({ ...p, uhrzeit: "", urzeitVon: neu.urzeitVon || "09:00", urzeitBis: neu.urzeitBis || "17:00" }))}
+          />
+        </div>
+        {neu.urzeitVon ? (
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <TextInput type="time" value={neu.urzeitVon} onChange={(v) => setNeu((p) => ({ ...p, urzeitVon: v }))} placeholder="Von" />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
+            <div style={{ flex: 1 }}>
+              <TextInput type="time" value={neu.urzeitBis} onChange={(v) => setNeu((p) => ({ ...p, urzeitBis: v }))} placeholder="Bis" />
+            </div>
+          </div>
+        ) : (
+          <TextInput type="time" value={neu.uhrzeit} onChange={(v) => setNeu((p) => ({ ...p, uhrzeit: v }))} />
+        )}
 
         <Label>Eigenes Ziel in Tagen (optional)</Label>
         <TextInput type="number" value={neu.zielTage} onChange={(v) => setNeu((p) => ({ ...p, zielTage: v }))} placeholder="z. B. 66" />

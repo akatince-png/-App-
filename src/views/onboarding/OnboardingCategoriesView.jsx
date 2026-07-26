@@ -164,6 +164,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const [gName, setGName] = useState("");
   const [gMenge, setGMenge] = useState("");
   const [gUhrzeit, setGUhrzeit] = useState("");
+  const [gUrzeitModus, setGUrzeitModus] = useState("fest"); // "fest" | "fenster"
+  const [gUrzeitVon, setGUrzeitVon] = useState("");
+  const [gUrzeitBis, setGUrzeitBis] = useState("");
   const [gZielTage, setGZielTage] = useState("");
 
   // Schlaf — mehrere Blöcke, jeweils mit eigenen Wochentagen (z. B. Woche
@@ -224,6 +227,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setGName("");
     setGMenge("");
     setGUhrzeit("");
+    setGUrzeitModus("fest");
+    setGUrzeitVon("");
+    setGUrzeitBis("");
     setGZielTage("");
     setSchlafIntervallTyp("weekdays");
     setSchlafBloecke([neuerSchlafblock([...WOCHENTAGE])]);
@@ -429,7 +435,15 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         return;
       }
       label = gName.trim();
-      result = await gewohnheitHinzufuegen({ name: gName, icon: "🌱", menge: gMenge, uhrzeit: gUhrzeit, zielTage: gZielTage ? Number(gZielTage) : null });
+      result = await gewohnheitHinzufuegen({
+        name: gName,
+        icon: "🌱",
+        menge: gMenge,
+        uhrzeit: gUrzeitModus === "fest" ? gUhrzeit : "",
+        urzeitVon: gUrzeitModus === "fenster" ? gUrzeitVon : "",
+        urzeitBis: gUrzeitModus === "fenster" ? gUrzeitBis : "",
+        zielTage: gZielTage ? Number(gZielTage) : null,
+      });
       if (result?.ok) {
         setGName("");
         setGMenge("");
@@ -644,7 +658,31 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               <Label>{t("onboarding.gewohnheiten.menge.label")}</Label>
               <TextInput value={gMenge} onChange={setGMenge} placeholder={t("onboarding.gewohnheiten.menge.placeholder")} />
               <Label>{t("onboarding.gewohnheiten.uhrzeit.label")}</Label>
-              <TextInput type="time" value={gUhrzeit} onChange={setGUhrzeit} />
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <Pill
+                  label={tLabel("Feste Uhrzeit")}
+                  selected={gUrzeitModus === "fest"}
+                  onClick={() => setGUrzeitModus("fest")}
+                />
+                <Pill
+                  label={tLabel("Zeitfenster")}
+                  selected={gUrzeitModus === "fenster"}
+                  onClick={() => setGUrzeitModus("fenster")}
+                />
+              </div>
+              {gUrzeitModus === "fenster" ? (
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div style={{ flex: 1 }}>
+                    <TextInput type="time" value={gUrzeitVon} onChange={setGUrzeitVon} placeholder="Von" />
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
+                  <div style={{ flex: 1 }}>
+                    <TextInput type="time" value={gUrzeitBis} onChange={setGUrzeitBis} placeholder="Bis" />
+                  </div>
+                </div>
+              ) : (
+                <TextInput type="time" value={gUhrzeit} onChange={setGUhrzeit} />
+              )}
               <Label>{t("onboarding.gewohnheiten.zieltage.label")}</Label>
               <TextInput type="number" value={gZielTage} onChange={setGZielTage} placeholder={t("onboarding.gewohnheiten.zieltage.placeholder")} />
             </>
