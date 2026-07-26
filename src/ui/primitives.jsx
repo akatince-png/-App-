@@ -56,7 +56,7 @@ export function Card({ children, style }) {
   );
 }
 
-export function PrimaryButton({ children, onClick, disabled, variant = "accent" }) {
+export function PrimaryButton({ children, onClick, disabled, variant = "accent", style }) {
   const styles = {
     accent: { background: disabled ? "#B7D8D1" : accent, color: "#fff" },
     success: { background: disabled ? "#B7D8D1" : success, color: "#fff" },
@@ -78,6 +78,7 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent" 
         fontWeight: 700,
         cursor: disabled ? "not-allowed" : "pointer",
         ...styles[variant],
+        ...style,
       }}
     >
       {children}
@@ -156,13 +157,14 @@ export function Label({ children }) {
   );
 }
 
-export function TextInput({ value, onChange, placeholder, type = "text" }) {
+export function TextInput({ value, onChange, placeholder, type = "text", onKeyPress }) {
   return (
     <input
       className="mp-input"
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onKeyPress={onKeyPress}
       placeholder={placeholder}
       style={{
         width: "100%",
