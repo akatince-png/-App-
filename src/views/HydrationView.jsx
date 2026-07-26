@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextArea, CheckRow } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
+import HydrationErinnerungenCard from "../ui/HydrationErinnerungenCard";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
@@ -209,6 +210,11 @@ export default function HydrationView({ onHome, embedded = false }) {
           </div>
         </div>
         <GrundEingabe grund={zielGrund} onChange={setZielGrund} />
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>
+      <Card style={{ marginBottom: 14 }}>
+        <HydrationErinnerungenCard />
       </Card>
 
       {hydrationEintraege.length > 0 && (
