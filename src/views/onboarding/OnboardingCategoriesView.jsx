@@ -685,6 +685,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               )}
               <Label>{t("onboarding.gewohnheiten.zieltage.label")}</Label>
               <TextInput type="number" value={gZielTage} onChange={setGZielTage} placeholder={t("onboarding.gewohnheiten.zieltage.placeholder")} />
+              <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}`, fontSize: 12, color: textMuted, lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 700, marginBottom: 4, color: accentDark }}>✓ Häufig verwendete Ziele</div>
+                <div>21–66 Tage sind etablierte Richtwerte — du kannst aber jedes Ziel wählen, das zu dir passt.</div>
+              </div>
             </>
           )}
 
