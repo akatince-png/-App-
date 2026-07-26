@@ -193,18 +193,18 @@ export default function HomeView({ onOpenView }) {
           Zeilen der Text darunter braucht. */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
         <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 14 }}>{t("home.tagesfortschritt")}</div>
-          <ProgressRing done={erledigtCount} total={heuteItems.length} size={84} stroke={10} color={accentDark} />
-          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 14 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 16 }}>{t("home.tagesfortschritt")}</div>
+          <ProgressRing done={erledigtCount} total={heuteItems.length} size={110} stroke={9} color={accentDark} />
+          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 16 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
         </Card>
         <Card
           className="mp-tap"
           style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer", background: blueSoft, border: "none" }}
           onClick={() => onOpenView("routinen")}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, color: blue, marginBottom: 14 }}>{tLabel("Gewohnheiten")}</div>
-          <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={84} stroke={10} color={blue} />
-          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 14, color: blue }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: blue, marginBottom: 16 }}>{tLabel("Gewohnheiten")}</div>
+          <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={110} stroke={9} color={blue} />
+          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 16, color: blue }}>
             {gewohnheitHeuteItems.length === 0
               ? t("home.gewohnheiten.leer")
               : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length, lang)}
