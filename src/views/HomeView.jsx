@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Shell, Card } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
@@ -9,6 +9,9 @@ import { statusText } from "../utils/motivation";
 import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useT } from "../i18n/translate";
+import ADHSModeToggle from "../ui/ADHSModeToggle";
+import QuickTaskList from "../ui/QuickTaskList";
+import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 
 // Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
 // bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
@@ -83,6 +86,20 @@ export default function HomeView({ onOpenView }) {
     confirmAlleTageszeit,
   } = useAppData();
 
+  // ADHS Mode State
+  const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
+  const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
+
+  const handleToggleEmergencyMode = (newState) => {
+    setIsEmergencyMode(newState);
+    saveADHSMode(newState);
+  };
+
+  const handleToggleSoundEnabled = (newState) => {
+    setSoundEnabled(newState);
+    saveSoundEnabled(newState);
+  };
+
   const today = new Date();
   const stunde = today.getHours();
   const gruss = stunde < 12 ? t("home.greeting.morgen") : stunde < 18 ? t("home.greeting.tag") : t("home.greeting.abend");
@@ -103,12 +120,37 @@ export default function HomeView({ onOpenView }) {
     gewohnheiten,
     gewohnheitErledigt,
   });
-  const erledigtCount = heuteItems.filter((i) => i.done).length;
-  const gewohnheitHeuteItems = heuteItems.filter((i) => i.kategorie === "gewohnheit");
+
+  // Im Notfallmodus: nur Medikamente, Hormone und Hydration anzeigen
+  const displayItems = isEmergencyMode
+    ? heuteItems.filter((item) => {
+        const essentialCategories = ["medikament", "hormon", "hydration"];
+        return essentialCategories.includes(item.kategorie);
+      })
+    : heuteItems;
+
+  const erledigtCount = displayItems.filter((i) => i.done).length;
+  const gewohnheitHeuteItems = displayItems.filter((i) => i.kategorie === "gewohnheit");
   const gewohnheitErledigtHeute = gewohnheitHeuteItems.filter((i) => i.done).length;
-  const offeneItems = heuteItems.filter((i) => !i.done);
+  const offeneItems = displayItems.filter((i) => !i.done);
   const angezeigteItems = gruppiereFuerAlsNaechstes(offeneItems, t, tLabel);
   const tagStr = toLocalISODate(today);
+
+  // Konvertiere Items ins QuickTaskList-Format
+  const quickTasksFormatted = angezeigteItems.map((item) => ({
+    key: item.key,
+    name: item.name,
+    detail: item.detail || "",
+    done: item.done || false,
+    kategorie: item.kategorie,
+    onToggle: () => {
+      if (item.bundleIds) {
+        confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+      } else {
+        onOpenView("tagesplan");
+      }
+    },
+  }));
 
   return (
     <Shell>
@@ -119,6 +161,28 @@ export default function HomeView({ onOpenView }) {
           <Logo size={56} />
         </div>
       </div>
+
+      {/* ADHS Mode Toggle */}
+      <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
+
+      {/* Emergency Mode Info Banner */}
+      {isEmergencyMode && (
+        <div
+          style={{
+            padding: "12px 14px",
+            marginBottom: "14px",
+            background: "rgba(217, 119, 6, 0.08)",
+            border: "1px solid rgba(217, 119, 6, 0.3)",
+            borderRadius: "10px",
+            fontSize: "12px",
+            color: "#D97706",
+            lineHeight: "1.5",
+            fontWeight: "500",
+          }}
+        >
+          💛 <strong>Heute nur Basics:</strong> Medikamente + Wasser. Alles andere ist Bonus. Kein Druck!
+        </div>
+      )}
 
       {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü.
           Vertikal gestapelt (Label über Ring über Text) statt nebeneinander:
@@ -174,79 +238,83 @@ export default function HomeView({ onOpenView }) {
       {angezeigteItems.length > 0 && (
         <>
           <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 10 }}>{t("home.alsNaechstes")}</div>
-          <Card style={{ marginBottom: 20, padding: 8 }}>
-            {angezeigteItems.slice(0, 4).map((item, i, arr) => {
-              const k = KATEGORIE_META[item.kategorie];
-              return (
-                <div
-                  key={item.key}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    padding: "12px 12px",
-                    borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
-                  }}
-                >
-                  <button
-                    className="mp-tap"
-                    onClick={() => onOpenView("tagesplan")}
+          <Card style={{ marginBottom: 20, padding: isEmergencyMode ? 8 : 8 }}>
+            {isEmergencyMode ? (
+              <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
+            ) : (
+              angezeigteItems.slice(0, 4).map((item, i, arr) => {
+                const k = KATEGORIE_META[item.kategorie];
+                return (
+                  <div
+                    key={item.key}
                     style={{
-                      flex: 1,
+                      width: "100%",
                       display: "flex",
                       alignItems: "center",
+                      justifyContent: "space-between",
                       gap: 10,
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      padding: 0,
-                      minWidth: 0,
+                      padding: "12px 12px",
+                      borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
                     }}
                   >
-                    <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>
-                        {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {tLabel(item.uhrzeit)}</span>
-                      </div>
-                      {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
-                    </div>
-                  </button>
-                  {item.bundleIds ? (
-                    <button
-                      className="mp-tap"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
-                      }}
-                      style={{
-                        flexShrink: 0,
-                        padding: "7px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        background: accentSoft,
-                        color: accentDark,
-                        fontSize: 11.5,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {t("home.list.confirmAll")}
-                    </button>
-                  ) : (
                     <button
                       className="mp-tap"
                       onClick={() => onOpenView("tagesplan")}
-                      style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        background: "transparent",
+                        border: "none",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        padding: 0,
+                        minWidth: 0,
+                      }}
                     >
-                      ›
+                      <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>
+                          {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {tLabel(item.uhrzeit)}</span>
+                        </div>
+                        {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
+                      </div>
                     </button>
-                  )}
-                </div>
-              );
-            })}
+                    {item.bundleIds ? (
+                      <button
+                        className="mp-tap"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+                        }}
+                        style={{
+                          flexShrink: 0,
+                          padding: "7px 12px",
+                          borderRadius: 10,
+                          border: "none",
+                          background: accentSoft,
+                          color: accentDark,
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {t("home.list.confirmAll")}
+                      </button>
+                    ) : (
+                      <button
+                        className="mp-tap"
+                        onClick={() => onOpenView("tagesplan")}
+                        style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
+                      >
+                        ›
+                      </button>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </Card>
         </>
       )}

@@ -1,243 +1,176 @@
 import React from "react";
-import { Heart, RotateCcw } from "lucide-react";
 
 /**
  * GraceDayCard: Wochenrückblick mit Anti-Scham-Mechanismus
  *
  * Props:
- * - weeklyStats: { completedDays: number, missedDays: number, totalDays: 7 }
- * - motivationalMessage: optional custom message
+ * - weeklyStats: { completedDays, missedDays, totalDays }
+ * - motivationalMessage: Optional custom Message (sonst auto)
  *
- * Änderungen für ADHS:
- * - Keine Schuldgefühle für "verpasste" Tage
- * - 50%+ Erfolg = "erfolgreich" (nicht 100%!)
- * - Grün für Aktiv, Grau für Pause (nicht Rot!)
- * - Warme, unterstützende Tonalität
+ * Features:
+ * - Visuelle Day Circles (grün für aktiv, grau für Pause)
+ * - 50%+ Erfolg = "Erfolg" (nicht 100% erforderlich)
+ * - Dynamische motivierende Messages basierend auf Completion Rate
+ * - Anti-Blame-Messaging: "Pausen sind nicht Scheitern"
+ * - ADHS-freundlich: Keine Bestrafung, keine Schuld
  */
-export default function GraceDayCard({
-  weeklyStats = { completedDays: 4, missedDays: 3, totalDays: 7 },
-  motivationalMessage = null,
-}) {
-  const completionRate = Math.round(
-    (weeklyStats.completedDays / weeklyStats.totalDays) * 100
-  );
-  const isAcceptable = completionRate >= 50;
+export default function GraceDayCard({ weeklyStats = {}, motivationalMessage = null }) {
+  const { completedDays = 0, missedDays = 0, totalDays = 7 } = weeklyStats;
+  const completionRate = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
 
-  const getMessage = () => {
+  const getMotivationalMessage = () => {
     if (motivationalMessage) return motivationalMessage;
 
-    if (completionRate >= 80) return "🚀 Fantastisch! Eine sehr starke Woche.";
-    if (completionRate >= 50)
+    if (completionRate >= 80) {
+      return "🚀 Fantastisch! Eine sehr starke Woche.";
+    } else if (completionRate >= 50) {
       return "💪 Sehr gut! 50%+ bedeutet: du machst das richtig.";
-    if (completionRate >= 30) return "🌱 Du machst kleine Fortschritte. Das zählt.";
-    return "💛 Kein Drama. Jeder Tag ist ein neuer Versuch.";
+    } else if (completionRate >= 30) {
+      return "🌱 Du machst kleine Fortschritte. Das zählt.";
+    } else {
+      return "💛 Kein Drama. Jeder Tag ist ein neuer Versuch.";
+    }
+  };
+
+  const getMessageColor = () => {
+    if (completionRate >= 80) return "#16A34A";
+    if (completionRate >= 50) return "#0891B2";
+    if (completionRate >= 30) return "#D97706";
+    return "#6B7280";
   };
 
   return (
     <div
       style={{
-        padding: "20px",
-        marginBottom: "16px",
-        background: "linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%)",
-        border: "1px solid rgba(148, 163, 184, 0.1)",
-        borderRadius: "16px",
-        backdropFilter: "blur(4px)",
+        padding: "16px 14px",
+        borderRadius: 14,
+        background: "#FFF",
+        border: "1px solid #E5E7EB",
+        animation: "fadeInUp 0.5s ease-out",
       }}
     >
-      {/* HEADER */}
-      <div style={{ marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-          <Heart size={18} color="#F472B6" />
-          <h3
-            style={{
-              fontSize: "14px",
-              fontWeight: "700",
-              color: "#E2E8F0",
-              margin: 0,
-            }}
-          >
-            Wochenrückblick
-          </h3>
-        </div>
-        <p
+      {/* Header */}
+      <div style={{ marginBottom: 14 }}>
+        <div
           style={{
-            fontSize: "12px",
-            color: "#94A3B8",
-            margin: 0,
-            fontStyle: "italic",
-          }}
-        >
-          Das ist dein realer Rhythmus. Nicht gut oder schlecht.
-        </p>
-      </div>
-
-      {/* VISUAL DAY CIRCLES */}
-      <div style={{ marginBottom: "16px" }}>
-        <p
-          style={{
-            fontSize: "11px",
-            fontWeight: "600",
-            color: "#64748B",
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#9CA3AF",
             textTransform: "uppercase",
             letterSpacing: "0.5px",
-            marginBottom: "8px",
+            marginBottom: 4,
           }}
         >
-          Tage dieser Woche
-        </p>
-        <div style={{ display: "flex", gap: "6px", justifyContent: "space-between" }}>
-          {Array.from({ length: weeklyStats.totalDays }).map((_, i) => {
-            const isCompleted = i < weeklyStats.completedDays;
-            return (
-              <div
-                key={i}
-                style={{
-                  width: "100%",
-                  height: "32px",
-                  borderRadius: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  border: "1px solid",
-                  background: isCompleted
-                    ? "rgba(16, 185, 129, 0.15)"
-                    : "rgba(100, 116, 139, 0.08)",
-                  borderColor: isCompleted
-                    ? "rgba(16, 185, 129, 0.3)"
-                    : "rgba(100, 116, 139, 0.2)",
-                  color: isCompleted ? "#10B981" : "#94A3B8",
-                  transition: "all 200ms ease-out",
-                  cursor: "default",
-                }}
-                title={isCompleted ? "Aktiv ✓" : "Pause"}
-              >
-                {isCompleted ? "✓" : "○"}
-              </div>
-            );
-          })}
+          Diese Woche
+        </div>
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: getMessageColor(),
+          }}
+        >
+          {getMotivationalMessage()}
         </div>
       </div>
 
-      {/* STATS GRID */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-        <div
-          style={{
-            padding: "10px",
-            background: "rgba(16, 185, 129, 0.08)",
-            border: "1px solid rgba(16, 185, 129, 0.2)",
-            borderRadius: "8px",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ fontSize: "10px", color: "#64748B", margin: "0 0 4px 0" }}>
-            Aktiv
-          </p>
-          <p
-            style={{
-              fontSize: "18px",
-              fontWeight: "700",
-              color: "#10B981",
-              margin: 0,
-            }}
-          >
-            {weeklyStats.completedDays}
-          </p>
-        </div>
-        <div
-          style={{
-            padding: "10px",
-            background: "rgba(100, 116, 139, 0.08)",
-            border: "1px solid rgba(100, 116, 139, 0.2)",
-            borderRadius: "8px",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ fontSize: "10px", color: "#64748B", margin: "0 0 4px 0" }}>
-            Pause
-          </p>
-          <p
-            style={{
-              fontSize: "18px",
-              fontWeight: "700",
-              color: "#94A3B8",
-              margin: 0,
-            }}
-          >
-            {weeklyStats.missedDays}
-          </p>
-        </div>
-        <div
-          style={{
-            padding: "10px",
-            background: "rgba(59, 130, 246, 0.08)",
-            border: "1px solid rgba(59, 130, 246, 0.2)",
-            borderRadius: "8px",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ fontSize: "10px", color: "#64748B", margin: "0 0 4px 0" }}>
-            Quote
-          </p>
-          <p
-            style={{
-              fontSize: "18px",
-              fontWeight: "700",
-              color: "#3B82F6",
-              margin: 0,
-            }}
-          >
-            {completionRate}%
-          </p>
-        </div>
-      </div>
-
-      {/* STATUS MESSAGE */}
+      {/* Day circles */}
       <div
         style={{
-          padding: "12px",
-          marginBottom: "12px",
-          background: isAcceptable
-            ? "rgba(16, 185, 129, 0.1)"
-            : "rgba(59, 130, 246, 0.1)",
-          border: isAcceptable
-            ? "1px solid rgba(16, 185, 129, 0.2)"
-            : "1px solid rgba(59, 130, 246, 0.2)",
-          borderRadius: "8px",
-          color: isAcceptable ? "#86EFAC" : "#93C5FD",
-          fontSize: "13px",
-          fontWeight: "500",
-          lineHeight: "1.5",
-        }}
-      >
-        {getMessage()}
-      </div>
-
-      {/* GRACE MESSAGE */}
-      <div
-        style={{
-          padding: "12px",
-          background: "rgba(148, 163, 184, 0.08)",
-          border: "1px solid rgba(148, 163, 184, 0.15)",
-          borderRadius: "8px",
           display: "flex",
-          gap: "10px",
+          gap: 8,
+          marginBottom: 12,
+          justifyContent: "center",
         }}
       >
-        <RotateCcw size={14} color="#94A3B8" style={{ marginTop: "2px", flexShrink: 0 }} />
-        <p
+        {Array.from({ length: totalDays }).map((_, i) => {
+          const isCompleted = i < completedDays;
+          return (
+            <div
+              key={i}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: isCompleted ? "#16A34A" : "#E5E7EB",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 700,
+                color: isCompleted ? "#fff" : "#9CA3AF",
+                transition: "all 200ms ease-out",
+              }}
+            >
+              {isCompleted ? "✓" : "–"}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Stats */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 10,
+        }}
+      >
+        <div
           style={{
-            fontSize: "12px",
-            color: "#CBD5E1",
-            lineHeight: "1.5",
-            margin: 0,
+            padding: 10,
+            background: "#F0FDF4",
+            borderRadius: 8,
+            textAlign: "center",
           }}
         >
-          <strong>Wichtig:</strong> Mit ADHS sind Pausen nicht Scheitern. Sie sind dein
-          Körper, der sagt: "Verschnauf mal." Morgen ist ein neuer Versuch. Keine
-          Schuldgefühle.
-        </p>
+          <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 2 }}>
+            Aktive Tage
+          </div>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#16A34A",
+            }}
+          >
+            {completedDays}
+          </div>
+        </div>
+        <div
+          style={{
+            padding: 10,
+            background: "#F3F4F6",
+            borderRadius: 8,
+            textAlign: "center",
+          }}
+        >
+          <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 2 }}>
+            Pausen
+          </div>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#9CA3AF",
+            }}
+          >
+            {missedDays}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer note */}
+      <div
+        style={{
+          fontSize: 11,
+          color: "#9CA3AF",
+          textAlign: "center",
+          marginTop: 12,
+          fontStyle: "italic",
+        }}
+      >
+        Pausen sind nicht Scheitern. Du machst das richtig. 💛
       </div>
     </div>
   );

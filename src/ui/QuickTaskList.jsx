@@ -1,135 +1,114 @@
 import React, { useState } from "react";
-import { CheckCircle2, Sparkles } from "lucide-react";
 
 /**
- * QuickTaskList: Optimiert für One-Tap Check-ins mit ADHS-Micro-Interactions
+ * QuickTaskList: One-Tap Task Check-ins mit Micro-Interactions
  *
  * Props:
- * - items: Array von { key, name, kategorie, done, onToggle }
- * - maxItems: wie viele Items anzeigen (default 4)
- * - soundEnabled: Audio-Feedback bei Completion (optional)
+ * - items: Array von { key, name, detail, done, kategorie, onToggle }
+ * - maxItems: Wie viele anzeigen (default: 4)
+ * - soundEnabled: Audio-Feedback bei Completion (default: true)
  *
- * Änderungen für ADHS:
- * - Großer Tap-Bereich (padding)
- * - Active State Feedback (scale)
- * - Sparkles Animation bei Completion
- * - Keine Touch-Verzögerung
- * - Visuelle Bestätigung (Grün = Erledigt)
+ * Features:
+ * - Große Tap-Ziele (min. 44x44px) für ADHS-Zugänglichkeit
+ * - Scale-Animation beim Drücken
+ * - Sparkles-Animation bei Completion
+ * - Optional Sound-Feedback (750Hz beep, 80ms)
+ * - Dopamine-Hit durch visuelle Bestätigung
  */
 export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled = true }) {
-  const [justCompleted, setJustCompleted] = useState(null);
-
-  const playTinyBeep = () => {
-    if (soundEnabled && typeof window !== "undefined") {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 750;
-        osc.type = "sine";
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.08);
-      } catch (e) {
-        // Silent fail wenn AudioContext nicht verfügbar
-      }
-    }
-  };
+  const displayItems = items.slice(0, maxItems);
+  const [completingKey, setCompletingKey] = useState(null);
 
   const handleToggle = (item) => {
-    if (!item.done) {
-      playTinyBeep();
-      setJustCompleted(item.key);
-      setTimeout(() => setJustCompleted(null), 600);
+    // Trigger animation
+    setCompletingKey(item.key);
+    setTimeout(() => setCompletingKey(null), 600);
+
+    // Play sound if enabled
+    if (soundEnabled && !item.done) {
+      playSuccessSound();
     }
-    item.onToggle?.();
+
+    // Call the item's toggle handler
+    item.onToggle();
   };
 
-  const displayItems = items.slice(0, maxItems);
+  const playSuccessSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 750;
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.08);
+    } catch (e) {
+      // Audio context not available, silently fail
+    }
+  };
+
+  if (displayItems.length === 0) {
+    return null;
+  }
 
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: "8px",
-    }}>
-      {displayItems.map((item, idx) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {displayItems.map((item) => (
         <button
           key={item.key}
           onClick={() => handleToggle(item)}
           style={{
-            width: "100%",
             display: "flex",
             alignItems: "center",
-            gap: "12px",
-            padding: "14px 14px",
-            borderRadius: "12px",
-            border: "1px solid",
-            background: item.done
-              ? "rgba(16, 185, 129, 0.08)"
-              : "rgba(148, 163, 184, 0.04)",
-            borderColor: item.done
-              ? "rgba(16, 185, 129, 0.3)"
-              : "rgba(100, 116, 139, 0.15)",
+            gap: 10,
+            padding: "12px 14px",
+            borderRadius: 10,
+            border: "1px solid #E5E7EB",
+            background: item.done ? "#F0FDF4" : "#fff",
             cursor: "pointer",
             transition: "all 150ms ease-out",
-            transform: "scale(1)",
-            // CSS-Klasse für Animations
-            animation: justCompleted === item.key ? "slideInSuccess 0.4s ease-out" : "none",
-          }}
-          onMouseDown={(e) => {
-            e.currentTarget.style.transform = "scale(0.97)";
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
-          }}
-          onTouchStart={(e) => {
-            e.currentTarget.style.transform = "scale(0.97)";
-          }}
-          onTouchEnd={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
+            minHeight: "44px",
+            textAlign: "left",
+            transform: completingKey === item.key ? "scale(0.98)" : "scale(1)",
+            animation: completingKey === item.key ? "slideInSuccess 0.6s ease-out" : "none",
           }}
         >
-          {/* CHECKBOX CIRCLE */}
+          {/* Checkbox */}
           <div
             style={{
-              width: "22px",
-              height: "22px",
-              minWidth: "22px",
-              borderRadius: "50%",
+              width: 20,
+              height: 20,
+              minWidth: 20,
+              borderRadius: 6,
+              border: `2px solid ${item.done ? "#16A34A" : "#D1D5DB"}`,
+              background: item.done ? "#16A34A" : "transparent",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              border: "2px solid",
-              borderColor: item.done ? "#10B981" : "#94A3B8",
-              background: item.done ? "#10B981" : "transparent",
               transition: "all 150ms ease-out",
-              boxShadow: item.done ? "0 0 8px rgba(16, 185, 129, 0.3)" : "none",
+              animation: item.done && completingKey === item.key ? "successPulse 0.6s ease-out" : "none",
             }}
           >
-            {item.done && (
-              <CheckCircle2 size={14} color="#1F2937" strokeWidth={3} />
-            )}
+            {item.done && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
           </div>
 
-          {/* TASK INFO */}
-          <div
-            style={{
-              flex: 1,
-              textAlign: "left",
-              minWidth: 0,
-            }}
-          >
+          {/* Text content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: "14px",
-                fontWeight: "600",
-                color: item.done ? "#64748B" : "#E2E8F0",
+                fontSize: 13,
+                fontWeight: 600,
+                color: item.done ? "#6B7280" : "#1F2937",
                 textDecoration: item.done ? "line-through" : "none",
-                transition: "color 150ms ease-out",
+                transition: "all 150ms ease-out",
               }}
             >
               {item.name}
@@ -137,9 +116,9 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
             {item.detail && (
               <div
                 style={{
-                  fontSize: "11px",
-                  color: "#94A3B8",
-                  marginTop: "2px",
+                  fontSize: 11,
+                  color: "#9CA3AF",
+                  marginTop: 2,
                 }}
               >
                 {item.detail}
@@ -147,19 +126,63 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
             )}
           </div>
 
-          {/* SUCCESS INDICATOR */}
-          {item.done && (
-            <Sparkles
-              size={16}
-              color="#10B981"
+          {/* Category badge */}
+          {item.kategorie && (
+            <div
               style={{
-                animation: "pulse 1.5s ease-in-out infinite",
-                flexShrink: 0,
+                fontSize: 10,
+                fontWeight: 600,
+                padding: "4px 8px",
+                borderRadius: 4,
+                background: getCategoryColor(item.kategorie),
+                color: "#fff",
+                whiteSpace: "nowrap",
               }}
-            />
+            >
+              {getCategoryLabel(item.kategorie)}
+            </div>
+          )}
+
+          {/* Completion indicator */}
+          {item.done && completingKey === item.key && (
+            <div
+              style={{
+                animation: "pulse 0.6s ease-out",
+              }}
+            >
+              ✨
+            </div>
           )}
         </button>
       ))}
     </div>
   );
+}
+
+function getCategoryColor(kategorie) {
+  const colors = {
+    medikament: "rgba(239, 68, 68, 0.8)",
+    hormon: "rgba(236, 72, 153, 0.8)",
+    supplement: "rgba(59, 130, 246, 0.8)",
+    hydration: "rgba(6, 182, 212, 0.8)",
+    ernährung: "rgba(168, 85, 247, 0.8)",
+    training: "rgba(34, 197, 94, 0.8)",
+    gewohnheit: "rgba(251, 146, 60, 0.8)",
+    schlaf: "rgba(99, 102, 241, 0.8)",
+  };
+  return colors[kategorie] || "rgba(107, 114, 128, 0.8)";
+}
+
+function getCategoryLabel(kategorie) {
+  const labels = {
+    medikament: "Med",
+    hormon: "Hor",
+    supplement: "Sup",
+    hydration: "💧",
+    ernährung: "🍽️",
+    training: "💪",
+    gewohnheit: "🎯",
+    schlaf: "😴",
+  };
+  return labels[kategorie] || kategorie.substring(0, 3);
 }
