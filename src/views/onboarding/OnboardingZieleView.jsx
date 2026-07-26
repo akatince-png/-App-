@@ -24,20 +24,10 @@ export default function OnboardingZieleView({ onDone, onBack, onCancel }) {
         ) : (
           <div />
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div>
           <div className="mp-tap" onClick={onDone} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
             {tLabel("Überspringen")}
           </div>
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
-              title={tLabel("Abbrechen")}
-            >
-              ⌂
-            </button>
-          )}
         </div>
       </div>
 
@@ -52,8 +42,26 @@ export default function OnboardingZieleView({ onDone, onBack, onCancel }) {
           <CheckRow key={z} label={tLabel(z)} checked={ziele.includes(z)} onToggle={() => toggleZiel(z)} />
         ))}
 
-        <div style={{ marginTop: 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
           <PrimaryButton onClick={onDone}>{tLabel("Weiter")}</PrimaryButton>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 12,
+                border: "1px solid #E5E7EB",
+                background: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 150ms ease-out",
+              }}
+            >
+              {tLabel("Abbrechen")}
+            </button>
+          )}
         </div>
       </Card>
     </Shell>

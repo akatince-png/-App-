@@ -53,18 +53,6 @@ export default function HauptprotokollErstellenView({ onDone, onCancel }) {
 
   return (
     <Shell>
-      {onCancel && (
-        <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 8, paddingBottom: 8, marginBottom: 8 }}>
-          <button
-            type="button"
-            onClick={onCancel}
-            style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
-            title={tLabel("Abbrechen")}
-          >
-            ⌂
-          </button>
-        </div>
-      )}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 12, marginBottom: 24 }}>
         <div
           style={{
@@ -101,10 +89,28 @@ export default function HauptprotokollErstellenView({ onDone, onCancel }) {
 
         {error && <div style={{ color: danger, fontSize: 12.5, marginTop: 10 }}>{error}</div>}
 
-        <div style={{ marginTop: 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
           <PrimaryButton onClick={submit} disabled={saving}>
             {saving ? t("onboarding.saving") : t("hauptprotokoll.weiter")}
           </PrimaryButton>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 12,
+                border: "1px solid #E5E7EB",
+                background: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 150ms ease-out",
+              }}
+            >
+              {tLabel("Abbrechen")}
+            </button>
+          )}
         </div>
       </Card>
     </Shell>
