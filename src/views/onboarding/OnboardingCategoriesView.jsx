@@ -912,6 +912,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                 wochenplanEntfernen={wochenplanEntfernen}
                 titel={null}
               />
+              <div style={{ marginTop: 16, padding: 12, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}`, fontSize: 12, color: textMuted, lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 700, marginBottom: 6, color: accentDark }}>💡 {tLabel("Tipp")}</div>
+                <div>
+                  {t("onboarding.training.hinweis", {
+                    defaultValue: "Lege jetzt fest, an welchen Tagen du trainieren möchtest. Die genauen Übungen (Sätze, Wiederholungen, Gewicht, Dauer) kannst du später im Trainings-Bereich hinzufügen — dort kannst du auch Cardio, Kraft, HIIT und Bodyweight kombinieren.",
+                  })}
+                </div>
+              </div>
             </>
           )}
 
