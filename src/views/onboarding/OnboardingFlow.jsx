@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import WelcomeView from "../WelcomeView";
 import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
+import OnboardingIntroView from "./OnboardingIntroView";
 import OnboardingZieleView from "./OnboardingZieleView";
 import OnboardingProfilView from "./OnboardingProfilView";
 import OnboardingLaborwerteView from "./OnboardingLaborwerteView";
@@ -28,7 +29,7 @@ import OnboardingCompletionView from "./OnboardingCompletionView";
 // echten Abbrechen-Knopf, den es beim ursprünglichen Erst-Onboarding nicht
 // gibt.
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | ziele | profil | laborwerte | categories | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | intro | ziele | profil | laborwerte | categories | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
 
   if (phase === "welcome") {
@@ -36,11 +37,15 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   }
 
   if (phase === "hauptprotokoll") {
-    return <HauptprotokollErstellenView onDone={() => setPhase("ziele")} onCancel={onCancel} />;
+    return <HauptprotokollErstellenView onDone={() => setPhase("intro")} onCancel={onCancel} />;
+  }
+
+  if (phase === "intro") {
+    return <OnboardingIntroView onDone={() => setPhase("ziele")} onCancel={onCancel} />;
   }
 
   if (phase === "ziele") {
-    return <OnboardingZieleView onDone={() => setPhase("profil")} onBack={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
+    return <OnboardingZieleView onDone={() => setPhase("profil")} onBack={() => setPhase("intro")} onCancel={onCancel} />;
   }
 
   if (phase === "profil") {

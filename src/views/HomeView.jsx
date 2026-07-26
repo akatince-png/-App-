@@ -104,6 +104,9 @@ export default function HomeView({ onOpenView }) {
   const stunde = today.getHours();
   const gruss = stunde < 12 ? t("home.greeting.morgen") : stunde < 18 ? t("home.greeting.tag") : t("home.greeting.abend");
 
+  // Lade Benutzernamen aus localStorage
+  const userName = typeof window !== "undefined" ? localStorage.getItem("user_name") : null;
+
   const heuteItems = buildDayItems(today, {
     plan,
     erledigt,
@@ -154,10 +157,12 @@ export default function HomeView({ onOpenView }) {
 
   return (
     <Shell>
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}>{gruss}</div>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: textMuted, marginBottom: 8 }}>
+          {userName ? `${gruss}, ${userName}` : gruss}
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.2 }}>MyProtocols</div>
+          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: -0.3 }}>MyProtocols</div>
           <Logo size={56} />
         </div>
       </div>
