@@ -8,6 +8,7 @@ import { getCoachName, getVorlesenAktiv, saveVorlesenAktiv } from "../utils/coac
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
 import { wissensBasisText } from "../utils/wissensBasis";
 import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
+import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
 
 // Wie viele Nachrichten aus dem (potenziell über Wochen gewachsenen)
 // gespeicherten Verlauf maximal als Kontext an die KI mitgeschickt werden —
@@ -15,25 +16,6 @@ import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
 // im aufklappbaren Verlauf sichtbar, nur die KI-Anfrage selbst wird
 // gekappt.
 const KI_KONTEXT_LIMIT = 24;
-
-function MikrofonIcon({ size = 18 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8.5" y="2" width="7" height="13" rx="3.5" fill="currentColor" />
-      <path d="M5 11a7 7 0 0 0 14 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M12 18v3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M8.3 21.2h7.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function StopIcon({ size = 15 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" />
-    </svg>
-  );
-}
 
 // Wiederverwendbare Chat-Oberfläche für den ADHS Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).

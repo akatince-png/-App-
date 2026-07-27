@@ -41,7 +41,11 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   }
 
   if (phase === "intro") {
-    return <OnboardingIntroView onDone={() => setPhase("ziele")} onCancel={onCancel} />;
+    // Bei Coach-Begleitung deckt OnboardingIntroView (über OnboardingCoachGuide)
+    // Name, Ziele UND Profil direkt mit ab — dann direkt zu "laborwerte"
+    // statt die (bereits erledigten) Phasen "ziele"/"profil" nochmal manuell
+    // zu durchlaufen.
+    return <OnboardingIntroView onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")} onCancel={onCancel} />;
   }
 
   if (phase === "ziele") {
