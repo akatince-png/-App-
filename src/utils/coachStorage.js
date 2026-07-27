@@ -25,3 +25,25 @@ export function saveCoachName(name) {
     // LocalStorage nicht verfügbar — Name gilt dann nur für diese Sitzung.
   }
 }
+
+// Ob Coach-Antworten automatisch vorgelesen werden sollen (siehe
+// utils/speech.js) — Default aus, damit niemand unerwartet Ton bekommt.
+const VORLESEN_KEY = "kiCoachVorlesen";
+
+export function getVorlesenAktiv() {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(VORLESEN_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function saveVorlesenAktiv(aktiv) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(VORLESEN_KEY, aktiv ? "true" : "false");
+  } catch {
+    // LocalStorage nicht verfügbar — Einstellung gilt dann nur für diese Sitzung.
+  }
+}
