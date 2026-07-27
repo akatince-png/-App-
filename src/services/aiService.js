@@ -274,4 +274,32 @@ export const AIService = {
     if (!Array.isArray(data.zeiten)) throw new Error("Unerwartetes Format: 'zeiten' fehlt oder ist kein Array.");
     return data;
   },
+
+  /**
+   * Extrahiert aus einem geführten Tageslicht-Gespräch (siehe coachChat())
+   * ein neues Tagesziel in Minuten.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{zielMinuten: number}>}
+   */
+  async tageslichtAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines täglichen Tageslicht-/Freiluft-Ziels hilft.",
+        "Fasse das vorangegangene Gespräch jetzt zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "zielMinuten": number (Tagesziel in Minuten, aus dem Gespräch abgeleitet) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben besprochene Tagesziel jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (typeof data.zielMinuten !== "number") throw new Error("Unerwartetes Format: 'zielMinuten' fehlt oder ist keine Zahl.");
+    return data;
+  },
 };
