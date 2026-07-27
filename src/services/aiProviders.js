@@ -12,12 +12,12 @@
 // (Port ggf. an den tatsächlichen Vite-Dev-Server anpassen — steht in der
 // Kommandozeile, wenn `npm run dev` läuft.)
 //
-// WICHTIG bei Groq: Ein clientseitig gesetzter VITE_AI_API_KEY landet
+// WICHTIG bei Groq/Gemini: Ein clientseitig gesetzter VITE_AI_API_KEY landet
 // sichtbar im ausgelieferten Browser-Code — nur zum schnellen Testen
-// gedacht. Im Normalbetrieb (kein VITE_AI_API_KEY gesetzt) läuft Groq
-// stattdessen automatisch über die Supabase Edge Function "groq-chat"
-// (supabase/functions/groq-chat/index.ts), die den echten Key nur
-// serverseitig als Secret hält.
+// gedacht. Im Normalbetrieb (kein VITE_AI_API_KEY gesetzt) läuft die Anfrage
+// stattdessen automatisch über die passende Supabase Edge Function
+// ("groq-chat" bzw. "gemini-chat" in supabase/functions/), die den echten
+// Key nur serverseitig als Secret hält.
 import { supabase } from "../lib/supabaseClient";
 
 const PROVIDER = (import.meta.env.VITE_AI_PROVIDER || "ollama").toLowerCase();
@@ -176,18 +176,41 @@ async function anfrageOpenAiKompatibel({ system, messages, json }) {
 // ---------------------------------------------------------------------
 // Google Gemini — eigenes Request-/Response-Format: "assistant" heißt dort
 // "model", und der Verlauf steht als "contents" statt "messages".
-// API-Key als Query-Param statt Header.
+//
+// Zwei Wege, je nachdem ob VITE_AI_API_KEY gesetzt ist (gleiches Prinzip
+// wie bei Groq oben):
+// - Gesetzt (Schnellweg zum Testen): Gemini direkt aus dem Browser, Key als
+//   Query-Param — der Key ist dann im Programmcode sichtbar.
+// - Nicht gesetzt (sicherer Normalweg): Anfrage geht an die eigene
+//   Supabase Edge Function "gemini-chat", die den echten Key nur
+//   serverseitig kennt. Braucht ein aktives Login.
 // ---------------------------------------------------------------------
 async function anfrageGemini({ system, messages, json }) {
-  if (!API_KEY) throw new Error("VITE_AI_API_KEY fehlt — für Gemini erforderlich.");
+  const payload = {
+    contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+    ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
+    ...(json ? { generationConfig: { responseMimeType: "application/json" } } : {}),
+  };
+
+  if (!API_KEY) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Gemini wird ein aktives Login benötigt.");
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ model: MODEL, ...payload }),
+    });
+    if (!res.ok) throw new Error(`Gemini-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  }
+
   const res = await fetch(`${BASE_URL}/models/${MODEL}:generateContent?key=${API_KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-      ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
-      ...(json ? { generationConfig: { responseMimeType: "application/json" } } : {}),
-    }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Gemini-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
   const data = await res.json();
