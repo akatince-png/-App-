@@ -302,4 +302,34 @@ export const AIService = {
     if (typeof data.zielMinuten !== "number") throw new Error("Unerwartetes Format: 'zielMinuten' fehlt oder ist keine Zahl.");
     return data;
   },
+
+  /**
+   * Extrahiert aus einem geführten Supplement-Gespräch (siehe coachChat())
+   * ein neues Supplement — Format entspricht dem, was supplementHinzufuegen()
+   * erwartet (siehe SupplementeView.jsx: { name, tageszeiten, hinweis }).
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{name: string, tageszeiten: string[], hinweis: string}>}
+   */
+  async supplementAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der neue Supplemente für Nutzer anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt als fertiges Supplement zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string, "tageszeiten": string[] (nur aus: "Morgens","Mittags","Abends"), ' +
+          '"hinweis": string (nur aus: "Zur Mahlzeit","Nüchtern","Vor dem Schlafen","Vor dem Training","Nach dem Training" — leer wenn nichts davon passt) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben besprochene Supplement jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.name || !Array.isArray(data.tageszeiten)) throw new Error("Unerwartetes Format: 'name'/'tageszeiten' fehlen.");
+    return data;
+  },
 };
