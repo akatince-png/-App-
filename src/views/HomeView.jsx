@@ -89,6 +89,8 @@ export default function HomeView({ onOpenView }) {
     hydrationHeuteMl,
     hydrationZielMl,
     hydrationHinzufuegen,
+    tageslichtHeuteMinuten,
+    tageslichtZielMinuten,
   } = useAppData();
 
   // ADHS Mode State
@@ -338,6 +340,21 @@ export default function HomeView({ onOpenView }) {
       onAction: () => hydrationHinzufuegen(200),
     });
 
+    // Tageslicht — gleicher Aufbau wie Hydration (laufende Tageszeit statt
+    // Item-Liste), Standard-Ziel ist 30 Minuten (siehe 0033_tageslicht.sql).
+    widgets.push({
+      name: tLabel("Tageslicht"),
+      kategorie: "tageslicht",
+      viewId: "tageslicht",
+      aktiv: tageslichtHeuteMinuten > 0 || tageslichtZielMinuten !== 30,
+      dailyCount: Math.min(tageslichtHeuteMinuten, tageslichtZielMinuten),
+      dailyTotal: tageslichtZielMinuten || 1,
+      weeklyCount: 0,
+      weeklyTotal: 1,
+      isEssential: false,
+      unit: "min",
+    });
+
     // Im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
     // Kategorien. Sonst: je nach Präferenz entweder alle (unbenutzte grau)
     // oder nur die tatsächlich genutzten.
@@ -345,7 +362,8 @@ export default function HomeView({ onOpenView }) {
     return alleWidgetsAnzeigen ? widgets : widgets.filter((w) => w.aktiv);
   }, [isEmergencyMode, alleWidgetsAnzeigen, plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
       mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan, trainingTemplates,
-      gewohnheiten, gewohnheitErledigt, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen, heuteItems, today, tLabel]);
+      gewohnheiten, gewohnheitErledigt, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen,
+      tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel]);
 
   return (
     <Shell>

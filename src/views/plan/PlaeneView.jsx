@@ -5,6 +5,7 @@ import { PLAENE_TABS } from "../../constants";
 import Icon from "../../ui/Icon";
 import SchlafView from "../SchlafView";
 import HydrationView from "../HydrationView";
+import TageslichtView from "../TageslichtView";
 import NutritionView from "../NutritionView";
 import TrainingView from "../TrainingView";
 import SupplementeView from "../SupplementeView";
@@ -15,6 +16,7 @@ import WochenuebersichtView from "../WochenuebersichtView";
 const VIEWS = {
   schlaf: SchlafView,
   hydration: HydrationView,
+  tageslicht: TageslichtView,
   ernaehrung: NutritionView,
   training: TrainingView,
   supplemente: SupplementeView,

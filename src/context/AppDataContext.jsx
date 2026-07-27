@@ -9,6 +9,7 @@ import { useDrinkRecipes } from "../data/useDrinkRecipes";
 import { useMealData } from "../data/useMealData";
 import { useGewohnheitenData } from "../data/useGewohnheitenData";
 import { useHydrationData } from "../data/useHydrationData";
+import { useTageslichtData } from "../data/useTageslichtData";
 import { useTrainingData } from "../data/useTrainingData";
 import { useTrainingTemplates } from "../data/useTrainingTemplates";
 import { useCheckinData } from "../data/useCheckinData";
@@ -37,6 +38,7 @@ export function AppDataProvider({ children }) {
   const mealData = useMealData(userId, hauptprotokollId);
   const gewohnheitenData = useGewohnheitenData(userId, hauptprotokollId);
   const hydrationData = useHydrationData(userId);
+  const tageslichtData = useTageslichtData(userId);
   const trainingData = useTrainingData(userId);
   const trainingTemplates = useTrainingTemplates(userId);
   const checkinData = useCheckinData(userId);
@@ -71,6 +73,7 @@ export function AppDataProvider({ children }) {
     ...mealData,
     ...gewohnheitenData,
     ...hydrationData,
+    ...tageslichtData,
     ...trainingData,
     ...trainingTemplates,
     ...checkinData,

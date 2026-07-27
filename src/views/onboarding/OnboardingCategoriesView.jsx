@@ -139,6 +139,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     gewohnheitHinzufuegen,
     hydrationZielMl,
     hydrationZielSetzen,
+    tageslichtZielMinuten,
+    tageslichtZielSetzen,
     mahlzeitHinzufuegen,
     wochenplanMahlzeitSetzen,
     supplementHinzufuegen,
@@ -201,6 +203,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // speichernUndWeiter), damit ein reines Durchklicken nichts überschreibt.
   const [hydrationMl, setHydrationMl] = useState("");
 
+  // Tageslicht — analog zu Hydration bewusst leer statt vorbelegt, siehe
+  // Kommentar oben.
+  const [tageslichtMinuten, setTageslichtMinuten] = useState("");
+
   // Ernährung — Wochentage (an welchen Tagen gilt diese Mahlzeit) + eine
   // einzelne Uhrzeit statt der pauschalen Morgens/Mittags/Abends-Auswahl,
   // damit sie später wie jede andere Mahlzeit über meal_wochenplan
@@ -254,6 +260,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setSchlafIntervallTyp("weekdays");
     setSchlafBloecke([neuerSchlafblock([...WOCHENTAGE])]);
     setHydrationMl("");
+    setTageslichtMinuten("");
     setMahlName("");
     setMahlIntervallTyp("weekdays");
     setMahlTage([...WOCHENTAGE]);
@@ -396,6 +403,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       const neuesZiel = hydrationMl.trim() === "" ? hydrationZielMl : Math.max(0, Number(hydrationMl) || 0);
       await hydrationZielSetzen(neuesZiel);
       setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
+    } else if (step.key === "tageslicht") {
+      const neuesZiel = tageslichtMinuten.trim() === "" ? tageslichtZielMinuten : Math.max(0, Number(tageslichtMinuten) || 0);
+      await tageslichtZielSetzen(neuesZiel);
+      setCategoryZiel("tageslicht", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
       // gespeichert (wochenplanHinzufuegen/-Entfernen, wie in TrainingView) —
@@ -799,6 +810,21 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   <TextInput type="date" value={eigenesStartdatum} onChange={setEigenesStartdatum} />
                 </div>
               )}
+            </>
+          )}
+
+          {step.key === "tageslicht" && (
+            <>
+              <Label>{tLabel("Tagesziel in Minuten")}</Label>
+              <TextInput
+                type="number"
+                value={tageslichtMinuten}
+                onChange={setTageslichtMinuten}
+                placeholder={tageslichtZielMinuten ? String(tageslichtZielMinuten) : "z. B. 30"}
+              />
+              <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>
+                {tLabel("Wie viele Minuten am Tag möchtest du bewusst im Freien/Tageslicht verbringen?")}
+              </div>
             </>
           )}
 
