@@ -56,16 +56,17 @@ export async function sendeAnfrage({ system, messages, json = false }) {
  * Wie sendeAnfrage(), aber ruft onTeilantwort(bisherigerText) bei jedem
  * neuen Textstück auf, statt am Ende einmal die komplette Antwort
  * zurückzugeben — lässt den Chat wortweise "mitschreiben" statt lange
- * stillzustehen und dann alles auf einmal zu zeigen. Nur bei Ollama echtes
- * Streaming (eigenes NDJSON-Format); bei Groq/Gemini kommt die Antwort
- * (noch) am Stück, onTeilantwort wird dort einmalig mit dem Volltext
- * aufgerufen, damit der Aufrufer nicht zwei verschiedene Codepfade braucht.
+ * stillzustehen und dann alles auf einmal zu zeigen. Bei Ollama und Gemini
+ * echtes Streaming; bei Groq kommt die Antwort (noch) am Stück,
+ * onTeilantwort wird dort einmalig mit dem Volltext aufgerufen, damit der
+ * Aufrufer nicht mehrere verschiedene Codepfade braucht.
  *
  * @param {{system?: string, messages: Array<{role: "user"|"assistant", content: string}>, onTeilantwort: (text: string) => void}} params
  * @returns {Promise<string>} die vollständige Antwort, wenn sie fertig ist
  */
 export async function sendeAnfrageStreamend({ system, messages, onTeilantwort }) {
   if (PROVIDER === "ollama") return anfrageOllamaStreamend({ system, messages, onTeilantwort });
+  if (PROVIDER === "gemini") return anfrageGeminiStreamend({ system, messages, onTeilantwort });
   const antwort = await sendeAnfrage({ system, messages, json: false });
   onTeilantwort(antwort);
   return antwort;
@@ -215,4 +216,60 @@ async function anfrageGemini({ system, messages, json }) {
   if (!res.ok) throw new Error(`Gemini-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+}
+
+// Gemini liefert im Streaming-Modus Server-Sent Events (SSE): pro Textstück
+// eine Zeile "data: {...}", die ein Teilstück der Antwort als JSON enthält
+// — wir lesen den Response-Body deshalb selbst statt res.json() zu nutzen
+// (gleiches Prinzip wie bei Ollama oben, nur anderes Zeilenformat).
+async function anfrageGeminiStreamend({ system, messages, onTeilantwort }) {
+  const payload = {
+    contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+    ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
+  };
+
+  let res;
+  if (!API_KEY) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Gemini wird ein aktives Login benötigt.");
+    res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ model: MODEL, stream: true, ...payload }),
+    });
+  } else {
+    res = await fetch(`${BASE_URL}/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  }
+  if (!res.ok || !res.body) throw new Error(`Gemini-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let volltext = "";
+  let rest = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    rest += decoder.decode(value, { stream: true });
+    const zeilen = rest.split("\n");
+    rest = zeilen.pop() ?? ""; // letzte, evtl. noch unvollständige Zeile für den nächsten Durchlauf aufheben
+    for (const zeile of zeilen) {
+      const inhalt = zeile.trim();
+      if (!inhalt.startsWith("data:")) continue;
+      const jsonText = inhalt.slice(5).trim();
+      if (!jsonText || jsonText === "[DONE]") continue;
+      const stueck = JSON.parse(jsonText);
+      const text = stueck.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        volltext += text;
+        onTeilantwort(volltext);
+      }
+    }
+  }
+  return volltext;
 }

@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { model, ...payload } = await req.json();
+    const { model, stream, ...payload } = await req.json();
     if (!model) {
       return new Response(JSON.stringify({ error: "Feld 'model' fehlt im Request-Body." }), {
         status: 400,
@@ -60,14 +60,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const endpoint = stream
+      ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    // Bei stream=true den SSE-Body 1:1 weiterreichen, statt ihn erst
+    // vollständig einzusammeln — sonst käme beim Client trotz Streaming-
+    // Endpunkt alles auf einmal an.
+    if (stream) {
+      return new Response(response.body, {
+        status: response.status,
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
 
     const text = await response.text();
     return new Response(text, {
