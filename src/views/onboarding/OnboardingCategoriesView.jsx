@@ -14,6 +14,34 @@ import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS } from "./categorySteps";
 import { useT } from "../../i18n/translate";
 import { toLocalISODate } from "../../utils/dates";
+import KiChat from "../../ui/KiChat";
+import { AIService } from "../../services/aiService";
+import { getCoachName } from "../../utils/coachStorage";
+
+// Systemprompt je Kategorie für den Coach-Begleitungs-Chat (siehe
+// onUebernehmenKategorie() weiter unten) — bewusst kurz und auf die
+// jeweiligen fehlenden Angaben fokussiert, statt eines generischen Prompts
+// für alle 9 Bereiche.
+const KATEGORIE_COACH_PROMPTS = {
+  gewohnheiten:
+    "Du hilfst dabei, eine neue Gewohnheit einzurichten. Frag nach, was noch fehlt: Name, Menge/Umfang, feste Uhrzeit oder Zeitfenster, und ein Zieltage-Ziel (z. B. 21 oder 66 Tage). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  schlaf:
+    "Du hilfst dabei, den gewünschten Schlafrhythmus einzurichten. Frag nach der üblichen Bettzeit und Aufwachzeit. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  hydration:
+    "Du hilfst dabei, ein tägliches Trinkziel einzurichten. Frag nach, wie viel die Person aktuell trinkt und was ein realistisches Tagesziel wäre. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  tageslicht:
+    "Du hilfst dabei, ein tägliches Tageslicht-/Freiluft-Ziel in Minuten einzurichten. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  ernaehrung:
+    "Du hilfst dabei, eine Mahlzeit für den Wochenplan einzurichten. Frag nach Name, Zutaten, an welchen Wochentagen sie stattfindet, und der Uhrzeit. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  training:
+    "Du hilfst dabei, einen Trainingsplan für die Woche einzurichten. Frag nach, wenn wichtige Angaben fehlen (z. B. Erfahrung, verfügbare Tage, Ziele), mach konkrete Vorschläge. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  supplemente:
+    "Du hilfst dabei, ein neues Supplement einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  medikamente:
+    "Du hilfst dabei, ein neues Medikament oder Hormon einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, Kategorie, und der Rhythmus sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  peptide:
+    "Du hilfst dabei, ein neues Peptid einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, und der Rhythmus sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+};
 
 const ZIEL_LEER = { modus: "offen", wochen: "" };
 const MULTI_ADD_KEYS = ["gewohnheiten", "ernaehrung", "supplemente", "medikamente"];
@@ -586,6 +614,146 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // zusammen und sollen nicht auf zwei Seiten aufgeteilt sein.
   const effectiveModus = step.key === "hydration" ? "jetzt" : modus;
 
+  // Coach-Begleitung je Kategorie-Schritt (siehe UEBERGABEPROTOKOLL.md,
+  // "Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte"): der
+  // Coach übernimmt NICHT das Speichern selbst, sondern füllt dieselben
+  // lokalen Felder aus, die auch das manuelle Formular unten benutzt — die
+  // Person klickt danach ganz normal "Hinzufügen"/"Speichern & weiter",
+  // genau wie bei der Schritt-für-Schritt-Begleitung in
+  // OnboardingCoachGuide.jsx. Ausnahmen: Training und Peptide speichern
+  // schon beim manuellen Antippen direkt (siehe Kommentare oben), deshalb
+  // übernimmt der Coach dort ebenfalls sofort statt nur Felder zu füllen.
+  const onUebernehmenKategorie = async (verlauf) => {
+    const coachName = getCoachName();
+    switch (step.key) {
+      case "gewohnheiten": {
+        const g = await AIService.gewohnheitAusChat({ verlauf, coachName });
+        setGName(g.name || "");
+        setGMenge(g.menge || "");
+        if (g.uhrzeit) {
+          setGUrzeitModus("fest");
+          setGUhrzeit(g.uhrzeit);
+        } else if (g.urzeitVon || g.urzeitBis) {
+          setGUrzeitModus("fenster");
+          setGUrzeitVon(g.urzeitVon || "");
+          setGUrzeitBis(g.urzeitBis || "");
+        }
+        setGZielTage(g.zielTage ? String(g.zielTage) : "");
+        return g;
+      }
+      case "schlaf": {
+        const s = await AIService.schlafzielAusChat({ verlauf, coachName });
+        setSchlafIntervallTyp("fixed");
+        if (s.bettzeit) setBlockFeld(0, "bettzeit", s.bettzeit);
+        if (s.aufwachzeit) setBlockFeld(0, "aufwachzeit", s.aufwachzeit);
+        return s;
+      }
+      case "hydration": {
+        const h = await AIService.hydrationAusChat({ verlauf, coachName });
+        if (h.zielMl) setHydrationMl(String(h.zielMl));
+        return h;
+      }
+      case "tageslicht": {
+        const tl = await AIService.tageslichtAusChat({ verlauf, coachName });
+        setTageslichtMinuten(String(tl.zielMinuten));
+        return tl;
+      }
+      case "ernaehrung": {
+        const m = await AIService.mahlzeitplanAusChat({ verlauf, coachName });
+        setMahlName(m.name || "");
+        setMahlZutaten(m.zutaten?.length ? m.zutaten : [neueZutat()]);
+        setMahlUhrzeit(m.uhrzeit || "08:00");
+        const tage = m.wochentage?.length ? m.wochentage : [...WOCHENTAGE];
+        if (tage.length < WOCHENTAGE.length) {
+          setMahlIntervallTyp("weekdays");
+          setMahlTage(tage);
+        } else {
+          setMahlIntervallTyp("fixed");
+          setMahlTage([...WOCHENTAGE]);
+        }
+        return m;
+      }
+      case "training": {
+        const einheiten = await AIService.trainingsplanAusChat({ verlauf, coachName });
+        for (const einheit of einheiten) {
+          await wochenplanHinzufuegen(einheit);
+        }
+        return einheiten;
+      }
+      case "supplemente": {
+        const p = await AIService.peptidAusChat({ verlauf, coachName });
+        setSuppName(p.name || "");
+        setSuppEinnahmeart(p.einnahmeart || "Kapsel");
+        setSuppDosierung({
+          menge: p.menge || "",
+          intervallTyp: p.intervallTyp || "fixed",
+          intervallDays: p.intervallDays || 1,
+          customDays: p.customDays || "",
+          onDays: p.onDays || "",
+          offDays: p.offDays || "",
+          weekdays: p.weekdays || [],
+          uhrzeiten: p.uhrzeiten?.length ? p.uhrzeiten : ["20:00"],
+          eigenerStart: p.eigenerStart || "",
+        });
+        return p;
+      }
+      case "medikamente": {
+        const m = await AIService.medikamentAusChat({ verlauf, coachName });
+        setMedName(m.name || "");
+        setMedKategorie(m.kategorie || "Hormone");
+        setMedEinnahmeart(m.einnahmeart || "Injektion");
+        setMedDosierung({
+          menge: m.menge || "",
+          intervallTyp: m.intervallTyp || "fixed",
+          intervallDays: m.intervallDays || 1,
+          customDays: m.customDays || "",
+          onDays: m.onDays || "",
+          offDays: m.offDays || "",
+          weekdays: m.weekdays || [],
+          uhrzeiten: m.uhrzeiten?.length ? m.uhrzeiten : ["20:00"],
+          eigenerStart: m.eigenerStart || "",
+        });
+        return m;
+      }
+      case "peptide": {
+        const p = await AIService.peptidAusChat({ verlauf, coachName });
+        const name = p.name.trim();
+        const art = p.einnahmeart || "Injektion";
+        if (!peptide.includes(name)) {
+          const result = await addCustomPreparat(name, art);
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        } else {
+          setEinnahmeart(name, art);
+        }
+        if ((p.intervallTyp || "fixed") === "fixed") {
+          setDose(name, "intervallPreset", p.intervallDays || 7);
+        } else {
+          setDose(name, "intervallTyp", p.intervallTyp);
+          setDose(name, "customDays", p.customDays || "");
+          setDose(name, "onDays", p.onDays || "");
+          setDose(name, "offDays", p.offDays || "");
+          setDose(name, "weekdays", p.weekdays || []);
+        }
+        setDose(name, "menge", p.menge || "");
+        setDose(name, "uhrzeiten", p.uhrzeiten?.length ? p.uhrzeiten : ["20:00"]);
+        return { name, menge: p.menge || "" };
+      }
+      default:
+        throw new Error("Für diesen Bereich gibt es noch keine Coach-Begleitung.");
+    }
+  };
+
+  const renderKategorieErgebnis = (ergebnis) => {
+    let text = "Felder ausgefüllt — bitte kurz prüfen und unten speichern.";
+    if (step.key === "training") {
+      const anzahl = Array.isArray(ergebnis) ? ergebnis.length : 0;
+      text = `${anzahl} Einheit${anzahl === 1 ? "" : "en"} in den Wochenplan übernommen.`;
+    } else if (step.key === "peptide") {
+      text = `${ergebnis?.name || ""} ${ergebnis?.menge ? `(${ergebnis.menge})` : ""} eingerichtet.`;
+    }
+    return <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>{text}</div>;
+  };
+
   return (
     <Shell>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
@@ -653,6 +821,18 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       )}
 
       {effectiveModus === "jetzt" && (
+        <>
+          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+            Sag {getCoachName()}, was du hier einrichten möchtest — er füllt die Felder für dich aus.
+          </div>
+          <KiChat
+            key={step.key}
+            systemPrompt={KATEGORIE_COACH_PROMPTS[step.key]}
+            einleitung={`Hi, ich bin ${getCoachName()}! Was möchtest du für "${tLabel(step.label)}" einrichten?`}
+            onUebernehmen={onUebernehmenKategorie}
+            uebernehmenLabel="Übernehmen"
+            renderErgebnis={renderKategorieErgebnis}
+          />
         <Card>
           {ISTZUSTAND_FRAGEN[step.key] && (
             <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${cardBorder}` }}>
@@ -1082,6 +1262,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             )}
           </div>
         </Card>
+        </>
       )}
     </Shell>
   );

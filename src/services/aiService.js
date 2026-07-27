@@ -552,4 +552,94 @@ export const AIService = {
     const antwort = await sendeAnfrage({ system, messages, json: true });
     return parseJsonAntwort(antwort);
   },
+
+  /**
+   * Extrahiert aus einem Gespräch über den Schlafrhythmus (Onboarding-
+   * Kategorien-Schritt "Schlaf", siehe OnboardingCategoriesView.jsx) eine
+   * gewünschte Bett-/Aufwachzeit — anders als schlafAusChat() geht es hier
+   * um ein Ziel/Rhythmus, nicht um einen Eintrag für eine bestimmte Nacht.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{bettzeit: string, aufwachzeit: string}>}
+   */
+  async schlafzielAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines gewünschten Schlafrhythmus hilft (übliche Bett- und Aufwachzeit, nicht ein einzelner Eintrag für eine Nacht).",
+        "Fasse das vorangegangene Gespräch jetzt zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "bettzeit": string ("HH:MM"), "aufwachzeit": string ("HH:MM") }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse den oben besprochenen Schlafrhythmus jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    return parseJsonAntwort(antwort);
+  },
+
+  /**
+   * Extrahiert aus einem Gespräch über eine geplante Mahlzeit (Onboarding-
+   * Kategorien-Schritt "Ernährung", siehe OnboardingCategoriesView.jsx)
+   * Name, Zutaten, Wochentage und Uhrzeit — anders als
+   * ernaehrungsplanAusChat() (mehrere fertige Rezepte mit Nährwerten) geht
+   * es hier um einen einzelnen Mahlzeit-Slot im Wochenplan.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{name: string, zutaten: Array<{name: string, menge: string}>, wochentage: string[], uhrzeit: string}>}
+   */
+  async mahlzeitplanAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der eine Mahlzeit für den Wochenplan einrichtet.",
+        "Fasse das vorangegangene Gespräch jetzt zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string, "zutaten": [ { "name": string, "menge": string } ] (leeres Array wenn keine genannt), ' +
+          '"wochentage": string[] (aus "Mo","Di","Mi","Do","Fr","Sa","So" — alle 7, wenn "täglich" gesagt wurde), ' +
+          '"uhrzeit": string ("HH:MM", Standard "08:00" wenn nicht genannt) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse die oben besprochene Mahlzeit jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
+    return data;
+  },
+
+  /**
+   * Extrahiert aus einem Gespräch über Laborwerte (Onboarding-Schritt
+   * "Laborwerte", siehe OnboardingLaborwerteView.jsx / ProfilTab) die
+   * genannten Werte als flache Name→Wert-Liste — Format entspricht dem,
+   * was setBiomarkerWert() erwartet (ein Aufruf je Wert).
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{werte: Record<string, string>}>}
+   */
+  async laborwerteAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der genannte Laborwerte erfasst.",
+        "Fasse das vorangegangene Gespräch jetzt zusammen — nur Werte, die die Person tatsächlich genannt hat.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "werte": { [laborwertName: string]: string } } (Schlüssel ist der übliche Name des Laborwerts, z. B. "Vitamin D", "Testosteron gesamt", "TSH" — Wert ist die genannte Zahl inkl. Einheit falls genannt, z. B. "45 ng/ml")',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse die oben genannten Laborwerte jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.werte || typeof data.werte !== "object") throw new Error("Unerwartetes Format: 'werte' fehlt.");
+    return data;
+  },
 };
