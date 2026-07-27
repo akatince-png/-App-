@@ -1,8 +1,8 @@
 # 📋 ÜBERGABEPROTOKOLL: MyProtocols App
 
-**Stand: 27.07.2026, später Nachmittag/Abend, Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
+**Stand: 27.07.2026, Abend, Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
-> ⚠️ **Diese Fassung ersetzt die Version vom Vormittag desselben Tages.** Seitdem kam ein sehr umfangreicher KI-Coach-Ausbau dazu (siehe Abschnitt 4/5) — die technischen Grundlagen (Architektur, Datenmodell) sind unverändert, aber Abschnitt 5 (KI-Coach) und Abschnitt 6 (offene Punkte) haben sich stark verändert und sollten komplett neu gelesen werden, nicht nur überflogen.
+> ⚠️ **Diese Fassung ersetzt die Version vom späten Nachmittag desselben Tages.** Seitdem: KI-Coach läuft jetzt produktiv über **Gemini in der Cloud** (nicht mehr nur lokales Ollama), großer Design-Umbau (Home-Button, Plus-Button, animierter Coach-Orb), Performance-Fixes. Abschnitt 5 (KI-Coach) und Abschnitt 6 (offene Punkte) komplett neu lesen.
 
 ---
 
@@ -15,24 +15,24 @@ Bedienelemente, klare Sprache). Die Nutzerin ist selbst nicht technisch
 versiert (kommuniziert per Spracheingabe, oft mit Transkriptionsfehlern) —
 siehe Abschnitt 8 für Hinweise zur Zusammenarbeit.
 
-Abgedeckte Lebensbereiche (jeder mit eigenem Plan/Protokoll):
-
-- **Schlaf**, **Hydration**, **Ernährung**, **Training**, **Gewohnheiten**,
-  **Supplemente**, **Medikamente/Hormone**, **Peptide**
-- **Tageslicht** (⭐ neu heute) — wie viel Zeit am Tag im Freien/Tageslicht
-  verbracht wird, trackbar und planbar (Tagesziel in Minuten)
+Abgedeckte Lebensbereiche (jeder mit eigenem Plan/Protokoll): Schlaf,
+Hydration, Ernährung, Training, Gewohnheiten, Supplemente,
+Medikamente/Hormone, Peptide, Tageslicht (wie viel Zeit am Tag im
+Freien/Tageslicht verbracht wird).
 
 Darüber liegt ein **Hauptprotokoll** (Name, Startdatum, Grund/Ziel), unter
 dem alle Kategorien als **Teilprotokolle** laufen.
 
-**Der KI-Coach** (⭐ heute von einem reinen Backend-Modul zu einer
-durchgängig nutzbaren Funktion ausgebaut, siehe Abschnitt 5): Ein
-persönlich benennbarer Assistent (z. B. "Coach Acker"), der in mehreren
-Bereichen als echter Chat verfügbar ist — er fragt nach, schlägt vor, und
-legt nach Bestätigung durch die Nutzerin selbst neue Einträge an (Rezepte,
-Trainingspläne, Gewohnheiten, Supplemente, Medikamente, Ziele). Läuft
-lokal über Ollama auf dem PC der Nutzerin (privat, kostenlos), mit
-vorbereiteter Cloud-Option (Groq/Gemini) für später.
+**Der KI-Coach**: Ein persönlich benennbarer Assistent (z. B. "Coach
+Acker"), der in 8 Bereichen als echter Chat verfügbar ist — er fragt nach,
+schlägt vor, und legt nach Bestätigung durch die Nutzerin selbst neue
+Einträge an (Rezepte, Trainingspläne, Gewohnheiten, Supplemente,
+Medikamente, Ziele). **Läuft jetzt produktiv über Google Gemini** (Cloud,
+schnell, auch unterwegs auf dem Handy nutzbar) — Ollama (lokal) und Groq
+bleiben als Alternativ-Provider im Code vorbereitet, aber Gemini ist der
+aktuell konfigurierte und bestätigt funktionierende Weg. Der Trigger ist
+ein animierter Coach-Orb statt eines Text-Buttons — Tippen öffnet den Chat
+und startet direkt die Spracherkennung.
 
 ---
 
@@ -42,12 +42,15 @@ vorbereiteter Cloud-Option (Groq/Gemini) für später.
   trotz `@types/react` in devDependencies — reine Editor-Hilfe).
 - **Backend/Datenbank:** Supabase (Postgres, Auth, Storage, Row Level
   Security, Edge Functions in Deno/TypeScript).
-- **Hosting:** **Vercel**, Live-URL **`https://myprotocolsapp.vercel.app`**
-  (heute mehrfach bestätigt). Automatischer Rebuild bei jedem Push auf
-  `main` — reine Environment-Variable-Änderungen lösen KEIN automatisches
-  Rebuild aus, dafür braucht es manuell "Redeploy" im Vercel-Dashboard.
-- **KI:** Lokales Ollama auf dem Windows-PC der Nutzerin (Modell aktuell:
-  `qwen2.5:7b`), angebunden über `src/services/` (siehe Abschnitt 5).
+- **Hosting:** **Vercel**, Live-URL **`https://myprotocolsapp.vercel.app`**.
+  Automatischer Rebuild bei jedem Push auf `main` — reine
+  Environment-Variable-Änderungen lösen KEIN automatisches Rebuild aus,
+  dafür braucht es manuell "Redeploy" im Vercel-Dashboard.
+- **KI:** **Google Gemini** (Modell `gemini-3.6-flash` — Vorsicht:
+  Gemini-Modellnamen werden von Google regelmäßig abgeschaltet, siehe
+  Abschnitt 5 „Modell-Fallstrick"), angebunden über einen sicheren
+  Supabase-Edge-Function-Proxy. Alternativ verfügbar, aber nicht aktiv
+  konfiguriert: Ollama (lokal, `qwen2.5:7b`) und Groq (Cloud).
 - **Supabase-Projekt-Ref:** `xdajxswaclukstteafnk`.
 
 ---
@@ -59,76 +62,74 @@ vorbereiteter Cloud-Option (Groq/Gemini) für später.
 ```
 src/
 ├── views/                        Haupt-Seiten
-│   ├── HomeView.jsx               Startseite, Mini-Widgets, ADHS-Modus, ⭐ globaler Coach-Knopf
-│   ├── TageslichtView.jsx         ⭐ NEU
+│   ├── HomeView.jsx               Startseite, Mini-Widgets, ADHS-Modus, Coach-Orb
+│   ├── TageslichtView.jsx
 │   ├── HydrationView.jsx, NutritionView.jsx, TrainingView.jsx,
 │   │   GewohnheitenView.jsx, SupplementeView.jsx, MedikamenteView.jsx
-│   │   → alle ⭐ heute um eine KiChat-Coach-Karte erweitert (siehe Abschnitt 5)
-│   ├── onboarding/                Onboarding-Flow (Ist-Zustand-Fragen, Kategorien-Setup)
-│   └── plan/                      PlaeneView (Tab-Hub für alle Kategorien), MehrTab (KI-Coach-Test + Coach-Name)
+│   │   → alle mit Coach-Orb (KiChat) erweitert
+│   ├── onboarding/                Onboarding-Flow
+│   └── plan/                      PlaeneView (Tab-Hub), MehrTab (Coach-Name-Einstellung)
 ├── ui/
 │   ├── primitives.jsx             Card, Label, TextInput, TextArea, PrimaryButton, Pill, ...
-│   ├── KiChat.jsx                 ⭐ NEU: wiederverwendbare Chat-Oberfläche für den KI-Coach
-│   ├── HydrationErinnerungenCard.jsx, WochenplanEditor.jsx, TimeWheelField.jsx, ...
+│   ├── ViewHeader.jsx             ⭐ NEU: einheitliche Kopfzeile (Home-Button + Logo) für alle Screens
+│   ├── CoachOrb.jsx               ⭐ NEU: animierte Kreis-Grafik, reagiert auf Coach-Gesprächszustand
+│   ├── KiChat.jsx                 Wiederverwendbare Chat-Oberfläche, jetzt als Orb-Trigger + Bottom-Sheet-Modal
+│   ├── Fab.jsx                    "+"-Button, jetzt oben rechts (war: unten mittig)
 ├── services/
-│   ├── aiProviders.js             Low-Level: Ollama/Groq/Gemini, Mehrfach-Turn-Gespräche (messages statt einzelner prompt)
-│   └── aiService.js               Domänenfunktionen (siehe Abschnitt 5 für die vollständige Liste)
+│   ├── aiProviders.js             Low-Level: Ollama/Groq/Gemini, inkl. Streaming, sicherer Edge-Function-Weg
+│   └── aiService.js               Domänenfunktionen (siehe Abschnitt 5)
 ├── utils/
-│   ├── coachStorage.js            ⭐ NEU: localStorage für den gewählten Coach-Namen
-│   ├── dayItems.js                buildDayItems() + KATEGORIE_META (inkl. ⭐ tageslicht)
-│   ├── kalorien.js                Mifflin-St-Jeor
-├── context/AppDataContext.jsx     Zentrale Datenverwaltung — kombiniert ALLE data/use*.js-Hooks (inkl. ⭐ useTageslichtData)
-└── constants.js                   TRAININGSARTEN, WOCHENTAGE, PLAENE_TABS (inkl. ⭐ tageslicht), ...
+│   ├── coachStorage.js            localStorage für Coach-Namen + Vorlesen-Einstellung
+│   ├── speech.js                  Web Speech API (Mikrofon + Vorlesen)
+├── context/AppDataContext.jsx     Zentrale Datenverwaltung — kombiniert alle data/use*.js-Hooks
+supabase/functions/
+├── groq-chat/index.ts             Sicherer Groq-Proxy (Key nur serverseitig) — deployt, aber nicht aktiv genutzt
+├── gemini-chat/index.ts           Sicherer Gemini-Proxy — ⭐ AKTIV, siehe Abschnitt 5 für die reale Deploy-Adresse
 ```
 
-### Datenbank — neue Tabellen seit der letzten Fassung
+### Design-System
 
-`tageslicht_logs` (datum, minuten pro Tag), `tageslicht_settings`
-(ziel_minuten, Standard 30) — Migration `0033_tageslicht.sql`, gleicher
-Aufbau wie `hydration_logs`/`hydration_settings`.
+Kein CSS-Framework — plain CSS (`src/index.css`, v. a. `@keyframes`) +
+Design-Tokens aus `src/ui/theme.js` (`accent`, `accentDark`, `cardBorder`,
+...), eingebunden über inline `style={{...}}`-Objekte. **Immer** Farben aus
+`theme.js` importieren, nie Hex-Werte direkt schreiben.
 
-### Design-Bereinigung (heute)
-
-14 Dateien (Onboarding + einige ältere Views: Login, Welcome, Peptide,
-Medikamente, GraceDayCard, QuickTaskList, LaborwerteCard,
-WoechentlicheCheckinsCard) verwendeten noch fest codierte Farben aus einer
-älteren Palette (`#0FB8A3` Teal, `#E5E7EB` Grau) statt der aktuellen
-`theme.js`-Token (`accent`, `cardBorder`). Jetzt überall vereinheitlicht —
-falls in Zukunft neue Komponenten entstehen: **immer** Farben aus
-`src/ui/theme.js` importieren, nie Hex-Werte direkt in den Style schreiben.
+Der Home-Button war früher ~19-fach einzeln pro Screen kopiert — jetzt
+über `src/ui/ViewHeader.jsx` vereinheitlicht (Home-Button links neben dem
+Logo, größer als vorher). Bei neuen Screens **immer** `ViewHeader` nutzen,
+nicht wieder einen eigenen Header-Block bauen.
 
 ---
 
-## 4. Was wurde in dieser Session-Reihe verändert? (chronologisch nach Thema)
+## 4. Was wurde in dieser Session-Reihe verändert? (chronologisch)
 
-*(Punkte 1–9 stammen vom Vormittag desselben Tages, siehe vorherige
-Protokoll-Fassung für Details — hier nur die Überschriften. Ab Punkt 10
-neu seit dem Nachmittag.)*
+*(Punkte 1–17 aus früheren Fassungen, siehe Git-Historie für Details. Ab
+Punkt 18 neu seit der letzten Protokoll-Fassung.)*
 
-1. Branch-Divergenz-Bereinigung
-2. Trainings-Onboarding neu gebaut (Mehrfach-Einheiten pro Wochentag)
-3. Zeit-Eingabe vereinheitlicht (natives `<input type="time">`)
-4. Mini-Widgets repariert & erweitert (immer sichtbar, grau wenn ungenutzt)
-5. Alte Formulardaten beim Onboarding geleert (`frisch`-Prop-Muster)
-6. Kalorien-/Grundumsatz-Berechnung (Mifflin-St-Jeor)
-7. Server-seitiges Push-Erinnerungssystem für Hydration (Edge Function + pg_cron)
-8. Hydration-Erinnerungs-UI vereinheitlicht (geteilte Komponente, Datum+Speichern-Button)
-9. Ist-Zustand-Fragen im Onboarding (Schlaf/Hydration/Ernährung/Training/Gewohnheiten) + Detailanzeige auf Abschluss-Screen
-10. **KI-Coach-Servicemodul angelegt** (`src/services/aiProviders.js` + `aiService.js`) — Ollama/Groq/Gemini-Anbindung, austauschbar über `VITE_AI_PROVIDER`-ENV-Variable. Erste Testfunktion `morgenImpuls()` im Mehr-Tab.
-11. **Coach-Name/Persona**: localStorage-Speicher (`utils/coachStorage.js`), einstellbar im Mehr-Tab, wird in jede KI-Anfrage als Rollenbeschreibung eingebettet.
-12. **Design-Bereinigung** (siehe Abschnitt 3).
-13. **Neuer Lebensbereich Tageslicht** (siehe Abschnitt 3) — DB, Hook, View, Onboarding-Schritt, Mini-Widget, Navigation.
-14. **Echte Chat-Funktion statt Einmal-Vorschlag**: `aiProviders.js`/`sendeAnfrage()` von einzelnem `prompt` auf vollen Gesprächsverlauf (`messages`) umgestellt — das Modell kann sich jetzt an frühere Antworten halten. Neue wiederverwendbare Komponente `ui/KiChat.jsx` (Chat-Verlauf, Eingabefeld, optionaler "Übernehmen"-Knopf mit Ergebnisanzeige).
-15. **KiChat in sieben Bereichen eingebaut** — überall nach demselben sicheren Muster: frei mit dem Coach reden/nachfragen lassen, erst nach explizitem "Übernehmen"-Tap wird wirklich gespeichert:
-    - **Training**: Trainingsplan besprechen → Einheiten in den Wochenplan übernehmen.
-    - **Gewohnheiten**: neue Gewohnheit besprechen (Uhrzeit/Zeitfenster, Menge, Zieltage) → anlegen.
-    - **Ernährung**: Rezeptvorschläge besprechen (kennt KFA/Gewicht/Kalorienziel automatisch) → als Mahlzeiten anlegen.
-    - **Hydration**: Tagesziel + Erinnerungszeiten besprechen → Ziel setzen, neue Zeiten an bestehende anhängen.
-    - **Tageslicht**: Tagesziel besprechen → setzen.
-    - **Supplemente**: neues Supplement besprechen (Tageszeiten, Hinweis) → anlegen.
-    - **Medikamente**: neues Medikament/Hormon besprechen (volle Dosierungslogik: Menge, Kategorie, Einnahmeart, Intervall, Uhrzeiten) → anlegen.
-16. **Globaler Coach-Zugang auf der Startseite**: neuer Knopf direkt unter der Begrüßung in `HomeView.jsx` — öffnet denselben Chat, beantwortet allgemeine Fragen und kann (wie im Gewohnheiten-Bereich) direkt neue Gewohnheiten anlegen.
-17. **Ollama übers Internet erreichbar gemacht** (Cloudflare Quick Tunnel, siehe Abschnitt 5) — die Nutzerin kann den KI-Coach jetzt auch vom Handy/Tablet aus nutzen, nicht nur auf dem PC, auf dem Ollama läuft.
+18. **Performance-Fixes**: N+1-Query-Bug beim Dosis-Speichern (Peptide,
+    Hormone/Medikamente) behoben — mehrere `.update()`-Aufrufe pro Feld zu
+    einem einzigen Batch-Update zusammengefasst (`setDoseBatch`,
+    `setHormonDoseBatch`). Sequenzielle `await`-Schleifen durch
+    `Promise.all` ersetzt (Mahlzeiten-Bearbeitung, Ernährungsplan-Übernahme).
+    Redundante `buildDayItems()`-Berechnung in `HomeView.jsx` (lief 21×
+    statt 7× pro Render) auf eine gemeinsame Berechnung reduziert.
+19. **Echtes Streaming** für Ollama (NDJSON) und jetzt auch **Gemini**
+    (Server-Sent Events über `streamGenerateContent`) — Coach-Antworten
+    erscheinen wortweise live statt am Stück. Groq streamt noch nicht
+    (kommt als Volltext zurück).
+20. **Sicherer Cloud-KI-Weg statt nur lokalem Ollama**: Neue Supabase Edge
+    Functions `groq-chat` und `gemini-chat` — der echte API-Key liegt nur
+    serverseitig als Supabase-Secret, landet nie im Browser-Code. Ohne
+    gesetzten `VITE_AI_API_KEY` läuft die Anfrage automatisch über die
+    Edge Function (sicherer Normalweg); mit gesetztem Key ginge sie direkt
+    aus dem Browser (schneller Testweg, aber Key wäre sichtbar — aktuell
+    NICHT genutzt, `gemini-chat` läuft im sicheren Modus).
+21. **Design-Umbau**: `ViewHeader.jsx` (Home-Button vereinheitlicht, siehe
+    Abschnitt 3), `Fab.jsx` (Plus-Button von unten-mittig nach oben-rechts),
+    `CoachOrb.jsx` (animierte Kreis-Grafik als Coach-Trigger in allen 8
+    Bereichen, ersetzt statischen Text-Button). `KiChat.jsx` übernimmt jetzt
+    selbst das Öffnen/Schließen als Bottom-Sheet-Modal — Tap auf den Orb
+    öffnet den Chat UND startet direkt die Spracherkennung.
 
 ---
 
@@ -136,19 +137,26 @@ neu seit dem Nachmittag.)*
 
 ### Architektur
 
-- `src/services/aiProviders.js` — Low-Level-Transport. `sendeAnfrage({system, messages, json})` nimmt den **vollen Gesprächsverlauf** entgegen (nicht nur die letzte Nachricht), einheitlich für alle drei Provider (Ollama `/api/chat`, Groq OpenAI-kompatibel, Gemini mit eigenem `contents`-Format). Provider-Wahl über `VITE_AI_PROVIDER`, Modell über `VITE_AI_MODEL`, Basis-URL über `VITE_AI_BASE_URL` (alle als Vercel-Environment-Variablen gesetzt).
-- `src/services/aiService.js` — Domänenfunktionen, alle nutzen `mitPersona(coachName, rollenbeschreibung)` um den gewählten Coach-Namen einzubetten:
-  - `morgenImpuls()` — Fließtext-Morgenimpuls (Testfunktion im Mehr-Tab).
-  - `coachChat({systemPrompt, verlauf, coachName})` — generischer freier Chat-Turn, von `KiChat.jsx` intern genutzt.
-  - Pro Bereich ein Funktionspaar **„…Vorschlag/…AusChat"**: `trainingsplanAusChat`, `ernaehrungsplanAusChat`, `gewohnheitAusChat`, `hydrationAusChat`, `tageslichtAusChat`, `supplementAusChat`, `medikamentAusChat` — nehmen jeweils den Gesprächsverlauf entgegen und liefern strukturiertes JSON **im exakten Format**, das die jeweilige `…Hinzufuegen()`/`…Setzen()`-Funktion aus `AppDataContext` erwartet.
-- `src/ui/KiChat.jsx` — wiederverwendbare Chat-Oberfläche (Props: `systemPrompt`, `einleitung`, `onUebernehmen`, `uebernehmenLabel`, `renderErgebnis`). Zwei Phasen bewusst getrennt: frei reden (Fließtext) vs. auf Tap strukturiert zusammenfassen (JSON) — vermeidet, dass das Modell mitten im Gespräch zwischen beidem hin- und herspringen muss.
-- `src/utils/coachStorage.js` — Coach-Name nur in localStorage, kein Server-Roundtrip.
+- `src/services/aiProviders.js` — Low-Level-Transport, drei Provider
+  (Ollama/Groq/Gemini) über `VITE_AI_PROVIDER` wählbar. `sendeAnfrage()`
+  für normale Anfragen, `sendeAnfrageStreamend()` für Wort-für-Wort-Antworten
+  (Ollama + Gemini haben echtes Streaming, Groq noch nicht). Bei
+  Groq/Gemini: ohne `VITE_AI_API_KEY` läuft die Anfrage automatisch über
+  die passende Supabase Edge Function.
+- `src/services/aiService.js` — Domänenfunktionen (`coachChatStreamend`,
+  `trainingsplanAusChat`, `ernaehrungsplanAusChat`, `gewohnheitAusChat`,
+  `hydrationAusChat`, `tageslichtAusChat`, `supplementAusChat`,
+  `medikamentAusChat`), alle nutzen `mitPersona()` für den Coach-Namen.
+- `src/ui/KiChat.jsx` — geschlossen: zeigt nur `CoachOrb` + "{Name} fragen"
+  als Trigger-Zeile. Offen: Bottom-Sheet-Modal mit Chat-Verlauf,
+  Mikrofon/Texteingabe, optionalem "Übernehmen"-Knopf. Tap auf den
+  geschlossenen Orb startet automatisch die Spracherkennung.
 
-### Wo der Coach heute überall verfügbar ist
+### Wo der Coach heute verfügbar ist
 
-Home (global), Training, Gewohnheiten, Ernährung, Hydration, Tageslicht,
+Home, Training, Gewohnheiten, Ernährung, Hydration, Tageslicht,
 Supplemente, Medikamente. **Noch nicht:** Schlaf, Peptide, Onboarding
-selbst (siehe Abschnitt 6).
+selbst.
 
 ### Sicherheitsmodell (bewusste Entscheidung, bitte beibehalten)
 
@@ -157,32 +165,49 @@ läuft über: (1) frei chatten, (2) Nutzerin tippt explizit auf einen
 "Übernehmen/Anlegen/Setzen"-Knopf, (3) erst dann wird über die ganz normale
 App-Funktion (dieselbe, die auch das manuelle Formular aufruft)
 gespeichert. Kein direkter Datenbankzugriff durch die KI, kein
-Code-Zugriff. Die Nutzerin hat das explizit so gewünscht ("kein
-uneingeschränkter Zugriff, aber er soll die Funktionen nutzen können, die
-ich als Nutzerin auch nutze").
+Code-Zugriff.
 
-### Ollama-Erreichbarkeit — drei mögliche Zustände
+### ⚠️ Gemini-Setup — wichtige Fallstricke für die Zukunft
 
-1. **Nur lokal** (`VITE_AI_BASE_URL` nicht gesetzt, Standard
-   `http://localhost:11434`): funktioniert nur, wenn die Live-Seite auf
-   demselben Computer geöffnet wird, auf dem Ollama läuft.
-2. **Heimnetz** (nicht umgesetzt, nur besprochen): Ollama im selben WLAN
-   erreichbar machen, für andere Geräte der Nutzerin zuhause.
-3. **Cloudflare Quick Tunnel** (⭐ heute umgesetzt, aktueller Zustand):
-   `cloudflared tunnel --url http://localhost:11434` auf dem PC gestartet,
-   erzeugt eine öffentliche, zufällige `*.trycloudflare.com`-Adresse, in
-   Vercel als `VITE_AI_BASE_URL` hinterlegt. **Wichtige Einschränkungen:**
-   - Die Adresse ist **nicht dauerhaft** — bei jedem Neustart des
-     `cloudflared`-Befehls (oder PC-Neustart) entsteht eine neue Adresse,
-     die dann erneut in Vercel eingetragen und redeployt werden muss.
-   - Das cmd-Fenster mit `cloudflared` muss die ganze Zeit offen/laufend
-     bleiben, sonst ist die Adresse tot.
-   - Ollama selbst hat **kein eingebautes Passwort** — die Nutzerin hat
-     das Sicherheitsrisiko bewusst und ausdrücklich in Kauf genommen
-     ("vorübergehend unsicher, kümmere mich später darum") — falls das
-     Thema wieder aufkommt: sie wollte KEINE Portfreigabe am Router,
-     sondern genau diesen Tunnel-Ansatz, weil er die Heim-IP nicht direkt
-     offenlegt.
+1. **Edge-Function-Adresse ist NICHT `gemini-chat`, sondern
+   `clever-worker`.** Beim erstmaligen Deployen über den
+   Supabase-Browser-Editor ("Via Editor") vergibt Supabase automatisch
+   einen zufälligen Slug (Teil der URL) — dieser lässt sich über die
+   Supabase-Oberfläche **im Nachhinein nicht mehr umbenennen**. Das
+   "Name"-Feld in den Function-Settings ändert nur die Anzeige, nicht die
+   echte Adresse. Der Code in `aiProviders.js` ruft deshalb bewusst
+   `.../functions/v1/clever-worker` auf (Konstante
+   `GEMINI_EDGE_FUNCTION_SLUG`), obwohl die Quelldatei weiterhin unter
+   `supabase/functions/gemini-chat/index.ts` liegt. **Falls die Funktion
+   irgendwann sauber unter dem Namen `gemini-chat` neu deployt wird**
+   (z. B. per CLI, wo der Name frei wählbar ist), muss diese Konstante
+   angepasst werden.
+2. **Gemini-Modellnamen veralten schnell.** `gemini-2.5-flash` (ursprünglich
+   empfohlen) war zum Testzeitpunkt bereits für neue Nutzer abgeschaltet.
+   Aktuell konfiguriert: `gemini-3.6-flash`. Bei einem erneuten "model not
+   found"-Fehler: aktuelle Modellliste unter
+   `ai.google.dev/gemini-api/docs/latest-model` prüfen (Web-Suche nutzen,
+   nicht raten — die Modellgenerationen wechseln offenbar im
+   Monats-/Quartalstakt).
+3. **`GEMINI_API_KEY` ist ein Supabase-Secret, keine Vercel-Variable** —
+   liegt unter Supabase Dashboard → Edge Functions → Secrets. Leicht zu
+   verwechseln, da die restlichen `VITE_*`-Variablen bei Vercel liegen.
+4. **`VITE_AI_MODEL`/`VITE_AI_PROVIDER` bei Vercel ändern reicht allein
+   nicht** — Vite bäckt diese Variablen beim Build ein, nicht zur
+   Laufzeit. Nach jeder Änderung braucht es einen manuellen Redeploy.
+
+### Ollama/Groq — weiterhin im Code, aktuell nicht die aktive Konfiguration
+
+- **Ollama**: lokal über Cloudflare Quick Tunnel erreichbar gemacht
+  (`cloudflared tunnel --url http://localhost:11434`), Adresse ist
+  **ephemeral** (ändert sich bei jedem Neustart des Tunnels/PCs). Kein
+  Passwort auf Ollama — bewusst akzeptiertes, vorübergehendes
+  Sicherheitsrisiko der Nutzerin.
+- **Groq**: `supabase/functions/groq-chat/index.ts` ist deployt-fertig im
+  Code, aber die Nutzerin kam nicht an einen Groq-API-Key (GitHub/Apple-
+  Signup-Probleme) — Gemini wurde stattdessen genutzt. Falls Groq später
+  doch gewünscht wird: Code ist fertig, nur Key besorgen + Secret setzen +
+  `VITE_AI_PROVIDER=groq` setzen.
 
 ---
 
@@ -190,32 +215,29 @@ ich als Nutzerin auch nutze").
 
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
-| 1 | Weitere Bereiche für KiChat (Schlaf, Peptide) | Noch nicht umgesetzt | Nach demselben Muster wie die 7 bestehenden Bereiche, bei Bedarf |
-| 2 | KI-geführte Onboarding-Konversation (Coach stellt sich direkt nach Namenseingabe vor, begleitet Schritt für Schritt) | Bewusst zurückgestellt — größter Einzel-Umbau, verändert die Architektur des Einstiegs-Flows | Nur nach explizitem Auftrag angehen, eigene Sitzung dafür einplanen |
-| 3 | Cloudflare-Tunnel-Adresse ist ephemeral | Bekannte Einschränkung, kein Bug | Falls die Nutzerin dauerhaften Zugriff will: benannter Cloudflare Tunnel (Konto nötig) oder Umstieg auf Cloud-Provider (Groq) besprechen |
-| 4 | Sicherheit des KI-Zugriffs (kein Passwort auf Ollama) | Von der Nutzerin bewusst und ausdrücklich zurückgestellt | Nur ansprechen, wenn sie selbst das Thema wieder aufbringt — nicht von sich aus mahnen, sie weiß es |
-| 5 | `send-due-reminders` Edge Function mit `startDatum`-Unterstützung neu deployen | Unklar, ob inzwischen erledigt (letzter bekannter Stand: nein) | Bei Gelegenheit nachfragen/prüfen |
-| 6 | Push-Erinnerungen auf andere Kategorien ausweiten | Von der Nutzerin bewusst zurückgestellt | Nur nach explizitem Wunsch |
-| 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Technisch erklärt (aktuell: nur 1 Person kann den Live-KI-Zugriff nutzen, das ist die Nutzerin selbst über ihren PC) — Coach-Name/Persona-Feature ist der Teil davon, der schon funktioniert | Bei Bedarf: Umstieg auf Cloud-Provider oder dauerhaften Tunnel für echten Mehrnutzer-Betrieb besprechen |
+| 1 | Weitere Bereiche für KiChat (Schlaf, Peptide) | Noch nicht umgesetzt | Nach demselben Muster wie die 8 bestehenden Bereiche, bei Bedarf |
+| 2 | KI-geführte Onboarding-Konversation | Bewusst zurückgestellt — größter Einzel-Umbau | Nur nach explizitem Auftrag, eigene Sitzung einplanen |
+| 3 | Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen | Funktioniert wie es ist, aber unschöner Name/Slug-Mismatch | Nur bei Gelegenheit, z. B. via Supabase CLI statt Browser-Editor — danach `GEMINI_EDGE_FUNCTION_SLUG` in `aiProviders.js` zurückändern |
+| 4 | Groq als Provider aktivieren | Code fertig, aber kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
+| 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Bekannte Einschränkung, aktuell nicht aktiv genutzt (Gemini läuft) | Nur relevant, falls wieder auf Ollama gewechselt wird |
+| 6 | Groq-Streaming | Noch nicht implementiert (nur Ollama + Gemini) | Bei Bedarf, gleiches Muster wie Gemini-SSE-Streaming übernehmen |
+| 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Mit Gemini technisch näher (Cloud statt Ein-PC-Ollama), aber noch nicht umgesetzt | Bei Bedarf besprechen |
+| 8 | Plus-Button erscheint auf allen Screens, nicht nur Home | Bewusste Vereinfachung (ein globaler Button), Nutzerin hat das nicht explizit anders gewünscht | Nur ändern, falls sie das ausdrücklich anders will |
 
 ---
 
-## 7. Ziele / Gesamtvision (aktualisiert)
+## 7. Ziele / Gesamtvision (unverändert)
 
 - ADHS-freundliche, reizarme App zur Verwaltung komplexer
   Gesundheitsprotokolle — Notfallmodus für überforderte Tage.
 - Ist-Zustand + Zielzustand sauber trennen und sichtbar machen.
-- Hinweise auf künftige Monetarisierungs-/Freischaltungsstufen (immer
-  alle Widgets sichtbar, grau wenn nicht eingerichtet).
-- **KI-Coach als Ersatz für einen klassischen Online-Coach**: Die Nutzerin
-  möchte, dass Nutzer nicht selbst aufwendige Formulare/Pläne ausfüllen
-  müssen, sondern sich mit einem persönlich benannten Coach ("digitaler
-  Mitarbeiter") unterhalten, der die Arbeit im Hintergrund erledigt — genau
-  das ist mit dem KiChat-Muster (Abschnitt 5) die Grundlage dafür, jetzt in
-  7 Bereichen umgesetzt, erweiterbar auf den Rest der App.
-- Langfristig denkbar: der Coach führt komplett durchs Onboarding (siehe
-  offener Punkt 2), und/oder mehrere echte Nutzer bekommen jeweils eigene,
-  zuverlässig erreichbare Coach-Instanzen (siehe offener Punkt 7).
+- **KI-Coach als Ersatz für einen klassischen Online-Coach**: Nutzerin
+  möchte sich mit einem persönlich benannten Coach unterhalten, der die
+  Arbeit im Hintergrund erledigt, statt selbst Formulare auszufüllen —
+  jetzt in 8 Bereichen umgesetzt, mit Cloud-KI (Gemini) auch unterwegs
+  nutzbar.
+- Langfristig denkbar: Coach führt komplett durchs Onboarding, und/oder
+  mehrere echte Nutzer bekommen jeweils eigene Coach-Instanzen.
 
 ---
 
@@ -223,32 +245,33 @@ ich als Nutzerin auch nutze").
 
 - **Die Nutzerin ist nicht technisch versiert**, spricht oft per
   Spracherkennung — Transkriptionsfehler bei Fachbegriffen sind normal
-  (Beispiele: "Obama" = Ollama, "Nettify" = Netlify, "cloudflare tunnel"
-  wurde korrekt verstanden nachdem konkrete Copy-Paste-Befehle gegeben
-  wurden). Bei Screenshots/Fotos von Bildschirmen: genau hinschauen, oft
-  liegt der Fehler an einer kleinen Verwechslung (z. B. `https://` statt
-  `http://` bei lokalen Diensten), nicht an grundsätzlichem Unverständnis.
+  (Beispiele: "Obama" = Ollama, "Grow"/"Growth" = Groq). Bei
+  Screenshots/Fotos von Bildschirmen: genau hinschauen, oft liegt der
+  Fehler an einer kleinen Verwechslung, nicht an grundsätzlichem
+  Unverständnis.
+- **Dashboards (Supabase/Vercel) können täuschen**: ein angezeigtes
+  "Name"-Feld ist nicht zwangsläufig die echte Adresse/der echte Slug —
+  siehe Abschnitt 5, Gemini-Fallstrick #1. Im Zweifel selbst über die
+  Screenshots nachvollziehen, was technisch wirklich passiert, nicht nur
+  was die UI suggeriert.
+- **Eigene Sandbox hat keinen Netzwerkzugriff nach außen** (Supabase,
+  Vercel, etc. sind blockiert — bestätigt über `curl` + 403 von der
+  Proxy-Policy). Live-Verifikation von Deployments/Endpunkten ist nur über
+  Screenshots der Nutzerin möglich, nicht selbst per `curl`/Browser-Test.
+  Ehrlich kommunizieren statt es wiederholt zu versuchen.
 - **Alles außerhalb von Code sehr kleinschrittig erklären** — echte
   Klick-für-Klick-Anleitungen, keine Fachbegriffe ohne Erklärung.
-- **Keine Infrastruktur-Fakten erfinden** — Hosting-URL, Konten-Zugänge
-  etc. stehen nicht im Code, im Zweifel nachfragen/verifizieren lassen statt
-  zu vermuten.
+- **Keine Infrastruktur-Fakten erfinden** — Hosting-URL, Konten-Zugänge,
+  Modellnamen etc. im Zweifel per Web-Suche verifizieren statt zu raten
+  (siehe Gemini-Modell-Fallstrick, Abschnitt 5).
 - **Git-Workflow:** Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`,
-  NICHT direkt auf `main` arbeiten. Merge/Push nach `main` erst nach
-  Freigabe der Nutzerin — sie hat das heute mehrfach pauschal für
-  "weiterarbeiten, bis das Kontingent aufgebraucht ist" erteilt, das gilt
-  aber nur für diese eine Sitzung, nicht automatisch für künftige.
-- **Große Anfragen kommen oft gebündelt** (mehrere Wünsche in einer
-  Nachricht) — beim Umsetzen: klar priorisieren, ehrlich sagen was heute
-  geht und was nicht, lieber weniger sauber fertigstellen als alles
-  gleichzeitig halb bauen.
+  NICHT direkt auf `main` arbeiten, dann fetch+fast-forward-merge+push nach
+  `main` (in dieser Session-Reihe wiederholt so autorisiert).
 - **Dieses Dokument aktuell halten** — bei nächster Gelegenheit neu
   schreiben (nicht nur ergänzen), sobald sich wieder viel verändert hat.
 
 ---
 
-**Letzte Aktualisierung:** 27.07.2026, Nachmittag/Abend — Nutzerin hat
-angewiesen, autonom weiterzuarbeiten ("bis unser Nutzungskontingent
-aufgebraucht ist"). Nächster sinnvoller Ansatzpunkt beim nächsten Gespräch:
-offene Punkte in Abschnitt 6 durchgehen, insbesondere prüfen ob der
-Cloudflare-Tunnel noch läuft (Adresse ändert sich bei Neustart).
+**Letzte Aktualisierung:** 27.07.2026, Abend — Gemini-Coach bestätigt
+funktionsfähig (Nutzerin: "Es funktioniert, der Coach antwortet"). Nächster
+sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6 durchgehen.
