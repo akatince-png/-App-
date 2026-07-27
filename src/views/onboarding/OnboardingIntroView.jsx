@@ -5,19 +5,23 @@ import Logo from "../../ui/Logo";
 import Icon from "../../ui/Icon";
 import CoachOrb from "../../ui/CoachOrb";
 import OnboardingCoachGuide from "./OnboardingCoachGuide";
+import OnboardingCoachFreitext from "./OnboardingCoachFreitext";
 import { getCoachName } from "../../utils/coachStorage";
 import { useT } from "../../i18n/translate";
 
 /**
- * OnboardingIntroView: Persönliche Begrüßung, danach die Wahl zwischen
- * Coach-Begleitung (Felder werden einzeln abgefragt, siehe
- * OnboardingCoachGuide.jsx) oder dem bisherigen manuellen Formular. Bei
- * Begleitung deckt der Guide direkt auch die Ziele- und Profil-Schritte mit
- * ab — OnboardingFlow.jsx überspringt diese Phasen dann.
+ * OnboardingIntroView: Persönliche Begrüßung, danach die Wahl zwischen zwei
+ * Coach-Begleitungs-Varianten oder dem bisherigen manuellen Formular:
+ * - "begleitet-schritt" (Phase 1): Felder werden einzeln abgefragt, siehe
+ *   OnboardingCoachGuide.jsx.
+ * - "begleitet-frei" (Phase 2): freies Erzählen, der Coach ordnet danach
+ *   automatisch zu, siehe OnboardingCoachFreitext.jsx.
+ * Beide decken direkt auch die Ziele- und Profil-Schritte mit ab —
+ * OnboardingFlow.jsx überspringt diese Phasen dann.
  */
 export default function OnboardingIntroView({ onDone, onCancel }) {
   const { t } = useT();
-  const [modus, setModus] = useState(null); // null (Frage noch offen) | "manuell" | "begleitet"
+  const [modus, setModus] = useState(null); // null (Frage noch offen) | "manuell" | "begleitet-schritt" | "begleitet-frei"
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const coachName = getCoachName();
@@ -37,8 +41,12 @@ export default function OnboardingIntroView({ onDone, onCancel }) {
     onDone();
   };
 
-  if (modus === "begleitet") {
+  if (modus === "begleitet-schritt") {
     return <OnboardingCoachGuide onFertig={() => onDone({ guided: true })} />;
+  }
+
+  if (modus === "begleitet-frei") {
+    return <OnboardingCoachFreitext onFertig={() => onDone({ guided: true })} />;
   }
 
   if (modus === null) {
@@ -61,7 +69,23 @@ export default function OnboardingIntroView({ onDone, onCancel }) {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <PrimaryButton onClick={() => setModus("begleitet")}>Ja, begleite mich</PrimaryButton>
+            <PrimaryButton onClick={() => setModus("begleitet-frei")}>Ja, ich erzähl einfach frei</PrimaryButton>
+            <button
+              type="button"
+              onClick={() => setModus("begleitet-schritt")}
+              style={{
+                padding: "13px 16px",
+                borderRadius: 12,
+                border: `1px solid ${cardBorder}`,
+                background: "#fff",
+                color: textMuted,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Lieber Frage für Frage
+            </button>
             <button
               type="button"
               onClick={() => setModus("manuell")}

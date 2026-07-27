@@ -518,4 +518,38 @@ export const AIService = {
     if (typeof data.stunden !== "number") throw new Error("Unerwartetes Format: 'stunden' fehlt oder ist keine Zahl.");
     return data;
   },
+
+  /**
+   * Extrahiert aus einem frei geführten Onboarding-Gespräch (Phase 2 der
+   * Coach-Begleitung, siehe OnboardingCoachFreitext.jsx) Name, Ziele und
+   * persönliche Daten — Gegenstück zu OnboardingCoachGuide.jsx (Phase 1,
+   * feste Frage-für-Frage-Sequenz), hier antwortet die Person frei und in
+   * beliebiger Reihenfolge, die KI ordnet danach zu.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string, zieleOptionen: string[]}} params
+   * @returns {Promise<{name: string, ziele: string[], geschlecht: string, geburtsdatum: string, groesse: string, gewichtStart: string}>}
+   */
+  async onboardingAusChat({ verlauf, coachName, zieleOptionen }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der aus einem frei geführten Einrichtungsgespräch die genannten Angaben herausliest.",
+        "Fasse das vorangegangene Gespräch jetzt zusammen — nur das, was die Person tatsächlich genannt hat, nichts erfinden.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string (leer wenn nicht genannt), ' +
+          `"ziele": string[] (nur aus dieser Liste: ${zieleOptionen.join(", ")} — leeres Array wenn nichts genannt), ` +
+          '"geschlecht": "Weiblich"|"Männlich"|"Divers"|"" (leer wenn nicht genannt), ' +
+          '"geburtsdatum": string ("YYYY-MM-DD" falls genannt, sonst leer), ' +
+          '"groesse": string (Größe in cm, nur die Zahl, leer wenn nicht genannt), ' +
+          '"gewichtStart": string (Gewicht in kg, nur die Zahl, leer wenn nicht genannt) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    return parseJsonAntwort(antwort);
+  },
 };
