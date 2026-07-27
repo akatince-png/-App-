@@ -1,4 +1,4 @@
-import { sendeAnfrage } from "./aiProviders";
+import { sendeAnfrage, sendeAnfrageStreamend } from "./aiProviders";
 import { STANDARD_COACH_NAME } from "../utils/coachStorage";
 
 // KI-Coach-Modul: bündelt alle App-seitigen KI-Funktionen hinter einer
@@ -146,6 +146,21 @@ export const AIService = {
     const system = mitPersona(coachName, systemPrompt);
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
     const antwort = await sendeAnfrage({ system, messages, json: false });
+    return antwort.trim();
+  },
+
+  /**
+   * Wie coachChat(), aber ruft onTeilantwort(bisherigerText) bei jedem
+   * neuen Textstück auf (siehe sendeAnfrageStreamend()) — lässt den Chat
+   * wortweise mitschreiben statt lange still zu stehen.
+   *
+   * @param {{systemPrompt: string, verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string, onTeilantwort: (text: string) => void}} params
+   * @returns {Promise<string>}
+   */
+  async coachChatStreamend({ systemPrompt, verlauf, coachName, onTeilantwort }) {
+    const system = mitPersona(coachName, systemPrompt);
+    const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
+    const antwort = await sendeAnfrageStreamend({ system, messages, onTeilantwort });
     return antwort.trim();
   },
 

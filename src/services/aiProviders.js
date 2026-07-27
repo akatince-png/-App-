@@ -44,6 +44,25 @@ export async function sendeAnfrage({ system, messages, json = false }) {
   throw new Error(`Unbekannter VITE_AI_PROVIDER: "${PROVIDER}". Erlaubt: ollama, groq, gemini.`);
 }
 
+/**
+ * Wie sendeAnfrage(), aber ruft onTeilantwort(bisherigerText) bei jedem
+ * neuen Textstück auf, statt am Ende einmal die komplette Antwort
+ * zurückzugeben — lässt den Chat wortweise "mitschreiben" statt lange
+ * stillzustehen und dann alles auf einmal zu zeigen. Nur bei Ollama echtes
+ * Streaming (eigenes NDJSON-Format); bei Groq/Gemini kommt die Antwort
+ * (noch) am Stück, onTeilantwort wird dort einmalig mit dem Volltext
+ * aufgerufen, damit der Aufrufer nicht zwei verschiedene Codepfade braucht.
+ *
+ * @param {{system?: string, messages: Array<{role: "user"|"assistant", content: string}>, onTeilantwort: (text: string) => void}} params
+ * @returns {Promise<string>} die vollständige Antwort, wenn sie fertig ist
+ */
+export async function sendeAnfrageStreamend({ system, messages, onTeilantwort }) {
+  if (PROVIDER === "ollama") return anfrageOllamaStreamend({ system, messages, onTeilantwort });
+  const antwort = await sendeAnfrage({ system, messages, json: false });
+  onTeilantwort(antwort);
+  return antwort;
+}
+
 // ---------------------------------------------------------------------
 // Ollama — lokal, kein API-Key. Chat-Endpunkt mit optionalem JSON-Mode
 // ("format": "json" zwingt das Modell zu syntaktisch validem JSON).
@@ -63,6 +82,44 @@ async function anfrageOllama({ system, messages, json }) {
   if (!res.ok) throw new Error(`Ollama-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
   const data = await res.json();
   return data.message?.content ?? "";
+}
+
+// Ollama liefert bei "stream: true" den Text zeilenweise als NDJSON
+// (ein JSON-Objekt pro Zeile, letzte Zeile hat "done: true") statt einer
+// einzelnen Antwort — wir lesen den Response-Body deshalb selbst statt
+// res.json() zu nutzen.
+async function anfrageOllamaStreamend({ system, messages, onTeilantwort }) {
+  const res = await fetch(`${BASE_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [...(system ? [{ role: "system", content: system }] : []), ...messages],
+      stream: true,
+    }),
+  });
+  if (!res.ok || !res.body) throw new Error(`Ollama-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let volltext = "";
+  let rest = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    rest += decoder.decode(value, { stream: true });
+    const zeilen = rest.split("\n");
+    rest = zeilen.pop() ?? ""; // letzte, evtl. noch unvollständige Zeile für den nächsten Durchlauf aufheben
+    for (const zeile of zeilen) {
+      if (!zeile.trim()) continue;
+      const stueck = JSON.parse(zeile);
+      if (stueck.message?.content) {
+        volltext += stueck.message.content;
+        onTeilantwort(volltext);
+      }
+    }
+  }
+  return volltext;
 }
 
 // ---------------------------------------------------------------------

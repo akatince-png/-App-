@@ -27,6 +27,7 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
   const [ergebnis, setErgebnis] = useState(null);
   const [hoert, setHoert] = useState(false);
   const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
+  const [streamText, setStreamText] = useState("");
   const stopErkennungRef = useRef(null);
 
   // Laufende Sprachausgabe/-erkennung beenden, wenn die Karte verschwindet
@@ -48,14 +49,21 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
     setErgebnis(null);
     setLaden(true);
     setFehler(null);
+    setStreamText("");
     try {
-      const antwort = await AIService.coachChat({ systemPrompt, verlauf: neuerVerlauf, coachName: getCoachName() });
+      const antwort = await AIService.coachChatStreamend({
+        systemPrompt,
+        verlauf: neuerVerlauf,
+        coachName: getCoachName(),
+        onTeilantwort: setStreamText,
+      });
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
       if (vorlesenAktiv) sprich(antwort);
     } catch (err) {
       setFehler(err.message);
     } finally {
       setLaden(false);
+      setStreamText("");
     }
   };
 
@@ -166,7 +174,26 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
             )}
           </div>
         ))}
-        {laden && <div style={{ fontSize: 12.5, color: textMuted, alignSelf: "flex-start" }}>Frage Ollama…</div>}
+        {laden &&
+          (streamText ? (
+            <div
+              style={{
+                alignSelf: "flex-start",
+                maxWidth: "85%",
+                padding: "10px 13px",
+                borderRadius: 14,
+                background: accentSoft,
+                color: textMain,
+                fontSize: 13.5,
+                lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {streamText}
+            </div>
+          ) : (
+            <div style={{ fontSize: 12.5, color: textMuted, alignSelf: "flex-start" }}>Frage Ollama…</div>
+          ))}
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
