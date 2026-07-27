@@ -262,6 +262,22 @@ geführte Alternative für Laborwerte und die 9 Kategorien-Schritte
 deutlich vielschichtiger (Multi-Add-Muster, Dosierungs-Unterformulare,
 Foto-Upload/OCR, WochenplanEditor) und brauchen einen eigenen Anlauf.
 
+### Laborwerte-Lexikon-Verknüpfung (⭐ neu)
+
+Jeder Laborwert in `LaborwerteFelder.jsx` (ProfilTab + Onboarding-
+Biomarker-Plan) hat jetzt einen kleinen ℹ️-Knopf neben dem Namen. Klick
+darauf lädt eine kurze Erklärung über das bestehende Lexikon (eigene
+Supabase-Edge-Function `lexikon`, nutzt direkt die Anthropic-API,
+unabhängig vom eingestellten Coach-Provider Ollama/Groq/Gemini — läuft
+also immer, egal welcher KI-Anbieter gerade für den Coach aktiv ist): was
+der Wert misst, wieso er gemessen wird, seine Relevanz, und der übliche
+Referenzbereich — ausdrücklich ohne Diagnose. Antwort erscheint direkt
+unter der jeweiligen Zeile, pro Zeile eigener Lade-/Fehler-Zustand
+(`LaborwertZeile`-Komponente). Neue Hook-Funktion `lexikonSchnellFragen()`
+in `useLexikon.js`: wie die bestehende `lexikonFragen()`, aber ohne den
+geteilten Lexikon-Verlauf zu verändern — gibt die Antwort direkt zurück,
+für punktuelle Erklärungen wie diese.
+
 ### Wo der Coach heute verfügbar ist
 
 Home (universell, alle 7 Bereiche), Training, Gewohnheiten, Ernährung,

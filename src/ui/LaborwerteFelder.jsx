@@ -1,7 +1,87 @@
 import React, { useState } from "react";
 import { TextInput } from "./primitives";
-import { accentDark, cardBorder, success, textMuted } from "./theme";
+import { accentDark, accentSoft, cardBorder, danger, success, textMain, textMuted } from "./theme";
 import { LABORWERTE_ALLE, LABORWERTE_KATEGORIEN } from "../constants";
+import { useAppData } from "../context/AppDataContext";
+
+// Eine Laborwert-Zeile: Label + Info-Button (Lexikon-Erklärung, eigene, vom
+// gewählten KI-Provider unabhängige Anbindung, siehe useLexikon.js) + Eingabe.
+// Die aufgeklappte Erklärung erscheint als eigener Block unterhalb der Zeile.
+// Eigene Komponente statt Inline-Logik, damit jede Zeile ihren eigenen
+// Lade-/Antwort-Zustand hat, ohne die anderen Zeilen zu beeinflussen.
+function LaborwertZeile({ name, value, onChange, borderBottom }) {
+  const { lexikonSchnellFragen } = useAppData();
+  const [offen, setOffen] = useState(false);
+  const [laden, setLaden] = useState(false);
+  const [antwort, setAntwort] = useState(null);
+  const [fehler, setFehler] = useState(null);
+
+  const umschalten = async () => {
+    const wirdGeoeffnet = !offen;
+    setOffen(wirdGeoeffnet);
+    if (wirdGeoeffnet && antwort === null && !laden) {
+      setLaden(true);
+      setFehler(null);
+      try {
+        const text = await lexikonSchnellFragen(
+          `Erkläre den Laborwert "${name}" kurz und verständlich: was er misst, wieso er gemessen wird, welche Relevanz er hat, und in welchem Bereich er normalerweise liegen sollte. Keine Diagnose, nur allgemeine Einordnung.`,
+          "Laborwerte"
+        );
+        setAntwort(text);
+      } catch (err) {
+        setFehler(err.message || "Erklärung konnte nicht geladen werden.");
+      } finally {
+        setLaden(false);
+      }
+    }
+  };
+
+  return (
+    <div style={{ padding: "6px 0", borderBottom }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 2 }}>
+          {name}
+          <button
+            type="button"
+            onClick={umschalten}
+            title={`${name} erklären`}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: offen ? accentDark : textMuted,
+              fontSize: 14,
+              cursor: "pointer",
+              padding: "2px 4px",
+              flexShrink: 0,
+            }}
+          >
+            ℹ️
+          </button>
+        </span>
+        <div style={{ width: 100 }}>
+          <TextInput value={value} onChange={onChange} placeholder="—" />
+        </div>
+      </div>
+      {offen && (
+        <div
+          style={{
+            marginTop: 6,
+            padding: "8px 10px",
+            borderRadius: 10,
+            background: accentSoft,
+            fontSize: 12,
+            lineHeight: 1.5,
+            color: textMain,
+          }}
+        >
+          {laden && "Lädt Erklärung…"}
+          {fehler && <span style={{ color: danger }}>{fehler}</span>}
+          {antwort}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Kategorisierte, aufklappbare Laborwert-Eingabe — geteilt zwischen ProfilTab
 // (laufende Pflege, inkl. Kamera-Erfassung dort) und dem Biomarker-Plan im
@@ -72,12 +152,12 @@ export default function LaborwerteFelder({ biomarker, setBiomarkerWert, frisch =
             {offen && (
               <div style={{ padding: "2px 0 10px" }}>
                 {kat.werte.map((b) => (
-                  <div key={b} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
-                    <span style={{ fontSize: 13 }}>{b}</span>
-                    <div style={{ width: 100 }}>
-                      <TextInput value={anzeige[b] || ""} onChange={(v) => wertAendern(b, v)} placeholder="—" />
-                    </div>
-                  </div>
+                  <LaborwertZeile
+                    key={b}
+                    name={b}
+                    value={anzeige[b] || ""}
+                    onChange={(v) => wertAendern(b, v)}
+                  />
                 ))}
               </div>
             )}
@@ -89,12 +169,13 @@ export default function LaborwerteFelder({ biomarker, setBiomarkerWert, frisch =
         <>
           <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14, marginBottom: 2 }}>Eigene Werte</div>
           {eigeneWerte.map((k) => (
-            <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}` }}>
-              <span style={{ fontSize: 13 }}>{k}</span>
-              <div style={{ width: 100 }}>
-                <TextInput value={anzeige[k] || ""} onChange={(v) => wertAendern(k, v)} placeholder="—" />
-              </div>
-            </div>
+            <LaborwertZeile
+              key={k}
+              name={k}
+              value={anzeige[k] || ""}
+              onChange={(v) => wertAendern(k, v)}
+              borderBottom={`1px solid ${cardBorder}`}
+            />
           ))}
         </>
       )}
