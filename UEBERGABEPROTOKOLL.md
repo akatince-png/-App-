@@ -327,19 +327,20 @@ Code-Zugriff.
 
 ### ⚠️ Gemini-Setup — wichtige Fallstricke für die Zukunft
 
-1. **Edge-Function-Adresse ist NICHT `gemini-chat`, sondern
-   `clever-worker`.** Beim erstmaligen Deployen über den
-   Supabase-Browser-Editor ("Via Editor") vergibt Supabase automatisch
-   einen zufälligen Slug (Teil der URL) — dieser lässt sich über die
-   Supabase-Oberfläche **im Nachhinein nicht mehr umbenennen**. Das
-   "Name"-Feld in den Function-Settings ändert nur die Anzeige, nicht die
-   echte Adresse. Der Code in `aiProviders.js` ruft deshalb bewusst
-   `.../functions/v1/clever-worker` auf (Konstante
-   `GEMINI_EDGE_FUNCTION_SLUG`), obwohl die Quelldatei weiterhin unter
-   `supabase/functions/gemini-chat/index.ts` liegt. **Falls die Funktion
-   irgendwann sauber unter dem Namen `gemini-chat` neu deployt wird**
-   (z. B. per CLI, wo der Name frei wählbar ist), muss diese Konstante
-   angepasst werden.
+1. ~~Edge-Function-Adresse ist NICHT `gemini-chat`, sondern
+   `clever-worker`.~~ **Behoben (27.07., abends):** Die Funktion läuft
+   jetzt unter ihrem eigentlichen Namen `gemini-chat` (Nutzerin hat sie
+   über den Supabase-Browser-Editor neu deployt, Code aus
+   `supabase/functions/gemini-chat/index.ts`) — `GEMINI_EDGE_FUNCTION_SLUG`
+   in `aiProviders.js` entsprechend zurückgeändert. Die alte Funktion
+   `clever-worker` kann bei Gelegenheit im Dashboard gelöscht werden, ist
+   aber unschädlich, falls sie noch da ist (wird vom Code nicht mehr
+   angesprochen). Hintergrund, falls das je wieder passiert: Supabase
+   vergibt beim Deployen über den Browser-Editor ("Via Editor")
+   automatisch einen Slug (Teil der URL), der sich über die Oberfläche
+   **im Nachhinein nicht umbenennen** lässt — das "Name"-Feld in den
+   Function-Settings ändert nur die Anzeige, nicht die echte Adresse. Nur
+   ein komplettes Neu-Deployen unter dem gewünschten Namen behebt das.
 2. **Gemini-Modellnamen veralten schnell.** `gemini-2.5-flash` (ursprünglich
    empfohlen) war zum Testzeitpunkt bereits für neue Nutzer abgeschaltet.
    Aktuell konfiguriert: `gemini-3.6-flash`. Bei einem erneuten "model not
@@ -376,7 +377,7 @@ Code-Zugriff.
 | 1 | ~~Weitere Bereiche für KiChat (Schlaf, Peptide)~~ | ✅ Erledigt — alle Lebensbereiche haben jetzt einen Coach | — |
 | 2 | ~~Onboarding-Begleitung Phase 2 (freies Erzählen + automatische Feld-Zuordnung)~~ | ✅ Erledigt — neue `OnboardingCoachFreitext.jsx`, Auswahlbildschirm bietet jetzt beide Varianten | — |
 | 2b | ~~Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte~~ | ✅ Erledigt — Coach füllt Felder je Kategorie aus (Übernahme dann wie gehabt manuell bestätigen), Training/Peptide übernehmen direkt | — |
-| 3 | Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen | Funktioniert wie es ist, aber unschöner Name/Slug-Mismatch | Nur bei Gelegenheit, z. B. via Supabase CLI statt Browser-Editor — danach `GEMINI_EDGE_FUNCTION_SLUG` in `aiProviders.js` zurückändern |
+| 3 | ~~Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen~~ | ✅ Erledigt (27.07., abends) — Nutzerin hat neu deployt, Code umgestellt | — |
 | 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — Code fertig, aber kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
 | 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — bekannte Einschränkung, aktuell nicht aktiv genutzt (Gemini läuft) | Nur relevant, falls wieder auf Ollama gewechselt wird |
 | 6 | Groq-Streaming | Noch nicht implementiert (nur Ollama + Gemini) | Bei Bedarf, gleiches Muster wie Gemini-SSE-Streaming übernehmen |

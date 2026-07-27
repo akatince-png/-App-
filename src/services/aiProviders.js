@@ -186,14 +186,12 @@ async function anfrageOpenAiKompatibel({ system, messages, json }) {
 //   Supabase Edge Function (Quellcode in supabase/functions/gemini-chat/),
 //   die den echten Key nur serverseitig kennt. Braucht ein aktives Login.
 // ---------------------------------------------------------------------
-// Der über den Supabase-Browser-Editor deployte Funktions-Slug (Teil der
-// URL) wird beim allerersten Anlegen automatisch vergeben und lässt sich
-// über die Supabase-Oberfläche im Nachhinein NICHT mehr umbenennen — ein
-// späteres Ändern des angezeigten "Name"-Felds ändert nur die Anzeige,
-// nicht die tatsächliche Adresse. Deshalb hier der real deployte Slug statt
-// des ursprünglich geplanten "gemini-chat" (falls die Funktion später unter
-// dem eigentlichen Namen neu angelegt wird, hier einfach zurückändern).
-const GEMINI_EDGE_FUNCTION_SLUG = "clever-worker";
+// Läuft seit 27.07. unter ihrem eigentlichen Namen "gemini-chat" (zuvor
+// übergangsweise "clever-worker", weil der beim allerersten Anlegen über den
+// Supabase-Browser-Editor automatisch vergebene Slug sich im Nachhinein
+// nicht mehr ändern ließ — die alte Funktion wurde neu unter dem
+// gewünschten Namen deployt statt umbenannt).
+const GEMINI_EDGE_FUNCTION_SLUG = "gemini-chat";
 
 async function anfrageGemini({ system, messages, json }) {
   const payload = {
