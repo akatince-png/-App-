@@ -183,9 +183,18 @@ async function anfrageOpenAiKompatibel({ system, messages, json }) {
 // - Gesetzt (Schnellweg zum Testen): Gemini direkt aus dem Browser, Key als
 //   Query-Param — der Key ist dann im Programmcode sichtbar.
 // - Nicht gesetzt (sicherer Normalweg): Anfrage geht an die eigene
-//   Supabase Edge Function "gemini-chat", die den echten Key nur
-//   serverseitig kennt. Braucht ein aktives Login.
+//   Supabase Edge Function (Quellcode in supabase/functions/gemini-chat/),
+//   die den echten Key nur serverseitig kennt. Braucht ein aktives Login.
 // ---------------------------------------------------------------------
+// Der über den Supabase-Browser-Editor deployte Funktions-Slug (Teil der
+// URL) wird beim allerersten Anlegen automatisch vergeben und lässt sich
+// über die Supabase-Oberfläche im Nachhinein NICHT mehr umbenennen — ein
+// späteres Ändern des angezeigten "Name"-Felds ändert nur die Anzeige,
+// nicht die tatsächliche Adresse. Deshalb hier der real deployte Slug statt
+// des ursprünglich geplanten "gemini-chat" (falls die Funktion später unter
+// dem eigentlichen Namen neu angelegt wird, hier einfach zurückändern).
+const GEMINI_EDGE_FUNCTION_SLUG = "clever-worker";
+
 async function anfrageGemini({ system, messages, json }) {
   const payload = {
     contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
@@ -198,7 +207,7 @@ async function anfrageGemini({ system, messages, json }) {
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Gemini wird ein aktives Login benötigt.");
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-chat`, {
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${GEMINI_EDGE_FUNCTION_SLUG}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ model: MODEL, ...payload }),
@@ -234,7 +243,7 @@ async function anfrageGeminiStreamend({ system, messages, onTeilantwort }) {
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Gemini wird ein aktives Login benötigt.");
-    res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-chat`, {
+    res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${GEMINI_EDGE_FUNCTION_SLUG}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ model: MODEL, stream: true, ...payload }),
