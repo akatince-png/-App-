@@ -3,6 +3,16 @@
 **Stand: 27.07.2026, spät abends, Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
 > ⚠️ **Diese Fassung ergänzt die Version vom frühen Abend desselben Tages.** Seitdem: Coach heißt jetzt standardmäßig **"Aka"** mit fest vorgegebener Persönlichkeit/Antwortstruktur, neue **Wissens-Basis** (`src/wissen/`, ein Unterordner pro Lebensbereich) + Trackingdaten-Zusammenfassung laufen jetzt in JEDEM der 8 Bereiche automatisch mit (nicht mehr nur Home), und ein neuer **Coach-geführter Onboarding-Modus** (Phase 1: Felder einzeln abfragen) für Name/Ziele/Profil. Abschnitt 5 komplett neu lesen.
+>
+> ⚠️ **Nachtrag, spätnachts:** Laborwerte haben jetzt eine ℹ️-Lexikon-
+> Erklärung pro Wert, und **Schlaf + Peptide** haben jetzt auch einen Coach
+> — damit hat wirklich jeder der 8 Lebensbereiche + Home einen Coach.
+> Autonom weitergearbeitet bis hierhin (Nutzerinnen-Auftrag), dann
+> pausiert: die restlichen offenen Punkte (Tabelle Abschnitt 6) sind
+> entweder auf sie blockiert (Groq-Key, Supabase-CLI-Zugriff,
+> Kostenzusage für Cloud-TTS) oder bewusst als "braucht expliziten
+> Auftrag" markiert (Onboarding Phase 2 + geführte Laborwerte/9-
+> Kategorien-Schritte — zu vielschichtig für eine Annahme ohne Rückfrage).
 
 ---
 
