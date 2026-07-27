@@ -12,6 +12,7 @@ import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
@@ -222,14 +223,6 @@ export default function NutritionView({ onHome, embedded = false }) {
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
   const [mahlzeitError, setMahlzeitError] = useState(null);
 
-  // KI-Ernährungsplan-Vorschlag (siehe services/aiService.js) — legt
-  // vorgeschlagene Rezepte direkt als Mahlzeiten an (noch keinem Wochentag
-  // zugewiesen, das erledigt man wie bei jeder anderen Mahlzeit unten in
-  // der Liste).
-  const [kiLadend, setKiLadend] = useState(false);
-  const [kiErgebnis, setKiErgebnis] = useState(null);
-  const [kiFehler, setKiFehler] = useState(null);
-
   const toggleNeueMahlzeitWochentag = (tag) =>
     setNeueMahlzeit((prev) => ({
       ...prev,
@@ -352,31 +345,21 @@ export default function NutritionView({ onHome, embedded = false }) {
 
   const aktuellesKfa = gewichtsEintraege?.length ? gewichtsEintraege[gewichtsEintraege.length - 1].kfa : undefined;
 
-  const handleKiVorschlag = async () => {
-    setKiLadend(true);
-    setKiErgebnis(null);
-    setKiFehler(null);
-    try {
-      const rezepte = await AIService.ernaehrungsplanVorschlag({
-        kfa: aktuellesKfa || undefined,
-        gewicht: aktuellesGewicht || undefined,
-        kalorienZiel: kalorienZiel || kalorienIst || undefined,
-        coachName: getCoachName(),
+  // Übergabe an <KiChat onUebernehmen>: nimmt den Gesprächsstand (der Coach
+  // kennt dabei schon dein KFA/Gewicht/Kalorienziel aus der Einleitung),
+  // lässt daraus die finalen Rezepte extrahieren und legt sie über denselben
+  // Weg an wie das manuelle Formular (noch keinem Wochentag zugewiesen).
+  const handleErnaehrungsplanUebernehmen = async (verlauf) => {
+    const rezepte = await AIService.ernaehrungsplanAusChat({ verlauf, coachName: getCoachName() });
+    for (const rezept of rezepte) {
+      const result = await mahlzeitHinzufuegen({
+        name: rezept.name,
+        hinweis: "KI-Vorschlag",
+        zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
       });
-      for (const rezept of rezepte) {
-        const result = await mahlzeitHinzufuegen({
-          name: rezept.name,
-          hinweis: "KI-Vorschlag",
-          zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
-        });
-        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-      }
-      setKiErgebnis(rezepte);
-    } catch (err) {
-      setKiFehler(err.message);
-    } finally {
-      setKiLadend(false);
+      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
     }
+    return rezepte;
   };
 
   const zeitGruppen = Array.from(new Set(tagesEintraege.map(zeitVon)));
@@ -418,18 +401,19 @@ export default function NutritionView({ onHome, embedded = false }) {
         </Card>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 KI-Vorschlag</div>
-      <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>
-          Schlägt anhand deiner Profildaten (KFA, Gewicht, Kalorienziel) passende Rezepte vor und legt sie unten als neue Mahlzeiten an — Wochentagen musst du sie danach noch selbst zuweisen. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
-        </div>
-        <PrimaryButton onClick={handleKiVorschlag} disabled={kiLadend}>
-          {kiLadend ? "Frage Ollama…" : "Rezepte vorschlagen"}
-        </PrimaryButton>
-        {kiErgebnis && (
-          <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-            {kiErgebnis.length} Rezept{kiErgebnis.length === 1 ? "" : "e"} hinzugefügt:
-            {kiErgebnis.map((r, i) => (
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} — Ernährungsplanung</div>
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Sag, worauf du Lust hast oder was du erreichen willst, frag nach, lass Vorschläge anpassen. Wenn ihr euch einig seid, auf „Rezepte übernehmen" tippen — legt sie als neue Mahlzeiten an (Wochentag danach noch selbst zuweisen). Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+      </div>
+      <KiChat
+        systemPrompt={`Du bist ein erfahrener, geduldiger Ernährungscoach für eine bestehende App. Bekannte Profildaten dieser Person: KFA ${aktuellesKfa ?? "unbekannt"}%, Gewicht ${aktuellesGewicht ?? "unbekannt"} kg, Kalorienziel ${kalorienZiel || kalorienIst || "unbekannt"} kcal/Tag. Hilf, passende Rezepte zu finden — frag nach Vorlieben/Abneigungen, Unverträglichkeiten oder Zeitaufwand, wenn relevant. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.`}
+        einleitung={`Hi, ich bin ${getCoachName()}! Worauf hast du Lust, oder was für Ziele hast du bei der Ernährung?`}
+        onUebernehmen={handleErnaehrungsplanUebernehmen}
+        uebernehmenLabel="Rezepte übernehmen"
+        renderErgebnis={(rezepte) => (
+          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+            {rezepte.length} Rezept{rezepte.length === 1 ? "" : "e"} als Mahlzeiten angelegt:
+            {rezepte.map((r, i) => (
               <div key={i}>
                 · {r.name}
                 {r.naehrwerte?.kalorien ? ` (${r.naehrwerte.kalorien} kcal)` : ""}
@@ -437,8 +421,7 @@ export default function NutritionView({ onHome, embedded = false }) {
             ))}
           </div>
         )}
-        {kiFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{kiFehler}</div>}
-      </Card>
+      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
       <Card style={{ marginBottom: 14 }}>

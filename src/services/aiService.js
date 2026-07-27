@@ -212,4 +212,35 @@ export const AIService = {
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
+
+  /**
+   * Extrahiert aus einem geführten Ernährungs-Gespräch (siehe coachChat())
+   * die finalen Rezeptvorschläge — gleiches Format wie
+   * ernaehrungsplanVorschlag(), damit sich das Ergebnis genauso direkt an
+   * mahlzeitHinzufuegen() weiterreichen lässt.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<Array<{name: string, zutaten: Array<{name: string, menge: string}>, naehrwerte: {kalorien: number, protein: number, kohlenhydrate: number, fett: number}}>>}
+   */
+  async ernaehrungsplanAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Ernährungs-Assistent für Makro-Tracking in einer bestehenden App.",
+        "Fasse das vorangegangene Gespräch jetzt als finale Rezeptvorschläge zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "rezepte": [ { "name": string, "zutaten": [ { "name": string, "menge": string } ], ' +
+          '"naehrwerte": { "kalorien": number, "protein": number, "kohlenhydrate": number, "fett": number } } ] }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse die oben besprochenen Rezepte jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!Array.isArray(data.rezepte)) throw new Error("Unerwartetes Format: 'rezepte' fehlt oder ist kein Array.");
+    return data.rezepte;
+  },
 };
