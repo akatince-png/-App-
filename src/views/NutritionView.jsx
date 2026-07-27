@@ -4,12 +4,13 @@ import GrundEingabe from "../ui/GrundEingabe";
 import WochentagPills from "../ui/WochentagPills";
 import TimeWheelField from "../ui/TimeWheelField";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { TAGESZEIT_STUNDE } from "../utils/dayItems";
 import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
+import { AIService } from "../services/aiService";
 
 const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
@@ -220,6 +221,14 @@ export default function NutritionView({ onHome, embedded = false }) {
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
   const [mahlzeitError, setMahlzeitError] = useState(null);
 
+  // KI-Ernährungsplan-Vorschlag (siehe services/aiService.js) — legt
+  // vorgeschlagene Rezepte direkt als Mahlzeiten an (noch keinem Wochentag
+  // zugewiesen, das erledigt man wie bei jeder anderen Mahlzeit unten in
+  // der Liste).
+  const [kiLadend, setKiLadend] = useState(false);
+  const [kiErgebnis, setKiErgebnis] = useState(null);
+  const [kiFehler, setKiFehler] = useState(null);
+
   const toggleNeueMahlzeitWochentag = (tag) =>
     setNeueMahlzeit((prev) => ({
       ...prev,
@@ -340,6 +349,34 @@ export default function NutritionView({ onHome, embedded = false }) {
   const kalorienZielProzent =
     kalorienIst && kalorienZiel ? Math.round(((Number(kalorienZiel) - kalorienIst) / kalorienIst) * 100) : null;
 
+  const aktuellesKfa = gewichtsEintraege?.length ? gewichtsEintraege[gewichtsEintraege.length - 1].kfa : undefined;
+
+  const handleKiVorschlag = async () => {
+    setKiLadend(true);
+    setKiErgebnis(null);
+    setKiFehler(null);
+    try {
+      const rezepte = await AIService.ernaehrungsplanVorschlag({
+        kfa: aktuellesKfa || undefined,
+        gewicht: aktuellesGewicht || undefined,
+        kalorienZiel: kalorienZiel || kalorienIst || undefined,
+      });
+      for (const rezept of rezepte) {
+        const result = await mahlzeitHinzufuegen({
+          name: rezept.name,
+          hinweis: "KI-Vorschlag",
+          zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
+        });
+        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+      }
+      setKiErgebnis(rezepte);
+    } catch (err) {
+      setKiFehler(err.message);
+    } finally {
+      setKiLadend(false);
+    }
+  };
+
   const zeitGruppen = Array.from(new Set(tagesEintraege.map(zeitVon)));
 
   const content = (
@@ -378,6 +415,28 @@ export default function NutritionView({ onHome, embedded = false }) {
           </div>
         </Card>
       )}
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 KI-Vorschlag</div>
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>
+          Schlägt anhand deiner Profildaten (KFA, Gewicht, Kalorienziel) passende Rezepte vor und legt sie unten als neue Mahlzeiten an — Wochentagen musst du sie danach noch selbst zuweisen. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+        </div>
+        <PrimaryButton onClick={handleKiVorschlag} disabled={kiLadend}>
+          {kiLadend ? "Frage Ollama…" : "Rezepte vorschlagen"}
+        </PrimaryButton>
+        {kiErgebnis && (
+          <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+            {kiErgebnis.length} Rezept{kiErgebnis.length === 1 ? "" : "e"} hinzugefügt:
+            {kiErgebnis.map((r, i) => (
+              <div key={i}>
+                · {r.name}
+                {r.naehrwerte?.kalorien ? ` (${r.naehrwerte.kalorien} kcal)` : ""}
+              </div>
+            ))}
+          </div>
+        )}
+        {kiFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{kiFehler}</div>}
+      </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
       <Card style={{ marginBottom: 14 }}>

@@ -5,7 +5,8 @@ import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
 import AutocompleteInput from "../ui/AutocompleteInput";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
-import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import { AIService } from "../services/aiService";
 import {
   TRAININGSARTEN,
   TRAINING_ENERGIELEVEL_OPTIONEN,
@@ -406,6 +407,15 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
   const [feedbackFuerId, setFeedbackFuerId] = useState(null);
 
+  // KI-Trainingsplan-Vorschlag (siehe services/aiService.js) — schlägt
+  // Einheiten vor und übernimmt sie direkt über denselben Weg wie eine
+  // manuell im WochenplanEditor hinzugefügte Einheit.
+  const [kiWunsch, setKiWunsch] = useState("");
+  const [kiEinheitenProWoche, setKiEinheitenProWoche] = useState("3");
+  const [kiLadend, setKiLadend] = useState(false);
+  const [kiErgebnis, setKiErgebnis] = useState(null);
+  const [kiFehler, setKiFehler] = useState(null);
+
   useEffect(() => {
     if (initialSessionId) {
       setLiveSessionId(initialSessionId);
@@ -492,6 +502,29 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     wochenplanEntfernen(id);
   };
 
+  const handleKiVorschlag = async () => {
+    setKiLadend(true);
+    setKiErgebnis(null);
+    setKiFehler(null);
+    try {
+      const einheiten = await AIService.trainingsplanVorschlag({
+        wunsch: kiWunsch || "ausgewogener Ganzkörper-Trainingsplan",
+        einheitenProWoche: Number(kiEinheitenProWoche) || 3,
+      });
+      // Nacheinander statt Promise.all, damit die Änderungsprotokoll-Einträge
+      // (aenderungVermerken in handleWochenplanHinzufuegen) in derselben
+      // Reihenfolge wie die KI-Antwort entstehen.
+      for (const einheit of einheiten) {
+        await handleWochenplanHinzufuegen(einheit);
+      }
+      setKiErgebnis(einheiten);
+    } catch (err) {
+      setKiFehler(err.message);
+    } finally {
+      setKiLadend(false);
+    }
+  };
+
   const handleTrainingEntfernen = (e) => {
     aenderungVermerken({
       kategorie: "training",
@@ -559,11 +592,40 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       </div>
 
       {wochenplanOffen && (
-        <WochenplanEditor
-          trainingWochenplan={trainingWochenplan}
-          wochenplanHinzufuegen={handleWochenplanHinzufuegen}
-          wochenplanEntfernen={handleWochenplanEntfernen}
-        />
+        <>
+          <WochenplanEditor
+            trainingWochenplan={trainingWochenplan}
+            wochenplanHinzufuegen={handleWochenplanHinzufuegen}
+            wochenplanEntfernen={handleWochenplanEntfernen}
+          />
+
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, marginTop: 14 }}>🤖 KI-Vorschlag</div>
+          <Card style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>
+              Beschreibe, was du trainieren willst — die KI schlägt passende Einheiten vor und trägt sie direkt oben in den Wochenplan ein. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+            </div>
+            <Label>Trainingswunsch</Label>
+            <TextInput value={kiWunsch} onChange={setKiWunsch} placeholder="z. B. Push/Pull/Legs" />
+            <Label>Einheiten pro Woche</Label>
+            <TextInput type="number" value={kiEinheitenProWoche} onChange={setKiEinheitenProWoche} placeholder="3" />
+            <div style={{ marginTop: 10 }}>
+              <PrimaryButton onClick={handleKiVorschlag} disabled={kiLadend}>
+                {kiLadend ? "Frage Ollama…" : "Plan vorschlagen"}
+              </PrimaryButton>
+            </div>
+            {kiErgebnis && (
+              <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                {kiErgebnis.length} Einheit{kiErgebnis.length === 1 ? "" : "en"} hinzugefügt:
+                {kiErgebnis.map((e, i) => (
+                  <div key={i}>
+                    · {e.wochentag}: {(e.arten || []).join(" + ")} {e.saetze && e.wiederholungen ? `(${e.saetze}×${e.wiederholungen})` : ""}
+                  </div>
+                ))}
+              </div>
+            )}
+            {kiFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{kiFehler}</div>}
+          </Card>
+        </>
       )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Nur ein Timer? (ohne Eintrag)</div>
