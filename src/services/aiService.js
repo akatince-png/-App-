@@ -243,4 +243,35 @@ export const AIService = {
     if (!Array.isArray(data.rezepte)) throw new Error("Unerwartetes Format: 'rezepte' fehlt oder ist kein Array.");
     return data.rezepte;
   },
+
+  /**
+   * Extrahiert aus einem geführten Hydrations-Gespräch (siehe coachChat())
+   * ein optionales neues Tagesziel und/oder neue Erinnerungszeiten — Format
+   * der Zeiten entspricht dem, was HydrationErinnerungenCard erwartet
+   * ({zeit, menge}), lässt sich also direkt an die bestehende Liste anhängen.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{zielMl: number|null, zeiten: Array<{zeit: string, menge: string}>}>}
+   */
+  async hydrationAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der beim Einrichten des Trink-/Hydrationsziels und passender Erinnerungszeiten hilft.",
+        "Fasse das vorangegangene Gespräch jetzt zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "zielMl": number|null (Tagesziel in ml, null wenn nicht genannt/unverändert), ' +
+          '"zeiten": [ { "zeit": "HH:MM", "menge": string (z. B. "300") } ] (leeres Array wenn keine Erinnerungszeiten besprochen wurden) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!Array.isArray(data.zeiten)) throw new Error("Unerwartetes Format: 'zeiten' fehlt oder ist kein Array.");
+    return data;
+  },
 };
