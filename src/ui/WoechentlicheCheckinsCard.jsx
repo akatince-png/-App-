@@ -13,16 +13,31 @@ function leererEintrag(aktiveMesswerte) {
 
 // "Wöchentliche Check-ins"-Karte, geteilt zwischen ProfilTab (laufende
 // Pflege) und dem "Profil & Ausgangslage"-Schritt im Onboarding
-// (Ersteingabe) — siehe LaborwerteFelder für dasselbe Muster.
-export default function WoechentlicheCheckinsCard() {
-  const { aktiveMesswerte, toggleMesswert, combinedMesswertDefs, addCustomMesswert, gewichtsEintraege, gewichtHinzufuegen } = useAppData();
+// (Ersteingabe) — siehe PersoenlicheDatenCard für dasselbe `frisch`-Muster.
+//
+// `frisch`: im Onboarding sollen weder bereits ausgewählte Messwerte
+// vorangehakt noch bisherige Check-in-Einträge sichtbar sein — ohne die
+// echten Daten zu löschen (bleiben unangetastet, bis aktiv etwas
+// angetippt/gespeichert wird). Der ProfilTab zur laufenden Pflege zeigt
+// weiterhin ganz normal die echten Werte.
+export default function WoechentlicheCheckinsCard({ frisch = false }) {
+  const { aktiveMesswerte, toggleMesswert, combinedMesswertDefs, customMesswerte, addCustomMesswert, removeCustomMesswert, gewichtsEintraege, gewichtHinzufuegen } =
+    useAppData();
+
+  const [lokalAktiv, setLokalAktiv] = useState([]);
+  const angezeigteAktiv = frisch ? lokalAktiv : aktiveMesswerte;
 
   const [neueVariable, setNeueVariable] = useState("");
-  const [neuerEintrag, setNeuerEintrag] = useState(() => leererEintrag(aktiveMesswerte));
+  const [neuerEintrag, setNeuerEintrag] = useState(() => leererEintrag(angezeigteAktiv));
   const [pendingFotos, setPendingFotos] = useState([]); // [{kategorie, file, previewUrl}]
   const [fotoKategorie, setFotoKategorie] = useState(FOTO_KATEGORIEN[0]);
 
   const setEintragFeld = (id, val) => setNeuerEintrag((prev) => ({ ...prev, [id]: val }));
+
+  const messwertUmschalten = (id) => {
+    if (frisch) setLokalAktiv((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    toggleMesswert(id);
+  };
 
   const variableHinzufuegen = () => {
     if (!neueVariable.trim()) return;
@@ -38,8 +53,8 @@ export default function WoechentlicheCheckinsCard() {
   };
 
   const submitEintrag = async () => {
-    await gewichtHinzufuegen(neuerEintrag, aktiveMesswerte, combinedMesswertDefs, pendingFotos);
-    setNeuerEintrag(leererEintrag(aktiveMesswerte));
+    await gewichtHinzufuegen(neuerEintrag, angezeigteAktiv, combinedMesswertDefs, pendingFotos);
+    setNeuerEintrag(leererEintrag(angezeigteAktiv));
     setPendingFotos([]);
   };
 
@@ -49,9 +64,39 @@ export default function WoechentlicheCheckinsCard() {
       <Card style={{ marginBottom: 14 }}>
         <Label>Welche Messwerte willst du tracken?</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {combinedMesswertDefs.map((d) => (
-            <Pill key={d.id} label={d.label} selected={aktiveMesswerte.includes(d.id)} onClick={() => toggleMesswert(d.id)} />
-          ))}
+          {combinedMesswertDefs.map((d) => {
+            const istEigen = customMesswerte.some((c) => c.id === d.id);
+            return (
+              <div key={d.id} style={{ position: "relative", display: "inline-block" }}>
+                <Pill label={d.label} selected={angezeigteAktiv.includes(d.id)} onClick={() => messwertUmschalten(d.id)} />
+                {istEigen && (
+                  <button
+                    type="button"
+                    onClick={() => removeCustomMesswert(d.id)}
+                    title="Eigenen Messwert entfernen"
+                    style={{
+                      position: "absolute",
+                      top: -4,
+                      right: 2,
+                      width: 16,
+                      height: 16,
+                      lineHeight: "16px",
+                      borderRadius: "50%",
+                      border: "none",
+                      background: "#fff",
+                      boxShadow: `0 0 0 1px ${cardBorder}`,
+                      color: textMuted,
+                      fontSize: 10,
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
           <div style={{ flex: 1 }}>
@@ -70,7 +115,7 @@ export default function WoechentlicheCheckinsCard() {
         <Label>Datum</Label>
         <TextInput type="date" value={neuerEintrag.datum} onChange={(v) => setEintragFeld("datum", v)} />
 
-        {aktiveMesswerte.map((id) => {
+        {angezeigteAktiv.map((id) => {
           const def = combinedMesswertDefs.find((d) => d.id === id);
           if (!def) return null;
           if (def.emoji) {
@@ -137,7 +182,7 @@ export default function WoechentlicheCheckinsCard() {
           <PrimaryButton onClick={submitEintrag}>Eintrag hinzufügen</PrimaryButton>
         </div>
 
-        {gewichtsEintraege.length > 0 && (
+        {!frisch && gewichtsEintraege.length > 0 && (
           <div style={{ marginTop: 14 }}>
             {gewichtsEintraege
               .slice()

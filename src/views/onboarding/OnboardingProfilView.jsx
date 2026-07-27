@@ -69,7 +69,7 @@ export default function OnboardingProfilView({ onDone, onBack, onCancel }) {
         </div>
       )}
 
-      <WoechentlicheCheckinsCard />
+      <WoechentlicheCheckinsCard frisch />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
         <PrimaryButton onClick={onDone}>{tLabel("Weiter")}</PrimaryButton>

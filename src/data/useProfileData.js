@@ -192,7 +192,14 @@ export function useProfileData(userId) {
       const trimmed = label.trim();
       if (!trimmed) return;
       const id = trimmed.toLowerCase().replace(/\s+/g, "_");
-      if (combinedMesswertDefs.some((d) => d.id === id)) return;
+      // Sowohl per ID als auch per Label (unabhängig von Groß-/Kleinschreibung)
+      // gegen Duplikate prüfen — ein alter, vor dieser Prüfung angelegter
+      // Eintrag kann eine andere ID als der eingebaute Messwert tragen, aber
+      // dasselbe Label ("BMI"), und würde sonst doppelt in der Liste auftauchen.
+      const doppelt = combinedMesswertDefs.some(
+        (d) => d.id === id || d.label.trim().toLowerCase() === trimmed.toLowerCase()
+      );
+      if (doppelt) return;
       const { error } = await supabase
         .from("custom_messwerte")
         .insert({ user_id: userId, key: id, label: trimmed, unit: "" });
@@ -214,6 +221,30 @@ export function useProfileData(userId) {
     [userId, combinedMesswertDefs]
   );
 
+  // Entfernt einen selbst angelegten Messwert wieder (z. B. einen versehentlich
+  // doppelt angelegten) — nur für eigene, nicht für eingebaute Messwerte
+  // relevant, siehe combinedMesswertDefs.
+  const removeCustomMesswert = useCallback(
+    async (id) => {
+      const { error } = await supabase.from("custom_messwerte").delete().eq("user_id", userId).eq("key", id);
+      if (error) {
+        console.error(error);
+        return;
+      }
+      setCustomMesswerte((prev) => prev.filter((d) => d.id !== id));
+      setAktiveMesswerte((prev) => {
+        const next = prev.filter((x) => x !== id);
+        supabase
+          .from("profiles")
+          .update({ aktive_messwerte: next })
+          .eq("id", userId)
+          .then(({ error: e }) => e && console.error(e));
+        return next;
+      });
+    },
+    [userId]
+  );
+
   return {
     loading,
     personalData,
@@ -228,6 +259,7 @@ export function useProfileData(userId) {
     customMesswerte,
     combinedMesswertDefs,
     addCustomMesswert,
+    removeCustomMesswert,
     categoryZiele,
     setCategoryZiel,
     erinnerungen,
