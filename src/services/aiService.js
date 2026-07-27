@@ -450,4 +450,72 @@ export const AIService = {
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
+
+  /**
+   * Extrahiert aus einem geführten Peptid-Gespräch (siehe coachChat()) ein
+   * neues Peptid — gleiches Intervall-/Uhrzeiten-Format wie
+   * medikamentAusChat(), aber ohne "kategorie" (die gibt es bei Peptiden
+   * nicht, siehe PeptidView.jsx: addCustomPreparat() + setDoseBatch()).
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{name: string, menge: string, einnahmeart: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
+   */
+  async peptidAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der neue Peptide für Nutzer anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt als fertiges Peptid zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string, "menge": string (z. B. "250mcg"), ' +
+          '"einnahmeart": "Injektion"|"Tablette (oral)"|"Kapsel"|"Pulver"|"Tropfen"|"Nasenspray", ' +
+          '"intervallTyp": "fixed"|"custom"|"cycle"|"weekdays" (fixed = alle X Tage, custom = eigene Tagesanzahl, cycle = X Tage an/Y Tage ab, weekdays = feste Wochentage), ' +
+          '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
+          '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
+          '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), "uhrzeiten": string[] (eine oder mehrere "HH:MM") }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben besprochene Peptid jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
+    return data;
+  },
+
+  /**
+   * Extrahiert aus einem geführten Schlaf-Gespräch (siehe coachChat()) einen
+   * fertigen Schlaf-Eintrag — Format entspricht dem, was schlafHinzufuegen()
+   * erwartet (siehe SchlafView.jsx).
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{stunden: number, schlafqualitaet: string, einschlafzeit: string, durchgeschlafen: boolean|null, erholt: boolean|null, traeume: string, bemerkungen: string}>}
+   */
+  async schlafAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der einen Schlaf-Eintrag für die letzte Nacht erfasst.",
+        "Fasse das vorangegangene Gespräch jetzt als fertigen Schlaf-Eintrag zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "stunden": number (Schlafdauer in Stunden, z. B. 7.5), ' +
+          '"schlafqualitaet": string (z. B. "Gut","Mittel","Schlecht" — leer wenn nicht genannt), ' +
+          '"einschlafzeit": string ("HH:MM" falls genannt, sonst leer), ' +
+          '"durchgeschlafen": boolean|null (null wenn nicht besprochen), "erholt": boolean|null (null wenn nicht besprochen), ' +
+          '"traeume": string (kurz, leer wenn nichts erzählt), "bemerkungen": string (sonstiges, leer wenn nichts) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse den oben besprochenen Schlaf-Eintrag jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (typeof data.stunden !== "number") throw new Error("Unerwartetes Format: 'stunden' fehlt oder ist keine Zahl.");
+    return data;
+  },
 };

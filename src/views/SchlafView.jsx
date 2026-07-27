@@ -6,6 +6,9 @@ import { accentDark, blue, cardBorder, danger, textMuted } from "../ui/theme";
 import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
+import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 const LEERER_EINTRAG = {
   datum: new Date().toISOString().slice(0, 10),
@@ -33,6 +36,25 @@ export default function SchlafView({ onHome, embedded = false }) {
     }
     setNeuerSchlafEintrag(LEERER_EINTRAG);
     setDetailsOffen(false);
+  };
+
+  // Übergabe an <KiChat onUebernehmen>: legt den im Gespräch besprochenen
+  // Schlaf-Eintrag über denselben Weg an wie das manuelle Formular oben.
+  const handleSchlafUebernehmen = async (verlauf) => {
+    const s = await AIService.schlafAusChat({ verlauf, coachName: getCoachName() });
+    const eintrag = {
+      ...LEERER_EINTRAG,
+      stunden: String(s.stunden),
+      schlafqualitaet: s.schlafqualitaet || "",
+      einschlafzeit: s.einschlafzeit || "",
+      durchgeschlafen: s.durchgeschlafen ?? null,
+      erholt: s.erholt ?? null,
+      traeume: s.traeume || "",
+      bemerkungen: s.bemerkungen || "",
+    };
+    const result = await schlafHinzufuegen(eintrag);
+    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+    return eintrag;
   };
 
   const content = (
@@ -115,6 +137,22 @@ export default function SchlafView({ onHome, embedded = false }) {
           <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
         </div>
       </Card>
+
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Coach trägt den Eintrag für dich ein.
+      </div>
+      <KiChat
+        bereich="schlaf"
+        systemPrompt="Du hilfst dabei, einen Schlaf-Eintrag für die letzte Nacht zu erfassen. Frag nach Schlafdauer, Schlafqualität, ob durchgeschlafen und erholt aufgewacht wurde, bevor ihr fertig seid — Träume und Bemerkungen sind optional. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Wie hast du geschlafen?`}
+        onUebernehmen={handleSchlafUebernehmen}
+        uebernehmenLabel="Eintragen"
+        renderErgebnis={(r) => (
+          <div style={{ padding: 12, borderRadius: 12, background: "#EAF3F8", fontSize: 12.5, lineHeight: 1.6 }}>
+            Schlaf-Eintrag mit {r.stunden} h gespeichert{r.schlafqualitaet ? ` (${r.schlafqualitaet})` : ""}.
+          </div>
+        )}
+      />
 
       {schlafEintraege.length > 0 && (
         <>

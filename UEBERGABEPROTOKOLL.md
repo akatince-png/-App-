@@ -281,9 +281,13 @@ für punktuelle Erklärungen wie diese.
 ### Wo der Coach heute verfügbar ist
 
 Home (universell, alle 7 Bereiche), Training, Gewohnheiten, Ernährung,
-Hydration, Tageslicht, Supplemente, Medikamente, sowie geführt beim
-Onboarding (Name/Ziele/Profil). **Noch nicht:** Schlaf, Peptide, die
-tieferen Onboarding-Schritte (Laborwerte, Kategorien).
+Hydration, Tageslicht, Supplemente, Medikamente, Schlaf, Peptide, sowie
+geführt beim Onboarding (Name/Ziele/Profil) — damit hat jeder Lebensbereich
+seinen Coach. Neue Extraktoren `AIService.schlafAusChat()` (an
+`schlafHinzufuegen()`) und `AIService.peptidAusChat()` (an
+`addCustomPreparat()` + `setDoseBatch()`, gleiches Intervall-Format wie
+`medikamentAusChat()`). **Noch nicht:** die tieferen Onboarding-Schritte
+(Laborwerte, die 9 Kategorien-Schritte).
 
 ### ⭐ Leitprinzip: Manuell UND per KI — niemals nur eins von beidem
 
@@ -350,7 +354,7 @@ Code-Zugriff.
 
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
-| 1 | Weitere Bereiche für KiChat (Schlaf, Peptide) | Noch nicht umgesetzt | Nach demselben Muster wie die 8 bestehenden Bereiche, bei Bedarf |
+| 1 | ~~Weitere Bereiche für KiChat (Schlaf, Peptide)~~ | ✅ Erledigt — alle Lebensbereiche haben jetzt einen Coach | — |
 | 2 | Onboarding-Begleitung Phase 2 (freies Erzählen + automatische Feld-Zuordnung) | Bewusst zurückgestellt, Phase 1 (Felder einzeln abfragen) ist fertig | Eigener Anlauf, nach explizitem Auftrag |
 | 2b | Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte | Noch nicht umgesetzt — deutlich vielschichtiger (Multi-Add, Dosierung, Foto/OCR, WochenplanEditor) | Eigener Anlauf pro Kategorie, nach explizitem Auftrag |
 | 3 | Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen | Funktioniert wie es ist, aber unschöner Name/Slug-Mismatch | Nur bei Gelegenheit, z. B. via Supabase CLI statt Browser-Editor — danach `GEMINI_EDGE_FUNCTION_SLUG` in `aiProviders.js` zurückändern |

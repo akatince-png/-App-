@@ -10,6 +10,9 @@ import { describeInterval } from "../utils/schedule";
 import { fmtDate, keyOf, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useT } from "../i18n/translate";
+import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 const NEUES_PEPTID_LEER = {
   name: "",
@@ -84,6 +87,30 @@ export default function PeptidView({ onHome, embedded = false }) {
       detail: `${neuesPeptid.einnahmeart} · ${neuesPeptid.menge || "–"}`,
     });
     setNeuesPeptid(NEUES_PEPTID_LEER);
+  };
+
+  // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
+  // Peptid über denselben Weg an wie das manuelle Formular oben.
+  const handlePeptidUebernehmen = async (verlauf) => {
+    const p = await AIService.peptidAusChat({ verlauf, coachName: getCoachName() });
+    const name = p.name.trim();
+    const einnahmeart = p.einnahmeart || "Injektion";
+    const result = await addCustomPreparat(name, einnahmeart);
+    if (!result?.ok) throw new Error(result?.error || t("peptid.error.save.generic"));
+    const felder = { menge: p.menge || "", uhrzeiten: p.uhrzeiten?.length ? p.uhrzeiten : ["20:00"] };
+    if ((p.intervallTyp || "fixed") === "fixed") {
+      felder.intervallPreset = p.intervallDays || 7;
+    } else {
+      felder.intervallTyp = p.intervallTyp;
+      felder.customDays = p.customDays || "";
+      felder.onDays = p.onDays || "";
+      felder.offDays = p.offDays || "";
+      felder.weekdays = p.weekdays || [];
+      felder.eigenerStart = p.eigenerStart || "";
+    }
+    setDoseBatch(name, felder);
+    aenderungVermerken({ kategorie: "peptid", itemName: name, aktion: "hinzugefügt", detail: `${einnahmeart} · ${p.menge || "–"}` });
+    return { name, menge: p.menge || "" };
   };
 
   const handleEntfernen = (p) => {
@@ -181,6 +208,22 @@ export default function PeptidView({ onHome, embedded = false }) {
           </PrimaryButton>
         </div>
       </Card>
+
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Sag z. B. "ich möchte BPC-157 starten, 250mcg, jeden Tag abends um 20 Uhr" — der Coach richtet es für dich ein.
+      </div>
+      <KiChat
+        bereich="peptide"
+        systemPrompt="Du hilfst dabei, ein neues Peptid für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray), und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Welches Peptid möchtest du einrichten?`}
+        onUebernehmen={handlePeptidUebernehmen}
+        uebernehmenLabel="Übernehmen"
+        renderErgebnis={(r) => (
+          <div style={{ padding: 12, borderRadius: 12, background: "#EAF3F8", fontSize: 12.5, lineHeight: 1.6 }}>
+            {r.name} {r.menge ? `(${r.menge})` : ""} hinzugefügt.
+          </div>
+        )}
+      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("peptid.today.heading")}</div>
       <Card style={{ marginBottom: 14 }}>
