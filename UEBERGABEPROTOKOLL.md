@@ -1,8 +1,8 @@
 # 📋 ÜBERGABEPROTOKOLL: MyProtocols App
 
-**Stand: 27.07.2026, Abend, Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
+**Stand: 27.07.2026, spät abends, Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
-> ⚠️ **Diese Fassung ersetzt die Version vom späten Nachmittag desselben Tages.** Seitdem: KI-Coach läuft jetzt produktiv über **Gemini in der Cloud** (nicht mehr nur lokales Ollama), großer Design-Umbau (Home-Button, Plus-Button, animierter Coach-Orb), Performance-Fixes. Abschnitt 5 (KI-Coach) und Abschnitt 6 (offene Punkte) komplett neu lesen.
+> ⚠️ **Diese Fassung ergänzt die Version vom frühen Abend desselben Tages.** Seitdem: Coach heißt jetzt standardmäßig **"Aka"** mit fest vorgegebener Persönlichkeit/Antwortstruktur, neue **Wissens-Basis** (`src/wissen/`, ein Unterordner pro Lebensbereich) + Trackingdaten-Zusammenfassung laufen jetzt in JEDEM der 8 Bereiche automatisch mit (nicht mehr nur Home), und ein neuer **Coach-geführter Onboarding-Modus** (Phase 1: Felder einzeln abfragen) für Name/Ziele/Profil. Abschnitt 5 komplett neu lesen.
 
 ---
 
@@ -39,10 +39,12 @@ dem alle Kategorien als **Teilprotokolle** laufen.
 > parallel neben dem Coach-Orb). Der Coach-Orb öffnet sich nur auf Tap, nie
 > von selbst — wer ihn nie antippt, bekommt die KI nie zu Gesicht.
 
-**Der KI-Coach**: Ein persönlich benennbarer Assistent (z. B. "Coach
-Acker"), der in 8 Bereichen als echter Chat verfügbar ist — er fragt nach,
-schlägt vor, und legt nach Bestätigung durch die Nutzerin selbst neue
-Einträge an (Rezepte, Trainingspläne, Gewohnheiten, Supplemente,
+**Der ADHS Coach** (Standardname **"Aka"**, individuell umbenennbar, z. B.
+"Coach Acker"): ein Assistent mit fest vorgegebener Persönlichkeit (direkt,
+wertschätzend, kurze Absätze/Fettdruck/Stichpunkte, immer ein "nächster
+kleiner Schritt", siehe Abschnitt 5), der in 8 Bereichen als echter Chat
+verfügbar ist — er fragt nach, schlägt vor, und legt nach Bestätigung durch
+die Nutzerin selbst neue Einträge an (Rezepte, Trainingspläne, Gewohnheiten, Supplemente,
 Medikamente, Ziele). **Läuft jetzt produktiv über Google Gemini** (Cloud,
 schnell, auch unterwegs auf dem Handy nutzbar) — Ollama (lokal) und Groq
 bleiben als Alternativ-Provider im Code vorbereitet, aber Gemini ist der
@@ -196,11 +198,76 @@ Extraktions-/Speicherfunktion, die auch der jeweilige Bereichs-Chat nutzt
 weiterhin nicht — dort ist der Bereich ja von vornherein durch den Kontext
 klar.
 
+### Persona: "Aka" + feste Tonalität (⭐ neu)
+
+`STANDARD_COACH_NAME` in `coachStorage.js` ist jetzt `"Aka"` (statt
+generisch "dein ADHS Coach"), individuell weiterhin umbenennbar. In
+`aiService.js` gibt es jetzt zwei Persona-Ebenen:
+- `mitPersona()` (unverändert) — nur die Namens-Vorstellung, für ALLE
+  Funktionen inkl. der strukturierten Extraktoren (…AusChat).
+- `mitVollerPersona()` (⭐ neu) — zusätzlich die von der Nutzerin fest
+  vorgegebene Persönlichkeits-/Antwortstruktur (direkt, wertschätzend,
+  kurze Absätze/Fettdruck/Stichpunkte, immer ein "nächster kleiner
+  Schritt", ADHS-Hürden ohne Urteil, Pläne als lesbarer Fließtext statt
+  JSON). Nur für `coachChat`/`coachChatStreamend` (den freien Chat)
+  verwendet — **bewusst nicht** für die …AusChat/…Vorschlag-Funktionen,
+  da die Stil-Vorgaben dort mit der geforderten reinen JSON-Antwort
+  kollidieren und das Parsen brechen würden.
+
+### "Background Brain": Wissens-Basis + Live-Daten (⭐ neu, in JEDER Anfrage)
+
+Zwei Kontext-Quellen werden jetzt zentral in `KiChat.jsx` (nicht mehr nur
+Home) an jede Coach-Anfrage angehängt:
+- `src/utils/wissensBasis.js` — liest alle `.md`-Dateien unter
+  `src/wissen/**/*.md` per `import.meta.glob` (eager, `?raw`) beim Bauen
+  der App ein. Ein Unterordner pro Lebensbereich (`schlaf/`, `hydration/`,
+  `ernaehrung/`, `training/`, `gewohnheiten/`, `supplemente/`,
+  `medikamente/`, `peptide/`, `tageslicht/`, `profil/`, `blutwerte/`) plus
+  `allgemein/` für bereichsübergreifende ADHS-Coaching-Themen — aktuell
+  überall nur Platzhalter-Inhalte, die die Nutzerin nach und nach durch
+  echtes Coaching-Wissen ersetzen will. **Neue `.md`-Datei irgendwo unter
+  `src/wissen/` ablegen reicht** — kein Code nötig, wird automatisch beim
+  nächsten Deploy erkannt. Einfache Variante bewusst ohne Vektorsuche
+  (kompletter Text aller Dateien wird angehängt) — falls der Ordner mal
+  sehr groß wird, muss hier eine Auswahl/Suche rein.
+- `src/utils/trackingZusammenfassung.js` (bisher nur Home) — jetzt überall.
+  Deckt zusätzlich Profil (Alter/Größe/Startgewicht) und Blutwerte/
+  Biomarker ab, nicht mehr nur die zeitraumbezogenen Trackingdaten.
+
+Wichtig: Die `wissen/`-Dateien sind rein statisches Hintergrundwissen
+(Coaching-Theorie) — die eigentlichen Nutzerinnen-Daten liegen weiterhin
+ausschließlich in Supabase. Ein Browser kann nicht in Projektdateien
+schreiben; "Daten in wissen/ speichern" ist technisch nicht möglich und
+war nicht die richtige Umsetzung eines entsprechenden Wunsches der
+Nutzerin — stattdessen läuft `trackingZusammenfassung()` jetzt überall.
+
+### Coach-geführtes Onboarding, Phase 1 (⭐ neu)
+
+Nach der Begrüßung (`OnboardingIntroView.jsx`) fragt der Coach jetzt, ob
+er begleiten soll oder die Nutzerin lieber allein macht. Bei Begleitung
+übernimmt `OnboardingCoachGuide.jsx` (neu, in `src/views/onboarding/`)
+Name, Ziele und persönliche Daten (Geschlecht, Geburtsdatum, Größe,
+Startgewicht) als durchgehende Frage-für-Frage-Sequenz — Mikrofon-Option,
+überspringbar, speichert jede Antwort **sofort über dieselben Funktionen**
+wie die manuellen Formulare (`toggleZiel`, `setPersonal`). Kein KI-Call für
+die Fragen selbst (Felder sind fest bekannt, ein Modell wäre hier nur
+Latenz + Fehlerquelle in einem kritischen Pfad). `OnboardingFlow.jsx`
+überspringt danach die Phasen `ziele`/`profil` (bereits erledigt) und geht
+direkt zu `laborwerte` weiter — ab da normaler manueller Ablauf.
+
+**Nicht umgesetzt (bewusst, siehe offene Punkte):** freies Erzählen +
+automatische Zuordnung zu Feldern (Variante 2 aus dem Auftrag), sowie eine
+geführte Alternative für Laborwerte und die 9 Kategorien-Schritte
+(Training, Ernährung, Supplemente, Medikamente, Peptide, …) — die sind
+deutlich vielschichtiger (Multi-Add-Muster, Dosierungs-Unterformulare,
+Foto-Upload/OCR, WochenplanEditor) und brauchen einen eigenen Anlauf.
+
 ### Wo der Coach heute verfügbar ist
 
 Home (universell, alle 7 Bereiche), Training, Gewohnheiten, Ernährung,
-Hydration, Tageslicht, Supplemente, Medikamente. **Noch nicht:** Schlaf,
-Peptide, Onboarding selbst.
+Hydration, Tageslicht, Supplemente, Medikamente, sowie geführt beim
+Onboarding (Name/Ziele/Profil). **Noch nicht:** Schlaf, Peptide, die
+tieferen Onboarding-Schritte (Laborwerte, Kategorien).
 
 ### ⭐ Leitprinzip: Manuell UND per KI — niemals nur eins von beidem
 
@@ -268,7 +335,8 @@ Code-Zugriff.
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
 | 1 | Weitere Bereiche für KiChat (Schlaf, Peptide) | Noch nicht umgesetzt | Nach demselben Muster wie die 8 bestehenden Bereiche, bei Bedarf |
-| 2 | KI-geführte Onboarding-Konversation | Bewusst zurückgestellt — größter Einzel-Umbau | Nur nach explizitem Auftrag, eigene Sitzung einplanen |
+| 2 | Onboarding-Begleitung Phase 2 (freies Erzählen + automatische Feld-Zuordnung) | Bewusst zurückgestellt, Phase 1 (Felder einzeln abfragen) ist fertig | Eigener Anlauf, nach explizitem Auftrag |
+| 2b | Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte | Noch nicht umgesetzt — deutlich vielschichtiger (Multi-Add, Dosierung, Foto/OCR, WochenplanEditor) | Eigener Anlauf pro Kategorie, nach explizitem Auftrag |
 | 3 | Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen | Funktioniert wie es ist, aber unschöner Name/Slug-Mismatch | Nur bei Gelegenheit, z. B. via Supabase CLI statt Browser-Editor — danach `GEMINI_EDGE_FUNCTION_SLUG` in `aiProviders.js` zurückändern |
 | 4 | Groq als Provider aktivieren | Code fertig, aber kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
 | 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Bekannte Einschränkung, aktuell nicht aktiv genutzt (Gemini läuft) | Nur relevant, falls wieder auf Ollama gewechselt wird |
@@ -334,10 +402,12 @@ Code-Zugriff.
 
 ---
 
-**Letzte Aktualisierung:** 27.07.2026, spät abends — persistenter
-Gesprächsverlauf, Sprachmodus-Anzeige, Barge-in/bessere Sprachbedienung,
-und universeller Home-Coach (alle 7 Bereiche statt nur Gewohnheiten) fertig
-umgesetzt und deployt. Leitprinzip "Manuell UND per KI" von der Nutzerin
-explizit als nicht verhandelbar formuliert und dokumentiert (Abschnitt 1,
-5, 7, 8). Nächster sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6
-durchgehen.
+**Letzte Aktualisierung:** 27.07.2026, spät abends — Coach heißt jetzt
+"Aka" mit fest vorgegebener Persönlichkeit, Wissens-Basis
+(`src/wissen/`) + Trackingdaten-Zusammenfassung laufen jetzt in jedem
+Bereich mit, und Coach-geführtes Onboarding (Phase 1: Name/Ziele/Profil
+einzeln abfragen) ist fertig umgesetzt und deployt. Leitprinzip "Manuell
+UND per KI" bleibt unverändert gültig (Abschnitt 1, 5, 7, 8). Nächster
+sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6 durchgehen,
+insbesondere Onboarding-Begleitung Phase 2 und die tieferen
+Kategorien-Schritte.
