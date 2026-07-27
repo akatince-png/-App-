@@ -11,6 +11,14 @@
 //   OLLAMA_ORIGINS=http://localhost:5173 ollama serve
 // (Port ggf. an den tatsächlichen Vite-Dev-Server anpassen — steht in der
 // Kommandozeile, wenn `npm run dev` läuft.)
+//
+// WICHTIG bei Groq: Ein clientseitig gesetzter VITE_AI_API_KEY landet
+// sichtbar im ausgelieferten Browser-Code — nur zum schnellen Testen
+// gedacht. Im Normalbetrieb (kein VITE_AI_API_KEY gesetzt) läuft Groq
+// stattdessen automatisch über die Supabase Edge Function "groq-chat"
+// (supabase/functions/groq-chat/index.ts), die den echten Key nur
+// serverseitig als Secret hält.
+import { supabase } from "../lib/supabaseClient";
 
 const PROVIDER = (import.meta.env.VITE_AI_PROVIDER || "ollama").toLowerCase();
 const MODEL = import.meta.env.VITE_AI_MODEL || "llama3.1";
@@ -124,19 +132,41 @@ async function anfrageOllamaStreamend({ system, messages, onTeilantwort }) {
 
 // ---------------------------------------------------------------------
 // Groq — und jede andere OpenAI-kompatible API (gleiches Schema, nur
-// baseUrl/model tauschen). Bearer-Token im Header, JSON-Mode über
-// response_format.
+// baseUrl/model tauschen). JSON-Mode über response_format.
+//
+// Zwei Wege, je nachdem ob VITE_AI_API_KEY gesetzt ist:
+// - Gesetzt (Schnellweg zum Testen): Groq direkt aus dem Browser mit dem
+//   Key im Bearer-Header — der Key ist dann im Programmcode sichtbar.
+// - Nicht gesetzt (sicherer Normalweg): Anfrage geht an die eigene
+//   Supabase Edge Function "groq-chat", die den echten Key nur
+//   serverseitig kennt. Braucht ein aktives Login.
 // ---------------------------------------------------------------------
 async function anfrageOpenAiKompatibel({ system, messages, json }) {
-  if (!API_KEY) throw new Error("VITE_AI_API_KEY fehlt — für Groq/OpenAI-kompatible Provider erforderlich.");
+  const body = {
+    model: MODEL,
+    messages: [...(system ? [{ role: "system", content: system }] : []), ...messages],
+    ...(json ? { response_format: { type: "json_object" } } : {}),
+  };
+
+  if (!API_KEY) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Groq wird ein aktives Login benötigt.");
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/groq-chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Groq-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content ?? "";
+  }
+
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${API_KEY}` },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [...(system ? [{ role: "system", content: system }] : []), ...messages],
-      ...(json ? { response_format: { type: "json_object" } } : {}),
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Groq-Anfrage fehlgeschlagen (${res.status}): ${await res.text()}`);
   const data = await res.json();
