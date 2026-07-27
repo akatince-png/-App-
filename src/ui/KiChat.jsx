@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Label, PrimaryButton, TextInput } from "./primitives";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "./theme";
 import CoachOrb from "./CoachOrb";
@@ -6,6 +6,8 @@ import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
 import { getCoachName, getVorlesenAktiv, saveVorlesenAktiv } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
+import { wissensBasisText } from "../utils/wissensBasis";
+import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
 
 // Wie viele Nachrichten aus dem (potenziell über Wochen gewachsenen)
 // gespeicherten Verlauf maximal als Kontext an die KI mitgeschickt werden —
@@ -89,7 +91,17 @@ export default function KiChat({
   pruefeBereitschaft,
   uebernehmenLabels,
 }) {
-  const { coachVerlaufLaden, coachNachrichtSpeichern } = useAppData();
+  const appData = useAppData();
+  const { coachVerlaufLaden, coachNachrichtSpeichern } = appData;
+  // "Background Brain" für den ADHS Coach — statische Wissens-Basis (siehe
+  // src/wissen/) + aktuelle Trackingdaten-Zusammenfassung, automatisch an
+  // JEDE Coach-Anfrage angehängt, in allen Bereichen (nicht nur Home) —
+  // damit der Coach unabhängig vom Gesprächsthema echten Hintergrund über
+  // die Nutzerin hat, statt bei jeder Anfrage bei null anzufangen.
+  const hintergrundKontext = useMemo(
+    () => `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}`,
+    [appData]
+  );
   const [offen, setOffen] = useState(false);
   const [verlauf, setVerlauf] = useState([]);
   const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);
@@ -160,7 +172,7 @@ export default function KiChat({
     if (bereich) coachNachrichtSpeichern(bereich, "nutzer", nachricht);
     try {
       const antwort = await AIService.coachChatStreamend({
-        systemPrompt,
+        systemPrompt: `${systemPrompt}\n\n${hintergrundKontext}`,
         verlauf: neuerVerlauf.slice(-KI_KONTEXT_LIMIT),
         coachName: getCoachName(),
         onTeilantwort: setStreamText,

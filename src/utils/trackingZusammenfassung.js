@@ -28,6 +28,16 @@ function schnitt(werte) {
   return werte.reduce((summe, w) => summe + w, 0) / werte.length;
 }
 
+function alterInJahren(geburtsdatumStr) {
+  const geburt = new Date(geburtsdatumStr);
+  if (Number.isNaN(geburt.getTime())) return null;
+  const heute = new Date();
+  let alter = heute.getFullYear() - geburt.getFullYear();
+  const geburtstagNochNichtGehabt = heute.getMonth() < geburt.getMonth() || (heute.getMonth() === geburt.getMonth() && heute.getDate() < geburt.getDate());
+  if (geburtstagNochNichtGehabt) alter -= 1;
+  return alter;
+}
+
 function trendRichtung(werte) {
   if (werte.length < 4) return null;
   const mitte = Math.floor(werte.length / 2);
@@ -140,6 +150,27 @@ export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_Z
       });
     }
     abschnitte.push(`Check-ins: ${checkins.length} Messung${checkins.length === 1 ? "" : "en"} erfasst` + (vergleiche.length ? `, Veränderung: ${vergleiche.join(", ")}` : "") + ".");
+  }
+
+  // Profil / persönliche Stammdaten — aktueller Stand, nicht auf den
+  // Zeitraum begrenzt (ändert sich selten).
+  const profil = appData.personalData;
+  if (profil && (profil.geschlecht || profil.geburtsdatum || profil.groesse || profil.gewichtStart)) {
+    const teile = [];
+    if (profil.geschlecht) teile.push(`Geschlecht: ${profil.geschlecht}`);
+    if (profil.geburtsdatum) {
+      const alter = alterInJahren(profil.geburtsdatum);
+      teile.push(`Alter: ${alter != null ? `${alter} Jahre` : profil.geburtsdatum}`);
+    }
+    if (profil.groesse) teile.push(`Größe: ${profil.groesse} cm`);
+    if (profil.gewichtStart) teile.push(`Startgewicht: ${profil.gewichtStart} kg`);
+    abschnitte.push(`Profil: ${teile.join(", ")}.`);
+  }
+
+  // Blutwerte/Biomarker — aktuellste bekannte Werte (kein zeitlicher Verlauf).
+  const blutwerteEintraege = Object.entries(appData.biomarker || {}).filter(([, wert]) => wert !== "" && wert != null);
+  if (blutwerteEintraege.length > 0) {
+    abschnitte.push(`Blutwerte (aktuellste bekannte Werte): ${blutwerteEintraege.map(([name, wert]) => `${name}: ${wert}`).join(", ")}.`);
   }
 
   if (abschnitte.length === 0) {

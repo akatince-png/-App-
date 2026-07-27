@@ -16,17 +16,14 @@ import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "..
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
-import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
 import KiChat from "../ui/KiChat";
 
-// Basis-Rollenbeschreibung des Home-Coaches — die Trackingdaten-
-// Zusammenfassung (siehe trackingZusammenfassung()) wird zur Laufzeit
-// darangehängt, damit der Coach bereichsübergreifende Zusammenhänge
-// erkennen kann (z. B. "seit weniger getrunken wird, sind auch die
-// Trainingswerte schlechter"), ohne bei jeder Anfrage die komplette
-// Rohhistorie mitschicken zu müssen.
+// Basis-Rollenbeschreibung des Home-Coaches. Die "Background Brain"-Inhalte
+// (Wissens-Basis aus src/wissen/ + Trackingdaten-Zusammenfassung) werden
+// nicht hier, sondern zentral in KiChat.jsx an JEDE Coach-Anfrage in allen
+// Bereichen angehängt (nicht nur Home) — siehe dort.
 const HOME_SYSTEM_PROMPT_BASIS =
-  "Du bist ein hilfsbereiter Coach für eine App zur Selbstverwaltung von Gesundheitsprotokollen (Peptide, Hormone, Supplemente, Training, Schlaf, Ernährung, Hydration, Tageslicht, Gewohnheiten). Beantworte Fragen zu den Plänen der Person allgemein und motivierend. Nutze die unten mitgegebene Zusammenfassung der Trackingdaten, um Zusammenhänge zwischen den Bereichen zu erkennen und anzusprechen, wenn es hilfreich ist (z. B. sinkende Trinkmenge und schlechtere Trainingswerte) — dräng das aber nicht in jede Antwort, nur wenn es zur Frage passt. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein neues Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, neue Rezepte), frag von dir aus alle dafür nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — antworte dabei immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.";
+  "Du bist ein hilfsbereiter Coach für eine App zur Selbstverwaltung von Gesundheitsprotokollen (Peptide, Hormone, Supplemente, Training, Schlaf, Ernährung, Hydration, Tageslicht, Gewohnheiten). Beantworte Fragen zu den Plänen der Person allgemein und motivierend. Nutze die weiter unten mitgegebene Zusammenfassung der Trackingdaten, um Zusammenhänge zwischen den Bereichen zu erkennen und anzusprechen, wenn es hilfreich ist (z. B. sinkende Trinkmenge und schlechtere Trainingswerte) — dräng das aber nicht in jede Antwort, nur wenn es zur Frage passt. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein neues Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, neue Rezepte), frag von dir aus alle dafür nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — antworte dabei immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.";
 
 // Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
 // bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
@@ -128,11 +125,6 @@ export default function HomeView({ onOpenView }) {
     setErinnerung,
     aenderungVermerken,
   } = useAppData();
-  // Voller Kontext (zweiter useAppData()-Aufruf ist unproblematisch, liest
-  // nur denselben Context erneut) — für trackingZusammenfassung() unten,
-  // die deutlich mehr Felder braucht als das restliche HomeView.
-  const appData = useAppData();
-  const trackingSummaryText = useMemo(() => trackingZusammenfassung(appData), [appData]);
 
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
@@ -521,7 +513,7 @@ export default function HomeView({ onOpenView }) {
         </div>
         <KiChat
           bereich="home"
-          systemPrompt={`${HOME_SYSTEM_PROMPT_BASIS}\n\n${trackingSummaryText}`}
+          systemPrompt={HOME_SYSTEM_PROMPT_BASIS}
           einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was — ich kann dir auch direkt bei jedem Bereich der App helfen, z. B. eine neue Gewohnheit anlegen, ein Supplement hinzufügen oder einen Trainingsplan aufstellen.`}
           pruefeBereitschaft={handleBereitschaftPruefen}
           onUebernehmen={handleUniverselleUebernahme}
