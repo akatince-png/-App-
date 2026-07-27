@@ -64,7 +64,7 @@ export const AIService = {
     ]
       .filter(Boolean)
       .join("\n");
-    const antwort = await sendeAnfrage({ system, prompt, json: false });
+    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: prompt }], json: false });
     return antwort.trim();
   },
 
@@ -96,7 +96,7 @@ export const AIService = {
     ]
       .filter(Boolean)
       .join("\n");
-    const antwort = await sendeAnfrage({ system, prompt, json: true });
+    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: prompt }], json: true });
     const data = parseJsonAntwort(antwort);
     if (!Array.isArray(data.einheiten)) throw new Error("Unerwartetes Format: 'einheiten' fehlt oder ist kein Array.");
     return data.einheiten;
@@ -126,9 +126,58 @@ export const AIService = {
       `Makro-Ziele pro Tag: ${kalorienZiel ?? "?"} kcal, ${proteinZiel ?? "?"}g Protein, ${kohlenhydrateZiel ?? "?"}g Kohlenhydrate, ${fettZiel ?? "?"}g Fett.`,
       "Schlage 2-3 passende Rezepte inkl. Zutaten und Nährwerten vor, die zu diesen Zielen passen.",
     ].join("\n");
-    const antwort = await sendeAnfrage({ system, prompt, json: true });
+    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: prompt }], json: true });
     const data = parseJsonAntwort(antwort);
     if (!Array.isArray(data.rezepte)) throw new Error("Unerwartetes Format: 'rezepte' fehlt oder ist kein Array.");
     return data.rezepte;
+  },
+
+  /**
+   * Freies Hin-und-Her mit dem Coach zu einem Thema (z. B. Trainingsplanung)
+   * — verlauf ist die komplette bisherige Konversation, damit die KI sich
+   * an frühere Antworten hält statt bei jeder Nachricht neu zu starten.
+   * Antwort bleibt Fließtext (kein JSON) — für eine strukturierte
+   * Zusammenfassung siehe trainingsplanAusChat().
+   *
+   * @param {{systemPrompt: string, verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<string>}
+   */
+  async coachChat({ systemPrompt, verlauf, coachName }) {
+    const system = mitPersona(coachName, systemPrompt);
+    const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
+    const antwort = await sendeAnfrage({ system, messages, json: false });
+    return antwort.trim();
+  },
+
+  /**
+   * Extrahiert aus einem geführten Trainings-Gespräch (siehe coachChat())
+   * den finalen, strukturierten Plan — gleiches JSON-Format wie
+   * trainingsplanVorschlag(), damit sich das Ergebnis genauso direkt an
+   * wochenplanHinzufuegen() weiterreichen lässt.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<Array<{wochentag: string, arten: string[], saetze: number, wiederholungen: string, uebungen: string}>>}
+   */
+  async trainingsplanAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Trainingsplan-Assistent für eine bestehende App.",
+        "Fasse das vorangegangene Gespräch jetzt als finalen Plan zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "einheiten": [ { "wochentag": "Mo"|"Di"|"Mi"|"Do"|"Fr"|"Sa"|"So", ' +
+          '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Sonstiges"), ' +
+          '"saetze": number, "wiederholungen": string, "uebungen": string (kommagetrennte Übungsliste als ein Textfeld) } ] }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse den oben besprochenen Trainingsplan jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!Array.isArray(data.einheiten)) throw new Error("Unerwartetes Format: 'einheiten' fehlt oder ist kein Array.");
+    return data.einheiten;
   },
 };

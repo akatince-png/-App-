@@ -29,15 +29,18 @@ const BASE_URL = import.meta.env.VITE_AI_BASE_URL || STANDARD_BASE_URLS[PROVIDER
  * rohen Antworttext zurück — das JSON-Parsing für Formulare übernimmt
  * aiService.js, da nur dort bekannt ist, welches Format erwartet wird.
  *
- * @param {{system?: string, prompt: string, json?: boolean}} params
+ * @param {{system?: string, messages: Array<{role: "user"|"assistant", content: string}>, json?: boolean}} params
+ *   messages: der volle bisherige Gesprächsverlauf (nicht nur die neueste
+ *   Nachricht) — erst dadurch kann das Modell auf frühere Antworten Bezug
+ *   nehmen, statt bei jeder Anfrage "vergesslich" neu zu starten.
  *   json: true fordert vom Modell strukturierte JSON-Ausgabe an (bei jedem
  *   Provider anders umgesetzt, siehe die einzelnen anfrage*-Funktionen).
  * @returns {Promise<string>}
  */
-export async function sendeAnfrage({ system, prompt, json = false }) {
-  if (PROVIDER === "ollama") return anfrageOllama({ system, prompt, json });
-  if (PROVIDER === "groq") return anfrageOpenAiKompatibel({ system, prompt, json });
-  if (PROVIDER === "gemini") return anfrageGemini({ system, prompt, json });
+export async function sendeAnfrage({ system, messages, json = false }) {
+  if (PROVIDER === "ollama") return anfrageOllama({ system, messages, json });
+  if (PROVIDER === "groq") return anfrageOpenAiKompatibel({ system, messages, json });
+  if (PROVIDER === "gemini") return anfrageGemini({ system, messages, json });
   throw new Error(`Unbekannter VITE_AI_PROVIDER: "${PROVIDER}". Erlaubt: ollama, groq, gemini.`);
 }
 
@@ -46,13 +49,13 @@ export async function sendeAnfrage({ system, prompt, json = false }) {
 // ("format": "json" zwingt das Modell zu syntaktisch validem JSON).
 // https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-chat-completion
 // ---------------------------------------------------------------------
-async function anfrageOllama({ system, prompt, json }) {
+async function anfrageOllama({ system, messages, json }) {
   const res = await fetch(`${BASE_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: MODEL,
-      messages: [...(system ? [{ role: "system", content: system }] : []), { role: "user", content: prompt }],
+      messages: [...(system ? [{ role: "system", content: system }] : []), ...messages],
       stream: false,
       ...(json ? { format: "json" } : {}),
     }),
@@ -67,14 +70,14 @@ async function anfrageOllama({ system, prompt, json }) {
 // baseUrl/model tauschen). Bearer-Token im Header, JSON-Mode über
 // response_format.
 // ---------------------------------------------------------------------
-async function anfrageOpenAiKompatibel({ system, prompt, json }) {
+async function anfrageOpenAiKompatibel({ system, messages, json }) {
   if (!API_KEY) throw new Error("VITE_AI_API_KEY fehlt — für Groq/OpenAI-kompatible Provider erforderlich.");
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${API_KEY}` },
     body: JSON.stringify({
       model: MODEL,
-      messages: [...(system ? [{ role: "system", content: system }] : []), { role: "user", content: prompt }],
+      messages: [...(system ? [{ role: "system", content: system }] : []), ...messages],
       ...(json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
@@ -84,16 +87,17 @@ async function anfrageOpenAiKompatibel({ system, prompt, json }) {
 }
 
 // ---------------------------------------------------------------------
-// Google Gemini — eigenes Request-/Response-Format, API-Key als Query-Param
-// statt Header.
+// Google Gemini — eigenes Request-/Response-Format: "assistant" heißt dort
+// "model", und der Verlauf steht als "contents" statt "messages".
+// API-Key als Query-Param statt Header.
 // ---------------------------------------------------------------------
-async function anfrageGemini({ system, prompt, json }) {
+async function anfrageGemini({ system, messages, json }) {
   if (!API_KEY) throw new Error("VITE_AI_API_KEY fehlt — für Gemini erforderlich.");
   const res = await fetch(`${BASE_URL}/models/${MODEL}:generateContent?key=${API_KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
       ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
       ...(json ? { generationConfig: { responseMimeType: "application/json" } } : {}),
     }),

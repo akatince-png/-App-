@@ -8,6 +8,7 @@ import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
 import { accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 import {
   TRAININGSARTEN,
   TRAINING_ENERGIELEVEL_OPTIONEN,
@@ -408,14 +409,6 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
   const [feedbackFuerId, setFeedbackFuerId] = useState(null);
 
-  // KI-Trainingsplan-Vorschlag (siehe services/aiService.js) — schlägt
-  // Einheiten vor und übernimmt sie direkt über denselben Weg wie eine
-  // manuell im WochenplanEditor hinzugefügte Einheit.
-  const [kiWunsch, setKiWunsch] = useState("");
-  const [kiEinheitenProWoche, setKiEinheitenProWoche] = useState("3");
-  const [kiLadend, setKiLadend] = useState(false);
-  const [kiErgebnis, setKiErgebnis] = useState(null);
-  const [kiFehler, setKiFehler] = useState(null);
 
   useEffect(() => {
     if (initialSessionId) {
@@ -503,28 +496,19 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     wochenplanEntfernen(id);
   };
 
-  const handleKiVorschlag = async () => {
-    setKiLadend(true);
-    setKiErgebnis(null);
-    setKiFehler(null);
-    try {
-      const einheiten = await AIService.trainingsplanVorschlag({
-        wunsch: kiWunsch || "ausgewogener Ganzkörper-Trainingsplan",
-        einheitenProWoche: Number(kiEinheitenProWoche) || 3,
-        coachName: getCoachName(),
-      });
-      // Nacheinander statt Promise.all, damit die Änderungsprotokoll-Einträge
-      // (aenderungVermerken in handleWochenplanHinzufuegen) in derselben
-      // Reihenfolge wie die KI-Antwort entstehen.
-      for (const einheit of einheiten) {
-        await handleWochenplanHinzufuegen(einheit);
-      }
-      setKiErgebnis(einheiten);
-    } catch (err) {
-      setKiFehler(err.message);
-    } finally {
-      setKiLadend(false);
+  // Übergabe an <KiChat onUebernehmen>: nimmt den kompletten Gesprächsstand,
+  // lässt die KI daraus den finalen Plan als JSON zusammenfassen und trägt
+  // jede Einheit über denselben Weg ein wie eine manuell im
+  // WochenplanEditor hinzugefügte Einheit.
+  const handleTrainingsplanUebernehmen = async (verlauf) => {
+    const einheiten = await AIService.trainingsplanAusChat({ verlauf, coachName: getCoachName() });
+    // Nacheinander statt Promise.all, damit die Änderungsprotokoll-Einträge
+    // (aenderungVermerken in handleWochenplanHinzufuegen) in derselben
+    // Reihenfolge wie die KI-Antwort entstehen.
+    for (const einheit of einheiten) {
+      await handleWochenplanHinzufuegen(einheit);
     }
+    return einheiten;
   };
 
   const handleTrainingEntfernen = (e) => {
@@ -601,32 +585,26 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
             wochenplanEntfernen={handleWochenplanEntfernen}
           />
 
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, marginTop: 14 }}>🤖 KI-Vorschlag</div>
-          <Card style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>
-              Beschreibe, was du trainieren willst — die KI schlägt passende Einheiten vor und trägt sie direkt oben in den Wochenplan ein. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
-            </div>
-            <Label>Trainingswunsch</Label>
-            <TextInput value={kiWunsch} onChange={setKiWunsch} placeholder="z. B. Push/Pull/Legs" />
-            <Label>Einheiten pro Woche</Label>
-            <TextInput type="number" value={kiEinheitenProWoche} onChange={setKiEinheitenProWoche} placeholder="3" />
-            <div style={{ marginTop: 10 }}>
-              <PrimaryButton onClick={handleKiVorschlag} disabled={kiLadend}>
-                {kiLadend ? "Frage Ollama…" : "Plan vorschlagen"}
-              </PrimaryButton>
-            </div>
-            {kiErgebnis && (
-              <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                {kiErgebnis.length} Einheit{kiErgebnis.length === 1 ? "" : "en"} hinzugefügt:
-                {kiErgebnis.map((e, i) => (
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, marginTop: 14 }}>🤖 {getCoachName()} — Trainingsplanung</div>
+          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+            Erzähl frei, was du trainieren willst, frag nach, lass Vorschläge anpassen — dein Coach merkt sich das Gespräch. Wenn ihr euch einig seid, auf „Plan übernehmen" tippen. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+          </div>
+          <KiChat
+            systemPrompt="Du bist ein erfahrener, geduldiger Trainingscoach für eine bestehende App. Hilf der Person, einen zu ihr passenden Trainingsplan zu entwickeln — frag nach, wenn wichtige Angaben fehlen (z. B. Erfahrung, verfügbare Tage, Ziele), mach konkrete Vorschläge, geh auf Wünsche und Korrekturen ein. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+            einleitung={`Hi, ich bin ${getCoachName()}! Erzähl mir, wie dein Training aussehen soll — z. B. Erfahrungslevel, wie viele Tage pro Woche du Zeit hast, und worauf du Lust hast (Kraft, Cardio, Bodyweight, ...).`}
+            onUebernehmen={handleTrainingsplanUebernehmen}
+            uebernehmenLabel="Plan übernehmen"
+            renderErgebnis={(einheiten) => (
+              <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                {einheiten.length} Einheit{einheiten.length === 1 ? "" : "en"} in den Wochenplan übernommen:
+                {einheiten.map((e, i) => (
                   <div key={i}>
                     · {e.wochentag}: {(e.arten || []).join(" + ")} {e.saetze && e.wiederholungen ? `(${e.saetze}×${e.wiederholungen})` : ""}
                   </div>
                 ))}
               </div>
             )}
-            {kiFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{kiFehler}</div>}
-          </Card>
+          />
         </>
       )}
 
