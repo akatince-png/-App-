@@ -8,6 +8,9 @@ import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 const DOSIS_FELDER = ["menge", "customDays", "onDays", "offDays", "eigenerStart", "weekdays", "uhrzeiten"];
 
@@ -77,6 +80,30 @@ export default function MedikamenteView({ onHome, embedded = false }) {
     setNeuesMedikament(NEUES_MEDIKAMENT_LEER);
   };
 
+  // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
+  // Medikament über denselben Weg an wie das manuelle Formular unten.
+  const handleMedikamentUebernehmen = async (verlauf) => {
+    const m = await AIService.medikamentAusChat({ verlauf, coachName: getCoachName() });
+    const payload = {
+      name: m.name,
+      menge: m.menge || "",
+      kategorie: m.kategorie || "Sonstige",
+      einnahmeart: m.einnahmeart || "Tablette (oral)",
+      intervallTyp: m.intervallTyp || "fixed",
+      intervallDays: m.intervallDays || 1,
+      customDays: m.customDays || "",
+      onDays: m.onDays || "",
+      offDays: m.offDays || "",
+      weekdays: m.weekdays || [],
+      eigenerStart: m.eigenerStart || "",
+      uhrzeiten: m.uhrzeiten?.length ? m.uhrzeiten : ["20:00"],
+    };
+    const result = await hormonHinzufuegen(payload);
+    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+    aenderungVermerken({ kategorie: "hormon", itemName: m.name, aktion: "hinzugefügt", detail: `${payload.kategorie} · ${payload.menge || "–"}` });
+    return payload;
+  };
+
   const handleFoto = (name, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -138,8 +165,25 @@ export default function MedikamenteView({ onHome, embedded = false }) {
         </div>
       )}
 
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} fragen</div>
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Sag, welches Medikament/Hormon du hinzufügen willst — der Coach fragt Dosierung, Einnahmeart und Rhythmus ab. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+      </div>
+      <KiChat
+        systemPrompt="Du hilfst dabei, ein neues Medikament oder Hormon für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Welches Medikament oder Hormon möchtest du hinzufügen?`}
+        onUebernehmen={handleMedikamentUebernehmen}
+        uebernehmenLabel="Medikament anlegen"
+        renderErgebnis={(m) => (
+          <div style={{ padding: 12, borderRadius: 12, background: "#EAF0F8", fontSize: 12.5, lineHeight: 1.6 }}>
+            "{m.name}" wurde angelegt · {m.kategorie}
+            {m.menge ? ` · ${m.menge}` : ""}
+          </div>
+        )}
+      />
+
       <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen</div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen (manuell)</div>
         <Label>Name</Label>
         <TextInput value={neuesMedikament.name} onChange={(v) => handleChange("name", v)} placeholder="z. B. Testosteron Enantat" />
 

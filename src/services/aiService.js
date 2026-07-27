@@ -332,4 +332,39 @@ export const AIService = {
     if (!data.name || !Array.isArray(data.tageszeiten)) throw new Error("Unerwartetes Format: 'name'/'tageszeiten' fehlen.");
     return data;
   },
+
+  /**
+   * Extrahiert aus einem geführten Medikamenten-Gespräch (siehe coachChat())
+   * ein neues Medikament/Hormon — Format entspricht dem, was
+   * hormonHinzufuegen() erwartet (siehe MedikamenteView.jsx).
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{name: string, menge: string, kategorie: string, einnahmeart: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
+   */
+  async medikamentAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der neue Medikamente/Hormone für Nutzer anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt als fertiges Medikament zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string, "menge": string (z. B. "50mg"), ' +
+          '"kategorie": "Hormone"|"Blutdruck"|"Diabetes"|"Cholesterin"|"Schmerzmittel"|"Sonstige", ' +
+          '"einnahmeart": "Injektion"|"Tablette (oral)"|"Kapsel"|"Pulver"|"Tropfen"|"Nasenspray", ' +
+          '"intervallTyp": "fixed"|"custom"|"cycle"|"weekdays" (fixed = alle X Tage, custom = eigene Tagesanzahl, cycle = X Tage an/Y Tage ab, weekdays = feste Wochentage), ' +
+          '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
+          '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
+          '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), "uhrzeiten": string[] (eine oder mehrere "HH:MM") }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben besprochene Medikament jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
+    return data;
+  },
 };
