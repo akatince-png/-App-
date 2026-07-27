@@ -11,6 +11,14 @@
 export const LABELS = {
   en: {
     // --- constants.js: ZIELE ---
+    "Fokus & Konzentration": "Focus & concentration",
+    "Prokrastination überwinden": "Overcome procrastination",
+    "Tagesstruktur aufbauen": "Build daily structure",
+    "Reizüberflutung reduzieren": "Reduce sensory overload",
+    "Zeitgefühl verbessern": "Improve time awareness",
+    "Impulskontrolle stärken": "Strengthen impulse control",
+    "Weniger Overwhelm": "Less overwhelm",
+    "Motivation im Alltag": "Everyday motivation",
     "Gewichtsabnahme": "Weight loss",
     "Muskelaufbau": "Muscle building",
     "Regeneration / Heilung": "Recovery / Healing",
@@ -345,6 +353,14 @@ export const LABELS = {
   },
   tr: {
     // --- constants.js: ZIELE ---
+    "Fokus & Konzentration": "Odak & konsantrasyon",
+    "Prokrastination überwinden": "Erteleme alışkanlığını aşmak",
+    "Tagesstruktur aufbauen": "Günlük düzen oluşturmak",
+    "Reizüberflutung reduzieren": "Uyaran yoğunluğunu azaltmak",
+    "Zeitgefühl verbessern": "Zaman algısını geliştirmek",
+    "Impulskontrolle stärken": "Dürtü kontrolünü güçlendirmek",
+    "Weniger Overwhelm": "Daha az bunalma hissi",
+    "Motivation im Alltag": "Günlük motivasyon",
     "Gewichtsabnahme": "Kilo verme",
     "Muskelaufbau": "Kas geliştirme",
     "Regeneration / Heilung": "Onarım / İyileşme",

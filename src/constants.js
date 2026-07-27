@@ -1,4 +1,16 @@
+// Reihenfolge bewusst: erst ADHS-spezifische Ziele (die eigentliche
+// Zielgruppe der App), danach die allgemeinen Gesundheits-/Biohacking-Ziele
+// — zwei inhaltliche Gruppen in einer Liste, ohne das per Überschrift extra
+// zu benennen (Nutzerinnen-Vorgabe).
 export const ZIELE = [
+  "Fokus & Konzentration",
+  "Prokrastination überwinden",
+  "Tagesstruktur aufbauen",
+  "Reizüberflutung reduzieren",
+  "Zeitgefühl verbessern",
+  "Impulskontrolle stärken",
+  "Weniger Overwhelm",
+  "Motivation im Alltag",
   "Gewichtsabnahme",
   "Muskelaufbau",
   "Regeneration / Heilung",

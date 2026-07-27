@@ -275,26 +275,50 @@ schreiben; "Daten in wissen/ speichern" ist technisch nicht möglich und
 war nicht die richtige Umsetzung eines entsprechenden Wunsches der
 Nutzerin — stattdessen läuft `trackingZusammenfassung()` jetzt überall.
 
-### Coach-geführtes Onboarding, Phase 1 (⭐ neu)
+### Coach-geführtes Onboarding — beide Phasen + alle Schritte (⭐ aktualisiert 27.07., nachts)
 
-Nach der Begrüßung (`OnboardingIntroView.jsx`) fragt der Coach jetzt, ob
-er begleiten soll oder die Nutzerin lieber allein macht. Bei Begleitung
-übernimmt `OnboardingCoachGuide.jsx` (neu, in `src/views/onboarding/`)
-Name, Ziele und persönliche Daten (Geschlecht, Geburtsdatum, Größe,
-Startgewicht) als durchgehende Frage-für-Frage-Sequenz — Mikrofon-Option,
-überspringbar, speichert jede Antwort **sofort über dieselben Funktionen**
-wie die manuellen Formulare (`toggleZiel`, `setPersonal`). Kein KI-Call für
-die Fragen selbst (Felder sind fest bekannt, ein Modell wäre hier nur
-Latenz + Fehlerquelle in einem kritischen Pfad). `OnboardingFlow.jsx`
-überspringt danach die Phasen `ziele`/`profil` (bereits erledigt) und geht
-direkt zu `laborwerte` weiter — ab da normaler manueller Ablauf.
+Nach der Begrüßung (`OnboardingIntroView.jsx`) fragt der Coach, ob er
+begleiten soll oder die Nutzerin lieber allein macht — bei Begleitung
+gibt es jetzt zwei gleichwertige Varianten zur Auswahl:
+- **Phase 1 — Frage für Frage** (`OnboardingCoachGuide.jsx`): feste
+  Sequenz durch Name/Ziele/Geschlecht/Geburtsdatum/Größe/Startgewicht.
+  Die Fragen selbst sind weiterhin NICHT KI-generiert (Felder fest
+  bekannt, kein Latenz-/Fehlerrisiko in diesem kritischen Pfad) — aber
+  die ANTWORT bei Text-/Zahlenfeldern läuft jetzt durch
+  `AIService.feldAntwortInterpretieren()` (z. B. "ich wiege ungefähr 75
+  Kilo" → "75") und wird der Person zur Bestätigung gezeigt, bevor
+  gespeichert wird. Der Coach-Orb selbst ist jetzt der Mikrofon-Knopf
+  (antippen = sprechen) — der frühere separate Mikrofon-Button neben dem
+  Eingabefeld ist weg (Nutzerinnen-Feedback: wirkte doppelt/überflüssig).
+- **Phase 2 — Frei erzählen** (`OnboardingCoachFreitext.jsx`): die
+  Person erzählt frei, `AIService.onboardingAusChat()` ordnet am Ende
+  zu. Komplett neu gestaltet (Nutzerinnen-Feedback: "sieht extrem billig
+  aus") — kein Kasten mehr um Mikrofon+Eingabe, stattdessen ein
+  großer, zentraler Coach-Orb (132px, "Home-Button auf Steroiden") als
+  visueller Mittelpunkt, schlichte Eingabezeile darunter. Hat jetzt auch
+  das "Background Brain" (Wissensbasis + Trackingdaten-Zusammenfassung,
+  wie überall sonst in der App) im Systemprompt.
 
-**Nicht umgesetzt (bewusst, siehe offene Punkte):** freies Erzählen +
-automatische Zuordnung zu Feldern (Variante 2 aus dem Auftrag), sowie eine
-geführte Alternative für Laborwerte und die 9 Kategorien-Schritte
-(Training, Ernährung, Supplemente, Medikamente, Peptide, …) — die sind
-deutlich vielschichtiger (Multi-Add-Muster, Dosierungs-Unterformulare,
-Foto-Upload/OCR, WochenplanEditor) und brauchen einen eigenen Anlauf.
+Beide Varianten zeigen vor dem eigentlichen Speichern eine
+**Bestätigungs-/Vorschau-Ansicht** ("Passt das so?" mit den erkannten
+Werten) statt sofort zu speichern — erst nach explizitem zweitem Tippen
+wird über dieselben Funktionen wie die manuellen Formulare gespeichert
+(`toggleZiel`, `setPersonal`, `localStorage`). `OnboardingFlow.jsx`
+überspringt danach die Phasen `ziele`/`profil` (bereits erledigt) und
+geht direkt zu `laborwerte` weiter.
+
+Auch **Laborwerte** und alle **9 Kategorien-Schritte** (Training,
+Ernährung, Supplemente, Medikamente, Peptide, Schlaf, Hydration,
+Tageslicht, Gewohnheiten) haben inzwischen eine Coach-Begleitung — siehe
+Abschnitt weiter unten ("Wo der Coach heute verfügbar ist").
+
+**ZIELE-Liste jetzt ADHS-spezifisch** (`constants.js`): acht neue
+ADHS-bezogene Ziele (Fokus & Konzentration, Prokrastination überwinden,
+Tagesstruktur aufbauen, Reizüberflutung reduzieren, Zeitgefühl
+verbessern, Impulskontrolle stärken, Weniger Overwhelm, Motivation im
+Alltag) stehen jetzt VOR den bisherigen allgemeinen Gesundheits-/
+Biohacking-Zielen — eine Liste, zwei inhaltliche Gruppen durch
+Reihenfolge statt Überschrift (Nutzerinnen-Vorgabe: "nicht so genannt").
 
 ### Laborwerte-Lexikon-Verknüpfung (⭐ neu)
 

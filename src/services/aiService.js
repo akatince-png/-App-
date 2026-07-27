@@ -642,4 +642,32 @@ export const AIService = {
     if (!data.werte || typeof data.werte !== "object") throw new Error("Unerwartetes Format: 'werte' fehlt.");
     return data;
   },
+
+  /**
+   * Bereinigt eine gesprochene oder getippte Antwort auf EINE einzelne
+   * Onboarding-Frage (siehe OnboardingCoachGuide.jsx) zum reinen Feldwert —
+   * z. B. "ich wiege ungefähr 75 Kilo" → "75". Anders als die …AusChat-
+   * Funktionen kein ganzes Gespräch, sondern eine einzelne Frage/Antwort,
+   * damit die Person das Ergebnis vor dem Speichern noch bestätigen kann.
+   *
+   * @param {{frage: string, antwort: string, feldTyp: "text"|"number", coachName?: string}} params
+   * @returns {Promise<{wert: string}>}
+   */
+  async feldAntwortInterpretieren({ frage, antwort, feldTyp, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du hilfst dabei, eine gesprochene oder getippte Antwort auf eine einzelne Frage in einem Formularfeld zu erfassen.",
+        `Die gestellte Frage war: "${frage}"`,
+        `Erwarteter Feldtyp: ${feldTyp === "number" ? "eine Zahl, ohne Einheit" : "ein kurzer Text"}.`,
+        "Extrahiere aus der Antwort NUR den eigentlichen Wert für dieses Feld, ohne Füllwörter, ohne ganze Sätze.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "wert": string }',
+      ].join(" ")
+    );
+    const messages = [{ role: "user", content: antwort }];
+    const antwortJson = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwortJson);
+    return { wert: (data.wert ?? antwort).toString() };
+  },
 };
