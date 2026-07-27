@@ -11,6 +11,7 @@ import { TAGESZEIT_STUNDE } from "../utils/dayItems";
 import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
 
 const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
@@ -360,6 +361,7 @@ export default function NutritionView({ onHome, embedded = false }) {
         kfa: aktuellesKfa || undefined,
         gewicht: aktuellesGewicht || undefined,
         kalorienZiel: kalorienZiel || kalorienIst || undefined,
+        coachName: getCoachName(),
       });
       for (const rezept of rezepte) {
         const result = await mahlzeitHinzufuegen({

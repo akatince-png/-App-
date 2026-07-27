@@ -41,7 +41,7 @@ export default function WelcomeView({ onDone }) {
               style={{
                 padding: "6px 10px",
                 borderRadius: 6,
-                border: "1px solid #E5E7EB",
+                border: `1px solid ${cardBorder}`,
                 background: lang === langCode ? "#1E2B29" : "#fff",
                 color: lang === langCode ? "#fff" : "#6B7280",
                 fontSize: 11,

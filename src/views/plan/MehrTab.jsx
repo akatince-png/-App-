@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Pill } from "../../ui/primitives";
+import { Card, Label, Pill, TextInput } from "../../ui/primitives";
 import { accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
 import { useAppData } from "../../context/AppDataContext";
@@ -7,6 +7,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import { AIService } from "../../services/aiService";
+import { getCoachName, saveCoachName, STANDARD_COACH_NAME } from "../../utils/coachStorage";
 
 export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
@@ -29,6 +30,7 @@ export default function MehrTab({ onOpenLexikon }) {
   const [kiLadend, setKiLadend] = useState(false);
   const [kiAntwort, setKiAntwort] = useState(null);
   const [kiFehler, setKiFehler] = useState(null);
+  const [coachName, setCoachNameState] = useState(getCoachName());
 
   const DATENSCHUTZ = ["mehr.datenschutz.1", "mehr.datenschutz.2", "mehr.datenschutz.3", "mehr.datenschutz.4", "mehr.datenschutz.5"];
   const ERWEITERUNGEN = ["mehr.erweiterungen.1", "mehr.erweiterungen.2", "mehr.erweiterungen.3", "mehr.erweiterungen.4"];
@@ -60,7 +62,7 @@ export default function MehrTab({ onOpenLexikon }) {
     setKiAntwort(null);
     setKiFehler(null);
     try {
-      const antwort = await AIService.morgenImpuls({});
+      const antwort = await AIService.morgenImpuls({ coachName });
       setKiAntwort(antwort);
     } catch (err) {
       setKiFehler(err.message);
@@ -201,6 +203,28 @@ export default function MehrTab({ onOpenLexikon }) {
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>KI-Coach</div>
       <Card style={{ marginBottom: 20 }}>
+        <Label>Name deines Coaches</Label>
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <div style={{ flex: 1 }}>
+            <TextInput
+              value={coachName === STANDARD_COACH_NAME ? "" : coachName}
+              onChange={setCoachNameState}
+              placeholder="z. B. Coach Acker"
+              onKeyPress={(e) => e.key === "Enter" && saveCoachName(coachName)}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => saveCoachName(coachName)}
+            style={{ padding: "0 16px", borderRadius: 10, border: "none", background: accentDark, color: "#fff", fontWeight: 700, cursor: "pointer" }}
+          >
+            Speichern
+          </button>
+        </div>
+        <div style={{ fontSize: 11.5, color: textMuted, marginTop: -6, marginBottom: 14 }}>
+          Dein Coach stellt sich danach überall in der App unter diesem Namen vor, statt nur "KI-Coach" zu heißen. Nur auf diesem Gerät gespeichert.
+        </div>
+
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
           Testet die Verbindung zu deinem lokalen Ollama — funktioniert nur, wenn Ollama auf diesem Computer gerade läuft und du die Seite auf demselben Computer geöffnet hast.
         </div>

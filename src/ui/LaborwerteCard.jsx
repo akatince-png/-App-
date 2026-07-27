@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "./primitives";
-import { accentDark, accentSoft, danger, success, textMuted } from "./theme";
+import { accent, accentDark, accentSoft, danger, success, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import LaborwerteFelder from "./LaborwerteFelder";
 
@@ -37,7 +37,7 @@ export default function LaborwerteCard({ titel = "Laborwerte (optional)", inputI
             gap: 8,
             padding: "12px",
             borderRadius: 10,
-            border: `1.5px dashed #0FB8A3`,
+            border: `1.5px dashed ${accent}`,
             background: accentSoft,
             color: accentDark,
             fontSize: 13,

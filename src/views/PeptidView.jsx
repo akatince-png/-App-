@@ -3,7 +3,7 @@ import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInp
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { accentSoft, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { accent, accentSoft, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, keyOf, sameDay } from "../utils/dates";
@@ -210,7 +210,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                 ) : (
                   <button
                     onClick={() => openFeedback(dose)}
-                    style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#0FB8A3", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                    style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                   >
                     {t("peptid.action.inject")}
                   </button>
@@ -257,7 +257,7 @@ export default function PeptidView({ onHome, embedded = false }) {
                   />
                   <label
                     htmlFor={`nebenwirkung-foto-${k}`}
-                    style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed #0FB8A3`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
+                    style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
                   >
                     {t("peptid.feedback.photo.cta")}
                   </label>

@@ -7,6 +7,7 @@ import AutocompleteInput from "../ui/AutocompleteInput";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
 import { accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
 import {
   TRAININGSARTEN,
   TRAINING_ENERGIELEVEL_OPTIONEN,
@@ -510,6 +511,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       const einheiten = await AIService.trainingsplanVorschlag({
         wunsch: kiWunsch || "ausgewogener Ganzkörper-Trainingsplan",
         einheitenProWoche: Number(kiEinheitenProWoche) || 3,
+        coachName: getCoachName(),
       });
       // Nacheinander statt Promise.all, damit die Änderungsprotokoll-Einträge
       // (aenderungVermerken in handleWochenplanHinzufuegen) in derselben

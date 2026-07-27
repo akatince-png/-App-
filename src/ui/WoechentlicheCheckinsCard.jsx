@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, Label, Pill, PrimaryButton, TextInput } from "./primitives";
 import { SignedPhoto } from "./SignedPhoto";
-import { accentDark, accentSoft, cardBorder, textMuted } from "./theme";
+import { accent, accentDark, accentSoft, cardBorder, textMuted } from "./theme";
 import { ENERGIELEVEL_OPTIONEN, FOTO_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 
@@ -132,7 +132,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
                         padding: "8px 0",
                         borderRadius: 8,
                         fontSize: 16,
-                        border: `1px solid ${neuerEintrag[id] === e ? "#0FB8A3" : cardBorder}`,
+                        border: `1px solid ${neuerEintrag[id] === e ? accent : cardBorder}`,
                         background: neuerEintrag[id] === e ? accentSoft : "#FAFEFC",
                         cursor: "pointer",
                       }}
@@ -163,7 +163,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
         <input type="file" accept="image/*" id="eintrag-foto" style={{ display: "none" }} onChange={handleEintragFoto} />
         <label
           htmlFor="eintrag-foto"
-          style={{ display: "block", textAlign: "center", padding: "10px", borderRadius: 10, border: `1.5px dashed #0FB8A3`, background: accentSoft, color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          style={{ display: "block", textAlign: "center", padding: "10px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: accentSoft, color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
         >
           📷 {fotoKategorie}-Foto aufnehmen
         </label>

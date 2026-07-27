@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { cardBorder } from "./theme";
 
 /**
  * QuickTaskList: One-Tap Task Check-ins mit Micro-Interactions
@@ -71,7 +72,7 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
             gap: 14,
             padding: "16px 16px",
             borderRadius: 14,
-            border: item.done ? "none" : "2px solid #E5E7EB",
+            border: item.done ? "none" : `2px solid ${cardBorder}`,
             background: item.done
               ? "linear-gradient(135deg, #F0FDF4, #DBEAFE)"
               : "#fff",

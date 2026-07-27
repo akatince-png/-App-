@@ -8,7 +8,7 @@ import TimeWheelField from "../../ui/TimeWheelField";
 import NumberWheelField from "../../ui/NumberWheelField";
 import DosierungFields from "../../ui/DosierungFields";
 import { SignedPhoto } from "../../ui/SignedPhoto";
-import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, PEPTIDE_OPTIONEN, WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS } from "./categorySteps";
@@ -1010,7 +1010,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                         textAlign: "center",
                         padding: "9px",
                         borderRadius: 10,
-                        border: "1.5px dashed #0FB8A3",
+                        border: `1.5px dashed ${accent}`,
                         background: "#fff",
                         color: accentDark,
                         fontSize: 12,

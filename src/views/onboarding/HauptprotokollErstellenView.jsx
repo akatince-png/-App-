@@ -100,7 +100,7 @@ export default function HauptprotokollErstellenView({ onDone, onCancel }) {
               style={{
                 padding: "12px 20px",
                 borderRadius: 12,
-                border: "1px solid #E5E7EB",
+                border: `1px solid ${cardBorder}`,
                 background: "#fff",
                 fontSize: 14,
                 fontWeight: 600,

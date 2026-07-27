@@ -3,7 +3,7 @@ import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextInput } from 
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
@@ -197,7 +197,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
                     ) : (
                       <button
                         onClick={() => toggleHormonErledigt(toLocalISODate(dose.date), dose.name, dose.uhrzeit)}
-                        style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#0FB8A3", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                        style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                       >
                         Bestätigen
                       </button>

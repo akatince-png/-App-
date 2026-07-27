@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, PrimaryButton } from "../../ui/primitives";
-import { textMuted } from "../../ui/theme";
+import { cardBorder, textMuted } from "../../ui/theme";
 import Logo from "../../ui/Logo";
 import Icon from "../../ui/Icon";
 import { useT } from "../../i18n/translate";
@@ -76,7 +76,7 @@ export default function OnboardingIntroView({ onDone, onCancel }) {
               style={{
                 padding: "12px 20px",
                 borderRadius: 12,
-                border: "1px solid #E5E7EB",
+                border: `1px solid ${cardBorder}`,
                 background: "#fff",
                 fontSize: 14,
                 fontWeight: 600,

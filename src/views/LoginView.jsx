@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, PrimaryButton } from "../ui/primitives";
-import { danger, success, textMuted } from "../ui/theme";
+import { cardBorder, danger, success, textMuted } from "../ui/theme";
 import Logo from "../ui/Logo";
 import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/translate";
@@ -51,7 +51,7 @@ export default function LoginView() {
               style={{
                 padding: "8px 12px",
                 borderRadius: 8,
-                border: "1px solid #E5E7EB",
+                border: `1px solid ${cardBorder}`,
                 background: lang === langCode ? "#1E2B29" : "#fff",
                 color: lang === langCode ? "#fff" : "#6B7280",
                 fontSize: 12,

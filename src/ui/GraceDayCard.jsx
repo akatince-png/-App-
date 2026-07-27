@@ -1,4 +1,5 @@
 import React from "react";
+import { accent, cardBorder } from "./theme";
 
 /**
  * GraceDayCard: Wochenrückblick mit Anti-Scham-Mechanismus
@@ -45,7 +46,7 @@ export default function GraceDayCard({ weeklyStats = {}, motivationalMessage = n
         padding: "16px 14px",
         borderRadius: 14,
         background: "#FFF",
-        border: "1px solid #E5E7EB",
+        border: `1px solid ${cardBorder}`,
         animation: "fadeInUp 0.5s ease-out",
       }}
     >
@@ -92,7 +93,7 @@ export default function GraceDayCard({ weeklyStats = {}, motivationalMessage = n
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
-                background: isCompleted ? "#16A34A" : "#E5E7EB",
+                background: isCompleted ? accent : cardBorder,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
