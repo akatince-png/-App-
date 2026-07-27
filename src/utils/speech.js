@@ -1,4 +1,4 @@
-// Sprachein-/ausgabe für den KI-Coach — nutzt ausschließlich im Browser
+// Sprachein-/ausgabe für den ADHS Coach — nutzt ausschließlich im Browser
 // eingebaute APIs (Web Speech API), keinen zusätzlichen Dienst und keine
 // neuen Kosten. Verfügbarkeit unterscheidet sich je Browser:
 // - Spracherkennung (Mikrofon → Text): Chrome/Edge/Safari, NICHT Firefox.

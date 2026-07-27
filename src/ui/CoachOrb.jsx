@@ -1,6 +1,6 @@
 import React from "react";
 
-// Animierte "digitale" Kreis-Grafik für den KI-Coach — Trigger-Icon und
+// Animierte "digitale" Kreis-Grafik für den ADHS Coach — Trigger-Icon und
 // Live-Anzeige des Gesprächszustands statt eines statischen Buttons,
 // angelehnt an die Sprachmodus-Optik moderner KI-Apps (Gemini, ChatGPT).
 // zustand: "ruhe" (Standard) | "hoert" (Mikrofon aktiv) | "denkt"

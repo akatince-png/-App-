@@ -1,7 +1,7 @@
 import { sendeAnfrage, sendeAnfrageStreamend } from "./aiProviders";
 import { STANDARD_COACH_NAME } from "../utils/coachStorage";
 
-// KI-Coach-Modul: bündelt alle App-seitigen KI-Funktionen hinter einer
+// ADHS-Coach-Modul: bündelt alle App-seitigen KI-Funktionen hinter einer
 // stabilen Schnittstelle, unabhängig davon, ob im Hintergrund gerade Ollama
 // (lokal) oder eine Cloud-API antwortet (siehe aiProviders.js). Bewusst als
 // eigenständiges Modul ohne Abhängigkeit auf React/AppDataContext — die
@@ -36,7 +36,7 @@ function parseJsonAntwort(text) {
 // gegenüber jeder Person unter ihrem eigenen, selbst gewählten Namen auf.
 function mitPersona(coachName, rollenbeschreibung) {
   const name = coachName?.trim();
-  const vorstellung = name && name !== STANDARD_COACH_NAME ? `Du heißt "${name}" und bist der persönliche KI-Coach dieser Person. ` : "";
+  const vorstellung = name && name !== STANDARD_COACH_NAME ? `Du heißt "${name}" und bist der persönliche ADHS Coach dieser Person. ` : "";
   return vorstellung + rollenbeschreibung;
 }
 

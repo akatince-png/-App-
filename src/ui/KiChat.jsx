@@ -33,7 +33,7 @@ function StopIcon({ size = 15 }) {
   );
 }
 
-// Wiederverwendbare Chat-Oberfläche für den KI-Coach — echtes Hin-und-Her
+// Wiederverwendbare Chat-Oberfläche für den ADHS Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).
 // Zwei Phasen: 1) frei mit dem Coach reden/nachjustieren, 2) per eigenem
 // Knopf den aktuellen Gesprächsstand strukturiert "übernehmen" (z. B. als

@@ -153,7 +153,7 @@ async function anfrageOpenAiKompatibel({ system, messages, json }) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Groq wird ein aktives Login benötigt.");
+    if (!session) throw new Error("Nicht angemeldet — für den ADHS Coach über Groq wird ein aktives Login benötigt.");
     const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/groq-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
@@ -206,7 +206,7 @@ async function anfrageGemini({ system, messages, json }) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Gemini wird ein aktives Login benötigt.");
+    if (!session) throw new Error("Nicht angemeldet — für den ADHS Coach über Gemini wird ein aktives Login benötigt.");
     const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${GEMINI_EDGE_FUNCTION_SLUG}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
@@ -242,7 +242,7 @@ async function anfrageGeminiStreamend({ system, messages, onTeilantwort }) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session) throw new Error("Nicht angemeldet — für den KI-Coach über Gemini wird ein aktives Login benötigt.");
+    if (!session) throw new Error("Nicht angemeldet — für den ADHS Coach über Gemini wird ein aktives Login benötigt.");
     res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${GEMINI_EDGE_FUNCTION_SLUG}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },

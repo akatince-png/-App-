@@ -137,7 +137,7 @@ input[type="time"]::-webkit-date-and-time-value {
   }
 }
 
-/* KI-Coach-Orb: animierte Kreis-Grafik statt statischem Icon als Trigger für
+/* ADHS-Coach-Orb: animierte Kreis-Grafik statt statischem Icon als Trigger für
    den Coach-Chat (angelehnt an die Sprachmodus-Optik moderner KI-Apps) —
    reagiert auf den Gesprächszustand (ruhig / hört zu / denkt nach / spricht),
    siehe src/ui/CoachOrb.jsx. */

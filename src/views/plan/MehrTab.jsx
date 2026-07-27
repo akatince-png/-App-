@@ -55,7 +55,7 @@ export default function MehrTab({ onOpenLexikon }) {
     setTestMsg(result?.ok ? t("mehr.push.test.success") : result?.error || t("mehr.push.test.error"));
   };
 
-  // Erster Testaufruf des KI-Coach-Moduls direkt aus der App heraus — prüft
+  // Erster Testaufruf des ADHS-Coach-Moduls direkt aus der App heraus — prüft
   // die ganze Kette (Vercel-ENV → Browser → Ollama) ohne eigene Testseite.
   const handleKiTest = async () => {
     setKiLadend(true);
@@ -201,7 +201,7 @@ export default function MehrTab({ onOpenLexikon }) {
         </button>
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>KI-Coach</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>ADHS Coach</div>
       <Card style={{ marginBottom: 20 }}>
         <Label>Name deines Coaches</Label>
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
@@ -222,7 +222,7 @@ export default function MehrTab({ onOpenLexikon }) {
           </button>
         </div>
         <div style={{ fontSize: 11.5, color: textMuted, marginTop: -6, marginBottom: 14 }}>
-          Dein Coach stellt sich danach überall in der App unter diesem Namen vor, statt nur "KI-Coach" zu heißen. Nur auf diesem Gerät gespeichert.
+          Dein Coach stellt sich danach überall in der App unter diesem Namen vor, statt nur "ADHS Coach" zu heißen. Nur auf diesem Gerät gespeichert.
         </div>
 
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>

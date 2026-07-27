@@ -1,10 +1,10 @@
-// Persönlicher Name des KI-Coaches (z. B. "Coach Acker") — rein clientseitig
-// in localStorage, kein Server-Roundtrip nötig. Ein Name, keine getrennten
-// "Mitarbeiter" — dieselbe KI-Quelle (siehe services/aiProviders.js)
-// antwortet einfach unter diesem Namen, injiziert über den System-Prompt in
-// jeder Anfrage (siehe services/aiService.js).
+// Persönlicher Name des ADHS Coaches (z. B. "Coach Acker") — rein
+// clientseitig in localStorage, kein Server-Roundtrip nötig. Ein Name,
+// keine getrennten "Mitarbeiter" — dieselbe KI-Quelle (siehe
+// services/aiProviders.js) antwortet einfach unter diesem Namen, injiziert
+// über den System-Prompt in jeder Anfrage (siehe services/aiService.js).
 const COACH_NAME_KEY = "kiCoachName";
-export const STANDARD_COACH_NAME = "dein KI-Coach";
+export const STANDARD_COACH_NAME = "dein ADHS Coach";
 
 export function getCoachName() {
   if (typeof window === "undefined") return STANDARD_COACH_NAME;
