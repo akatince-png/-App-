@@ -572,6 +572,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
             Erzähl frei, was du trainieren willst, frag nach, lass Vorschläge anpassen — dein Coach merkt sich das Gespräch. Wenn ihr euch einig seid, auf „Plan übernehmen" tippen.
           </div>
           <KiChat
+            bereich="training"
             systemPrompt="Du bist ein erfahrener, geduldiger Trainingscoach für eine bestehende App. Hilf der Person, einen zu ihr passenden Trainingsplan zu entwickeln — frag nach, wenn wichtige Angaben fehlen (z. B. Erfahrung, verfügbare Tage, Ziele), mach konkrete Vorschläge, geh auf Wünsche und Korrekturen ein. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
             einleitung={`Hi, ich bin ${getCoachName()}! Erzähl mir, wie dein Training aussehen soll — z. B. Erfahrungslevel, wie viele Tage pro Woche du Zeit hast, und worauf du Lust hast (Kraft, Cardio, Bodyweight, ...).`}
             onUebernehmen={handleTrainingsplanUebernehmen}

@@ -398,6 +398,7 @@ export default function HomeView({ onOpenView }) {
           Frag alles rund um deine Pläne, oder lass eine neue Gewohnheit anlegen.
         </div>
         <KiChat
+          bereich="home"
           systemPrompt="Du bist ein hilfsbereiter Coach für eine App zur Selbstverwaltung von Gesundheitsprotokollen (Peptide, Hormone, Supplemente, Training, Schlaf, Ernährung, Hydration, Tageslicht, Gewohnheiten). Beantworte Fragen zu den Plänen der Person allgemein und motivierend. Wenn sie eine neue Gewohnheit/Routine einrichten möchte, frag alle nötigen Details ab (Uhrzeit oder Zeitfenster, Umfang/Menge, Zieltage oder offen fortlaufend), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
           einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was, oder sag mir, welche neue Gewohnheit ich für dich anlegen soll.`}
           onUebernehmen={handleGewohnheitUebernehmen}

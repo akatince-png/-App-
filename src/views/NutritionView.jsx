@@ -405,6 +405,7 @@ export default function NutritionView({ onHome, embedded = false }) {
         Sag, worauf du Lust hast oder was du erreichen willst, frag nach, lass Vorschläge anpassen. Wenn ihr euch einig seid, auf „Rezepte übernehmen" tippen — legt sie als neue Mahlzeiten an (Wochentag danach noch selbst zuweisen).
       </div>
       <KiChat
+        bereich="ernaehrung"
         systemPrompt={`Du bist ein erfahrener, geduldiger Ernährungscoach für eine bestehende App. Bekannte Profildaten dieser Person: KFA ${aktuellesKfa ?? "unbekannt"}%, Gewicht ${aktuellesGewicht ?? "unbekannt"} kg, Kalorienziel ${kalorienZiel || kalorienIst || "unbekannt"} kcal/Tag. Hilf, passende Rezepte zu finden — frag nach Vorlieben/Abneigungen, Unverträglichkeiten oder Zeitaufwand, wenn relevant. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.`}
         einleitung={`Hi, ich bin ${getCoachName()}! Worauf hast du Lust, oder was für Ziele hast du bei der Ernährung?`}
         onUebernehmen={handleErnaehrungsplanUebernehmen}

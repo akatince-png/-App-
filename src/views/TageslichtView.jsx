@@ -117,6 +117,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
         Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Coach schlägt ein Tagesziel vor.
       </div>
       <KiChat
+        bereich="tageslicht"
         systemPrompt="Du hilfst dabei, ein tägliches Tageslicht-/Freiluft-Ziel (in Minuten) für eine bestehende App einzurichten. Frag nach, wie viel Zeit die Person aktuell draußen verbringt (z. B. Bürojob vs. viel unterwegs) und was realistisch machbar wäre, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
         einleitung={`Hi, ich bin ${getCoachName()}! Wie viel Zeit verbringst du aktuell so am Tag draußen im Tageslicht?`}
         onUebernehmen={handleTageslichtUebernehmen}

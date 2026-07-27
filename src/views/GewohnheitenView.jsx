@@ -203,6 +203,7 @@ export default function GewohnheitenView({ onHome }) {
 
       <div style={{ marginBottom: 16 }}>
         <KiChat
+          bereich="gewohnheiten"
           systemPrompt="Du hilfst dabei, eine neue Gewohnheit/Routine für eine bestehende App einzurichten. Frag nach, was noch fehlt (z. B. Uhrzeit oder Zeitfenster, Umfang/Menge, ob es ein Zieltage-Ende geben soll oder offen fortlaufend sein soll), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
           einleitung={`Hi, ich bin ${getCoachName()}! Welche Gewohnheit möchtest du dir aufbauen?`}
           onUebernehmen={handleGewohnheitUebernehmen}

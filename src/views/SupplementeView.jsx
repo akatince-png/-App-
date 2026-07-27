@@ -223,6 +223,7 @@ function SupplementeSection() {
         Sag, welches Supplement du nehmen willst und wann — der Coach fragt bei Bedarf nach.
       </div>
       <KiChat
+        bereich="supplemente"
         systemPrompt="Du hilfst dabei, ein neues Supplement für eine bestehende App einzurichten. Frag nach, zu welcher(n) Tageszeit(en) (Morgens/Mittags/Abends) es genommen werden soll und ob es einen Hinweis gibt (z. B. zur Mahlzeit, nüchtern, vor/nach dem Training), falls das noch fehlt. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
         einleitung={`Hi, ich bin ${getCoachName()}! Welches Supplement möchtest du hinzufügen?`}
         onUebernehmen={handleSupplementUebernehmen}

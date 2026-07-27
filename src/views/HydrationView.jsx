@@ -135,6 +135,7 @@ export default function HydrationView({ onHome, embedded = false }) {
         Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Coach schlägt Ziel und Zeiten vor.
       </div>
       <KiChat
+        bereich="hydration"
         systemPrompt="Du hilfst dabei, ein tägliches Trinkziel und passende Erinnerungszeiten für eine bestehende App einzurichten. Frag nach, wie viel die Person aktuell trinkt und wann sie erinnert werden möchte, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
         einleitung={`Hi, ich bin ${getCoachName()}! Wie viel trinkst du aktuell am Tag, und wann möchtest du an Wasser erinnert werden?`}
         onUebernehmen={handleHydrationUebernehmen}

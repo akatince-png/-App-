@@ -3,8 +3,16 @@ import { Label, PrimaryButton, TextInput } from "./primitives";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "./theme";
 import CoachOrb from "./CoachOrb";
 import { AIService } from "../services/aiService";
+import { useAppData } from "../context/AppDataContext";
 import { getCoachName, getVorlesenAktiv, saveVorlesenAktiv } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
+
+// Wie viele Nachrichten aus dem (potenziell über Wochen gewachsenen)
+// gespeicherten Verlauf maximal als Kontext an die KI mitgeschickt werden —
+// begrenzt Kosten/Tempo. Der volle Verlauf bleibt trotzdem gespeichert und
+// im aufklappbaren Verlauf sichtbar, nur die KI-Anfrage selbst wird
+// gekappt.
+const KI_KONTEXT_LIMIT = 24;
 
 // Wiederverwendbare Chat-Oberfläche für den KI-Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).
@@ -14,21 +22,37 @@ import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppe
 // nicht zwischen Fließtext und JSON hin- und herspringen muss.
 //
 // Trigger + Modal statt dauerhaft sichtbarer Karte: geschlossen zeigt die
-// Komponente nur den animierten Coach-Orb; ein Tap öffnet den Chat als
-// Bottom-Sheet UND startet direkt die Spracherkennung (falls verfügbar),
-// damit man sofort losreden kann statt erst noch das Mikrofon suchen zu
-// müssen — Tippen bleibt jederzeit als Alternative möglich.
+// Komponente nur den animierten Coach-Orb als schwebenden Rundknopf; ein
+// Tap öffnet den Chat als Bottom-Sheet UND startet direkt die
+// Spracherkennung (falls verfügbar), damit man sofort losreden kann statt
+// erst noch das Mikrofon suchen zu müssen — Tippen bleibt jederzeit als
+// Alternative möglich.
+//
+// Anzeige bewusst minimal statt als klassisches Chatfenster gehalten (wie
+// der Sprachmodus von ChatGPT/Gemini): nur die jeweils aktuelle Frage und
+// Antwort stehen groß da, der ältere Verlauf ist standardmäßig eingeklappt.
+//
+// Persistenz: jede Nachricht wird über coachVerlaufLaden/-Speichern (siehe
+// src/data/useCoachVerlauf.js) unter der Kennung `bereich` in Supabase
+// gespeichert — einerseits, damit die Nutzerin frühere Gespräche wieder
+// einsehen kann, andererseits damit der geladene Verlauf automatisch als
+// Gedächtnis in jede neue KI-Anfrage einfließt (der Coach kennt die
+// Nutzerin über die Zeit immer besser).
 //
 // Props:
+// - bereich: Kennung für die Persistenz (z. B. "training", "ernaehrung") —
+//   ohne diese Angabe läuft der Chat weiter, aber ohne gespeicherten Verlauf
 // - systemPrompt: Rollenbeschreibung für den Coach in diesem Kontext
 // - einleitung: erste Coach-Nachricht, ohne extra Anfrage angezeigt
 // - onUebernehmen: optional, async (verlauf) => Ergebnis-Array — wenn
 //   gesetzt, erscheint nach der ersten Antwort ein "Übernehmen"-Knopf
 // - uebernehmenLabel: Beschriftung dieses Knopfes
 // - renderErgebnis: optional (ergebnis) => Node, für die Erfolgs-Anzeige
-export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebernehmenLabel = "Übernehmen", renderErgebnis }) {
+export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehmen, uebernehmenLabel = "Übernehmen", renderErgebnis }) {
+  const { coachVerlaufLaden, coachNachrichtSpeichern } = useAppData();
   const [offen, setOffen] = useState(false);
   const [verlauf, setVerlauf] = useState([]);
+  const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);
   const [eingabe, setEingabe] = useState("");
   const [laden, setLaden] = useState(false);
   const [fehler, setFehler] = useState(null);
@@ -37,6 +61,7 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
   const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const [streamText, setStreamText] = useState("");
   const stopErkennungRef = useRef(null);
+  const verlaufGeladenRef = useRef(false);
 
   // Laufende Sprachausgabe/-erkennung beenden, wenn die Karte verschwindet
   // (z. B. Wechsel auf einen anderen Bildschirm), statt im Hintergrund
@@ -58,14 +83,16 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
     setLaden(true);
     setFehler(null);
     setStreamText("");
+    if (bereich) coachNachrichtSpeichern(bereich, "nutzer", nachricht);
     try {
       const antwort = await AIService.coachChatStreamend({
         systemPrompt,
-        verlauf: neuerVerlauf,
+        verlauf: neuerVerlauf.slice(-KI_KONTEXT_LIMIT),
         coachName: getCoachName(),
         onTeilantwort: setStreamText,
       });
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
+      if (bereich) coachNachrichtSpeichern(bereich, "coach", antwort);
       if (vorlesenAktiv) sprich(antwort);
     } catch (err) {
       setFehler(err.message);
@@ -100,9 +127,14 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
     mikrofonStarten();
   };
 
-  const oeffnen = () => {
+  const oeffnen = async () => {
     setOffen(true);
     if (spracherkennungVerfuegbar()) mikrofonStarten();
+    if (bereich && !verlaufGeladenRef.current) {
+      verlaufGeladenRef.current = true;
+      const gespeichert = await coachVerlaufLaden(bereich);
+      if (gespeichert.length) setVerlauf(gespeichert);
+    }
   };
 
   const schliessen = () => {
@@ -137,6 +169,9 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
 
   const alleNachrichten = einleitung ? [{ rolle: "coach", text: einleitung }, ...verlauf] : verlauf;
   const orbZustand = hoert ? "hoert" : laden ? (streamText ? "spricht" : "denkt") : "ruhe";
+  const letzteNutzerNachricht = [...verlauf].reverse().find((n) => n.rolle === "nutzer");
+  const letzteCoachNachricht = [...verlauf].reverse().find((n) => n.rolle === "coach");
+  const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || einleitung || "";
 
   if (!offen) {
     return (
@@ -192,11 +227,8 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
           boxShadow: "0 -8px 30px rgba(0, 0, 0, 0.25)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <CoachOrb zustand={orbZustand} size={44} />
-            <div style={{ fontSize: 15, fontWeight: 800 }}>{getCoachName()}</div>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 800 }}>{getCoachName()}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {sprachausgabeVerfuegbar() && (
               <button
@@ -236,64 +268,76 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12, minHeight: 80, maxHeight: "50vh", overflowY: "auto" }}>
-          {alleNachrichten.map((n, i) => (
-            <div
-              key={i}
-              style={{
-                alignSelf: n.rolle === "coach" ? "flex-start" : "flex-end",
-                maxWidth: "85%",
-                display: "flex",
-                alignItems: "flex-end",
-                gap: 6,
-              }}
+        {/* Minimale Sprachmodus-Anzeige: nur die aktuelle Frage/Antwort groß,
+            statt einer langen Sprechblasen-Liste — der volle Verlauf bleibt
+            über den Aufklapp-Link darunter erreichbar. */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 12, padding: "10px 4px 16px" }}>
+          <CoachOrb zustand={orbZustand} size={76} />
+          {letzteNutzerNachricht && !laden && (
+            <div style={{ fontSize: 12.5, color: textMuted, fontStyle: "italic", maxWidth: "90%" }}>„{letzteNutzerNachricht.text}"</div>
+          )}
+          <div style={{ fontSize: 16, lineHeight: 1.6, color: textMain, whiteSpace: "pre-wrap", maxWidth: "95%" }}>{grosseAntwort}</div>
+          {!laden && letzteCoachNachricht && sprachausgabeVerfuegbar() && (
+            <button
+              type="button"
+              onClick={() => sprich(letzteCoachNachricht.text)}
+              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 2 }}
             >
-              <div
-                style={{
-                  padding: "10px 13px",
-                  borderRadius: 14,
-                  background: n.rolle === "coach" ? accentSoft : accent,
-                  color: n.rolle === "coach" ? textMain : "#fff",
-                  fontSize: 13.5,
-                  lineHeight: 1.5,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {n.text}
-              </div>
-              {n.rolle === "coach" && sprachausgabeVerfuegbar() && (
-                <button
-                  type="button"
-                  onClick={() => sprich(n.text)}
-                  title="Vorlesen"
-                  style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: 2, flexShrink: 0 }}
-                >
-                  🔊
-                </button>
-              )}
-            </div>
-          ))}
-          {laden &&
-            (streamText ? (
-              <div
-                style={{
-                  alignSelf: "flex-start",
-                  maxWidth: "85%",
-                  padding: "10px 13px",
-                  borderRadius: 14,
-                  background: accentSoft,
-                  color: textMain,
-                  fontSize: 13.5,
-                  lineHeight: 1.5,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {streamText}
-              </div>
-            ) : (
-              <div style={{ fontSize: 12.5, color: textMuted, alignSelf: "flex-start" }}>{getCoachName()} überlegt…</div>
-            ))}
+              🔊 Vorlesen
+            </button>
+          )}
         </div>
+
+        {verlauf.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setVerlaufSichtbar((v) => !v)}
+            style={{ display: "block", margin: "0 auto 10px", border: "none", background: "transparent", color: textMuted, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+          >
+            {verlaufSichtbar ? "Verlauf ausblenden ▲" : `Bisheriger Verlauf (${verlauf.length}) ▾`}
+          </button>
+        )}
+
+        {verlaufSichtbar && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12, maxHeight: "40vh", overflowY: "auto" }}>
+            {alleNachrichten.map((n, i) => (
+              <div
+                key={i}
+                style={{
+                  alignSelf: n.rolle === "coach" ? "flex-start" : "flex-end",
+                  maxWidth: "85%",
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: 6,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "10px 13px",
+                    borderRadius: 14,
+                    background: n.rolle === "coach" ? accentSoft : accent,
+                    color: n.rolle === "coach" ? textMain : "#fff",
+                    fontSize: 13.5,
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {n.text}
+                </div>
+                {n.rolle === "coach" && sprachausgabeVerfuegbar() && (
+                  <button
+                    type="button"
+                    onClick={() => sprich(n.text)}
+                    title="Vorlesen"
+                    style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: 2, flexShrink: 0 }}
+                  >
+                    🔊
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: 8 }}>
           {spracherkennungVerfuegbar() && (
