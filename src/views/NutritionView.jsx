@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, PrimaryButton, StatusBadge } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import GrundEingabe from "../ui/GrundEingabe";
 import WochentagPills from "../ui/WochentagPills";
 import TimeWheelField from "../ui/TimeWheelField";
@@ -375,16 +376,7 @@ export default function NutritionView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>🥗 Ernährungsplan</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="🥗 Ernährungsplan" onHome={onHome} />
       )}
 
       {kalorienIst && (
@@ -409,9 +401,8 @@ export default function NutritionView({ onHome, embedded = false }) {
         </Card>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} — Ernährungsplanung</div>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, worauf du Lust hast oder was du erreichen willst, frag nach, lass Vorschläge anpassen. Wenn ihr euch einig seid, auf „Rezepte übernehmen" tippen — legt sie als neue Mahlzeiten an (Wochentag danach noch selbst zuweisen). Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+        Sag, worauf du Lust hast oder was du erreichen willst, frag nach, lass Vorschläge anpassen. Wenn ihr euch einig seid, auf „Rezepte übernehmen" tippen — legt sie als neue Mahlzeiten an (Wochentag danach noch selbst zuweisen).
       </div>
       <KiChat
         systemPrompt={`Du bist ein erfahrener, geduldiger Ernährungscoach für eine bestehende App. Bekannte Profildaten dieser Person: KFA ${aktuellesKfa ?? "unbekannt"}%, Gewicht ${aktuellesGewicht ?? "unbekannt"} kg, Kalorienziel ${kalorienZiel || kalorienIst || "unbekannt"} kcal/Tag. Hilf, passende Rezepte zu finden — frag nach Vorlieben/Abneigungen, Unverträglichkeiten oder Zeitaufwand, wenn relevant. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.`}

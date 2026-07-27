@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Shell, Card } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import { accent, accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
@@ -119,16 +120,7 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>📖 Protokolle</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="📖 Protokolle" onHome={onHome} />
       )}
 
       {ersteWoche && (

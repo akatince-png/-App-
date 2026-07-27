@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import Timer from "../ui/Timer";
 import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
@@ -254,16 +255,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🏋️ {session.art}</div>
-        <button
-          onClick={onSchliessen}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title="Zurück"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title={`🏋️ ${session.art}`} onHome={onSchliessen} homeTitle="Zurück" />
 
       {fertig ? (
         justFinished && !feedbackErledigt ? (
@@ -557,16 +549,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>🏋️ Training</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="🏋️ Training" onHome={onHome} />
       )}
 
       {feedbackFuerId && <TrainingFeedbackPanel trainingId={feedbackFuerId} onDone={() => setFeedbackFuerId(null)} />}
@@ -585,9 +568,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
             wochenplanEntfernen={handleWochenplanEntfernen}
           />
 
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, marginTop: 14 }}>🤖 {getCoachName()} — Trainingsplanung</div>
-          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-            Erzähl frei, was du trainieren willst, frag nach, lass Vorschläge anpassen — dein Coach merkt sich das Gespräch. Wenn ihr euch einig seid, auf „Plan übernehmen" tippen. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10, marginTop: 14 }}>
+            Erzähl frei, was du trainieren willst, frag nach, lass Vorschläge anpassen — dein Coach merkt sich das Gespräch. Wenn ihr euch einig seid, auf „Plan übernehmen" tippen.
           </div>
           <KiChat
             systemPrompt="Du bist ein erfahrener, geduldiger Trainingscoach für eine bestehende App. Hilf der Person, einen zu ihr passenden Trainingsplan zu entwickeln — frag nach, wenn wichtige Angaben fehlen (z. B. Erfahrung, verfügbare Tage, Ziele), mach konkrete Vorschläge, geh auf Wünsche und Korrekturen ein. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

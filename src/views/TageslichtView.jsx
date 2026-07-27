@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, PrimaryButton } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
 import ErinnerungField from "../ui/ErinnerungField";
@@ -97,16 +98,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>☀️ Tageslicht</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="☀️ Tageslicht" onHome={onHome} />
       )}
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>
@@ -121,9 +113,8 @@ export default function TageslichtView({ onHome, embedded = false }) {
 
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} fragen</div>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Coach schlägt ein Tagesziel vor. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+        Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Coach schlägt ein Tagesziel vor.
       </div>
       <KiChat
         systemPrompt="Du hilfst dabei, ein tägliches Tageslicht-/Freiluft-Ziel (in Minuten) für eine bestehende App einzurichten. Frag nach, wie viel Zeit die Person aktuell draußen verbringt (z. B. Bürojob vs. viel unterwegs) und was realistisch machbar wäre, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

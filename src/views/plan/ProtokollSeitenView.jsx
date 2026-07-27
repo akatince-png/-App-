@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
 import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../../ui/theme";
-import Logo from "../../ui/Logo";
+import ViewHeader from "../../ui/ViewHeader";
 
 const SEITEN_TITEL = ["Protokoll-Übersicht", "Wochenplan", "Protokoll-Verlauf", "Wichtige Hinweise"];
 
@@ -19,19 +19,7 @@ export default function ProtokollSeitenView({ snapshot, onHome }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Logo size={28} />
-          <div style={{ fontSize: 14, fontWeight: 800 }}>Dein erstes Wochen-Protokoll</div>
-        </div>
-        <button
-          onClick={onHome}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title="Schließen"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title="Dein erstes Wochen-Protokoll" onHome={onHome} homeTitle="Schließen" />
 
       <div
         style={{

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextArea, TextInput } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import { SimpleLineChart } from "../ui/charts";
 import { accentDark, blue, cardBorder, danger, textMuted } from "../ui/theme";
 import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
@@ -37,16 +38,7 @@ export default function SchlafView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>😴 Schlaf</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="😴 Schlaf" onHome={onHome} />
       )}
 
       <Card style={{ marginBottom: 14 }}>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextArea, CheckRow } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
 import HydrationErinnerungenCard from "../ui/HydrationErinnerungenCard";
@@ -113,16 +114,7 @@ export default function HydrationView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>💧 Hydration</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="💧 Hydration" onHome={onHome} />
       )}
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>
@@ -139,9 +131,8 @@ export default function HydrationView({ onHome, embedded = false }) {
         <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{hydrationError}</div>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} — Tagesziel & Erinnerungen</div>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Coach schlägt Ziel und Zeiten vor. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+        Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Coach schlägt Ziel und Zeiten vor.
       </div>
       <KiChat
         systemPrompt="Du hilfst dabei, ein tägliches Trinkziel und passende Erinnerungszeiten für eine bestehende App einzurichten. Frag nach, wie viel die Person aktuell trinkt und wann sie erinnert werden möchte, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

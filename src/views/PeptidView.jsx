@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
@@ -156,16 +157,7 @@ export default function PeptidView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>{t("peptid.header.title")}</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title={t("peptid.header.dashboard")}
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title={t("peptid.header.title")} onHome={onHome} homeTitle={t("peptid.header.dashboard")} />
       )}
 
       <Card style={{ marginBottom: 14 }}>

@@ -8,6 +8,7 @@ import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import ViewHeader from "../ui/ViewHeader";
 
 function SupplementZeile({ s, istLetzte, onAendern, onEntfernen }) {
   const [offen, setOffen] = useState(false);
@@ -88,16 +89,7 @@ export default function SupplementeView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Supplemente</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="💊 Supplemente" onHome={onHome} />
       )}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
@@ -227,9 +219,8 @@ function SupplementeSection() {
 
   return (
     <>
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} fragen</div>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, welches Supplement du nehmen willst und wann — der Coach fragt bei Bedarf nach. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+        Sag, welches Supplement du nehmen willst und wann — der Coach fragt bei Bedarf nach.
       </div>
       <KiChat
         systemPrompt="Du hilfst dabei, ein neues Supplement für eine bestehende App einzurichten. Frag nach, zu welcher(n) Tageszeit(en) (Morgens/Mittags/Abends) es genommen werden soll und ob es einen Hinweis gibt (z. B. zur Mahlzeit, nüchtern, vor/nach dem Training), falls das noch fehlt. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

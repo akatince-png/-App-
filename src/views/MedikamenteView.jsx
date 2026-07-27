@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextInput } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
@@ -155,21 +156,11 @@ export default function MedikamenteView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>💊 Medikamente</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="💊 Medikamente" onHome={onHome} />
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} fragen</div>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, welches Medikament/Hormon du hinzufügen willst — der Coach fragt Dosierung, Einnahmeart und Rhythmus ab. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+        Sag, welches Medikament/Hormon du hinzufügen willst — der Coach fragt Dosierung, Einnahmeart und Rhythmus ab.
       </div>
       <KiChat
         systemPrompt="Du hilfst dabei, ein neues Medikament oder Hormon für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

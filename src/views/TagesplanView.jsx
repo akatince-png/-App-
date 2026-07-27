@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
 import {
@@ -306,17 +307,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🗓️ Tagesplan</div>
-        <button
-          className="mp-tap"
-          onClick={onHome}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
 
       {modus === "tag" && (
         <Card style={{ marginBottom: 16 }}>

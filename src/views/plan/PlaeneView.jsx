@@ -1,5 +1,6 @@
 import React from "react";
 import { Shell } from "../../ui/primitives";
+import ViewHeader from "../../ui/ViewHeader";
 import { accent, cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
 import Icon from "../../ui/Icon";
@@ -35,16 +36,7 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>Alle Pläne</div>
-        <button
-          onClick={onHome}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title="Alle Pläne" onHome={onHome} />
 
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {PLAENE_TABS.map((t) => (

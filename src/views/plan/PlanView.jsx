@@ -1,5 +1,6 @@
 import React from "react";
 import { Shell } from "../../ui/primitives";
+import ViewHeader from "../../ui/ViewHeader";
 import { accent, cardBorder, textMuted } from "../../ui/theme";
 import StatistikTab from "./StatistikTab";
 import ProfilTab from "./ProfilTab";
@@ -24,16 +25,7 @@ const TABS = [
 export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }) {
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>Archiv</div>
-        <button
-          onClick={onHome}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title="Archiv" onHome={onHome} />
 
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {TABS.map((t) => (

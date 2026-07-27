@@ -149,7 +149,7 @@ export default function AuthenticatedApp() {
 
   return (
     <>
-      <div style={{ paddingBottom: zeigeFab ? 90 : 0 }}>{screen}</div>
+      {screen}
       {zeigeFab && <Fab onClick={neuesProtokoll} />}
     </>
   );

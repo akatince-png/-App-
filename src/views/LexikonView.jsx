@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Pill, TextInput } from "../ui/primitives";
-import { accent, accentDark, cardBorder, textMuted } from "../ui/theme";
+import ViewHeader from "../ui/ViewHeader";
+import { accent, accentDark, textMuted } from "../ui/theme";
 import { LEXIKON_BEISPIELE, LEXIKON_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 
@@ -16,24 +17,7 @@ export default function LexikonView({ onHome }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>📚 Lexikon</div>
-        <button
-          onClick={onHome}
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            border: `1px solid ${cardBorder}`,
-            background: "#fff",
-            fontSize: 15,
-            cursor: "pointer",
-          }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title="📚 Lexikon" onHome={onHome} />
 
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 10 }}>
         Stell eine Frage — kurze, sachliche Antworten, keine Dosierungsempfehlungen.

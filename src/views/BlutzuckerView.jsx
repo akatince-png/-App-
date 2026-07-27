@@ -1,21 +1,13 @@
 import React from "react";
 import { Shell, Card } from "../ui/primitives";
-import { cardBorder, textMuted } from "../ui/theme";
+import ViewHeader from "../ui/ViewHeader";
+import { textMuted } from "../ui/theme";
 
 export default function BlutzuckerView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>🩸 Blutzucker / CGM</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="🩸 Blutzucker / CGM" onHome={onHome} />
       )}
 
       <Card style={{ textAlign: "center" }}>

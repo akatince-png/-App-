@@ -1,6 +1,6 @@
 import React from "react";
 import { Shell } from "../../ui/primitives";
-import { cardBorder } from "../../ui/theme";
+import ViewHeader from "../../ui/ViewHeader";
 import MehrTab from "./MehrTab";
 import { useT } from "../../i18n/translate";
 
@@ -11,16 +11,7 @@ export default function MehrView({ onHome, onOpenLexikon }) {
   const { t } = useT();
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>{t("mehrView.titel")}</div>
-        <button
-          onClick={onHome}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title={t("mehrView.zumDashboard")}
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title={t("mehrView.titel")} onHome={onHome} homeTitle={t("mehrView.zumDashboard")} />
       <MehrTab onOpenLexikon={onOpenLexikon} />
     </Shell>
   );

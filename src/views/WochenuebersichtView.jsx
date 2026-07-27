@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { exportElementAsPdf } from "../utils/pdfExport";
@@ -86,16 +87,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
   const content = (
     <>
       {!embedded && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>🗓️ Wochenübersicht</div>
-          <button
-            onClick={onHome}
-            style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-            title="Zum Dashboard"
-          >
-            ⌂
-          </button>
-        </div>
+        <ViewHeader title="🗓️ Wochenübersicht" onHome={onHome} />
       )}
 
       <div style={{ display: "flex", gap: 5, marginBottom: 14, overflowX: "auto" }}>

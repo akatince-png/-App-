@@ -13,9 +13,8 @@ export default function Fab({ onClick }) {
       aria-label="Neues Protokoll"
       style={{
         position: "fixed",
-        bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
-        left: "50%",
-        transform: "translateX(-50%)",
+        top: "calc(20px + env(safe-area-inset-top, 0px))",
+        right: "calc(20px + env(safe-area-inset-right, 0px))",
         width: 56,
         height: 56,
         borderRadius: 28,

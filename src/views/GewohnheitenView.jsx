@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../ui/primitives";
+import ViewHeader from "../ui/ViewHeader";
 import GrundEingabe from "../ui/GrundEingabe";
 import TimeWheelField from "../ui/TimeWheelField";
 import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
@@ -195,34 +196,25 @@ export default function GewohnheitenView({ onHome }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ fontSize: 22, fontWeight: 800 }}>🌱 Gewohnheiten</div>
-        <button
-          className="mp-tap"
-          onClick={onHome}
-          style={{ width: 44, height: 44, borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer" }}
-          title="Zum Dashboard"
-        >
-          ⌂
-        </button>
-      </div>
+      <ViewHeader title="🌱 Gewohnheiten" onHome={onHome} />
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 18 }}>
         Baue neue Gewohnheiten auf — Achtsamkeit, Lesen oder was du dir vornimmst. Erscheint mit Uhrzeit auch im Tagesplan zum Abhaken.
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} fragen</div>
-      <KiChat
-        systemPrompt="Du hilfst dabei, eine neue Gewohnheit/Routine für eine bestehende App einzurichten. Frag nach, was noch fehlt (z. B. Uhrzeit oder Zeitfenster, Umfang/Menge, ob es ein Zieltage-Ende geben soll oder offen fortlaufend sein soll), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Welche Gewohnheit möchtest du dir aufbauen?`}
-        onUebernehmen={handleGewohnheitUebernehmen}
-        uebernehmenLabel="Gewohnheit anlegen"
-        renderErgebnis={(g) => (
-          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-            "{g.name}" wurde angelegt{g.uhrzeit ? ` · ${g.uhrzeit} Uhr` : g.urzeitVon ? ` · ${g.urzeitVon}–${g.urzeitBis} Uhr` : ""}
-            {g.menge ? ` · ${g.menge}` : ""}
-          </div>
-        )}
-      />
+      <div style={{ marginBottom: 16 }}>
+        <KiChat
+          systemPrompt="Du hilfst dabei, eine neue Gewohnheit/Routine für eine bestehende App einzurichten. Frag nach, was noch fehlt (z. B. Uhrzeit oder Zeitfenster, Umfang/Menge, ob es ein Zieltage-Ende geben soll oder offen fortlaufend sein soll), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+          einleitung={`Hi, ich bin ${getCoachName()}! Welche Gewohnheit möchtest du dir aufbauen?`}
+          onUebernehmen={handleGewohnheitUebernehmen}
+          uebernehmenLabel="Gewohnheit anlegen"
+          renderErgebnis={(g) => (
+            <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+              "{g.name}" wurde angelegt{g.uhrzeit ? ` · ${g.uhrzeit} Uhr` : g.urzeitVon ? ` · ${g.urzeitVon}–${g.urzeitBis} Uhr` : ""}
+              {g.menge ? ` · ${g.menge}` : ""}
+            </div>
+          )}
+        />
+      </div>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Gewohnheit (manuell)</div>
       <Card style={{ marginBottom: 16 }}>
