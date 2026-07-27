@@ -23,6 +23,22 @@ Freien/Tageslicht verbracht wird).
 Darüber liegt ein **Hauptprotokoll** (Name, Startdatum, Grund/Ziel), unter
 dem alle Kategorien als **Teilprotokolle** laufen.
 
+> ⭐ **Leitprinzip, nicht verhandelbar (ausdrücklich von der Nutzerin so
+> formuliert): Die App muss IMMER zwei vollständig gleichwertige
+> Bedienwege haben — manuell ausfüllen ODER per KI-Coach (Sprache/Chat).**
+> Das ist "der Hack" an der ganzen App: Für "denkfaule, tippfaule,
+> schreibfaule, recherchierfaule" Menschen macht der KI-Coach die App erst
+> nutzbar. Für alle anderen — die selbst genau wissen, was sie wollen, ihre
+> Ruhe haben möchten, der KI grundsätzlich nicht vertrauen, oder die App nur
+> als reines Erinnerungs-/Verwaltungstool ohne jede KI-Einmischung nutzen
+> wollen — muss jede Funktion genauso gut **ganz ohne KI** nutzbar bleiben.
+> Praktisch heißt das: **niemals** ein manuelles Formular/einen manuellen
+> Button entfernen oder verstecken, nur weil es jetzt auch einen
+> KI-Coach-Weg dafür gibt (aktuell in allen 8 Bereichen mit KiChat so
+> umgesetzt — die "(manuell)"-Karten/Formulare stehen überall weiterhin
+> parallel neben dem Coach-Orb). Der Coach-Orb öffnet sich nur auf Tap, nie
+> von selbst — wer ihn nie antippt, bekommt die KI nie zu Gesicht.
+
 **Der KI-Coach**: Ein persönlich benennbarer Assistent (z. B. "Coach
 Acker"), der in 8 Bereichen als echter Chat verfügbar ist — er fragt nach,
 schlägt vor, und legt nach Bestätigung durch die Nutzerin selbst neue
@@ -146,17 +162,53 @@ Punkt 18 neu seit der letzten Protokoll-Fassung.)*
 - `src/services/aiService.js` — Domänenfunktionen (`coachChatStreamend`,
   `trainingsplanAusChat`, `ernaehrungsplanAusChat`, `gewohnheitAusChat`,
   `hydrationAusChat`, `tageslichtAusChat`, `supplementAusChat`,
-  `medikamentAusChat`), alle nutzen `mitPersona()` für den Coach-Namen.
-- `src/ui/KiChat.jsx` — geschlossen: zeigt nur `CoachOrb` + "{Name} fragen"
-  als Trigger-Zeile. Offen: Bottom-Sheet-Modal mit Chat-Verlauf,
-  Mikrofon/Texteingabe, optionalem "Übernehmen"-Knopf. Tap auf den
-  geschlossenen Orb startet automatisch die Spracherkennung.
+  `medikamentAusChat`, `bereichErkennen`), alle nutzen `mitPersona()` für
+  den Coach-Namen. `bereichErkennen()` klassifiziert im Hintergrund, ob/zu
+  welchem der 7 Themenbereiche ein Gespräch schon konkret genug ist (siehe
+  "Universeller Home-Coach" unten).
+- `src/data/useCoachVerlauf.js` + Tabelle `coach_nachrichten` — persistenter
+  Gesprächsverlauf pro `bereich`. Wird beim Öffnen eines Chats geladen und
+  fließt automatisch (bis zu den letzten 24 Nachrichten, siehe
+  `KI_KONTEXT_LIMIT` in KiChat.jsx) als Kontext in jede neue KI-Anfrage ein
+  — der Coach "kennt" die Nutzerin über die Zeit zunehmend besser.
+- `src/ui/KiChat.jsx` — geschlossen: schwebender runder "Anruf-Knopf"
+  (`CoachOrb`, 68px) unten mittig, kein Text mehr. Tap öffnet ein
+  Bottom-Sheet-Modal UND startet direkt die Spracherkennung. Anzeige
+  bewusst minimal wie ein KI-Sprachmodus (ChatGPT/Gemini-Stil): nur die
+  jeweils aktuelle Frage/Antwort groß, älterer Verlauf hinter
+  Aufklapp-Link. Barge-in: eigenes Sprechen oder Antippen des Orbs
+  unterbricht sofort eine laufende Sprachausgabe. Spracherkennung liefert
+  Zwischenergebnisse live (nicht erst am Ende), Tastatur fokussiert sich
+  automatisch sobald nicht zugehört wird.
+
+### Universeller Home-Coach (⭐ neu)
+
+Der globale Coach auf der Startseite ist NICHT mehr auf eine einzige feste
+Aktion (früher: nur Gewohnheiten) beschränkt, sondern kann alle 7 Bereiche
+bedienen. Mechanik: `KiChat` bekommt bei Bedarf die Props
+`pruefeBereitschaft` (async, läuft automatisch nach jeder Coach-Antwort,
+liefert erkannten Bereich oder `null`) und `uebernehmenLabels` (Beschriftung
+je Bereich). Der "Übernehmen"-Knopf erscheint erst, wenn ein Bereich
+erkannt wurde — nicht mehr automatisch nach jeder beliebigen Antwort. Beim
+Klick routet `HomeView.handleUniverselleUebernahme()` zur selben
+Extraktions-/Speicherfunktion, die auch der jeweilige Bereichs-Chat nutzt
+(keine neue Schreib-Logik). Die anderen 7 Bereichs-Chats setzen diese Props
+weiterhin nicht — dort ist der Bereich ja von vornherein durch den Kontext
+klar.
 
 ### Wo der Coach heute verfügbar ist
 
-Home, Training, Gewohnheiten, Ernährung, Hydration, Tageslicht,
-Supplemente, Medikamente. **Noch nicht:** Schlaf, Peptide, Onboarding
-selbst.
+Home (universell, alle 7 Bereiche), Training, Gewohnheiten, Ernährung,
+Hydration, Tageslicht, Supplemente, Medikamente. **Noch nicht:** Schlaf,
+Peptide, Onboarding selbst.
+
+### ⭐ Leitprinzip: Manuell UND per KI — niemals nur eins von beidem
+
+Siehe Abschnitt 1 für die vollständige Formulierung der Nutzerin. Kurz: die
+App muss für "Nerds"/Kontrollmenschen genauso vollständig ohne KI nutzbar
+bleiben wie für Menschen, die die KI die Arbeit machen lassen wollen. Jedes
+manuelle Formular bleibt **immer** parallel zum jeweiligen Coach-Orb
+bestehen — niemals eins zugunsten des anderen entfernen.
 
 ### Sicherheitsmodell (bewusste Entscheidung, bitte beibehalten)
 
@@ -223,6 +275,8 @@ Code-Zugriff.
 | 6 | Groq-Streaming | Noch nicht implementiert (nur Ollama + Gemini) | Bei Bedarf, gleiches Muster wie Gemini-SSE-Streaming übernehmen |
 | 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Mit Gemini technisch näher (Cloud statt Ein-PC-Ollama), aber noch nicht umgesetzt | Bei Bedarf besprechen |
 | 8 | Plus-Button erscheint auf allen Screens, nicht nur Home | Bewusste Vereinfachung (ein globaler Button), Nutzerin hat das nicht explizit anders gewünscht | Nur ändern, falls sie das ausdrücklich anders will |
+| 9 | `bereichErkennen()`-Routing (universeller Home-Coach) nur für Home | Bewusst so begrenzt — die 7 Bereichs-Chats kennen ihren Bereich schon | Bei Bedarf auf weitere "universelle" Einstiegspunkte ausweiten |
+| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | Nutzerin hat robotische Stimme kritisiert, Web-Speech-API-Grenzen erklärt | Nur nach explizitem Wunsch — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) |
 
 ---
 
@@ -235,7 +289,11 @@ Code-Zugriff.
   möchte sich mit einem persönlich benannten Coach unterhalten, der die
   Arbeit im Hintergrund erledigt, statt selbst Formulare auszufüllen —
   jetzt in 8 Bereichen umgesetzt, mit Cloud-KI (Gemini) auch unterwegs
-  nutzbar.
+  nutzbar, und im Home-Bereich universell (alle 7 Aktionen, nicht nur
+  Gewohnheiten).
+- **Gleichzeitig, gleichrangig: vollständige manuelle Nutzbarkeit ohne
+  jede KI** — siehe Leitprinzip in Abschnitt 1/5. Beide Bedienwege sind
+  Kernversprechen der App, nicht KI-Weg mit manuellem Fallback.
 - Langfristig denkbar: Coach führt komplett durchs Onboarding, und/oder
   mehrere echte Nutzer bekommen jeweils eigene Coach-Instanzen.
 
@@ -243,6 +301,10 @@ Code-Zugriff.
 
 ## 8. Wichtige Hinweise für den nächsten Agenten — Arbeitsweise
 
+- **Manuell UND per KI, nie nur eins von beidem** (siehe Abschnitt 1) —
+  bei JEDER Änderung an einem Bereich prüfen, ob das manuelle Formular
+  noch genauso vollständig funktioniert wie vorher. Diese Regel steht
+  über den meisten anderen Design-Entscheidungen.
 - **Die Nutzerin ist nicht technisch versiert**, spricht oft per
   Spracherkennung — Transkriptionsfehler bei Fachbegriffen sind normal
   (Beispiele: "Obama" = Ollama, "Grow"/"Growth" = Groq). Bei
@@ -272,6 +334,10 @@ Code-Zugriff.
 
 ---
 
-**Letzte Aktualisierung:** 27.07.2026, Abend — Gemini-Coach bestätigt
-funktionsfähig (Nutzerin: "Es funktioniert, der Coach antwortet"). Nächster
-sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6 durchgehen.
+**Letzte Aktualisierung:** 27.07.2026, spät abends — persistenter
+Gesprächsverlauf, Sprachmodus-Anzeige, Barge-in/bessere Sprachbedienung,
+und universeller Home-Coach (alle 7 Bereiche statt nur Gewohnheiten) fertig
+umgesetzt und deployt. Leitprinzip "Manuell UND per KI" von der Nutzerin
+explizit als nicht verhandelbar formuliert und dokumentiert (Abschnitt 1,
+5, 7, 8). Nächster sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6
+durchgehen.
