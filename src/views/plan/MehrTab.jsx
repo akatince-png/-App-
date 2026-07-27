@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Card, Pill } from "../../ui/primitives";
-import { accentDark, cardBorder, danger, success, textMuted } from "../../ui/theme";
+import { accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
 import { useAppData } from "../../context/AppDataContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
+import { AIService } from "../../services/aiService";
 
 export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
@@ -25,6 +26,9 @@ export default function MehrTab({ onOpenLexikon }) {
   const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
   const [testMsg, setTestMsg] = useState(null);
+  const [kiLadend, setKiLadend] = useState(false);
+  const [kiAntwort, setKiAntwort] = useState(null);
+  const [kiFehler, setKiFehler] = useState(null);
 
   const DATENSCHUTZ = ["mehr.datenschutz.1", "mehr.datenschutz.2", "mehr.datenschutz.3", "mehr.datenschutz.4", "mehr.datenschutz.5"];
   const ERWEITERUNGEN = ["mehr.erweiterungen.1", "mehr.erweiterungen.2", "mehr.erweiterungen.3", "mehr.erweiterungen.4"];
@@ -47,6 +51,22 @@ export default function MehrTab({ onOpenLexikon }) {
     setTestMsg(null);
     const result = await pushTestSenden();
     setTestMsg(result?.ok ? t("mehr.push.test.success") : result?.error || t("mehr.push.test.error"));
+  };
+
+  // Erster Testaufruf des KI-Coach-Moduls direkt aus der App heraus — prüft
+  // die ganze Kette (Vercel-ENV → Browser → Ollama) ohne eigene Testseite.
+  const handleKiTest = async () => {
+    setKiLadend(true);
+    setKiAntwort(null);
+    setKiFehler(null);
+    try {
+      const antwort = await AIService.morgenImpuls({});
+      setKiAntwort(antwort);
+    } catch (err) {
+      setKiFehler(err.message);
+    } finally {
+      setKiLadend(false);
+    }
   };
 
   return (
@@ -177,6 +197,34 @@ export default function MehrTab({ onOpenLexikon }) {
         >
           {t("mehr.konto.abmelden")}
         </button>
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>KI-Coach</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
+          Testet die Verbindung zu deinem lokalen Ollama — funktioniert nur, wenn Ollama auf diesem Computer gerade läuft und du die Seite auf demselben Computer geöffnet hast.
+        </div>
+        <button
+          onClick={handleKiTest}
+          disabled={kiLadend}
+          style={{
+            width: "100%",
+            padding: "13px 16px",
+            borderRadius: 12,
+            border: `1px solid ${accentDark}`,
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: kiLadend ? "not-allowed" : "pointer",
+            background: "#fff",
+            color: accentDark,
+          }}
+        >
+          {kiLadend ? "Frage Ollama…" : "Morgen-Impuls testen"}
+        </button>
+        {kiAntwort && (
+          <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.5 }}>{kiAntwort}</div>
+        )}
+        {kiFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{kiFehler}</div>}
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.testen")}</div>
