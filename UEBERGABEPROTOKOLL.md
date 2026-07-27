@@ -445,6 +445,50 @@ Code-Zugriff.
   doch gewünscht wird: Code ist fertig, nur Key besorgen + Secret setzen +
   `VITE_AI_PROVIDER=groq` setzen.
 
+### 🔔 Erinnerungs-/Push-System (⭐ erweitert 28.07., nachts)
+
+**Befund:** Die UI bietet in JEDER Kategorie (Onboarding, `MehrTab.jsx` —
+"Erinnerungen"-Übersicht) ein "Ja, erinnere mich" an, aber
+`supabase/functions/send-due-reminders/index.ts` (per pg_cron einmal pro
+Minute aufgerufen, siehe Migration 0032) prüfte bisher **nur Hydration** —
+alle anderen Kategorien hatten also ein UI-Versprechen ohne echte
+Funktion dahinter. Die DB-Spalten für Peptide/Medikamente/Supplemente
+(`uhrzeiten`, `intervall_mode`, ...) waren dafür laut Migrations-
+Kommentar 0029 sogar extra vorbereitet, nur nie angeschlossen.
+
+**Jetzt ergänzt** (`send-due-reminders/index.ts`, portiert aus
+`faelltAnTag()` in `src/utils/schedule.js`, damit Server- und
+Client-Logik nie auseinanderlaufen):
+- Peptide (`protocol_peptide`), Medikamente (`hormones`), Supplemente
+  (`supplements`) — volles Intervall-Modell (fixed/custom/cycle/
+  weekdays) + `uhrzeiten`-Array.
+- Gewohnheiten (`routines`) — feste einzelne `uhrzeit`, kein
+  Intervallsystem (Gewohnheiten sind konzeptionell täglich).
+- Mehrere gleichzeitig fällige Erinnerungen eines Nutzers werden zu
+  **einer** Push-Nachricht gebündelt statt mehrerer auf einmal.
+
+**Bewusst NICHT abgedeckt** (nächster Schritt für später, kein Blocker):
+- **Training/Ernährung**: laufen über Wochenplan-Tabellen
+  (`protocol_training_wochenplan`/`meal_wochenplan`, nicht untersucht) —
+  andere Datenstruktur, eigener Anlauf nötig.
+- **Tageslicht/Schlaf**: haben aktuell in der DB gar keine Uhrzeit pro
+  Eintrag hinterlegt (nur ein Ja/Nein-Flag) — ohne konkrete Uhrzeit kann
+  serverseitig nichts "fällig" werden. Müsste zuerst ein Uhrzeit-Feld
+  bekommen (z. B. der Schlafrhythmus-Vorschlag aus dem Onboarding-Coach).
+- **"Bereits erledigt" wird nicht geprüft** — wer z. B. ein Supplement
+  schon vor der geplanten Uhrzeit abgehakt hat, bekommt trotzdem die
+  Erinnerung (gleiches Verhalten wie das bestehende Hydration-System,
+  bewusst nicht verändert für Konsistenz).
+
+**⚠️ Braucht Deploy durch die Nutzerin** — diese Umgebung hat keinen
+Supabase-Zugriff (wie beim Gemini-Slug-Fix). Schritte: Supabase
+Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen durch
+den Inhalt von `supabase/functions/send-due-reminders/index.ts` →
+Redeploy. **Keine neuen Secrets nötig** — `CRON_SECRET`/VAPID-Keys sind
+bereits gesetzt (Hydration-Erinnerungen liefen ja schon). Push-
+Berechtigung auf dem jeweiligen Gerät (unter "Mehr") bleibt weiterhin
+Voraussetzung, wie schon bei Hydration.
+
 ---
 
 ## 6. Offene Punkte — konkret, mit nächstem Schritt
@@ -462,6 +506,9 @@ Code-Zugriff.
 | 8 | ~~Plus-Button erscheint auf allen Screens, nicht nur Home~~ | ❌ Verworfen (Nutzerinnen-Entscheidung 27.07.) — bleibt wie es ist | — |
 | 9 | ~~`bereichErkennen()`-Routing (universeller Home-Coach) nur für Home~~ | ✅ Erledigt — Logik in `useUniversellerCoach.js` extrahiert, jetzt auch auf Tagesplan und Wochenübersicht | — |
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen (Nutzerinnen-Entscheidung 27.07.) — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
+| 11 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten | Code fertig (28.07., nachts), **braucht Deploy durch Nutzerin** — siehe Abschnitt 5, "🔔 Erinnerungs-/Push-System" | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
+| 12 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | Noch nicht umgesetzt — andere Datenstruktur als die 5 bereits abgedeckten Kategorien | Eigener Anlauf, `protocol_training_wochenplan`/`meal_wochenplan`-Schema erst untersuchen |
+| 13 | Erinnerungs-Versand für Tageslicht/Schlaf | Noch nicht möglich — kein Uhrzeit-Feld pro Eintrag in der DB, nur ein Ja/Nein-Flag | Erst ein Uhrzeit-Feld ergänzen (z. B. Schlafrhythmus-Vorschlag aus dem Onboarding-Coach), dann Versand bauen |
 
 ---
 
