@@ -180,4 +180,36 @@ export const AIService = {
     if (!Array.isArray(data.einheiten)) throw new Error("Unerwartetes Format: 'einheiten' fehlt oder ist kein Array.");
     return data.einheiten;
   },
+
+  /**
+   * Extrahiert aus einem geführten Gewohnheiten-Gespräch (siehe coachChat())
+   * die fertige Gewohnheit — Format entspricht 1:1 dem, was
+   * gewohnheitHinzufuegen() erwartet (siehe useGewohnheitenData.js), lässt
+   * sich also direkt weiterreichen.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{name: string, icon: string, menge: string, uhrzeit: string, urzeitVon: string, urzeitBis: string, zielTage: number|null}>}
+   */
+  async gewohnheitAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der neue Gewohnheiten/Routinen für Nutzer anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt als fertige Gewohnheit zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string, "icon": string (ein einzelnes passendes Emoji), "menge": string (z. B. "10 Seiten", leer wenn nicht genannt), ' +
+          '"uhrzeit": string ("HH:MM" bei fester Uhrzeit, sonst leer), "urzeitVon": string, "urzeitBis": string (bei Zeitfenster statt fester Uhrzeit, sonst beide leer), ' +
+          '"zielTage": number|null (Zieltage bis die Gewohnheit etabliert ist, z. B. 21 oder 66 — null wenn nicht genannt/offen) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse die oben besprochene Gewohnheit jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
+    return data;
+  },
 };

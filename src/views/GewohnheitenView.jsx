@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
 import TimeWheelField from "../ui/TimeWheelField";
-import { accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
+import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭"];
 
@@ -145,6 +148,30 @@ export default function GewohnheitenView({ onHome }) {
     setNeu(LEERE_GEWOHNHEIT);
   };
 
+  // Übergabe an <KiChat onUebernehmen>: lässt die KI aus dem Gespräch die
+  // fertige Gewohnheit extrahieren und legt sie über denselben Weg an wie
+  // das manuelle Formular unten.
+  const handleGewohnheitUebernehmen = async (verlauf) => {
+    const g = await AIService.gewohnheitAusChat({ verlauf, coachName: getCoachName() });
+    const result = await gewohnheitHinzufuegen({
+      name: g.name,
+      icon: g.icon || "🌱",
+      menge: g.menge || "",
+      uhrzeit: g.uhrzeit || "",
+      urzeitVon: g.urzeitVon || "",
+      urzeitBis: g.urzeitBis || "",
+      zielTage: g.zielTage ?? null,
+    });
+    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+    aenderungVermerken({
+      kategorie: "gewohnheit",
+      itemName: g.name,
+      aktion: "hinzugefügt",
+      detail: g.uhrzeit ? `Uhrzeit: ${g.uhrzeit}` : g.urzeitVon ? `Zeitfenster: ${g.urzeitVon}–${g.urzeitBis}` : "",
+    });
+    return g;
+  };
+
   const handleEntfernen = (g) => {
     aenderungVermerken({
       kategorie: "gewohnheit",
@@ -183,7 +210,21 @@ export default function GewohnheitenView({ onHome }) {
         Baue neue Gewohnheiten auf — Achtsamkeit, Lesen oder was du dir vornimmst. Erscheint mit Uhrzeit auch im Tagesplan zum Abhaken.
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Gewohnheit</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🤖 {getCoachName()} fragen</div>
+      <KiChat
+        systemPrompt="Du hilfst dabei, eine neue Gewohnheit/Routine für eine bestehende App einzurichten. Frag nach, was noch fehlt (z. B. Uhrzeit oder Zeitfenster, Umfang/Menge, ob es ein Zieltage-Ende geben soll oder offen fortlaufend sein soll), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Welche Gewohnheit möchtest du dir aufbauen?`}
+        onUebernehmen={handleGewohnheitUebernehmen}
+        uebernehmenLabel="Gewohnheit anlegen"
+        renderErgebnis={(g) => (
+          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+            "{g.name}" wurde angelegt{g.uhrzeit ? ` · ${g.uhrzeit} Uhr` : g.urzeitVon ? ` · ${g.urzeitVon}–${g.urzeitBis} Uhr` : ""}
+            {g.menge ? ` · ${g.menge}` : ""}
+          </div>
+        )}
+      />
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Gewohnheit (manuell)</div>
       <Card style={{ marginBottom: 16 }}>
         <Label>Name</Label>
         <TextInput value={neu.name} onChange={(v) => setNeu((p) => ({ ...p, name: v }))} placeholder="z. B. 10 Minuten lesen" />

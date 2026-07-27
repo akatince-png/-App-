@@ -14,6 +14,9 @@ import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
+import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 // Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
 // bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
@@ -91,7 +94,11 @@ export default function HomeView({ onOpenView }) {
     hydrationHinzufuegen,
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
+    gewohnheitHinzufuegen,
+    aenderungVermerken,
   } = useAppData();
+
+  const [coachOffen, setCoachOffen] = useState(false);
 
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
@@ -99,6 +106,31 @@ export default function HomeView({ onOpenView }) {
   // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
   // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
   const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
+
+  // Übergabe an <KiChat onUebernehmen> im globalen Coach — momentan die
+  // einzige Aktion, die von hier aus direkt ausgeführt werden kann (siehe
+  // GewohnheitenView.jsx für dieselbe Funktion). Weitere Bereiche folgen
+  // nach demselben Muster, sobald geprüft.
+  const handleGewohnheitUebernehmen = async (verlauf) => {
+    const g = await AIService.gewohnheitAusChat({ verlauf, coachName: getCoachName() });
+    const result = await gewohnheitHinzufuegen({
+      name: g.name,
+      icon: g.icon || "🌱",
+      menge: g.menge || "",
+      uhrzeit: g.uhrzeit || "",
+      urzeitVon: g.urzeitVon || "",
+      urzeitBis: g.urzeitBis || "",
+      zielTage: g.zielTage ?? null,
+    });
+    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+    aenderungVermerken({
+      kategorie: "gewohnheit",
+      itemName: g.name,
+      aktion: "hinzugefügt",
+      detail: g.uhrzeit ? `Uhrzeit: ${g.uhrzeit}` : g.urzeitVon ? `Zeitfenster: ${g.urzeitVon}–${g.urzeitBis}` : "",
+    });
+    return g;
+  };
 
   const handleToggleEmergencyMode = (newState) => {
     setIsEmergencyMode(newState);
@@ -375,6 +407,50 @@ export default function HomeView({ onOpenView }) {
           <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 26, fontWeight: 800, letterSpacing: -0.3 }}>MyProtocols</div>
           <Logo size={56} />
         </div>
+      </div>
+
+      <div style={{ marginBottom: coachOffen ? 14 : 24 }}>
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => setCoachOffen((o) => !o)}
+          style={{
+            width: "100%",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${accentDark}`,
+            background: coachOffen ? accentDark : "#fff",
+            color: coachOffen ? "#fff" : accentDark,
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          🤖 {coachOffen ? "Chat schließen" : `${getCoachName()} fragen`}
+        </button>
+        {coachOffen && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
+              Frag alles rund um deine Pläne, oder lass eine neue Gewohnheit anlegen. Braucht ein lokal laufendes Ollama (siehe „Mehr" → KI-Coach).
+            </div>
+            <KiChat
+              systemPrompt="Du bist ein hilfsbereiter Coach für eine App zur Selbstverwaltung von Gesundheitsprotokollen (Peptide, Hormone, Supplemente, Training, Schlaf, Ernährung, Hydration, Tageslicht, Gewohnheiten). Beantworte Fragen zu den Plänen der Person allgemein und motivierend. Wenn sie eine neue Gewohnheit/Routine einrichten möchte, frag alle nötigen Details ab (Uhrzeit oder Zeitfenster, Umfang/Menge, Zieltage oder offen fortlaufend), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+              einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was, oder sag mir, welche neue Gewohnheit ich für dich anlegen soll.`}
+              onUebernehmen={handleGewohnheitUebernehmen}
+              uebernehmenLabel="Gewohnheit anlegen"
+              renderErgebnis={(g) => (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  "{g.name}" wurde angelegt{g.uhrzeit ? ` · ${g.uhrzeit} Uhr` : g.urzeitVon ? ` · ${g.urzeitVon}–${g.urzeitBis} Uhr` : ""}
+                  {g.menge ? ` · ${g.menge}` : ""}
+                </div>
+              )}
+            />
+          </div>
+        )}
       </div>
 
       {/* ADHS Mode Toggle */}
