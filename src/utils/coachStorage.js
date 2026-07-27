@@ -4,7 +4,7 @@
 // services/aiProviders.js) antwortet einfach unter diesem Namen, injiziert
 // über den System-Prompt in jeder Anfrage (siehe services/aiService.js).
 const COACH_NAME_KEY = "kiCoachName";
-export const STANDARD_COACH_NAME = "dein ADHS Coach";
+export const STANDARD_COACH_NAME = "Aka";
 
 export function getCoachName() {
   if (typeof window === "undefined") return STANDARD_COACH_NAME;

@@ -31,13 +31,48 @@ function parseJsonAntwort(text) {
   }
 }
 
-// Persönlicher Coach-Name (z. B. "Coach Acker", siehe utils/coachStorage.js)
-// wird jeder Rollenbeschreibung vorangestellt — dieselbe KI-Quelle tritt so
-// gegenüber jeder Person unter ihrem eigenen, selbst gewählten Namen auf.
+// Persönlicher Coach-Name (Standard: "Aka", individuell umbenennbar in den
+// Einstellungen, siehe utils/coachStorage.js) wird jeder Rollenbeschreibung
+// vorangestellt — dieselbe KI-Quelle tritt so gegenüber jeder Person unter
+// ihrem eigenen, selbst gewählten Namen auf.
 function mitPersona(coachName, rollenbeschreibung) {
   const name = coachName?.trim();
   const vorstellung = name && name !== STANDARD_COACH_NAME ? `Du heißt "${name}" und bist der persönliche ADHS Coach dieser Person. ` : "";
   return vorstellung + rollenbeschreibung;
+}
+
+// Volle Persönlichkeits-/Tonalitäts-Vorgabe für den freien Coach-Chat (von
+// der Nutzerin explizit so vorgegeben) — bewusst NUR für die freien
+// Gesprächsfunktionen (coachChat/coachChatStreamend), NICHT für die
+// strukturierten Extraktions-Funktionen (…AusChat, …Vorschlag,
+// bereichErkennen): dort würde die Stil-Vorgabe (Bullet Points, Next Small
+// Step, Fettdruck) mit der geforderten reinen JSON-Antwort kollidieren und
+// das Parsen brechen. Punkt 4 der Vorgabe ("strukturiertes Format") ist
+// deshalb hier bewusst auf lesbaren Fließtext eingeschränkt — die eigentliche
+// JSON-Übernahme läuft separat über den "Übernehmen"-Knopf.
+function coachPersonaBlock(name) {
+  return [
+    `Du bist "${name}", der digitale ADHS-Coach dieser Person. Deine Aufgabe: strukturierte, sofort umsetzbare und motivierende Unterstützung im Alltag bieten.`,
+    "",
+    "Persönlichkeit & Tonalität:",
+    "- Sprich auf Augenhöhe, wertschätzend, direkt und nahbar — wie ein erfahrener Kumpel/Coach, nicht wie ein Lehrbuch.",
+    "- Klare, einfache Sprache, keine endlosen Fachbegriffe oder belehrenden Vorträge.",
+    "- Verstehe typische ADHS-Hürden (exekutive Dysfunktion, Paralyse, Reizüberflutung, Motivationstiefs) ohne Urteil.",
+    "- Wenn angebracht: eine Prise Humor, um Druck rauszunehmen.",
+    "",
+    "Antwort-Struktur (sehr wichtig für ADHS):",
+    "1. Bring das Wichtigste sofort auf den Punkt, kein langes Vorgeplänkel.",
+    "2. Kurze Absätze, Fettdruck und klare Stichpunkte für maximale Lesbarkeit.",
+    "3. Gib nach Möglichkeit einen \"Nächster kleiner Schritt\" an — einen einzigen, winzigen, sofort machbaren Handlungsschritt, um die Anfangshürde abzubauen.",
+    "4. Wenn ein Plan/eine Übersicht (z. B. Trainingsplan, Tagesstruktur, Rezept) sinnvoll ist, formatier sie klar mit Überschriften/Stichpunkten in normalem Fließtext — NIE als rohes JSON oder Code-Block in deiner sichtbaren Antwort (die strukturierte Übernahme passiert separat, erst wenn die Person aktiv auf \"Übernehmen\" tippt).",
+    "",
+    "Ziel: die Person sanft, aber bestimmt aus dem Grübeln/Überdenken direkt ins Handeln bringen.",
+  ].join("\n");
+}
+
+function mitVollerPersona(coachName, rollenbeschreibung) {
+  const name = coachName?.trim() || STANDARD_COACH_NAME;
+  return `${coachPersonaBlock(name)}\n\n${rollenbeschreibung}`;
 }
 
 export const AIService = {
@@ -143,7 +178,7 @@ export const AIService = {
    * @returns {Promise<string>}
    */
   async coachChat({ systemPrompt, verlauf, coachName }) {
-    const system = mitPersona(coachName, systemPrompt);
+    const system = mitVollerPersona(coachName, systemPrompt);
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
     const antwort = await sendeAnfrage({ system, messages, json: false });
     return antwort.trim();
@@ -158,7 +193,7 @@ export const AIService = {
    * @returns {Promise<string>}
    */
   async coachChatStreamend({ systemPrompt, verlauf, coachName, onTeilantwort }) {
-    const system = mitPersona(coachName, systemPrompt);
+    const system = mitVollerPersona(coachName, systemPrompt);
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
     const antwort = await sendeAnfrageStreamend({ system, messages, onTeilantwort });
     return antwort.trim();
