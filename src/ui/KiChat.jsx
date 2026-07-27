@@ -144,20 +144,24 @@ export default function KiChat({ systemPrompt, einleitung, onUebernehmen, uebern
         type="button"
         className="mp-tap"
         onClick={oeffnen}
+        aria-label={`${getCoachName()} fragen`}
+        title={`${getCoachName()} fragen`}
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          width: "100%",
-          padding: "12px 16px",
-          borderRadius: 16,
-          border: `1px solid ${accentDark}`,
-          background: "#fff",
+          position: "fixed",
+          bottom: "calc(22px + env(safe-area-inset-bottom, 0px))",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 68,
+          height: 68,
+          borderRadius: "50%",
+          border: "none",
+          padding: 0,
           cursor: "pointer",
+          boxShadow: "0 10px 26px rgba(14, 124, 102, 0.4)",
+          zIndex: 40,
         }}
       >
-        <CoachOrb zustand="ruhe" size={38} />
-        <span style={{ fontSize: 14, fontWeight: 700, color: accentDark }}>{getCoachName()} fragen</span>
+        <CoachOrb zustand="ruhe" size={68} />
       </button>
     );
   }

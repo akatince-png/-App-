@@ -146,9 +146,19 @@ input[type="time"]::-webkit-date-and-time-value {
   background: conic-gradient(from 0deg, #0e7c66, #4a6fa5, #0e7c66);
   background-size: 200% 200%;
 }
+/* Ruhezustand bekommt eine eigene, weichere Wolken-Textur statt des
+   Farbrads — mehrere unscharfe Farbflecken, die langsam umherwandern
+   (angelehnt an die Sprachmodus-Kugel von ChatGPT/ Gemini), damit der
+   Knopf auch im Stillstand "lebendig" statt starr wirkt. */
+.mp-orb-ruhe {
+  background-image: radial-gradient(circle at 30% 30%, #86a6ff 0%, transparent 62%), radial-gradient(circle at 72% 62%, #0e7c66 0%, transparent 62%),
+    radial-gradient(circle at 45% 82%, #eaf1ff 0%, transparent 68%);
+  background-color: #4a6fa5;
+  background-size: 220% 220%;
+}
 @media (prefers-reduced-motion: no-preference) {
   .mp-orb-ruhe {
-    animation: mp-orb-breathe 3.6s ease-in-out infinite;
+    animation: mp-orb-drift 7s ease-in-out infinite, mp-orb-breathe 3.6s ease-in-out infinite;
   }
   .mp-orb-hoert {
     animation: mp-orb-pulse 1.1s ease-in-out infinite;
@@ -160,14 +170,23 @@ input[type="time"]::-webkit-date-and-time-value {
     animation: mp-orb-pulse 0.7s ease-in-out infinite;
   }
 
+  @keyframes mp-orb-drift {
+    0%, 100% {
+      background-position: 20% 30%, 80% 60%, 45% 85%;
+    }
+    33% {
+      background-position: 55% 10%, 35% 75%, 78% 40%;
+    }
+    66% {
+      background-position: 78% 55%, 18% 30%, 30% 72%;
+    }
+  }
   @keyframes mp-orb-breathe {
     0%, 100% {
-      transform: scale(0.92);
-      opacity: 0.85;
+      transform: scale(0.96);
     }
     50% {
-      transform: scale(1);
-      opacity: 1;
+      transform: scale(1.03);
     }
   }
   @keyframes mp-orb-pulse {
