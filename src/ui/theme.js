@@ -1,8 +1,11 @@
-// Ruhige, hochwertige Palette mit wenigen Farben: ein warmneutraler Grund,
-// ein einziger kräftiger Marken-Akzent (dient auch als "erledigt"-Signal,
-// damit nicht noch eine zweite Grün-Variante dazukommt), und Blau/Rot nur
-// dort, wo "geplant" bzw. "verpasst/Achtung" wirklich etwas anderes bedeuten.
-export const bg = "#F7F7F5";
+// Heller, frischer Grund (Nutzerinnen-Vorgabe: großzügig Weiß statt des
+// früheren warmgrauen Tons überall) + ein einziger kräftiger Marken-Akzent
+// als generischer Rückfall (dient auch als "erledigt"-Signal). Die
+// eigentliche Farbigkeit kommt jetzt bereichsbezogen aus KATEGORIE_META
+// (siehe utils/dayItems.js) statt aus diesem einen Grün — jeder Lebens-
+// bereich (Training, Hydration, Schlaf, ...) bekommt seine eigene Akzent-
+// farbe in Header/Buttons, angelehnt an die bunten Home-Mini-Widgets.
+export const bg = "#FFFFFF";
 export const card = "#FFFFFF";
 export const cardBorder = "#EAEAE5";
 export const accent = "#0E7C66"; // Tiefes Smaragd/Petrol — Marke + "erledigt"

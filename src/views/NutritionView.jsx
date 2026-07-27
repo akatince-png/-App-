@@ -5,15 +5,19 @@ import GrundEingabe from "../ui/GrundEingabe";
 import WochentagPills from "../ui/WochentagPills";
 import TimeWheelField from "../ui/TimeWheelField";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMuted } from "../ui/theme";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
-import { TAGESZEIT_STUNDE } from "../utils/dayItems";
+import { TAGESZEIT_STUNDE, KATEGORIE_META } from "../utils/dayItems";
 import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Ernährung
+// ist Terrakotta, passend zu den bunten Home-Mini-Widgets.
+const { dot: accent, text: accentDark, bg: accentSoft } = KATEGORIE_META.mahlzeit;
 
 const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
@@ -610,5 +614,5 @@ export default function NutritionView({ onHome, embedded = false }) {
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="mahlzeit">{content}</Shell>;
 }

@@ -133,6 +133,41 @@ Der Home-Button war früher ~19-fach einzeln pro Screen kopiert — jetzt
 Logo, größer als vorher). Bei neuen Screens **immer** `ViewHeader` nutzen,
 nicht wieder einen eigenen Header-Block bauen.
 
+**⭐ 27.07., nachts — Redesign: weißer Untergrund + bereichseigene Farben.**
+Nutzerinnen-Vorgabe: die App wirkte in Onboarding/Untermenüs zu dunkel/
+grau und überall gleich grün, während Home (mit den bunten Mini-Widgets)
+schon "frisch" aussah. Umgesetzt:
+- `theme.js`: `bg` von `#F7F7F5` auf `#FFFFFF` — großzügig heller/weißer
+  Untergrund überall (ein Werte-Wechsel, wirkt aber auf jeden Screen).
+- `KATEGORIE_META` (`utils/dayItems.js`) ist jetzt die zentrale
+  Farbquelle pro Lebensbereich, korrigiert/erweitert: Tageslicht=Gelb,
+  Training=Rot, Medikamente=Lila, Hydration=Blau, **Schlaf=Indigo (neu,
+  gab's vorher nicht)**, Peptide=Marken-Grün, Supplemente=Gold,
+  Ernährung=Terrakotta, Gewohnheiten=Teal.
+- **Neuer `src/ui/BereichColorContext.jsx`**: `<Shell bereich="training">`
+  (Prop an die bestehende `Shell`-Komponente) versorgt `PrimaryButton`,
+  `Pill`, `CheckRow` und `Stepper` automatisch mit der passenden Farbe
+  über React Context — kein einzelner Button-Aufruf musste manuell
+  eingefärbt werden, nur `bereich=` an der Shell setzen. Ohne `bereich`
+  fällt alles auf die generische Marken-Akzentfarbe zurück (z. B. Home,
+  Wochenübersicht — mischen mehrere Bereiche).
+- `PlaeneView.jsx` (der "Alle Pläne"-Tab-Hub, über den ALLE 8
+  Kategorie-Views mit `embedded` laufen) setzt `bereich` dynamisch nach
+  aktivem Tab — auch die farbige Tab-Leiste selbst nutzt jetzt
+  `KATEGORIE_META` statt einer einzigen Akzentfarbe für "aktiv".
+- `OnboardingCategoriesView.jsx` setzt `bereich` ebenso dynamisch nach
+  aktuellem Kategorie-Schritt (`SCHRITT_ZU_KATEGORIE`-Mapping).
+- Einzelne Views (Training/Hydration/Tageslicht/Schlaf/Medikamente/
+  Supplemente/Ernährung/Gewohnheiten) haben zusätzlich ihre direkten
+  Farb-Referenzen (`accentDark` etc. in Stat-Zahlen, ProgressRing-Farbe)
+  lokal auf `KATEGORIE_META[bereich]` umgestellt.
+- **Visuell verifiziert** über eine temporäre lokale QA-Seite (nicht
+  committed) mit Playwright-Screenshots aller 9 Bereichsfarben — alle
+  klar unterscheidbar, weißer Hintergrund bestätigt.
+- Bewusst NICHT gemacht (Zeit-/Umfang-Grenze): farbige Icon-Hintergründe
+  in den Onboarding-Kategorie-Headern, komplette Web-App-weite Suche nach
+  vereinzelten Hex-Farben außerhalb der 9 Bereichs-Views.
+
 ---
 
 ## 4. Was wurde in dieser Session-Reihe verändert? (chronologisch)

@@ -4,7 +4,7 @@ import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
@@ -12,6 +12,11 @@ import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import { KATEGORIE_META } from "../utils/dayItems";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Medikamente
+// sind Lila, passend zu den bunten Home-Mini-Widgets.
+const { dot: accent, text: accentDark } = KATEGORIE_META.hormon;
 
 const DOSIS_FELDER = ["menge", "customDays", "onDays", "offDays", "eigenerStart", "weekdays", "uhrzeiten"];
 
@@ -343,5 +348,5 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="hormon">{content}</Shell>;
 }

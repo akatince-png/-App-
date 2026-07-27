@@ -18,6 +18,23 @@ import KiChat from "../../ui/KiChat";
 import { AIService } from "../../services/aiService";
 import { getCoachName } from "../../utils/coachStorage";
 
+// CATEGORY_STEPS-Schlüssel → KATEGORIE_META-Schlüssel (weichen an einigen
+// Stellen vom Schritt-Namen ab: "ernaehrung"→"mahlzeit",
+// "gewohnheiten"→"gewohnheit", "supplemente"→"supplement",
+// "medikamente"→"hormon", "peptide"→"peptid") — steuert die Farbe von
+// <Shell bereich=…> für den jeweils aktuellen Kategorie-Schritt.
+const SCHRITT_ZU_KATEGORIE = {
+  schlaf: "schlaf",
+  hydration: "hydration",
+  tageslicht: "tageslicht",
+  ernaehrung: "mahlzeit",
+  training: "training",
+  gewohnheiten: "gewohnheit",
+  supplemente: "supplement",
+  medikamente: "hormon",
+  peptide: "peptid",
+};
+
 // Systemprompt je Kategorie für den Coach-Begleitungs-Chat (siehe
 // onUebernehmenKategorie() weiter unten) — bewusst kurz und auf die
 // jeweiligen fehlenden Angaben fokussiert, statt eines generischen Prompts
@@ -755,7 +772,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   };
 
   return (
-    <Shell>
+    <Shell bereich={SCHRITT_ZU_KATEGORIE[step.key]}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>

@@ -1,25 +1,34 @@
 import React from "react";
-import { accent, accentDark, accentSoft, blue, blueSoft, bg, card, cardBorder, danger, shadow, success, textMain, textMuted } from "./theme";
+import { accentDark, accentSoft, blue, blueSoft, bg, card, cardBorder, danger, shadow, success, textMain, textMuted } from "./theme";
+import { BereichColorProvider, useBereichColor } from "./BereichColorContext";
 
-export function Shell({ children }) {
+// `bereich` (optional, z. B. "training", "hydration" — Schlüssel aus
+// KATEGORIE_META in utils/dayItems.js): färbt PrimaryButton/Pill/CheckRow/
+// Stepper innerhalb dieses Screens automatisch in der Farbe des jeweiligen
+// Lebensbereichs statt der generischen Marken-Akzentfarbe — ein Prop statt
+// jeden einzelnen Button manuell einzufärben.
+export function Shell({ children, bereich }) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: bg,
-        color: textMain,
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        display: "flex",
-        justifyContent: "center",
-        padding: "32px 16px",
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: 420 }}>{children}</div>
-    </div>
+    <BereichColorProvider bereich={bereich}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: bg,
+          color: textMain,
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          display: "flex",
+          justifyContent: "center",
+          padding: "32px 16px",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: 420 }}>{children}</div>
+      </div>
+    </BereichColorProvider>
   );
 }
 
 export function Stepper({ step, total }) {
+  const { accent: bereichAccent } = useBereichColor();
   return (
     <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
       {Array.from({ length: total }).map((_, i) => (
@@ -29,7 +38,7 @@ export function Stepper({ step, total }) {
             flex: 1,
             height: 5,
             borderRadius: 3,
-            background: i <= step ? accent : "#D9EEE7",
+            background: i <= step ? bereichAccent : "#EBEBE8",
             transition: "background 0.3s ease",
           }}
         />
@@ -57,9 +66,10 @@ export function Card({ children, style }) {
 }
 
 export function PrimaryButton({ children, onClick, disabled, variant = "accent", style }) {
+  const { accent: bereichAccent } = useBereichColor();
   const styles = {
-    accent: { background: disabled ? "#B7D8D1" : accent, color: "#fff" },
-    success: { background: disabled ? "#B7D8D1" : success, color: "#fff" },
+    accent: { background: disabled ? "#D8D8D3" : bereichAccent, color: "#fff" },
+    success: { background: disabled ? "#D8D8D3" : success, color: "#fff" },
     ghost: { background: "transparent", color: textMuted, border: `1px solid ${cardBorder}` },
   };
   return (
@@ -87,6 +97,7 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
 }
 
 export function CheckRow({ label, checked, onToggle }) {
+  const { accent: bereichAccent, accentSoft: bereichAccentSoft } = useBereichColor();
   return (
     <div
       className="mp-tap"
@@ -99,9 +110,9 @@ export function CheckRow({ label, checked, onToggle }) {
         borderRadius: 14,
         marginBottom: 8,
         minHeight: 48,
-        background: checked ? accentSoft : "#FAFBFA",
+        background: checked ? bereichAccentSoft : "#FAFBFA",
         cursor: "pointer",
-        border: `1px solid ${checked ? accent : cardBorder}`,
+        border: `1px solid ${checked ? bereichAccent : cardBorder}`,
       }}
     >
       <span style={{ fontSize: 14, fontWeight: checked ? 600 : 500 }}>{label}</span>
@@ -110,8 +121,8 @@ export function CheckRow({ label, checked, onToggle }) {
           width: 22,
           height: 22,
           borderRadius: 7,
-          border: `2px solid ${checked ? accent : "#C6CBCF"}`,
-          background: checked ? accent : "transparent",
+          border: `2px solid ${checked ? bereichAccent : "#C6CBCF"}`,
+          background: checked ? bereichAccent : "transparent",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -127,6 +138,7 @@ export function CheckRow({ label, checked, onToggle }) {
 }
 
 export function Pill({ label, selected, onClick }) {
+  const { accent: bereichAccent } = useBereichColor();
   return (
     <button
       type="button"
@@ -138,8 +150,8 @@ export function Pill({ label, selected, onClick }) {
         fontSize: 12.5,
         fontWeight: 600,
         minHeight: 38,
-        border: `1px solid ${selected ? accent : cardBorder}`,
-        background: selected ? accent : "#FAFBFA",
+        border: `1px solid ${selected ? bereichAccent : cardBorder}`,
+        background: selected ? bereichAccent : "#FAFBFA",
         color: selected ? "#fff" : textMuted,
         cursor: "pointer",
         marginRight: 6,

@@ -4,13 +4,18 @@ import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
 import HydrationErinnerungenCard from "../ui/HydrationErinnerungenCard";
-import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import NumberWheelField from "../ui/NumberWheelField";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import { KATEGORIE_META } from "../utils/dayItems";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
+// ist Blau, passend zu den bunten Home-Mini-Widgets.
+const { text: accentDark } = KATEGORIE_META.hydration;
 
 const heute = () => new Date().toISOString().slice(0, 10);
 
@@ -119,7 +124,7 @@ export default function HydrationView({ onHome, embedded = false }) {
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-          <ProgressRing done={hydrationHeuteMl} total={hydrationZielMl} size={92} />
+          <ProgressRing done={hydrationHeuteMl} total={hydrationZielMl} size={92} color={accentDark} />
         </div>
         <div style={{ fontSize: 20, fontWeight: 800, color: accentDark }}>
           {hydrationHeuteMl} <span style={{ fontSize: 13, fontWeight: 600, color: textMuted }}>/ {hydrationZielMl} ml</span>
@@ -270,5 +275,5 @@ export default function HydrationView({ onHome, embedded = false }) {
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="hydration">{content}</Shell>;
 }

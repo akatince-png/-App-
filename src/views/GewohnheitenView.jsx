@@ -3,11 +3,16 @@ import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../ui/primit
 import ViewHeader from "../ui/ViewHeader";
 import GrundEingabe from "../ui/GrundEingabe";
 import TimeWheelField from "../ui/TimeWheelField";
-import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import { KATEGORIE_META } from "../utils/dayItems";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
+// Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
+const { text: accentDark, bg: accentSoft } = KATEGORIE_META.gewohnheit;
 
 const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭"];
 
@@ -195,7 +200,7 @@ export default function GewohnheitenView({ onHome }) {
   };
 
   return (
-    <Shell>
+    <Shell bereich="gewohnheit">
       <ViewHeader title="🌱 Gewohnheiten" onHome={onHome} />
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 18 }}>
         Baue neue Gewohnheiten auf — Achtsamkeit, Lesen oder was du dir vornimmst. Erscheint mit Uhrzeit auch im Tagesplan zum Abhaken.

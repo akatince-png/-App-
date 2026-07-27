@@ -6,7 +6,7 @@ import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
 import AutocompleteInput from "../ui/AutocompleteInput";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
-import { accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
@@ -20,8 +20,13 @@ import {
   CARDIO_MODI_STRECKE,
   CARDIO_MODI_SPRUNGSEIL,
 } from "../constants";
-import { trainingDetail } from "../utils/dayItems";
+import { trainingDetail, KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe (siehe
+// KATEGORIE_META in dayItems.js) — Training ist Rot, passend zu den bunten
+// Home-Mini-Widgets.
+const { text: accentDark, bg: accentSoft } = KATEGORIE_META.training;
 
 const LEERE_UEBUNG = { name: "", saetze: "", wiederholungen: "", gewicht: "", pauseSekunden: "180" };
 
@@ -254,7 +259,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   };
 
   return (
-    <Shell>
+    <Shell bereich="training">
       <ViewHeader title={`🏋️ ${session.art}`} onHome={onSchliessen} homeTitle="Zurück" />
 
       {fertig ? (
@@ -873,5 +878,5 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="training">{content}</Shell>;
 }

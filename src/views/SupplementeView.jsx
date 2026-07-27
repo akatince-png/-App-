@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
-import { accent, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMuted } from "../ui/theme";
 import { HINWEISE, TAGESZEITEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -9,6 +9,11 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import ViewHeader from "../ui/ViewHeader";
+import { KATEGORIE_META } from "../utils/dayItems";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
+// Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
+const { dot: accent, text: accentDark } = KATEGORIE_META.supplement;
 
 function SupplementZeile({ s, istLetzte, onAendern, onEntfernen }) {
   const [offen, setOffen] = useState(false);
@@ -117,7 +122,7 @@ export default function SupplementeView({ onHome, embedded = false }) {
       {tab === "supplemente" ? <SupplementeSection /> : <RezepteSection />}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="supplement">{content}</Shell>;
 }
 
 function SupplementeSection() {

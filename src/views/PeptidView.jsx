@@ -417,5 +417,5 @@ export default function PeptidView({ onHome, embedded = false }) {
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="peptid">{content}</Shell>;
 }

@@ -5,11 +5,16 @@ import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
 import ErinnerungField from "../ui/ErinnerungField";
 import NumberWheelField from "../ui/NumberWheelField";
-import { accentDark, cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import { KATEGORIE_META } from "../utils/dayItems";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
+// ist Gelb, passend zu den bunten Home-Mini-Widgets.
+const { text: accentDark } = KATEGORIE_META.tageslicht;
 
 const SCHNELLAUSWAHL = [
   { label: "Kurzer Spaziergang", minuten: 15 },
@@ -103,7 +108,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-          <ProgressRing done={tageslichtHeuteMinuten} total={tageslichtZielMinuten} size={92} />
+          <ProgressRing done={tageslichtHeuteMinuten} total={tageslichtZielMinuten} size={92} color={accentDark} />
         </div>
         <div style={{ fontSize: 20, fontWeight: 800, color: accentDark }}>
           {tageslichtHeuteMinuten} <span style={{ fontSize: 13, fontWeight: 600, color: textMuted }}>/ {tageslichtZielMinuten} Min.</span>
@@ -217,5 +222,5 @@ export default function TageslichtView({ onHome, embedded = false }) {
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="tageslicht">{content}</Shell>;
 }

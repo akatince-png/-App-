@@ -2,13 +2,18 @@ import React, { useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextArea, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { SimpleLineChart } from "../ui/charts";
-import { accentDark, blue, cardBorder, danger, textMuted } from "../ui/theme";
+import { cardBorder, danger, textMuted } from "../ui/theme";
 import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import { KATEGORIE_META } from "../utils/dayItems";
+
+// Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
+// ist Indigo, passend zu den bunten Home-Mini-Widgets.
+const { text: accentDark, dot: blue } = KATEGORIE_META.schlaf;
 
 const LEERER_EINTRAG = {
   datum: new Date().toISOString().slice(0, 10),
@@ -187,5 +192,5 @@ export default function SchlafView({ onHome, embedded = false }) {
       )}
     </>
   );
-  return embedded ? content : <Shell>{content}</Shell>;
+  return embedded ? content : <Shell bereich="schlaf">{content}</Shell>;
 }

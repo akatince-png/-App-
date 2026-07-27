@@ -1,6 +1,6 @@
 import { keyOf, sameDay, toLocalISODate } from "./dates";
 import { faelltAnTag } from "./schedule";
-import { accent, accentDark, accentSoft, blue } from "../ui/theme";
+import { accent, accentDark, accentSoft } from "../ui/theme";
 
 // getDay()-indexiert (0 = Sonntag), passend zu JS' Date#getDay().
 const GETDAY_TO_LABEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -9,18 +9,23 @@ const GETDAY_TO_LABEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 // sinnvoll neben exakten Uhrzeiten (Peptide/Medikamente) einsortieren.
 export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 
-// Eine kleine, harmonische Farbfamilie statt eines Regenbogens: zwei kühle
-// Töne (Peptide/Medikamente) und zwei warme (Supplemente/Mahlzeiten) — so
-// bleibt jede Kategorie auf einen Blick unterscheidbar, ohne unruhig zu wirken.
+// Jeder Lebensbereich bekommt eine eigene, klar erkennbare Farbe statt
+// überall derselben Marken-Akzentfarbe (Nutzerinnen-Vorgabe, 27.07.):
+// Tageslicht = Gelb, Training = Rot, Medikamente = Lila, Hydration = Blau,
+// Schlaf = Indigo (nachtnahes Dunkelblau, unterscheidbar von Medikamente-
+// Lila), Peptide = Marken-Grün, Supplemente = Gold, Ernährung = Terrakotta,
+// Gewohnheiten = Teal. `dot` ist die kräftige Version (Icons, Ringe,
+// Buttons), `bg`/`text` die helle Variante für Badges/Chips.
 export const KATEGORIE_META = {
   peptid: { bg: accentSoft, text: accentDark, dot: accent, label: "Peptid" },
-  hormon: { bg: "#EAF0F8", text: "#3A5A87", dot: blue, label: "Medikament" },
+  hormon: { bg: "#F1E9F6", text: "#6B3F91", dot: "#8B5CB0", label: "Medikament" },
   supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
-  training: { bg: "#F1EDF8", text: "#786198", dot: "#9B85B8", label: "Training" },
-  gewohnheit: { bg: "#EAF3EA", text: "#3F6B46", dot: "#5E9468", label: "Gewohnheit" },
+  training: { bg: "#FBEAE7", text: "#A63B32", dot: "#CC5145", label: "Training" },
+  gewohnheit: { bg: "#E6F3F2", text: "#286661", dot: "#3E8E8A", label: "Gewohnheit" },
   hydration: { bg: "#EAF3F8", text: "#2F6E8C", dot: "#4A93B8", label: "Hydration" },
   tageslicht: { bg: "#FDF3E3", text: "#8C6A1F", dot: "#D9A62E", label: "Tageslicht" },
+  schlaf: { bg: "#ECEDF7", text: "#3F4380", dot: "#5B5FA6", label: "Schlaf" },
 };
 
 // Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —
