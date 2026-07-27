@@ -297,6 +297,50 @@ export function useProtocolData(userId) {
     [protocolId]
   );
 
+  // Wie setDose(), aber für mehrere Felder auf einmal — ein einzelner
+  // DB-Aufruf statt einem pro geändertem Feld. Ein Dosis-Speichern-Tap
+  // ändert oft Menge + Intervall + Uhrzeiten gleichzeitig; mit setDose()
+  // wären das bis zu 7-8 sequentielle Netzwerk-Roundtrips für einen einzigen
+  // Speichervorgang gewesen.
+  const setDoseBatch = useCallback(
+    (peptid, felder) => {
+      let localPatch = {};
+      const dbPatch = {};
+
+      Object.entries(felder).forEach(([feld, val]) => {
+        if (feld === "intervallPreset") {
+          localPatch = { ...localPatch, intervallTyp: "fixed", intervallDays: val };
+          dbPatch.intervall_mode = "fixed";
+          dbPatch.intervall_days = val;
+          return;
+        }
+        if (feld === "intervallTyp") {
+          localPatch = { ...localPatch, intervallTyp: val };
+          dbPatch.intervall_mode = val;
+          return;
+        }
+        const column = DOSE_FELD_TO_COLUMN[feld];
+        if (!column) return;
+        let value = val;
+        if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
+        else if (feld === "eigenerStart") value = val === "" ? null : val;
+        localPatch = { ...localPatch, [feld]: val };
+        dbPatch[column] = value;
+      });
+
+      setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], ...localPatch } }));
+      if (!protocolId || Object.keys(dbPatch).length === 0) return;
+
+      supabase
+        .from("protocol_peptide")
+        .update(dbPatch)
+        .eq("protocol_id", protocolId)
+        .eq("name", peptid)
+        .then(({ error }) => error && console.error(error));
+    },
+    [protocolId]
+  );
+
   const setPeptidFoto = useCallback(
     async (peptid, file) => {
       if (!protocolId) return;
@@ -449,6 +493,7 @@ export function useProtocolData(userId) {
     addCustomPreparat,
     dosierung,
     setDose,
+    setDoseBatch,
     setPeptidFoto,
     startdatum,
     setStartdatum,

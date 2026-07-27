@@ -213,6 +213,18 @@ export default function HomeView({ onOpenView }) {
   const miniWidgetData = useMemo(() => {
     const widgets = [];
 
+    // Einmal für alle 7 Tage berechnen statt einmal pro Kategorie-Block —
+    // vorher riefen Supplemente/Mahlzeiten/Training je einzeln dieselbe
+    // 7-Tage-Schleife mit identischen Argumenten auf (21 buildDayItems()-
+    // Aufrufe pro Render statt der nötigen 7).
+    const wocheItems = Array.from({ length: 7 }, (_, i) =>
+      buildDayItems(addDays(today, i), {
+        plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+        mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
+        trainingTemplates, gewohnheiten, gewohnheitErledigt,
+      })
+    ).flat();
+
     // Peptide/Hormone
     {
       const todayCount = plan.filter((d) => {
@@ -274,16 +286,7 @@ export default function HomeView({ onOpenView }) {
     {
       const supplementItems = heuteItems.filter((i) => i.kategorie === "supplement");
       const todayCount = supplementItems.filter((i) => i.done).length;
-      const weekItems = [];
-      for (let i = 0; i < 7; i++) {
-        const d = addDays(today, i);
-        const dayItems = buildDayItems(d, {
-          plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
-          mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
-          trainingTemplates, gewohnheiten, gewohnheitErledigt,
-        });
-        weekItems.push(...dayItems.filter((it) => it.kategorie === "supplement" && it.done));
-      }
+      const weekItems = wocheItems.filter((it) => it.kategorie === "supplement" && it.done);
       widgets.push({
         name: tLabel("Supplemente"),
         kategorie: "supplement",
@@ -301,16 +304,7 @@ export default function HomeView({ onOpenView }) {
     {
       const mealItems = heuteItems.filter((i) => i.kategorie === "mahlzeit");
       const todayCount = mealItems.filter((i) => i.done).length;
-      const weekItems = [];
-      for (let i = 0; i < 7; i++) {
-        const d = addDays(today, i);
-        const dayItems = buildDayItems(d, {
-          plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
-          mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
-          trainingTemplates, gewohnheiten, gewohnheitErledigt,
-        });
-        weekItems.push(...dayItems.filter((it) => it.kategorie === "mahlzeit" && it.done));
-      }
+      const weekItems = wocheItems.filter((it) => it.kategorie === "mahlzeit" && it.done);
       widgets.push({
         name: tLabel("Mahlzeiten"),
         kategorie: "mahlzeit",
@@ -328,16 +322,7 @@ export default function HomeView({ onOpenView }) {
     {
       const trainingItems = heuteItems.filter((i) => i.kategorie === "training");
       const todayCount = trainingItems.filter((i) => i.done).length;
-      const weekItems = [];
-      for (let i = 0; i < 7; i++) {
-        const d = addDays(today, i);
-        const dayItems = buildDayItems(d, {
-          plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
-          mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
-          trainingTemplates, gewohnheiten, gewohnheitErledigt,
-        });
-        weekItems.push(...dayItems.filter((it) => it.kategorie === "training" && it.done));
-      }
+      const weekItems = wocheItems.filter((it) => it.kategorie === "training" && it.done);
       widgets.push({
         name: tLabel("Training"),
         kategorie: "training",

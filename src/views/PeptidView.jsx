@@ -45,7 +45,7 @@ export default function PeptidView({ onHome, embedded = false }) {
     addCustomPreparat,
     togglePeptid,
     setEinnahmeart,
-    setDose,
+    setDoseBatch,
     setPeptidFoto,
     aenderungVermerken,
   } = useAppData();
@@ -67,15 +67,15 @@ export default function PeptidView({ onHome, embedded = false }) {
       setPeptidError(result?.error || t("peptid.error.save.generic"));
       return;
     }
-    setDose(name, "menge", neuesPeptid.menge);
-    setDose(name, "uhrzeiten", neuesPeptid.uhrzeiten);
-    if (neuesPeptid.intervallTyp === "fixed") setDose(name, "intervallPreset", neuesPeptid.intervallDays);
+    const felder = { menge: neuesPeptid.menge, uhrzeiten: neuesPeptid.uhrzeiten };
+    if (neuesPeptid.intervallTyp === "fixed") felder.intervallPreset = neuesPeptid.intervallDays;
     else {
-      setDose(name, "intervallTyp", neuesPeptid.intervallTyp);
+      felder.intervallTyp = neuesPeptid.intervallTyp;
       DOSIS_FELDER.forEach((feld) => {
-        if (feld !== "menge" && feld !== "uhrzeiten") setDose(name, feld, neuesPeptid[feld]);
+        if (feld !== "menge" && feld !== "uhrzeiten") felder[feld] = neuesPeptid[feld];
       });
     }
+    setDoseBatch(name, felder);
     aenderungVermerken({
       kategorie: "peptid",
       itemName: name,
@@ -103,14 +103,16 @@ export default function PeptidView({ onHome, embedded = false }) {
     if (aenderungen.length > 0) {
       aenderungVermerken({ kategorie: "peptid", itemName: p, aktion: "geändert", detail: aenderungen.join("; "), grund });
     }
+    const felder = {};
     DOSIS_FELDER.forEach((feld) => {
-      if (JSON.stringify(entwurf[feld]) !== JSON.stringify(vorher[feld])) setDose(p, feld, entwurf[feld]);
+      if (JSON.stringify(entwurf[feld]) !== JSON.stringify(vorher[feld])) felder[feld] = entwurf[feld];
     });
     if (entwurf.intervallTyp === "fixed" && (entwurf.intervallTyp !== vorher.intervallTyp || entwurf.intervallDays !== vorher.intervallDays)) {
-      setDose(p, "intervallPreset", entwurf.intervallDays);
+      felder.intervallPreset = entwurf.intervallDays;
     } else if (entwurf.intervallTyp !== vorher.intervallTyp) {
-      setDose(p, "intervallTyp", entwurf.intervallTyp);
+      felder.intervallTyp = entwurf.intervallTyp;
     }
+    if (Object.keys(felder).length > 0) setDoseBatch(p, felder);
     setDosisEditOffen(null);
   };
 

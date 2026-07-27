@@ -62,6 +62,7 @@ export function AppDataProvider({ children }) {
     setHormonKategorie: hormoneData.setHormonKategorie,
     setHormonEinnahmeart: hormoneData.setHormonEinnahmeart,
     setHormonDose: hormoneData.setHormonDose,
+    setHormonDoseBatch: hormoneData.setHormonDoseBatch,
     hormonErledigt: hormoneData.hormonErledigt,
     toggleHormonErledigt: hormoneData.toggleHormonErledigt,
     hormonFeedback: hormoneData.hormonFeedback,

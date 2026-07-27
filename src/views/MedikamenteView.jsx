@@ -45,7 +45,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
     setHormonFoto,
     setHormonKategorie,
     setHormonEinnahmeart,
-    setHormonDose,
+    setHormonDoseBatch,
     hormonErledigt,
     hormonFeedback,
     toggleHormonErledigt,
@@ -134,14 +134,16 @@ export default function MedikamenteView({ onHome, embedded = false }) {
     if (aenderungen.length > 0) {
       aenderungVermerken({ kategorie: "hormon", itemName: h, aktion: "geändert", detail: aenderungen.join("; "), grund });
     }
+    const felder = {};
     DOSIS_FELDER.forEach((feld) => {
-      if (JSON.stringify(entwurf[feld]) !== JSON.stringify(vorher[feld])) setHormonDose(h, feld, entwurf[feld]);
+      if (JSON.stringify(entwurf[feld]) !== JSON.stringify(vorher[feld])) felder[feld] = entwurf[feld];
     });
     if (entwurf.intervallTyp === "fixed" && (entwurf.intervallTyp !== vorher.intervallTyp || entwurf.intervallDays !== vorher.intervallDays)) {
-      setHormonDose(h, "intervallPreset", entwurf.intervallDays);
+      felder.intervallPreset = entwurf.intervallDays;
     } else if (entwurf.intervallTyp !== vorher.intervallTyp) {
-      setHormonDose(h, "intervallTyp", entwurf.intervallTyp);
+      felder.intervallTyp = entwurf.intervallTyp;
     }
+    if (Object.keys(felder).length > 0) setHormonDoseBatch(h, felder);
     setDosisEditOffen(null);
   };
 

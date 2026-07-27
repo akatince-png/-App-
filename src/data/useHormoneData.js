@@ -231,6 +231,48 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
     [userId]
   );
 
+  // Wie setHormonDose(), aber für mehrere Felder auf einmal — ein einzelner
+  // DB-Aufruf statt einem pro geändertem Feld (siehe setDoseBatch() in
+  // useProtocolData.js für dieselbe Begründung/dasselbe Muster).
+  const setHormonDoseBatch = useCallback(
+    (name, felder) => {
+      let localPatch = {};
+      const dbPatch = {};
+
+      Object.entries(felder).forEach(([feld, val]) => {
+        if (feld === "intervallPreset") {
+          localPatch = { ...localPatch, intervallTyp: "fixed", intervallDays: val };
+          dbPatch.intervall_mode = "fixed";
+          dbPatch.intervall_days = val;
+          return;
+        }
+        if (feld === "intervallTyp") {
+          localPatch = { ...localPatch, intervallTyp: val };
+          dbPatch.intervall_mode = val;
+          return;
+        }
+        const column = DOSE_FELD_TO_COLUMN[feld];
+        if (!column) return;
+        let value = val;
+        if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
+        else if (feld === "eigenerStart") value = val === "" ? null : val;
+        localPatch = { ...localPatch, [feld]: val };
+        dbPatch[column] = value;
+      });
+
+      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], ...localPatch } }));
+      if (Object.keys(dbPatch).length === 0) return;
+
+      supabase
+        .from("hormones")
+        .update(dbPatch)
+        .eq("user_id", userId)
+        .eq("name", name)
+        .then(({ error }) => error && console.error(error));
+    },
+    [userId]
+  );
+
   const toggleHormonErledigt = useCallback(
     async (datumStr, name, uhrzeit) => {
       const k = `${datumStr}__${name}__${uhrzeit}`;
@@ -326,6 +368,7 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
     setHormonKategorie,
     setHormonEinnahmeart,
     setHormonDose,
+    setHormonDoseBatch,
     hormonErledigt,
     toggleHormonErledigt,
     hormonFeedback,

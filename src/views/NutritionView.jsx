@@ -89,12 +89,15 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
       const original = m.zutaten.find((oz) => oz.id === z.id);
       return original && (String(original.mengeGramm ?? "") !== String(z.mengeGramm ?? "") || String(original.kcalPro100g ?? "") !== String(z.kcalPro100g ?? ""));
     });
-    for (const z of geaenderteZutaten) {
-      const result = await onZutatAendern(m.id, z.id, { mengeGramm: z.mengeGramm, kcalPro100g: z.kcalPro100g });
-      if (!result?.ok) {
-        setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-        return;
-      }
+    // Parallel statt nacheinander — jede Zutat ist eine unabhängige Zeile,
+    // ein Roundtrip pro geänderter Zutat gleichzeitig statt sequentiell.
+    const ergebnisse = await Promise.all(
+      geaenderteZutaten.map((z) => onZutatAendern(m.id, z.id, { mengeGramm: z.mengeGramm, kcalPro100g: z.kcalPro100g }))
+    );
+    const fehlgeschlagen = ergebnisse.find((r) => !r?.ok);
+    if (fehlgeschlagen) {
+      setFehler(fehlgeschlagen.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
     }
     if (entwurfUhrzeit !== aktuelleUhrzeit) {
       await onUhrzeitAendern(m, entwurfUhrzeit);
@@ -351,14 +354,19 @@ export default function NutritionView({ onHome, embedded = false }) {
   // Weg an wie das manuelle Formular (noch keinem Wochentag zugewiesen).
   const handleErnaehrungsplanUebernehmen = async (verlauf) => {
     const rezepte = await AIService.ernaehrungsplanAusChat({ verlauf, coachName: getCoachName() });
-    for (const rezept of rezepte) {
-      const result = await mahlzeitHinzufuegen({
-        name: rezept.name,
-        hinweis: "KI-Vorschlag",
-        zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
-      });
-      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    }
+    // Parallel statt nacheinander — jedes Rezept ist eine unabhängige
+    // Mahlzeit, ein Roundtrip-Paar pro Rezept gleichzeitig statt sequentiell.
+    const ergebnisse = await Promise.all(
+      rezepte.map((rezept) =>
+        mahlzeitHinzufuegen({
+          name: rezept.name,
+          hinweis: "KI-Vorschlag",
+          zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
+        })
+      )
+    );
+    const fehlgeschlagen = ergebnisse.find((r) => !r?.ok);
+    if (fehlgeschlagen) throw new Error(fehlgeschlagen.error || "Speichern fehlgeschlagen.");
     return rezepte;
   };
 
