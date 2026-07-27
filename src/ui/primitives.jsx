@@ -157,9 +157,10 @@ export function Label({ children }) {
   );
 }
 
-export function TextInput({ value, onChange, placeholder, type = "text", onKeyPress }) {
+export const TextInput = React.forwardRef(function TextInput({ value, onChange, placeholder, type = "text", onKeyPress }, ref) {
   return (
     <input
+      ref={ref}
       className="mp-input"
       type={type}
       value={value}
@@ -180,7 +181,7 @@ export function TextInput({ value, onChange, placeholder, type = "text", onKeyPr
       }}
     />
   );
-}
+});
 
 export function TextArea({ value, onChange, placeholder }) {
   return (

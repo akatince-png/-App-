@@ -14,6 +14,25 @@ import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppe
 // gekappt.
 const KI_KONTEXT_LIMIT = 24;
 
+function MikrofonIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8.5" y="2" width="7" height="13" rx="3.5" fill="currentColor" />
+      <path d="M5 11a7 7 0 0 0 14 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <path d="M12 18v3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8.3 21.2h7.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StopIcon({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" />
+    </svg>
+  );
+}
+
 // Wiederverwendbare Chat-Oberfläche für den KI-Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).
 // Zwei Phasen: 1) frei mit dem Coach reden/nachjustieren, 2) per eigenem
@@ -58,10 +77,12 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
   const [fehler, setFehler] = useState(null);
   const [ergebnis, setErgebnis] = useState(null);
   const [hoert, setHoert] = useState(false);
+  const [zwischenText, setZwischenText] = useState("");
   const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const [streamText, setStreamText] = useState("");
   const stopErkennungRef = useRef(null);
   const verlaufGeladenRef = useRef(false);
+  const eingabeRef = useRef(null);
 
   // Laufende Sprachausgabe/-erkennung beenden, wenn die Karte verschwindet
   // (z. B. Wechsel auf einen anderen Bildschirm), statt im Hintergrund
@@ -73,12 +94,20 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
     };
   }, []);
 
+  // Tastatur automatisch bereit, sobald nicht (mehr) zugehört wird — nach
+  // manuellem Mikrofon-Stopp, nach Ende der Erkennung, oder von Anfang an,
+  // falls Spracherkennung im Browser gar nicht verfügbar ist.
+  useEffect(() => {
+    if (offen && !hoert) eingabeRef.current?.focus();
+  }, [offen, hoert]);
+
   const senden = async (text) => {
-    const nachricht = (text ?? eingabe).trim();
+    const nachricht = (text ?? `${eingabe}${eingabe && zwischenText ? " " : ""}${zwischenText}`).trim();
     if (!nachricht || laden) return;
     const neuerVerlauf = [...verlauf, { rolle: "nutzer", text: nachricht }];
     setVerlauf(neuerVerlauf);
     setEingabe("");
+    setZwischenText("");
     setErgebnis(null);
     setLaden(true);
     setFehler(null);
@@ -104,16 +133,30 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
 
   // Erkannter Text landet nur im Eingabefeld statt automatisch abgesendet
   // zu werden — Spracherkennung verhört sich, und die Nutzerin soll vor dem
-  // Senden noch korrigieren können.
+  // Senden noch korrigieren können. Zwischenergebnisse werden schon
+  // während des Sprechens angezeigt (nicht erst am Ende), damit der
+  // Senden-Knopf sofort reagiert statt lange inaktiv zu wirken.
   const mikrofonStarten = () => {
     setFehler(null);
     setHoert(true);
+    setZwischenText("");
+    // Barge-in: sobald ich selbst rede, wird eine gerade laufende
+    // Vorlese-Antwort des Coaches sofort unterbrochen statt weiterzulaufen.
+    sprachausgabeStoppen();
     stopErkennungRef.current = starteSprachErkennung({
-      onErgebnis: (text) => setEingabe((prev) => (prev ? `${prev} ${text}` : text)),
-      onEnde: () => setHoert(false),
+      onZwischenergebnis: setZwischenText,
+      onErgebnis: (text) => {
+        setEingabe((prev) => (prev ? `${prev} ${text}` : text));
+        setZwischenText("");
+      },
+      onEnde: () => {
+        setHoert(false);
+        setZwischenText("");
+      },
       onFehler: (msg) => {
         setFehler(msg);
         setHoert(false);
+        setZwischenText("");
       },
     });
   };
@@ -122,6 +165,7 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
     if (hoert) {
       stopErkennungRef.current?.();
       setHoert(false);
+      setZwischenText("");
       return;
     }
     mikrofonStarten();
@@ -272,7 +316,14 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
             statt einer langen Sprechblasen-Liste — der volle Verlauf bleibt
             über den Aufklapp-Link darunter erreichbar. */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 12, padding: "10px 4px 16px" }}>
-          <CoachOrb zustand={orbZustand} size={76} />
+          <button
+            type="button"
+            onClick={sprachausgabeStoppen}
+            title="Antippen, um den Coach beim Sprechen zu unterbrechen"
+            style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", borderRadius: "50%" }}
+          >
+            <CoachOrb zustand={orbZustand} size={76} />
+          </button>
           {letzteNutzerNachricht && !laden && (
             <div style={{ fontSize: 12.5, color: textMuted, fontStyle: "italic", maxWidth: "90%" }}>„{letzteNutzerNachricht.text}"</div>
           )}
@@ -347,21 +398,24 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
               title={hoert ? "Aufnahme stoppen" : "Sprechen statt tippen"}
               style={{
                 width: 44,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 borderRadius: 10,
                 border: `1px solid ${hoert ? danger : cardBorder}`,
                 background: hoert ? "#FDE9EC" : "#fff",
                 color: hoert ? danger : accentDark,
-                fontSize: 16,
                 cursor: "pointer",
                 flexShrink: 0,
               }}
             >
-              {hoert ? "⏹" : "🎤"}
+              {hoert ? <StopIcon /> : <MikrofonIcon />}
             </button>
           )}
           <div style={{ flex: 1 }}>
             <TextInput
-              value={eingabe}
+              ref={eingabeRef}
+              value={hoert && zwischenText ? `${eingabe}${eingabe ? " " : ""}${zwischenText}` : eingabe}
               onChange={setEingabe}
               placeholder={hoert ? "Höre zu…" : "Schreib deinem Coach…"}
               onKeyPress={(e) => e.key === "Enter" && senden()}
@@ -370,7 +424,7 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
           <button
             type="button"
             onClick={() => senden()}
-            disabled={laden || !eingabe.trim()}
+            disabled={laden || !(eingabe.trim() || zwischenText.trim())}
             style={{
               padding: "0 18px",
               borderRadius: 10,
@@ -378,8 +432,8 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
               background: accentDark,
               color: "#fff",
               fontWeight: 700,
-              cursor: laden || !eingabe.trim() ? "not-allowed" : "pointer",
-              opacity: laden || !eingabe.trim() ? 0.6 : 1,
+              cursor: laden || !(eingabe.trim() || zwischenText.trim()) ? "not-allowed" : "pointer",
+              opacity: laden || !(eingabe.trim() || zwischenText.trim()) ? 0.6 : 1,
             }}
           >
             Senden

@@ -16,13 +16,17 @@ export function sprachausgabeVerfuegbar() {
 }
 
 /**
- * Startet eine einzelne Spracherkennung (Deutsch). Ruft onErgebnis(text)
- * auf, sobald ein endgültiges Ergebnis vorliegt — bewusst kein
- * Auto-Absenden, der erkannte Text landet nur im Eingabefeld, damit
- * Erkennungsfehler vor dem Senden noch korrigiert werden können.
+ * Startet eine fortlaufende Spracherkennung (Deutsch) — bleibt aktiv über
+ * mehrere Sätze/Sprechpausen hinweg, statt nach dem ersten Satz von selbst
+ * zu stoppen. Ruft onZwischenergebnis(text) laufend mit dem noch
+ * unbestätigten aktuellen Satzteil auf (damit z. B. der Senden-Knopf schon
+ * während des Sprechens aktiv wird, nicht erst danach), und onErgebnis(text)
+ * für jeden fertig erkannten Satzabschnitt. Bewusst kein Auto-Absenden, der
+ * erkannte Text landet nur im Eingabefeld, damit Erkennungsfehler vor dem
+ * Senden noch korrigiert werden können.
  * @returns {() => void} stop-Funktion
  */
-export function starteSprachErkennung({ onErgebnis, onEnde, onFehler }) {
+export function starteSprachErkennung({ onZwischenergebnis, onErgebnis, onEnde, onFehler }) {
   const Recognition = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
   if (!Recognition) {
     onFehler?.("Spracherkennung wird von diesem Browser nicht unterstützt.");
@@ -30,16 +34,36 @@ export function starteSprachErkennung({ onErgebnis, onEnde, onFehler }) {
   }
   const erkennung = new Recognition();
   erkennung.lang = "de-DE";
-  erkennung.interimResults = false;
+  erkennung.interimResults = true;
+  erkennung.continuous = true;
   erkennung.maxAlternatives = 1;
   erkennung.onresult = (e) => {
-    const text = e.results?.[0]?.[0]?.transcript;
-    if (text) onErgebnis(text);
+    let final = "";
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const stueck = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += stueck;
+      else interim += stueck;
+    }
+    if (final) onErgebnis(final.trim());
+    onZwischenergebnis?.(interim.trim());
   };
   erkennung.onerror = (e) => onFehler?.(e.error || "Unbekannter Fehler bei der Spracherkennung.");
   erkennung.onend = () => onEnde?.();
   erkennung.start();
   return () => erkennung.stop();
+}
+
+// Bevorzugt eine natürlicher klingende deutsche Stimme, falls der
+// Browser/das Betriebssystem mehrere anbietet (die Standardstimme ist auf
+// vielen Geräten die roboterhafteste verfügbare Option). Wird bei jedem
+// Aufruf neu ermittelt, da getVoices() beim ersten Laden der Seite oft noch
+// leer ist und sich erst asynchron füllt.
+function besteDeutscheStimme() {
+  const stimmen = window.speechSynthesis.getVoices().filter((s) => s.lang?.startsWith("de"));
+  if (!stimmen.length) return null;
+  const bevorzugt = stimmen.find((s) => /Google|Natural|Neural|Premium|Enhanced/i.test(s.name));
+  return bevorzugt || stimmen[0];
 }
 
 // Bricht eine laufende Ausgabe ab statt sie zu stapeln — sonst würden bei
@@ -49,6 +73,9 @@ export function sprich(text) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "de-DE";
+  utterance.rate = 1.04;
+  const stimme = besteDeutscheStimme();
+  if (stimme) utterance.voice = stimme;
   window.speechSynthesis.speak(utterance);
 }
 
