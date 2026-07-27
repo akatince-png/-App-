@@ -221,14 +221,32 @@ generisch "dein ADHS Coach"), individuell weiterhin umbenennbar. In
 `aiService.js` gibt es jetzt zwei Persona-Ebenen:
 - `mitPersona()` (unverändert) — nur die Namens-Vorstellung, für ALLE
   Funktionen inkl. der strukturierten Extraktoren (…AusChat).
-- `mitVollerPersona()` (⭐ neu) — zusätzlich die von der Nutzerin fest
-  vorgegebene Persönlichkeits-/Antwortstruktur (direkt, wertschätzend,
-  kurze Absätze/Fettdruck/Stichpunkte, immer ein "nächster kleiner
-  Schritt", ADHS-Hürden ohne Urteil, Pläne als lesbarer Fließtext statt
-  JSON). Nur für `coachChat`/`coachChatStreamend` (den freien Chat)
-  verwendet — **bewusst nicht** für die …AusChat/…Vorschlag-Funktionen,
-  da die Stil-Vorgaben dort mit der geforderten reinen JSON-Antwort
-  kollidieren und das Parsen brechen würden.
+- `mitVollerPersona()` — zusätzlich die von der Nutzerin fest vorgegebene
+  Persönlichkeits-/Antwortstruktur. Nur für `coachChat`/
+  `coachChatStreamend` (den freien Chat) verwendet — **bewusst nicht**
+  für die …AusChat/…Vorschlag-Funktionen ("Formular-Generatoren"), da die
+  Stil-Vorgaben dort mit der geforderten reinen JSON-Antwort kollidieren
+  und das Parsen brechen würden.
+
+  **⭐ 27.07., abends: Rollenwechsel "Coach" → "exekutiver Assistent".**
+  Zielgruppe erwachsene High-Performer/Selbstständige mit ADHS (25-45+) —
+  ein belehrender "Coach"-Ton wirkt bei denen schnell wie ein
+  Besserwisser. Neuer Rahmen in `coachPersonaBlock()`: Aka ist jetzt
+  exekutiver Assistent/Copilot/"digitales Backbrain", der die mentale
+  Logistik abnimmt statt Ratschläge zu erteilen — kein Zeigefinger, die
+  Person weiß bereits was gesund ist, Hilfe nur bei der Umsetzung
+  (exekutive Dysfunktion). Ton: direkt, pragmatisch, wie ein
+  hochkompetenter COO an der Seite der Person, statt "Kumpel/Coach".
+  Struktur-Prinzipien (sofort auf den Punkt, Mikroschritte, Bullet
+  Points, Pläne strukturiert) blieben inhaltlich gleich. Eine Vorgabe
+  bewusst NICHT wörtlich übernommen: der Nutzertext wollte Pläne "wie
+  JSON" direkt im Chat-Fließtext — das bleibt aus demselben Grund wie
+  oben (Formular-Generatoren/Parsing) bei lesbarem Fließtext, rohes JSON
+  taucht weiterhin nie in der sichtbaren Chat-Antwort auf, sondern nur
+  in den separaten …AusChat-Extraktoren nach Tippen auf "Übernehmen".
+  Betrifft nur `coachPersonaBlock()`/`mitVollerPersona()` (freier Chat) —
+  Name "Aka", `mitPersona()`, UI-Label "ADHS Coach", Gemini-API-Anbindung
+  (`aiProviders.js`) und alle Formular-Generatoren unverändert.
 
 ### "Background Brain": Wissens-Basis + Live-Daten (⭐ neu, in JEDER Anfrage)
 
