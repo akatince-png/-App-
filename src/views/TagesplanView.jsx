@@ -14,6 +14,9 @@ import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
+import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
+import { getCoachName } from "../utils/coachStorage";
+import KiChat from "../ui/KiChat";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -116,6 +119,7 @@ function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggl
 }
 
 export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
+  const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const {
     plan,
     erledigt,
@@ -308,6 +312,14 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   return (
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
+
+      <KiChat
+        systemPrompt="Du bist ein hilfsbereiter Coach für eine App zur Selbstverwaltung von Gesundheitsprotokollen. Beantworte Fragen zum Tagesplan der Person. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein neues Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, neue Rezepte), frag von dir aus alle dafür nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — antworte dabei immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was zu deinem Tag, oder ich helf dir direkt bei jedem Bereich der App weiter.`}
+        pruefeBereitschaft={handleBereitschaftPruefen}
+        onUebernehmen={handleUniverselleUebernahme}
+        uebernehmenLabels={BEREICH_LABELS}
+      />
 
       {modus === "tag" && (
         <Card style={{ marginBottom: 16 }}>

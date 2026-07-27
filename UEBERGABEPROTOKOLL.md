@@ -7,12 +7,18 @@
 > ⚠️ **Nachtrag, spätnachts:** Laborwerte haben jetzt eine ℹ️-Lexikon-
 > Erklärung pro Wert, und **Schlaf + Peptide** haben jetzt auch einen Coach
 > — damit hat wirklich jeder der 8 Lebensbereiche + Home einen Coach.
-> Autonom weitergearbeitet bis hierhin (Nutzerinnen-Auftrag), dann
-> pausiert: die restlichen offenen Punkte (Tabelle Abschnitt 6) sind
-> entweder auf sie blockiert (Groq-Key, Supabase-CLI-Zugriff,
-> Kostenzusage für Cloud-TTS) oder bewusst als "braucht expliziten
-> Auftrag" markiert (Onboarding Phase 2 + geführte Laborwerte/9-
-> Kategorien-Schritte — zu vielschichtig für eine Annahme ohne Rückfrage).
+>
+> ⚠️ **Nachtrag, noch später:** Nutzerin hat aus der offenen-Punkte-Liste
+> gezielt ausgewählt, was als Nächstes passieren soll (Nummern 1/2/9
+> umsetzen, 10/8 verwerfen, 4/5/7 zurückstellen). Umgesetzt: **Onboarding-
+> Begleitung Phase 2** (freies Erzählen, `OnboardingCoachFreitext.jsx`),
+> **Coach-Begleitung für Laborwerte + alle 9 Kategorien-Schritte** im
+> Onboarding, und der **universelle Coach** (Bereichs-Erkennung +
+> Routing) jetzt auch auf Tagesplan und Wochenübersicht, nicht mehr nur
+> Home (Logik dafür in `useUniversellerCoach.js` extrahiert). Verworfen:
+> Cloud-TTS, globaler Plus-Button. Zurückgestellt (weiter in der Tabelle
+> Abschnitt 6 vermerkt): Groq aktivieren, Ollama-Tunnel, Multi-User-Vision.
+> Abschnitt 5 + 6 komplett neu lesen.
 
 ---
 
@@ -290,14 +296,17 @@ für punktuelle Erklärungen wie diese.
 
 ### Wo der Coach heute verfügbar ist
 
-Home (universell, alle 7 Bereiche), Training, Gewohnheiten, Ernährung,
+Home, Tagesplan, Wochenübersicht (alle drei universell — Bereichs-Erkennung
++ Routing zu allen 7 Aktionen, Logik gemeinsam in
+`src/data/useUniversellerCoach.js`), Training, Gewohnheiten, Ernährung,
 Hydration, Tageslicht, Supplemente, Medikamente, Schlaf, Peptide, sowie
-geführt beim Onboarding (Name/Ziele/Profil) — damit hat jeder Lebensbereich
-seinen Coach. Neue Extraktoren `AIService.schlafAusChat()` (an
-`schlafHinzufuegen()`) und `AIService.peptidAusChat()` (an
-`addCustomPreparat()` + `setDoseBatch()`, gleiches Intervall-Format wie
-`medikamentAusChat()`). **Noch nicht:** die tieferen Onboarding-Schritte
-(Laborwerte, die 9 Kategorien-Schritte).
+geführt beim Onboarding — Name/Ziele/Profil (Phase 1 `OnboardingCoachGuide`
+ODER Phase 2 `OnboardingCoachFreitext`, freie Wahl), Laborwerte, und jeder
+der 9 Kategorien-Schritte (`OnboardingCategoriesView`). Damit hat wirklich
+jeder Bereich der App einen Coach, nicht mehr nur ein Teil. Neue
+Extraktoren `AIService.schlafAusChat()`, `AIService.peptidAusChat()`,
+`AIService.onboardingAusChat()`, `AIService.schlafzielAusChat()`,
+`AIService.mahlzeitplanAusChat()`, `AIService.laborwerteAusChat()`.
 
 ### ⭐ Leitprinzip: Manuell UND per KI — niemals nur eins von beidem
 
@@ -365,16 +374,16 @@ Code-Zugriff.
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
 | 1 | ~~Weitere Bereiche für KiChat (Schlaf, Peptide)~~ | ✅ Erledigt — alle Lebensbereiche haben jetzt einen Coach | — |
-| 2 | Onboarding-Begleitung Phase 2 (freies Erzählen + automatische Feld-Zuordnung) | Bewusst zurückgestellt, Phase 1 (Felder einzeln abfragen) ist fertig | Eigener Anlauf, nach explizitem Auftrag |
-| 2b | Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte | Noch nicht umgesetzt — deutlich vielschichtiger (Multi-Add, Dosierung, Foto/OCR, WochenplanEditor) | Eigener Anlauf pro Kategorie, nach explizitem Auftrag |
+| 2 | ~~Onboarding-Begleitung Phase 2 (freies Erzählen + automatische Feld-Zuordnung)~~ | ✅ Erledigt — neue `OnboardingCoachFreitext.jsx`, Auswahlbildschirm bietet jetzt beide Varianten | — |
+| 2b | ~~Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte~~ | ✅ Erledigt — Coach füllt Felder je Kategorie aus (Übernahme dann wie gehabt manuell bestätigen), Training/Peptide übernehmen direkt | — |
 | 3 | Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen | Funktioniert wie es ist, aber unschöner Name/Slug-Mismatch | Nur bei Gelegenheit, z. B. via Supabase CLI statt Browser-Editor — danach `GEMINI_EDGE_FUNCTION_SLUG` in `aiProviders.js` zurückändern |
-| 4 | Groq als Provider aktivieren | Code fertig, aber kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
-| 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Bekannte Einschränkung, aktuell nicht aktiv genutzt (Gemini läuft) | Nur relevant, falls wieder auf Ollama gewechselt wird |
+| 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — Code fertig, aber kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
+| 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — bekannte Einschränkung, aktuell nicht aktiv genutzt (Gemini läuft) | Nur relevant, falls wieder auf Ollama gewechselt wird |
 | 6 | Groq-Streaming | Noch nicht implementiert (nur Ollama + Gemini) | Bei Bedarf, gleiches Muster wie Gemini-SSE-Streaming übernehmen |
-| 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Mit Gemini technisch näher (Cloud statt Ein-PC-Ollama), aber noch nicht umgesetzt | Bei Bedarf besprechen |
-| 8 | Plus-Button erscheint auf allen Screens, nicht nur Home | Bewusste Vereinfachung (ein globaler Button), Nutzerin hat das nicht explizit anders gewünscht | Nur ändern, falls sie das ausdrücklich anders will |
-| 9 | `bereichErkennen()`-Routing (universeller Home-Coach) nur für Home | Bewusst so begrenzt — die 7 Bereichs-Chats kennen ihren Bereich schon | Bei Bedarf auf weitere "universelle" Einstiegspunkte ausweiten |
-| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | Nutzerin hat robotische Stimme kritisiert, Web-Speech-API-Grenzen erklärt | Nur nach explizitem Wunsch — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) |
+| 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — mit Gemini technisch näher (Cloud statt Ein-PC-Ollama), aber noch nicht umgesetzt | Bei Bedarf besprechen |
+| 8 | ~~Plus-Button erscheint auf allen Screens, nicht nur Home~~ | ❌ Verworfen (Nutzerinnen-Entscheidung 27.07.) — bleibt wie es ist | — |
+| 9 | ~~`bereichErkennen()`-Routing (universeller Home-Coach) nur für Home~~ | ✅ Erledigt — Logik in `useUniversellerCoach.js` extrahiert, jetzt auch auf Tagesplan und Wochenübersicht | — |
+| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen (Nutzerinnen-Entscheidung 27.07.) — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 
 ---
 

@@ -14,9 +14,9 @@ import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
-import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 
 // Basis-Rollenbeschreibung des Home-Coaches. Die "Background Brain"-Inhalte
 // (Wissens-Basis aus src/wissen/ + Trackingdaten-Zusammenfassung) werden
@@ -78,19 +78,6 @@ const ORDNER = [
   { id: "mehr", labelKey: "home.ordner.mehr.label", descKey: "home.ordner.mehr.desc", icon: "sliders" },
 ];
 
-// Beschriftung des "Übernehmen"-Knopfs im globalen Coach — je nachdem,
-// welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
-// hat (siehe handleBereitschaftPruefen/handleUniverselleUebernahme unten).
-const BEREICH_LABELS = {
-  gewohnheit: "Gewohnheit anlegen",
-  supplement: "Supplement anlegen",
-  medikament: "Medikament anlegen",
-  hydration: "Übernehmen",
-  tageslicht: "Ziel übernehmen",
-  training: "Plan übernehmen",
-  ernaehrung: "Rezepte übernehmen",
-};
-
 export default function HomeView({ onOpenView }) {
   const { t, tLabel, lang } = useT();
   const {
@@ -112,19 +99,11 @@ export default function HomeView({ onOpenView }) {
     hydrationHeuteMl,
     hydrationZielMl,
     hydrationHinzufuegen,
-    hydrationZielSetzen,
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
-    tageslichtZielSetzen,
-    gewohnheitHinzufuegen,
-    supplementHinzufuegen,
-    hormonHinzufuegen,
-    wochenplanHinzufuegen,
-    mahlzeitHinzufuegen,
-    erinnerungen,
-    setErinnerung,
-    aenderungVermerken,
   } = useAppData();
+
+  const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
 
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
@@ -132,118 +111,6 @@ export default function HomeView({ onOpenView }) {
   // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
   // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
   const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
-
-  // Übergabe an <KiChat pruefeBereitschaft>: läuft im Hintergrund nach
-  // jeder Coach-Antwort, damit der "Übernehmen"-Knopf nur erscheint, wenn
-  // das Gespräch wirklich schon konkret genug ist — nicht schon nach
-  // belanglosem Small Talk (siehe KiChat.jsx für die genaue Mechanik).
-  const handleBereitschaftPruefen = async (verlauf) => {
-    const { bereich } = await AIService.bereichErkennen({ verlauf, coachName: getCoachName() });
-    return bereich === "keiner" ? null : bereich;
-  };
-
-  // Übergabe an <KiChat onUebernehmen> im globalen Coach: anders als die
-  // Bereichs-Chats (Training, Ernährung, ...) kennt der globale Coach nicht
-  // von vornherein, worum es geht — routet deshalb je nach dem von
-  // handleBereitschaftPruefen erkannten Bereich zur selben Extraktions- und
-  // Speicherfunktion, die auch der jeweilige Bereichs-Chat nutzt (siehe
-  // z. B. GewohnheitenView.jsx, SupplementeView.jsx, ...).
-  const handleUniverselleUebernahme = async (verlauf, erkannterBereich) => {
-    const coachName = getCoachName();
-    switch (erkannterBereich) {
-      case "gewohnheit": {
-        const g = await AIService.gewohnheitAusChat({ verlauf, coachName });
-        const result = await gewohnheitHinzufuegen({
-          name: g.name,
-          icon: g.icon || "🌱",
-          menge: g.menge || "",
-          uhrzeit: g.uhrzeit || "",
-          urzeitVon: g.urzeitVon || "",
-          urzeitBis: g.urzeitBis || "",
-          zielTage: g.zielTage ?? null,
-        });
-        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-        aenderungVermerken({
-          kategorie: "gewohnheit",
-          itemName: g.name,
-          aktion: "hinzugefügt",
-          detail: g.uhrzeit ? `Uhrzeit: ${g.uhrzeit}` : g.urzeitVon ? `Zeitfenster: ${g.urzeitVon}–${g.urzeitBis}` : "",
-        });
-        return { bereich: "gewohnheit", daten: g };
-      }
-      case "supplement": {
-        const s = await AIService.supplementAusChat({ verlauf, coachName });
-        const result = await supplementHinzufuegen({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis || "" });
-        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-        aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "hinzugefügt", detail: s.tageszeiten.join(", ") });
-        return { bereich: "supplement", daten: s };
-      }
-      case "medikament": {
-        const m = await AIService.medikamentAusChat({ verlauf, coachName });
-        const payload = {
-          name: m.name,
-          menge: m.menge || "",
-          kategorie: m.kategorie || "Sonstige",
-          einnahmeart: m.einnahmeart || "Tablette (oral)",
-          intervallTyp: m.intervallTyp || "fixed",
-          intervallDays: m.intervallDays || 1,
-          customDays: m.customDays || "",
-          onDays: m.onDays || "",
-          offDays: m.offDays || "",
-          weekdays: m.weekdays || [],
-          eigenerStart: m.eigenerStart || "",
-          uhrzeiten: m.uhrzeiten?.length ? m.uhrzeiten : ["20:00"],
-        };
-        const result = await hormonHinzufuegen(payload);
-        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-        aenderungVermerken({ kategorie: "hormon", itemName: m.name, aktion: "hinzugefügt", detail: `${payload.kategorie} · ${payload.menge || "–"}` });
-        return { bereich: "medikament", daten: payload };
-      }
-      case "hydration": {
-        const { zielMl, zeiten } = await AIService.hydrationAusChat({ verlauf, coachName });
-        if (zielMl) await hydrationZielSetzen(zielMl);
-        if (zeiten.length > 0) {
-          const bestehende = Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : [];
-          const neue = zeiten.map((z) => ({ zeit: z.zeit, menge: z.menge, startDatum: "" }));
-          const kombiniert = [...bestehende, ...neue].sort((a, b) => a.zeit.localeCompare(b.zeit));
-          setErinnerung("hydration", { aktiv: true, zeiten: kombiniert });
-        }
-        return { bereich: "hydration", daten: { zielMl, zeiten } };
-      }
-      case "tageslicht": {
-        const { zielMinuten } = await AIService.tageslichtAusChat({ verlauf, coachName });
-        const result = await tageslichtZielSetzen(zielMinuten);
-        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-        return { bereich: "tageslicht", daten: { zielMinuten } };
-      }
-      case "training": {
-        const einheiten = await AIService.trainingsplanAusChat({ verlauf, coachName });
-        for (const einheit of einheiten) {
-          const detail = [einheit.uhrzeit, (einheit.arten || []).join(" + ")].filter(Boolean).join(" · ");
-          aenderungVermerken({ kategorie: "training", itemName: einheit.wochentag, aktion: "hinzugefügt", detail });
-          await wochenplanHinzufuegen(einheit);
-        }
-        return { bereich: "training", daten: einheiten };
-      }
-      case "ernaehrung": {
-        const rezepte = await AIService.ernaehrungsplanAusChat({ verlauf, coachName });
-        const ergebnisse = await Promise.all(
-          rezepte.map((rezept) =>
-            mahlzeitHinzufuegen({
-              name: rezept.name,
-              hinweis: "KI-Vorschlag",
-              zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
-            })
-          )
-        );
-        const fehlgeschlagen = ergebnisse.find((r) => !r?.ok);
-        if (fehlgeschlagen) throw new Error(fehlgeschlagen.error || "Speichern fehlgeschlagen.");
-        return { bereich: "ernaehrung", daten: rezepte };
-      }
-      default:
-        return { bereich: null };
-    }
-  };
 
   const handleToggleEmergencyMode = (newState) => {
     setIsEmergencyMode(newState);
