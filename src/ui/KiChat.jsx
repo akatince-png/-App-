@@ -63,11 +63,32 @@ function StopIcon({ size = 15 }) {
 //   ohne diese Angabe läuft der Chat weiter, aber ohne gespeicherten Verlauf
 // - systemPrompt: Rollenbeschreibung für den Coach in diesem Kontext
 // - einleitung: erste Coach-Nachricht, ohne extra Anfrage angezeigt
-// - onUebernehmen: optional, async (verlauf) => Ergebnis-Array — wenn
-//   gesetzt, erscheint nach der ersten Antwort ein "Übernehmen"-Knopf
-// - uebernehmenLabel: Beschriftung dieses Knopfes
+// - onUebernehmen: optional, async (verlauf, erkannterBereich) => Ergebnis —
+//   wenn gesetzt, erscheint nach der ersten Antwort ein "Übernehmen"-Knopf
+//   (bzw. erst, sobald pruefeBereitschaft grünes Licht gibt, siehe unten)
+// - uebernehmenLabel: Beschriftung dieses Knopfes (Fallback ohne pruefeBereitschaft)
 // - renderErgebnis: optional (ergebnis) => Node, für die Erfolgs-Anzeige
-export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehmen, uebernehmenLabel = "Übernehmen", renderErgebnis }) {
+// - pruefeBereitschaft: optional, async (verlauf) => bereich|null — für
+//   Chats, die (anders als die meisten Bereichs-Chats) mehrere mögliche
+//   Aktionen kennen, z. B. der globale Coach auf der Startseite. Läuft
+//   automatisch im Hintergrund nach jeder Coach-Antwort; der
+//   "Übernehmen"-Knopf erscheint erst, wenn eine Funktion einen Bereich
+//   zurückliefert (nicht null) — verhindert, dass der Knopf schon nach
+//   belanglosem Small Talk auftaucht. Das Ergebnis wird als zweites
+//   Argument an onUebernehmen durchgereicht, damit dort nicht nochmal
+//   klassifiziert werden muss.
+// - uebernehmenLabels: optional, { [bereich]: string } — Beschriftung je
+//   nach von pruefeBereitschaft erkanntem Bereich
+export default function KiChat({
+  bereich,
+  systemPrompt,
+  einleitung,
+  onUebernehmen,
+  uebernehmenLabel = "Übernehmen",
+  renderErgebnis,
+  pruefeBereitschaft,
+  uebernehmenLabels,
+}) {
   const { coachVerlaufLaden, coachNachrichtSpeichern } = useAppData();
   const [offen, setOffen] = useState(false);
   const [verlauf, setVerlauf] = useState([]);
@@ -80,6 +101,7 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
   const [zwischenText, setZwischenText] = useState("");
   const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const [streamText, setStreamText] = useState("");
+  const [erkannterBereich, setErkannterBereich] = useState(null);
   const stopErkennungRef = useRef(null);
   const verlaufGeladenRef = useRef(false);
   const eingabeRef = useRef(null);
@@ -100,6 +122,29 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
   useEffect(() => {
     if (offen && !hoert) eingabeRef.current?.focus();
   }, [offen, hoert]);
+
+  // Läuft nur, wenn pruefeBereitschaft übergeben wurde (aktuell nur der
+  // globale Coach auf der Startseite, der mehrere mögliche Aktionen kennt):
+  // prüft nach jeder Coach-Antwort im Hintergrund, ob das Gespräch schon
+  // konkret genug für einen "Übernehmen"-Knopf ist, statt ihn nach jeder
+  // beliebigen Antwort (auch reinem Small Talk) anzuzeigen.
+  useEffect(() => {
+    if (!pruefeBereitschaft) return;
+    const letzte = verlauf[verlauf.length - 1];
+    if (!letzte || letzte.rolle !== "coach") return;
+    let abgebrochen = false;
+    pruefeBereitschaft(verlauf).then(
+      (bereich) => {
+        if (!abgebrochen) setErkannterBereich(bereich || null);
+      },
+      () => {
+        if (!abgebrochen) setErkannterBereich(null);
+      }
+    );
+    return () => {
+      abgebrochen = true;
+    };
+  }, [verlauf, pruefeBereitschaft]);
 
   const senden = async (text) => {
     const nachricht = (text ?? `${eingabe}${eingabe && zwischenText ? " " : ""}${zwischenText}`).trim();
@@ -202,7 +247,7 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
     setFehler(null);
     setErgebnis(null);
     try {
-      const result = await onUebernehmen(verlauf);
+      const result = await onUebernehmen(verlauf, erkannterBereich);
       setErgebnis(result);
     } catch (err) {
       setFehler(err.message);
@@ -216,6 +261,8 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
   const letzteNutzerNachricht = [...verlauf].reverse().find((n) => n.rolle === "nutzer");
   const letzteCoachNachricht = [...verlauf].reverse().find((n) => n.rolle === "coach");
   const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || einleitung || "";
+  const zeigeUebernehmenKnopf = onUebernehmen && verlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
+  const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel;
 
   if (!offen) {
     return (
@@ -440,10 +487,10 @@ export default function KiChat({ bereich, systemPrompt, einleitung, onUebernehme
           </button>
         </div>
 
-        {onUebernehmen && verlauf.some((n) => n.rolle === "coach") && (
+        {zeigeUebernehmenKnopf && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
             <PrimaryButton onClick={uebernehmen} disabled={laden}>
-              {laden ? "Wird übernommen…" : uebernehmenLabel}
+              {laden ? "Wird übernommen…" : aktuellesUebernehmenLabel}
             </PrimaryButton>
           </div>
         )}

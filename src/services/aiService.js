@@ -165,6 +165,39 @@ export const AIService = {
   },
 
   /**
+   * Bestimmt, ob und zu welchem Themenbereich das bisherige Gespräch schon
+   * konkret genug ist, um etwas zu übernehmen — für den globalen Coach auf
+   * der Startseite, der (anders als die Bereichs-Chats) nicht von vornherein
+   * weiß, worum es geht. Läuft im Hintergrund nach jeder Coach-Antwort, damit
+   * der "Übernehmen"-Knopf nur dann erscheint, wenn es wirklich etwas zu
+   * übernehmen gibt, statt schon nach der ersten Antwort auf eine Small-Talk-
+   * Frage aufzutauchen.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{bereich: "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"keiner"}>}
+   */
+  async bereichErkennen({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Klassifikations-Assistent für eine bestehende App, kein Gesprächspartner.",
+        "Analysiere das bisherige Gespräch und entscheide, ob es inhaltlich schon konkret genug ist,",
+        "um es in genau einen der folgenden Themenbereiche zu übernehmen:",
+        "gewohnheit (neue Gewohnheit/Routine), supplement (neues Supplement),",
+        "medikament (neues Medikament/Hormon), hydration (Trinkziel/-erinnerungen),",
+        "tageslicht (Tageslicht-/Freiluft-Ziel), training (Trainingsplan), ernaehrung (Rezepte/Mahlzeiten).",
+        "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"keiner" }',
+      ].join(" ")
+    );
+    const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    return { bereich: data.bereich || "keiner" };
+  },
+
+  /**
    * Extrahiert aus einem geführten Trainings-Gespräch (siehe coachChat())
    * den finalen, strukturierten Plan — gleiches JSON-Format wie
    * trainingsplanVorschlag(), damit sich das Ergebnis genauso direkt an
