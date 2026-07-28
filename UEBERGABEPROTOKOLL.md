@@ -569,7 +569,7 @@ echte Funktion dahinter. Die DB-Spalten für Peptide/Medikamente/
 Supplemente (`uhrzeiten`, `intervall_mode`, ...) waren laut
 Migrations-Kommentar 0029 extra dafür vorbereitet, nur nie angeschlossen.
 
-**Jetzt ergänzt** (portiert aus `faelltAnTag()` in
+**Ergänzt am 28.07.** (portiert aus `faelltAnTag()` in
 `src/utils/schedule.js`, damit Server- und Client-Logik nie
 auseinanderlaufen):
 - Peptide (`protocol_peptide`), Medikamente (`hormones`), Supplemente
@@ -580,12 +580,42 @@ auseinanderlaufen):
 - Mehrere gleichzeitig fällige Erinnerungen eines Nutzers werden zu
   **einer** Push-Nachricht gebündelt statt mehrerer auf einmal.
 
+**Nachtrag 28.07., vierte Runde — Vorab- + Nachfass-Erinnerung:** Auf
+Wunsch der Nutzerin gibt's jetzt pro Kategorie (außer Hydration) nicht
+mehr nur EINE Erinnerung zur geplanten Uhrzeit, sondern drei mögliche
+Zeitpunkte:
+1. Zur geplanten Uhrzeit selbst (wie bisher).
+2. **Vorab, 15 Minuten vorher** ("⏳ Gleich dran: ...") — für Peptide/
+   Medikamente/Supplemente/Gewohnheiten/Hydration.
+3. **Nachfass, 10 Minuten danach** ("❗ Noch offen: ...") — nur wenn bis
+   dahin noch NICHT bestätigt wurde. Dafür gleicht die Funktion jetzt
+   zusätzlich gegen `peptide_logs`/`hormone_logs`/`supplement_logs`/
+   `routine_logs` für den jeweils "heutigen" Tag (in der Zeitzone des
+   Nutzers) ab. Hydration hat keine Nachfass-Erinnerung, weil Trinken
+   keine einzelne bestätigbare Aktion mit eigenem Log ist, sondern eine
+   laufende Menge.
+
+Beide Zeitfenster (15 Min. vorab, 10 Min. Nachfass) sind bewusst feste
+Werte im Code (`VORLAUF_MINUTEN`, `NACHFASS_MINUTEN` oben in der Datei),
+nicht pro Nutzer/Kategorie einstellbar — die Nutzerin hatte selbst
+gesagt, dass sie "10, 20 Minuten vorher" bzw. "eine halbe Stunde früher"
+je nach Kontext will, aber die genaue Feinabstimmung mir überlässt. Das
+ist der erste, einfache Schritt; eine Kategorie-genaue oder gar
+KI-gewählte Vorlaufzeit wäre der nächste Ausbau, falls gewünscht.
+
+Nebenbei behoben: Die `faellig`-Map (sammelt fällige Erinnerungen pro
+Durchlauf) war als Modul-Variable deklariert und wurde nie geleert — bei
+einer zwischen Cron-Ticks warmgehaltenen Deno-Isolate hätte das zu
+mehrfach/wachsend gesendeten Erinnerungen führen können. Jetzt wird sie
+zu Beginn jedes Aufrufs explizit geleert.
+
 **Bewusst noch nicht abgedeckt** (siehe offene Punkte, Abschnitt 6):
 - Training/Ernährung (Wochenplan-basiert, andere Datenstruktur).
 - Tageslicht/Schlaf (aktuell keine Uhrzeit pro Eintrag in der DB, nur ein
   Ja/Nein-Flag — ohne Uhrzeit kann nichts "fällig" werden).
-- "Bereits erledigt" wird nicht geprüft (gleiches Verhalten wie das
-  ursprüngliche Hydration-System, bewusst nicht verändert).
+- Eine dauerhafte, wiederholte Erinnerung nach dem ersten Nachfass (z. B.
+  alle 30 Min. weiter nerven) — aktuell genau EIN Nachfass-Ping pro
+  verpasstem Termin, keine Eskalation.
 
 **⚠️ Braucht Deploy durch die Nutzerin** (Agent-Sandbox hat keinen
 Supabase-Zugriff): Supabase Dashboard → Edge Functions →
@@ -601,7 +631,7 @@ Voraussetzung.
 
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
-| 1 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten | Code fertig, **braucht Deploy durch Nutzerin** — siehe Abschnitt 5 | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
+| 1 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten/Hydration, jetzt inkl. Vorab- (15 Min. vorher) und Nachfass-Erinnerung (10 Min. Verspätung) | Code fertig, **braucht Deploy durch Nutzerin** — siehe Abschnitt 5 | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
 | 2 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | Noch nicht umgesetzt — andere Datenstruktur | Eigener Anlauf, `protocol_training_wochenplan`/`meal_wochenplan`-Schema erst untersuchen |
 | 3 | Erinnerungs-Versand für Tageslicht/Schlaf | Noch nicht möglich — kein Uhrzeit-Feld pro Eintrag in der DB | Erst ein Uhrzeit-Feld ergänzen (z. B. Schlafrhythmus-Vorschlag aus dem Onboarding-Coach), dann Versand bauen |
 | 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung) — Code fertig, kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
@@ -613,7 +643,7 @@ Voraussetzung.
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
 | 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
-| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Teilweise erledigt (28.07.): Verspätung wird bei Peptide/Medikamente/Supplemente/Gewohnheiten/Mahlzeiten jetzt im Tagesverlauf vermerkt (siehe Abschnitt 4). Offen: Training/Schlaf/Hydration/Tageslicht (anderes Datenmodell), echte "ausgefallen"-Nacherfassung, Notfallmodus-Tagesdokumentation, Erinnerung ab 10 Min., Vorab-Erinnerungen, KI an/aus-Schalter, Korrelationen | Als Nächstes: Training/Schlaf/Hydration/Tageslicht-Konzept festlegen, dann die Erinnerungs-Engine (10-Min.-Verspätung + Vorab) — braucht vermutlich eine Erweiterung von `send-due-reminders` |
+| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Teilweise erledigt (28.07.): Verspätung wird bei Peptide/Medikamente/Supplemente/Gewohnheiten/Mahlzeiten im Tagesverlauf vermerkt (Abschnitt 4). Vorab-Erinnerung (15 Min. vorher) + Nachfass-Erinnerung (10 Min. Verspätung, nur wenn unbestätigt) für Peptide/Medikamente/Supplemente/Gewohnheiten/Hydration fertig in `send-due-reminders`, **braucht Deploy durch Nutzerin** (Abschnitt 5). Offen: Training/Schlaf/Tageslicht (anderes Datenmodell), echte "ausgefallen"-Nacherfassung, Notfallmodus-Tagesdokumentation, KI an/aus-Schalter, Korrelationen | Deploy von `send-due-reminders` abwarten/bestätigen lassen, dann: Training/Schlaf/Tageslicht-Konzept festlegen, KI an/aus-Schalter unter "Mehr", Korrelationserkennung |
 
 ---
 

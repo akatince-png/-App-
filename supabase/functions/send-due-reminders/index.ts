@@ -11,6 +11,18 @@
 // wird nur geprüft, wenn profiles.erinnerungen[kategorie] für den
 // jeweiligen Nutzer aktiv ist (siehe ErinnerungField.jsx / MehrTab.jsx).
 //
+// Drei Arten von Erinnerungen pro Kategorie (Hydration nur die ersten zwei,
+// da "trinken" keine bestätigbare Einzelaktion mit eigenem erledigt-Log
+// ist):
+//   1. Zur geplanten Uhrzeit selbst.
+//   2. Vorab, VORLAUF_MINUTEN vorher ("Gleich dran").
+//   3. Nachfass, NACHFASS_MINUTEN danach, aber nur wenn bis dahin noch
+//      nicht bestätigt wurde (Abgleich gegen peptide_logs/hormone_logs/
+//      supplement_logs/routine_logs für den heutigen Tag).
+// Beide Zeitfenster sind bewusst als feste Werte statt pro Nutzer/Kategorie
+// konfigurierbar gehalten — laut Übergabeprotokoll ein deklarierter erster
+// Schritt, kein Anspruch auf die volle "10-30 Min., je nach Kontext"-Vision.
+//
 // Noch NICHT abgedeckt (bewusst zurückgestellt, siehe UEBERGABEPROTOKOLL.md):
 // Training/Ernährung (Wochenplan-basiert, andere Datenstruktur) und
 // Tageslicht/Schlaf (aktuell keine Uhrzeit pro Eintrag hinterlegt, ohne
@@ -23,6 +35,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
+const VORLAUF_MINUTEN = 15;
+const NACHFASS_MINUTEN = 10;
 
 webpush.setVapidDetails("mailto:hello@myprotocols.app", VAPID_PUBLIC_KEY ?? "", VAPID_PRIVATE_KEY ?? "");
 
@@ -64,6 +79,18 @@ function lokalesDatum(zeitzone: string): string | null {
   } catch {
     return null;
   }
+}
+
+// Verschiebt eine "HH:MM"-Uhrzeit um deltaMinuten (auch negativ), mit
+// Wraparound über Mitternacht — genügt hier, weil wir nur auf Gleichheit
+// mit fest hinterlegten Uhrzeiten prüfen, nicht auf das genaue Datum.
+function verschobeneUhrzeit(uhrzeit: string, deltaMinuten: number): string | null {
+  const [h, m] = uhrzeit.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const total = (((h * 60 + m + deltaMinuten) % 1440) + 1440) % 1440;
+  const stunde = String(Math.floor(total / 60)).padStart(2, "0");
+  const minute = String(total % 60).padStart(2, "0");
+  return `${stunde}:${minute}`;
 }
 
 const WEEKDAY_INDEX: Record<string, number> = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
@@ -124,6 +151,53 @@ function merken(userId: string, icon: string, zeile: string) {
   faellig.set(userId, liste);
 }
 
+// Gemeinsames Schema für Peptide/Medikamente/Supplemente: Stammdaten-Tabelle
+// mit uhrzeiten-Array + Intervall-Logik, dazugehörige *_logs-Tabelle mit
+// eigenem Schlüssel für "an diesem Datum/dieser Uhrzeit schon bestätigt?".
+type DosierungsKategorie = {
+  kategorie: string;
+  table: string;
+  icon: string;
+  einheit: string;
+  logTable: string;
+  logDateSpalte: string;
+  logSchluessel: (log: Record<string, unknown>) => string;
+  rowSchluessel: (row: Record<string, unknown>, uhrzeit: string, datum: string) => string;
+};
+
+const DOSIERUNGS_KATEGORIEN: DosierungsKategorie[] = [
+  {
+    kategorie: "peptide",
+    table: "protocol_peptide",
+    icon: "🧬",
+    einheit: "Peptid",
+    logTable: "peptide_logs",
+    logDateSpalte: "dose_date",
+    logSchluessel: (log) => `${log.protocol_id}__${log.peptid_name}__${log.dose_date}__${log.uhrzeit}`,
+    rowSchluessel: (row, uhrzeit, datum) => `${row.protocol_id}__${row.name}__${datum}__${uhrzeit}`,
+  },
+  {
+    kategorie: "medikamente",
+    table: "hormones",
+    icon: "💊",
+    einheit: "Medikament",
+    logTable: "hormone_logs",
+    logDateSpalte: "dose_date",
+    logSchluessel: (log) => `${log.user_id}__${log.hormone_name}__${log.dose_date}__${log.uhrzeit}`,
+    rowSchluessel: (row, uhrzeit, datum) => `${row.user_id}__${row.name}__${datum}__${uhrzeit}`,
+  },
+  {
+    kategorie: "supplemente",
+    table: "supplements",
+    icon: "🟡",
+    einheit: "Supplement",
+    logTable: "supplement_logs",
+    logDateSpalte: "log_date",
+    logSchluessel: (log) => `${log.supplement_id}__${log.log_date}__${log.tageszeit}`,
+    rowSchluessel: (row, uhrzeit, datum) => `${row.id}__${datum}__${uhrzeit}`,
+  },
+];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok");
@@ -138,6 +212,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Isolate kann zwischen Cron-Ticks warmgehalten werden — Map explizit
+    // leeren, sonst würden sich Einträge über mehrere Minuten hinweg
+    // ansammeln statt nur den aktuellen Durchlauf abzubilden.
+    faellig.clear();
+
     const admin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     const { data: profiles, error: profilesError } = await admin
@@ -156,38 +235,73 @@ Deno.serve(async (req) => {
     }
 
     // --- Hydration: eigene Uhrzeiten-Liste statt Intervall-Logik ---------
+    // Nur Erinnerung + Vorab-Erinnerung — "trinken" ist keine bestätigbare
+    // Einzelaktion mit eigenem erledigt-Log, daher kein Nachfass-Fenster.
     for (const [userId, info] of nutzerInfo) {
       const hydration = info.erinnerungen.hydration as { aktiv?: boolean; zeiten?: { zeit?: string; menge?: string; startDatum?: string }[] } | undefined;
       if (!hydration?.aktiv || !Array.isArray(hydration.zeiten)) continue;
+
       const treffer = hydration.zeiten.filter((z) => z.zeit === info.jetzt && (!z.startDatum || z.startDatum <= info.heute));
-      if (treffer.length === 0) continue;
-      const mengen = treffer.map((z) => z.menge).filter(Boolean);
-      merken(userId, "💧", mengen.length > 0 ? `Trinken: ${mengen.join(", ")}` : "Zeit zu trinken");
+      if (treffer.length > 0) {
+        const mengen = treffer.map((z) => z.menge).filter(Boolean);
+        merken(userId, "💧", mengen.length > 0 ? `Trinken: ${mengen.join(", ")}` : "Zeit zu trinken");
+      }
+
+      const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+      if (vorabZiel) {
+        const vorabTreffer = hydration.zeiten.filter((z) => z.zeit === vorabZiel && (!z.startDatum || z.startDatum <= info.heute));
+        if (vorabTreffer.length > 0) {
+          const mengen = vorabTreffer.map((z) => z.menge).filter(Boolean);
+          merken(userId, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): Trinken${mengen.length > 0 ? ` (${mengen.join(", ")})` : ""}`);
+        }
+      }
     }
 
     // --- Peptide/Medikamente/Supplemente: gemeinsames Dosierungsschema --
-    const DOSIERUNGS_KATEGORIEN: { kategorie: string; table: string; icon: string; einheit: string }[] = [
-      { kategorie: "peptide", table: "protocol_peptide", icon: "🧬", einheit: "Peptid" },
-      { kategorie: "medikamente", table: "hormones", icon: "💊", einheit: "Medikament" },
-      { kategorie: "supplemente", table: "supplements", icon: "🟡", einheit: "Supplement" },
-    ];
-    for (const { kategorie, table, icon, einheit } of DOSIERUNGS_KATEGORIEN) {
-      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen[kategorie]).map(([id]) => id);
+    for (const kat of DOSIERUNGS_KATEGORIEN) {
+      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen[kat.kategorie]).map(([id]) => id);
       if (userIds.length === 0) continue;
-      const { data: rows, error } = await admin
-        .from(table)
-        .select("user_id, name, menge, intervall_mode, intervall_days, custom_days, on_days, off_days, weekdays, eigener_start, uhrzeiten")
-        .in("user_id", userIds);
+
+      const { data: rows, error } = await admin.from(kat.table).select("*").in("user_id", userIds);
       if (error) {
-        console.error(`Abfrage ${table} fehlgeschlagen:`, error);
+        console.error(`Abfrage ${kat.table} fehlgeschlagen:`, error);
         continue;
       }
+
+      // Für den Nachfass-Check: welche Kombinationen sind für den jeweils
+      // "heutigen" Tag (pro Zeitzone) schon bestätigt?
+      const heuteWerte = [...new Set(userIds.map((id) => nutzerInfo.get(id)!.heute))];
+      const { data: logs, error: logError } = await admin
+        .from(kat.logTable)
+        .select("*")
+        .in("user_id", userIds)
+        .in(kat.logDateSpalte, heuteWerte)
+        .eq("erledigt", true);
+      if (logError) console.error(`Abfrage ${kat.logTable} fehlgeschlagen:`, logError);
+      const erledigtSet = new Set((logs || []).map((log) => kat.logSchluessel(log)));
+
       for (const row of rows || []) {
         const info = nutzerInfo.get(row.user_id);
         if (!info) continue;
-        if (!Array.isArray(row.uhrzeiten) || !row.uhrzeiten.includes(info.jetzt)) continue;
+        if (!Array.isArray(row.uhrzeiten)) continue;
         if (!faelltAnTag(row, info.heute)) continue;
-        merken(row.user_id, icon, row.name ? `${row.name}${row.menge ? ` (${row.menge})` : ""}` : einheit);
+
+        if (row.uhrzeiten.includes(info.jetzt)) {
+          merken(row.user_id, kat.icon, row.name ? `${row.name}${row.menge ? ` (${row.menge})` : ""}` : kat.einheit);
+        }
+
+        const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+        if (vorabZiel && row.uhrzeiten.includes(vorabZiel)) {
+          merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${row.name || kat.einheit}`);
+        }
+
+        const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
+        if (nachfassZiel && row.uhrzeiten.includes(nachfassZiel)) {
+          const schluessel = kat.rowSchluessel(row, nachfassZiel, info.heute);
+          if (!erledigtSet.has(schluessel)) {
+            merken(row.user_id, "❗", `Noch offen: ${row.name || kat.einheit} (${NACHFASS_MINUTEN} Min. überfällig)`);
+          }
+        }
       }
     }
 
@@ -195,16 +309,37 @@ Deno.serve(async (req) => {
     {
       const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen.gewohnheiten).map(([id]) => id);
       if (userIds.length > 0) {
-        const { data: rows, error } = await admin.from("routines").select("user_id, name, uhrzeit").in("user_id", userIds);
+        const { data: rows, error } = await admin.from("routines").select("id, user_id, name, uhrzeit").in("user_id", userIds);
         if (error) {
           console.error("Abfrage routines fehlgeschlagen:", error);
         } else {
+          const heuteWerte = [...new Set(userIds.map((id) => nutzerInfo.get(id)!.heute))];
+          const { data: logs, error: logError } = await admin
+            .from("routine_logs")
+            .select("routine_id, log_date")
+            .in("user_id", userIds)
+            .in("log_date", heuteWerte);
+          if (logError) console.error("Abfrage routine_logs fehlgeschlagen:", logError);
+          const erledigtSet = new Set((logs || []).map((log) => `${log.routine_id}__${log.log_date}`));
+
           for (const row of rows || []) {
             const info = nutzerInfo.get(row.user_id);
             if (!info || !row.uhrzeit) continue;
             const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
-            if (uhrzeitKurz !== info.jetzt) continue;
-            merken(row.user_id, "🌱", row.name || "Gewohnheit");
+
+            if (uhrzeitKurz === info.jetzt) {
+              merken(row.user_id, "🌱", row.name || "Gewohnheit");
+            }
+
+            const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+            if (vorabZiel && uhrzeitKurz === vorabZiel) {
+              merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${row.name || "Gewohnheit"}`);
+            }
+
+            const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
+            if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.id}__${info.heute}`)) {
+              merken(row.user_id, "❗", `Noch offen: ${row.name || "Gewohnheit"} (${NACHFASS_MINUTEN} Min. überfällig)`);
+            }
           }
         }
       }
