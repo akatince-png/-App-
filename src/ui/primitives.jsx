@@ -1,5 +1,5 @@
-import React from "react";
-import { accentDark, accentSoft, blue, blueSoft, bg, card, cardBorder, danger, shadow, success, textMain, textMuted } from "./theme";
+import React, { useState } from "react";
+import { blue, blueSoft, bg, card, cardBorder, danger, shadow, success, successSoft, textMain, textMuted, aufhellen, hexZuRgba } from "./theme";
 import { BereichColorProvider, useBereichColor } from "./BereichColorContext";
 
 // `bereich` (optional, z. B. "training", "hydration" — Schlüssel aus
@@ -65,11 +65,26 @@ export function Card({ children, style }) {
   );
 }
 
+// Farbverlauf + farbiger Glow-Schatten + Press-Animation statt einer
+// flachen Einfarb-Fläche (Nutzerinnen-Vorgabe, 28.07.: wirkte "flach,
+// undynamisch" — Vorbild ist der Notfallmodus-Knopf auf Home, siehe
+// ADHSModeToggle.jsx). Gilt automatisch für jede Bereichsfarbe aus
+// KATEGORIE_META, nicht nur den generischen Akzent.
 export function PrimaryButton({ children, onClick, disabled, variant = "accent", style }) {
   const { accent: bereichAccent } = useBereichColor();
+  const [gedrueckt, setGedrueckt] = useState(false);
+  const basisFarbe = variant === "success" ? success : bereichAccent;
   const styles = {
-    accent: { background: disabled ? "#D8D8D3" : bereichAccent, color: "#fff" },
-    success: { background: disabled ? "#D8D8D3" : success, color: "#fff" },
+    accent: {
+      background: disabled ? "#D8D8D3" : `linear-gradient(135deg, ${basisFarbe}, ${aufhellen(basisFarbe, 20)})`,
+      color: "#fff",
+      boxShadow: disabled ? "none" : `0 8px 20px ${hexZuRgba(basisFarbe, 0.32)}`,
+    },
+    success: {
+      background: disabled ? "#D8D8D3" : `linear-gradient(135deg, ${basisFarbe}, ${aufhellen(basisFarbe, 20)})`,
+      color: "#fff",
+      boxShadow: disabled ? "none" : `0 8px 20px ${hexZuRgba(basisFarbe, 0.32)}`,
+    },
     ghost: { background: "transparent", color: textMuted, border: `1px solid ${cardBorder}` },
   };
   return (
@@ -78,6 +93,11 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
       className="mp-btn"
       onClick={onClick}
       disabled={disabled}
+      onMouseDown={() => setGedrueckt(true)}
+      onMouseUp={() => setGedrueckt(false)}
+      onMouseLeave={() => setGedrueckt(false)}
+      onTouchStart={() => setGedrueckt(true)}
+      onTouchEnd={() => setGedrueckt(false)}
       style={{
         width: "100%",
         minHeight: 52,
@@ -86,7 +106,10 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
         border: "none",
         fontSize: 15,
         fontWeight: 700,
+        letterSpacing: 0.2,
         cursor: disabled ? "not-allowed" : "pointer",
+        transform: gedrueckt && !disabled ? "scale(0.97)" : "scale(1)",
+        transition: "transform 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms ease",
         ...styles[variant],
         ...style,
       }}
@@ -113,6 +136,7 @@ export function CheckRow({ label, checked, onToggle }) {
         background: checked ? bereichAccentSoft : "#FAFBFA",
         cursor: "pointer",
         border: `1px solid ${checked ? bereichAccent : cardBorder}`,
+        transition: "background 150ms ease, border-color 150ms ease",
       }}
     >
       <span style={{ fontSize: 14, fontWeight: checked ? 600 : 500 }}>{label}</span>
@@ -123,12 +147,14 @@ export function CheckRow({ label, checked, onToggle }) {
           borderRadius: 7,
           border: `2px solid ${checked ? bereichAccent : "#C6CBCF"}`,
           background: checked ? bereichAccent : "transparent",
+          boxShadow: checked ? `0 3px 8px ${hexZuRgba(bereichAccent, 0.35)}` : "none",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 12,
           color: "#fff",
           flexShrink: 0,
+          transition: "background 150ms ease, box-shadow 150ms ease",
         }}
       >
         {checked ? "✓" : ""}
@@ -222,7 +248,7 @@ export function TextArea({ value, onChange, placeholder }) {
 
 export function StatusBadge({ status }) {
   const map = {
-    erledigt: { c: accentDark, bg: accentSoft, l: "Erledigt" },
+    erledigt: { c: success, bg: successSoft, l: "Erledigt" },
     geplant: { c: blue, bg: blueSoft, l: "Geplant" },
     verpasst: { c: danger, bg: "#F9E9E9", l: "Verpasst" },
   };

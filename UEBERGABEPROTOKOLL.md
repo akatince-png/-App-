@@ -142,6 +142,36 @@ Der Home-Button ist über `src/ui/ViewHeader.jsx` vereinheitlicht
 (Home-Button links neben dem Logo). Bei neuen Screens **immer**
 `ViewHeader` nutzen, nicht wieder einen eigenen Header-Block bauen.
 
+**Farbverlauf-Buttons + Tiefe statt flacher Flächen (Nachtrag 28.07.).**
+Nutzerinnen-Feedback: das bisherige Design wirkte "flach, undynamisch,
+unmodern"; als Vorbild diente der Notfallmodus-Knopf auf Home
+(`ADHSModeToggle.jsx` — Farbverlauf + farbiger Glow-Schatten +
+Press-Animation). Umgesetzt:
+- Genereller Marken-Akzent (`accent` in `theme.js`) ist jetzt Indigo
+  (`#6366F1`) statt des alten Grüns.
+- „Erledigt"/Erfolg ist jetzt ein **eigenständiges** Grün (`success`,
+  `#0E7C66` — der alte Akzent-Wert), nicht mehr an `accent` gekoppelt.
+  Beide Bedeutungen (Marke vs. Erfolg) waren vorher in einer Farbe
+  vermischt.
+- Zwei neue Hilfsfunktionen in `theme.js`: `aufhellen(hex, prozent)` und
+  `hexZuRgba(hex, alpha)` — erzeugen zur Laufzeit den zweiten
+  Verlaufs-Farbton bzw. den Glow-Schatten aus jeder beliebigen Hex-Farbe.
+- `PrimaryButton` (`primitives.jsx`) nutzt jetzt einen
+  135°-Zweifarben-Verlauf, einen farbigen `boxShadow`-Glow und eine
+  Press-Scale-Animation (`onMouseDown`/`onTouchStart` → `scale(0.97)`).
+  Das gilt automatisch für **jede** Bereichsfarbe aus `KATEGORIE_META`
+  (über `useBereichColor()`), nicht nur den generischen Akzent — ein
+  Training-Button ist z. B. jetzt ein Rot-Verlauf mit rotem Glow, ohne
+  dass irgendwo eine Bereichsfarbe einzeln angefasst werden musste.
+- `Card`-Schatten vertieft (`shadow` in `theme.js`, sichtbar dunkler/
+  größer) und `CheckRow`s bekommen im ausgewählten Zustand ebenfalls
+  einen farbigen Glow am Häkchen-Kästchen, damit es nicht nur bei
+  Buttons "lebendig" wirkt.
+- Hintergrund (`bg`) ist weiterhin reines Weiß (`#FFFFFF`) — kann nicht
+  wörtlich "noch heller" werden; falls die Nutzerin das anders meinte
+  (z. B. Kontrast zwischen Seite und Karte), müsste das gezielt
+  nachgefragt werden.
+
 ---
 
 ## 4. KI-Coach — vollständiger technischer Überblick
