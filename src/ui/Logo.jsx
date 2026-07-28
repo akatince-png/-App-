@@ -7,13 +7,13 @@ import { textMain, textMuted } from "./theme";
 export default function Logo({ size = 56, withWordmark = false }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: withWordmark ? 12 : 0 }}>
-      <img src="/logo-mark.svg" alt="MyProtocols" width={size} height={size} style={{ display: "block", flexShrink: 0 }} />
+      <img src="/logo-mark.svg" alt="AKA" width={size} height={size} style={{ display: "block", flexShrink: 0 }} />
       {withWordmark && (
         <div>
           <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: size * 0.34, fontWeight: 700, color: textMain, lineHeight: 1.1, letterSpacing: -0.2 }}>
-            MyProtocols
+            AKA
           </div>
-          <div style={{ fontSize: size * 0.15, color: textMuted, fontWeight: 600 }}>Health. Organized.</div>
+          <div style={{ fontSize: size * 0.15, color: textMuted, fontWeight: 600 }}>Deine exekutive rechte Hand</div>
         </div>
       )}
     </div>

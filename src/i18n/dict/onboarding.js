@@ -2,7 +2,7 @@ export const onboarding = {
   de: {
     "onboarding.categories.progress": "{{current}} von {{total}}",
     "onboarding.gate.title": "{{label}} einrichten?",
-    "onboarding.gate.instructions": "Du kannst diesen Bereich jetzt kurz einrichten oder später jederzeit über das Dashboard nachholen.",
+    "onboarding.gate.instructions": "Du kannst diesen Bereich jetzt kurz einrichten oder später jederzeit über die Startseite nachholen.",
     "onboarding.gewohnheiten.name.label": "Name der Gewohnheit",
     "onboarding.gewohnheiten.name.placeholder": "z. B. 10 Minuten Spaziergang",
     "onboarding.schlaf.bettzeit.label": "Bettzeit",
@@ -46,7 +46,7 @@ export const onboarding = {
     "onboarding.completion.title": "Herzlichen Glückwunsch — deine Pläne sind eingerichtet!",
     "onboarding.completion.subtitle": "Du musst dir jetzt nichts mehr merken — dein Tagesplan zeigt dir ab jetzt jeden Tag, was ansteht.",
     "onboarding.completion.eingerichtet": "Eingerichtet:",
-    "onboarding.completion.rest": "Die restlichen Bereiche kannst du jederzeit später über das Dashboard einrichten.",
+    "onboarding.completion.rest": "Die restlichen Bereiche kannst du jederzeit später über die Startseite einrichten.",
     "onboarding.completion.los": "Los geht's",
     "onboarding.training.wochenplan.titel": "Wochenplan",
     "onboarding.training.wochenplan.instructions": "Leg fest, was an welchem Tag ansteht — erscheint danach automatisch in deinem Tagesplan.",

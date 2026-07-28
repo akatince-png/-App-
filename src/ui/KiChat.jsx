@@ -68,7 +68,7 @@ export default function KiChat({
   systemPrompt,
   einleitung,
   onUebernehmen,
-  uebernehmenLabel = "Übernehmen",
+  uebernehmenLabel,
   renderErgebnis,
   pruefeBereitschaft,
   uebernehmenLabels,
@@ -256,7 +256,7 @@ export default function KiChat({
   const letzteCoachNachricht = [...verlauf].reverse().find((n) => n.rolle === "coach");
   const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || einleitung || "";
   const zeigeUebernehmenKnopf = onUebernehmen && verlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
-  const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel;
+  const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel || `An ${getCoachName()} übermitteln`;
 
   if (!offen) {
     return (
@@ -458,7 +458,7 @@ export default function KiChat({
               ref={eingabeRef}
               value={hoert && zwischenText ? `${eingabe}${eingabe ? " " : ""}${zwischenText}` : eingabe}
               onChange={setEingabe}
-              placeholder={hoert ? "Höre zu…" : "Schreib deinem Coach…"}
+              placeholder={hoert ? "Höre zu…" : `Anweisung an ${getCoachName()} eingeben…`}
               onKeyPress={(e) => e.key === "Enter" && senden()}
             />
           </div>

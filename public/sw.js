@@ -1,4 +1,4 @@
-// Service Worker für MyProtocols — nötig, damit echte Push-Benachrichtigungen
+// Service Worker für AKA — nötig, damit echte Push-Benachrichtigungen
 // auch ankommen, wenn die App gerade nicht geöffnet ist (iOS 16.4+, Android).
 // Kein Offline-Caching hier — das ist bewusst nicht Ziel dieser Datei.
 
@@ -11,7 +11,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "MyProtocols", body: "Erinnerung", url: "/" };
+  let data = { title: "AKA", body: "Erinnerung", url: "/" };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch {

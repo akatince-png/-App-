@@ -88,7 +88,7 @@ export function usePushNotifications(userId) {
       data: { session },
     } = await supabase.auth.getSession();
     const { data, error } = await supabase.functions.invoke("send-push", {
-      body: { title: "MyProtocols", body: "So sieht eine Erinnerung aus. 🎉", url: "/" },
+      body: { title: "AKA", body: "So sieht eine Erinnerung aus. 🎉", url: "/" },
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (error || data?.error) {

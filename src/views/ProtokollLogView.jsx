@@ -120,7 +120,7 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <ViewHeader title="📖 Protokolle" onHome={onHome} />
+        <ViewHeader title="📖 Akas fertige Protokolle" onHome={onHome} />
       )}
 
       {ersteWoche && (

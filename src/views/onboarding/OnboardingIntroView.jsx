@@ -60,14 +60,14 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel }) {
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Hey! 👋</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: textMuted, lineHeight: 1.5 }}>
-            Schön, dass du da bist.
+            Ich bin {coachName} — deine exekutive rechte Hand.
           </div>
         </div>
         <Card style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 14, marginBottom: 18 }}>
             <CoachOrb zustand="ruhe" size={64} />
             <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.5 }}>
-              Ich bin {coachName} — soll ich dich beim Einrichten begleiten, oder möchtest du das lieber allein machen?
+              Du musst deine Gesundheit und Routinen ab jetzt nicht mehr alleine im Kopf managen — ich übernehme die Logistik. Ich habe deine Protokolle, Tagesstrukturen und Rechner bereits griffbereit. Soll ich dich beim Einrichten begleiten, oder möchtest du das lieber allein machen?
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

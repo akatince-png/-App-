@@ -53,7 +53,7 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
 
   return (
     <Shell bereich={TAB_ZU_KATEGORIE[planeTab]}>
-      <ViewHeader title="Alle Pläne" onHome={onHome} />
+      <ViewHeader title="Deine aktiven Systeme" onHome={onHome} />
 
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {PLAENE_TABS.map((t) => {

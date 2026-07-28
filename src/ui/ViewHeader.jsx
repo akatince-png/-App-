@@ -5,7 +5,7 @@ import { cardBorder } from "./theme";
 // Einheitliche Kopfzeile für alle Screens: Home-Button links neben dem Logo
 // (statt wie früher rechts, klein, einzeln pro Screen dupliziert), Titel
 // rechts daneben. Ersetzt ~19 einzeln kopierte Header-Blöcke.
-export default function ViewHeader({ title, onHome, homeTitle = "Zum Dashboard" }) {
+export default function ViewHeader({ title, onHome, homeTitle = "Zur Startseite" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18, marginTop: 6 }}>
       <button

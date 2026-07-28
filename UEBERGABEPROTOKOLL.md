@@ -1,4 +1,4 @@
-# 📋 ÜBERGABEPROTOKOLL: MyProtocols App
+# 📋 ÜBERGABEPROTOKOLL: AKA App
 
 **Stand: 28.07.2026, nachts — Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
@@ -11,12 +11,24 @@ dieser Datei.
 
 ## 1. Was ist diese App?
 
-**MyProtocols** ist eine Web-App zur Selbstverwaltung von
-Gesundheitsprotokollen/Biohacking, mit besonderem Fokus auf
-ADHS-Freundlichkeit (reduzierte Reizüberflutung, Notfallmodus, große
-Bedienelemente, klare Sprache). Die Nutzerin ist selbst nicht technisch
-versiert (kommuniziert oft per Spracheingabe, mit Transkriptionsfehlern) —
-siehe Abschnitt 8 für Hinweise zur Zusammenarbeit.
+**AKA** (Claim: "Deine exekutive rechte Hand") ist eine Web-App zur
+Selbstverwaltung von Gesundheitsprotokollen/Biohacking, mit besonderem
+Fokus auf ADHS-Freundlichkeit (reduzierte Reizüberflutung, Notfallmodus,
+große Bedienelemente, klare Sprache). Die Nutzerin ist selbst nicht
+technisch versiert (kommuniziert oft per Spracheingabe, mit
+Transkriptionsfehlern) — siehe Abschnitt 8 für Hinweise zur
+Zusammenarbeit.
+
+**Rebranding (Nachtrag 28.07.):** Die App hieß bis dahin "MyProtocols";
+das Produkt selbst heißt jetzt fest **AKA** (Titel, Login, Manifest,
+Service Worker — überall hartcodiert, nicht personalisierbar). Getrennt
+davon bleibt der **KI-Coach-Persona-Name** weiterhin individuell
+umbenennbar (siehe `utils/coachStorage.js`), Standardwert ist ebenfalls
+"Aka" — beide Namen kommen bewusst aus derselben Idee (die App IST die
+exekutive rechte Hand), sind technisch aber zwei getrennte Konzepte:
+Marken-Text (Logo, Header, Abschnittsüberschriften) ist immer fest "AKA"/
+"Akas", Dialog-Text (Chat-Begrüßungen, Platzhalter, Persona-System-Prompt)
+nutzt weiterhin dynamisch `getCoachName()`.
 
 Abgedeckte Lebensbereiche (jeder mit eigenem Plan/Protokoll): Schlaf,
 Hydration, Ernährung, Training, Gewohnheiten, Supplemente,

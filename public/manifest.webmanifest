@@ -1,7 +1,7 @@
 {
-  "name": "MyProtocols",
-  "short_name": "MyProtocols",
-  "description": "Dein persönliches Protokoll für Peptide, Medikamente, Supplemente, Schlaf, Training und mehr.",
+  "name": "AKA",
+  "short_name": "AKA",
+  "description": "Deine exekutive rechte Hand für Peptide, Medikamente, Supplemente, Schlaf, Training und mehr.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

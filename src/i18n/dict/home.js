@@ -20,7 +20,7 @@ export const home = {
     "home.ordner.mehr.label": "Mehr",
     "home.ordner.mehr.desc": "Einstellungen & mehr",
     "mehrView.titel": "⚙️ Mehr",
-    "mehrView.zumDashboard": "Zum Dashboard",
+    "mehrView.zumDashboard": "Zur Startseite",
     "app.loading": "Daten werden geladen...",
   },
   en: {

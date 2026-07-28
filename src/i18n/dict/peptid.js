@@ -1,7 +1,7 @@
 export const peptid = {
   de: {
     "peptid.header.title": "💉 Peptide",
-    "peptid.header.dashboard": "Zum Dashboard",
+    "peptid.header.dashboard": "Zur Startseite",
     "peptid.error.save.generic": "Speichern fehlgeschlagen. Bitte nochmal versuchen.",
     "peptid.new.title": "Neues Peptid hinzufügen",
     "peptid.new.name.placeholder": "z. B. BPC-157",

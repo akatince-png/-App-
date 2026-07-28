@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const payload = JSON.stringify({ title: title || "MyProtocols", body: body || "", url: url || "/" });
+    const payload = JSON.stringify({ title: title || "AKA", body: body || "", url: url || "/" });
 
     let versendet = 0;
     for (const sub of subs) {
