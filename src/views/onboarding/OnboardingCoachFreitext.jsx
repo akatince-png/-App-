@@ -285,7 +285,15 @@ function FesterOrb({ zustand, onClick, title }) {
         onClick={onClick}
         disabled={!onClick}
         title={title}
-        style={{ border: "none", background: "transparent", padding: 0, cursor: onClick ? "pointer" : "default", borderRadius: "50%" }}
+        style={{
+          border: "none",
+          background: "transparent",
+          padding: 0,
+          cursor: onClick ? "pointer" : "default",
+          opacity: onClick ? 1 : 0.4,
+          transition: "opacity 150ms ease",
+          borderRadius: "50%",
+        }}
       >
         <CoachOrb zustand={zustand} size={100} />
       </button>

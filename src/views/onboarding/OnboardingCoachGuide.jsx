@@ -196,7 +196,7 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
             type="button"
             onClick={orbUmschalten}
             disabled={!orbKlickbar}
-            title={orbKlickbar ? (hoert ? "Aufnahme stoppen" : "Sprechen statt tippen") : undefined}
+            title={orbKlickbar ? (hoert ? "Aufnahme stoppen" : "Sprechen statt tippen") : "Für dieses Feld bitte auswählen/eingeben"}
             style={{
               width: 68,
               height: 68,
@@ -204,7 +204,9 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
               border: "none",
               padding: 0,
               cursor: orbKlickbar ? "pointer" : "default",
-              boxShadow: "0 10px 26px rgba(14, 124, 102, 0.4)",
+              opacity: orbKlickbar ? 1 : 0.4,
+              boxShadow: orbKlickbar ? "0 10px 26px rgba(14, 124, 102, 0.4)" : "none",
+              transition: "opacity 150ms ease",
             }}
           >
             <CoachOrb zustand={orbZustand} size={68} />
