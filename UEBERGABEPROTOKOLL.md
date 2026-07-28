@@ -333,6 +333,20 @@ Runde):**
   Spracherkennung liefert Zwischenergebnisse live, Tastatur fokussiert
   sich automatisch sobald nicht zugehört wird.
 
+**Nachtrag 28.07. — Vorlesen jetzt überall, Standard AN:** Bug-Report der
+Nutzerin per Screenshot: Im Onboarding ("Frei erzählen") antwortete Aka
+nur als Text, obwohl "Vorlesen" in den Grundeinstellungen existierte —
+`sprich()` (Text-zu-Sprache, `utils/speech.js`) war nur in `KiChat.jsx`
+verdrahtet, nicht in den zwei Onboarding-Begleitungs-Screens
+(`OnboardingCoachFreitext.jsx`, `OnboardingCoachGuide.jsx`). Beide lesen
+jetzt ihre Antworten (Begrüßung/Coach-Antwort bzw. jede neue Frage)
+automatisch vor. Außerdem: `getVorlesenAktiv()` in `coachStorage.js`
+liefert jetzt standardmäßig `true` statt `false` (Nutzerin: "ich möchte
+eigentlich das ja überall mit Ton antwortet") — wer es nicht will, kann
+es jederzeit über den 🔊/🔈-Knopf abschalten, neu ausgelagert in
+`src/ui/VorlesenToggle.jsx` und an allen drei Stellen (KiChat + beide
+Onboarding-Screens) eingebunden.
+
 ### Persona: "Aka" als Sidekick, ausdrücklich kein Coach
 
 `STANDARD_COACH_NAME` in `coachStorage.js` ist `"Aka"`, individuell

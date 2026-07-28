@@ -1,10 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton, TextInput, Pill } from "../../ui/primitives";
 import { accentDark, danger, textMain, textMuted } from "../../ui/theme";
 import CoachOrb from "../../ui/CoachOrb";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
-import { getCoachName } from "../../utils/coachStorage";
-import { spracherkennungVerfuegbar, starteSprachErkennung } from "../../utils/speech";
+import VorlesenToggle from "../../ui/VorlesenToggle";
+import { getCoachName, getVorlesenAktiv } from "../../utils/coachStorage";
+import { spracherkennungVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../../utils/speech";
 import { ZIELE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { AIService } from "../../services/aiService";
@@ -51,11 +52,23 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
   const [interpretiert, setInterpretiert] = useState(null);
   const [interpretationLaden, setInterpretationLaden] = useState(false);
   const [fehler, setFehler] = useState(null);
+  const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const stopErkennungRef = useRef(null);
 
   const schritt = SCHRITTE[index];
   const istLetzter = index === SCHRITTE.length - 1;
   const coachName = getCoachName();
+
+  // Jede neue Frage vorlesen, sobald sie erscheint — inkl. der ersten beim
+  // Öffnen des Bildschirms. Beim Wechsel zur Bestätigungs-Ansicht
+  // (interpretiert !== null) wird bewusst nichts vorgelesen, das steht
+  // schon direkt lesbar in der Karte.
+  useEffect(() => {
+    if (vorlesenAktiv && interpretiert === null) sprich(schritt.frage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schritt, interpretiert]);
+
+  useEffect(() => () => sprachausgabeStoppen(), []);
 
   const orbUmschalten = () => {
     if (schritt.typ === "pillMulti" || schritt.typ === "pillSingle" || schritt.typ === "date") return;
@@ -65,6 +78,7 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
       return;
     }
     setHoert(true);
+    sprachausgabeStoppen();
     stopErkennungRef.current = starteSprachErkennung({
       onErgebnis: (text) => setWert((prev) => (prev ? `${prev} ${text}` : text)),
       onEnde: () => setHoert(false),
@@ -215,8 +229,11 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, marginTop: 24, marginBottom: 24 }}>
-        <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
-          {coachName} · Schritt {index + 1} von {SCHRITTE.length}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
+            {coachName} · Schritt {index + 1} von {SCHRITTE.length}
+          </div>
+          <VorlesenToggle aktiv={vorlesenAktiv} onChange={setVorlesenAktiv} />
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.5, maxWidth: "90%" }}>{schritt.frage}</div>
       </div>

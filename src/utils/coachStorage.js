@@ -31,15 +31,18 @@ export function saveCoachName(name) {
 }
 
 // Ob Antworten des Assistenten automatisch vorgelesen werden sollen (siehe
-// utils/speech.js) — Default aus, damit niemand unerwartet Ton bekommt.
+// utils/speech.js) — Default AN (Nutzerinnen-Vorgabe, 28.07.: soll
+// "überall mit Ton antworten"), lässt sich aber jederzeit über
+// VorlesenToggle.jsx manuell abschalten.
 const VORLESEN_KEY = "kiCoachVorlesen";
 
 export function getVorlesenAktiv() {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") return true;
   try {
-    return localStorage.getItem(VORLESEN_KEY) === "true";
+    const gespeichert = localStorage.getItem(VORLESEN_KEY);
+    return gespeichert === null ? true : gespeichert === "true";
   } catch {
-    return false;
+    return true;
   }
 }
 

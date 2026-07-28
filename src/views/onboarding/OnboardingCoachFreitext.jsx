@@ -1,11 +1,12 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
 import { accentDark, danger, textMain, textMuted } from "../../ui/theme";
 import CoachOrb from "../../ui/CoachOrb";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
+import VorlesenToggle from "../../ui/VorlesenToggle";
 import { MikrofonIcon, StopIcon } from "../../ui/MikrofonIcons";
-import { getCoachName } from "../../utils/coachStorage";
-import { spracherkennungVerfuegbar, starteSprachErkennung } from "../../utils/speech";
+import { getCoachName, getVorlesenAktiv } from "../../utils/coachStorage";
+import { spracherkennungVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../../utils/speech";
 import { ZIELE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { AIService } from "../../services/aiService";
@@ -41,7 +42,9 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
   const [streamText, setStreamText] = useState("");
   const [hoert, setHoert] = useState(false);
   const [vorschau, setVorschau] = useState(null);
+  const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const stopErkennungRef = useRef(null);
+  const eingeleitetRef = useRef(false);
   const coachName = getCoachName();
 
   // "Background Brain" wie im Rest der App (siehe KiChat.jsx) — Aka kennt
@@ -51,6 +54,16 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
 
   const einleitung = `Hi, ich bin ${coachName}! Erzähl mir einfach frei von dir — wie du heißt, was deine Ziele sind, und etwas zu dir (Geschlecht, Geburtsdatum, Größe, Gewicht). Du musst nicht alles auf einmal sagen.`;
 
+  // Begrüßung einmalig vorlesen, sobald der Bildschirm erscheint — sonst
+  // würde die Person die erste Ansage nur lesen, obwohl "Vorlesen" an ist.
+  useEffect(() => {
+    if (eingeleitetRef.current) return;
+    eingeleitetRef.current = true;
+    if (vorlesenAktiv) sprich(einleitung);
+    return () => sprachausgabeStoppen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const mikrofonUmschalten = () => {
     if (hoert) {
       stopErkennungRef.current?.();
@@ -58,6 +71,8 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
       return;
     }
     setHoert(true);
+    // Barge-in: eigenes Sprechen unterbricht eine gerade laufende Vorlese-Antwort.
+    sprachausgabeStoppen();
     stopErkennungRef.current = starteSprachErkennung({
       onErgebnis: (text) => setEingabe((prev) => (prev ? `${prev} ${text}` : text)),
       onEnde: () => setHoert(false),
@@ -82,6 +97,7 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
         onTeilantwort: setStreamText,
       });
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
+      if (vorlesenAktiv) sprich(antwort);
     } catch (err) {
       setFehler(err.message);
     } finally {
@@ -189,7 +205,10 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
         title={hoert ? "Aufnahme stoppen" : "Sprechen statt tippen"}
       />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, marginTop: 28, marginBottom: 28 }}>
-        <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>{coachName} · Frei erzählen</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>{coachName} · Frei erzählen</div>
+          <VorlesenToggle aktiv={vorlesenAktiv} onChange={setVorlesenAktiv} />
+        </div>
         {letzteNutzerNachricht && !laden && (
           <div style={{ fontSize: 12.5, color: textMuted, fontStyle: "italic", maxWidth: "90%" }}>„{letzteNutzerNachricht.text}"</div>
         )}

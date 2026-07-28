@@ -4,11 +4,12 @@ import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted
 import CoachOrb from "./CoachOrb";
 import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
-import { getCoachName, getVorlesenAktiv, saveVorlesenAktiv } from "../utils/coachStorage";
+import { getCoachName, getVorlesenAktiv } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
 import { wissensBasisText } from "../utils/wissensBasis";
 import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
 import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
+import VorlesenToggle from "./VorlesenToggle";
 
 // Wie viele Nachrichten aus dem (potenziell über Wochen gewachsenen)
 // gespeicherten Verlauf maximal als Kontext an die KI mitgeschickt werden —
@@ -227,15 +228,6 @@ export default function KiChat({
     setOffen(false);
   };
 
-  const vorlesenUmschalten = () => {
-    setVorlesenAktiv((prev) => {
-      const next = !prev;
-      saveVorlesenAktiv(next);
-      if (!next) sprachausgabeStoppen();
-      return next;
-    });
-  };
-
   const uebernehmen = async () => {
     setLaden(true);
     setFehler(null);
@@ -315,25 +307,7 @@ export default function KiChat({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <div style={{ fontSize: 14, fontWeight: 800 }}>{getCoachName()}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {sprachausgabeVerfuegbar() && (
-              <button
-                type="button"
-                onClick={vorlesenUmschalten}
-                title={vorlesenAktiv ? "Antworten vorlesen: an" : "Antworten vorlesen: aus"}
-                style={{
-                  border: `1px solid ${vorlesenAktiv ? accentDark : cardBorder}`,
-                  background: vorlesenAktiv ? accentSoft : "#fff",
-                  color: vorlesenAktiv ? accentDark : textMuted,
-                  borderRadius: 20,
-                  padding: "4px 12px",
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {vorlesenAktiv ? "🔊" : "🔈"}
-              </button>
-            )}
+            <VorlesenToggle aktiv={vorlesenAktiv} onChange={setVorlesenAktiv} />
             <button
               type="button"
               onClick={schliessen}
