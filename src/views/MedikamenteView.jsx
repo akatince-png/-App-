@@ -7,7 +7,7 @@ import { SignedPhoto } from "../ui/SignedPhoto";
 import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
-import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
@@ -75,12 +75,27 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       ...prev,
       nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
     }));
+  // Lückenloses Tagesprotokoll (Nutzerinnen-Vorgabe 28.07.): jede
+  // Bestätigung wird — inkl. Verspätung gegenüber der geplanten Uhrzeit —
+  // im bereichsübergreifenden Änderungsprotokoll vermerkt.
+  const protokollZeile = (dose, feedback) => {
+    const verspaetung = verspaetungText(dose.uhrzeit);
+    const teile = [verspaetung];
+    if (feedback?.vertraeglichkeit) teile.push(`Verträglichkeit: ${feedback.vertraeglichkeit}`);
+    if (feedback?.wirkung) teile.push(`Wirkung: ${feedback.wirkung}`);
+    if ((feedback?.nebenwirkungen || []).length > 0) teile.push(`Nebenwirkungen: ${feedback.nebenwirkungen.join(", ")}`);
+    if (feedback?.notizen) teile.push(feedback.notizen);
+    return teile.filter(Boolean).join(" · ");
+  };
+
   const handleFeedbackSave = (dose) => {
     saveHormonFeedback(dose, draftFeedback);
+    aenderungVermerken({ kategorie: "hormon", itemName: dose.name, aktion: "erledigt", detail: protokollZeile(dose, draftFeedback) });
     setFeedbackOpen(null);
   };
   const handleFeedbackSkip = (dose) => {
     skipHormonFeedback(dose);
+    aenderungVermerken({ kategorie: "hormon", itemName: dose.name, aktion: "erledigt", detail: protokollZeile(dose, null) });
     setFeedbackOpen(null);
   };
 

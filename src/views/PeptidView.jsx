@@ -7,7 +7,7 @@ import { SignedPhoto } from "../ui/SignedPhoto";
 import { accent, accentSoft, accentDark, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, NEBENWIRKUNGEN_OPTIONEN, STAERKE_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
-import { fmtDate, keyOf, sameDay } from "../utils/dates";
+import { fmtDate, keyOf, sameDay, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useT } from "../i18n/translate";
 import { AIService } from "../services/aiService";
@@ -172,12 +172,28 @@ export default function PeptidView({ onHome, embedded = false }) {
       nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
     }));
 
+  // Lückenloses Tagesprotokoll (Nutzerinnen-Vorgabe 28.07.): jede
+  // Bestätigung wird — inkl. Verspätung gegenüber der geplanten Uhrzeit —
+  // im bereichsübergreifenden Änderungsprotokoll vermerkt, nicht nur der
+  // reine erledigt/nicht-erledigt-Status.
+  const protokollZeile = (dose, feedback) => {
+    const verspaetung = verspaetungText(dose.uhrzeit);
+    const teile = [verspaetung];
+    if (feedback?.staerke && feedback.staerke !== "Keine") {
+      teile.push(`Nebenwirkungen: ${feedback.nebenwirkungen?.join(", ") || feedback.staerke}`);
+    }
+    if (feedback?.notizen) teile.push(feedback.notizen);
+    return teile.filter(Boolean).join(" · ");
+  };
+
   const handleSave = (dose) => {
     saveFeedback(dose, draftFeedback);
+    aenderungVermerken({ kategorie: "peptid", itemName: dose.peptid, aktion: "erledigt", detail: protokollZeile(dose, draftFeedback) });
     setFeedbackOpen(null);
   };
   const handleSkip = (dose) => {
     skipFeedback(dose);
+    aenderungVermerken({ kategorie: "peptid", itemName: dose.peptid, aktion: "erledigt", detail: protokollZeile(dose, null) });
     setFeedbackOpen(null);
   };
 

@@ -3,7 +3,7 @@ import { Shell, Card, Label, TextInput, TextArea, Pill, PrimaryButton, StatusBad
 import GrundEingabe from "../ui/GrundEingabe";
 import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { HINWEISE, NEBENWIRKUNGEN_OPTIONEN, TAGESZEITEN, WIRKUNG_OPTIONEN, WOCHENTAGE } from "../constants";
-import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
@@ -155,12 +155,26 @@ function SupplementeSection() {
       ...prev,
       nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
     }));
+  // Lückenloses Tagesprotokoll (Nutzerinnen-Vorgabe 28.07.): jede
+  // Bestätigung wird — inkl. Verspätung gegenüber der geplanten Uhrzeit —
+  // im bereichsübergreifenden Änderungsprotokoll vermerkt.
+  const protokollZeile = (dose, feedback) => {
+    const verspaetung = verspaetungText(dose.zeit);
+    const teile = [verspaetung];
+    if (feedback?.wirkung) teile.push(`Wirkung: ${feedback.wirkung}`);
+    if ((feedback?.nebenwirkungen || []).length > 0) teile.push(`Nebenwirkungen: ${feedback.nebenwirkungen.join(", ")}`);
+    if (feedback?.notizen) teile.push(feedback.notizen);
+    return teile.filter(Boolean).join(" · ");
+  };
+
   const handleFeedbackSave = (dose) => {
     saveSupplementFeedback(dose, draftFeedback);
+    aenderungVermerken({ kategorie: "supplement", itemName: dose.name, aktion: "erledigt", detail: protokollZeile(dose, draftFeedback) });
     setFeedbackOpen(null);
   };
   const handleFeedbackSkip = (dose) => {
     skipSupplementFeedback(dose);
+    aenderungVermerken({ kategorie: "supplement", itemName: dose.name, aktion: "erledigt", detail: protokollZeile(dose, null) });
     setFeedbackOpen(null);
   };
 
@@ -384,7 +398,7 @@ function SupplementeSection() {
                     const done = !!supplementErledigt[k];
                     const isOpen = feedbackOpen === k;
                     const fb = supplementFeedback[k];
-                    const dose = { datum: tagStr, id: s.id, zeit };
+                    const dose = { datum: tagStr, id: s.id, zeit, name: s.name };
                     return (
                       <div
                         key={s.id}

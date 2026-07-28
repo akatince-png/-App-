@@ -7,7 +7,7 @@ import TimeWheelField from "../ui/TimeWheelField";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { cardBorder, danger, textMuted } from "../ui/theme";
 import { WOCHENTAGE } from "../constants";
-import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { TAGESZEIT_STUNDE, KATEGORIE_META } from "../utils/dayItems";
 import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
@@ -579,7 +579,10 @@ export default function NutritionView({ onHome, embedded = false }) {
                           <StatusBadge status="erledigt" />
                         ) : (
                           <button
-                            onClick={() => toggleMahlzeitErledigt(tagStr, m.id, zeit)}
+                            onClick={() => {
+                              toggleMahlzeitErledigt(tagStr, m.id, zeit);
+                              aenderungVermerken({ kategorie: "mahlzeit", itemName: m.name, aktion: "erledigt", detail: verspaetungText(zeit) || "" });
+                            }}
                             style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                           >
                             Bestätigen

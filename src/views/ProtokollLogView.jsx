@@ -155,11 +155,11 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
         Was du wirklich gemacht hast — nicht der Plan, sondern das tatsächliche Ergebnis.
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>📝 Änderungen</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>📝 Tagesverlauf</div>
       {aenderungGruppen.length === 0 ? (
         <Card style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
-            Noch keine Änderungen protokolliert — sobald du etwas an einem aktiven Plan anpasst, erscheint es hier.
+            Noch nichts protokolliert — sobald du eine Einnahme bestätigst oder etwas an einem aktiven Plan anpasst, erscheint es hier, inklusive Verspätung gegenüber der geplanten Uhrzeit.
           </div>
         </Card>
       ) : (

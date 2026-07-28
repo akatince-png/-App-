@@ -260,6 +260,43 @@ Rückfrage schon vorher (RPE/Schmerzen bei Training, Erholt-Status bei
 Schlaf, Menge bei Hydration, Nebenwirkungen bei Peptiden) — nur
 Medikamente/Supplemente fehlten.
 
+**Nachtrag 28.07., dritte Runde — lückenloses Tagesprotokoll (Start):**
+Nutzerinnen-Vorgabe: jeder Protokollschritt soll dokumentiert werden,
+inklusive Verspätung gegenüber der geplanten Uhrzeit. Statt eine neue
+Tabelle zu bauen, wird das bereichsübergreifende **Änderungsprotokoll**
+weiterverwendet, das es schon gab (`aenderungsprotokoll`-Tabelle,
+`useAenderungsprotokoll.js`, bisher nur für "hinzugefügt/entfernt/
+geändert" bei Plan-Bearbeitungen genutzt — sichtbar in
+`ProtokollLogView.jsx`, jetzt "📝 Tagesverlauf" statt "📝 Änderungen"
+genannt, weil dort jetzt auch Bestätigungen auftauchen). Neuer Helper
+`verspaetungText(geplantUhrzeit, jetzt)` in `utils/dates.js` (5 Minuten
+Toleranz, sonst "X Min./Std. später als geplant") wird beim Bestätigen
+in **Peptide, Medikamente, Supplemente, Gewohnheiten, Mahlzeiten**
+aufgerufen und zusammen mit etwaigem Feedback (Nebenwirkungen/Notizen)
+als `aktion: "erledigt"`-Eintrag vermerkt.
+
+**Noch nicht abgedeckt (bewusst nächster Schritt, nicht in dieser
+Runde):**
+- Training/Schlaf/Hydration/Tageslicht: haben kein einzelnes
+  "geplant vs. erledigt"-Paar wie die anderen Bereiche (Training loggt
+  bereits volle Einheiten, Schlaf/Hydration/Tageslicht sind kumulative
+  Tageswerte statt Einzeltermine) — bräuchten ein eigenes Konzept statt
+  denselben `verspaetungText()`-Aufruf.
+- **Echte "ausgefallen"-Dokumentation** (ein Termin wird gar nicht erst
+  wahrgenommen): aktuell nur implizit sichtbar (Status "verpasst" wird
+  live berechnet, wenn ein Datum verstrichen ist, ohne eigenen Log-
+  Eintrag). Eine automatische Nacherfassung bräuchte einen Tages-
+  Rollover-Sweep (beim App-Start prüfen, was seit gestern offen blieb)
+  mit Dedup-Logik, damit nichts doppelt geloggt wird — bewusst
+  zurückgestellt, um das nicht überstürzt/fehleranfällig zu bauen.
+- **"Notfallmodus/kein Plan genutzt"-Tagesdokumentation**: der
+  Notfallmodus (`ADHSModeToggle.jsx`) ist aktuell rein clientseitiger
+  UI-Zustand (welche Widgets angezeigt werden), wird nirgends
+  persistiert — bräuchte eine neue Aktion, die einen Tages-Eintrag ins
+  Änderungsprotokoll schreibt.
+- Der Sammel-Knopf "Alle bestätigen" (Supplemente, mehrere auf einmal)
+  loggt noch nicht einzeln — bewusst niedrige Priorität.
+
 ---
 
 ## 4. KI-Assistent — vollständiger technischer Überblick
@@ -576,7 +613,7 @@ Voraussetzung.
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
 | 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
-| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Nutzerinnen-Vorgabe 28.07. — Feedback-Fenster (Verträglichkeit/Wirkung/Nebenwirkungen) für Medikamente/Supplemente sind erledigt (siehe "Wochenübersicht & PDF-Export" oben), Rest noch nicht begonnen | Empfehlung: zuerst lückenloses Tagesprotokoll für alle 9 Bereiche (Datengrundlage), dann Verspätungs-Erinnerung, Rest danach — mit Nutzerin abgestimmt, noch nicht final priorisiert |
+| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Teilweise erledigt (28.07.): Verspätung wird bei Peptide/Medikamente/Supplemente/Gewohnheiten/Mahlzeiten jetzt im Tagesverlauf vermerkt (siehe Abschnitt 4). Offen: Training/Schlaf/Hydration/Tageslicht (anderes Datenmodell), echte "ausgefallen"-Nacherfassung, Notfallmodus-Tagesdokumentation, Erinnerung ab 10 Min., Vorab-Erinnerungen, KI an/aus-Schalter, Korrelationen | Als Nächstes: Training/Schlaf/Hydration/Tageslicht-Konzept festlegen, dann die Erinnerungs-Engine (10-Min.-Verspätung + Vorab) — braucht vermutlich eine Erweiterung von `send-due-reminders` |
 
 ---
 

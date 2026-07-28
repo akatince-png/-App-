@@ -9,6 +9,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
+import { verspaetungText } from "../utils/dates";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -136,6 +137,18 @@ export default function GewohnheitenView({ onHome }) {
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
   const [fehler, setFehler] = useState(null);
   const heute = new Date().toISOString().slice(0, 10);
+
+  // Lückenloses Tagesprotokoll (Nutzerinnen-Vorgabe 28.07.): beim Abhaken
+  // (nicht beim Zurücknehmen) wird die Erledigung — inkl. Verspätung
+  // gegenüber der geplanten Uhrzeit — im Änderungsprotokoll vermerkt.
+  const handleToggleHeute = (g) => {
+    const warErledigt = !!gewohnheitErledigt[`${heute}__${g.id}`];
+    toggleGewohnheitErledigt(heute, g.id);
+    if (!warErledigt) {
+      const verspaetung = verspaetungText(g.uhrzeit);
+      aenderungVermerken({ kategorie: "gewohnheit", itemName: g.name, aktion: "erledigt", detail: verspaetung || "" });
+    }
+  };
 
   const submit = async () => {
     setFehler(null);
@@ -290,7 +303,7 @@ export default function GewohnheitenView({ onHome }) {
             key={g.id}
             g={g}
             heuteErledigt={!!gewohnheitErledigt[`${heute}__${g.id}`]}
-            onToggleHeute={() => toggleGewohnheitErledigt(heute, g.id)}
+            onToggleHeute={() => handleToggleHeute(g)}
             onEntfernen={handleEntfernen}
             onZielAendern={handleZielAendern}
             gesamtTage={gesamtTage}
