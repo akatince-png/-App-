@@ -240,6 +240,26 @@ Journal") müsste die bestehende Wochenübersicht um alle 9 Bereiche
 erweitert werden, statt eine Parallel-Lösung zu bauen — die Tag/Woche/
 Monat-Umschaltung und der PDF-Export sind die richtige Grundlage dafür.
 
+**Nachtrag 28.07., später am selben Tag — Feedback-Fenster nach jeder
+Bestätigung:** Nutzerinnen-Vorgabe: nach jeder "Bestätigen"-Aktion soll
+(wie beim Peptid-Nebenwirkungsfenster) eine kurze, typ-passende
+Rückfrage kommen. Bei der Durchsicht zeigte sich: das Backend dafür war
+für Medikamente und Supplemente bereits vollständig fertig gebaut
+(`saveHormonFeedback`/`skipHormonFeedback` in `useHormoneData.js`,
+`saveSupplementFeedback`/`skipSupplementFeedback` in
+`useSupplementData.js`, inkl. passender Konstanten
+`VERTRAEGLICHKEIT_OPTIONEN`/`WIRKUNG_OPTIONEN`/`NEBENWIRKUNGEN_OPTIONEN`
+in `constants.js`) — nur die UI hat nie darauf zugegriffen, der
+"Bestätigen"-Knopf hat direkt `toggleHormonErledigt`/
+`toggleSupplementErledigt` ohne Rückfrage aufgerufen. Jetzt behoben:
+`MedikamenteView.jsx` und `SupplementeView.jsx` haben jetzt dasselbe
+Feedback-Panel-Muster wie `PeptidView.jsx` (Pills für
+Verträglichkeit/Wirkung/Nebenwirkungen + Notizfeld + "Ohne Notiz
+bestätigen"/"Speichern"). Training/Schlaf/Hydration/Peptide hatten diese
+Rückfrage schon vorher (RPE/Schmerzen bei Training, Erholt-Status bei
+Schlaf, Menge bei Hydration, Nebenwirkungen bei Peptiden) — nur
+Medikamente/Supplemente fehlten.
+
 ---
 
 ## 4. KI-Assistent — vollständiger technischer Überblick
@@ -556,7 +576,7 @@ Voraussetzung.
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
 | 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
-| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Nutzerinnen-Vorgabe 28.07., noch nicht begonnen — siehe "Wochenübersicht & PDF-Export" oben für die vorhandene Grundlage | Empfehlung: zuerst lückenloses Tagesprotokoll für alle 9 Bereiche (Datengrundlage), dann Verspätungs-Erinnerung, Rest danach — mit Nutzerin abgestimmt, noch nicht final priorisiert |
+| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Nutzerinnen-Vorgabe 28.07. — Feedback-Fenster (Verträglichkeit/Wirkung/Nebenwirkungen) für Medikamente/Supplemente sind erledigt (siehe "Wochenübersicht & PDF-Export" oben), Rest noch nicht begonnen | Empfehlung: zuerst lückenloses Tagesprotokoll für alle 9 Bereiche (Datengrundlage), dann Verspätungs-Erinnerung, Rest danach — mit Nutzerin abgestimmt, noch nicht final priorisiert |
 
 ---
 

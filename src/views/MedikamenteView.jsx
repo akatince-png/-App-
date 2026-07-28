@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextInput } from "../ui/primitives";
+import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
-import { cardBorder, danger, textMuted } from "../ui/theme";
-import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN } from "../constants";
+import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -54,14 +54,35 @@ export default function MedikamenteView({ onHome, embedded = false }) {
     setHormonDoseBatch,
     hormonErledigt,
     hormonFeedback,
-    toggleHormonErledigt,
+    saveHormonFeedback,
+    skipHormonFeedback,
     hormonPlan,
     aenderungVermerken,
   } = useAppData();
   const [neuesMedikament, setNeuesMedikament] = useState(NEUES_MEDIKAMENT_LEER);
   const [medikamentError, setMedikamentError] = useState(null);
   const [dosisEditOffen, setDosisEditOffen] = useState(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(null);
+  const [draftFeedback, setDraftFeedback] = useState({ vertraeglichkeit: "", wirkung: "", nebenwirkungen: [], notizen: "" });
   const today = new Date();
+
+  const openFeedback = (k) => {
+    setFeedbackOpen(k);
+    setDraftFeedback({ vertraeglichkeit: "", wirkung: "", nebenwirkungen: [], notizen: "" });
+  };
+  const toggleDraftNebenwirkung = (n) =>
+    setDraftFeedback((prev) => ({
+      ...prev,
+      nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
+    }));
+  const handleFeedbackSave = (dose) => {
+    saveHormonFeedback(dose, draftFeedback);
+    setFeedbackOpen(null);
+  };
+  const handleFeedbackSkip = (dose) => {
+    skipHormonFeedback(dose);
+    setFeedbackOpen(null);
+  };
 
   const handleChange = (feld, val) => {
     setNeuesMedikament((prev) => {
@@ -225,25 +246,75 @@ export default function MedikamenteView({ onHome, embedded = false }) {
                 const k = `${toLocalISODate(dose.date)}__${dose.name}__${dose.uhrzeit}`;
                 const done = !!hormonErledigt[k];
                 const angezeigteMenge = done ? hormonFeedback[k]?.menge ?? dose.menge : dose.menge;
+                const isOpen = feedbackOpen === k;
+                const fb = hormonFeedback[k];
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>
-                        {dose.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {dose.uhrzeit}</span>
+                  <div key={i} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>
+                          {dose.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {dose.uhrzeit}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: textMuted }}>
+                          {angezeigteMenge} · {dose.einnahmeart}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 12, color: textMuted }}>
-                        {angezeigteMenge} · {dose.einnahmeart}
-                      </div>
+                      {done ? (
+                        <StatusBadge status="erledigt" />
+                      ) : (
+                        <button
+                          onClick={() => openFeedback(k)}
+                          style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                        >
+                          Bestätigen
+                        </button>
+                      )}
                     </div>
-                    {done ? (
-                      <StatusBadge status="erledigt" />
-                    ) : (
-                      <button
-                        onClick={() => toggleHormonErledigt(toLocalISODate(dose.date), dose.name, dose.uhrzeit)}
-                        style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                      >
-                        Bestätigen
-                      </button>
+
+                    {done && fb && (fb.wirkung || fb.vertraeglichkeit || (fb.nebenwirkungen || []).length > 0) && (
+                      <div style={{ fontSize: 11, color: textMuted, marginTop: 6 }}>
+                        {fb.wirkung && `Wirkung: ${fb.wirkung}`}
+                        {fb.vertraeglichkeit && ` · Verträglichkeit: ${fb.vertraeglichkeit}`}
+                        {(fb.nebenwirkungen || []).length > 0 && ` · Nebenwirkungen: ${fb.nebenwirkungen.join(", ")}`}
+                      </div>
+                    )}
+
+                    {isOpen && (
+                      <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Hast du deine Tabletten/Dosis genommen? Geht's dir gut, oder gibt's was zu vermerken?</div>
+                        <Label>Verträglichkeit</Label>
+                        <div style={{ display: "flex", flexWrap: "wrap" }}>
+                          {VERTRAEGLICHKEIT_OPTIONEN.map((v) => (
+                            <Pill key={v} label={v} selected={draftFeedback.vertraeglichkeit === v} onClick={() => setDraftFeedback((p) => ({ ...p, vertraeglichkeit: v }))} />
+                          ))}
+                        </div>
+                        <Label>Spürst du eine Wirkung?</Label>
+                        <div style={{ display: "flex", flexWrap: "wrap" }}>
+                          {WIRKUNG_OPTIONEN.map((w) => (
+                            <Pill key={w} label={w} selected={draftFeedback.wirkung === w} onClick={() => setDraftFeedback((p) => ({ ...p, wirkung: w }))} />
+                          ))}
+                        </div>
+                        <Label>Nebenwirkungen</Label>
+                        <div style={{ display: "flex", flexWrap: "wrap" }}>
+                          {NEBENWIRKUNGEN_OPTIONEN.map((n) => (
+                            <Pill key={n} label={n} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
+                          ))}
+                        </div>
+                        <Label>Notizen</Label>
+                        <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Optional" />
+                        <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                          <div style={{ flex: 1 }}>
+                            <PrimaryButton onClick={() => handleFeedbackSkip(dose)} variant="ghost">
+                              Ohne Notiz bestätigen
+                            </PrimaryButton>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <PrimaryButton onClick={() => handleFeedbackSave(dose)} variant="success">
+                              Speichern
+                            </PrimaryButton>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );

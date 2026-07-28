@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Shell, Card, Label, TextInput, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
+import { Shell, Card, Label, TextInput, TextArea, Pill, PrimaryButton, StatusBadge } from "../ui/primitives";
 import GrundEingabe from "../ui/GrundEingabe";
-import { cardBorder, danger, textMuted } from "../ui/theme";
-import { HINWEISE, TAGESZEITEN, WOCHENTAGE } from "../constants";
+import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { HINWEISE, NEBENWIRKUNGEN_OPTIONEN, TAGESZEITEN, WIRKUNG_OPTIONEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
@@ -132,7 +132,9 @@ function SupplementeSection() {
     supplementAendern,
     supplementEntfernen,
     supplementErledigt,
-    toggleSupplementErledigt,
+    supplementFeedback,
+    saveSupplementFeedback,
+    skipSupplementFeedback,
     confirmAlleTageszeit,
     aenderungVermerken,
   } = useAppData();
@@ -141,6 +143,26 @@ function SupplementeSection() {
   const [eigeneZeit, setEigeneZeit] = useState("");
   const [customHinweis, setCustomHinweis] = useState("");
   const [supplementError, setSupplementError] = useState(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(null);
+  const [draftFeedback, setDraftFeedback] = useState({ wirkung: "", nebenwirkungen: [], notizen: "" });
+
+  const openFeedback = (k) => {
+    setFeedbackOpen(k);
+    setDraftFeedback({ wirkung: "", nebenwirkungen: [], notizen: "" });
+  };
+  const toggleDraftNebenwirkung = (n) =>
+    setDraftFeedback((prev) => ({
+      ...prev,
+      nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
+    }));
+  const handleFeedbackSave = (dose) => {
+    saveSupplementFeedback(dose, draftFeedback);
+    setFeedbackOpen(null);
+  };
+  const handleFeedbackSkip = (dose) => {
+    skipSupplementFeedback(dose);
+    setFeedbackOpen(null);
+  };
 
   const toggleNeuesSupplementZeit = (z) =>
     setNeuesSupplement((prev) => ({
@@ -360,39 +382,80 @@ function SupplementeSection() {
                   {items.map((s, i) => {
                     const k = `${tagStr}__${s.id}__${zeit}`;
                     const done = !!supplementErledigt[k];
+                    const isOpen = feedbackOpen === k;
+                    const fb = supplementFeedback[k];
+                    const dose = { datum: tagStr, id: s.id, zeit };
                     return (
                       <div
                         key={s.id}
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
                           padding: "10px 0",
                           borderBottom: i < items.length - 1 ? `1px solid ${cardBorder}` : "none",
                         }}
                       >
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 700 }}>{s.name}</div>
-                          {s.hinweis && <div style={{ fontSize: 12, color: textMuted }}>{s.hinweis}</div>}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 700 }}>{s.name}</div>
+                            {s.hinweis && <div style={{ fontSize: 12, color: textMuted }}>{s.hinweis}</div>}
+                          </div>
+                          {done ? (
+                            <StatusBadge status="erledigt" />
+                          ) : (
+                            <button
+                              onClick={() => openFeedback(k)}
+                              style={{
+                                padding: "7px 16px",
+                                borderRadius: 10,
+                                border: "none",
+                                background: accent,
+                                color: "#fff",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Bestätigen
+                            </button>
+                          )}
                         </div>
-                        {done ? (
-                          <StatusBadge status="erledigt" />
-                        ) : (
-                          <button
-                            onClick={() => toggleSupplementErledigt(tagStr, s.id, zeit)}
-                            style={{
-                              padding: "7px 16px",
-                              borderRadius: 10,
-                              border: "none",
-                              background: accent,
-                              color: "#fff",
-                              fontSize: 12,
-                              fontWeight: 700,
-                              cursor: "pointer",
-                            }}
-                          >
-                            Bestätigen
-                          </button>
+
+                        {done && fb && (fb.wirkung || (fb.nebenwirkungen || []).length > 0 || fb.notizen) && (
+                          <div style={{ fontSize: 11, color: textMuted, marginTop: 6 }}>
+                            {fb.wirkung && `Wirkung: ${fb.wirkung}`}
+                            {(fb.nebenwirkungen || []).length > 0 && ` · Nebenwirkungen: ${fb.nebenwirkungen.join(", ")}`}
+                          </div>
+                        )}
+
+                        {isOpen && (
+                          <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Genommen — spürst du was, oder gibt's was zu vermerken?</div>
+                            <Label>Spürst du eine Wirkung?</Label>
+                            <div style={{ display: "flex", flexWrap: "wrap" }}>
+                              {WIRKUNG_OPTIONEN.map((w) => (
+                                <Pill key={w} label={w} selected={draftFeedback.wirkung === w} onClick={() => setDraftFeedback((p) => ({ ...p, wirkung: w }))} />
+                              ))}
+                            </div>
+                            <Label>Nebenwirkungen</Label>
+                            <div style={{ display: "flex", flexWrap: "wrap" }}>
+                              {NEBENWIRKUNGEN_OPTIONEN.map((n) => (
+                                <Pill key={n} label={n} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
+                              ))}
+                            </div>
+                            <Label>Notizen</Label>
+                            <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Optional" />
+                            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                              <div style={{ flex: 1 }}>
+                                <PrimaryButton onClick={() => handleFeedbackSkip(dose)} variant="ghost">
+                                  Ohne Notiz bestätigen
+                                </PrimaryButton>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <PrimaryButton onClick={() => handleFeedbackSave(dose)} variant="success">
+                                  Speichern
+                                </PrimaryButton>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     );
