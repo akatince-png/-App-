@@ -306,6 +306,36 @@ speichern). Jeder Laborwert hat außerdem einen ℹ️-Knopf mit einer
 Kurzerklärung übers Lexikon (Relevanz, Zweck, üblicher Referenzbereich,
 ohne Diagnose).
 
+### Vor-/Zurück-Pfeile im gesamten Onboarding (Nachtrag 28.07.)
+
+Nutzerinnen-Vorgabe: beim Durchgucken/Bearbeiten der Onboarding-Seiten
+nicht mehr komplett raus müssen, sondern Seite für Seite vor und zurück
+blättern können — ausdrücklich auch auf den allerersten Seiten
+(Welcome-Folien, Hauptprotokoll anlegen, Intro-Begrüßung), die vorher gar
+keine Zurück-Option hatten.
+
+Neue geteilte Komponente `src/ui/OnboardingNavArrows.jsx` — eine
+Kopfzeile mit „‹ Zurück" links und „Weiter ›" rechts, `onBack`/`onForward`
+weglassen blendet die jeweilige Seite aus (z. B. Intro-Auswahlbildschirm
+hat drei gleichwertige Optionen statt eines einzelnen „weiter", deshalb
+dort kein Pfeil rechts). Eingebaut in **jeden** Onboarding-Screen:
+- `WelcomeView.jsx`: Pfeile navigieren jetzt zwischen den 3 Folien (vorher
+  nur Punkte + ein "Weiter"-Button ohne Zurück-Möglichkeit).
+- `OnboardingFlow.jsx`: `hauptprotokoll`- und `intro`-Phase bekommen jetzt
+  ein echtes `onBack` (vorher gab es dort gar keinen Rückweg).
+- `HauptprotokollErstellenView.jsx`/`OnboardingIntroView.jsx`: Pfeil
+  „Weiter" löst dieselbe Validierung wie der bestehende Haupt-Button aus
+  (z. B. Name-Pflichtfeld) — kein Bypass, damit sich nichts an der
+  echten Nutzung für neue Konten ändert.
+- `OnboardingCoachGuide.jsx`: neue `vorherigerSchritt()`-Funktion für
+  Schritt-zurück (vorher nur vorwärts/überspringen möglich).
+- `OnboardingCoachFreitext.jsx`, `OnboardingZieleView.jsx`,
+  `OnboardingProfilView.jsx`, `OnboardingLaborwerteView.jsx`,
+  `OnboardingCategoriesView.jsx`, `OnboardingCompletionView.jsx`: Pfeile
+  nutzen dieselben Handler wie die bereits vorhandenen
+  Zurück-/Überspringen-Buttons — keine neue Logik, nur eine einheitliche,
+  konsistente Bedienung obendrauf.
+
 **ZIELE-Liste ist ADHS-spezifisch** (`constants.js`): acht ADHS-bezogene
 Ziele (Fokus & Konzentration, Prokrastination überwinden, Tagesstruktur
 aufbauen, Reizüberflutung reduzieren, Zeitgefühl verbessern,

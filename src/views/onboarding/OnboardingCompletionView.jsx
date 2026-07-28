@@ -1,6 +1,7 @@
 import React from "react";
 import { Shell, Card, PrimaryButton } from "../../ui/primitives";
 import { accent, accentDark, accentSoft, blue, cardBorder, textMuted } from "../../ui/theme";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useT } from "../../i18n/translate";
 import { useAppData } from "../../context/AppDataContext";
 import { ISTZUSTAND_FRAGEN } from "./OnboardingCategoriesView";
@@ -34,11 +35,12 @@ function planInhaltText(kategorie, ziel) {
 // ISTZUSTAND_FRAGEN) zeigt diese Seite zusätzlich im Detail: den erfragten
 // Ist-Zustand, die gewählte Zieldauer und — soweit schon in categoryZiele
 // vorhanden — was der Plan selbst beinhaltet.
-export default function OnboardingCompletionView({ eingerichteteBereiche, onDone }) {
+export default function OnboardingCompletionView({ eingerichteteBereiche, onDone, onBack }) {
   const { t, tLabel } = useT();
   const { categoryZiele } = useAppData();
   return (
     <Shell>
+      <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={t("onboarding.completion.los")} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20, marginBottom: 24 }}>
         <div
           style={{

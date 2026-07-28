@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../../ui/primitives";
 import { accent, blue, cardBorder, danger, textMuted } from "../../ui/theme";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
 import { toLocalISODate } from "../../utils/dates";
@@ -20,7 +21,7 @@ const BEISPIELE = [
 // Teilprotokoll (Schlaf, Ernährung, ...) eingerichtet wird. Dieses Startdatum
 // ist danach die Vorbelegung für jedes Teilprotokoll, falls dort kein
 // eigenes, abweichendes Startdatum gewählt wird.
-export default function HauptprotokollErstellenView({ onDone, onCancel }) {
+export default function HauptprotokollErstellenView({ onDone, onBack, onCancel }) {
   const { hauptprotokollErstellen, verknuepfeMitHauptprotokoll } = useAppData();
   const { t, tLabel } = useT();
   const [name, setName] = useState("");
@@ -53,6 +54,13 @@ export default function HauptprotokollErstellenView({ onDone, onCancel }) {
 
   return (
     <Shell>
+      <OnboardingNavArrows
+        onBack={onBack}
+        backLabel={tLabel("Zurück")}
+        onForward={submit}
+        forwardLabel={saving ? t("onboarding.saving") : t("hauptprotokoll.weiter")}
+        forwardDisabled={saving}
+      />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 12, marginBottom: 24 }}>
         <div
           style={{

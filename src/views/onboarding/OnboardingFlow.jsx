@@ -37,7 +37,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   }
 
   if (phase === "hauptprotokoll") {
-    return <HauptprotokollErstellenView onDone={() => setPhase("intro")} onCancel={onCancel} />;
+    return <HauptprotokollErstellenView onDone={() => setPhase("intro")} onBack={() => setPhase("welcome")} onCancel={onCancel} />;
   }
 
   if (phase === "intro") {
@@ -45,7 +45,13 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     // Name, Ziele UND Profil direkt mit ab — dann direkt zu "laborwerte"
     // statt die (bereits erledigten) Phasen "ziele"/"profil" nochmal manuell
     // zu durchlaufen.
-    return <OnboardingIntroView onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")} onCancel={onCancel} />;
+    return (
+      <OnboardingIntroView
+        onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")}
+        onBack={() => setPhase("hauptprotokoll")}
+        onCancel={onCancel}
+      />
+    );
   }
 
   if (phase === "ziele") {
@@ -73,5 +79,5 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     );
   }
 
-  return <OnboardingCompletionView eingerichteteBereiche={eingerichteteBereiche} onDone={onDone} />;
+  return <OnboardingCompletionView eingerichteteBereiche={eingerichteteBereiche} onDone={onDone} onBack={() => setPhase("categories")} />;
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
 import { accentDark, accentSoft, cardBorder, textMuted } from "../../ui/theme";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import PersoenlicheDatenCard from "../../ui/PersoenlicheDatenCard";
 import WoechentlicheCheckinsCard from "../../ui/WoechentlicheCheckinsCard";
 import { useT } from "../../i18n/translate";
@@ -26,20 +27,7 @@ export default function OnboardingProfilView({ onDone, onBack, onCancel }) {
 
   return (
     <Shell>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, paddingTop: 8, paddingBottom: 8 }}>
-        {onBack ? (
-          <div className="mp-tap" onClick={onBack} style={{ fontSize: 15, fontWeight: 700, color: textMuted, cursor: "pointer", padding: "8px 12px" }}>
-            {t("onboarding.zurueck")}
-          </div>
-        ) : (
-          <div />
-        )}
-        <div>
-          <div className="mp-tap" onClick={onDone} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
-            {tLabel("Überspringen")}
-          </div>
-        </div>
-      </div>
+      <OnboardingNavArrows onBack={onBack} backLabel={t("onboarding.zurueck")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <div style={{ fontSize: 28 }}>👤</div>

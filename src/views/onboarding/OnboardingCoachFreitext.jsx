@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
 import { accentDark, danger, textMain, textMuted } from "../../ui/theme";
 import CoachOrb from "../../ui/CoachOrb";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { MikrofonIcon, StopIcon } from "../../ui/MikrofonIcons";
 import { getCoachName } from "../../utils/coachStorage";
 import { spracherkennungVerfuegbar, starteSprachErkennung } from "../../utils/speech";
@@ -29,7 +30,7 @@ function systemPrompt(hintergrundKontext) {
   )}), Geschlecht, Geburtsdatum, Größe in cm, aktuelles Gewicht in kg. Lass die Person frei erzählen, in beliebiger Reihenfolge, auch mehrere Angaben auf einmal — frag nur nach dem, was noch fehlt, nicht der Reihe nach jedes Feld einzeln ab. Gib bei Bedarf kurze, ADHS-gerechte Tipps zur jeweiligen Frage. Wenn alles beisammen ist, fasse kurz zusammen und sag ihr, dass sie unten auf "Fertig" tippen kann. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.\n\n${hintergrundKontext}`;
 }
 
-export default function OnboardingCoachFreitext({ onFertig }) {
+export default function OnboardingCoachFreitext({ onFertig, onBack }) {
   const appData = useAppData();
   const { toggleZiel, ziele, setPersonal } = appData;
   const [verlauf, setVerlauf] = useState([]);
@@ -140,6 +141,7 @@ export default function OnboardingCoachFreitext({ onFertig }) {
 
     return (
       <Shell>
+        <OnboardingNavArrows onBack={() => setVorschau(null)} backLabel="Zurück zum Gespräch" onForward={fertig} forwardLabel="Ja, so eintragen" />
         <FesterOrb zustand="ruhe" />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, marginTop: 28, marginBottom: 28 }}>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Passt das so?</div>
@@ -174,6 +176,13 @@ export default function OnboardingCoachFreitext({ onFertig }) {
 
   return (
     <Shell>
+      <OnboardingNavArrows
+        onBack={onBack}
+        backLabel="Zurück"
+        onForward={vorschauLaden}
+        forwardLabel={uebernehmenLaden ? "Einen Moment…" : "Fertig, Daten übernehmen"}
+        forwardDisabled={uebernehmenLaden || verlauf.length === 0}
+      />
       <FesterOrb
         zustand={hoert ? "hoert" : laden ? (streamText ? "spricht" : "denkt") : "ruhe"}
         onClick={mikrofonUmschalten}

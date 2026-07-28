@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { Shell, Card, PrimaryButton, TextInput, Pill } from "../../ui/primitives";
 import { accentDark, danger, textMain, textMuted } from "../../ui/theme";
 import CoachOrb from "../../ui/CoachOrb";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { getCoachName } from "../../utils/coachStorage";
 import { spracherkennungVerfuegbar, starteSprachErkennung } from "../../utils/speech";
 import { ZIELE } from "../../constants";
@@ -41,7 +42,7 @@ const SCHRITTE = [
 // Feldwert bereinigt und bestätigt wird, statt sie 1:1 zu übernehmen.
 const INTERPRETATION_TYPEN = ["text", "number"];
 
-export default function OnboardingCoachGuide({ onFertig }) {
+export default function OnboardingCoachGuide({ onFertig, onBack }) {
   const { toggleZiel, ziele, setPersonal } = useAppData();
   const [index, setIndex] = useState(0);
   const [wert, setWert] = useState("");
@@ -82,6 +83,15 @@ export default function OnboardingCoachGuide({ onFertig }) {
       return;
     }
     setIndex((i) => i + 1);
+  };
+
+  const vorherigerSchritt = () => {
+    stopErkennungRef.current?.();
+    setHoert(false);
+    setWert("");
+    setInterpretiert(null);
+    setFehler(null);
+    setIndex((i) => Math.max(0, i - 1));
   };
 
   const wertSpeichern = (finalerWert) => {
@@ -142,6 +152,23 @@ export default function OnboardingCoachGuide({ onFertig }) {
 
   return (
     <Shell>
+      <OnboardingNavArrows
+        onBack={interpretiert !== null ? korrigieren : index === 0 ? onBack : vorherigerSchritt}
+        backLabel="Zurück"
+        onForward={interpretiert !== null ? bestaetigen : antwortAbschicken}
+        forwardLabel={
+          interpretiert !== null
+            ? istLetzter
+              ? "Ja, fertig"
+              : "Ja, passt"
+            : interpretationLaden
+            ? "Einen Moment…"
+            : istLetzter && !INTERPRETATION_TYPEN.includes(schritt.typ)
+            ? "Fertig"
+            : "Weiter"
+        }
+        forwardDisabled={interpretiert === null && (!kannWeiter || interpretationLaden)}
+      />
       {/* Fester Coach-Orb unten mittig — exakt dieselbe Position/Größe wie
           der Coach-Trigger überall sonst in der App (siehe KiChat.jsx),
           statt oben im Inhalt zu stehen (Nutzerinnen-Feedback: einheitlich

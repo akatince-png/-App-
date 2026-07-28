@@ -8,6 +8,7 @@ import TimeWheelField from "../../ui/TimeWheelField";
 import NumberWheelField from "../../ui/NumberWheelField";
 import DosierungFields from "../../ui/DosierungFields";
 import { SignedPhoto } from "../../ui/SignedPhoto";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, PEPTIDE_OPTIONEN, WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
@@ -773,6 +774,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
 
   return (
     <Shell bereich={SCHRITT_ZU_KATEGORIE[step.key]}>
+      <OnboardingNavArrows
+        onBack={index > 0 || onBackToStart ? zurueck : undefined}
+        backLabel={t("onboarding.zurueck")}
+        onForward={() => weiter(false)}
+        forwardLabel={tLabel("Weiter")}
+      />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>

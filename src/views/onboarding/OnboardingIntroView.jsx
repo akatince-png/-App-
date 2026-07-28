@@ -4,6 +4,7 @@ import { accentDark, cardBorder, textMuted } from "../../ui/theme";
 import Logo from "../../ui/Logo";
 import Icon from "../../ui/Icon";
 import CoachOrb from "../../ui/CoachOrb";
+import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import OnboardingCoachGuide from "./OnboardingCoachGuide";
 import OnboardingCoachFreitext from "./OnboardingCoachFreitext";
 import { getCoachName } from "../../utils/coachStorage";
@@ -19,8 +20,8 @@ import { useT } from "../../i18n/translate";
  * Beide decken direkt auch die Ziele- und Profil-Schritte mit ab —
  * OnboardingFlow.jsx überspringt diese Phasen dann.
  */
-export default function OnboardingIntroView({ onDone, onCancel }) {
-  const { t } = useT();
+export default function OnboardingIntroView({ onDone, onBack, onCancel }) {
+  const { t, tLabel } = useT();
   const [modus, setModus] = useState(null); // null (Frage noch offen) | "manuell" | "begleitet-schritt" | "begleitet-frei"
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,16 +43,17 @@ export default function OnboardingIntroView({ onDone, onCancel }) {
   };
 
   if (modus === "begleitet-schritt") {
-    return <OnboardingCoachGuide onFertig={() => onDone({ guided: true })} />;
+    return <OnboardingCoachGuide onFertig={() => onDone({ guided: true })} onBack={() => setModus(null)} />;
   }
 
   if (modus === "begleitet-frei") {
-    return <OnboardingCoachFreitext onFertig={() => onDone({ guided: true })} />;
+    return <OnboardingCoachFreitext onFertig={() => onDone({ guided: true })} onBack={() => setModus(null)} />;
   }
 
   if (modus === null) {
     return (
       <Shell>
+        <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} />
         <div style={{ marginBottom: 32, paddingTop: 20 }}>
           <Logo size={72} />
         </div>
@@ -126,6 +128,13 @@ export default function OnboardingIntroView({ onDone, onCancel }) {
 
   return (
     <Shell>
+      <OnboardingNavArrows
+        onBack={() => setModus(null)}
+        backLabel={tLabel("Zurück")}
+        onForward={handleContinue}
+        forwardLabel={loading ? "Einen Moment..." : tLabel("Weiter")}
+        forwardDisabled={loading || !name.trim()}
+      />
       <div style={{ marginBottom: 32, paddingTop: 20 }}>
         <Logo size={72} />
       </div>

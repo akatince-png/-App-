@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import { accent, blue, cardBorder, textMuted } from "../ui/theme";
 import Logo from "../ui/Logo";
+import OnboardingNavArrows from "../ui/OnboardingNavArrows";
 import { useT } from "../i18n/translate";
 import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 
@@ -61,6 +62,13 @@ export default function WelcomeView({ onDone }) {
           {t("welcome.skip")}
         </button>
       </div>
+
+      <OnboardingNavArrows
+        onBack={index > 0 ? () => setIndex((i) => i - 1) : undefined}
+        backLabel={tLabel("Zurück")}
+        onForward={() => (isLast ? onDone() : setIndex((i) => i + 1))}
+        forwardLabel={isLast ? t("welcome.button.los") : tLabel("Weiter")}
+      />
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20, marginBottom: 28 }}>
         {index === 0 ? (
