@@ -23,20 +23,24 @@ Zusammenarbeit.
 das Produkt selbst heißt jetzt fest **AKA** (Titel, Login, Manifest,
 Service Worker — überall hartcodiert, nicht personalisierbar). Getrennt
 davon bleibt der **Assistenten-Persona-Name** weiterhin individuell
-umbenennbar (siehe `utils/coachStorage.js`) — beide Namen kommen bewusst
-aus derselben Idee (die App IST die exekutive rechte Hand), sind
-technisch aber zwei getrennte Konzepte: Marken-Text (Logo, Header,
-Abschnittsüberschriften) ist immer fest "AKA"/"Akas", Dialog-Text
-(Chat-Begrüßungen, Platzhalter, Persona-System-Prompt) nutzt weiterhin
-dynamisch `getCoachName()`.
+umbenennbar (siehe `utils/coachStorage.js`), Standard ist **"Aka"** —
+beide Namen kommen bewusst aus derselben Idee (die App IST die
+exekutive rechte Hand), sind technisch aber zwei getrennte Konzepte:
+Marken-Text (Logo, Header, Abschnittsüberschriften) ist immer fest
+"AKA"/"Akas", Dialog-Text (Chat-Begrüßungen, Platzhalter,
+Persona-System-Prompt) nutzt dynamisch `getCoachName()`.
 
-**Begriff "Coach" entfernt, Standardname → "Acker" (Nachtrag, selber
-Tag, später):** Nutzerinnen-Vorgabe direkt im Anschluss — das Wort
-"Coach" sollte komplett aus der App raus (impliziert Vorschriften machen,
-das Gegenteil von dem, was gewünscht ist), der Assistent heißt
-stattdessen standardmäßig **"Acker"**. Siehe Abschnitt 4 "Persona:
-'Acker' als Assistent nach Butler-Vorbild" für die volle Begründung/
-Umsetzung.
+**Begriff "Coach" komplett entfernt (Nachtrag, selber Tag):**
+Nutzerinnen-Vorgabe — das Wort "Coach" sollte aus der gesamten
+sichtbaren App raus (impliziert Vorschriften machen, das Gegenteil von
+dem, was gewünscht ist). Zwischenzeitlich hieß der Standardname testweise
+"Acker" (kurz probiert, dann von der Nutzerin wieder verworfen — Standard
+ist wieder "Aka", siehe Abschnitt 4 für die volle Persona-Beschreibung).
+Betrifft nur sichtbaren Text/Verhalten — interne Variablen-/Dateinamen
+(`getCoachName()`, `coachStorage.js`, `CoachOrb.jsx`, ...) behalten
+bewusst "coach" im Namen, das sieht die Nutzerin nie und ein App-weites
+Umbenennen aller Bezeichner wäre unverhältnismäßig hoher Aufwand/Risiko
+ohne sichtbaren Nutzen.
 
 Abgedeckte Lebensbereiche (jeder mit eigenem Plan/Protokoll): Schlaf,
 Hydration, Ernährung, Training, Gewohnheiten, Supplemente,
@@ -58,16 +62,21 @@ dem alle Kategorien als **Teilprotokolle** laufen.
 > wollen — muss jede Funktion genauso gut **ganz ohne KI** nutzbar bleiben.
 > Praktisch heißt das: **niemals** ein manuelles Formular/einen manuellen
 > Button entfernen oder verstecken, nur weil es jetzt auch einen
-> KI-Coach-Weg dafür gibt. Der Coach-Orb öffnet sich nur auf Tap, nie von
-> selbst — wer ihn nie antippt, bekommt die KI nie zu Gesicht.
+> KI-Weg dafür gibt. Der Assistenten-Orb öffnet sich nur auf Tap, nie von
+> selbst — wer ihn nie antippt, bekommt die KI nie zu Gesicht. (Ausnahme,
+> siehe Abschnitt 4: bei auffälligen Trackinglücken darf der Assistent im
+> *Gesprächsverlauf* von sich aus etwas ansprechen — das öffnet aber
+> weiterhin nichts von selbst, sondern wirkt erst, wenn die Nutzerin den
+> Chat ohnehin öffnet.)
 
-**Der Assistent** heißt standardmäßig **"Acker"** (individuell umbenennbar,
+**Der Assistent** heißt standardmäßig **"Aka"** (individuell umbenennbar,
 z. B. "Finn") und ist als echter Chat in **jedem der 9 Bereiche plus
 Home/Tagesplan/Wochenübersicht** verfügbar — er fragt nach, schlägt vor,
 und legt nach Bestätigung durch die Nutzerin selbst neue Einträge an.
-Rolle/Tonalität: **Assistent nach Butler-Vorbild (Alfred, Batmans
-Butler), ausdrücklich kein "Coach"** (siehe Abschnitt 5 für den vollen
-Systemprompt-Hintergrund) — unaufdringlich, aber zu allem fähig, nimmt
+Rolle/Tonalität: **Sidekick-Assistent, ausdrücklich kein "Coach"** (siehe
+Abschnitt 4 für den vollen Systemprompt-Hintergrund) — im Hintergrund
+unaufdringlich wie ein Butler, aber im Gespräch präsent statt rein passiv,
+nimmt
 die lästige Logistik/den Papierkram ab, erzeugt kein schlechtes Gewissen,
 lässt der Person aber die Kontrolle. Läuft produktiv über **Google
 Gemini** (Cloud, auch unterwegs nutzbar) — Ollama (lokal) und Groq bleiben
@@ -195,7 +204,7 @@ Press-Animation). Umgesetzt:
 
 ---
 
-## 4. KI-Coach — vollständiger technischer Überblick
+## 4. KI-Assistent — vollständiger technischer Überblick
 
 ### Architektur
 
@@ -219,8 +228,9 @@ Press-Animation). Umgesetzt:
   Gesprächsverlauf pro `bereich`. Wird beim Öffnen eines Chats geladen und
   fließt automatisch (bis zu `KI_KONTEXT_LIMIT` = 24 Nachrichten) als
   Kontext in jede neue KI-Anfrage ein.
-- `src/ui/KiChat.jsx` — geschlossen: schwebender runder Coach-Orb (68px)
-  unten mittig. Tap öffnet ein Bottom-Sheet-Modal UND startet direkt die
+- `src/ui/KiChat.jsx` — geschlossen: schwebender runder Assistenten-Orb
+  (68px, Komponente `CoachOrb.jsx` — Dateiname intern noch "Coach", nicht
+  sichtbar) unten mittig. Tap öffnet ein Bottom-Sheet-Modal UND startet direkt die
   Spracherkennung. Anzeige bewusst minimal wie ein KI-Sprachmodus
   (ChatGPT/Gemini-Stil): nur die jeweils aktuelle Frage/Antwort groß,
   älterer Verlauf hinter Aufklapp-Link. Barge-in: eigenes Sprechen oder
@@ -228,11 +238,11 @@ Press-Animation). Umgesetzt:
   Spracherkennung liefert Zwischenergebnisse live, Tastatur fokussiert
   sich automatisch sobald nicht zugehört wird.
 
-### Persona: "Acker" als Assistent nach Butler-Vorbild
+### Persona: "Aka" als Sidekick, ausdrücklich kein Coach
 
-`STANDARD_COACH_NAME` in `coachStorage.js` ist `"Acker"` (bis 28.07. war
-der Standard "Aka" — geändert, siehe Nachtrag unten), individuell
-umbenennbar. In `aiService.js` gibt es zwei Persona-Ebenen:
+`STANDARD_COACH_NAME` in `coachStorage.js` ist `"Aka"`, individuell
+umbenennbar (Einstellungen → "Dein Assistent"). In `aiService.js` gibt es
+zwei Persona-Ebenen:
 - `mitPersona()` — nur die Namens-Vorstellung, für ALLE Funktionen inkl.
   der strukturierten Extraktoren.
 - `mitVollerPersona()` (`coachPersonaBlock()`) — zusätzlich die volle
@@ -241,33 +251,67 @@ umbenennbar. In `aiService.js` gibt es zwei Persona-Ebenen:
   da die Stil-Vorgaben (Bullet Points etc.) mit der geforderten reinen
   JSON-Antwort kollidieren und das Parsen brechen würden.
 
-**Rolle: Assistent, ausdrücklich nicht Coach (Nachtrag 28.07.).**
-Nutzerinnen-Vorgabe: das Wort "Coach" komplett raus — ein Coach schreibt
-vor, ein Assistent nimmt ab. Vorbild ist Alfred, Batmans Butler:
-unaufdringlich, drängt sich nie auf, aber zu allem fähig, klärt Probleme
-im Hintergrund bevor sie auffallen. ADHSler lassen sich ungern etwas
-vorschreiben, wollen aber trotzdem verstehen, worum es geht, und das
-Gefühl behalten, Kontrolle zu haben — der Assistent erklärt auf Nachfrage,
-bevormundet aber nie, und übernimmt nur den langweiligen Teil
-(Formulare, Tabellen, Rückfragen zu Details) unsichtbar im Hintergrund.
-Erzeugt bewusst **kein schlechtes Gewissen** (viele ADHSler tragen davon
-schon chronisch genug mit sich herum) — kein Zeigefinger, kein Urteil,
-keine Vorwürfe bei Rückschlägen. Behält außerdem im Hinterkopf: Gewohnheiten
-halten meist erst, wenn die gesundheitliche Grundlage stimmt (Schlaf,
-Bewegung, Morgenroutine, Hormonhaushalt) — bei Problemen lieber die
-eigentliche Ursache mitdenken statt nur das Symptom zu behandeln. Prinzipien
-für die Antwortstruktur: sofort auf den Punkt, konkrete Mikroschritte
-("Next Small Step"), maximale Scannbarkeit (Fettdruck, Bullet Points).
-Eine Vorgabe bewusst NICHT wörtlich umgesetzt: Pläne erscheinen weiterhin
-als lesbarer Fließtext in der sichtbaren Antwort, NIE als rohes JSON — das
+**Wichtig zur Begriffsklärung:** "AKA" (Großschreibung) ist der feste
+App-Markenname (Login, Titel, Manifest — siehe Abschnitt 1). "Aka"
+(Groß-/Kleinschreibung wie ein Name) ist der personalisierbare
+Assistenten-Name. Beides kommt aus derselben Grundidee, sind technisch
+aber getrennte Konzepte.
+
+**Rolle: Sidekick, ausdrücklich kein Coach (Nachtrag 28.07., zweimal
+präzisiert).** Das Wort "Coach" ist komplett aus der sichtbaren App raus
+— ein Coach schreibt vor, ein Sidekick nimmt ab, bleibt aber im Gespräch
+präsent statt nur zu verwalten. Metapher: ADHSler haben oft
+außergewöhnliche Fähigkeiten (Kreativität, Hyperfokus, schnelles Denken)
+— was fehlt, sind die Rahmenbedingungen, damit die auch zum Tragen
+kommen. Genau das liefert Aka.
+
+Zwei Ebenen, die zusammen die Balance halten (erste Fassung war zu
+Butler-lastig/passiv — Nutzerinnen-Feedback direkt danach: "nicht zu
+ruhig, nicht zu ausschließlich Hintergrund"):
+- **Im Hintergrund unaufdringlich wie ein guter Butler** (Alfred,
+  Batmans Butler): übernimmt den langweiligen Teil (Formulare, Tabellen,
+  Rückfragen zu Details) unsichtbar, langweilt die Person nicht mit dem
+  Umfang dessen, was im Hintergrund passiert.
+- **Im Gespräch präsent, nicht passiv:** freundschaftlich, motivierend,
+  mit echtem Interesse. Kritisiert konstruktiv und lösungsorientiert,
+  wenn's mal nicht rund läuft — nie als Vorwurf. Meldet sich bei
+  Auffälligkeiten von sich aus (siehe unten), statt nur zu reagieren.
+
+ADHSler lassen sich ungern etwas vorschreiben, wollen aber trotzdem
+verstehen, worum es geht, und das Gefühl behalten, Kontrolle zu haben —
+Aka erklärt auf Nachfrage, bevormundet aber nie. Erzeugt bewusst **kein
+schlechtes Gewissen** (viele ADHSler tragen davon schon chronisch genug
+mit sich herum) — kein Zeigefinger, kein Urteil, keine Vorwürfe bei
+Rückschlägen, aber Ansprechen ist ausdrücklich erwünscht, solange es
+unterstützend klingt. Behält außerdem im Hinterkopf: Gewohnheiten halten
+meist erst, wenn die gesundheitliche Grundlage stimmt (Schlaf, Bewegung,
+Morgenroutine, Hormonhaushalt) — bei Problemen lieber die eigentliche
+Ursache mitdenken statt nur das Symptom zu behandeln. Prinzipien für die
+Antwortstruktur: sofort auf den Punkt, konkrete Mikroschritte ("Next
+Small Step"), maximale Scannbarkeit (Fettdruck, Bullet Points). Eine
+Vorgabe bewusst NICHT wörtlich umgesetzt: Pläne erscheinen weiterhin als
+lesbarer Fließtext in der sichtbaren Antwort, NIE als rohes JSON — das
 würde sonst mit den Formular-Generatoren kollidieren (die strukturierte
 Übernahme läuft separat über den "Übernehmen"-Knopf).
 
-**Wichtig zur Begriffsklärung:** "AKA" (Großschreibung) ist der feste
-App-Markenname (Login, Titel, Manifest — siehe Abschnitt 1), "Acker" ist
-der personalisierbare Assistenten-Name (Standardwert, in Einstellungen →
-"Dein Assistent" umbenennbar). Beides kommt aus derselben Grundidee, sind
-technisch aber getrennte Konzepte.
+**Proaktives Nachfragen bei Trackinglücken (neu, 28.07.):**
+Nutzerinnen-Vorgabe konkret: "wenn drei Tage kein geplantes Training
+gemacht wurde, muss die KI von sich aus nachfragen." Umgesetzt in
+`src/utils/trackingZusammenfassung.js` (`trainingsLuecken()`): vergleicht
+die letzten 7 Tage gegen `trainingWochenplan` (was war geplant) und
+`trainingEintraege` (was wurde geloggt); ab 3 verpassten geplanten Tagen
+erscheint eine "Auffälligkeit"-Zeile im Trackingdaten-Kontext, der
+ohnehin bei jeder Chat-Anfrage mitgeschickt wird ("Background Brain",
+siehe unten). Der System-Prompt weist Aka an, das dann von sich aus
+anzusprechen. Wichtig: das ist **kein echtes Push/Server-Proaktiv** — es
+wirkt erst, wenn die Nutzerin selbst irgendeinen Chat öffnet (passt zum
+Leitprinzip oben: nichts öffnet sich von selbst). Bisher nur für Training
+gebaut (klarstes Plan-vs-Log-Paar); ließe sich nach demselben Muster auf
+andere Bereiche mit Wochenplan/Dosierung ausweiten, falls gewünscht.
+Echte Push-Benachrichtigungen bei Lücken (auch wenn die App zu ist) wären
+ein größerer, separater Ausbau — würde die `send-due-reminders`
+Edge-Function um dieselbe Lücken-Logik erweitern und einen manuellen
+Redeploy brauchen.
 
 ### "Background Brain": Wissens-Basis + Live-Daten in JEDER Anfrage
 

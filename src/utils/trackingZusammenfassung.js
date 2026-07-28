@@ -1,9 +1,9 @@
 import { toLocalISODate } from "./dates";
 
 // Verdichtet Trackingdaten der letzten N Tage zu einem kompakten Text für
-// den ADHS Coach — NICHT die komplette Rohhistorie bei jeder Anfrage,
+// den Assistenten — NICHT die komplette Rohhistorie bei jeder Anfrage,
 // sondern aggregierte Werte (Durchschnitte, Trends, Auffälligkeiten), damit
-// der Coach bereichsübergreifende Zusammenhänge erkennen kann (z. B.
+// der Assistent bereichsübergreifende Zusammenhänge erkennen kann (z. B.
 // "seit weniger getrunken wird, sind auch die Trainingswerte schlechter"),
 // ohne bei jeder Nachricht Unmengen an Tokens zu verbrauchen.
 //
@@ -49,6 +49,33 @@ function trendRichtung(werte) {
   return relativeAenderung > 0 ? "steigend" : "sinkend";
 }
 
+const WOCHENTAGE_KURZ = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const LUECKEN_LOOKBACK_TAGE = 7;
+const LUECKEN_SCHWELLE = 3;
+
+// Geplantes Training der letzten LUECKEN_LOOKBACK_TAGE Tage, für das keine
+// passende Trainingseinheit geloggt wurde — Grundlage dafür, dass der
+// Assistent von sich aus nachfragt statt nur zu warten, bis er gefragt wird
+// (Nutzerinnen-Vorgabe, 28.07.: "wenn etwas auffällt, soll die KI von sich
+// aus reagieren", Beispiel war explizit "drei Tage kein geplantes
+// Training"). Bewusst nur Training (klarstes Plan-vs-Log-Paar); andere
+// Bereiche könnten nach demselben Muster ergänzt werden, falls gewünscht.
+function trainingsLuecken(appData, heute) {
+  const plan = appData.trainingWochenplan || [];
+  if (plan.length === 0) return [];
+  const geplanteWochentage = new Set(plan.map((p) => p.wochentag));
+  const geloggteDaten = new Set((appData.trainingEintraege || []).map((e) => e.datum));
+  const luecken = [];
+  for (let i = 1; i <= LUECKEN_LOOKBACK_TAGE; i++) {
+    const tag = new Date(heute);
+    tag.setDate(tag.getDate() - i);
+    if (!geplanteWochentage.has(WOCHENTAGE_KURZ[tag.getDay()])) continue;
+    const tagIso = toLocalISODate(tag);
+    if (!geloggteDaten.has(tagIso)) luecken.push(tagIso);
+  }
+  return luecken;
+}
+
 export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_ZURUECK } = {}) {
   const grenzeDatum = new Date();
   grenzeDatum.setDate(grenzeDatum.getDate() - tageZurueck);
@@ -80,6 +107,17 @@ export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_Z
     if (rpeWerte.length > 0) zeile += `, Ø RPE ${rund(schnitt(rpeWerte))}`;
     if (schmerzenCount > 0) zeile += `, ${schmerzenCount}x Schmerzen erwähnt`;
     abschnitte.push(zeile + ".");
+  }
+
+  // Auffälligkeit: geplantes Training mehrfach nicht geloggt (siehe
+  // trainingsLuecken() oben) — unabhängig davon, ob überhaupt schon
+  // Training im Zeitraum geloggt wurde, damit auch eine komplette Flaute
+  // auffällt.
+  const luecken = trainingsLuecken(appData, new Date());
+  if (luecken.length >= LUECKEN_SCHWELLE) {
+    abschnitte.push(
+      `Auffälligkeit: Training war an ${luecken.length} der letzten ${LUECKEN_LOOKBACK_TAGE} Tage geplant, aber nicht geloggt (${luecken.join(", ")}). Falls das im Gespräch noch nicht Thema war, sprich es von dir aus an.`
+    );
   }
 
   // Schlaf
