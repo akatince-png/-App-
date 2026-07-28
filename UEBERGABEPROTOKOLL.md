@@ -202,6 +202,44 @@ Press-Animation). Umgesetzt:
   (z. B. Kontrast zwischen Seite und Karte), müsste das gezielt
   nachgefragt werden.
 
+### Wochenübersicht & PDF-Export (existiert schon — Nachtrag 28.07.)
+
+**Wichtig:** diese Funktion war vor dem heutigen Nachtrag in diesem
+Dokument nicht beschrieben — reiner Dokumentationsfehler, die Nutzerin
+mit Recht nachgefragt, ob das schon bekannt war. `WochenuebersichtView.jsx`
+hat bereits:
+- Umschalter **Tag/Woche/Monat** (`viewMode`), Monatsansicht mit
+  Vor/Zurück-Navigation.
+- **PDF-Export** (`src/utils/pdfExport.js`, `exportElementAsPdf()`):
+  fotografiert ein unsichtbares Off-Screen-Export-Raster per
+  `html2canvas` und packt es als mehrseitiges A4-PDF (`jsPDF`), Download
+  läuft komplett clientseitig.
+- Ein separates **"Erste-Woche-Protokoll"-Snapshot-System**
+  (`src/utils/wochenprotokollSnapshot.js` + `useWochenprotokollMeilenstein.js`
+  + Tabelle `wochenprotokoll_snapshots`): wird EINMALIG 7 Tage nach
+  Protokollstart fällig, friert Substanzen/Wochenplan/Compliance als
+  festen Schnappschuss ein (nicht live neu berechnet wie die normale
+  Wochenübersicht).
+
+**Lücke zur Vorgabe der Nutzerin (28.07., "wöchentliches/monatliches
+Protokoll für einen frei festgelegten Zeitraum, einsehbar + als PDF"):**
+- Compliance/Statistik ist aktuell nur für **Peptide/Hormone** berechnet
+  (`plan`/`hormonPlan` vs. `erledigt`/`hormonErledigt`) — NICHT für die
+  anderen 7 Bereiche (Schlaf, Hydration, Ernährung, Training,
+  Gewohnheiten, Supplemente, Tageslicht).
+- Kein **frei wählbarer Zeitraum** — nur Tag/Woche/(rollierender)Monat,
+  kein "von X bis Y" oder "für die Dauer des Protokolls".
+- Kein **Verspätungs-/Auslass-Tracking** (wann wurde etwas nachgeholt,
+  wie spät, mit welcher Notiz) — nur binäres erledigt/nicht erledigt zum
+  Anzeigezeitpunkt.
+- Das "Erste-Woche"-Snapshot-System ist ein Einzelfall (Meilenstein nach
+  7 Tagen), kein wiederkehrendes Wochen-/Monats-Protokoll.
+
+Für die volle Vorgabe (siehe Abschnitt 6, offener Punkt "Protokoll-
+Journal") müsste die bestehende Wochenübersicht um alle 9 Bereiche
+erweitert werden, statt eine Parallel-Lösung zu bauen — die Tag/Woche/
+Monat-Umschaltung und der PDF-Export sind die richtige Grundlage dafür.
+
 ---
 
 ## 4. KI-Assistent — vollständiger technischer Überblick
@@ -517,7 +555,8 @@ Voraussetzung.
 | 9 | Farbige Icon-Hintergründe in Onboarding-Kategorie-Headern | Bewusst zurückgestellt beim Design-Umbau (Zeitgrenze) | Nur Politur, kein funktionaler Gap |
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
-| 12 | Sprachauswahl (DE/EN/TR) auf den Coach ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Coach antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
+| 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
+| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Nutzerinnen-Vorgabe 28.07., noch nicht begonnen — siehe "Wochenübersicht & PDF-Export" oben für die vorhandene Grundlage | Empfehlung: zuerst lückenloses Tagesprotokoll für alle 9 Bereiche (Datengrundlage), dann Verspätungs-Erinnerung, Rest danach — mit Nutzerin abgestimmt, noch nicht final priorisiert |
 
 ---
 

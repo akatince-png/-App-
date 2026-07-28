@@ -119,7 +119,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Coach schlägt ein Tagesziel vor.
+        Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Assistent schlägt ein Tagesziel vor.
       </div>
       <KiChat
         bereich="tageslicht"

@@ -144,7 +144,7 @@ export default function SchlafView({ onHome, embedded = false }) {
       </Card>
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Coach trägt den Eintrag für dich ein.
+        Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Assistent trägt den Eintrag für dich ein.
       </div>
       <KiChat
         bereich="schlaf"

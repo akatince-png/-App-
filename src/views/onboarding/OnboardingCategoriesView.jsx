@@ -757,7 +757,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         return { name, menge: p.menge || "" };
       }
       default:
-        throw new Error("Für diesen Bereich gibt es noch keine Coach-Begleitung.");
+        throw new Error("Für diesen Bereich gibt es noch keine Assistenten-Begleitung.");
     }
   };
 

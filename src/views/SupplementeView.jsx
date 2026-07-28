@@ -225,7 +225,7 @@ function SupplementeSection() {
   return (
     <>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, welches Supplement du nehmen willst und wann — der Coach fragt bei Bedarf nach.
+        Sag, welches Supplement du nehmen willst und wann — der Assistent fragt bei Bedarf nach.
       </div>
       <KiChat
         bereich="supplemente"

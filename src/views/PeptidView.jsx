@@ -210,7 +210,7 @@ export default function PeptidView({ onHome, embedded = false }) {
       </Card>
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag z. B. "ich möchte BPC-157 starten, 250mcg, jeden Tag abends um 20 Uhr" — der Coach richtet es für dich ein.
+        Sag z. B. "ich möchte BPC-157 starten, 250mcg, jeden Tag abends um 20 Uhr" — der Assistent richtet es für dich ein.
       </div>
       <KiChat
         bereich="peptide"

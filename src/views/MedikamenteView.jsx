@@ -165,7 +165,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       )}
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, welches Medikament/Hormon du hinzufügen willst — der Coach fragt Dosierung, Einnahmeart und Rhythmus ab.
+        Sag, welches Medikament/Hormon du hinzufügen willst — der Assistent fragt Dosierung, Einnahmeart und Rhythmus ab.
       </div>
       <KiChat
         bereich="medikamente"

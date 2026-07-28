@@ -95,7 +95,7 @@ export const AIService = {
   async morgenImpuls({ name, termine = [], stimmung, coachName } = {}) {
     const system = mitPersona(
       coachName,
-      "Du bist ein warmherziger, kurz angebundener Morgen-Coach für Menschen mit ADHS. " +
+      "Du bist ein warmherziger, kurz angebundener Morgen-Assistent für Menschen mit ADHS. " +
         "Antworte auf Deutsch in maximal 2 knappen Sätzen, motivierend und konkret, ohne Floskeln."
     );
     const terminZeilen = termine.length ? termine.map((t) => `- ${t}`).join("\n") : "Keine Termine bekannt.";

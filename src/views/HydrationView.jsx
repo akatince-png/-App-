@@ -137,7 +137,7 @@ export default function HydrationView({ onHome, embedded = false }) {
       )}
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Coach schlägt Ziel und Zeiten vor.
+        Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Assistent schlägt Ziel und Zeiten vor.
       </div>
       <KiChat
         bereich="hydration"
