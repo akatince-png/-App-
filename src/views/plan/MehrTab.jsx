@@ -201,15 +201,15 @@ export default function MehrTab({ onOpenLexikon }) {
         </button>
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>ADHS Coach</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Assistent</div>
       <Card style={{ marginBottom: 20 }}>
-        <Label>Name deines Coaches</Label>
+        <Label>Name deines Assistenten</Label>
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <div style={{ flex: 1 }}>
             <TextInput
               value={coachName === STANDARD_COACH_NAME ? "" : coachName}
               onChange={setCoachNameState}
-              placeholder="z. B. Coach Acker"
+              placeholder="z. B. Finn"
               onKeyPress={(e) => e.key === "Enter" && saveCoachName(coachName)}
             />
           </div>
@@ -222,7 +222,7 @@ export default function MehrTab({ onOpenLexikon }) {
           </button>
         </div>
         <div style={{ fontSize: 11.5, color: textMuted, marginTop: -6, marginBottom: 14 }}>
-          Dein Coach stellt sich danach überall in der App unter diesem Namen vor, statt nur "ADHS Coach" zu heißen. Nur auf diesem Gerät gespeichert.
+          Dein Assistent stellt sich danach überall in der App unter diesem Namen vor, statt mit dem Standardnamen "{STANDARD_COACH_NAME}". Nur auf diesem Gerät gespeichert.
         </div>
 
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>

@@ -22,7 +22,7 @@ const WISSENS_BASIS_TEXT = (() => {
   const eintraege = Object.entries(DATEIEN).sort(([a], [b]) => a.localeCompare(b));
   if (eintraege.length === 0) return "";
   const abschnitte = eintraege.map(([pfad, inhalt]) => `## ${relativerPfad(pfad)}\n${inhalt.trim()}`);
-  return `Wissens-Basis (Hintergrundwissen zu ADHS-Coaching-Themen — als Hintergrundinformation nutzen, nicht wörtlich zitieren):\n\n${abschnitte.join("\n\n")}`;
+  return `Wissens-Basis (Hintergrundwissen zu ADHS-Themen — als Hintergrundinformation nutzen, nicht wörtlich zitieren):\n\n${abschnitte.join("\n\n")}`;
 })();
 
 export function wissensBasisText() {

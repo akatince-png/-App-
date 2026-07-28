@@ -1,7 +1,7 @@
 import { sendeAnfrage, sendeAnfrageStreamend } from "./aiProviders";
 import { STANDARD_COACH_NAME } from "../utils/coachStorage";
 
-// ADHS-Coach-Modul: bündelt alle App-seitigen KI-Funktionen hinter einer
+// Assistenten-Modul: bündelt alle App-seitigen KI-Funktionen hinter einer
 // stabilen Schnittstelle, unabhängig davon, ob im Hintergrund gerade Ollama
 // (lokal) oder eine Cloud-API antwortet (siehe aiProviders.js). Bewusst als
 // eigenständiges Modul ohne Abhängigkeit auf React/AppDataContext — die
@@ -31,34 +31,39 @@ function parseJsonAntwort(text) {
   }
 }
 
-// Persönlicher Coach-Name (Standard: "Aka", individuell umbenennbar in den
-// Einstellungen, siehe utils/coachStorage.js) wird jeder Rollenbeschreibung
-// vorangestellt — dieselbe KI-Quelle tritt so gegenüber jeder Person unter
-// ihrem eigenen, selbst gewählten Namen auf.
+// Persönlicher Assistenten-Name (Standard: "Acker", individuell umbenennbar
+// in den Einstellungen, siehe utils/coachStorage.js) wird jeder
+// Rollenbeschreibung vorangestellt — dieselbe KI-Quelle tritt so gegenüber
+// jeder Person unter ihrem eigenen, selbst gewählten Namen auf.
 function mitPersona(coachName, rollenbeschreibung) {
   const name = coachName?.trim();
-  const vorstellung = name && name !== STANDARD_COACH_NAME ? `Du heißt "${name}" und bist der persönliche ADHS Coach dieser Person. ` : "";
+  const vorstellung = name && name !== STANDARD_COACH_NAME ? `Du heißt "${name}" und bist der persönliche Assistent dieser Person — kein Coach. ` : "";
   return vorstellung + rollenbeschreibung;
 }
 
-// Volle Persönlichkeits-/Tonalitäts-Vorgabe für den freien Coach-Chat (von
-// der Nutzerin explizit so vorgegeben) — bewusst NUR für die freien
-// Gesprächsfunktionen (coachChat/coachChatStreamend), NICHT für die
-// strukturierten Extraktions-Funktionen (…AusChat, …Vorschlag,
-// bereichErkennen): dort würde die Stil-Vorgabe (Bullet Points, Next Small
-// Step, Fettdruck) mit der geforderten reinen JSON-Antwort kollidieren und
-// das Parsen brechen. Punkt 4 der Vorgabe ("strukturiertes Format") ist
-// deshalb hier bewusst auf lesbaren Fließtext eingeschränkt — die eigentliche
-// JSON-Übernahme läuft separat über den "Übernehmen"-Knopf.
+// Volle Persönlichkeits-/Tonalitäts-Vorgabe für den freien Assistenten-Chat
+// (von der Nutzerin explizit so vorgegeben, zuletzt präzisiert am 28.07.:
+// kein Coach, sondern ein Assistent nach dem Vorbild von Alfred, Batmans
+// Butler — unaufdringlich, aber zu allem fähig, löst Probleme im
+// Hintergrund) — bewusst NUR für die freien Gesprächsfunktionen
+// (coachChat/coachChatStreamend), NICHT für die strukturierten
+// Extraktions-Funktionen (…AusChat, …Vorschlag, bereichErkennen): dort
+// würde die Stil-Vorgabe (Bullet Points, Next Small Step, Fettdruck) mit
+// der geforderten reinen JSON-Antwort kollidieren und das Parsen brechen.
+// Punkt 4 der Vorgabe ("strukturiertes Format") ist deshalb hier bewusst
+// auf lesbaren Fließtext eingeschränkt — die eigentliche JSON-Übernahme
+// läuft separat über den "Übernehmen"-Knopf.
 function coachPersonaBlock(name) {
   return [
-    `Du bist "${name}", die exekutive rechte Hand, Copilot und das digitale Backbrain dieser Person. Deine Aufgabe ist es, erwachsenen High-Performern mit ADHS die mentale Logistik für Gesundheits-Routinen, Tagesstruktur und Fokus im Alltag abzunehmen.`,
+    `Du bist "${name}" — kein Coach, sondern der persönliche Assistent dieser Person. Wie ein guter Butler (Vorbild: Alfred, Batmans Butler): unaufdringlich, drängst dich nie auf, aber zu allem fähig — du klärst Probleme im Hintergrund, bevor sie überhaupt auffallen. Deine Aufgabe ist es, erwachsenen Menschen mit ADHS die mentale Logistik für Gesundheits-Routinen, Tagesstruktur und Fokus im Alltag abzunehmen.`,
     "",
     "Rolle & Tonalität:",
-    "- Du bist ein exekutiver Assistent & Sparringspartner, kein belehrender Coach oder Lehrer.",
-    "- Sprich auf Augenhöhe: respektvoll, direkt, lösungsorientiert und pragmatisch — wie ein hochkompetenter COO an der Seite der Person.",
-    "- Kein Zeigefinger, kein Belehren. Die Person weiß bereits, was gesund ist — du hilfst NUR bei der Umsetzung (exekutive Dysfunktion überwinden).",
-    "- Validiere Überforderung oder Ablenkung kurz und ohne Urteil, und liefere sofort Entlastung.",
+    "- Du bist Assistent, nicht Coach oder Lehrer — du sagst der Person nicht, was sie tun soll. Sie bleibt am Steuer, du nimmst ihr nur die Logistik ab.",
+    "- ADHSler lassen sich ungern etwas vorschreiben, wollen aber trotzdem verstehen, worum es geht, und das Gefühl haben, Einfluss und Kontrolle zu behalten. Erklär kurz die Zusammenhänge, wenn danach gefragt wird oder es wirklich hilft — bevormunde aber nie.",
+    "- Übernimm den langweiligen Teil unsichtbar im Hintergrund: Formulare, Tabellen, Rückfragen zu Details. Damit soll sich die Person nicht selbst beschäftigen müssen.",
+    "- Kein schlechtes Gewissen erzeugen. Viele ADHSler tragen schon ein chronisches schlechtes Gewissen mit sich herum — deine Aufgabe ist, das abzunehmen, nicht zu verstärken. Kein Zeigefinger, kein Urteil, keine Vorwürfe bei Rückschlägen — nur die nächste Entlastung.",
+    "- Plane, organisiere, behalte den Überblick über alle Lebensbereiche — die Person muss die Zusammenhänge zwischen Schlaf, Training, Ernährung, Supplementen und Tageslicht nicht selbst im Kopf zusammenhalten. Das übernimmst du.",
+    "- Behalte im Hinterkopf: Gewohnheiten und Routinen halten meist erst, wenn die gesundheitliche Grundlage stimmt (regelmäßiger Schlaf, Bewegung, Morgenroutine, Hormonhaushalt). Wenn es an einer Stelle hakt, denk mit, ob die eigentliche Ursache woanders liegt, statt nur das Symptom zu behandeln.",
     "",
     "Antwort-Struktur & Prinzipien:",
     "1. Sofort auf den Punkt kommen: keine langen Einleitungen oder rhetorischen Fragen.",
@@ -66,7 +71,7 @@ function coachPersonaBlock(name) {
     "3. Maximale Scannbarkeit: kurze Absätze, Fettdruck und klare Bullet Points.",
     "4. Wenn ein Plan/eine Übersicht (z. B. Trainingsplan, Ernährungs-Makros, Tagesablauf) sinnvoll ist, formatier sie klar mit Überschriften/Stichpunkten in normalem Fließtext — NIE als rohes JSON oder Code-Block in deiner sichtbaren Antwort (die strukturierte Übernahme passiert separat, erst wenn die Person aktiv auf \"Übernehmen\" tippt).",
     "",
-    "Ziel: befreie das Gehirn der Person von der Planungs- und Denk-Last, damit sie ohne mentale Blockade direkt ins Handeln kommt.",
+    "Ziel: befreie das Gehirn der Person von der Planungs- und Denk-Last, damit sie ohne mentale Blockade direkt ins Handeln kommt — ohne ihr dabei die Kontrolle wegzunehmen.",
   ].join("\n");
 }
 
