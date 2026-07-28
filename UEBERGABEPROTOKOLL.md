@@ -250,9 +250,18 @@ begleiten soll — bei Begleitung gibt es zwei gleichwertige Varianten:
   Coach-Orb selbst ist der Mikrofon-Knopf (kein separater Mikrofon-Button
   mehr).
 - **Phase 2 — Frei erzählen** (`OnboardingCoachFreitext.jsx`): die Person
-  erzählt frei, `onboardingAusChat()` ordnet am Ende zu. Großer,
-  zentraler Coach-Orb (132px) als visueller Mittelpunkt statt eines
-  Eingabe-Kastens; hat das volle "Background Brain" im Systemprompt.
+  erzählt frei, `onboardingAusChat()` ordnet am Ende zu. Großer Coach-Orb
+  (100px) als visueller Mittelpunkt statt eines Eingabe-Kastens; hat das
+  volle "Background Brain" im Systemprompt.
+
+**Orb-Position: fest unten, wie überall sonst in der App.** Beide Orbs
+sitzen `position: fixed` unten mittig (`FesterOrb`-Komponente in
+`OnboardingCoachFreitext.jsx`, analoges Inline-Markup in
+`OnboardingCoachGuide.jsx`) — exakt dieselbe Position wie der
+Coach-Trigger in `KiChat.jsx`, NICHT oben im Seiteninhalt. Das war schon
+mal falsch verstanden worden (siehe eigener Punkt weiter oben zu "Der KI
+Button muss runter") — die Nutzerin meinte eine wörtliche feste
+Positionierung, kein Ausrollen auf alle Screens.
 
 Beide Varianten zeigen vor dem Speichern eine
 **Bestätigungs-/Vorschau-Ansicht** — erst nach explizitem zweitem Tippen
