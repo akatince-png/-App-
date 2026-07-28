@@ -140,8 +140,8 @@ export default function OnboardingCoachFreitext({ onFertig }) {
 
     return (
       <Shell>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, marginTop: 40, marginBottom: 28 }}>
-          <CoachOrb zustand="ruhe" size={132} />
+        <FesterOrb zustand="ruhe" />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, marginTop: 28, marginBottom: 28 }}>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Passt das so?</div>
           <div style={{ fontSize: 13, color: textMuted, maxWidth: "85%" }}>
             Bevor ich das eintrage, schau kurz drüber — du kannst danach jederzeit alles in deinem Profil ändern.
@@ -158,7 +158,7 @@ export default function OnboardingCoachFreitext({ onFertig }) {
           ))}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 130 }}>
           <PrimaryButton onClick={fertig}>Ja, so eintragen</PrimaryButton>
           <button
             type="button"
@@ -174,15 +174,12 @@ export default function OnboardingCoachFreitext({ onFertig }) {
 
   return (
     <Shell>
+      <FesterOrb
+        zustand={hoert ? "hoert" : laden ? (streamText ? "spricht" : "denkt") : "ruhe"}
+        onClick={mikrofonUmschalten}
+        title={hoert ? "Aufnahme stoppen" : "Sprechen statt tippen"}
+      />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, marginTop: 28, marginBottom: 28 }}>
-        <button
-          type="button"
-          onClick={mikrofonUmschalten}
-          title={hoert ? "Aufnahme stoppen" : "Sprechen statt tippen"}
-          style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", borderRadius: "50%" }}
-        >
-          <CoachOrb zustand={hoert ? "hoert" : laden ? (streamText ? "spricht" : "denkt") : "ruhe"} size={132} />
-        </button>
         <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>{coachName} · Frei erzählen</div>
         {letzteNutzerNachricht && !laden && (
           <div style={{ fontSize: 12.5, color: textMuted, fontStyle: "italic", maxWidth: "90%" }}>„{letzteNutzerNachricht.text}"</div>
@@ -249,11 +246,40 @@ export default function OnboardingCoachFreitext({ onFertig }) {
 
       {fehler && <div style={{ fontSize: 12, color: danger, marginBottom: 12, textAlign: "center" }}>{fehler}</div>}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 130 }}>
         <PrimaryButton onClick={vorschauLaden} disabled={uebernehmenLaden || verlauf.length === 0}>
           {uebernehmenLaden ? "Einen Moment…" : "Fertig, Daten übernehmen"}
         </PrimaryButton>
       </div>
     </Shell>
+  );
+}
+
+// Fest positionierter, großer Coach-Orb unten mittig — dieselbe Position
+// wie der Coach-Trigger überall sonst in der App (siehe KiChat.jsx),
+// nur deutlich größer ("Home-Button auf Steroiden", Nutzerinnen-Vorgabe),
+// weil er hier nicht nur ein Trigger, sondern der visuelle Mittelpunkt
+// des gesamten Bildschirms ist.
+function FesterOrb({ zustand, onClick, title }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "calc(22px + env(safe-area-inset-bottom, 0px))",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 40,
+      }}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!onClick}
+        title={title}
+        style={{ border: "none", background: "transparent", padding: 0, cursor: onClick ? "pointer" : "default", borderRadius: "50%" }}
+      >
+        <CoachOrb zustand={zustand} size={100} />
+      </button>
+    </div>
   );
 }

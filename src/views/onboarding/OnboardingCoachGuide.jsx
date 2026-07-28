@@ -138,26 +138,58 @@ export default function OnboardingCoachGuide({ onFertig }) {
   const kannWeiter = schritt.typ === "pillMulti" ? true : schritt.typ === "pillSingle" ? !!wert : !!wert.trim();
   const orbZustand = hoert ? "hoert" : interpretationLaden ? "denkt" : "ruhe";
   const orbKlickbar = INTERPRETATION_TYPEN.includes(schritt.typ) && spracherkennungVerfuegbar();
+  const zeigeOrb = interpretiert === null;
 
   return (
     <Shell>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 14, marginTop: 24, marginBottom: 24 }}>
-        <button
-          type="button"
-          onClick={orbUmschalten}
-          disabled={!orbKlickbar}
-          title={orbKlickbar ? (hoert ? "Aufnahme stoppen" : "Sprechen statt tippen") : undefined}
-          style={{ border: "none", background: "transparent", padding: 0, cursor: orbKlickbar ? "pointer" : "default", borderRadius: "50%" }}
+      {/* Fester Coach-Orb unten mittig — exakt dieselbe Position/Größe wie
+          der Coach-Trigger überall sonst in der App (siehe KiChat.jsx),
+          statt oben im Inhalt zu stehen (Nutzerinnen-Feedback: einheitlich
+          wie auf der Startseite). */}
+      {zeigeOrb && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "calc(22px + env(safe-area-inset-bottom, 0px))",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 40,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+          }}
         >
-          <CoachOrb zustand={orbZustand} size={92} />
-        </button>
+          {orbKlickbar && (
+            <div style={{ fontSize: 11.5, color: textMuted, fontWeight: 700, background: "#fff", padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+              {hoert ? "Ich höre zu…" : "Tippen zum Sprechen"}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={orbUmschalten}
+            disabled={!orbKlickbar}
+            title={orbKlickbar ? (hoert ? "Aufnahme stoppen" : "Sprechen statt tippen") : undefined}
+            style={{
+              width: 68,
+              height: 68,
+              borderRadius: "50%",
+              border: "none",
+              padding: 0,
+              cursor: orbKlickbar ? "pointer" : "default",
+              boxShadow: "0 10px 26px rgba(14, 124, 102, 0.4)",
+            }}
+          >
+            <CoachOrb zustand={orbZustand} size={68} />
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, marginTop: 24, marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
           {coachName} · Schritt {index + 1} von {SCHRITTE.length}
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.5, maxWidth: "90%" }}>{schritt.frage}</div>
-        {orbKlickbar && !interpretiert && (
-          <div style={{ fontSize: 11.5, color: textMuted }}>{hoert ? "Ich höre zu…" : "Auf den Kreis tippen zum Sprechen"}</div>
-        )}
       </div>
 
       {interpretiert !== null ? (
@@ -215,7 +247,9 @@ export default function OnboardingCoachGuide({ onFertig }) {
             )}
           </Card>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Platz für den fest positionierten Orb unten, damit er die
+              Buttons nicht überdeckt. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 110 }}>
             <PrimaryButton onClick={antwortAbschicken} disabled={!kannWeiter || interpretationLaden}>
               {interpretationLaden ? "Einen Moment…" : istLetzter && !INTERPRETATION_TYPEN.includes(schritt.typ) ? "Fertig" : "Weiter"}
             </PrimaryButton>
