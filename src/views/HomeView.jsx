@@ -692,7 +692,7 @@ export default function HomeView({ onOpenView }) {
         <span style={{ color: accentDark, fontSize: 18 }}>›</span>
       </button>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+      <div className="mp-ordner-grid">
         {ORDNER.map((o) => (
           <button
             key={o.id}

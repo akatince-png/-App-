@@ -6,6 +6,46 @@ body {
   margin: 0;
 }
 
+/* Tablet-/Desktop-Layout: die App war fest auf 420px Inhaltsbreite
+   gedeckelt (Shell in ui/primitives.jsx) — auf einem Tablet sah das dann
+   wie eine übergroße Handy-Ansicht mit viel Leerraum links/rechts aus,
+   statt den Bildschirm wirklich zu nutzen (Nutzerinnen-Feedback, 28.07.).
+   Feste Breakpoints statt einer stufenlosen Skalierung, damit Kartenraster
+   an klaren Punkten neue Spalten bekommen, statt krumm zu wachsen. */
+.mp-shell-inner {
+  width: 100%;
+  max-width: 420px;
+}
+@media (min-width: 640px) {
+  .mp-shell-inner {
+    max-width: 680px;
+  }
+}
+@media (min-width: 1024px) {
+  .mp-shell-inner {
+    max-width: 860px;
+  }
+}
+
+/* Kategorie-Kachelraster auf der Startseite (ORDNER-Grid) — auf Tablet/
+   Desktop mehr Spalten statt nur größerer Kacheln, damit es wirklich wie
+   ein für den größeren Bildschirm gestaltetes Raster wirkt. */
+.mp-ordner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .mp-ordner-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .mp-ordner-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 /* Sanftes, spürbares Tap-Feedback für Buttons/Karten — kleine, sofortige
    Rückmeldung statt eines stummen Klicks. Deaktiviert für alle, die
    reduzierte Bewegung eingestellt haben. */

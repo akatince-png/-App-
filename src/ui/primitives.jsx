@@ -21,7 +21,7 @@ export function Shell({ children, bereich }) {
           padding: "32px 16px",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 420 }}>{children}</div>
+        <div className="mp-shell-inner">{children}</div>
       </div>
     </BereichColorProvider>
   );

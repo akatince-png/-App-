@@ -202,6 +202,28 @@ Press-Animation). Umgesetzt:
   (z. B. Kontrast zwischen Seite und Karte), müsste das gezielt
   nachgefragt werden.
 
+**Tablet-/Desktop-Layout (Nachtrag 28.07.).** Bug-Report: "sieht aus wie
+Handy-Auflösung" — `Shell` (`primitives.jsx`) hatte die Inhaltsbreite alle
+30 Views hindurch fest auf `maxWidth: 420px` gedeckelt, unabhängig von
+der tatsächlichen Bildschirmgröße. Behoben über zwei neue CSS-Klassen mit
+festen Breakpoints (`index.css`, keine JS-Breite-Erkennung nötig):
+- `.mp-shell-inner` (ersetzt die inline `maxWidth` in `Shell`): 420px
+  Handy, **680px** ab 640px Viewportbreite, **860px** ab 1024px.
+- `.mp-ordner-grid` (Kategorie-Kacheln auf Home, `ORDNER.map(...)`): 3
+  Spalten Handy, **4 Spalten** ab 640px, **5 Spalten** ab 1024px — bekommt
+  auf Tablet also wirklich mehr Kacheln pro Zeile statt nur größerer.
+- Alle anderen Grids in der App (z. B. die 2-Spalten-Fortschrittsringe auf
+  Home, das `auto-fill`-Mini-Widget-Raster) profitieren automatisch von
+  der breiteren `Shell` mit — deren Zellen werden einfach größer, ohne
+  dass ich jede einzelne Stelle anfassen musste.
+- Bewusst NICHT angefasst: die übrigen fest 2-spaltigen Grids
+  (`HydrationView.jsx`, `TageslichtView.jsx`) — die werden auf Tablet
+  einfach breiter, nicht mehrspaltig. Falls das später auch störend groß
+  wirkt, wäre das ein gezielter Folgeschritt.
+- Visuell mit Playwright bei 390px (Handy)/768px (Tablet Hoch)/1024px
+  (Tablet Quer)/1280px (Desktop) geprüft, direkt gegen die kompilierte
+  CSS-Datei, ohne Login/Backend nötig.
+
 ### Wochenübersicht & PDF-Export (existiert schon — Nachtrag 28.07.)
 
 **Wichtig:** diese Funktion war vor dem heutigen Nachtrag in diesem
