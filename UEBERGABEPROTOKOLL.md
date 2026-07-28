@@ -1,24 +1,11 @@
 # 📋 ÜBERGABEPROTOKOLL: MyProtocols App
 
-**Stand: 27.07.2026, spät abends, Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
+**Stand: 28.07.2026, nachts — Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
-> ⚠️ **Diese Fassung ergänzt die Version vom frühen Abend desselben Tages.** Seitdem: Coach heißt jetzt standardmäßig **"Aka"** mit fest vorgegebener Persönlichkeit/Antwortstruktur, neue **Wissens-Basis** (`src/wissen/`, ein Unterordner pro Lebensbereich) + Trackingdaten-Zusammenfassung laufen jetzt in JEDEM der 8 Bereiche automatisch mit (nicht mehr nur Home), und ein neuer **Coach-geführter Onboarding-Modus** (Phase 1: Felder einzeln abfragen) für Name/Ziele/Profil. Abschnitt 5 komplett neu lesen.
->
-> ⚠️ **Nachtrag, spätnachts:** Laborwerte haben jetzt eine ℹ️-Lexikon-
-> Erklärung pro Wert, und **Schlaf + Peptide** haben jetzt auch einen Coach
-> — damit hat wirklich jeder der 8 Lebensbereiche + Home einen Coach.
->
-> ⚠️ **Nachtrag, noch später:** Nutzerin hat aus der offenen-Punkte-Liste
-> gezielt ausgewählt, was als Nächstes passieren soll (Nummern 1/2/9
-> umsetzen, 10/8 verwerfen, 4/5/7 zurückstellen). Umgesetzt: **Onboarding-
-> Begleitung Phase 2** (freies Erzählen, `OnboardingCoachFreitext.jsx`),
-> **Coach-Begleitung für Laborwerte + alle 9 Kategorien-Schritte** im
-> Onboarding, und der **universelle Coach** (Bereichs-Erkennung +
-> Routing) jetzt auch auf Tagesplan und Wochenübersicht, nicht mehr nur
-> Home (Logik dafür in `useUniversellerCoach.js` extrahiert). Verworfen:
-> Cloud-TTS, globaler Plus-Button. Zurückgestellt (weiter in der Tabelle
-> Abschnitt 6 vermerkt): Groq aktivieren, Ollama-Tunnel, Multi-User-Vision.
-> Abschnitt 5 + 6 komplett neu lesen.
+Dieses Dokument wurde komplett neu geschrieben (nicht nur ergänzt), um die
+vielen "Nachtrag"-Schichten der letzten Sessions in einen einzigen
+aktuellen Stand zusammenzuführen. Ältere Zwischenstände: siehe Git-Historie
+dieser Datei.
 
 ---
 
@@ -28,13 +15,14 @@
 Gesundheitsprotokollen/Biohacking, mit besonderem Fokus auf
 ADHS-Freundlichkeit (reduzierte Reizüberflutung, Notfallmodus, große
 Bedienelemente, klare Sprache). Die Nutzerin ist selbst nicht technisch
-versiert (kommuniziert per Spracheingabe, oft mit Transkriptionsfehlern) —
+versiert (kommuniziert oft per Spracheingabe, mit Transkriptionsfehlern) —
 siehe Abschnitt 8 für Hinweise zur Zusammenarbeit.
 
 Abgedeckte Lebensbereiche (jeder mit eigenem Plan/Protokoll): Schlaf,
 Hydration, Ernährung, Training, Gewohnheiten, Supplemente,
 Medikamente/Hormone, Peptide, Tageslicht (wie viel Zeit am Tag im
-Freien/Tageslicht verbracht wird).
+Freien/Tageslicht verbracht wird) — **9 Bereiche insgesamt**, plus die
+Startseite Home.
 
 Darüber liegt ein **Hauptprotokoll** (Name, Startdatum, Grund/Ziel), unter
 dem alle Kategorien als **Teilprotokolle** laufen.
@@ -50,23 +38,19 @@ dem alle Kategorien als **Teilprotokolle** laufen.
 > wollen — muss jede Funktion genauso gut **ganz ohne KI** nutzbar bleiben.
 > Praktisch heißt das: **niemals** ein manuelles Formular/einen manuellen
 > Button entfernen oder verstecken, nur weil es jetzt auch einen
-> KI-Coach-Weg dafür gibt (aktuell in allen 8 Bereichen mit KiChat so
-> umgesetzt — die "(manuell)"-Karten/Formulare stehen überall weiterhin
-> parallel neben dem Coach-Orb). Der Coach-Orb öffnet sich nur auf Tap, nie
-> von selbst — wer ihn nie antippt, bekommt die KI nie zu Gesicht.
+> KI-Coach-Weg dafür gibt. Der Coach-Orb öffnet sich nur auf Tap, nie von
+> selbst — wer ihn nie antippt, bekommt die KI nie zu Gesicht.
 
-**Der ADHS Coach** (Standardname **"Aka"**, individuell umbenennbar, z. B.
-"Coach Acker"): ein Assistent mit fest vorgegebener Persönlichkeit (direkt,
-wertschätzend, kurze Absätze/Fettdruck/Stichpunkte, immer ein "nächster
-kleiner Schritt", siehe Abschnitt 5), der in 8 Bereichen als echter Chat
-verfügbar ist — er fragt nach, schlägt vor, und legt nach Bestätigung durch
-die Nutzerin selbst neue Einträge an (Rezepte, Trainingspläne, Gewohnheiten, Supplemente,
-Medikamente, Ziele). **Läuft jetzt produktiv über Google Gemini** (Cloud,
-schnell, auch unterwegs auf dem Handy nutzbar) — Ollama (lokal) und Groq
-bleiben als Alternativ-Provider im Code vorbereitet, aber Gemini ist der
-aktuell konfigurierte und bestätigt funktionierende Weg. Der Trigger ist
-ein animierter Coach-Orb statt eines Text-Buttons — Tippen öffnet den Chat
-und startet direkt die Spracherkennung.
+**Der ADHS Coach** heißt standardmäßig **"Aka"** (individuell umbenennbar,
+z. B. "Coach Acker") und ist als echter Chat in **jedem der 9 Bereiche
+plus Home/Tagesplan/Wochenübersicht** verfügbar — er fragt nach, schlägt
+vor, und legt nach Bestätigung durch die Nutzerin selbst neue Einträge an.
+Rolle/Tonalität: **exekutiver Assistent, nicht belehrender Coach** (siehe
+Abschnitt 5 für den vollen Systemprompt-Hintergrund) — Zielgruppe sind
+erwachsene High-Performer mit ADHS, die keine Ratschläge, sondern
+Entlastung bei der Umsetzung wollen. Läuft produktiv über **Google
+Gemini** (Cloud, auch unterwegs nutzbar) — Ollama (lokal) und Groq bleiben
+als Alternativ-Provider im Code vorbereitet, aber nicht aktiv.
 
 ---
 
@@ -82,9 +66,10 @@ und startet direkt die Spracherkennung.
   dafür braucht es manuell "Redeploy" im Vercel-Dashboard.
 - **KI:** **Google Gemini** (Modell `gemini-3.6-flash` — Vorsicht:
   Gemini-Modellnamen werden von Google regelmäßig abgeschaltet, siehe
-  Abschnitt 5 „Modell-Fallstrick"), angebunden über einen sicheren
-  Supabase-Edge-Function-Proxy. Alternativ verfügbar, aber nicht aktiv
-  konfiguriert: Ollama (lokal, `qwen2.5:7b`) und Groq (Cloud).
+  Abschnitt 5 „Gemini-Fallstricke"), angebunden über einen sicheren
+  Supabase-Edge-Function-Proxy (`gemini-chat`). Alternativ vorbereitet,
+  aber nicht aktiv konfiguriert: Ollama (lokal, `qwen2.5:7b`) und Groq
+  (Cloud, kein API-Key vorhanden).
 - **Supabase-Projekt-Ref:** `xdajxswaclukstteafnk`.
 
 ---
@@ -96,113 +81,70 @@ und startet direkt die Spracherkennung.
 ```
 src/
 ├── views/                        Haupt-Seiten
-│   ├── HomeView.jsx               Startseite, Mini-Widgets, ADHS-Modus, Coach-Orb
-│   ├── TageslichtView.jsx
-│   ├── HydrationView.jsx, NutritionView.jsx, TrainingView.jsx,
-│   │   GewohnheitenView.jsx, SupplementeView.jsx, MedikamenteView.jsx
-│   │   → alle mit Coach-Orb (KiChat) erweitert
-│   ├── onboarding/                Onboarding-Flow
-│   └── plan/                      PlaeneView (Tab-Hub), MehrTab (Coach-Name-Einstellung)
+│   ├── HomeView.jsx               Startseite, Mini-Widgets, ADHS-Modus, universeller Coach
+│   ├── TageslichtView.jsx, HydrationView.jsx, NutritionView.jsx,
+│   │   TrainingView.jsx, GewohnheitenView.jsx, SupplementeView.jsx,
+│   │   MedikamenteView.jsx, PeptidView.jsx, SchlafView.jsx
+│   │   → alle mit Coach-Orb (KiChat) UND eigener Bereichsfarbe erweitert
+│   ├── onboarding/                Onboarding-Flow (siehe Abschnitt 5)
+│   └── plan/                      PlaeneView (Tab-Hub für die 8 Kategorien
+│                                   außer Gewohnheiten), MehrTab (Coach-Name,
+│                                   Sprache, Erinnerungen-Übersicht)
 ├── ui/
-│   ├── primitives.jsx             Card, Label, TextInput, TextArea, PrimaryButton, Pill, ...
-│   ├── ViewHeader.jsx             ⭐ NEU: einheitliche Kopfzeile (Home-Button + Logo) für alle Screens
-│   ├── CoachOrb.jsx               ⭐ NEU: animierte Kreis-Grafik, reagiert auf Coach-Gesprächszustand
-│   ├── KiChat.jsx                 Wiederverwendbare Chat-Oberfläche, jetzt als Orb-Trigger + Bottom-Sheet-Modal
-│   ├── Fab.jsx                    "+"-Button, jetzt oben rechts (war: unten mittig)
+│   ├── primitives.jsx             Shell, Card, PrimaryButton, Pill, CheckRow, Stepper, ...
+│   ├── BereichColorContext.jsx    Bereichseigene Akzentfarbe für Shell → Buttons/Pills
+│   ├── ViewHeader.jsx             Einheitliche Kopfzeile (Home-Button + Logo) für alle Screens
+│   ├── CoachOrb.jsx               Animierte Kreis-Grafik, reagiert auf Coach-Gesprächszustand
+│   ├── KiChat.jsx                 Wiederverwendbare Chat-Oberfläche (Orb-Trigger + Bottom-Sheet-Modal)
+│   ├── Fab.jsx                    "+"-Button oben rechts
 ├── services/
 │   ├── aiProviders.js             Low-Level: Ollama/Groq/Gemini, inkl. Streaming, sicherer Edge-Function-Weg
 │   └── aiService.js               Domänenfunktionen (siehe Abschnitt 5)
 ├── utils/
 │   ├── coachStorage.js            localStorage für Coach-Namen + Vorlesen-Einstellung
 │   ├── speech.js                  Web Speech API (Mikrofon + Vorlesen)
+│   ├── schedule.js                Intervall-Logik (fixed/custom/cycle/weekdays) — auch serverseitig portiert, siehe Abschnitt 5
+│   ├── dayItems.js                KATEGORIE_META (Bereichsfarben) + Tagesplan-Aggregation
+│   └── wissensBasis.js            Liest src/wissen/**/*.md fürs Coach-Hintergrundwissen
+├── data/                          Ein use*.js-Hook pro Datenbereich
 ├── context/AppDataContext.jsx     Zentrale Datenverwaltung — kombiniert alle data/use*.js-Hooks
+src/wissen/                        Statisches ADHS-Coaching-Hintergrundwissen (.md), pro Bereich ein Unterordner
 supabase/functions/
-├── groq-chat/index.ts             Sicherer Groq-Proxy (Key nur serverseitig) — deployt, aber nicht aktiv genutzt
-├── gemini-chat/index.ts           Sicherer Gemini-Proxy — ⭐ AKTIV, siehe Abschnitt 5 für die reale Deploy-Adresse
+├── groq-chat/index.ts             Sicherer Groq-Proxy — deployt, aber nicht aktiv genutzt
+├── gemini-chat/index.ts           Sicherer Gemini-Proxy — AKTIV
+├── lexikon/index.ts               Eigenständige Anthropic-Anbindung fürs Lexikon (Laborwerte-Erklärungen etc.)
+└── send-due-reminders/index.ts    Cron-Job-Versand für Push-Erinnerungen (siehe Abschnitt 5)
 ```
 
 ### Design-System
 
 Kein CSS-Framework — plain CSS (`src/index.css`, v. a. `@keyframes`) +
 Design-Tokens aus `src/ui/theme.js` (`accent`, `accentDark`, `cardBorder`,
-...), eingebunden über inline `style={{...}}`-Objekte. **Immer** Farben aus
-`theme.js` importieren, nie Hex-Werte direkt schreiben.
+`bg = "#FFFFFF"`, ...), eingebunden über inline `style={{...}}`-Objekte.
+**Immer** Farben aus `theme.js`/`KATEGORIE_META` importieren, nie
+Hex-Werte direkt schreiben.
 
-Der Home-Button war früher ~19-fach einzeln pro Screen kopiert — jetzt
-über `src/ui/ViewHeader.jsx` vereinheitlicht (Home-Button links neben dem
-Logo, größer als vorher). Bei neuen Screens **immer** `ViewHeader` nutzen,
-nicht wieder einen eigenen Header-Block bauen.
+**Bereichseigene Farben statt überall derselben Akzentfarbe.** Jeder
+Lebensbereich hat seine eigene Farbe (`KATEGORIE_META` in
+`utils/dayItems.js`): Tageslicht=Gelb, Training=Rot, Medikamente=Lila,
+Hydration=Blau, Schlaf=Indigo, Peptide=Marken-Grün, Supplemente=Gold,
+Ernährung=Terrakotta, Gewohnheiten=Teal. Umgesetzt über
+`src/ui/BereichColorContext.jsx`: `<Shell bereich="training">` (Prop an
+die `Shell`-Komponente) versorgt `PrimaryButton`/`Pill`/`CheckRow`/
+`Stepper` automatisch über React Context mit der passenden Farbe — kein
+einzelner Button musste manuell eingefärbt werden. Ohne `bereich` fällt
+alles auf die generische Marken-Akzentfarbe zurück (Home, Wochenübersicht
+— mischen mehrere Bereiche). `PlaeneView.jsx` (der "Alle Pläne"-Tab-Hub)
+und `OnboardingCategoriesView.jsx` setzen `bereich` dynamisch nach
+aktivem Tab/Schritt.
 
-**⭐ 27.07., nachts — Redesign: weißer Untergrund + bereichseigene Farben.**
-Nutzerinnen-Vorgabe: die App wirkte in Onboarding/Untermenüs zu dunkel/
-grau und überall gleich grün, während Home (mit den bunten Mini-Widgets)
-schon "frisch" aussah. Umgesetzt:
-- `theme.js`: `bg` von `#F7F7F5` auf `#FFFFFF` — großzügig heller/weißer
-  Untergrund überall (ein Werte-Wechsel, wirkt aber auf jeden Screen).
-- `KATEGORIE_META` (`utils/dayItems.js`) ist jetzt die zentrale
-  Farbquelle pro Lebensbereich, korrigiert/erweitert: Tageslicht=Gelb,
-  Training=Rot, Medikamente=Lila, Hydration=Blau, **Schlaf=Indigo (neu,
-  gab's vorher nicht)**, Peptide=Marken-Grün, Supplemente=Gold,
-  Ernährung=Terrakotta, Gewohnheiten=Teal.
-- **Neuer `src/ui/BereichColorContext.jsx`**: `<Shell bereich="training">`
-  (Prop an die bestehende `Shell`-Komponente) versorgt `PrimaryButton`,
-  `Pill`, `CheckRow` und `Stepper` automatisch mit der passenden Farbe
-  über React Context — kein einzelner Button-Aufruf musste manuell
-  eingefärbt werden, nur `bereich=` an der Shell setzen. Ohne `bereich`
-  fällt alles auf die generische Marken-Akzentfarbe zurück (z. B. Home,
-  Wochenübersicht — mischen mehrere Bereiche).
-- `PlaeneView.jsx` (der "Alle Pläne"-Tab-Hub, über den ALLE 8
-  Kategorie-Views mit `embedded` laufen) setzt `bereich` dynamisch nach
-  aktivem Tab — auch die farbige Tab-Leiste selbst nutzt jetzt
-  `KATEGORIE_META` statt einer einzigen Akzentfarbe für "aktiv".
-- `OnboardingCategoriesView.jsx` setzt `bereich` ebenso dynamisch nach
-  aktuellem Kategorie-Schritt (`SCHRITT_ZU_KATEGORIE`-Mapping).
-- Einzelne Views (Training/Hydration/Tageslicht/Schlaf/Medikamente/
-  Supplemente/Ernährung/Gewohnheiten) haben zusätzlich ihre direkten
-  Farb-Referenzen (`accentDark` etc. in Stat-Zahlen, ProgressRing-Farbe)
-  lokal auf `KATEGORIE_META[bereich]` umgestellt.
-- **Visuell verifiziert** über eine temporäre lokale QA-Seite (nicht
-  committed) mit Playwright-Screenshots aller 9 Bereichsfarben — alle
-  klar unterscheidbar, weißer Hintergrund bestätigt.
-- Bewusst NICHT gemacht (Zeit-/Umfang-Grenze): farbige Icon-Hintergründe
-  in den Onboarding-Kategorie-Headern, komplette Web-App-weite Suche nach
-  vereinzelten Hex-Farben außerhalb der 9 Bereichs-Views.
+Der Home-Button ist über `src/ui/ViewHeader.jsx` vereinheitlicht
+(Home-Button links neben dem Logo). Bei neuen Screens **immer**
+`ViewHeader` nutzen, nicht wieder einen eigenen Header-Block bauen.
 
 ---
 
-## 4. Was wurde in dieser Session-Reihe verändert? (chronologisch)
-
-*(Punkte 1–17 aus früheren Fassungen, siehe Git-Historie für Details. Ab
-Punkt 18 neu seit der letzten Protokoll-Fassung.)*
-
-18. **Performance-Fixes**: N+1-Query-Bug beim Dosis-Speichern (Peptide,
-    Hormone/Medikamente) behoben — mehrere `.update()`-Aufrufe pro Feld zu
-    einem einzigen Batch-Update zusammengefasst (`setDoseBatch`,
-    `setHormonDoseBatch`). Sequenzielle `await`-Schleifen durch
-    `Promise.all` ersetzt (Mahlzeiten-Bearbeitung, Ernährungsplan-Übernahme).
-    Redundante `buildDayItems()`-Berechnung in `HomeView.jsx` (lief 21×
-    statt 7× pro Render) auf eine gemeinsame Berechnung reduziert.
-19. **Echtes Streaming** für Ollama (NDJSON) und jetzt auch **Gemini**
-    (Server-Sent Events über `streamGenerateContent`) — Coach-Antworten
-    erscheinen wortweise live statt am Stück. Groq streamt noch nicht
-    (kommt als Volltext zurück).
-20. **Sicherer Cloud-KI-Weg statt nur lokalem Ollama**: Neue Supabase Edge
-    Functions `groq-chat` und `gemini-chat` — der echte API-Key liegt nur
-    serverseitig als Supabase-Secret, landet nie im Browser-Code. Ohne
-    gesetzten `VITE_AI_API_KEY` läuft die Anfrage automatisch über die
-    Edge Function (sicherer Normalweg); mit gesetztem Key ginge sie direkt
-    aus dem Browser (schneller Testweg, aber Key wäre sichtbar — aktuell
-    NICHT genutzt, `gemini-chat` läuft im sicheren Modus).
-21. **Design-Umbau**: `ViewHeader.jsx` (Home-Button vereinheitlicht, siehe
-    Abschnitt 3), `Fab.jsx` (Plus-Button von unten-mittig nach oben-rechts),
-    `CoachOrb.jsx` (animierte Kreis-Grafik als Coach-Trigger in allen 8
-    Bereichen, ersetzt statischen Text-Button). `KiChat.jsx` übernimmt jetzt
-    selbst das Öffnen/Schließen als Bottom-Sheet-Modal — Tap auf den Orb
-    öffnet den Chat UND startet direkt die Spracherkennung.
-
----
-
-## 5. KI-Coach — vollständiger technischer Überblick (heutiger Stand)
+## 4. KI-Coach — vollständiger technischer Überblick
 
 ### Architektur
 
@@ -211,254 +153,181 @@ Punkt 18 neu seit der letzten Protokoll-Fassung.)*
   für normale Anfragen, `sendeAnfrageStreamend()` für Wort-für-Wort-Antworten
   (Ollama + Gemini haben echtes Streaming, Groq noch nicht). Bei
   Groq/Gemini: ohne `VITE_AI_API_KEY` läuft die Anfrage automatisch über
-  die passende Supabase Edge Function.
-- `src/services/aiService.js` — Domänenfunktionen (`coachChatStreamend`,
-  `trainingsplanAusChat`, `ernaehrungsplanAusChat`, `gewohnheitAusChat`,
-  `hydrationAusChat`, `tageslichtAusChat`, `supplementAusChat`,
-  `medikamentAusChat`, `bereichErkennen`), alle nutzen `mitPersona()` für
-  den Coach-Namen. `bereichErkennen()` klassifiziert im Hintergrund, ob/zu
-  welchem der 7 Themenbereiche ein Gespräch schon konkret genug ist (siehe
-  "Universeller Home-Coach" unten).
+  die passende Supabase Edge Function (sicherer Normalweg, Key bleibt
+  serverseitig).
+- `src/services/aiService.js` — Domänenfunktionen: freier Chat
+  (`coachChat`/`coachChatStreamend`), strukturierte Extraktoren
+  ("Formular-Generatoren", …AusChat-Funktionen für jeden Bereich:
+  Training, Ernährung, Gewohnheiten, Hydration, Tageslicht, Supplemente,
+  Medikamente, Peptide, Schlaf, Laborwerte, Onboarding-Felder), sowie
+  `bereichErkennen()` (klassifiziert im Hintergrund, zu welchem
+  Themenbereich ein Gespräch schon konkret genug ist) und
+  `feldAntwortInterpretieren()` (bereinigt eine einzelne gesprochene
+  Antwort zum reinen Feldwert, z. B. "ich wiege ungefähr 75 Kilo" → "75").
 - `src/data/useCoachVerlauf.js` + Tabelle `coach_nachrichten` — persistenter
   Gesprächsverlauf pro `bereich`. Wird beim Öffnen eines Chats geladen und
-  fließt automatisch (bis zu den letzten 24 Nachrichten, siehe
-  `KI_KONTEXT_LIMIT` in KiChat.jsx) als Kontext in jede neue KI-Anfrage ein
-  — der Coach "kennt" die Nutzerin über die Zeit zunehmend besser.
-- `src/ui/KiChat.jsx` — geschlossen: schwebender runder "Anruf-Knopf"
-  (`CoachOrb`, 68px) unten mittig, kein Text mehr. Tap öffnet ein
-  Bottom-Sheet-Modal UND startet direkt die Spracherkennung. Anzeige
-  bewusst minimal wie ein KI-Sprachmodus (ChatGPT/Gemini-Stil): nur die
-  jeweils aktuelle Frage/Antwort groß, älterer Verlauf hinter
-  Aufklapp-Link. Barge-in: eigenes Sprechen oder Antippen des Orbs
-  unterbricht sofort eine laufende Sprachausgabe. Spracherkennung liefert
-  Zwischenergebnisse live (nicht erst am Ende), Tastatur fokussiert sich
-  automatisch sobald nicht zugehört wird.
+  fließt automatisch (bis zu `KI_KONTEXT_LIMIT` = 24 Nachrichten) als
+  Kontext in jede neue KI-Anfrage ein.
+- `src/ui/KiChat.jsx` — geschlossen: schwebender runder Coach-Orb (68px)
+  unten mittig. Tap öffnet ein Bottom-Sheet-Modal UND startet direkt die
+  Spracherkennung. Anzeige bewusst minimal wie ein KI-Sprachmodus
+  (ChatGPT/Gemini-Stil): nur die jeweils aktuelle Frage/Antwort groß,
+  älterer Verlauf hinter Aufklapp-Link. Barge-in: eigenes Sprechen oder
+  Antippen des Orbs unterbricht sofort eine laufende Sprachausgabe.
+  Spracherkennung liefert Zwischenergebnisse live, Tastatur fokussiert
+  sich automatisch sobald nicht zugehört wird.
 
-### Universeller Home-Coach (⭐ neu)
+### Persona: "Aka" als exekutiver Assistent
 
-Der globale Coach auf der Startseite ist NICHT mehr auf eine einzige feste
-Aktion (früher: nur Gewohnheiten) beschränkt, sondern kann alle 7 Bereiche
-bedienen. Mechanik: `KiChat` bekommt bei Bedarf die Props
-`pruefeBereitschaft` (async, läuft automatisch nach jeder Coach-Antwort,
-liefert erkannten Bereich oder `null`) und `uebernehmenLabels` (Beschriftung
-je Bereich). Der "Übernehmen"-Knopf erscheint erst, wenn ein Bereich
-erkannt wurde — nicht mehr automatisch nach jeder beliebigen Antwort. Beim
-Klick routet `HomeView.handleUniverselleUebernahme()` zur selben
-Extraktions-/Speicherfunktion, die auch der jeweilige Bereichs-Chat nutzt
-(keine neue Schreib-Logik). Die anderen 7 Bereichs-Chats setzen diese Props
-weiterhin nicht — dort ist der Bereich ja von vornherein durch den Kontext
-klar.
+`STANDARD_COACH_NAME` in `coachStorage.js` ist `"Aka"`, individuell
+umbenennbar. In `aiService.js` gibt es zwei Persona-Ebenen:
+- `mitPersona()` — nur die Namens-Vorstellung, für ALLE Funktionen inkl.
+  der strukturierten Extraktoren.
+- `mitVollerPersona()` (`coachPersonaBlock()`) — zusätzlich die volle
+  Persönlichkeits-/Antwortstruktur, NUR für den freien Chat
+  (`coachChat`/`coachChatStreamend`) — bewusst nicht für die Extraktoren,
+  da die Stil-Vorgaben (Bullet Points etc.) mit der geforderten reinen
+  JSON-Antwort kollidieren und das Parsen brechen würden.
 
-### Persona: "Aka" + feste Tonalität (⭐ neu)
+**Rolle: exekutiver Assistent, nicht Coach.** Zielgruppe sind erwachsene
+High-Performer/Selbstständige mit ADHS (25-45+) — ein belehrender
+"Coach"-Ton wirkt bei denen wie ein Besserwisser. Aka ist "exekutiver
+Assistent, Copilot, digitales Backbrain": kein Zeigefinger, die Person
+weiß bereits was gesund ist, Hilfe nur bei der Umsetzung (exekutive
+Dysfunktion). Ton: direkt, pragmatisch, wie ein hochkompetenter COO an
+der Seite der Person. Prinzipien: sofort auf den Punkt, konkrete
+Mikroschritte ("Next Small Step"), maximale Scannbarkeit (Fettdruck,
+Bullet Points). Eine Vorgabe bewusst NICHT wörtlich umgesetzt: Pläne
+erscheinen weiterhin als lesbarer Fließtext in der sichtbaren Antwort,
+NIE als rohes JSON — das würde sonst mit den Formular-Generatoren
+kollidieren (die strukturierte Übernahme läuft separat über den
+"Übernehmen"-Knopf).
 
-`STANDARD_COACH_NAME` in `coachStorage.js` ist jetzt `"Aka"` (statt
-generisch "dein ADHS Coach"), individuell weiterhin umbenennbar. In
-`aiService.js` gibt es jetzt zwei Persona-Ebenen:
-- `mitPersona()` (unverändert) — nur die Namens-Vorstellung, für ALLE
-  Funktionen inkl. der strukturierten Extraktoren (…AusChat).
-- `mitVollerPersona()` — zusätzlich die von der Nutzerin fest vorgegebene
-  Persönlichkeits-/Antwortstruktur. Nur für `coachChat`/
-  `coachChatStreamend` (den freien Chat) verwendet — **bewusst nicht**
-  für die …AusChat/…Vorschlag-Funktionen ("Formular-Generatoren"), da die
-  Stil-Vorgaben dort mit der geforderten reinen JSON-Antwort kollidieren
-  und das Parsen brechen würden.
+### "Background Brain": Wissens-Basis + Live-Daten in JEDER Anfrage
 
-  **⭐ 27.07., abends: Rollenwechsel "Coach" → "exekutiver Assistent".**
-  Zielgruppe erwachsene High-Performer/Selbstständige mit ADHS (25-45+) —
-  ein belehrender "Coach"-Ton wirkt bei denen schnell wie ein
-  Besserwisser. Neuer Rahmen in `coachPersonaBlock()`: Aka ist jetzt
-  exekutiver Assistent/Copilot/"digitales Backbrain", der die mentale
-  Logistik abnimmt statt Ratschläge zu erteilen — kein Zeigefinger, die
-  Person weiß bereits was gesund ist, Hilfe nur bei der Umsetzung
-  (exekutive Dysfunktion). Ton: direkt, pragmatisch, wie ein
-  hochkompetenter COO an der Seite der Person, statt "Kumpel/Coach".
-  Struktur-Prinzipien (sofort auf den Punkt, Mikroschritte, Bullet
-  Points, Pläne strukturiert) blieben inhaltlich gleich. Eine Vorgabe
-  bewusst NICHT wörtlich übernommen: der Nutzertext wollte Pläne "wie
-  JSON" direkt im Chat-Fließtext — das bleibt aus demselben Grund wie
-  oben (Formular-Generatoren/Parsing) bei lesbarem Fließtext, rohes JSON
-  taucht weiterhin nie in der sichtbaren Chat-Antwort auf, sondern nur
-  in den separaten …AusChat-Extraktoren nach Tippen auf "Übernehmen".
-  Betrifft nur `coachPersonaBlock()`/`mitVollerPersona()` (freier Chat) —
-  Name "Aka", `mitPersona()`, UI-Label "ADHS Coach", Gemini-API-Anbindung
-  (`aiProviders.js`) und alle Formular-Generatoren unverändert.
-
-### "Background Brain": Wissens-Basis + Live-Daten (⭐ neu, in JEDER Anfrage)
-
-Zwei Kontext-Quellen werden jetzt zentral in `KiChat.jsx` (nicht mehr nur
-Home) an jede Coach-Anfrage angehängt:
+Zwei Kontext-Quellen werden zentral in `KiChat.jsx` (und in
+`OnboardingCoachFreitext.jsx`) an jede Coach-Anfrage angehängt:
 - `src/utils/wissensBasis.js` — liest alle `.md`-Dateien unter
   `src/wissen/**/*.md` per `import.meta.glob` (eager, `?raw`) beim Bauen
-  der App ein. Ein Unterordner pro Lebensbereich (`schlaf/`, `hydration/`,
-  `ernaehrung/`, `training/`, `gewohnheiten/`, `supplemente/`,
-  `medikamente/`, `peptide/`, `tageslicht/`, `profil/`, `blutwerte/`) plus
-  `allgemein/` für bereichsübergreifende ADHS-Coaching-Themen — aktuell
-  überall nur Platzhalter-Inhalte, die die Nutzerin nach und nach durch
-  echtes Coaching-Wissen ersetzen will. **Neue `.md`-Datei irgendwo unter
-  `src/wissen/` ablegen reicht** — kein Code nötig, wird automatisch beim
-  nächsten Deploy erkannt. Einfache Variante bewusst ohne Vektorsuche
-  (kompletter Text aller Dateien wird angehängt) — falls der Ordner mal
-  sehr groß wird, muss hier eine Auswahl/Suche rein.
-- `src/utils/trackingZusammenfassung.js` (bisher nur Home) — jetzt überall.
-  Deckt zusätzlich Profil (Alter/Größe/Startgewicht) und Blutwerte/
-  Biomarker ab, nicht mehr nur die zeitraumbezogenen Trackingdaten.
+  der App ein. Ein Unterordner pro Lebensbereich plus `allgemein/` für
+  bereichsübergreifende ADHS-Coaching-Themen — aktuell überall nur
+  Platzhalter-Inhalte, die die Nutzerin nach und nach durch echtes
+  Coaching-Wissen ersetzen will. **Neue `.md`-Datei irgendwo unter
+  `src/wissen/` ablegen reicht** — kein Code nötig. Einfache Variante
+  bewusst ohne Vektorsuche (kompletter Text aller Dateien wird
+  angehängt) — falls der Ordner mal sehr groß wird, muss hier eine
+  Auswahl/Suche rein.
+- `src/utils/trackingZusammenfassung.js` — aggregierte Trackingdaten
+  (Hydration, Training, Schlaf, Ernährung, Peptid-/Hormon-Feedback,
+  Check-ins, Profil, Blutwerte) der letzten 2-4 Wochen statt der
+  kompletten Rohhistorie.
 
-Wichtig: Die `wissen/`-Dateien sind rein statisches Hintergrundwissen
-(Coaching-Theorie) — die eigentlichen Nutzerinnen-Daten liegen weiterhin
-ausschließlich in Supabase. Ein Browser kann nicht in Projektdateien
-schreiben; "Daten in wissen/ speichern" ist technisch nicht möglich und
-war nicht die richtige Umsetzung eines entsprechenden Wunsches der
-Nutzerin — stattdessen läuft `trackingZusammenfassung()` jetzt überall.
+Wichtig: Die `wissen/`-Dateien sind rein statisches Hintergrundwissen —
+die eigentlichen Nutzerinnen-Daten liegen ausschließlich in Supabase. Ein
+Browser kann nicht in Projektdateien schreiben.
 
-### Coach-geführtes Onboarding — beide Phasen + alle Schritte (⭐ aktualisiert 27.07., nachts)
+### Universeller Coach (Home, Tagesplan, Wochenübersicht)
+
+Diese drei Screens sind NICHT auf eine feste Aktion beschränkt, sondern
+können alle 7 Aktionen bedienen (Gewohnheit/Supplement/Medikament/
+Hydration/Tageslicht/Training/Ernährung anlegen). Mechanik: `KiChat`
+bekommt `pruefeBereitschaft` (läuft automatisch nach jeder Coach-Antwort,
+liefert erkannten Bereich oder `null` — der "Übernehmen"-Knopf erscheint
+erst dann, nicht nach jeder beliebigen Antwort) und `uebernehmenLabels`.
+Die komplette Routing-Logik liegt gemeinsam in
+`src/data/useUniversellerCoach.js` (Hook, extrahiert aus HomeView, damit
+sie nicht dupliziert werden musste).
+
+### Coach-geführtes Onboarding — zwei Phasen + alle Schritte
 
 Nach der Begrüßung (`OnboardingIntroView.jsx`) fragt der Coach, ob er
-begleiten soll oder die Nutzerin lieber allein macht — bei Begleitung
-gibt es jetzt zwei gleichwertige Varianten zur Auswahl:
+begleiten soll — bei Begleitung gibt es zwei gleichwertige Varianten:
 - **Phase 1 — Frage für Frage** (`OnboardingCoachGuide.jsx`): feste
   Sequenz durch Name/Ziele/Geschlecht/Geburtsdatum/Größe/Startgewicht.
-  Die Fragen selbst sind weiterhin NICHT KI-generiert (Felder fest
-  bekannt, kein Latenz-/Fehlerrisiko in diesem kritischen Pfad) — aber
-  die ANTWORT bei Text-/Zahlenfeldern läuft jetzt durch
-  `AIService.feldAntwortInterpretieren()` (z. B. "ich wiege ungefähr 75
-  Kilo" → "75") und wird der Person zur Bestätigung gezeigt, bevor
-  gespeichert wird. Der Coach-Orb selbst ist jetzt der Mikrofon-Knopf
-  (antippen = sprechen) — der frühere separate Mikrofon-Button neben dem
-  Eingabefeld ist weg (Nutzerinnen-Feedback: wirkte doppelt/überflüssig).
-- **Phase 2 — Frei erzählen** (`OnboardingCoachFreitext.jsx`): die
-  Person erzählt frei, `AIService.onboardingAusChat()` ordnet am Ende
-  zu. Komplett neu gestaltet (Nutzerinnen-Feedback: "sieht extrem billig
-  aus") — kein Kasten mehr um Mikrofon+Eingabe, stattdessen ein
-  großer, zentraler Coach-Orb (132px, "Home-Button auf Steroiden") als
-  visueller Mittelpunkt, schlichte Eingabezeile darunter. Hat jetzt auch
-  das "Background Brain" (Wissensbasis + Trackingdaten-Zusammenfassung,
-  wie überall sonst in der App) im Systemprompt.
+  Die Fragen selbst sind NICHT KI-generiert (Felder fest bekannt), aber
+  die Antwort läuft bei Text-/Zahlenfeldern durch
+  `feldAntwortInterpretieren()` und wird zur Bestätigung gezeigt. Der
+  Coach-Orb selbst ist der Mikrofon-Knopf (kein separater Mikrofon-Button
+  mehr).
+- **Phase 2 — Frei erzählen** (`OnboardingCoachFreitext.jsx`): die Person
+  erzählt frei, `onboardingAusChat()` ordnet am Ende zu. Großer,
+  zentraler Coach-Orb (132px) als visueller Mittelpunkt statt eines
+  Eingabe-Kastens; hat das volle "Background Brain" im Systemprompt.
 
-Beide Varianten zeigen vor dem eigentlichen Speichern eine
-**Bestätigungs-/Vorschau-Ansicht** ("Passt das so?" mit den erkannten
-Werten) statt sofort zu speichern — erst nach explizitem zweitem Tippen
-wird über dieselben Funktionen wie die manuellen Formulare gespeichert
-(`toggleZiel`, `setPersonal`, `localStorage`). `OnboardingFlow.jsx`
-überspringt danach die Phasen `ziele`/`profil` (bereits erledigt) und
-geht direkt zu `laborwerte` weiter.
+Beide Varianten zeigen vor dem Speichern eine
+**Bestätigungs-/Vorschau-Ansicht** — erst nach explizitem zweitem Tippen
+wird über dieselben Funktionen wie die manuellen Formulare gespeichert.
 
-Auch **Laborwerte** und alle **9 Kategorien-Schritte** (Training,
-Ernährung, Supplemente, Medikamente, Peptide, Schlaf, Hydration,
-Tageslicht, Gewohnheiten) haben inzwischen eine Coach-Begleitung — siehe
-Abschnitt weiter unten ("Wo der Coach heute verfügbar ist").
+Auch **Laborwerte** (`OnboardingLaborwerteView.jsx`) und alle **9
+Kategorien-Schritte** (`OnboardingCategoriesView.jsx`) haben eine
+Coach-Begleitung: der Coach füllt die passenden Felder aus, die Person
+bestätigt danach über den normalen Button (Training/Peptide übernehmen
+direkt, da diese Schritte schon beim manuellen Antippen sofort
+speichern). Jeder Laborwert hat außerdem einen ℹ️-Knopf mit einer
+Kurzerklärung übers Lexikon (Relevanz, Zweck, üblicher Referenzbereich,
+ohne Diagnose).
 
-**ZIELE-Liste jetzt ADHS-spezifisch** (`constants.js`): acht neue
-ADHS-bezogene Ziele (Fokus & Konzentration, Prokrastination überwinden,
-Tagesstruktur aufbauen, Reizüberflutung reduzieren, Zeitgefühl
-verbessern, Impulskontrolle stärken, Weniger Overwhelm, Motivation im
-Alltag) stehen jetzt VOR den bisherigen allgemeinen Gesundheits-/
-Biohacking-Zielen — eine Liste, zwei inhaltliche Gruppen durch
-Reihenfolge statt Überschrift (Nutzerinnen-Vorgabe: "nicht so genannt").
-
-### Laborwerte-Lexikon-Verknüpfung (⭐ neu)
-
-Jeder Laborwert in `LaborwerteFelder.jsx` (ProfilTab + Onboarding-
-Biomarker-Plan) hat jetzt einen kleinen ℹ️-Knopf neben dem Namen. Klick
-darauf lädt eine kurze Erklärung über das bestehende Lexikon (eigene
-Supabase-Edge-Function `lexikon`, nutzt direkt die Anthropic-API,
-unabhängig vom eingestellten Coach-Provider Ollama/Groq/Gemini — läuft
-also immer, egal welcher KI-Anbieter gerade für den Coach aktiv ist): was
-der Wert misst, wieso er gemessen wird, seine Relevanz, und der übliche
-Referenzbereich — ausdrücklich ohne Diagnose. Antwort erscheint direkt
-unter der jeweiligen Zeile, pro Zeile eigener Lade-/Fehler-Zustand
-(`LaborwertZeile`-Komponente). Neue Hook-Funktion `lexikonSchnellFragen()`
-in `useLexikon.js`: wie die bestehende `lexikonFragen()`, aber ohne den
-geteilten Lexikon-Verlauf zu verändern — gibt die Antwort direkt zurück,
-für punktuelle Erklärungen wie diese.
-
-### Wo der Coach heute verfügbar ist
-
-Home, Tagesplan, Wochenübersicht (alle drei universell — Bereichs-Erkennung
-+ Routing zu allen 7 Aktionen, Logik gemeinsam in
-`src/data/useUniversellerCoach.js`), Training, Gewohnheiten, Ernährung,
-Hydration, Tageslicht, Supplemente, Medikamente, Schlaf, Peptide, sowie
-geführt beim Onboarding — Name/Ziele/Profil (Phase 1 `OnboardingCoachGuide`
-ODER Phase 2 `OnboardingCoachFreitext`, freie Wahl), Laborwerte, und jeder
-der 9 Kategorien-Schritte (`OnboardingCategoriesView`). Damit hat wirklich
-jeder Bereich der App einen Coach, nicht mehr nur ein Teil. Neue
-Extraktoren `AIService.schlafAusChat()`, `AIService.peptidAusChat()`,
-`AIService.onboardingAusChat()`, `AIService.schlafzielAusChat()`,
-`AIService.mahlzeitplanAusChat()`, `AIService.laborwerteAusChat()`.
-
-### ⭐ Leitprinzip: Manuell UND per KI — niemals nur eins von beidem
-
-Siehe Abschnitt 1 für die vollständige Formulierung der Nutzerin. Kurz: die
-App muss für "Nerds"/Kontrollmenschen genauso vollständig ohne KI nutzbar
-bleiben wie für Menschen, die die KI die Arbeit machen lassen wollen. Jedes
-manuelle Formular bleibt **immer** parallel zum jeweiligen Coach-Orb
-bestehen — niemals eins zugunsten des anderen entfernen.
+**ZIELE-Liste ist ADHS-spezifisch** (`constants.js`): acht ADHS-bezogene
+Ziele (Fokus & Konzentration, Prokrastination überwinden, Tagesstruktur
+aufbauen, Reizüberflutung reduzieren, Zeitgefühl verbessern,
+Impulskontrolle stärken, Weniger Overwhelm, Motivation im Alltag) stehen
+vor den allgemeinen Gesundheits-/Biohacking-Zielen.
 
 ### Sicherheitsmodell (bewusste Entscheidung, bitte beibehalten)
 
 Der Coach kann **niemals** eigenständig etwas speichern — jede Aktion
 läuft über: (1) frei chatten, (2) Nutzerin tippt explizit auf einen
-"Übernehmen/Anlegen/Setzen"-Knopf, (3) erst dann wird über die ganz normale
-App-Funktion (dieselbe, die auch das manuelle Formular aufruft)
+"Übernehmen/Anlegen/Setzen"-Knopf, (3) erst dann wird über die ganz
+normale App-Funktion (dieselbe, die auch das manuelle Formular aufruft)
 gespeichert. Kein direkter Datenbankzugriff durch die KI, kein
 Code-Zugriff.
 
-### ⚠️ Gemini-Setup — wichtige Fallstricke für die Zukunft
+### ⚠️ Gemini-Fallstricke für die Zukunft
 
-1. ~~Edge-Function-Adresse ist NICHT `gemini-chat`, sondern
-   `clever-worker`.~~ **Behoben (27.07., abends):** Die Funktion läuft
-   jetzt unter ihrem eigentlichen Namen `gemini-chat` (Nutzerin hat sie
-   über den Supabase-Browser-Editor neu deployt, Code aus
-   `supabase/functions/gemini-chat/index.ts`) — `GEMINI_EDGE_FUNCTION_SLUG`
-   in `aiProviders.js` entsprechend zurückgeändert. Die alte Funktion
-   `clever-worker` kann bei Gelegenheit im Dashboard gelöscht werden, ist
-   aber unschädlich, falls sie noch da ist (wird vom Code nicht mehr
-   angesprochen). Hintergrund, falls das je wieder passiert: Supabase
-   vergibt beim Deployen über den Browser-Editor ("Via Editor")
-   automatisch einen Slug (Teil der URL), der sich über die Oberfläche
-   **im Nachhinein nicht umbenennen** lässt — das "Name"-Feld in den
-   Function-Settings ändert nur die Anzeige, nicht die echte Adresse. Nur
-   ein komplettes Neu-Deployen unter dem gewünschten Namen behebt das.
-2. **Gemini-Modellnamen veralten schnell.** `gemini-2.5-flash` (ursprünglich
-   empfohlen) war zum Testzeitpunkt bereits für neue Nutzer abgeschaltet.
-   Aktuell konfiguriert: `gemini-3.6-flash`. Bei einem erneuten "model not
-   found"-Fehler: aktuelle Modellliste unter
-   `ai.google.dev/gemini-api/docs/latest-model` prüfen (Web-Suche nutzen,
+1. **Gemini-Modellnamen veralten schnell.** Aktuell konfiguriert:
+   `gemini-3.6-flash`. Bei "model not found": aktuelle Modellliste unter
+   `ai.google.dev/gemini-api/docs/latest-model` per Web-Suche prüfen,
    nicht raten — die Modellgenerationen wechseln offenbar im
-   Monats-/Quartalstakt).
-3. **`GEMINI_API_KEY` ist ein Supabase-Secret, keine Vercel-Variable** —
-   liegt unter Supabase Dashboard → Edge Functions → Secrets. Leicht zu
-   verwechseln, da die restlichen `VITE_*`-Variablen bei Vercel liegen.
-4. **`VITE_AI_MODEL`/`VITE_AI_PROVIDER` bei Vercel ändern reicht allein
+   Monats-/Quartalstakt.
+2. **`GEMINI_API_KEY` ist ein Supabase-Secret, keine Vercel-Variable** —
+   liegt unter Supabase Dashboard → Edge Functions → Secrets.
+3. **`VITE_AI_MODEL`/`VITE_AI_PROVIDER` bei Vercel ändern reicht allein
    nicht** — Vite bäckt diese Variablen beim Build ein, nicht zur
    Laufzeit. Nach jeder Änderung braucht es einen manuellen Redeploy.
+4. **Ein über den Supabase-Browser-Editor deployter Funktions-Slug lässt
+   sich im Nachhinein nicht umbenennen** — das "Name"-Feld in den
+   Function-Settings ändert nur die Anzeige, nicht die echte Adresse
+   (passierte schon einmal: die Gemini-Funktion lief monatelang unter
+   `clever-worker` statt `gemini-chat`, bis neu deployt wurde). Nur ein
+   komplettes Neu-Deployen unter dem gewünschten Namen behebt das.
 
 ### Ollama/Groq — weiterhin im Code, aktuell nicht die aktive Konfiguration
 
-- **Ollama**: lokal über Cloudflare Quick Tunnel erreichbar gemacht
-  (`cloudflared tunnel --url http://localhost:11434`), Adresse ist
-  **ephemeral** (ändert sich bei jedem Neustart des Tunnels/PCs). Kein
+- **Ollama**: lokal über Cloudflare Quick Tunnel erreichbar gemacht,
+  Adresse ist **ephemeral** (ändert sich bei jedem Neustart). Kein
   Passwort auf Ollama — bewusst akzeptiertes, vorübergehendes
   Sicherheitsrisiko der Nutzerin.
-- **Groq**: `supabase/functions/groq-chat/index.ts` ist deployt-fertig im
-  Code, aber die Nutzerin kam nicht an einen Groq-API-Key (GitHub/Apple-
-  Signup-Probleme) — Gemini wurde stattdessen genutzt. Falls Groq später
-  doch gewünscht wird: Code ist fertig, nur Key besorgen + Secret setzen +
-  `VITE_AI_PROVIDER=groq` setzen.
+- **Groq**: `supabase/functions/groq-chat/index.ts` ist deployt-fertig,
+  aber die Nutzerin kam nicht an einen API-Key (GitHub/Apple-
+  Signup-Probleme). Falls später gewünscht: Code ist fertig, nur Key
+  besorgen + Secret setzen + `VITE_AI_PROVIDER=groq` setzen.
 
-### 🔔 Erinnerungs-/Push-System (⭐ erweitert 28.07., nachts)
+---
 
-**Befund:** Die UI bietet in JEDER Kategorie (Onboarding, `MehrTab.jsx` —
-"Erinnerungen"-Übersicht) ein "Ja, erinnere mich" an, aber
-`supabase/functions/send-due-reminders/index.ts` (per pg_cron einmal pro
-Minute aufgerufen, siehe Migration 0032) prüfte bisher **nur Hydration** —
-alle anderen Kategorien hatten also ein UI-Versprechen ohne echte
-Funktion dahinter. Die DB-Spalten für Peptide/Medikamente/Supplemente
-(`uhrzeiten`, `intervall_mode`, ...) waren dafür laut Migrations-
-Kommentar 0029 sogar extra vorbereitet, nur nie angeschlossen.
+## 5. Erinnerungs-/Push-System
 
-**Jetzt ergänzt** (`send-due-reminders/index.ts`, portiert aus
-`faelltAnTag()` in `src/utils/schedule.js`, damit Server- und
-Client-Logik nie auseinanderlaufen):
+**Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
+`MehrTab.jsx` — "Erinnerungen"-Übersicht) ein "Ja, erinnere mich" an,
+aber `supabase/functions/send-due-reminders/index.ts` (per pg_cron einmal
+pro Minute aufgerufen, siehe Migration 0032) prüfte bisher **nur
+Hydration** — alle anderen Kategorien hatten ein UI-Versprechen ohne
+echte Funktion dahinter. Die DB-Spalten für Peptide/Medikamente/
+Supplemente (`uhrzeiten`, `intervall_mode`, ...) waren laut
+Migrations-Kommentar 0029 extra dafür vorbereitet, nur nie angeschlossen.
+
+**Jetzt ergänzt** (portiert aus `faelltAnTag()` in
+`src/utils/schedule.js`, damit Server- und Client-Logik nie
+auseinanderlaufen):
 - Peptide (`protocol_peptide`), Medikamente (`hormones`), Supplemente
   (`supplements`) — volles Intervall-Modell (fixed/custom/cycle/
   weekdays) + `uhrzeiten`-Array.
@@ -467,27 +336,20 @@ Client-Logik nie auseinanderlaufen):
 - Mehrere gleichzeitig fällige Erinnerungen eines Nutzers werden zu
   **einer** Push-Nachricht gebündelt statt mehrerer auf einmal.
 
-**Bewusst NICHT abgedeckt** (nächster Schritt für später, kein Blocker):
-- **Training/Ernährung**: laufen über Wochenplan-Tabellen
-  (`protocol_training_wochenplan`/`meal_wochenplan`, nicht untersucht) —
-  andere Datenstruktur, eigener Anlauf nötig.
-- **Tageslicht/Schlaf**: haben aktuell in der DB gar keine Uhrzeit pro
-  Eintrag hinterlegt (nur ein Ja/Nein-Flag) — ohne konkrete Uhrzeit kann
-  serverseitig nichts "fällig" werden. Müsste zuerst ein Uhrzeit-Feld
-  bekommen (z. B. der Schlafrhythmus-Vorschlag aus dem Onboarding-Coach).
-- **"Bereits erledigt" wird nicht geprüft** — wer z. B. ein Supplement
-  schon vor der geplanten Uhrzeit abgehakt hat, bekommt trotzdem die
-  Erinnerung (gleiches Verhalten wie das bestehende Hydration-System,
-  bewusst nicht verändert für Konsistenz).
+**Bewusst noch nicht abgedeckt** (siehe offene Punkte, Abschnitt 6):
+- Training/Ernährung (Wochenplan-basiert, andere Datenstruktur).
+- Tageslicht/Schlaf (aktuell keine Uhrzeit pro Eintrag in der DB, nur ein
+  Ja/Nein-Flag — ohne Uhrzeit kann nichts "fällig" werden).
+- "Bereits erledigt" wird nicht geprüft (gleiches Verhalten wie das
+  ursprüngliche Hydration-System, bewusst nicht verändert).
 
-**⚠️ Braucht Deploy durch die Nutzerin** — diese Umgebung hat keinen
-Supabase-Zugriff (wie beim Gemini-Slug-Fix). Schritte: Supabase
-Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen durch
-den Inhalt von `supabase/functions/send-due-reminders/index.ts` →
-Redeploy. **Keine neuen Secrets nötig** — `CRON_SECRET`/VAPID-Keys sind
-bereits gesetzt (Hydration-Erinnerungen liefen ja schon). Push-
-Berechtigung auf dem jeweiligen Gerät (unter "Mehr") bleibt weiterhin
-Voraussetzung, wie schon bei Hydration.
+**⚠️ Braucht Deploy durch die Nutzerin** (Agent-Sandbox hat keinen
+Supabase-Zugriff): Supabase Dashboard → Edge Functions →
+`send-due-reminders` → Code ersetzen durch den Inhalt von
+`supabase/functions/send-due-reminders/index.ts` → Redeploy. Keine neuen
+Secrets nötig — `CRON_SECRET`/VAPID-Keys sind bereits gesetzt.
+Push-Berechtigung auf dem jeweiligen Gerät (unter "Mehr") bleibt weiterhin
+Voraussetzung.
 
 ---
 
@@ -495,20 +357,18 @@ Voraussetzung, wie schon bei Hydration.
 
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
-| 1 | ~~Weitere Bereiche für KiChat (Schlaf, Peptide)~~ | ✅ Erledigt — alle Lebensbereiche haben jetzt einen Coach | — |
-| 2 | ~~Onboarding-Begleitung Phase 2 (freies Erzählen + automatische Feld-Zuordnung)~~ | ✅ Erledigt — neue `OnboardingCoachFreitext.jsx`, Auswahlbildschirm bietet jetzt beide Varianten | — |
-| 2b | ~~Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte~~ | ✅ Erledigt — Coach füllt Felder je Kategorie aus (Übernahme dann wie gehabt manuell bestätigen), Training/Peptide übernehmen direkt | — |
-| 3 | ~~Gemini-Edge-Function sauber unter `gemini-chat` statt `clever-worker` neu deployen~~ | ✅ Erledigt (27.07., abends) — Nutzerin hat neu deployt, Code umgestellt | — |
-| 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — Code fertig, aber kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
-| 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — bekannte Einschränkung, aktuell nicht aktiv genutzt (Gemini läuft) | Nur relevant, falls wieder auf Ollama gewechselt wird |
+| 1 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten | Code fertig, **braucht Deploy durch Nutzerin** — siehe Abschnitt 5 | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
+| 2 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | Noch nicht umgesetzt — andere Datenstruktur | Eigener Anlauf, `protocol_training_wochenplan`/`meal_wochenplan`-Schema erst untersuchen |
+| 3 | Erinnerungs-Versand für Tageslicht/Schlaf | Noch nicht möglich — kein Uhrzeit-Feld pro Eintrag in der DB | Erst ein Uhrzeit-Feld ergänzen (z. B. Schlafrhythmus-Vorschlag aus dem Onboarding-Coach), dann Versand bauen |
+| 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung) — Code fertig, kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
+| 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Zurückgestellt — bekannte Einschränkung, aktuell nicht aktiv genutzt | Nur relevant, falls wieder auf Ollama gewechselt wird |
 | 6 | Groq-Streaming | Noch nicht implementiert (nur Ollama + Gemini) | Bei Bedarf, gleiches Muster wie Gemini-SSE-Streaming übernehmen |
-| 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Zurückgestellt (Nutzerinnen-Entscheidung 27.07.) — mit Gemini technisch näher (Cloud statt Ein-PC-Ollama), aber noch nicht umgesetzt | Bei Bedarf besprechen |
-| 8 | ~~Plus-Button erscheint auf allen Screens, nicht nur Home~~ | ❌ Verworfen (Nutzerinnen-Entscheidung 27.07.) — bleibt wie es ist | — |
-| 9 | ~~`bereichErkennen()`-Routing (universeller Home-Coach) nur für Home~~ | ✅ Erledigt — Logik in `useUniversellerCoach.js` extrahiert, jetzt auch auf Tagesplan und Wochenübersicht | — |
-| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen (Nutzerinnen-Entscheidung 27.07.) — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
-| 11 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten | Code fertig (28.07., nachts), **braucht Deploy durch Nutzerin** — siehe Abschnitt 5, "🔔 Erinnerungs-/Push-System" | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
-| 12 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | Noch nicht umgesetzt — andere Datenstruktur als die 5 bereits abgedeckten Kategorien | Eigener Anlauf, `protocol_training_wochenplan`/`meal_wochenplan`-Schema erst untersuchen |
-| 13 | Erinnerungs-Versand für Tageslicht/Schlaf | Noch nicht möglich — kein Uhrzeit-Feld pro Eintrag in der DB, nur ein Ja/Nein-Flag | Erst ein Uhrzeit-Feld ergänzen (z. B. Schlafrhythmus-Vorschlag aus dem Onboarding-Coach), dann Versand bauen |
+| 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Zurückgestellt — mit Gemini technisch näher, aber noch nicht umgesetzt | Bei Bedarf besprechen |
+| 8 | `bereichErkennen()`-Routing auf weitere Einstiegspunkte | Erledigt für Home/Tagesplan/Wochenübersicht | Bei Bedarf auf weitere Screens ausweiten |
+| 9 | Farbige Icon-Hintergründe in Onboarding-Kategorie-Headern | Bewusst zurückgestellt beim Design-Umbau (Zeitgrenze) | Nur Politur, kein funktionaler Gap |
+| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
+| 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
+| 12 | Sprachauswahl (DE/EN/TR) auf den Coach ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Coach antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
 
 ---
 
@@ -517,17 +377,16 @@ Voraussetzung, wie schon bei Hydration.
 - ADHS-freundliche, reizarme App zur Verwaltung komplexer
   Gesundheitsprotokolle — Notfallmodus für überforderte Tage.
 - Ist-Zustand + Zielzustand sauber trennen und sichtbar machen.
-- **KI-Coach als Ersatz für einen klassischen Online-Coach**: Nutzerin
-  möchte sich mit einem persönlich benannten Coach unterhalten, der die
-  Arbeit im Hintergrund erledigt, statt selbst Formulare auszufüllen —
-  jetzt in 8 Bereichen umgesetzt, mit Cloud-KI (Gemini) auch unterwegs
-  nutzbar, und im Home-Bereich universell (alle 7 Aktionen, nicht nur
-  Gewohnheiten).
+- **KI-Coach als Ersatz für einen klassischen Online-Coach**: die
+  Nutzerin möchte sich mit einem persönlich benannten Assistenten
+  unterhalten, der die Arbeit im Hintergrund erledigt, statt selbst
+  Formulare auszufüllen — jetzt in allen 9 Bereichen + Home/Tagesplan/
+  Wochenübersicht umgesetzt.
 - **Gleichzeitig, gleichrangig: vollständige manuelle Nutzbarkeit ohne
-  jede KI** — siehe Leitprinzip in Abschnitt 1/5. Beide Bedienwege sind
+  jede KI** — siehe Leitprinzip in Abschnitt 1. Beide Bedienwege sind
   Kernversprechen der App, nicht KI-Weg mit manuellem Fallback.
-- Langfristig denkbar: Coach führt komplett durchs Onboarding, und/oder
-  mehrere echte Nutzer bekommen jeweils eigene Coach-Instanzen.
+- Langfristig denkbar: mehrere echte Nutzer bekommen jeweils eigene
+  Coach-Instanzen (siehe offener Punkt 7).
 
 ---
 
@@ -542,36 +401,43 @@ Voraussetzung, wie schon bei Hydration.
   (Beispiele: "Obama" = Ollama, "Grow"/"Growth" = Groq). Bei
   Screenshots/Fotos von Bildschirmen: genau hinschauen, oft liegt der
   Fehler an einer kleinen Verwechslung, nicht an grundsätzlichem
-  Unverständnis.
+  Unverständnis. Bei abgeschnittenen/unklaren Sprachnachrichten lieber
+  kurz nachfragen als eine große Änderung auf eine Vermutung zu bauen.
 - **Dashboards (Supabase/Vercel) können täuschen**: ein angezeigtes
   "Name"-Feld ist nicht zwangsläufig die echte Adresse/der echte Slug —
-  siehe Abschnitt 5, Gemini-Fallstrick #1. Im Zweifel selbst über die
-  Screenshots nachvollziehen, was technisch wirklich passiert, nicht nur
-  was die UI suggeriert.
-- **Eigene Sandbox hat keinen Netzwerkzugriff nach außen** (Supabase,
-  Vercel, etc. sind blockiert — bestätigt über `curl` + 403 von der
-  Proxy-Policy). Live-Verifikation von Deployments/Endpunkten ist nur über
-  Screenshots der Nutzerin möglich, nicht selbst per `curl`/Browser-Test.
-  Ehrlich kommunizieren statt es wiederholt zu versuchen.
+  siehe Abschnitt 4, Gemini-Fallstrick #4.
+- **Diese Agent-Sandbox hat keinen Netzwerkzugriff auf Supabase/Vercel**
+  und keine Supabase-CLI. Änderungen an Edge Functions oder
+  DB-Migrationen landen im Code/Repo, müssen aber von der Nutzerin selbst
+  über das Supabase-Dashboard deployt werden — Code im Chat bereitstellen
+  und Schritt-für-Schritt-Anleitung geben (siehe Abschnitt 4/5 für
+  Beispiele). Live-Verifikation von Deployments ist nur über Screenshots
+  der Nutzerin möglich.
+- **Playwright ist lokal nutzbar für Frontend-QA**: `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`,
+  Chromium unter `/opt/pw-browsers/chromium`. Die App braucht echte
+  Supabase-Zugangsdaten zum Starten (`.env`, gitignored) — für reine
+  UI-Komponenten-QA notfalls einen temporären Platzhalter-`.env` +
+  einen temporären Test-Entry-Point anlegen, danach beides wieder
+  entfernen (nichts davon committen).
 - **Alles außerhalb von Code sehr kleinschrittig erklären** — echte
   Klick-für-Klick-Anleitungen, keine Fachbegriffe ohne Erklärung.
 - **Keine Infrastruktur-Fakten erfinden** — Hosting-URL, Konten-Zugänge,
-  Modellnamen etc. im Zweifel per Web-Suche verifizieren statt zu raten
-  (siehe Gemini-Modell-Fallstrick, Abschnitt 5).
+  Modellnamen etc. im Zweifel per Web-Suche verifizieren statt zu raten.
 - **Git-Workflow:** Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`,
-  NICHT direkt auf `main` arbeiten, dann fetch+fast-forward-merge+push nach
-  `main` (in dieser Session-Reihe wiederholt so autorisiert).
-- **Dieses Dokument aktuell halten** — bei nächster Gelegenheit neu
-  schreiben (nicht nur ergänzen), sobald sich wieder viel verändert hat.
+  NICHT direkt auf `main` arbeiten, dann fetch+fast-forward-merge+push
+  nach `main` (in dieser Session-Reihe wiederholt so autorisiert). Vor
+  jedem Commit: `npm run build` + `npx oxlint`.
+- **Dieses Dokument aktuell halten** — bei viel Veränderung lieber neu
+  schreiben (wie hier geschehen) statt endlos weitere "Nachtrag"-Absätze
+  aufzustapeln.
 
 ---
 
-**Letzte Aktualisierung:** 27.07.2026, spät abends — Coach heißt jetzt
-"Aka" mit fest vorgegebener Persönlichkeit, Wissens-Basis
-(`src/wissen/`) + Trackingdaten-Zusammenfassung laufen jetzt in jedem
-Bereich mit, und Coach-geführtes Onboarding (Phase 1: Name/Ziele/Profil
-einzeln abfragen) ist fertig umgesetzt und deployt. Leitprinzip "Manuell
-UND per KI" bleibt unverändert gültig (Abschnitt 1, 5, 7, 8). Nächster
+**Letzte Aktualisierung:** 28.07.2026, nachts. Coach ist jetzt exekutiver
+Assistent (nicht "Coach") in allen 9 Bereichen + Home/Tagesplan/
+Wochenübersicht, Onboarding hat zwei gleichwertige Begleitungs-Phasen,
+Design ist auf weißen Untergrund + bereichseigene Farben umgestellt, und
+das Erinnerungs-/Push-System deckt jetzt 5 von 9 Kategorien ab (Code
+fertig, Deploy durch Nutzerin steht für die neuen 4 noch aus). Nächster
 sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6 durchgehen,
-insbesondere Onboarding-Begleitung Phase 2 und die tieferen
-Kategorien-Schritte.
+insbesondere Punkt 1 (Erinnerungs-Deploy) mit der Nutzerin abschließen.
