@@ -1,27 +1,20 @@
 import React, { useState } from "react";
-import { Shell, Card, PrimaryButton } from "../ui/primitives";
-import { accent, blue, cardBorder, textMuted } from "../ui/theme";
-import Logo from "../ui/Logo";
+import { Shell, PrimaryButton } from "../ui/primitives";
+import { accent, cardBorder, textMain, textMuted } from "../ui/theme";
 import OnboardingNavArrows from "../ui/OnboardingNavArrows";
+import { KopfEntlastungIllustration, UebersichtIllustration, RuheIllustration } from "../ui/WelcomeIllustrations";
 import { useT } from "../i18n/translate";
 import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 
+// Drei Willkommens-Folien vor dem eigentlichen Onboarding — bewusst neu
+// gestaltet (Nutzerinnen-Vorgabe, 29.07.): nicht die Funktionen der App
+// verkaufen, sondern das Gefühl transportieren "ich muss nicht mehr alles
+// selbst im Kopf behalten". Referenz: Apple/Headspace/Notion-Onboarding —
+// ruhig, viel Weißraum, eine Illustration statt Icon-Emoji, wenig Text.
 const SLIDES = [
-  {
-    icon: "🧬",
-    titelKey: "welcome.slide1.titel",
-    textKey: "welcome.slide1.text",
-  },
-  {
-    icon: "🗓️",
-    titelKey: "welcome.slide2.titel",
-    textKey: "welcome.slide2.text",
-  },
-  {
-    icon: "🚀",
-    titelKey: "welcome.slide3.titel",
-    textKey: "welcome.slide3.text",
-  },
+  { Illustration: KopfEntlastungIllustration, titelKey: "welcome.slide1.titel", textKey: "welcome.slide1.text" },
+  { Illustration: UebersichtIllustration, titelKey: "welcome.slide2.titel", textKey: "welcome.slide2.text" },
+  { Illustration: RuheIllustration, titelKey: "welcome.slide3.titel", textKey: "welcome.slide3.text" },
 ];
 
 export default function WelcomeView({ onDone }) {
@@ -30,6 +23,7 @@ export default function WelcomeView({ onDone }) {
   const [index, setIndex] = useState(0);
   const slide = SLIDES[index];
   const isLast = index === SLIDES.length - 1;
+  const weiter = () => (isLast ? onDone() : setIndex((i) => i + 1));
 
   return (
     <Shell>
@@ -66,55 +60,56 @@ export default function WelcomeView({ onDone }) {
       <OnboardingNavArrows
         onBack={index > 0 ? () => setIndex((i) => i - 1) : undefined}
         backLabel={tLabel("Zurück")}
-        onForward={() => (isLast ? onDone() : setIndex((i) => i + 1))}
+        onForward={weiter}
         forwardLabel={isLast ? t("welcome.button.los") : tLabel("Weiter")}
       />
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20, marginBottom: 28 }}>
-        {index === 0 ? (
-          <div style={{ marginBottom: 20 }}>
-            <Logo size={72} />
-          </div>
-        ) : (
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 22,
-              background: `linear-gradient(135deg, ${accent}, ${blue})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 32,
-              marginBottom: 20,
-              boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
-            }}
-          >
-            {slide.icon}
+      {/* key={index} sorgt dafür, dass die fadeInUp-Animation (siehe
+          index.css) bei jedem Folienwechsel neu anläuft, statt nur beim
+          allerersten Rendern. */}
+      <div
+        key={index}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          marginTop: 40,
+          marginBottom: 40,
+          animation: "fadeInUp 0.45s ease-out",
+        }}
+      >
+        <div style={{ marginBottom: 28 }}>
+          <slide.Illustration size={132} />
+        </div>
+        <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.3, textAlign: "center", maxWidth: 300, color: textMain }}>
+          {t(slide.titelKey)}
+        </div>
+        <div style={{ fontSize: 15, color: textMuted, textAlign: "center", lineHeight: 1.7, maxWidth: 300, marginTop: 16, whiteSpace: "pre-wrap" }}>
+          {t(slide.textKey)}
+        </div>
+        {isLast && (
+          <div style={{ fontSize: 15, fontWeight: 700, color: textMain, textAlign: "center", lineHeight: 1.6, maxWidth: 280, marginTop: 22 }}>
+            {t("welcome.slide3.abschluss")}
           </div>
         )}
-        <div style={{ fontSize: 20, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>{t(slide.titelKey)}</div>
-        <div style={{ fontSize: 14, color: textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>{t(slide.textKey)}</div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 7, marginBottom: 28 }}>
         {SLIDES.map((_, i) => (
           <div
             key={i}
             style={{
-              width: i === index ? 20 : 8,
-              height: 8,
+              width: i === index ? 22 : 7,
+              height: 7,
               borderRadius: 4,
               background: i === index ? accent : cardBorder,
-              transition: "all 0.2s",
+              transition: "all 0.25s ease",
             }}
           />
         ))}
       </div>
 
-      <Card>
-        <PrimaryButton onClick={() => (isLast ? onDone() : setIndex((i) => i + 1))}>{isLast ? t("welcome.button.los") : tLabel("Weiter")}</PrimaryButton>
-      </Card>
+      <PrimaryButton onClick={weiter}>{isLast ? t("welcome.button.los") : tLabel("Weiter")}</PrimaryButton>
     </Shell>
   );
 }

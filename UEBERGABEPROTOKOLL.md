@@ -224,6 +224,55 @@ festen Breakpoints (`index.css`, keine JS-Breite-Erkennung nötig):
   (Tablet Quer)/1280px (Desktop) geprüft, direkt gegen die kompilierte
   CSS-Datei, ohne Login/Backend nötig.
 
+### Willkommens-Folien komplett neu (Nachtrag 29.07.)
+
+Auf ausführliche Vorgabe der Nutzerin komplett neu gestaltet: die drei
+Folien VOR dem eigentlichen Onboarding-Ablauf (`WelcomeView.jsx`, Phase
+`welcome` in `OnboardingFlow.jsx` — NICHT die Coach-Begleitungs-Screens
+aus den vorherigen Nachträgen, die kommen erst danach). Ziel:
+"nach den ersten drei Screens das Gefühl 'Endlich muss ich nicht mehr
+alles selbst im Kopf behalten'" statt Funktions-Verkauf — Referenz
+Apple/Headspace/Notion-Onboarding.
+
+- **Texte** komplett neu (`src/i18n/dict/welcome.js`, alle drei Sprachen
+  DE/EN/TR): weg vom bisherigen "Ich übernehme die Logistik: Peptide,
+  Medikamente, ..."-Aufzählungston, hin zu den drei von der Nutzerin
+  vorgegebenen Kernsätzen ("Dein Kopf ist fürs Leben da – nicht zum
+  Merken." / "Alles an einem Ort." / "Kleine Schritte. Große
+  Entlastung."). Neuer Dict-Key `welcome.slide3.abschluss` für den von
+  der Nutzerin selbst vorgeschlagenen Abschlusssatz ("Ab jetzt musst du
+  nicht mehr an alles denken – ich erinnere dich daran.") — erscheint nur
+  auf der letzten Folie, optisch abgesetzt als kleiner fetter
+  Abschluss-Satz.
+- **Neue Illustrationen** statt Marken-Ring-Logo/Emoji-Icons:
+  `src/ui/WelcomeIllustrations.jsx`, drei eigenständige, selbstgebaute
+  Inline-SVGs (kein externer Asset-Dienst) — `KopfEntlastungIllustration`
+  (Kopf, aus dem ein paar Gedanken sanft nach draußen abgegeben werden),
+  `UebersichtIllustration` (ruhiges 2×2-Raster statt Zettel-Chaos),
+  `RuheIllustration` (ruhiges Häkchen-Abzeichen statt Rakete — bewusst
+  Sicherheit/Leichtigkeit statt Tempo). Jede in ein weiches
+  Kreis-Badge eingebettet, Farben aus dem bestehenden Theme
+  (`accent`/`blue`/`success` + ihre Soft-Varianten), keine neuen Farben
+  eingeführt.
+- **Layout/Typografie**: `Card`-Rahmen um den Button entfernt (wirkte
+  bei einem einzelnen Button unnötig schwer), größere Illustration
+  (132px), größere/luftigere Überschrift (25px, engere Zeilenhöhe),
+  mehr Weißraum zwischen den Elementen, Fließtext mit bewussten
+  Absatzumbrüchen (`\n` in den Dict-Strings + `whiteSpace: "pre-wrap"`)
+  statt einem dichten Textblock. Sanfter Fade-in/Slide-Übergang beim
+  Folienwechsel über die schon vorhandene `fadeInUp`-Keyframe aus
+  `index.css` (`key={index}` löst die Animation bei jedem Wechsel neu
+  aus), respektiert automatisch `prefers-reduced-motion` wie der Rest der
+  App.
+- **Bewusst unverändert**: Sprach-Umschalter (DE/EN/TR) und
+  "Überspringen" oben, `OnboardingNavArrows` für Vor/Zurück, die
+  Fortschritts-Punkte unten, der gesamte weitere Onboarding-Ablauf danach
+  (Hauptprotokoll/Ziele/Profil/Laborwerte/Kategorien) — Auftrag war
+  ausdrücklich nur diese drei Folien, keine funktionalen Änderungen.
+- Mit Playwright bei Handy- und Tablet-Breite sowie in allen drei
+  Sprachen geprüft (Text bricht nirgends unschön um, Illustrationen
+  bleiben lesbar).
+
 ### Wochenübersicht & PDF-Export (existiert schon — Nachtrag 28.07.)
 
 **Wichtig:** diese Funktion war vor dem heutigen Nachtrag in diesem

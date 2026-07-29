@@ -1,42 +1,52 @@
 // UI-Texte für WelcomeView.jsx (Onboarding-Willkommens-Folien).
+//
+// Neu getextet am 29.07. (Nutzerinnen-Vorgabe): weg vom Funktions-Verkauf
+// ("Wir tracken deine Daten"), hin zur eigentlichen Botschaft — "du musst
+// nicht mehr alles im Kopf behalten". \n innerhalb der *.text-Strings
+// markiert einen bewussten Absatzumbruch (siehe whiteSpace: "pre-wrap" in
+// WelcomeView.jsx), damit die kurzen Sätze getrennt Luft zum Atmen haben
+// statt als ein dichter Block zu wirken.
 export const welcome = {
   de: {
     "welcome.skip": "Überspringen",
-    "welcome.slide1.titel": "Hi, ich bin Aka — deine exekutive rechte Hand.",
+    "welcome.slide1.titel": "Dein Kopf ist fürs Leben da – nicht zum Merken.",
     "welcome.slide1.text":
-      "Du musst deine Gesundheit und Routinen ab jetzt nicht mehr alleine im Kopf managen. Ich übernehme die Logistik: Peptide, Medikamente, Supplemente, Gewohnheiten, Schlaf, Hydration, Ernährung und Training an einem Ort — statt in Notizzetteln und deinem Kopf.",
-    "welcome.slide2.titel": "So funktioniert's",
+      "Hi, ich bin Aka. 👋\nIch helfe dir dabei, deine Routinen zu organisieren und an die wichtigen Dinge zu denken – damit du nicht alles selbst im Kopf behalten musst.",
+    "welcome.slide2.titel": "Alles an einem Ort.",
     "welcome.slide2.text":
-      "Dein Tagesplan zeigt dir jeden Tag genau, was ansteht — einmal antippen und abgehakt. Alle Details (Menge, Einnahmeart, Mischungen) findest du übersichtlich in Protokolle, wann immer du sie brauchst.",
-    "welcome.slide3.titel": "Einmal kurz investieren, langfristig Ruhe haben",
+      "Medikamente, Supplemente, Peptide, Hormone, Schlaf, Ernährung und Gewohnheiten – übersichtlich an einem Ort, genau dann verfügbar, wenn du sie brauchst.\nKeine Zettel. Keine fünf verschiedenen Apps. Kein unnötiges Suchen.",
+    "welcome.slide3.titel": "Kleine Schritte. Große Entlastung.",
     "welcome.slide3.text":
-      "Ein paar Minuten heute, um dein Protokoll einzurichten — und danach hast du alles im Griff, ohne nachdenken zu müssen. Jeden Bereich kannst du einzeln jetzt einrichten oder überspringen und später nachholen. Los geht's!",
+      "Ein paar Minuten Einrichtung. Danach begleite ich dich jeden Tag und übernehme die Organisation im Hintergrund.\nDu kannst dich auf das konzentrieren, was wirklich wichtig ist.",
+    "welcome.slide3.abschluss": "Ab jetzt musst du nicht mehr an alles denken – ich erinnere dich daran.",
     "welcome.button.los": "Los geht's",
   },
   en: {
     "welcome.skip": "Skip",
-    "welcome.slide1.titel": "Hi, I'm Aka — your executive right hand.",
+    "welcome.slide1.titel": "Your mind is for living — not for remembering.",
     "welcome.slide1.text":
-      "You don't have to manage your health and routines in your head alone anymore. I handle the logistics: peptides, medications, supplements, habits, sleep, hydration, nutrition, and training in one place — instead of scattered notes and your memory.",
-    "welcome.slide2.titel": "How it works",
+      "Hi, I'm Aka. 👋\nI help you organize your routines and remember the things that matter — so you don't have to keep it all in your head.",
+    "welcome.slide2.titel": "Everything in one place.",
     "welcome.slide2.text":
-      "Your daily plan shows you exactly what's due each day — tap once and it's checked off. All the details (amount, method of intake, mixes) are laid out clearly in Protocols, whenever you need them.",
-    "welcome.slide3.titel": "A little effort now, peace of mind later",
+      "Medications, supplements, peptides, hormones, sleep, nutrition, and habits — all organized in one place, ready exactly when you need them.\nNo sticky notes. No five different apps. No searching around.",
+    "welcome.slide3.titel": "Small steps. Real relief.",
     "welcome.slide3.text":
-      "A few minutes today to set up your protocol — and after that, everything's under control without having to think about it. You can set up each area now or skip it and come back later. Let's go!",
+      "A few minutes to set things up. After that, I'll walk with you every day and handle the organizing in the background.\nYou can focus on what actually matters.",
+    "welcome.slide3.abschluss": "From here on, you don't have to remember everything — I'll remind you.",
     "welcome.button.los": "Let's go",
   },
   tr: {
     "welcome.skip": "Atla",
-    "welcome.slide1.titel": "Merhaba, ben Aka — senin yönetici sağ kolun.",
+    "welcome.slide1.titel": "Zihnin hayat için var — ezberlemek için değil.",
     "welcome.slide1.text":
-      "Sağlığını ve rutinlerini artık tek başına kafanda yönetmek zorunda değilsin. Lojistiği ben hallederim: peptidler, ilaçlar, takviyeler, alışkanlıklar, uyku, hidrasyon, beslenme ve antrenman tek bir yerde — dağınık notlar ve belleğin yerine.",
-    "welcome.slide2.titel": "Nasıl çalışır",
+      "Merhaba, ben Aka. 👋\nRutinlerini düzenlemene ve önemli şeyleri hatırlamana yardımcı oluyorum — böylece her şeyi kafanda tutmak zorunda kalmazsın.",
+    "welcome.slide2.titel": "Her şey tek bir yerde.",
     "welcome.slide2.text":
-      "Günlük planınız size her gün tam olarak neyin gerekli olduğunu gösterir — bir kez dokunun ve tamamlanır. Tüm ayrıntılar (miktar, alım yöntemi, karışımlar) ihtiyacınız olduğunda Protokollerde açıkça görüntülenir.",
-    "welcome.slide3.titel": "Şimdi biraz çaba, sonra huzur",
+      "İlaçlar, takviyeler, peptidler, hormonlar, uyku, beslenme ve alışkanlıklar — hepsi tek bir yerde, tam ihtiyacın olduğunda hazır.\nNot kağıdı yok. Beş farklı uygulama yok. Gereksiz arama yok.",
+    "welcome.slide3.titel": "Küçük adımlar. Büyük rahatlama.",
     "welcome.slide3.text":
-      "Protokolünüzü ayarlamak için bugün birkaç dakika — ve sonrasında, üzerinde düşünmeden her şey kontrol altında olacak. Her alanı şimdi ayarlayabilir veya atlayabilir ve sonra tamamlayabilirsiniz. Başlayalım!",
+      "Kurulum için birkaç dakika. Sonrasında sana her gün eşlik ediyor ve organizasyonu arka planda üstleniyorum.\nGerçekten önemli olana odaklanabilirsin.",
+    "welcome.slide3.abschluss": "Artık her şeyi hatırlamak zorunda değilsin — sana ben hatırlatacağım.",
     "welcome.button.los": "Başlayalım",
   },
 };
