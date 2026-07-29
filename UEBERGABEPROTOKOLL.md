@@ -273,6 +273,30 @@ Apple/Headspace/Notion-Onboarding.
   Sprachen geprüft (Text bricht nirgends unschön um, Illustrationen
   bleiben lesbar).
 
+### Bugfix: Abmelden-Ausweg im Erst-Onboarding fehlte (Nachtrag 29.07.)
+
+**Bug (Nutzerin-Meldung):** Wer sich zum ersten Mal anmeldet, aber das
+Onboarding nicht in einem Zug durchläuft, blieb nach einem Seiten-Refresh
+im Willkommens-Screen hängen — ohne jeden Weg zurück zu Abmelden/Neu-
+anmelden. Das Hängenbleiben selbst beim Refresh ist gewollt (`onboarding_
+complete` liegt in der DB, nicht im Client-State — Onboarding wird
+korrekt fortgesetzt), der eigentliche Bug war: `AuthenticatedApp.jsx`
+übergab `<OnboardingFlow>` für Erstanmeldungen gar kein `onCancel`,
+und `WelcomeView.jsx`/die `welcome`-Phase in `OnboardingFlow.jsx` kannten
+das Prop bislang gar nicht (nur alle Screens danach hatten den
+`onCancel`-Abbrechen-Mechanismus, der aber schon für bestehende Konten,
+die das Protokoll neu einrichten, existierte).
+
+**Fix:** `AuthenticatedApp.jsx` übergibt jetzt `signOut` (aus `useAuth()`)
+als `onCancel` an `<OnboardingFlow>` bei Erstanmeldungen.
+`OnboardingFlow.jsx` reicht `onCancel` in der `welcome`-Phase an
+`WelcomeView` weiter (vorher dort schlicht nicht verdrahtet).
+`WelcomeView.jsx` zeigt bei gesetztem `onCancel` einen dezenten
+"Abmelden"-Link unter dem Haupt-Button (bewusst unauffällig, kollidiert
+nicht mit Sprach-Umschalter/"Überspringen" oben) — nutzt den bereits
+vorhandenen Übersetzungsschlüssel `mehr.konto.abmelden` (DE/EN/TR schon
+vorhanden). Reine Frontend-Änderung, kein Supabase-Deploy nötig.
+
 ### Wochenübersicht & PDF-Export (existiert schon — Nachtrag 28.07.)
 
 **Wichtig:** diese Funktion war vor dem heutigen Nachtrag in diesem
@@ -967,7 +991,10 @@ Das Erinnerungs-/Push-System deckt jetzt **alle 9 Kategorien** ab und ist
 letzten großen Bestandsaufnahme sind abgearbeitet: Notfallmodus-
 Dokumentation, KI an/aus-Schalter, automatische "ausgefallen"-Erfassung,
 Compliance für alle 9 Bereiche, Korrelationserkennung (Abschnitt 4a).
-Kein offener manueller Deploy-Schritt mehr. Nächster sinnvoller
-Ansatzpunkt: verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a.
-Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein akuter
-Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.
+Kein offener manueller Deploy-Schritt mehr. Zusätzlich behoben: Erst-
+Onboarding hatte keinen Abmelden-Ausweg, wenn es nicht in einem Zug
+durchlaufen wurde (siehe Nachtrag 29.07. bei den Willkommens-Folien) —
+gefixt, reine Frontend-Änderung. Nächster sinnvoller Ansatzpunkt:
+verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a. Punkte 4-7,
+alle bewusst zurückgestellt/verworfen, kein akuter Handlungsbedarf) oder
+auf neue Rückmeldung der Nutzerin warten.
