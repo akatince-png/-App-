@@ -1,7 +1,7 @@
 import React from "react";
 import { Shell } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { accent, cardBorder, textMuted } from "../../ui/theme";
+import { cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
 import { KATEGORIE_META } from "../../utils/dayItems";
 import Icon from "../../ui/Icon";
@@ -43,6 +43,12 @@ const TAB_ZU_KATEGORIE = {
   peptide: "peptid",
 };
 
+// Eigene Farbe für den Reiter-Button von "wochenuebersicht" — bewusst NICHT
+// die generische Akzentfarbe (`accent`), weil genau die schon fest an
+// "Peptide" vergeben ist (KATEGORIE_META.peptid.dot) und beide Reiter sonst
+// beim Anwählen identisch aussehen (bestätigter Bug, 29.07.).
+const WOCHENUEBERSICHT_FARBE = "#64748B";
+
 // "Alle Pläne"-Hub — bündelt die 7 Kategorien, die aktiv mit Zeiten/Zielen
 // geplant werden, unter einem gemeinsamen Reiter-Kopf statt als eigene
 // Dashboard-Kacheln. Gleiches Muster wie PlanView.jsx (Statistik/Profil/
@@ -57,12 +63,7 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
 
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {PLAENE_TABS.map((t) => {
-          // Fällt auf die generische Akzentfarbe zurück, wenn die Kategorie
-          // (aktuell nur "wochenuebersicht") keine eigene KATEGORIE_META-Farbe
-          // hat — sonst wurden Hintergrund UND Text beide weiß (weil beide
-          // auf denselben "dot"-Wert zurückfielen) und der aktive Reiter
-          // wirkte beim Antippen unsichtbar/leer (bestätigter Bug, 29.07.).
-          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || accent;
+          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || WOCHENUEBERSICHT_FARBE;
           const aktiv = planeTab === t.id;
           return (
             <button
