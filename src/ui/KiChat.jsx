@@ -83,16 +83,24 @@ export default function KiChat({
   autoStart = false,
 }) {
   const appData = useAppData();
-  const { coachVerlaufLaden, coachNachrichtSpeichern } = appData;
+  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext } = appData;
   // "Background Brain" für den ADHS Coach — statische Wissens-Basis (siehe
   // src/wissen/) + aktuelle Trackingdaten-Zusammenfassung, automatisch an
   // JEDE Coach-Anfrage angehängt, in allen Bereichen (nicht nur Home) —
   // damit der Coach unabhängig vom Gesprächsthema echten Hintergrund über
-  // die Nutzerin hat, statt bei jeder Anfrage bei null anzufangen.
-  const hintergrundKontext = useMemo(
-    () => `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}`,
-    [appData]
-  );
+  // die Nutzerin hat, statt bei jeder Anfrage bei null anzufangen. Zusätzlich
+  // offene "Kontext"-Hinweise vom Admin-Dashboard (0036_admin_notizen.sql) —
+  // z. B. "beim nächsten Mal Übung X genauer erklären" — der Coach baut sie
+  // von sich aus ein, es wird NIE wörtlich als "Nachricht vom Admin" gezeigt
+  // (Nutzerin-Vorgabe: der Assistent soll wie ihr Mitarbeiter wirken).
+  const hintergrundKontext = useMemo(() => {
+    const hinweise = (adminNotizenKontext || []).filter((n) => !n.bereich || n.bereich === bereich);
+    const hinweiseText = hinweise.length
+      ? `\n\nHINWEISE FÜR DICH ALS ASSISTENT (nicht wörtlich vorlesen oder als "Hinweis" ankündigen, einfach natürlich ins Gespräch einbauen):\n${hinweise.map((h) => `- ${h.text}`).join("\n")}`
+      : "";
+    return `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}${hinweiseText}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, adminNotizenKontext, bereich]);
   const [offen, setOffen] = useState(() => autoStart);
   const [verlauf, setVerlauf] = useState([]);
   const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);

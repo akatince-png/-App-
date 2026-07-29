@@ -22,6 +22,7 @@ import { useAenderungsprotokoll } from "../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../data/useLexikon";
 import { useCoachVerlauf } from "../data/useCoachVerlauf";
+import { useAdminNotizen } from "../data/useAdminNotizen";
 import { useHauptprotokollData } from "../data/useHauptprotokollData";
 
 const AppDataContext = createContext(null);
@@ -59,6 +60,7 @@ export function AppDataProvider({ children }) {
   const wochenprotokollMeilenstein = useWochenprotokollMeilenstein(userId);
   const lexikon = useLexikon();
   const coachVerlaufData = useCoachVerlauf(userId);
+  const adminNotizenData = useAdminNotizen(userId);
 
   const value = {
     userId,
@@ -96,6 +98,7 @@ export function AppDataProvider({ children }) {
     ...wochenprotokollMeilenstein,
     ...lexikon,
     ...coachVerlaufData,
+    ...adminNotizenData,
     ...hauptprotokollData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.

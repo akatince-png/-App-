@@ -1,8 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Shell, Card, PrimaryButton, TextInput, Label } from "../../ui/primitives";
+import { Shell, Card, PrimaryButton, TextInput, TextArea, Label, Pill } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { accentDark, accentSoft, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
+import { accentDark, accentSoft, cardBorder, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
+import { useAuth } from "../../context/AuthContext";
+
+// Bereiche, in denen KiChat.jsx tatsächlich mit bereich="..." aufgerufen
+// wird (siehe grep über src/views) — muss exakt übereinstimmen, sonst
+// landet ein Hinweis nie im richtigen Chat. "Allgemein" (bereich: null)
+// gilt bereichsübergreifend, inkl. des Home-Assistenten.
+const BEREICH_OPTIONEN = [
+  { value: "", label: "Allgemein" },
+  { value: "training", label: "Training" },
+  { value: "ernaehrung", label: "Ernährung" },
+  { value: "hydration", label: "Hydration" },
+  { value: "tageslicht", label: "Tageslicht" },
+  { value: "schlaf", label: "Schlaf" },
+  { value: "supplemente", label: "Supplemente" },
+  { value: "medikamente", label: "Medikamente" },
+  { value: "peptide", label: "Peptide" },
+  { value: "gewohnheiten", label: "Gewohnheiten" },
+];
 
 // Admin-Dashboard: Übersicht aller Probandinnen/Probanden + Möglichkeit,
 // stellvertretend für jemanden die App zu bedienen ("Verwalten"-Knopf →
@@ -11,11 +29,13 @@ import { supabase } from "../../lib/supabaseClient";
 // gedrückt wird, läuft die komplette App unverändert weiter, nur mit den
 // Daten der ausgewählten Person statt der eigenen (siehe AppDataContext.jsx).
 export default function AdminDashboardView({ onHome, onVerwalteAls }) {
+  const { user } = useAuth();
   const [probanden, setProbanden] = useState([]);
   const [ladend, setLadend] = useState(true);
   const [fehler, setFehler] = useState(null);
   const [suche, setSuche] = useState("");
   const [formOffen, setFormOffen] = useState(false);
+  const [notizFuer, setNotizFuer] = useState(null); // proband.id | null
 
   const ladeProbanden = async () => {
     setLadend(true);
@@ -102,17 +122,149 @@ export default function AdminDashboardView({ onHome, onVerwalteAls }) {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => onVerwalteAls({ id: p.id, email: p.email, vorname: p.vorname })}
-              className="mp-tap"
-              style={{ flexShrink: 0, padding: "11px 16px", borderRadius: 12, border: "none", background: accentDark, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-            >
-              Verwalten
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => onVerwalteAls({ id: p.id, email: p.email, vorname: p.vorname })}
+                className="mp-tap"
+                style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: accentDark, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+              >
+                Verwalten
+              </button>
+              <button
+                onClick={() => setNotizFuer((v) => (v === p.id ? null : p.id))}
+                className="mp-tap"
+                style={{ padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+              >
+                {notizFuer === p.id ? "Schließen" : "Hinweis"}
+              </button>
+            </div>
           </div>
+          {notizFuer === p.id && <AdminNotizPanel proband={p} adminId={user?.id} />}
         </Card>
       ))}
     </Shell>
+  );
+}
+
+// Hinweise/Nachrichten für EINE Person hinterlassen, ohne "Verwalten"
+// nutzen zu müssen — z. B. schnell zwischendurch "beim nächsten Training
+// die Übung genauer erklären" notieren. Läuft über den Assistenten, siehe
+// 0036_admin_notizen.sql + useCoachVerlauf.js/KiChat.jsx: die Person
+// bekommt es nie als separate "Nachricht vom Admin" zu sehen.
+function AdminNotizPanel({ proband, adminId }) {
+  const [notizen, setNotizen] = useState([]);
+  const [ladend, setLadend] = useState(true);
+  const [bereich, setBereich] = useState("");
+  const [modus, setModus] = useState("nachricht");
+  const [text, setText] = useState("");
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false);
+  const [fehler, setFehler] = useState(null);
+
+  const laden = async () => {
+    setLadend(true);
+    const { data, error } = await supabase
+      .from("admin_notizen")
+      .select("id, bereich, modus, text, status, erstellt_am")
+      .eq("user_id", proband.id)
+      .order("erstellt_am", { ascending: false });
+    if (!error) setNotizen(data || []);
+    setLadend(false);
+  };
+
+  useEffect(() => {
+    laden();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proband.id]);
+
+  const absenden = async () => {
+    setFehler(null);
+    if (!text.trim()) {
+      setFehler("Bitte einen Text eingeben.");
+      return;
+    }
+    setSpeichernLaeuft(true);
+    const { error } = await supabase
+      .from("admin_notizen")
+      .insert({ user_id: proband.id, admin_id: adminId, bereich: bereich || null, modus, text: text.trim() });
+    setSpeichernLaeuft(false);
+    if (error) {
+      setFehler(error.message);
+      return;
+    }
+    setText("");
+    laden();
+  };
+
+  const loeschen = async (id) => {
+    await supabase.from("admin_notizen").delete().eq("id", id);
+    setNotizen((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const bereichLabel = (value) => BEREICH_OPTIONEN.find((b) => b.value === (value || ""))?.label || value;
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+      <Label>Bereich</Label>
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
+        {BEREICH_OPTIONEN.map((b) => (
+          <Pill key={b.value} label={b.label} selected={bereich === b.value} onClick={() => setBereich(b.value)} />
+        ))}
+      </div>
+
+      <Label>Art</Label>
+      <div style={{ display: "flex" }}>
+        <Pill label="Direkte Nachricht" selected={modus === "nachricht"} onClick={() => setModus("nachricht")} />
+        <Pill label="Hintergrund-Hinweis" selected={modus === "kontext"} onClick={() => setModus("kontext")} />
+      </div>
+      <div style={{ fontSize: 11.5, color: textMuted, marginTop: -6, marginBottom: 12, lineHeight: 1.5 }}>
+        {modus === "nachricht"
+          ? "Wird als nächste Nachricht vom Assistenten zugestellt, sobald die Person den Chat im gewählten Bereich das nächste Mal öffnet."
+          : "Der Assistent bekommt es als Hintergrundwissen und baut es von sich aus ins Gespräch ein, sobald es passt — bleibt aktiv, bis du es hier löschst."}
+      </div>
+
+      <TextArea value={text} onChange={setText} placeholder='z. B. "Beim nächsten Mal die Kniebeuge-Technik genauer erklären."' />
+
+      <div style={{ marginTop: 10 }}>
+        <PrimaryButton onClick={absenden} disabled={speichernLaeuft}>
+          {speichernLaeuft ? "Speichert…" : "Hinterlassen"}
+        </PrimaryButton>
+      </div>
+      {fehler && <div style={{ fontSize: 12.5, color: danger, marginTop: 8 }}>{fehler}</div>}
+
+      {!ladend && notizen.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Label>Bisherige Hinweise</Label>
+          {notizen.map((n) => (
+            <div
+              key={n.id}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 8,
+                padding: "10px 0",
+                borderBottom: `1px solid ${cardBorder}`,
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: textMuted, marginBottom: 3 }}>
+                  {bereichLabel(n.bereich)} · {n.modus === "nachricht" ? "Nachricht" : "Hintergrund"} ·{" "}
+                  {n.status === "zugestellt" ? "zugestellt" : "offen"}
+                </div>
+                <div style={{ fontSize: 13 }}>{n.text}</div>
+              </div>
+              <button
+                onClick={() => loeschen(n.id)}
+                className="mp-tap"
+                style={{ flexShrink: 0, border: "none", background: "transparent", color: danger, fontSize: 12, cursor: "pointer", padding: "4px 6px" }}
+              >
+                Löschen
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

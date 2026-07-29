@@ -11,6 +11,31 @@ export function useCoachVerlauf(userId) {
   const coachVerlaufLaden = useCallback(
     async (bereich) => {
       if (!userId) return [];
+      // Offene "Nachricht"-Hinweise vom Admin für diesen Bereich (oder
+      // bereichsübergreifend, bereich = null) zuerst zustellen — landen als
+      // ganz normale Coach-Nachricht im Verlauf, siehe 0036_admin_notizen.sql.
+      // Funktioniert sowohl im "Verwalten als"-Modus als auch später, wenn
+      // die Person selbst mit ihrem eigenen Konto den Chat öffnet.
+      const { data: offeneNotizen } = await supabase
+        .from("admin_notizen")
+        .select("id, text")
+        .eq("user_id", userId)
+        .eq("modus", "nachricht")
+        .eq("status", "offen")
+        .or(`bereich.is.null,bereich.eq.${bereich}`);
+      if (offeneNotizen?.length) {
+        for (const notiz of offeneNotizen) {
+          await supabase.from("coach_nachrichten").insert({ user_id: userId, bereich, rolle: "coach", text: notiz.text });
+        }
+        await supabase
+          .from("admin_notizen")
+          .update({ status: "zugestellt", zugestellt_am: new Date().toISOString() })
+          .in(
+            "id",
+            offeneNotizen.map((n) => n.id)
+          );
+      }
+
       const { data, error } = await supabase
         .from("coach_nachrichten")
         .select("rolle, text")

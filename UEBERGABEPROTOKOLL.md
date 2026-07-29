@@ -915,6 +915,62 @@ geräte-, nicht kontogebunden — wenn der Admin während der Verwaltung fremd
 das der Probandin/des Probanden; das UI verhindert das nicht aktiv, der
 Admin muss es einfach nicht anklicken (kein Automatismus, der es versehentlich auslöst).
 
+**Status:** Migration 0035 + Edge Function `admin-create-proband` sind von
+der Nutzerin deployt und bestätigt (`is_admin` gesetzt, Dashboard sichtbar).
+
+---
+
+## 4c. Nachtrag 29.07. — Admin-Hinweise über den Assistenten zustellen
+
+**Auftrag der Nutzerin:** Acker soll sich wie "ihr Mitarbeiter am Kunden"
+verhalten — sie will ihm Dinge mitgeben können ("beim nächsten Mal die
+Übung X erklären"), oder eine Nachricht hinterlassen, die die Person nach
+der nächsten Aktion in einem Bereich bekommt. Explizit NICHT als separates
+"Nachricht vom Admin"-Postfach — es soll wirken, als käme es natürlich von
+Acker selbst.
+
+**Zwei Modi, beide über `admin_notizen` (Migration
+`0036_admin_notizen.sql` — NOCH NICHT DEPLOYT):**
+- **`kontext`** — Hintergrundwissen, fließt bei JEDER Chat-Anfrage im
+  passenden Bereich in den ohnehin schon bestehenden "Background
+  Brain"-Kontext ein (`KiChat.jsx`, `hintergrundKontext`, direkt neben
+  `wissensBasisText()`/`trackingZusammenfassung()`). Bleibt aktiv, bis der
+  Admin es im Dashboard löscht — wird der Person NIE wörtlich gezeigt, der
+  Assistent bekommt nur die Anweisung "natürlich einbauen, nicht als
+  Hinweis ankündigen".
+- **`nachricht`** — wird als eigene Coach-Nachricht zugestellt, sobald die
+  Person den Chat im gewählten Bereich (oder bereichsübergreifend, falls
+  kein Bereich gewählt) das nächste Mal öffnet. Umgesetzt in
+  `useCoachVerlauf.js`: `coachVerlaufLaden(bereich)` prüft vor dem Laden
+  des Verlaufs erst auf offene Nachrichten, schreibt sie als ganz normale
+  `coach_nachrichten`-Zeile (rolle "coach") und markiert sie als
+  zugestellt — dadurch taucht die Nachricht 1:1 wie eine normale Antwort
+  von Acker im Chat auf, keine Sonderbehandlung in der Anzeige nötig.
+
+Funktioniert unabhängig davon, ob der Admin gerade "verwaltet" oder die
+Person später selbst mit ihrem eigenen Konto den Chat öffnet — beide Male
+läuft dieselbe `userId`-basierte Logik.
+
+**Neu in `src/views/admin/AdminDashboardView.jsx`:** pro Proband ein
+"Hinweis"-Knopf neben "Verwalten" (kein Wechsel ins fremde Konto nötig für
+eine schnelle Notiz) — öffnet ein Panel mit Bereichs-Auswahl (die 10
+Bereiche, in denen KiChat tatsächlich mit `bereich="..."` läuft, siehe
+Konstante `BEREICH_OPTIONEN`), Modus (Nachricht/Hintergrund), Textfeld,
+plus eine Liste bisheriger Hinweise mit Zustellstatus (offen/zugestellt)
+und Löschen-Knopf.
+
+**Datenschutz/Rechte:** eigene RLS-Policies (nicht die additive
+Admin-Policy aus 0035, sondern eigens definiert) — die Probandin/der
+Proband darf die eigenen Notizen nur LESEN und als "zugestellt"
+markieren, NICHT selbst welche anlegen oder löschen. Nur der Admin kann
+schreiben/löschen (über `is_admin(auth.uid())`, dieselbe Hilfsfunktion
+wie in 0035).
+
+**⚠️ Für die Nutzerin — noch ein Deploy-Schritt:** Migration
+`0036_admin_notizen.sql` im Supabase-Dashboard unter "SQL Editor"
+einfügen und ausführen (gleiches Vorgehen wie bei 0035). Kein neuer
+Edge-Function-Schritt nötig, kein erneutes `is_admin`-Setzen.
+
 ---
 
 ## 5. Erinnerungs-/Push-System
@@ -1088,13 +1144,18 @@ Zusätzlich behoben: Erst-Onboarding hatte keinen Abmelden-Ausweg, wenn es
 nicht in einem Zug durchlaufen wurde (siehe Nachtrag 29.07. bei den
 Willkommens-Folien) — gefixt, reine Frontend-Änderung.
 
-**Neu, NOCH NICHT von der Nutzerin deployt:** Admin-Dashboard
-("Verwalten als"-Modus), siehe Abschnitt 4b im Detail. Migration
-`0035_admin_dashboard.sql` + Edge Function `admin-create-proband` müssen
-über das Supabase-Dashboard eingespielt werden, danach sich selbst per
-SQL einmalig `is_admin = true` setzen — genaue Schritte in Abschnitt 4b
-am Ende. Bis dahin ist der Code im Repo, aber der "Admin-Dashboard"-Eintrag
-unter "Mehr" bleibt unsichtbar (kein `is_admin` in der DB gesetzt).
+**Admin-Dashboard** ("Verwalten als"-Modus, Abschnitt 4b) ist deployt und
+live — Migration 0035 + Edge Function `admin-create-proband` sind
+eingespielt, die Nutzerin ist als Admin markiert und sieht das Dashboard
+unter "Mehr".
+
+**Neu, NOCH NICHT deployt:** Admin-Hinweise über den Assistenten
+zustellen (Abschnitt 4c) — Acker kann jetzt Hintergrundwissen oder direkte
+Nachrichten bekommen, die der Admin pro Proband hinterlässt, ohne dass es
+wie ein separates Verwaltungs-Postfach wirkt. Braucht noch Migration
+`0036_admin_notizen.sql` im Supabase-Dashboard (SQL Editor, gleiches
+Vorgehen wie bei 0035) — kein neuer Edge-Function-Schritt, kein erneutes
+`is_admin`-Setzen nötig.
 
 Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy dieser beiden
 Bausteine helfen (analog zum `send-due-reminders`-Deploy), danach
