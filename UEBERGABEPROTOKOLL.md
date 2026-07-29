@@ -868,14 +868,12 @@ Beschreibung aller sechs an diesem Tag geschlossenen Lücken.
   alle 30 Min. weiter nerven) — aktuell genau EIN Nachfass-Ping pro
   verpasstem Termin, keine Eskalation.
 
-**⚠️ Braucht Deploy durch die Nutzerin** (Agent-Sandbox hat keinen
-Supabase-Zugriff): Supabase Dashboard → Edge Functions →
-`send-due-reminders` → Code ersetzen durch den Inhalt von
-`supabase/functions/send-due-reminders/index.ts` → Redeploy. Keine neuen
-Secrets nötig — `CRON_SECRET`/VAPID-Keys sind bereits gesetzt.
-Push-Berechtigung auf dem jeweiligen Gerät (unter "Mehr") bleibt weiterhin
-Voraussetzung. Dies ist jetzt der EINZIGE noch offene manuelle Schritt aus
-der kompletten Liste in Abschnitt 6.
+**✅ Deployt (29.07.).** Die Nutzerin hat `send-due-reminders` über das
+Supabase Dashboard neu deployt (Code manuell ersetzt, kein Secret nötig).
+Damit ist der letzte offene manuelle Schritt aus der kompletten Liste in
+Abschnitt 6 erledigt — Push-Berechtigung auf dem jeweiligen Gerät (unter
+"Mehr") bleibt weiterhin Voraussetzung, damit tatsächlich Benachrichtigungen
+ankommen.
 
 ---
 
@@ -883,7 +881,7 @@ der kompletten Liste in Abschnitt 6.
 
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
-| 1 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten/Hydration, jetzt inkl. Vorab- (15 Min. vorher) und Nachfass-Erinnerung (10 Min. Verspätung) | Code fertig, **braucht Deploy durch Nutzerin** — siehe Abschnitt 5 | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
+| 1 | Erinnerungs-Versand für alle 9 Bereiche, inkl. Vorab- (15 Min. vorher) und Nachfass-Erinnerung (10 Min. Verspätung) | ✅ Erledigt (29.07.) — `send-due-reminders` deployt, siehe Abschnitt 5 | — |
 | 2 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | ✅ Erledigt (29.07.) — `training_wochenplan`/`meal_wochenplan` hatten schon eine `uhrzeit`-Spalte, jetzt an `send-due-reminders` angeschlossen | — |
 | 3 | Erinnerungs-Versand für Tageslicht/Schlaf | ✅ Erledigt (29.07.) — eigene Uhrzeiten-Liste wie bei Hydration (`ZeitErinnerungenCard.jsx`), keine neue Migration nötig | — |
 | 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung) — Code fertig, kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
@@ -895,7 +893,7 @@ der kompletten Liste in Abschnitt 6.
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
 | 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
-| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | ✅ Vollständig erledigt (29.07.), siehe Abschnitt 4a im Detail — Erinnerungen jetzt für alle 9 Bereiche, automatische "ausgefallen"-Erfassung, Notfallmodus-Dokumentation, KI an/aus-Schalter, Korrelationserkennung, Compliance für alle 9 Bereiche. **Braucht Deploy durch Nutzerin** (Abschnitt 5) für den Erinnerungs-Teil | Deploy von `send-due-reminders` |
+| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | ✅ Vollständig erledigt (29.07.), siehe Abschnitt 4a im Detail — Erinnerungen jetzt für alle 9 Bereiche (inkl. Deploy von `send-due-reminders` durch die Nutzerin bestätigt), automatische "ausgefallen"-Erfassung, Notfallmodus-Dokumentation, KI an/aus-Schalter, Korrelationserkennung, Compliance für alle 9 Bereiche | — |
 
 ---
 
@@ -960,11 +958,16 @@ der kompletten Liste in Abschnitt 6.
 
 ---
 
-**Letzte Aktualisierung:** 28.07.2026, nachts. Coach ist jetzt exekutiver
+**Letzte Aktualisierung:** 29.07.2026. Coach ist jetzt exekutiver
 Assistent (nicht "Coach") in allen 9 Bereichen + Home/Tagesplan/
 Wochenübersicht, Onboarding hat zwei gleichwertige Begleitungs-Phasen,
-Design ist auf weißen Untergrund + bereichseigene Farben umgestellt, und
-das Erinnerungs-/Push-System deckt jetzt 5 von 9 Kategorien ab (Code
-fertig, Deploy durch Nutzerin steht für die neuen 4 noch aus). Nächster
-sinnvoller Ansatzpunkt: offene Punkte in Abschnitt 6 durchgehen,
-insbesondere Punkt 1 (Erinnerungs-Deploy) mit der Nutzerin abschließen.
+Design ist auf weißen Untergrund + bereichseigene Farben umgestellt.
+Das Erinnerungs-/Push-System deckt jetzt **alle 9 Kategorien** ab und ist
+**deployt und bestätigt aktiv** (siehe Abschnitt 5). Alle Punkte aus der
+letzten großen Bestandsaufnahme sind abgearbeitet: Notfallmodus-
+Dokumentation, KI an/aus-Schalter, automatische "ausgefallen"-Erfassung,
+Compliance für alle 9 Bereiche, Korrelationserkennung (Abschnitt 4a).
+Kein offener manueller Deploy-Schritt mehr. Nächster sinnvoller
+Ansatzpunkt: verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a.
+Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein akuter
+Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.
