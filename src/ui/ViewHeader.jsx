@@ -29,8 +29,8 @@ export default function ViewHeader({ title, onHome, homeTitle = "Zur Startseite"
       >
         ⌂
       </button>
-      <Logo size={30} />
-      {title && <div style={{ fontSize: 15, fontWeight: 800, marginLeft: 2 }}>{title}</div>}
+      <Logo size={38} />
+      {title && <div style={{ fontSize: 16, fontWeight: 800, marginLeft: 2 }}>{title}</div>}
     </div>
   );
 }

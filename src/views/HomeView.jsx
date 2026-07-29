@@ -377,13 +377,13 @@ export default function HomeView({ onOpenView }) {
     <Shell>
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <Logo size={40} />
-          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 16, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
+          <Logo size={52} />
+          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 19, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
         </div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: textMuted, marginBottom: 4 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: textMuted, marginBottom: 4 }}>
           {userName ? `${gruss}, ${userName}` : gruss}
         </div>
-        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>
+        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.3 }}>
           {getCoachName()} ist einsatzbereit. Was verwalten wir heute?
         </div>
       </div>

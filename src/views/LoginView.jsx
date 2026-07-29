@@ -67,9 +67,9 @@ export default function LoginView() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 40, marginBottom: 32 }}>
-        <Logo size={64} />
-        <div style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginTop: 16 }}>AKA</div>
-        <div style={{ fontSize: 13, color: textMuted, marginTop: 4, textAlign: "center" }}>Deine exekutive rechte Hand</div>
+        <Logo size={84} />
+        <div style={{ fontSize: 28, fontWeight: 800, textAlign: "center", marginTop: 16 }}>AKA</div>
+        <div style={{ fontSize: 14.5, color: textMuted, marginTop: 4, textAlign: "center" }}>Deine exekutive rechte Hand</div>
       </div>
 
       <div
