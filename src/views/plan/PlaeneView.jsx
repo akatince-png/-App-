@@ -70,6 +70,36 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
     <Shell bereich={TAB_ZU_KATEGORIE[planeTab]}>
       <ViewHeader title="Deine aktiven Systeme" onHome={onHome} />
 
+      {/* Routinen bewusst VOR den 9 Reitern (Nutzerinnen-Vorgabe, 29.07.:
+          Priorität) — nicht nachträglich angehängt. */}
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Routinen</div>
+      {ROUTINEN_EINTRAEGE.map((r) => (
+        <button
+          key={r.id}
+          onClick={() => setPlaneTab(r.id)}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${cardBorder}`,
+            background: "#fff",
+            marginBottom: 8,
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Icon name={r.icon} size={16} color={KATEGORIE_META.gewohnheit.dot} />
+            <span style={{ fontSize: 14, fontWeight: 700 }}>{r.label}</span>
+          </div>
+          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+        </button>
+      ))}
+
+      <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Pläne</div>
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {PLAENE_TABS.map((t) => {
           const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || WOCHENUEBERSICHT_FARBE;
@@ -103,33 +133,6 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
       </div>
 
       <Aktiv embedded initialSessionId={initialSessionId} onConsumedInitialSession={onConsumedInitialSession} />
-
-      <div style={{ fontSize: 14, fontWeight: 800, margin: "24px 0 8px" }}>Routinen</div>
-      {ROUTINEN_EINTRAEGE.map((r) => (
-        <button
-          key={r.id}
-          onClick={() => setPlaneTab(r.id)}
-          className="mp-tap"
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "13px 16px",
-            borderRadius: 14,
-            border: `1px solid ${cardBorder}`,
-            background: "#fff",
-            marginBottom: 8,
-            cursor: "pointer",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Icon name={r.icon} size={16} color={KATEGORIE_META.gewohnheit.dot} />
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{r.label}</span>
-          </div>
-          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
-        </button>
-      ))}
     </Shell>
   );
 }
