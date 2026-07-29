@@ -54,12 +54,30 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
 
   const einleitung = `Hi, ich bin ${coachName}! Erzähl mir einfach frei von dir — wie du heißt, was deine Ziele sind, und etwas zu dir (Geschlecht, Geburtsdatum, Größe, Gewicht). Du musst nicht alles auf einmal sagen.`;
 
-  // Begrüßung einmalig vorlesen, sobald der Bildschirm erscheint — sonst
-  // würde die Person die erste Ansage nur lesen, obwohl "Vorlesen" an ist.
+  // Mikrofon direkt starten, ohne dass extra angetippt werden muss — die
+  // Wahl "Ja, ich erzähl frei" auf dem vorherigen Bildschirm gilt als
+  // durchgehende Zustimmung fürs ganze Gespräch, nicht nur für den Anfang.
+  const mikrofonStarten = () => {
+    setHoert(true);
+    stopErkennungRef.current = starteSprachErkennung({
+      onErgebnis: (text) => setEingabe((prev) => (prev ? `${prev} ${text}` : text)),
+      onEnde: () => setHoert(false),
+      onFehler: () => setHoert(false),
+    });
+  };
+
+  // Begrüßung sofort vorlesen, sobald der Bildschirm erscheint, und direkt
+  // danach automatisch zuhören — statt zu warten, dass erst noch auf den
+  // Orb getippt wird.
   useEffect(() => {
     if (eingeleitetRef.current) return;
     eingeleitetRef.current = true;
-    if (vorlesenAktiv) sprich(einleitung);
+    const kannHoeren = spracherkennungVerfuegbar();
+    if (vorlesenAktiv) {
+      sprich(einleitung, { onEnde: () => kannHoeren && mikrofonStarten() });
+    } else if (kannHoeren) {
+      mikrofonStarten();
+    }
     return () => sprachausgabeStoppen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -70,14 +88,9 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
       setHoert(false);
       return;
     }
-    setHoert(true);
     // Barge-in: eigenes Sprechen unterbricht eine gerade laufende Vorlese-Antwort.
     sprachausgabeStoppen();
-    stopErkennungRef.current = starteSprachErkennung({
-      onErgebnis: (text) => setEingabe((prev) => (prev ? `${prev} ${text}` : text)),
-      onEnde: () => setHoert(false),
-      onFehler: () => setHoert(false),
-    });
+    mikrofonStarten();
   };
 
   const senden = async (text) => {
@@ -97,7 +110,12 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
         onTeilantwort: setStreamText,
       });
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
-      if (vorlesenAktiv) sprich(antwort);
+      const kannHoeren = spracherkennungVerfuegbar();
+      if (vorlesenAktiv) {
+        sprich(antwort, { onEnde: () => kannHoeren && mikrofonStarten() });
+      } else if (kannHoeren) {
+        mikrofonStarten();
+      }
     } catch (err) {
       setFehler(err.message);
     } finally {

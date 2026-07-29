@@ -59,12 +59,33 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
   const istLetzter = index === SCHRITTE.length - 1;
   const coachName = getCoachName();
 
+  // Für Text-/Zahlenfelder das Mikrofon direkt starten (ohne erneutes
+  // Antippen) — die Wahl "Frage für Frage" auf dem vorherigen Bildschirm
+  // gilt als durchgehende Zustimmung fürs ganze Gespräch, nicht nur für die
+  // erste Frage.
+  const mikrofonStarten = () => {
+    setHoert(true);
+    stopErkennungRef.current = starteSprachErkennung({
+      onErgebnis: (text) => setWert((prev) => (prev ? `${prev} ${text}` : text)),
+      onEnde: () => setHoert(false),
+      onFehler: () => setHoert(false),
+    });
+  };
+
   // Jede neue Frage vorlesen, sobald sie erscheint — inkl. der ersten beim
-  // Öffnen des Bildschirms. Beim Wechsel zur Bestätigungs-Ansicht
-  // (interpretiert !== null) wird bewusst nichts vorgelesen, das steht
-  // schon direkt lesbar in der Karte.
+  // Öffnen des Bildschirms — und direkt danach automatisch zuhören, statt
+  // darauf zu warten, dass extra angetippt wird. Bei Feldtypen ohne
+  // Spracheingabe (Pillen/Datum) wird nur gefragt, nicht zugehört. Beim
+  // Wechsel zur Bestätigungs-Ansicht (interpretiert !== null) wird bewusst
+  // nichts vorgelesen, das steht schon direkt lesbar in der Karte.
   useEffect(() => {
-    if (vorlesenAktiv && interpretiert === null) sprich(schritt.frage);
+    if (interpretiert !== null) return;
+    const kannHoeren = INTERPRETATION_TYPEN.includes(schritt.typ) && spracherkennungVerfuegbar();
+    if (vorlesenAktiv) {
+      sprich(schritt.frage, { onEnde: () => kannHoeren && mikrofonStarten() });
+    } else if (kannHoeren) {
+      mikrofonStarten();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schritt, interpretiert]);
 
@@ -77,13 +98,8 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
       setHoert(false);
       return;
     }
-    setHoert(true);
     sprachausgabeStoppen();
-    stopErkennungRef.current = starteSprachErkennung({
-      onErgebnis: (text) => setWert((prev) => (prev ? `${prev} ${text}` : text)),
-      onEnde: () => setHoert(false),
-      onFehler: () => setHoert(false),
-    });
+    mikrofonStarten();
   };
 
   const naechsterSchritt = () => {

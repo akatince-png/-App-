@@ -66,17 +66,48 @@ function besteDeutscheStimme() {
   return bevorzugt || stimmen[0];
 }
 
+// Zerlegt Text in einzelne Sätze (an . ! ? getrennt, Satzzeichen bleibt
+// erhalten). Ein einziger langer Utterance klingt auf vielen Geräten
+// (v. a. iOS Safari) abgehackt oder bricht bei längeren Antworten sogar
+// mittendrin ab — mehrere kurze, nacheinander eingereihte Utterances
+// spielt der Browser dagegen lückenlos hintereinander ab und klingt
+// dadurch flüssiger. Keine Lookbehind-Regex (breiterer Browser-Support).
+function saetzeAufteilen(text) {
+  return text
+    .replace(/([.!?])\s+/g, "$1|||")
+    .split("|||")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 // Bricht eine laufende Ausgabe ab statt sie zu stapeln — sonst würden bei
 // mehreren schnellen Coach-Antworten alte Sätze nachträglich noch vorgelesen.
-export function sprich(text) {
-  if (!sprachausgabeVerfuegbar() || !text) return;
+// onEnde (optional) feuert, sobald der letzte Satz fertig gesprochen ist (oder
+// bei einem Fehler) — z. B. um danach automatisch das Mikrofon zu starten.
+export function sprich(text, { onEnde } = {}) {
+  if (!sprachausgabeVerfuegbar() || !text) {
+    onEnde?.();
+    return;
+  }
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "de-DE";
-  utterance.rate = 1.04;
+  const saetze = saetzeAufteilen(text);
+  if (saetze.length === 0) {
+    onEnde?.();
+    return;
+  }
   const stimme = besteDeutscheStimme();
-  if (stimme) utterance.voice = stimme;
-  window.speechSynthesis.speak(utterance);
+  saetze.forEach((satz, i) => {
+    const utterance = new SpeechSynthesisUtterance(satz);
+    utterance.lang = "de-DE";
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    if (stimme) utterance.voice = stimme;
+    if (i === saetze.length - 1) {
+      utterance.onend = () => onEnde?.();
+      utterance.onerror = () => onEnde?.();
+    }
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 export function sprachausgabeStoppen() {

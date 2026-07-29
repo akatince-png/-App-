@@ -369,6 +369,46 @@ es jederzeit über den 🔊/🔈-Knopf abschalten, neu ausgelagert in
 `src/ui/VorlesenToggle.jsx` und an allen drei Stellen (KiChat + beide
 Onboarding-Screens) eingebunden.
 
+**Nachtrag 28.07., zweite Runde — flüssigere Stimme + Auto-Zuhören ohne
+Antippen.** Zwei weitere Rückmeldungen der Nutzerin:
+- *"Die Stimme klingt noch abgehackt."* `sprich()` (`utils/speech.js`)
+  sprach bisher den kompletten Text als EINEN `SpeechSynthesisUtterance`
+  — das klingt auf vielen Geräten (v. a. iOS Safari) stockend und kann
+  bei längeren Antworten sogar mittendrin abbrechen (bekannter
+  Plattform-Bug). `sprich()` zerlegt den Text jetzt in einzelne Sätze und
+  reiht sie als mehrere kurze Utterances hintereinander ein — der Browser
+  spielt die lückenlos nacheinander ab, das klingt spürbar runder.
+  Zusätzlich `rate`/`pitch` auf neutrale Standardwerte (vorher `rate:
+  1.04`, leicht gehetzt). `sprich()` nimmt jetzt außerdem ein optionales
+  `{ onEnde }` entgegen, das feuert, sobald der letzte Satz fertig
+  gesprochen ist — Grundlage für den nächsten Punkt.
+- *Auto-Zuhören ohne erneutes Antippen:* Die Wahl "Frage für Frage" bzw.
+  "frei erzählen" auf `OnboardingIntroView.jsx` galt bisher nur als
+  Einstieg in den jeweiligen Bildschirm — dort musste dann trotzdem noch
+  einmal manuell auf den Orb getippt werden, um das Mikrofon zu starten.
+  Die Nutzerin wollte, dass diese Wahl direkt als durchgehende
+  Zustimmung fürs ganze Gespräch zählt: `OnboardingCoachGuide.jsx` und
+  `OnboardingCoachFreitext.jsx` sprechen jetzt jede Frage/Antwort
+  automatisch UND starten direkt danach (via `sprich(..., { onEnde })`)
+  automatisch das Mikrofon, ohne dass angetippt werden muss — bei
+  `OnboardingCoachGuide.jsx` nur für Feldtypen, die Spracheingabe
+  überhaupt unterstützen (Text/Zahl, nicht Pillen/Datum). Manuelles
+  Antippen des Orbs bleibt weiterhin möglich (Barge-in unterbricht wie
+  gehabt eine laufende Vorlese-Antwort).
+- **Bewusst nicht in dieser Runde:** Die Nutzerin nannte als Beispiele
+  auch Laborwerte/Hydration ("hast Du Laborwerte? Lass uns die
+  eingeben" statt "was ist dein Ferritinspiegel", "wie viel hast Du
+  schon getrunken, was ist dein Tagesziel") — diese Fragen laufen über
+  die generische `KiChat.jsx`-Komponente, eingebettet in
+  `OnboardingCategoriesView.jsx`/`OnboardingLaborwerteView.jsx` mit
+  bereits passenden, kategoriespezifischen System-Prompts
+  (`KATEGORIE_COACH_PROMPTS`). `KiChat.jsx` startet dort aber weiterhin
+  geschlossen (Tap zum Öffnen nötig), OHNE das neue Auto-Zuhören-Muster
+  — das auf alle ~14 `<KiChat>`-Einsatzstellen in der App auszuweiten
+  (Home, Trainingsplan, Ernährung, …) wäre ein deutlich größerer,
+  separater Schritt und war in dieser Runde bewusst nicht mehr
+  enthalten, um nichts überstürzt/inkonsistent umzusetzen.
+
 ### Persona: "Aka" als Sidekick, ausdrücklich kein Coach
 
 `STANDARD_COACH_NAME` in `coachStorage.js` ist `"Aka"`, individuell
