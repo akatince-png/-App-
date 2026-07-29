@@ -709,6 +709,97 @@ Code-Zugriff.
 
 ---
 
+## 4a. Nachtrag 29.07. — alle offenen Punkte aus Abschnitt 6 abgearbeitet
+
+Nutzerinnen-Vorgabe nach einer Bestandsaufnahme ("sind wir jetzt fertig?"):
+alle damals noch offenen Lücken "ohne Ausnahme" schließen. Sechs Punkte,
+alle bereits Teil des Codes (Deploy für den Erinnerungs-Teil steht noch
+aus, siehe Abschnitt 5):
+
+**1. Notfallmodus-Tage werden dokumentiert.** `ADHSModeToggle.jsx` war
+rein clientseitiger UI-Zustand. `HomeView.jsx`s `handleToggleEmergencyMode`
+ruft jetzt zusätzlich `aenderungVermerken({ kategorie: "notfallmodus",
+aktion: "aktiviert"/"beendet", ... })` auf — taucht damit automatisch im
+"📖 Tagesverlauf" (`ProtokollLogView.jsx`) auf. Neuer Eintrag in
+`KATEGORIE_META` (`dayItems.js`) fürs Icon/die Farbe.
+
+**2. KI an/aus-Schalter unter "Mehr".** Neues Pärchen `getKiAktiv()`/
+`saveKiAktiv()` in `coachStorage.js` (localStorage, Default AN). Neue
+Karte oben in `MehrTab.jsx` mit Pill-Umschalter. `KiChat.jsx` rendert bei
+`!getKiAktiv()` komplett `null` (weder schwebender Orb noch offenes
+Fenster) — geprüft sowohl vorm `autoStart`-Mount-Effekt als auch vorm
+finalen Render. Betrifft **nur** die KI-Oberfläche; alle manuellen
+Formulare bleiben davon komplett unberührt (Leitprinzip).
+
+**3. Erinnerungen jetzt für alle 9 Bereiche** (vorher 5 von 9):
+- `src/ui/HydrationErinnerungenCard.jsx` → verallgemeinert zu
+  `src/ui/ZeitErinnerungenCard.jsx` (Prop-gesteuert: `kategorie`,
+  `labelKey`, optional `mengeLabel`) und für **Tageslicht** und **Schlaf**
+  wiederverwendet — beide hatten kein Uhrzeit-Feld, bekommen aber jetzt
+  dieselbe frei editierbare Erinnerungszeiten-Liste wie Hydration
+  (`profiles.erinnerungen[kategorie].zeiten`, keine neue Migration
+  nötig). Eingebaut in `TageslichtView.jsx`, `SchlafView.jsx` UND den
+  jeweiligen Onboarding-Kategorie-Schritten.
+- **Training** (`training_wochenplan`) und **Ernährung**
+  (`meal_wochenplan`) hatten beim genaueren Hinsehen schon jeweils eine
+  echte `uhrzeit`-Spalte im Wochenplan — nur nie an `send-due-reminders`
+  angeschlossen. Jetzt ergänzt: Wochentag-Abgleich (kein Intervallsystem
+  wie bei Peptid/Medikament/Supplement, `training_wochenplan` erlaubt
+  ohnehin nur einen Eintrag pro Wochentag) + Vorab-/Nachfass-Erinnerung
+  wie bei den anderen Kategorien. Nachfass-Check gegen
+  `training_sessions`/`meal_logs` für den jeweiligen Tag.
+- **Keine neue Migration nötig** für den kompletten Punkt — alle
+  gebrauchten Spalten existierten schon.
+
+**4. Automatische "ausgefallen"-Erfassung.** Neuer
+`src/utils/ausgefallenSweep.js`: läuft einmal pro Kalendertag beim Laden
+der App (`AppDataContext.jsx`, `useEffect` mit `sweepLaufendRef`-Schutz
+gegen doppelte Läufe durch Re-Renders). Nutzt `buildDayItems()`
+(`dayItems.js`) — dieselbe Funktion, die auch Tagesplan/Home fürs
+Anzeigen von "was steht heute an" verwenden — für jeden Tag zwischen dem
+letzten Sweep und heute (auf 14 Tage gedeckelt), statt die "was war
+geplant"-Logik ein zweites Mal nachzubauen. Alles mit `done: false` wird
+als `aktion: "ausgefallen"` ins Änderungsprotokoll eingetragen, mit
+Dedup-Check gegen bereits vorhandene Einträge. **Deckt dieselben 6
+Bereiche ab wie `buildDayItems()`**: Peptide, Medikamente, Supplemente,
+Mahlzeiten, Gewohnheiten, Training — NICHT Hydration/Tageslicht/Schlaf
+(kumulative Tageswerte ohne Einzeltermin). Erster Lauf überhaupt legt nur
+die Grundlage, ohne rückwirkend zu fluten.
+
+**5. Wochen-/Monatsstatistik für alle 9 Bereiche.**
+`WochenuebersichtView.jsx` hatte nur eine Compliance-Zahl für Peptide/
+Hormone zusammen. Neue Karte "Compliance je Bereich" (Ansicht + PDF-
+Export):
+- Peptide/Medikamente/Supplemente/Gewohnheiten/Mahlzeiten/Training: Tag
+  für Tag über `buildDayItems()` gezählt, vom Protokollstart bis
+  **heute** (nicht bis Protokollende — sonst würden künftige, noch nicht
+  fällige Tage die Quote künstlich drücken). Auf 180 Tage gedeckelt.
+- Hydration/Tageslicht: kein Einzeltermin, sondern kumulative
+  Tageswerte — hier "an wie vielen Tagen im Zeitraum wurde das Tagesziel
+  erreicht".
+- Schlaf: kein hinterlegter Zielwert (nur Bettzeit/Aufwachzeit aus dem
+  Onboarding, kein Stunden-Ziel) — deshalb Durchschnitt statt Quote.
+- Rein aus bereits geladenen Daten berechnet, keine neuen Abfragen.
+
+**6. Korrelationserkennung.** `trackingZusammenfassung.js` bekommt eine
+neue `korrelationenErkennen()`-Funktion nach demselben Muster wie das
+schon bestehende `trainingsLuecken()` (siehe Abschnitt 4, "Proaktives
+Nachfragen bei Trackinglücken"): regelbasiert, keine Statistik/ML. Prüft
+über die letzten 7 Tage fünf Bereichspaare (Schlaf×Ernährung,
+Schlaf×Training, Schlaf×Hydration, Hydration×Training,
+Ernährung×Training) auf gemeinsame "schlechte" Tage — ab 2
+überschneidenden Tagen wird es als `Auffälligkeit (Zusammenhänge): ...`
+in den KI-Kontext eingespeist, den JEDE Chat-Anfrage ohnehin schon
+mitbekommt ("Background Brain"). Der Assistent spricht es dann von sich
+aus an, genau wie bei den Trainingslücken — kein neuer Mechanismus
+nötig, nur eine neue Erkennungsregel im bestehenden.
+"Schlecht"-Schwellen: Schlaf < 6 Std. oder "nicht erholt", Hydration
+< 50 % vom Tagesziel, Ernährung = kein bestätigter Eintrag an einem
+laut Ernährungsplan tatsächlich belegten Wochentag, Training = laut
+`trainingsLuecken()` geplant, aber nicht geloggt.
+
+---
+
 ## 5. Erinnerungs-/Push-System
 
 **Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
@@ -760,10 +851,19 @@ einer zwischen Cron-Ticks warmgehaltenen Deno-Isolate hätte das zu
 mehrfach/wachsend gesendeten Erinnerungen führen können. Jetzt wird sie
 zu Beginn jedes Aufrufs explizit geleert.
 
-**Bewusst noch nicht abgedeckt** (siehe offene Punkte, Abschnitt 6):
-- Training/Ernährung (Wochenplan-basiert, andere Datenstruktur).
-- Tageslicht/Schlaf (aktuell keine Uhrzeit pro Eintrag in der DB, nur ein
-  Ja/Nein-Flag — ohne Uhrzeit kann nichts "fällig" werden).
+**Nachtrag 29.07., fünfte Runde — jetzt alle 9 Bereiche.** Training
+(`training_wochenplan`) und Ernährung (`meal_wochenplan`) hatten schon
+eine `uhrzeit`-Spalte, nur nie angeschlossen — jetzt ergänzt, Wochentag-
+Abgleich statt Intervall-System, Nachfass-Check gegen
+`training_sessions`/`meal_logs`. Tageslicht/Schlaf bekommen dieselbe
+freie Uhrzeiten-Liste wie Hydration (`ZeitErinnerungenCard.jsx`,
+`profiles.erinnerungen[kategorie].zeiten`) — keine neue Migration nötig,
+das "kein Uhrzeit-Feld"-Problem von vorher ist damit erledigt (die Person
+legt die Erinnerungszeit selbst fest, statt dass sie aus einem
+Dosierungsplan abgeleitet würde). Siehe Abschnitt 4a für die volle
+Beschreibung aller sechs an diesem Tag geschlossenen Lücken.
+
+**Weiterhin bewusst nicht abgedeckt:**
 - Eine dauerhafte, wiederholte Erinnerung nach dem ersten Nachfass (z. B.
   alle 30 Min. weiter nerven) — aktuell genau EIN Nachfass-Ping pro
   verpasstem Termin, keine Eskalation.
@@ -774,7 +874,8 @@ Supabase-Zugriff): Supabase Dashboard → Edge Functions →
 `supabase/functions/send-due-reminders/index.ts` → Redeploy. Keine neuen
 Secrets nötig — `CRON_SECRET`/VAPID-Keys sind bereits gesetzt.
 Push-Berechtigung auf dem jeweiligen Gerät (unter "Mehr") bleibt weiterhin
-Voraussetzung.
+Voraussetzung. Dies ist jetzt der EINZIGE noch offene manuelle Schritt aus
+der kompletten Liste in Abschnitt 6.
 
 ---
 
@@ -783,8 +884,8 @@ Voraussetzung.
 | # | Thema | Status | Nächster Schritt |
 |---|-------|--------|-------------------|
 | 1 | Erinnerungs-Versand für Peptide/Medikamente/Supplemente/Gewohnheiten/Hydration, jetzt inkl. Vorab- (15 Min. vorher) und Nachfass-Erinnerung (10 Min. Verspätung) | Code fertig, **braucht Deploy durch Nutzerin** — siehe Abschnitt 5 | Supabase Dashboard → Edge Functions → `send-due-reminders` → Code ersetzen → Redeploy |
-| 2 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | Noch nicht umgesetzt — andere Datenstruktur | Eigener Anlauf, `protocol_training_wochenplan`/`meal_wochenplan`-Schema erst untersuchen |
-| 3 | Erinnerungs-Versand für Tageslicht/Schlaf | Noch nicht möglich — kein Uhrzeit-Feld pro Eintrag in der DB | Erst ein Uhrzeit-Feld ergänzen (z. B. Schlafrhythmus-Vorschlag aus dem Onboarding-Coach), dann Versand bauen |
+| 2 | Erinnerungs-Versand für Training/Ernährung (Wochenplan-basiert) | ✅ Erledigt (29.07.) — `training_wochenplan`/`meal_wochenplan` hatten schon eine `uhrzeit`-Spalte, jetzt an `send-due-reminders` angeschlossen | — |
+| 3 | Erinnerungs-Versand für Tageslicht/Schlaf | ✅ Erledigt (29.07.) — eigene Uhrzeiten-Liste wie bei Hydration (`ZeitErinnerungenCard.jsx`), keine neue Migration nötig | — |
 | 4 | Groq als Provider aktivieren | Zurückgestellt (Nutzerinnen-Entscheidung) — Code fertig, kein API-Key vorhanden | Falls Nutzerin einen Groq-Key bekommt: Secret setzen, `VITE_AI_PROVIDER=groq` |
 | 5 | Cloudflare-Tunnel-Adresse für Ollama ist ephemeral | Zurückgestellt — bekannte Einschränkung, aktuell nicht aktiv genutzt | Nur relevant, falls wieder auf Ollama gewechselt wird |
 | 6 | Groq-Streaming | Noch nicht implementiert (nur Ollama + Gemini) | Bei Bedarf, gleiches Muster wie Gemini-SSE-Streaming übernehmen |
@@ -794,7 +895,7 @@ Voraussetzung.
 | 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
 | 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
-| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | Teilweise erledigt (28.07.): Verspätung wird bei Peptide/Medikamente/Supplemente/Gewohnheiten/Mahlzeiten im Tagesverlauf vermerkt (Abschnitt 4). Vorab-Erinnerung (15 Min. vorher) + Nachfass-Erinnerung (10 Min. Verspätung, nur wenn unbestätigt) für Peptide/Medikamente/Supplemente/Gewohnheiten/Hydration fertig in `send-due-reminders`, **braucht Deploy durch Nutzerin** (Abschnitt 5). Offen: Training/Schlaf/Tageslicht (anderes Datenmodell), echte "ausgefallen"-Nacherfassung, Notfallmodus-Tagesdokumentation, KI an/aus-Schalter, Korrelationen | Deploy von `send-due-reminders` abwarten/bestätigen lassen, dann: Training/Schlaf/Tageslicht-Konzept festlegen, KI an/aus-Schalter unter "Mehr", Korrelationserkennung |
+| 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | ✅ Vollständig erledigt (29.07.), siehe Abschnitt 4a im Detail — Erinnerungen jetzt für alle 9 Bereiche, automatische "ausgefallen"-Erfassung, Notfallmodus-Dokumentation, KI an/aus-Schalter, Korrelationserkennung, Compliance für alle 9 Bereiche. **Braucht Deploy durch Nutzerin** (Abschnitt 5) für den Erinnerungs-Teil | Deploy von `send-due-reminders` |
 
 ---
 

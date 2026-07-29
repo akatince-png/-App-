@@ -76,6 +76,75 @@ function trainingsLuecken(appData, heute) {
   return luecken;
 }
 
+const KORRELATION_LOOKBACK_TAGE = 7;
+const KORRELATION_SCHWELLE = 2;
+
+// Einfache, regelbasierte Korrelationserkennung zwischen Lebensbereichen —
+// keine Statistik/ML, sondern zählt pro Bereichspaar, an wie vielen Tagen im
+// Lookback-Fenster BEIDE Bereiche gleichzeitig auffällig waren (Nutzerinnen-
+// Vorgabe, 29.07., Beispiel: "schlecht geschlafen + schlecht gegessen").
+// Ab KORRELATION_SCHWELLE gemeinsamen Tagen wird es als Auffälligkeit
+// gemeldet — dasselbe Prinzip wie trainingsLuecken() oben, nur bereichs-
+// übergreifend statt nur für Training.
+function korrelationenErkennen(appData, heute) {
+  const tage = [];
+  for (let i = 1; i <= KORRELATION_LOOKBACK_TAGE; i++) {
+    const tag = new Date(heute);
+    tag.setDate(tag.getDate() - i);
+    tage.push(toLocalISODate(tag));
+  }
+
+  const schlafProTag = new Map((appData.schlafEintraege || []).map((e) => [e.datum, e]));
+  const hydrationProTag = new Map((appData.hydrationEintraege || []).map((e) => [e.datum, e]));
+  const mahlzeitTageMitEintrag = new Set(
+    Object.entries(appData.mahlzeitErledigtAt || {})
+      .filter(([, zeitpunkt]) => zeitpunkt)
+      .map(([key]) => key.split("__")[0])
+  );
+  const geplanteMahlzeitWochentage = new Set((appData.mealWochenplan || []).map((w) => w.wochentag));
+  const trainingLueckenTage = new Set(trainingsLuecken(appData, heute));
+
+  const schlafSchlecht = new Set(
+    tage.filter((t) => {
+      const e = schlafProTag.get(t);
+      return !!e && ((typeof e.stunden === "number" && e.stunden < 6) || e.erholt === false);
+    })
+  );
+  const hydrationSchlecht = new Set(
+    tage.filter((t) => {
+      const e = hydrationProTag.get(t);
+      return !!e && !!appData.hydrationZielMl && (e.mengeMl || 0) < appData.hydrationZielMl * 0.5;
+    })
+  );
+  // Nur Tage zählen, an denen laut Ernährungsplan überhaupt eine Mahlzeit
+  // anstand — sonst würde ein normaler planloser Tag fälschlich als
+  // "schlecht gegessen" gelten.
+  const ernaehrungSchlecht = new Set(
+    tage.filter((t) => {
+      const wochentagLabel = WOCHENTAGE_KURZ[new Date(`${t}T12:00:00`).getDay()];
+      if (geplanteMahlzeitWochentage.size > 0 && !geplanteMahlzeitWochentage.has(wochentagLabel)) return false;
+      return !mahlzeitTageMitEintrag.has(t);
+    })
+  );
+
+  const paare = [
+    { a: schlafSchlecht, aLabel: "schlechtem Schlaf", b: ernaehrungSchlecht, bLabel: "kaum bestätigten Mahlzeiten" },
+    { a: schlafSchlecht, aLabel: "schlechtem Schlaf", b: trainingLueckenTage, bLabel: "ausgefallenem Training" },
+    { a: schlafSchlecht, aLabel: "schlechtem Schlaf", b: hydrationSchlecht, bLabel: "wenig Trinken" },
+    { a: hydrationSchlecht, aLabel: "wenig Trinken", b: trainingLueckenTage, bLabel: "ausgefallenem Training" },
+    { a: ernaehrungSchlecht, aLabel: "kaum bestätigten Mahlzeiten", b: trainingLueckenTage, bLabel: "ausgefallenem Training" },
+  ];
+
+  const befunde = [];
+  for (const { a, aLabel, b, bLabel } of paare) {
+    const ueberschneidung = [...a].filter((t) => b.has(t));
+    if (ueberschneidung.length >= KORRELATION_SCHWELLE) {
+      befunde.push(`${aLabel} und ${bLabel} fielen in den letzten ${KORRELATION_LOOKBACK_TAGE} Tagen an ${ueberschneidung.length} Tagen zusammen`);
+    }
+  }
+  return befunde;
+}
+
 export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_ZURUECK } = {}) {
   const grenzeDatum = new Date();
   grenzeDatum.setDate(grenzeDatum.getDate() - tageZurueck);
@@ -117,6 +186,17 @@ export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_Z
   if (luecken.length >= LUECKEN_SCHWELLE) {
     abschnitte.push(
       `Auffälligkeit: Training war an ${luecken.length} der letzten ${LUECKEN_LOOKBACK_TAGE} Tage geplant, aber nicht geloggt (${luecken.join(", ")}). Falls das im Gespräch noch nicht Thema war, sprich es von dir aus an.`
+    );
+  }
+
+  // Auffälligkeit: Korrelationen zwischen Lebensbereichen (siehe
+  // korrelationenErkennen() oben) — z. B. schlechter Schlaf fällt
+  // wiederholt mit ausgefallenem Training oder wenig getrunkenem Wasser
+  // zusammen.
+  const korrelationen = korrelationenErkennen(appData, new Date());
+  if (korrelationen.length > 0) {
+    abschnitte.push(
+      `Auffälligkeit (Zusammenhänge): ${korrelationen.join("; ")}. Falls das im Gespräch noch nicht Thema war, sprich von dir aus an, dass hier ein Zusammenhang bestehen könnte.`
     );
   }
 
