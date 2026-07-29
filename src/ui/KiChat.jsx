@@ -27,10 +27,11 @@ const KI_KONTEXT_LIMIT = 24;
 //
 // Trigger + Modal statt dauerhaft sichtbarer Karte: geschlossen zeigt die
 // Komponente nur den animierten Coach-Orb als schwebenden Rundknopf; ein
-// Tap öffnet den Chat als Bottom-Sheet UND startet direkt die
-// Spracherkennung (falls verfügbar), damit man sofort losreden kann statt
-// erst noch das Mikrofon suchen zu müssen — Tippen bleibt jederzeit als
-// Alternative möglich.
+// Tap öffnet den Chat als Bottom-Sheet, spricht die Begrüßung (bzw. beim
+// Wiedereinstieg die letzte Nachricht) vor und startet direkt danach
+// automatisch die Spracherkennung (falls verfügbar) — kein erneutes
+// Antippen pro Antwort nötig, das Gespräch bleibt fortlaufend
+// zuhörbereit. Tippen bleibt jederzeit als Alternative möglich.
 //
 // Anzeige bewusst minimal statt als klassisches Chatfenster gehalten (wie
 // der Sprachmodus von ChatGPT/Gemini): nur die jeweils aktuelle Frage und
@@ -64,6 +65,12 @@ const KI_KONTEXT_LIMIT = 24;
 //   klassifiziert werden muss.
 // - uebernehmenLabels: optional, { [bereich]: string } — Beschriftung je
 //   nach von pruefeBereitschaft erkanntem Bereich
+// - autoStart: optional, Standard false — startet direkt offen (kein
+//   Tap auf den Orb nötig) UND spricht sofort die Begrüßung/letzte
+//   Nachricht vor, danach automatisch zuhörend. Für Stellen gedacht, an
+//   denen der Chat schon direkt sichtbar eingebettet ist statt als
+//   schwebender Trigger (z. B. Onboarding-Kategorie-Schritte) — die Wahl,
+//   dorthin zu navigieren, gilt dort bereits als Zustimmung zum Gespräch.
 export default function KiChat({
   bereich,
   systemPrompt,
@@ -73,6 +80,7 @@ export default function KiChat({
   renderErgebnis,
   pruefeBereitschaft,
   uebernehmenLabels,
+  autoStart = false,
 }) {
   const appData = useAppData();
   const { coachVerlaufLaden, coachNachrichtSpeichern } = appData;
@@ -85,7 +93,7 @@ export default function KiChat({
     () => `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}`,
     [appData]
   );
-  const [offen, setOffen] = useState(false);
+  const [offen, setOffen] = useState(() => autoStart);
   const [verlauf, setVerlauf] = useState([]);
   const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);
   const [eingabe, setEingabe] = useState("");
@@ -99,6 +107,7 @@ export default function KiChat({
   const [erkannterBereich, setErkannterBereich] = useState(null);
   const stopErkennungRef = useRef(null);
   const verlaufGeladenRef = useRef(false);
+  const eingeleitetRef = useRef(false);
   const eingabeRef = useRef(null);
 
   // Laufende Sprachausgabe/-erkennung beenden, wenn die Karte verschwindet
@@ -162,7 +171,12 @@ export default function KiChat({
       });
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
       if (bereich) coachNachrichtSpeichern(bereich, "coach", antwort);
-      if (vorlesenAktiv) sprich(antwort);
+      const kannHoeren = spracherkennungVerfuegbar();
+      if (vorlesenAktiv) {
+        sprich(antwort, { onEnde: () => kannHoeren && mikrofonStarten() });
+      } else if (kannHoeren) {
+        mikrofonStarten();
+      }
     } catch (err) {
       setFehler(err.message);
     } finally {
@@ -211,15 +225,40 @@ export default function KiChat({
     mikrofonStarten();
   };
 
-  const oeffnen = async () => {
+  // Statt sofort beim Öffnen nur stumm zuzuhören, wird zuerst die
+  // Begrüßung (bzw. bei einem bestehenden Verlauf die letzte Coach-
+  // Nachricht, damit man beim Wiedereinsteigen weiß, wo man stand)
+  // vorgelesen — das Mikrofon startet automatisch erst danach (oder
+  // sofort, falls Vorlesen aus ist), analog zu den Onboarding-Screens.
+  const starteGespraech = async () => {
     setOffen(true);
-    if (spracherkennungVerfuegbar()) mikrofonStarten();
+    let geladenerVerlauf = verlauf;
     if (bereich && !verlaufGeladenRef.current) {
       verlaufGeladenRef.current = true;
       const gespeichert = await coachVerlaufLaden(bereich);
-      if (gespeichert.length) setVerlauf(gespeichert);
+      if (gespeichert.length) {
+        setVerlauf(gespeichert);
+        geladenerVerlauf = gespeichert;
+      }
+    }
+    const kannHoeren = spracherkennungVerfuegbar();
+    const letzteNachricht = [...geladenerVerlauf].reverse().find((n) => n.rolle === "coach")?.text;
+    const zuSprechen = letzteNachricht || einleitung;
+    if (vorlesenAktiv && zuSprechen) {
+      sprich(zuSprechen, { onEnde: () => kannHoeren && mikrofonStarten() });
+    } else if (kannHoeren) {
+      mikrofonStarten();
     }
   };
+
+  // autoStart: schon eingebettet sichtbar statt hinter einem Trigger-Orb —
+  // das Erscheinen dieses Screens gilt bereits als Zustimmung zum Gespräch.
+  useEffect(() => {
+    if (!autoStart || eingeleitetRef.current) return;
+    eingeleitetRef.current = true;
+    starteGespraech();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const schliessen = () => {
     stopErkennungRef.current?.();
@@ -255,7 +294,7 @@ export default function KiChat({
       <button
         type="button"
         className="mp-tap"
-        onClick={oeffnen}
+        onClick={starteGespraech}
         aria-label={`${getCoachName()} fragen`}
         title={`${getCoachName()} fragen`}
         style={{

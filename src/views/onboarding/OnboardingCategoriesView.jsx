@@ -61,6 +61,23 @@ const KATEGORIE_COACH_PROMPTS = {
     "Du hilfst dabei, ein neues Peptid einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, und der Rhythmus sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
 };
 
+// Erste (vorgelesene) Nachricht je Kategorie — bewusst schon die konkrete,
+// zur Substanz/Einnahmeart passende Frage statt eines generischen "Was
+// möchtest du einrichten?" (Nutzerinnen-Vorgabe, 28.07.: bei Wasser soll
+// gefragt werden "wie viel hast du bisher getrunken, was ist dein
+// Tagesziel", nicht irgendwas Allgemeines).
+const KATEGORIE_EINLEITUNG = {
+  gewohnheiten: (coachName) => `Hi, ich bin ${coachName}! Welche Gewohnheit möchtest du aufbauen, und warum ist sie dir wichtig?`,
+  schlaf: (coachName) => `Hi, ich bin ${coachName}! Wann gehst du normalerweise ins Bett, und wann willst du aufwachen?`,
+  hydration: (coachName) => `Hi, ich bin ${coachName}! Wie viel trinkst du aktuell am Tag, und was wäre ein gutes Tagesziel für dich?`,
+  tageslicht: (coachName) => `Hi, ich bin ${coachName}! Wie viel Zeit verbringst du aktuell draußen bei Tageslicht, und was wäre ein realistisches Ziel pro Tag?`,
+  ernaehrung: (coachName) => `Hi, ich bin ${coachName}! Erzähl mir von einer Mahlzeit, die du regelmäßig isst — was ist drin, an welchen Tagen, und um wie viel Uhr?`,
+  training: (coachName) => `Hi, ich bin ${coachName}! Wie sieht dein Training aktuell aus, und was schwebt dir für den Plan vor?`,
+  supplemente: (coachName) => `Hi, ich bin ${coachName}! Welches Supplement möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
+  medikamente: (coachName) => `Hi, ich bin ${coachName}! Welches Medikament oder Hormon möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
+  peptide: (coachName) => `Hi, ich bin ${coachName}! Welches Peptid möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
+};
+
 const ZIEL_LEER = { modus: "offen", wochen: "" };
 const MULTI_ADD_KEYS = ["gewohnheiten", "ernaehrung", "supplemente", "medikamente"];
 // Kategorien, für die vor der zukünftigen Zielplanung erst der aktuelle
@@ -852,10 +869,13 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <KiChat
             key={step.key}
             systemPrompt={KATEGORIE_COACH_PROMPTS[step.key]}
-            einleitung={`Hi, ich bin ${getCoachName()}! Was möchtest du für "${tLabel(step.label)}" einrichten?`}
+            einleitung={
+              (KATEGORIE_EINLEITUNG[step.key] || (() => `Hi, ich bin ${getCoachName()}! Was möchtest du für "${tLabel(step.label)}" einrichten?`))(getCoachName())
+            }
             onUebernehmen={onUebernehmenKategorie}
             uebernehmenLabel="Übernehmen"
             renderErgebnis={renderKategorieErgebnis}
+            autoStart
           />
         <Card>
           {ISTZUSTAND_FRAGEN[step.key] && (

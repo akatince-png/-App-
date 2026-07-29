@@ -395,19 +395,45 @@ Antippen.** Zwei weitere Rückmeldungen der Nutzerin:
   überhaupt unterstützen (Text/Zahl, nicht Pillen/Datum). Manuelles
   Antippen des Orbs bleibt weiterhin möglich (Barge-in unterbricht wie
   gehabt eine laufende Vorlese-Antwort).
-- **Bewusst nicht in dieser Runde:** Die Nutzerin nannte als Beispiele
-  auch Laborwerte/Hydration ("hast Du Laborwerte? Lass uns die
-  eingeben" statt "was ist dein Ferritinspiegel", "wie viel hast Du
-  schon getrunken, was ist dein Tagesziel") — diese Fragen laufen über
-  die generische `KiChat.jsx`-Komponente, eingebettet in
-  `OnboardingCategoriesView.jsx`/`OnboardingLaborwerteView.jsx` mit
-  bereits passenden, kategoriespezifischen System-Prompts
-  (`KATEGORIE_COACH_PROMPTS`). `KiChat.jsx` startet dort aber weiterhin
-  geschlossen (Tap zum Öffnen nötig), OHNE das neue Auto-Zuhören-Muster
-  — das auf alle ~14 `<KiChat>`-Einsatzstellen in der App auszuweiten
-  (Home, Trainingsplan, Ernährung, …) wäre ein deutlich größerer,
-  separater Schritt und war in dieser Runde bewusst nicht mehr
-  enthalten, um nichts überstürzt/inkonsistent umzusetzen.
+**Nachtrag 28.07., dritte Runde — dasselbe Muster jetzt auch in
+`KiChat.jsx` (Laborwerte, Hydration & Co.).** Direkte Folge auf "Mach
+weiter": die Nutzerin wollte dieselbe Auto-Frage/Auto-Zuhören-Logik auch
+dort, wo Fragen wie Laborwerte/Hydration tatsächlich gestellt werden —
+das läuft über die generische `KiChat.jsx`, eingebettet in
+`OnboardingCategoriesView.jsx` (9 Kategorie-Schritte) und
+`OnboardingLaborwerteView.jsx`, nicht über die beiden Onboarding-
+Profil-Screens von eben.
+- `KiChat.jsx` hat jetzt einen optionalen `autoStart`-Prop: startet
+  direkt offen (kein Tap auf den schwebenden Orb nötig), spricht sofort
+  die Begrüßung vor (bzw. bei bestehendem Verlauf die letzte
+  Coach-Nachricht, damit man beim Wiedereinstieg weiß, wo man stand) und
+  hört danach automatisch zu — extrahiert in eine gemeinsame
+  `starteGespraech()`-Funktion, die sowohl der Tap-Handler als auch ein
+  Mount-Effekt bei `autoStart` aufrufen.
+- **Universell für ALLE `<KiChat>`-Stellen** (auch ohne `autoStart`):
+  Tap auf den Orb spricht jetzt zuerst die Begrüßung vor und startet das
+  Mikrofon erst danach (vorher: sofortiges stummes Zuhören ohne
+  Vorlesen). Nach JEDER Coach-Antwort hört das Mikrofon jetzt automatisch
+  wieder zu (bzw. sofort, falls Vorlesen aus ist) — kein erneutes
+  Antippen pro Gesprächsrunde mehr nötig, überall in der App.
+- `autoStart` gesetzt nur auf den zwei eingebetteten Instanzen in
+  `OnboardingCategoriesView.jsx` und `OnboardingLaborwerteView.jsx` — die
+  ~12 schwebenden Trigger-Orb-Stellen (Home, Trainingsplan, Ernährung,
+  Hydration, Medikamente, Peptide, Supplemente, Schlaf, Tageslicht,
+  Wochenübersicht, Tagesplan, Gewohnheiten) bleiben bewusst Tap-to-open,
+  weil das Erreichen dieser Screens (anders als bei den Onboarding-
+  Kategorie-Schritten) keine Zustimmung zum sofortigen KI-Gespräch ist.
+- Neue `KATEGORIE_EINLEITUNG`-Map in `OnboardingCategoriesView.jsx`:
+  ersetzt die generische Begrüßung ("Was möchtest du für X einrichten?")
+  durch die konkrete, zur Substanz/Einnahmeart passende Frage direkt zu
+  Beginn — z. B. Hydration: "Wie viel trinkst du aktuell am Tag, und was
+  wäre ein gutes Tagesziel für dich?" statt einer generischen Frage.
+  Laborwerte-Begrüßung in `OnboardingLaborwerteView.jsx` ebenso
+  angepasst ("Hast du Laborwerte da? Sag sie mir einfach, oder mach
+  unten ein Foto vom Befund").
+- Manuelle Formulare bleiben unverändert erreichbar (Leitprinzip): das
+  Chat-Fenster ist ein schließbares Overlay, dahinter steht wie bisher
+  das komplette manuelle Formular.
 
 ### Persona: "Aka" als Sidekick, ausdrücklich kein Coach
 
