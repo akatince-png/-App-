@@ -18,7 +18,12 @@ export function Shell({ children, bereich }) {
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           display: "flex",
           justifyContent: "center",
-          padding: "32px 16px",
+          // Unten extra Platz reserviert: der schwebende, mittig sitzende
+          // Aka-Orb (KiChat.jsx, geschlossener Zustand) braucht diesen Raum,
+          // damit er nicht auf dem letzten Karteninhalt landet (Nutzerin
+          // wollte den Button bewusst wieder mittig statt in der Ecke,
+          // 29.07.) — so bleibt zumindest das Seitenende immer frei.
+          padding: "32px 16px 110px",
         }}
       >
         <div className="mp-shell-inner">{children}</div>
