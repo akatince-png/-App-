@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Nicht angemeldet." }, 401);
+    if (!authHeader) return json({ error: "Nicht angemeldet." }, 200);
 
     const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     const {
       data: { user },
     } = await callerClient.auth.getUser();
-    if (!user) return json({ error: "Nicht angemeldet." }, 401);
+    if (!user) return json({ error: "Nicht angemeldet." }, 200);
 
     const { targetUserId, playlistUri } = await req.json().catch(() => ({}));
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     let userId = user.id;
     if (targetUserId && targetUserId !== user.id) {
       const { data: callerProfile } = await adminClient.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
-      if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen für eine andere Person abspielen." }, 403);
+      if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen für eine andere Person abspielen." }, 200);
       userId = targetUserId;
     }
 
@@ -75,11 +75,11 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
-    if (ladeFehler) return json({ error: ladeFehler.message }, 500);
-    if (!verbindung) return json({ error: "Spotify ist noch nicht verbunden." }, 400);
+    if (ladeFehler) return json({ error: ladeFehler.message }, 200);
+    if (!verbindung) return json({ error: "Spotify ist noch nicht verbunden." }, 200);
 
     const uri = playlistUri || verbindung.playlist_uri;
-    if (!uri) return json({ error: "Keine Playlist hinterlegt." }, 400);
+    if (!uri) return json({ error: "Keine Playlist hinterlegt." }, 200);
 
     const accessToken = await frischesAccessToken(adminClient, verbindung);
 
@@ -92,11 +92,11 @@ Deno.serve(async (req) => {
     if (playRes.status === 204) return json({ ok: true });
 
     if (playRes.status === 404) {
-      return json({ error: "Kein aktives Spotify-Gerät gefunden. Bitte einmal die Spotify-App auf dem Handy öffnen und erneut versuchen." }, 400);
+      return json({ error: "Kein aktives Spotify-Gerät gefunden. Bitte einmal die Spotify-App auf dem Handy öffnen und erneut versuchen." }, 200);
     }
     const fehlerText = await playRes.text();
-    return json({ error: fehlerText || "Spotify hat die Wiedergabe abgelehnt." }, playRes.status);
+    return json({ error: fehlerText || "Spotify hat die Wiedergabe abgelehnt." }, 200);
   } catch (err) {
-    return json({ error: err.message || "Unbekannter Fehler." }, 500);
+    return json({ error: err.message || "Unbekannter Fehler." }, 200);
   }
 });

@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Nicht angemeldet." }, 401);
+    if (!authHeader) return json({ error: "Nicht angemeldet." }, 200);
 
     const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -34,14 +34,14 @@ Deno.serve(async (req) => {
     const {
       data: { user },
     } = await callerClient.auth.getUser();
-    if (!user) return json({ error: "Nicht angemeldet." }, 401);
+    if (!user) return json({ error: "Nicht angemeldet." }, 200);
 
     if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
-      return json({ error: "SPOTIFY_CLIENT_ID/SPOTIFY_CLIENT_SECRET sind auf dem Server nicht gesetzt." }, 500);
+      return json({ error: "SPOTIFY_CLIENT_ID/SPOTIFY_CLIENT_SECRET sind auf dem Server nicht gesetzt." }, 200);
     }
 
     const { code, redirectUri, targetUserId } = await req.json();
-    if (!code || !redirectUri) return json({ error: "code und redirectUri sind Pflichtfelder." }, 400);
+    if (!code || !redirectUri) return json({ error: "code und redirectUri sind Pflichtfelder." }, 200);
 
     const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
       method: "POST",
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri }),
     });
     const tokenData = await tokenRes.json();
-    if (!tokenRes.ok) return json({ error: tokenData.error_description || "Spotify hat den Code abgelehnt." }, 400);
+    if (!tokenRes.ok) return json({ error: tokenData.error_description || "Spotify hat den Code abgelehnt." }, 200);
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     let userId = user.id;
     if (targetUserId && targetUserId !== user.id) {
       const { data: callerProfile } = await adminClient.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
-      if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen für eine andere Person verbinden." }, 403);
+      if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen für eine andere Person verbinden." }, 200);
       userId = targetUserId;
     }
 
@@ -73,10 +73,10 @@ Deno.serve(async (req) => {
       access_token: tokenData.access_token,
       token_laeuft_ab: ablauf,
     });
-    if (error) return json({ error: error.message }, 500);
+    if (error) return json({ error: error.message }, 200);
 
     return json({ ok: true });
   } catch (err) {
-    return json({ error: err.message || "Unbekannter Fehler." }, 500);
+    return json({ error: err.message || "Unbekannter Fehler." }, 200);
   }
 });

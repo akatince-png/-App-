@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Nicht angemeldet." }, 401);
+    if (!authHeader) return json({ error: "Nicht angemeldet." }, 200);
 
     // Wer ruft auf? — mit Anon-Key + weitergereichtem Authorization-Header,
     // damit getUser() den echten aufrufenden Account liefert.
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     const {
       data: { user: caller },
     } = await callerClient.auth.getUser();
-    if (!caller) return json({ error: "Nicht angemeldet." }, 401);
+    if (!caller) return json({ error: "Nicht angemeldet." }, 200);
 
     // Service-Role-Client fürs eigentliche Anlegen — RLS-unabhängig, nur
     // serverseitig verfügbar (SUPABASE_SERVICE_ROLE_KEY steht in jeder
@@ -52,19 +52,19 @@ Deno.serve(async (req) => {
       .select("is_admin")
       .eq("id", caller.id)
       .maybeSingle();
-    if (profileError) return json({ error: profileError.message }, 500);
-    if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen neue Zugänge anlegen." }, 403);
+    if (profileError) return json({ error: profileError.message }, 200);
+    if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen neue Zugänge anlegen." }, 200);
 
     const { email, password, vorname } = await req.json();
-    if (!email || !password) return json({ error: "E-Mail und Passwort sind Pflichtfelder." }, 400);
-    if (password.length < 6) return json({ error: "Das Passwort muss mindestens 6 Zeichen lang sein." }, 400);
+    if (!email || !password) return json({ error: "E-Mail und Passwort sind Pflichtfelder." }, 200);
+    if (password.length < 6) return json({ error: "Das Passwort muss mindestens 6 Zeichen lang sein." }, 200);
 
     const { data: created, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     });
-    if (createError) return json({ error: createError.message }, 400);
+    if (createError) return json({ error: createError.message }, 200);
 
     if (vorname) {
       // handle_new_user() (0001_init.sql) legt die profiles-Zeile per
@@ -74,6 +74,6 @@ Deno.serve(async (req) => {
 
     return json({ id: created.user.id, email: created.user.email });
   } catch (err) {
-    return json({ error: err.message || "Unbekannter Fehler." }, 500);
+    return json({ error: err.message || "Unbekannter Fehler." }, 200);
   }
 });
