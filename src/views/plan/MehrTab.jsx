@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Label, Pill, TextInput } from "../../ui/primitives";
 import { accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
@@ -8,6 +8,7 @@ import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import { AIService } from "../../services/aiService";
 import { getCoachName, saveCoachName, STANDARD_COACH_NAME, getKiAktiv, saveKiAktiv } from "../../utils/coachStorage";
+import { spotifyAutorisierenUrl, spotifyPlaylistUriNormalisieren } from "../../services/spotify";
 
 export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
   const { signOut, user } = useAuth();
@@ -22,16 +23,29 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     pushTestSenden,
     erinnerungen,
     setErinnerung,
+    spotifyVerbunden,
+    spotifyPlaylistUri,
+    spotifyPlaylistSpeichern,
+    spotifyVerbindungTrennen,
+    spotifyAbspielen,
+    spotifyTestet,
+    spotifyFehler,
   } = useAppData();
   const { lang, setLang } = useLanguage();
   const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
   const [testMsg, setTestMsg] = useState(null);
+  const [playlistEingabe, setPlaylistEingabe] = useState(spotifyPlaylistUri || "");
+  const [playlistGespeichert, setPlaylistGespeichert] = useState(false);
   const [kiLadend, setKiLadend] = useState(false);
   const [kiAntwort, setKiAntwort] = useState(null);
   const [kiFehler, setKiFehler] = useState(null);
   const [coachName, setCoachNameState] = useState(getCoachName());
   const [kiAktiv, setKiAktivState] = useState(() => getKiAktiv());
+
+  useEffect(() => {
+    setPlaylistEingabe(spotifyPlaylistUri || "");
+  }, [spotifyPlaylistUri]);
 
   const handleKiAktivUmschalten = (next) => {
     setKiAktivState(next);
@@ -59,6 +73,12 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     setTestMsg(null);
     const result = await pushTestSenden();
     setTestMsg(result?.ok ? t("mehr.push.test.success") : result?.error || t("mehr.push.test.error"));
+  };
+
+  const handlePlaylistSpeichern = async () => {
+    setPlaylistGespeichert(false);
+    await spotifyPlaylistSpeichern(spotifyPlaylistUriNormalisieren(playlistEingabe));
+    setPlaylistGespeichert(true);
   };
 
   // Erster Testaufruf des ADHS-Coach-Moduls direkt aus der App heraus — prüft
@@ -197,6 +217,57 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
             />
           </div>
         ))}
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Musik (Spotify)</div>
+      <Card style={{ marginBottom: 20 }}>
+        {!spotifyVerbunden ? (
+          <>
+            <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
+              Verbinde Spotify, damit dein Assistent deine Playlist starten kann — z. B. morgens zum Aufwachen. Braucht ein
+              Spotify-Premium-Konto.
+            </div>
+            <a href={spotifyAutorisierenUrl()} style={{ textDecoration: "none" }}>
+              <button
+                style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
+              >
+                Mit Spotify verbinden
+              </button>
+            </a>
+          </>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ color: success, fontWeight: 700 }}>✓</span>
+              <span style={{ fontSize: 13, color: textMuted }}>Spotify ist verbunden.</span>
+            </div>
+            <Label>Playlist (Link aus der Spotify-App einfügen)</Label>
+            <TextInput value={playlistEingabe} onChange={setPlaylistEingabe} placeholder="https://open.spotify.com/playlist/..." />
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button
+                onClick={handlePlaylistSpeichern}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: "none", fontSize: 13.5, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
+              >
+                Speichern
+              </button>
+              <button
+                onClick={spotifyAbspielen}
+                disabled={spotifyTestet || !spotifyPlaylistUri}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 13.5, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark, opacity: spotifyPlaylistUri ? 1 : 0.5 }}
+              >
+                {spotifyTestet ? "Startet…" : "Jetzt testen"}
+              </button>
+            </div>
+            {playlistGespeichert && <div style={{ fontSize: 12, color: success, marginTop: 8 }}>Playlist gespeichert.</div>}
+            {spotifyFehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{spotifyFehler}</div>}
+            <button
+              onClick={spotifyVerbindungTrennen}
+              style={{ width: "100%", marginTop: 12, padding: "10px 16px", borderRadius: 12, border: "none", background: "transparent", color: textMuted, fontSize: 12, cursor: "pointer" }}
+            >
+              Spotify trennen
+            </button>
+          </>
+        )}
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.datenschutz")}</div>

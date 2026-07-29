@@ -16,6 +16,7 @@ import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import Fab from "./ui/Fab";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
+import { spotifyCodeAustauschen } from "./services/spotify";
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "profil", "blutzucker", "community"];
@@ -57,11 +58,29 @@ export default function AuthenticatedApp() {
     peptide,
     protokollArchivieren,
     isAdmin,
+    userId,
+    spotifyVerbindungNeuLaden,
   } = appData;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
   // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
   const [offenesTrainingId, setOffenesTrainingId] = useState(null);
+
+  // Rückkehr von der Spotify-Anmeldung (accounts.spotify.com leitet mit
+  // ?code=...&state=... zurück auf die App) — Code gegen Zugangsdaten
+  // tauschen (siehe spotify-auth-callback Edge Function) und danach direkt
+  // wieder bei "Mehr" landen, wo die Verbindung angestoßen wurde.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code || params.get("state") !== "aka_spotify_connect" || !userId) return;
+    window.history.replaceState({}, "", window.location.pathname);
+    spotifyCodeAustauschen(code, userId)
+      .then(() => spotifyVerbindungNeuLaden?.())
+      .catch((err) => console.error(err))
+      .finally(() => setView("mehr"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   useEffect(() => {
     if (!loading && view === null) {

@@ -973,6 +973,85 @@ Edge-Function-Schritt nötig, kein erneutes `is_admin`-Setzen.
 
 ---
 
+## 4d. Nachtrag 29.07. — Spotify-Anbindung (Grundlage für "geführte Morgenroutine")
+
+**Auftrag der Nutzerin:** Aka soll morgens wecken, direkt die Playlist
+starten und dann per Sprache durch die Morgenroutine führen (Getränk,
+Supplemente, Sonnenlicht, Training-Start), mit Wartezeiten und Nachfragen
+dazwischen — perspektivisch auch für Abendroutine/Training. Heute nur die
+Spotify-Anbindung selbst; die eigentliche geführte Routine (Timer,
+Sprachführung durch die Schritte) ist der nächste Schritt.
+
+**Wichtige technische Grenze, ehrlich kommuniziert:** eine Web-App wie AKA
+kann NICHT von selbst Ton abspielen oder "aufwachen", während das Handy
+gesperrt ist oder die App geschlossen ist — das verbietet iOS/Android jeder
+Web-App aus Akku-/Datenschutzgründen, unabhängig vom Code. Die Weckzeit
+läuft über eine Push-Benachrichtigung (Mechanismus existiert bereits, siehe
+Abschnitt 5), die Nutzerin tippt einmal drauf zum Aufwachen — AB DIESEM
+MOMENT kann Aka vollautomatisch übernehmen (Musik, Ansagen, Timing).
+Zusätzlich Voraussetzung: Spotify PREMIUM (Wiedergabe-Steuerung per API
+funktioniert nur damit, hat die Nutzerin bestätigt) und die Spotify-App
+muss auf dem Handy zumindest kürzlich geöffnet gewesen sein (sonst kein
+"aktives Wiedergabegerät", Fehler 404 von Spotify).
+
+**Umsetzung (OAuth Authorization-Code-Flow):**
+- `supabase/migrations/0037_spotify_verbindung.sql` — NOCH NICHT DEPLOYT.
+  Neue Tabelle `spotify_verbindung` (user_id, refresh_token, access_token,
+  token_laeuft_ab, playlist_uri) mit eigener Zeile-Policy + Admin-Bypass
+  (Admin kann die Verbindung auch im "Verwalten als"-Modus für eine
+  Probandin/einen Probanden herstellen/pflegen).
+- `supabase/functions/spotify-auth-callback/index.ts` — NOCH NICHT
+  DEPLOYT. Tauscht den OAuth-Code gegen Access-/Refresh-Token (braucht
+  `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` als Edge-Function-Secrets,
+  Secret NIE im Browser).
+- `supabase/functions/spotify-play/index.ts` — NOCH NICHT DEPLOYT.
+  Erneuert das Access-Token bei Bedarf und startet die hinterlegte
+  Playlist über die Spotify-Web-API.
+- `src/services/spotify.js` — baut die Spotify-Autorisierungs-URL
+  (`VITE_SPOTIFY_CLIENT_ID`, neue öffentliche Env-Var, siehe
+  `.env.example`), ruft die Edge Functions auf, normalisiert
+  Playlist-Links (`open.spotify.com/playlist/...` → `spotify:playlist:...`).
+- `src/data/useSpotifyVerbindung.js` + `AppDataContext.jsx` — Status/
+  Playlist/Testabspielen, nach demselben `userId`-Muster wie alle anderen
+  Daten-Hooks (funktioniert dadurch automatisch auch im "Verwalten
+  als"-Modus).
+- `AuthenticatedApp.jsx` — fängt die Rückkehr von `accounts.spotify.com`
+  ab (`?code=...&state=aka_spotify_connect` in der URL), tauscht den Code,
+  räumt die URL auf, landet danach automatisch wieder bei "Mehr".
+- Neue Karte "Musik (Spotify)" in `MehrTab.jsx`: Verbinden-Knopf, nach
+  Verbindung Playlist-Link einfügen + speichern + "Jetzt testen"-Knopf +
+  Trennen-Knopf.
+
+**⚠️ Für die Nutzerin — mehrere Schritte, bevor es nutzbar ist:**
+1. Auf [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+   mit dem Spotify-Konto einloggen, "Create app" — beliebiger Name/
+   Beschreibung.
+2. Bei "Redirect URIs" die echte Produktions-URL der App eintragen (die,
+   unter der die App im Browser erreichbar ist, z. B.
+   `https://deine-domain.vercel.app/`) — muss exakt passen, inkl. `/` am
+   Ende.
+3. In den App-Einstellungen "Client ID" und "Client secret" kopieren.
+4. Client ID: als `VITE_SPOTIFY_CLIENT_ID` bei Vercel unter
+   Environment Variables eintragen (Projekt-Einstellungen → Environment
+   Variables) UND als Secret `SPOTIFY_CLIENT_ID` bei den Edge Functions
+   `spotify-auth-callback` und `spotify-play` hinterlegen.
+5. Client secret: NUR als Secret `SPOTIFY_CLIENT_SECRET` bei denselben
+   beiden Edge Functions hinterlegen — nirgends sonst.
+6. Migration `0037_spotify_verbindung.sql` im SQL Editor ausführen.
+7. Beide Edge Functions deployen (gleiches Vorgehen wie bei
+   `admin-create-proband`).
+8. Nach Vercel-Neubau: unter "Mehr" → "Musik (Spotify)" → "Mit Spotify
+   verbinden".
+
+**Nächster Schritt (noch nicht begonnen):** die eigentliche geführte
+Morgenroutine — Weckzeit als Push-Erinnerung, die beim Antippen direkt in
+einen neuen Ablauf-Screen führt, der die vorher mit Aka geplanten Schritte
+per Sprache durchgeht (Musik starten, Ansagen, Wartezeiten abzählen,
+Nachfragen, Abschluss). Perspektivisch dieselbe Struktur für
+Abend-/Trainingsroutine.
+
+---
+
 ## 5. Erinnerungs-/Push-System
 
 **Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
@@ -1157,8 +1236,20 @@ wie ein separates Verwaltungs-Postfach wirkt. Braucht noch Migration
 Vorgehen wie bei 0035) — kein neuer Edge-Function-Schritt, kein erneutes
 `is_admin`-Setzen nötig.
 
-Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy dieser beiden
-Bausteine helfen (analog zum `send-due-reminders`-Deploy), danach
+**Neu, NOCH NICHT deployt:** Spotify-Anbindung (Abschnitt 4d) — Grundlage
+für die von der Nutzerin gewünschte "geführte Morgenroutine" (Aka weckt,
+startet Musik, führt per Sprache durch die Schritte). Braucht Migration
+`0037_spotify_verbindung.sql`, zwei neue Edge Functions
+(`spotify-auth-callback`, `spotify-play`) UND einmalig ein Spotify-
+Entwickler-Konto der Nutzerin (Client-ID/Secret) — mehrstufiger
+Deploy, genaue Schritte in Abschnitt 4d. Die eigentliche geführte Routine
+(Timer, Sprachführung, Nachfragen) ist danach der nächste große Baustein,
+noch nicht begonnen.
+
+Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy der drei
+offenen Bausteine helfen (0036 Admin-Hinweise, 0037 Spotify + Edge
+Functions + Spotify-Entwickler-Konto, analog zum `send-due-reminders`-
+Deploy), danach die geführte Morgenroutine selbst bauen, danach
 verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a. Punkte 4-7,
 alle bewusst zurückgestellt/verworfen, kein akuter Handlungsbedarf) oder
 auf neue Rückmeldung der Nutzerin warten.
