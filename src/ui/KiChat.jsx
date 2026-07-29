@@ -135,6 +135,16 @@ export default function KiChat({
   const stopErkennungRef = useRef(null);
   const verlaufGeladenRef = useRef(false);
   const eingeleitetRef = useRef(false);
+  // Wie viele Nachrichten beim Öffnen schon aus früheren Sitzungen geladen
+  // waren — alles bis zu diesem Index gilt als "alter" Verlauf. Die große,
+  // prominente Anzeige + automatisches Vorlesen zeigen/sprechen erst wieder
+  // etwas Neues, sobald in DIESER Sitzung tatsächlich etwas dazukommt, statt
+  // sofort mit der letzten alten Nachricht "weiterzumachen" (siehe
+  // starteGespraech — Nutzerin empfand das als "fängt immer wieder mit dem
+  // alten Thema an", 29.07.). Der volle Verlauf bleibt trotzdem geladen und
+  // über "Bisheriger Verlauf" einsehbar, und fließt weiter als Gedächtnis in
+  // KI-Anfragen ein — nur die Anzeige/Sprachausgabe beim Öffnen ist neu.
+  const altVerlaufBisRef = useRef(0);
   const eingabeRef = useRef(null);
 
   // Laufende Sprachausgabe/-erkennung beenden, wenn die Karte verschwindet
@@ -267,27 +277,27 @@ export default function KiChat({
     mikrofonStarten();
   };
 
-  // Statt sofort beim Öffnen nur stumm zuzuhören, wird zuerst die
-  // Begrüßung (bzw. bei einem bestehenden Verlauf die letzte Coach-
-  // Nachricht, damit man beim Wiedereinsteigen weiß, wo man stand)
-  // vorgelesen — das Mikrofon startet automatisch erst danach (oder
-  // sofort, falls Vorlesen aus ist), analog zu den Onboarding-Screens.
+  // Statt sofort beim Öffnen nur stumm zuzuhören, wird zuerst die Begrüßung
+  // vorgelesen — das Mikrofon startet automatisch erst danach (oder sofort,
+  // falls Vorlesen aus ist), analog zu den Onboarding-Screens. Liest NICHT
+  // mehr die letzte gespeicherte Coach-Nachricht vor (früher bewusst so
+  // gebaut, damit man beim Wiedereinsteigen weiß, wo man stand — Nutzerin
+  // empfand das aber als "fängt immer wieder mit dem alten Thema an" und
+  // musste Aka jedes Mal unterbrechen, 29.07.): jedes Öffnen fühlt sich
+  // jetzt wie ein neues Gespräch an. Der gespeicherte Verlauf wird trotzdem
+  // weiter geladen (Klapp-Verlauf + Erinnerung der KI über die Zeit), nur
+  // eben nicht mehr automatisch vorgelesen.
   const starteGespraech = async () => {
     setOffen(true);
-    let geladenerVerlauf = verlauf;
     if (bereich && !verlaufGeladenRef.current) {
       verlaufGeladenRef.current = true;
       const gespeichert = await coachVerlaufLaden(bereich);
-      if (gespeichert.length) {
-        setVerlauf(gespeichert);
-        geladenerVerlauf = gespeichert;
-      }
+      if (gespeichert.length) setVerlauf(gespeichert);
+      altVerlaufBisRef.current = gespeichert.length;
     }
     const kannHoeren = spracherkennungVerfuegbar();
-    const letzteNachricht = [...geladenerVerlauf].reverse().find((n) => n.rolle === "coach")?.text;
-    const zuSprechen = letzteNachricht || einleitung;
-    if (vorlesenAktiv && zuSprechen) {
-      sprich(zuSprechen, { onEnde: () => kannHoeren && mikrofonStarten() });
+    if (vorlesenAktiv && einleitung) {
+      sprich(einleitung, { onEnde: () => kannHoeren && mikrofonStarten() });
     } else if (kannHoeren) {
       mikrofonStarten();
     }
@@ -326,10 +336,16 @@ export default function KiChat({
 
   const alleNachrichten = einleitung ? [{ rolle: "coach", text: einleitung }, ...verlauf] : verlauf;
   const orbZustand = hoert ? "hoert" : laden ? (streamText ? "spricht" : "denkt") : "ruhe";
-  const letzteNutzerNachricht = [...verlauf].reverse().find((n) => n.rolle === "nutzer");
-  const letzteCoachNachricht = [...verlauf].reverse().find((n) => n.rolle === "coach");
+  // Nur Nachrichten AUS DIESER Sitzung (nicht der geladene alte Verlauf)
+  // treiben die große, prominente Anzeige — sonst wirkt jedes Öffnen wie
+  // eine Fortsetzung des letzten Gesprächs statt eines neuen (29.07.). Der
+  // volle Verlauf (inkl. alt) bleibt weiter über "Bisheriger Verlauf"
+  // (alleNachrichten, oben) einsehbar.
+  const neueSitzungVerlauf = verlauf.slice(altVerlaufBisRef.current);
+  const letzteNutzerNachricht = [...neueSitzungVerlauf].reverse().find((n) => n.rolle === "nutzer");
+  const letzteCoachNachricht = [...neueSitzungVerlauf].reverse().find((n) => n.rolle === "coach");
   const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || einleitung || "";
-  const zeigeUebernehmenKnopf = onUebernehmen && verlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
+  const zeigeUebernehmenKnopf = onUebernehmen && neueSitzungVerlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
   const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel || `An ${getCoachName()} übermitteln`;
 
   // Globaler An/Aus-Schalter (Einstellungen → "Mehr"): bei "Aus" erscheint
