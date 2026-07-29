@@ -75,6 +75,71 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     return Math.round((erledigtCount / gesamt) * 100);
   }, [plan, erledigt, hormonPlan, hormonErledigt]);
 
+  // Compliance je Bereich für alle 6 Kategorien mit "geplant vs. erledigt"
+  // (statt nur Peptide/Hormone wie oben): Tag für Tag über buildDayItems()
+  // gezählt, von Protokollstart bis heute (nicht bis Protokollende — noch
+  // nicht fällige Tage sollen die Quote nicht künstlich drücken). Auf 180
+  // Tage gedeckelt, damit ein sehr altes Protokoll keine lange Schleife
+  // auslöst.
+  const bereichsCompliance = useMemo(() => {
+    const heuteCap = today < endDatumObj ? today : endDatumObj;
+    const zaehler = {};
+    let cursor = new Date(startDatumObj);
+    cursor.setHours(0, 0, 0, 0);
+    const ende = new Date(heuteCap);
+    ende.setHours(0, 0, 0, 0);
+    let n = 0;
+    while (cursor <= ende && n < 180) {
+      const items = buildDayItems(cursor, appData);
+      for (const item of items) {
+        if (!zaehler[item.kategorie]) zaehler[item.kategorie] = { geplant: 0, erledigt: 0 };
+        zaehler[item.kategorie].geplant++;
+        if (item.done) zaehler[item.kategorie].erledigt++;
+      }
+      cursor = addDays(cursor, 1);
+      n++;
+    }
+    return Object.entries(zaehler)
+      .map(([kategorie, z]) => ({
+        kategorie,
+        label: KATEGORIE_META[kategorie]?.label || kategorie,
+        dot: KATEGORIE_META[kategorie]?.dot || textMuted,
+        prozent: z.geplant > 0 ? Math.round((z.erledigt / z.geplant) * 100) : null,
+        geplant: z.geplant,
+        erledigt: z.erledigt,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, startdatum, dauer]);
+
+  // Hydration/Tageslicht/Schlaf haben keinen einzelnen "geplant vs.
+  // erledigt"-Termin (kumulative Tageswerte) — hier stattdessen "an wie
+  // vielen Tagen im Zeitraum wurde das Tagesziel erreicht" bzw. bei Schlaf
+  // (kein Zielwert hinterlegt) der Durchschnitt.
+  const kumulativeCompliance = useMemo(() => {
+    const heuteCap = today < endDatumObj ? today : endDatumObj;
+    const startStr = toLocalISODate(startDatumObj);
+    const endeStr = toLocalISODate(heuteCap);
+    const imZeitraum = (datum) => datum >= startStr && datum <= endeStr;
+
+    const hydrationTage = (appData.hydrationEintraege || []).filter((e) => imZeitraum(e.datum));
+    const hydrationZielErreicht = appData.hydrationZielMl
+      ? hydrationTage.filter((e) => (e.mengeMl || 0) >= appData.hydrationZielMl).length
+      : 0;
+
+    const tageslichtTage = (appData.tageslichtEintraege || []).filter((e) => imZeitraum(e.datum));
+    const tageslichtZielErreicht = appData.tageslichtZielMinuten
+      ? tageslichtTage.filter((e) => (e.minuten || 0) >= appData.tageslichtZielMinuten).length
+      : 0;
+
+    const schlafTage = (appData.schlafEintraege || []).filter((e) => imZeitraum(e.datum));
+    const schlafDurchschnitt =
+      schlafTage.length > 0 ? (schlafTage.reduce((summe, e) => summe + (Number(e.stunden) || 0), 0) / schlafTage.length).toFixed(1) : null;
+
+    return { hydrationTage, hydrationZielErreicht, tageslichtTage, tageslichtZielErreicht, schlafTage, schlafDurchschnitt };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, startdatum, dauer]);
+
   const exportieren = async () => {
     if (!exportRef.current) return;
     setExportLaeuft(true);
@@ -378,6 +443,59 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
         )}
       </Card>
 
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Compliance je Bereich</div>
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: textMuted, marginBottom: 12 }}>Vom Protokollstart bis heute — nicht mitgezählt werden Tage, die noch bevorstehen.</div>
+        {bereichsCompliance.length === 0 && kumulativeCompliance.hydrationTage.length === 0 && kumulativeCompliance.tageslichtTage.length === 0 && kumulativeCompliance.schlafTage.length === 0 ? (
+          <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>Noch keine Daten im Protokollzeitraum.</div>
+        ) : (
+          <>
+            {bereichsCompliance.map((b) => (
+              <div key={b.kategorie} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: b.dot, flexShrink: 0 }} />
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{b.label}</div>
+                </div>
+                <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
+                  {b.prozent !== null ? `${b.prozent}%` : "–"} <span style={{ fontWeight: 500 }}>({b.erledigt}/{b.geplant})</span>
+                </div>
+              </div>
+            ))}
+            {kumulativeCompliance.hydrationTage.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: KATEGORIE_META.hydration.dot, flexShrink: 0 }} />
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Hydration</div>
+                </div>
+                <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
+                  Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
+                </div>
+              </div>
+            )}
+            {kumulativeCompliance.tageslichtTage.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: KATEGORIE_META.tageslicht.dot, flexShrink: 0 }} />
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Tageslicht</div>
+                </div>
+                <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
+                  Ziel an {kumulativeCompliance.tageslichtZielErreicht}/{kumulativeCompliance.tageslichtTage.length} Tagen erreicht
+                </div>
+              </div>
+            )}
+            {kumulativeCompliance.schlafDurchschnitt !== null && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: KATEGORIE_META.schlaf.dot, flexShrink: 0 }} />
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Schlaf</div>
+                </div>
+                <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)</div>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
+
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Export & Druck</div>
       <Card>
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>
@@ -439,6 +557,28 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
             Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)}
           </div>
           {compliance !== null && <div style={{ fontSize: 12 }}>Compliance: {compliance}%</div>}
+
+          <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Compliance je Bereich</div>
+          {bereichsCompliance.map((b) => (
+            <div key={b.kategorie} style={{ fontSize: 12, marginBottom: 2 }}>
+              {b.label}: {b.prozent !== null ? `${b.prozent}%` : "–"} ({b.erledigt}/{b.geplant})
+            </div>
+          ))}
+          {kumulativeCompliance.hydrationTage.length > 0 && (
+            <div style={{ fontSize: 12, marginBottom: 2 }}>
+              Hydration: Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
+            </div>
+          )}
+          {kumulativeCompliance.tageslichtTage.length > 0 && (
+            <div style={{ fontSize: 12, marginBottom: 2 }}>
+              Tageslicht: Ziel an {kumulativeCompliance.tageslichtZielErreicht}/{kumulativeCompliance.tageslichtTage.length} Tagen erreicht
+            </div>
+          )}
+          {kumulativeCompliance.schlafDurchschnitt !== null && (
+            <div style={{ fontSize: 12, marginBottom: 2 }}>
+              Schlaf: Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)
+            </div>
+          )}
         </div>
       </div>
     </>
