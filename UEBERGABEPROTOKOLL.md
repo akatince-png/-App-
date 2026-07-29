@@ -824,6 +824,99 @@ laut Ernährungsplan tatsächlich belegten Wochentag, Training = laut
 
 ---
 
+## 4b. Nachtrag 29.07. — Admin-Dashboard ("Verwalten als"-Modus)
+
+**Auftrag der Nutzerin:** Sie will sich als Admin anmelden und Zugriff auf
+Profile/Pläne aller Probandinnen und Probanden haben — u. a. um für Leute,
+die (noch) nicht selbstständig mit der KI ihren Plan erstellen können (z. B.
+ihre Eltern), das Ganze im Hintergrund einzustellen. Die Probandin/der
+Proband soll danach nur noch den fertigen Tagesplan auf ihrem/seinem
+eigenen Handy abrufen. Erst-Onboarding-Feinheiten (Sport-Istzustand,
+Körperkomposition etc.) sind bewusst zurückgestellt — heute zählte nur das
+Dashboard selbst.
+
+**Architekturentscheidung — kein Extra-UI, sondern "Verwalten als":** statt
+für den Admin ein zweites, eigenständiges UI zum Bearbeiten fremder Profile
+zu bauen, schaltet das Dashboard einfach um, FÜR WEN die ganz normale App
+gerade Daten lädt/speichert. Jeder Daten-Hook in `AppDataContext.jsx` nahm
+`userId` ohnehin schon als Parameter — der Admin klickt "Verwalten" bei
+einer Person, und ab dann läuft buchstäblich dieselbe App (Onboarding,
+KiChat, alle 9 Kategorien, Wochenübersicht, ...) mit deren `user_id` statt
+der eigenen. Dadurch ist "gleiches Design/gleicher Stil" automatisch erfüllt
+— es ist dieselbe Komponente, kein Nachbau.
+
+- **`src/context/AdminContext.jsx`** (neu): hält `proband` (`{ id, email,
+  vorname } | null`) — null heißt normaler eigener Account. NICHT
+  persistiert (kein sessionStorage), damit niemand nach einem Reload aus
+  Versehen dauerhaft im fremden Konto hängen bleibt.
+- **`src/context/AppDataContext.jsx`**: `userId = proband?.id || user?.id`
+  statt nur `user?.id`.
+- **`src/App.jsx`**: `AdminProvider` um `Root()` gelegt; `AppDataProvider`
+  bekommt `key={proband?.id || "self"}` — erzwingt beim Betreten/Verlassen
+  des Verwalten-als-Modus einen kompletten Remount (sonst bliebe z. B. der
+  `view`-State von `AuthenticatedApp` oder alter Hook-State hängen).
+- **`src/AuthenticatedApp.jsx`**: neuer `view === "admin"` (öffnet
+  `AdminDashboardView`), plus ein fest angepinntes grünes Banner ganz oben
+  ("Du verwaltest gerade: X — Zurück zum Dashboard"), sichtbar auf JEDEM
+  Screen, solange `proband` gesetzt ist — genau die gleiche Lehre wie beim
+  Onboarding-Abmelden-Bug vom selben Tag: ein Modus ohne jederzeit
+  sichtbaren Ausweg ist ein Bug, kein Feature.
+- **`src/views/admin/AdminDashboardView.jsx`** (neu): Liste aller Konten
+  (Name/E-Mail, Badge "Eingerichtet"/"Onboarding offen", Admin-Badge),
+  Suche, "Verwalten"-Knopf pro Zeile, "+ Neuen Zugang anlegen"-Formular.
+- **`src/views/plan/MehrTab.jsx`**: neuer "Admin-Dashboard"-Eintrag, nur
+  sichtbar wenn `appData.isAdmin` true ist (aus `useProfileData.js`, liest
+  `profiles.is_admin`).
+
+**Datenbank (`supabase/migrations/0035_admin_dashboard.sql` — NOCH NICHT
+DEPLOYT):**
+- `profiles.is_admin boolean default false`, `profiles.vorname text`.
+- `public.is_admin(uid)` — Hilfsfunktion.
+- `public.admin_liste_probanden()` — liefert die Probandenliste inkl.
+  E-Mail (liegt in `auth.users`, das der Browser nicht direkt lesen darf).
+- Pro Tabelle (alle ~35 mit `user_id`-Spalte) EINE zusätzliche, rein
+  additive RLS-Policy `"<tabelle>: admin voller Zugriff"`. Die
+  bestehenden "eigene Zeilen"-Policies bleiben unverändert — mehrere
+  permissive Policies für denselben Befehl verknüpfen sich in Postgres
+  automatisch per OR. Reines Hinzufügen, kein Risiko für bestehende
+  Nutzer:innen.
+
+**Edge Function `supabase/functions/admin-create-proband/index.ts` — NOCH
+NICHT DEPLOYT:** legt aus dem Dashboard heraus ein neues Konto an
+(service-role-basiert). Wichtig: ein normales `supabase.auth.signUp()` im
+Browser hätte die eigene Admin-Session durch die neue ersetzt — deshalb
+läuft das Anlegen serverseitig mit dem (automatisch bereitstehenden)
+`SUPABASE_SERVICE_ROLE_KEY`, ohne die Admin-Session zu berühren. Prüft
+selbst, ob die aufrufende Person Admin ist, bevor sie irgendwas anlegt.
+
+**⚠️ Für die Nutzerin — zwei Deploy-Schritte, bevor das Dashboard nutzbar
+ist** (wie beim `send-due-reminders`-Deploy: SQL Editor bzw. Edge Functions
+im Supabase-Dashboard, kein Terminal nötig):
+1. Migration `0035_admin_dashboard.sql` im Supabase-Dashboard unter
+   "SQL Editor" einmal komplett einfügen und ausführen (Inhalt von GitHub
+   kopieren, wie beim letzten Mal).
+2. Neue Edge Function `admin-create-proband` im Dashboard unter
+   "Edge Functions" → "Deploy a new function" mit dem Inhalt von
+   `supabase/functions/admin-create-proband/index.ts` anlegen.
+3. Sich selbst zur Admin machen — im SQL Editor einmalig (E-Mail-Adresse
+   anpassen):
+   ```sql
+   update public.profiles set is_admin = true
+   where id = (select id from auth.users where email = 'DEINE-E-MAIL@...');
+   ```
+   Danach Seite neu laden — unter "Mehr" erscheint "Admin-Dashboard".
+
+**Bewusst zurückgestellt (nächster Schritt, nicht heute):** die im
+Onboarding erwähnten Detailfragen zum Sport-Istzustand/Körperkomposition
+sind noch nicht eingebaut — sobald das Dashboard steht, kann das als
+zusätzlicher Onboarding-Schritt nachgezogen werden. Push-Erinnerungen sind
+geräte-, nicht kontogebunden — wenn der Admin während der Verwaltung fremd
+"Push aktivieren" drückt, würden Erinnerungen an SEIN Gerät gehen statt an
+das der Probandin/des Probanden; das UI verhindert das nicht aktiv, der
+Admin muss es einfach nicht anklicken (kein Automatismus, der es versehentlich auslöst).
+
+---
+
 ## 5. Erinnerungs-/Push-System
 
 **Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
@@ -991,10 +1084,20 @@ Das Erinnerungs-/Push-System deckt jetzt **alle 9 Kategorien** ab und ist
 letzten großen Bestandsaufnahme sind abgearbeitet: Notfallmodus-
 Dokumentation, KI an/aus-Schalter, automatische "ausgefallen"-Erfassung,
 Compliance für alle 9 Bereiche, Korrelationserkennung (Abschnitt 4a).
-Kein offener manueller Deploy-Schritt mehr. Zusätzlich behoben: Erst-
-Onboarding hatte keinen Abmelden-Ausweg, wenn es nicht in einem Zug
-durchlaufen wurde (siehe Nachtrag 29.07. bei den Willkommens-Folien) —
-gefixt, reine Frontend-Änderung. Nächster sinnvoller Ansatzpunkt:
+Zusätzlich behoben: Erst-Onboarding hatte keinen Abmelden-Ausweg, wenn es
+nicht in einem Zug durchlaufen wurde (siehe Nachtrag 29.07. bei den
+Willkommens-Folien) — gefixt, reine Frontend-Änderung.
+
+**Neu, NOCH NICHT von der Nutzerin deployt:** Admin-Dashboard
+("Verwalten als"-Modus), siehe Abschnitt 4b im Detail. Migration
+`0035_admin_dashboard.sql` + Edge Function `admin-create-proband` müssen
+über das Supabase-Dashboard eingespielt werden, danach sich selbst per
+SQL einmalig `is_admin = true` setzen — genaue Schritte in Abschnitt 4b
+am Ende. Bis dahin ist der Code im Repo, aber der "Admin-Dashboard"-Eintrag
+unter "Mehr" bleibt unsichtbar (kein `is_admin` in der DB gesetzt).
+
+Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy dieser beiden
+Bausteine helfen (analog zum `send-due-reminders`-Deploy), danach
 verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a. Punkte 4-7,
 alle bewusst zurückgestellt/verworfen, kein akuter Handlungsbedarf) oder
 auf neue Rückmeldung der Nutzerin warten.

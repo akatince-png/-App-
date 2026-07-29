@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { pruefeAusgefalleneEintraege } from "../utils/ausgefallenSweep";
 import { useAuth } from "./AuthContext";
+import { useAdmin } from "./AdminContext";
 import { useProfileData } from "../data/useProfileData";
 import { useProtocolData } from "../data/useProtocolData";
 import { usePeptideLogs } from "../data/usePeptideLogs";
@@ -27,7 +28,14 @@ const AppDataContext = createContext(null);
 
 export function AppDataProvider({ children }) {
   const { user } = useAuth();
-  const userId = user?.id;
+  // Im "Verwalten als"-Modus (Admin-Dashboard) lädt/speichert die App die
+  // Daten der ausgewählten Probandin/des Probanden statt der eigenen —
+  // jeder Hook unten nimmt userId ohnehin schon als Parameter, dadurch
+  // reicht dieser eine Umschaltpunkt, um die komplette App stellvertretend
+  // zu bedienen. Root() in App.jsx erzwingt beim Wechsel einen Remount
+  // (key={proband?.id || "self"}), damit kein alter State übrig bleibt.
+  const { proband } = useAdmin();
+  const userId = proband?.id || user?.id;
 
   const profileData = useProfileData(userId);
   const protocolData = useProtocolData(userId);

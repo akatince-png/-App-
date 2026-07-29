@@ -3,7 +3,9 @@ import { Shell } from "./ui/primitives";
 import { textMuted } from "./ui/theme";
 import { useAppData } from "./context/AppDataContext";
 import { useAuth } from "./context/AuthContext";
+import { useAdmin } from "./context/AdminContext";
 import HomeView from "./views/HomeView";
+import AdminDashboardView from "./views/admin/AdminDashboardView";
 import LexikonView from "./views/LexikonView";
 import TagesplanView from "./views/TagesplanView";
 import PlanView from "./views/plan/PlanView";
@@ -42,6 +44,7 @@ function LoadingScreen() {
 export default function AuthenticatedApp() {
   const appData = useAppData();
   const { signOut } = useAuth();
+  const { proband, verwalteAls, verlasseVerwaltung } = useAdmin();
   const {
     loading,
     onboardingComplete,
@@ -53,6 +56,7 @@ export default function AuthenticatedApp() {
     ziele,
     peptide,
     protokollArchivieren,
+    isAdmin,
   } = appData;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
@@ -148,7 +152,14 @@ export default function AuthenticatedApp() {
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
     screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("peptide")} />;
   } else if (view === "mehr") {
-    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} />;
+    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} onOpenAdmin={isAdmin ? () => setView("admin") : undefined} />;
+  } else if (view === "admin") {
+    // Nur erreichbar aus dem eigenen Konto heraus (nicht während man schon
+    // "als" jemand anderes verwaltet, proband ist dann null) — der
+    // key={proband?.id || "self"}-Remount in App.jsx sorgt dafür, dass
+    // dieser view-State beim Betreten/Verlassen des Verwalten-als-Modus
+    // ohnehin zurückgesetzt wird.
+    screen = <AdminDashboardView onHome={() => setView("home")} onVerwalteAls={verwalteAls} />;
   } else {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }
@@ -157,6 +168,33 @@ export default function AuthenticatedApp() {
 
   return (
     <>
+      {proband && (
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            padding: "10px 16px",
+            background: "#1E2B29",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          <span>Du verwaltest gerade: {proband.vorname || proband.email}</span>
+          <button
+            onClick={verlasseVerwaltung}
+            className="mp-tap"
+            style={{ border: "none", background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 10, padding: "7px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+          >
+            Zurück zum Dashboard
+          </button>
+        </div>
+      )}
       {screen}
       {zeigeFab && <Fab onClick={neuesProtokoll} />}
     </>

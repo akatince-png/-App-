@@ -14,6 +14,7 @@ export function useProfileData(userId) {
   });
   const [datenteilung, setDatenteilungState] = useState(false);
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [aktiveMesswerte, setAktiveMesswerte] = useState(DEFAULT_AKTIVE);
   const [customMesswerte, setCustomMesswerte] = useState([]);
   const [categoryZiele, setCategoryZieleState] = useState({});
@@ -38,6 +39,7 @@ export function useProfileData(userId) {
         });
         setDatenteilungState(!!profile.datenteilung);
         setOnboardingCompleteState(!!profile.onboarding_complete);
+        setIsAdmin(!!profile.is_admin);
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
         setCategoryZieleState(profile.category_ziele || {});
         setErinnerungenState(profile.erinnerungen || {});
@@ -254,6 +256,7 @@ export function useProfileData(userId) {
     onboardingComplete,
     completeOnboarding,
     resetOnboarding,
+    isAdmin,
     aktiveMesswerte,
     toggleMesswert,
     customMesswerte,

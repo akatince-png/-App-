@@ -9,7 +9,7 @@ import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import { AIService } from "../../services/aiService";
 import { getCoachName, saveCoachName, STANDARD_COACH_NAME, getKiAktiv, saveKiAktiv } from "../../utils/coachStorage";
 
-export default function MehrTab({ onOpenLexikon }) {
+export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
   const { signOut, user } = useAuth();
   const {
     resetOnboarding,
@@ -97,6 +97,28 @@ export default function MehrTab({ onOpenLexikon }) {
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 700 }}>{t("mehr.lexikon")}</span>
+          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+        </button>
+      )}
+
+      {onOpenAdmin && (
+        <button
+          onClick={onOpenAdmin}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${cardBorder}`,
+            background: "#fff",
+            marginBottom: 20,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 700 }}>Admin-Dashboard</span>
           <span style={{ color: textMuted, fontSize: 16 }}>›</span>
         </button>
       )}
