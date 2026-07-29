@@ -1,6 +1,5 @@
 import { keyOf, sameDay, toLocalISODate } from "./dates";
 import { faelltAnTag } from "./schedule";
-import { accent, accentDark, accentSoft } from "../ui/theme";
 
 // getDay()-indexiert (0 = Sonntag), passend zu JS' Date#getDay().
 const GETDAY_TO_LABEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -13,11 +12,16 @@ export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 // überall derselben Marken-Akzentfarbe (Nutzerinnen-Vorgabe, 27.07.):
 // Tageslicht = Gelb, Training = Rot, Medikamente = Lila, Hydration = Blau,
 // Schlaf = Indigo (nachtnahes Dunkelblau, unterscheidbar von Medikamente-
-// Lila), Peptide = Marken-Grün, Supplemente = Gold, Ernährung = Terrakotta,
+// Lila), Peptide = Grün, Supplemente = Gold, Ernährung = Terrakotta,
 // Gewohnheiten = Teal. `dot` ist die kräftige Version (Icons, Ringe,
-// Buttons), `bg`/`text` die helle Variante für Badges/Chips.
+// Buttons), `bg`/`text` die helle Variante für Badges/Chips. Peptide nutzte
+// zwischenzeitlich versehentlich dieselbe Farbe wie die allgemeine
+// Marken-Akzentfarbe (`accent`, seit dem Indigo-Redesign) — dadurch sahen
+// z. B. "Peptide" und andere generisch eingefärbte Elemente identisch aus
+// (bestätigter Bug, 29.07.). Jetzt ein eigenständiges Grün, klar getrennt
+// von `success` (Petrol) und Gewohnheiten (Teal).
 export const KATEGORIE_META = {
-  peptid: { bg: accentSoft, text: accentDark, dot: accent, label: "Peptid" },
+  peptid: { bg: "#E7F2E8", text: "#2C5C30", dot: "#4F9153", label: "Peptid" },
   hormon: { bg: "#F1E9F6", text: "#6B3F91", dot: "#8B5CB0", label: "Medikament" },
   supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
