@@ -922,12 +922,12 @@ der Nutzerin deployt und bestätigt (`is_admin` gesetzt, Dashboard sichtbar).
 
 ## 4c. Nachtrag 29.07. — Admin-Hinweise über den Assistenten zustellen
 
-**Auftrag der Nutzerin:** Acker soll sich wie "ihr Mitarbeiter am Kunden"
+**Auftrag der Nutzerin:** Aka soll sich wie "ihr Mitarbeiter am Kunden"
 verhalten — sie will ihm Dinge mitgeben können ("beim nächsten Mal die
 Übung X erklären"), oder eine Nachricht hinterlassen, die die Person nach
 der nächsten Aktion in einem Bereich bekommt. Explizit NICHT als separates
 "Nachricht vom Admin"-Postfach — es soll wirken, als käme es natürlich von
-Acker selbst.
+Aka selbst.
 
 **Zwei Modi, beide über `admin_notizen` (Migration
 `0036_admin_notizen.sql` — NOCH NICHT DEPLOYT):**
@@ -945,7 +945,7 @@ Acker selbst.
   des Verlaufs erst auf offene Nachrichten, schreibt sie als ganz normale
   `coach_nachrichten`-Zeile (rolle "coach") und markiert sie als
   zugestellt — dadurch taucht die Nachricht 1:1 wie eine normale Antwort
-  von Acker im Chat auf, keine Sonderbehandlung in der Anzeige nötig.
+  von Aka im Chat auf, keine Sonderbehandlung in der Anzeige nötig.
 
 Funktioniert unabhängig davon, ob der Admin gerade "verwaltet" oder die
 Person später selbst mit ihrem eigenen Konto den Chat öffnet — beide Male
@@ -1150,7 +1150,7 @@ eingespielt, die Nutzerin ist als Admin markiert und sieht das Dashboard
 unter "Mehr".
 
 **Neu, NOCH NICHT deployt:** Admin-Hinweise über den Assistenten
-zustellen (Abschnitt 4c) — Acker kann jetzt Hintergrundwissen oder direkte
+zustellen (Abschnitt 4c) — Aka kann jetzt Hintergrundwissen oder direkte
 Nachrichten bekommen, die der Admin pro Proband hinterlässt, ohne dass es
 wie ein separates Verwaltungs-Postfach wirkt. Braucht noch Migration
 `0036_admin_notizen.sql` im Supabase-Dashboard (SQL Editor, gleiches
