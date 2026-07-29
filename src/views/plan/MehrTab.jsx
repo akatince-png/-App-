@@ -7,7 +7,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import { AIService } from "../../services/aiService";
-import { getCoachName, saveCoachName, STANDARD_COACH_NAME } from "../../utils/coachStorage";
+import { getCoachName, saveCoachName, STANDARD_COACH_NAME, getKiAktiv, saveKiAktiv } from "../../utils/coachStorage";
 
 export default function MehrTab({ onOpenLexikon }) {
   const { signOut, user } = useAuth();
@@ -31,6 +31,12 @@ export default function MehrTab({ onOpenLexikon }) {
   const [kiAntwort, setKiAntwort] = useState(null);
   const [kiFehler, setKiFehler] = useState(null);
   const [coachName, setCoachNameState] = useState(getCoachName());
+  const [kiAktiv, setKiAktivState] = useState(() => getKiAktiv());
+
+  const handleKiAktivUmschalten = (next) => {
+    setKiAktivState(next);
+    saveKiAktiv(next);
+  };
 
   const DATENSCHUTZ = ["mehr.datenschutz.1", "mehr.datenschutz.2", "mehr.datenschutz.3", "mehr.datenschutz.4", "mehr.datenschutz.5"];
   const ERWEITERUNGEN = ["mehr.erweiterungen.1", "mehr.erweiterungen.2", "mehr.erweiterungen.3", "mehr.erweiterungen.4"];
@@ -203,6 +209,18 @@ export default function MehrTab({ onOpenLexikon }) {
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Assistent</div>
       <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${cardBorder}` }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>Assistent {kiAktiv ? "aktiv" : "ausgeschaltet"}</div>
+            <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2, maxWidth: 220 }}>
+              {kiAktiv
+                ? "Der Assistent (Chat, Sprache, Vorschläge) ist überall in der App verfügbar."
+                : "Kein Assistent mehr sichtbar — alle manuellen Formulare funktionieren unverändert."}
+            </div>
+          </div>
+          <Pill label={kiAktiv ? "An" : "Aus"} selected={kiAktiv} onClick={() => handleKiAktivUmschalten(!kiAktiv)} />
+        </div>
+
         <Label>Name deines Assistenten</Label>
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <div style={{ flex: 1 }}>
@@ -230,7 +248,7 @@ export default function MehrTab({ onOpenLexikon }) {
         </div>
         <button
           onClick={handleKiTest}
-          disabled={kiLadend}
+          disabled={kiLadend || !kiAktiv}
           style={{
             width: "100%",
             padding: "13px 16px",
@@ -238,7 +256,8 @@ export default function MehrTab({ onOpenLexikon }) {
             border: `1px solid ${accentDark}`,
             fontSize: 14,
             fontWeight: 700,
-            cursor: kiLadend ? "not-allowed" : "pointer",
+            opacity: kiAktiv ? 1 : 0.5,
+            cursor: kiLadend || !kiAktiv ? "not-allowed" : "pointer",
             background: "#fff",
             color: accentDark,
           }}

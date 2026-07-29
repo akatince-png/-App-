@@ -12,59 +12,75 @@ import { useT } from "../i18n/translate";
 const normalisiereZeiten = (zeiten) =>
   Array.isArray(zeiten) ? zeiten.map((z) => (typeof z === "string" ? { zeit: z, menge: "", startDatum: "" } : z)) : [];
 
-// Hydration-Erinnerungszeiten: eigene Liste konkreter Uhrzeit+Menge-Gaben
-// (statt nur eines Ja/Nein-Schalters wie bei den anderen Kategorien), da der
-// serverseitige Erinnerungs-Versand (send-due-reminders) genau diese Zeiten
-// abfragt. Jede Gabe hat ein Datum dabei — leer heißt "läuft schon ab heute".
-// Geteilt zwischen dem Hydration-Onboarding-Schritt (Ersteingabe) und
-// HydrationView (laufende Pflege).
-export default function HydrationErinnerungenCard() {
+// Erinnerungszeiten-Liste: eigene Liste konkreter Uhrzeiten (statt nur eines
+// Ja/Nein-Schalters wie bei den Dosierungs-Kategorien), da der serverseitige
+// Erinnerungs-Versand (send-due-reminders) genau diese Zeiten abfragt.
+// Ursprünglich nur für Hydration gebaut, jetzt verallgemeinert (29.07.) für
+// Tageslicht/Schlaf — Kategorien ohne feste Dosierungs-/Wochenplan-Uhrzeit,
+// bei denen die Person die Erinnerungszeit(en) frei selbst festlegt.
+// Jede Gabe hat ein Startdatum dabei — leer heißt "läuft schon ab heute".
+// Geteilt zwischen dem jeweiligen Onboarding-Schritt (Ersteingabe) und der
+// laufenden Pflege in der Bereichs-Ansicht selbst.
+//
+// Props:
+// - kategorie: Schlüssel in `erinnerungen` (z. B. "hydration", "tageslicht", "schlaf")
+// - labelKey: i18n-Key für die Beschriftung der Liste
+// - mengeLabel: optional — Platzhalter/Einheit für ein zusätzliches
+//   Mengenfeld (z. B. "ml" bei Hydration); weggelassen bei Kategorien ohne
+//   sinnvolle Menge (Tageslicht, Schlaf)
+// - mengeStandard: Startwert fürs Mengenfeld
+// - zeitStandard: Startwert für eine neue Uhrzeit
+export default function ZeitErinnerungenCard({ kategorie, labelKey, mengeLabel, mengeStandard = "", zeitStandard = "12:00" }) {
   const { erinnerungen, setErinnerung } = useAppData();
   const { t } = useT();
-  const [zeiten, setZeiten] = useState(() => normalisiereZeiten(erinnerungen?.hydration?.zeiten));
-  const [neueZeit, setNeueZeit] = useState("12:00");
-  const [neueMenge, setNeueMenge] = useState("300");
+  const [zeiten, setZeiten] = useState(() => normalisiereZeiten(erinnerungen?.[kategorie]?.zeiten));
+  const [neueZeit, setNeueZeit] = useState(zeitStandard);
+  const [neueMenge, setNeueMenge] = useState(mengeStandard);
   const [neuesDatum, setNeuesDatum] = useState("");
 
   const handleErinnerungChange = (v) => {
-    setErinnerung("hydration", v ? { aktiv: true, zeiten } : false);
+    setErinnerung(kategorie, v ? { aktiv: true, zeiten } : false);
   };
 
   const zeitHinzufuegen = () => {
     if (!neueZeit) return;
-    const next = [...zeiten, { zeit: neueZeit, menge: neueMenge, startDatum: neuesDatum }].sort((a, b) => a.zeit.localeCompare(b.zeit));
+    const eintrag = { zeit: neueZeit, startDatum: neuesDatum };
+    if (mengeLabel) eintrag.menge = neueMenge;
+    const next = [...zeiten, eintrag].sort((a, b) => a.zeit.localeCompare(b.zeit));
     setZeiten(next);
-    setErinnerung("hydration", { aktiv: true, zeiten: next });
-    setNeueZeit("12:00");
-    setNeueMenge("300");
+    setErinnerung(kategorie, { aktiv: true, zeiten: next });
+    setNeueZeit(zeitStandard);
+    setNeueMenge(mengeStandard);
     setNeuesDatum("");
   };
   const zeitFeldAendern = (i, feld, val) => {
     const next = zeiten.map((e, idx) => (idx === i ? { ...e, [feld]: val } : e));
     setZeiten(next);
-    setErinnerung("hydration", { aktiv: true, zeiten: next });
+    setErinnerung(kategorie, { aktiv: true, zeiten: next });
   };
   const zeitEntfernen = (i) => {
     const next = zeiten.filter((_, idx) => idx !== i);
     setZeiten(next);
-    setErinnerung("hydration", { aktiv: true, zeiten: next });
+    setErinnerung(kategorie, { aktiv: true, zeiten: next });
   };
 
   return (
     <>
-      <ErinnerungField value={erinnerungen.hydration} onChange={handleErinnerungChange} />
+      <ErinnerungField value={erinnerungen[kategorie]} onChange={handleErinnerungChange} />
 
-      {erinnerungen.hydration && (
+      {erinnerungen[kategorie] && (
         <div style={{ marginTop: 12 }}>
-          <Label>{t("onboarding.hydration.erinnerungszeiten.label")}</Label>
+          <Label>{t(labelKey)}</Label>
           {zeiten.map((eintrag, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
               <div style={{ flex: 1.2 }}>
                 <TimeWheelField value={eintrag.zeit} onChange={(v) => zeitFeldAendern(i, "zeit", v)} />
               </div>
-              <div style={{ width: 64 }}>
-                <TextInput type="number" value={eintrag.menge} onChange={(v) => zeitFeldAendern(i, "menge", v)} placeholder="ml" />
-              </div>
+              {mengeLabel && (
+                <div style={{ width: 64 }}>
+                  <TextInput type="number" value={eintrag.menge} onChange={(v) => zeitFeldAendern(i, "menge", v)} placeholder={mengeLabel} />
+                </div>
+              )}
               <div style={{ flex: 1 }}>
                 <TextInput type="date" value={eintrag.startDatum || ""} onChange={(v) => zeitFeldAendern(i, "startDatum", v)} />
               </div>
@@ -82,9 +98,11 @@ export default function HydrationErinnerungenCard() {
             <div style={{ flex: 1.2 }}>
               <TimeWheelField value={neueZeit} onChange={setNeueZeit} />
             </div>
-            <div style={{ width: 64 }}>
-              <TextInput type="number" value={neueMenge} onChange={setNeueMenge} placeholder="ml" />
-            </div>
+            {mengeLabel && (
+              <div style={{ width: 64 }}>
+                <TextInput type="number" value={neueMenge} onChange={setNeueMenge} placeholder={mengeLabel} />
+              </div>
+            )}
             <div style={{ flex: 1 }}>
               <TextInput type="date" value={neuesDatum} onChange={setNeuesDatum} />
             </div>

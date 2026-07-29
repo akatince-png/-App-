@@ -101,6 +101,7 @@ export default function HomeView({ onOpenView }) {
     hydrationHinzufuegen,
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
+    aenderungVermerken,
   } = useAppData();
 
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
@@ -112,9 +113,19 @@ export default function HomeView({ onOpenView }) {
   // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
   const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
 
+  // Notfallmodus-Tage werden jetzt im Tagesverlauf vermerkt (Nutzerinnen-
+  // Vorgabe: "Notfallmodus-Tage werden nicht dauerhaft gespeichert") —
+  // sowohl Aktivierung als auch Beendigung, damit im Protokoll sichtbar
+  // ist, wie lange ein Notfalltag gedauert hat.
   const handleToggleEmergencyMode = (newState) => {
     setIsEmergencyMode(newState);
     saveADHSMode(newState);
+    aenderungVermerken({
+      kategorie: "notfallmodus",
+      itemName: "Notfallmodus",
+      aktion: newState ? "aktiviert" : "beendet",
+      detail: newState ? "Nur Basics heute — kein vollständiger Plan genutzt" : "",
+    });
   };
 
   const handleToggleAlleWidgets = () => {

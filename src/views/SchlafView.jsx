@@ -6,6 +6,7 @@ import { cardBorder, danger, textMuted } from "../ui/theme";
 import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
+import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
@@ -158,6 +159,11 @@ export default function SchlafView({ onHome, embedded = false }) {
           </div>
         )}
       />
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>
+      <Card style={{ marginBottom: 14 }}>
+        <ZeitErinnerungenCard kategorie="schlaf" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="22:00" />
+      </Card>
 
       {schlafEintraege.length > 0 && (
         <>

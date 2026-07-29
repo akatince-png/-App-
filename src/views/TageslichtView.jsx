@@ -3,7 +3,7 @@ import { Shell, Card, Label, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
-import ErinnerungField from "../ui/ErinnerungField";
+import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
 import NumberWheelField from "../ui/NumberWheelField";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
@@ -36,9 +36,11 @@ function motivationsText(heuteMinuten, zielMinuten) {
 // Tageslicht verbracht wird — bewusst mit demselben Aufbau wie
 // HydrationView (Ring, Schnellauswahl, Korrektur, Tagesziel), aber ohne
 // die dortigen zusätzlichen Check-in-Felder (Elektrolyte/Durstgefühl), die
-// hier keine Entsprechung haben. Erinnerung läuft über das generische
-// Ja/Nein-Feld (ErinnerungField) wie bei den meisten anderen Kategorien,
-// statt über eine eigene Uhrzeiten-Liste wie bei Hydration.
+// hier keine Entsprechung haben. Erinnerung läuft über dieselbe
+// Uhrzeiten-Liste (ZeitErinnerungenCard) wie bei Hydration, statt nur
+// über ein Ja/Nein-Feld — Tageslicht hat kein einzelnes "geplant vs.
+// erledigt"-Paar wie die Dosierungs-Kategorien, sondern braucht
+// selbst festgelegte Erinnerungszeiten für send-due-reminders.
 export default function TageslichtView({ onHome, embedded = false }) {
   const {
     tageslichtEintraege,
@@ -47,8 +49,6 @@ export default function TageslichtView({ onHome, embedded = false }) {
     tageslichtHinzufuegen,
     tageslichtZielSetzen,
     aenderungVermerken,
-    erinnerungen,
-    setErinnerung,
   } = useAppData();
   const [zielEntwurf, setZielEntwurf] = useState(String(tageslichtZielMinuten));
   const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
@@ -197,7 +197,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>
       <Card style={{ marginBottom: 14 }}>
-        <ErinnerungField value={erinnerungen.tageslicht} onChange={(v) => setErinnerung("tageslicht", v)} />
+        <ZeitErinnerungenCard kategorie="tageslicht" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="12:00" />
       </Card>
 
       {tageslichtEintraege.length > 0 && (

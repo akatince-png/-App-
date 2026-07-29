@@ -54,3 +54,29 @@ export function saveVorlesenAktiv(aktiv) {
     // LocalStorage nicht verfügbar — Einstellung gilt dann nur für diese Sitzung.
   }
 }
+
+// Globaler An/Aus-Schalter für den Assistenten (Einstellungen → "Mehr") —
+// Default AN. Bei "Aus" rendert KiChat.jsx überhaupt nicht mehr (kein
+// schwebender Orb, kein Chat-Fenster) — die manuellen Formulare bleiben
+// davon komplett unberührt (Leitprinzip: nie ein Angebot durch Entfernen
+// des jeweils anderen Weges einschränken).
+const KI_AKTIV_KEY = "kiAssistentAktiv";
+
+export function getKiAktiv() {
+  if (typeof window === "undefined") return true;
+  try {
+    const gespeichert = localStorage.getItem(KI_AKTIV_KEY);
+    return gespeichert === null ? true : gespeichert === "true";
+  } catch {
+    return true;
+  }
+}
+
+export function saveKiAktiv(aktiv) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(KI_AKTIV_KEY, aktiv ? "true" : "false");
+  } catch {
+    // LocalStorage nicht verfügbar — Einstellung gilt dann nur für diese Sitzung.
+  }
+}

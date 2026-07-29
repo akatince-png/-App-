@@ -4,7 +4,7 @@ import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted
 import CoachOrb from "./CoachOrb";
 import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
-import { getCoachName, getVorlesenAktiv } from "../utils/coachStorage";
+import { getCoachName, getVorlesenAktiv, getKiAktiv } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
 import { wissensBasisText } from "../utils/wissensBasis";
 import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
@@ -253,8 +253,9 @@ export default function KiChat({
 
   // autoStart: schon eingebettet sichtbar statt hinter einem Trigger-Orb —
   // das Erscheinen dieses Screens gilt bereits als Zustimmung zum Gespräch.
+  // Läuft nicht, wenn der Assistent global ausgeschaltet ist (siehe unten).
   useEffect(() => {
-    if (!autoStart || eingeleitetRef.current) return;
+    if (!autoStart || eingeleitetRef.current || !getKiAktiv()) return;
     eingeleitetRef.current = true;
     starteGespraech();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -288,6 +289,11 @@ export default function KiChat({
   const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || einleitung || "";
   const zeigeUebernehmenKnopf = onUebernehmen && verlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
   const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel || `An ${getCoachName()} übermitteln`;
+
+  // Globaler An/Aus-Schalter (Einstellungen → "Mehr"): bei "Aus" erscheint
+  // weder der schwebende Orb noch ein offenes Chat-Fenster — die manuellen
+  // Formulare rund um diese Stelle bleiben davon komplett unberührt.
+  if (!getKiAktiv()) return null;
 
   if (!offen) {
     return (

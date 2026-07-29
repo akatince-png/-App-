@@ -4,29 +4,32 @@
 // pro angemeldetem Nutzer) hier serverseitig über ALLE Nutzer hinweg, mit
 // dem Service-Role-Key statt einem Nutzer-JWT.
 //
-// Deckt ab: Hydration (eigene Uhrzeiten-Liste in profiles.erinnerungen.
-// hydration.zeiten), Peptide/Medikamente/Supplemente (eigene Dosierungs-/
-// Intervall-Spalten, siehe protocol_peptide/hormones/supplements) und
-// Gewohnheiten (feste Uhrzeit, siehe routines). Jede dieser 5 Kategorien
-// wird nur geprüft, wenn profiles.erinnerungen[kategorie] für den
-// jeweiligen Nutzer aktiv ist (siehe ErinnerungField.jsx / MehrTab.jsx).
+// Deckt jetzt alle 9 Lebensbereiche ab:
+// - Eigene Uhrzeiten-Liste (profiles.erinnerungen[kategorie].zeiten, frei
+//   von der Person gepflegt über ZeitErinnerungenCard.jsx): Hydration,
+//   Tageslicht, Schlaf — Kategorien mit kumulativem Tageswert statt
+//   Einzeltermin, daher ohne eigenes "geplant vs. erledigt"-Paar.
+// - Dosierungs-/Intervall-Spalten (protocol_peptide/hormones/supplements):
+//   Peptide, Medikamente, Supplemente.
+// - Feste Uhrzeit ohne Intervallsystem (routines): Gewohnheiten.
+// - Wochenplan mit Uhrzeit (training_wochenplan/meal_wochenplan): Training,
+//   Ernährung.
+// Jede Kategorie wird nur geprüft, wenn profiles.erinnerungen[kategorie]
+// für den jeweiligen Nutzer aktiv ist (siehe ErinnerungField.jsx/
+// ZeitErinnerungenCard.jsx/MehrTab.jsx).
 //
-// Drei Arten von Erinnerungen pro Kategorie (Hydration nur die ersten zwei,
-// da "trinken" keine bestätigbare Einzelaktion mit eigenem erledigt-Log
-// ist):
+// Drei Arten von Erinnerungen pro Kategorie (die reine Zeiten-Liste
+// Hydration/Tageslicht/Schlaf nur die ersten zwei, da dort keine einzelne
+// bestätigbare Aktion mit eigenem erledigt-Log existiert):
 //   1. Zur geplanten Uhrzeit selbst.
 //   2. Vorab, VORLAUF_MINUTEN vorher ("Gleich dran").
 //   3. Nachfass, NACHFASS_MINUTEN danach, aber nur wenn bis dahin noch
 //      nicht bestätigt wurde (Abgleich gegen peptide_logs/hormone_logs/
-//      supplement_logs/routine_logs für den heutigen Tag).
+//      supplement_logs/routine_logs/training_sessions/meal_logs für den
+//      heutigen Tag).
 // Beide Zeitfenster sind bewusst als feste Werte statt pro Nutzer/Kategorie
 // konfigurierbar gehalten — laut Übergabeprotokoll ein deklarierter erster
 // Schritt, kein Anspruch auf die volle "10-30 Min., je nach Kontext"-Vision.
-//
-// Noch NICHT abgedeckt (bewusst zurückgestellt, siehe UEBERGABEPROTOKOLL.md):
-// Training/Ernährung (Wochenplan-basiert, andere Datenstruktur) und
-// Tageslicht/Schlaf (aktuell keine Uhrzeit pro Eintrag hinterlegt, ohne
-// die gibt's nichts, wozu man serverseitig "fällig" sagen könnte).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
@@ -94,6 +97,10 @@ function verschobeneUhrzeit(uhrzeit: string, deltaMinuten: number): string | nul
 }
 
 const WEEKDAY_INDEX: Record<string, number> = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
+// Umkehrung von WEEKDAY_INDEX — Postgres getUTCDay() (0=So..6=Sa) auf das
+// im Wochenplan verwendete Kürzel zurückführen (training_wochenplan/
+// meal_wochenplan, beide ohne Intervall-System, nur "an welchem Wochentag").
+const WEEKDAY_NAMEN = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 // Portierung von faelltAnTag() aus src/utils/schedule.js (Client) — dieselbe
 // Intervall-Logik (fixed/custom/cycle/weekdays), damit serverseitiger
@@ -234,25 +241,33 @@ Deno.serve(async (req) => {
       nutzerInfo.set(profile.id, { zeitzone, jetzt, heute, erinnerungen: profile.erinnerungen || {} });
     }
 
-    // --- Hydration: eigene Uhrzeiten-Liste statt Intervall-Logik ---------
-    // Nur Erinnerung + Vorab-Erinnerung — "trinken" ist keine bestätigbare
-    // Einzelaktion mit eigenem erledigt-Log, daher kein Nachfass-Fenster.
-    for (const [userId, info] of nutzerInfo) {
-      const hydration = info.erinnerungen.hydration as { aktiv?: boolean; zeiten?: { zeit?: string; menge?: string; startDatum?: string }[] } | undefined;
-      if (!hydration?.aktiv || !Array.isArray(hydration.zeiten)) continue;
+    // --- Hydration/Tageslicht/Schlaf: eigene Uhrzeiten-Liste statt ------
+    // Intervall-Logik (ZeitErinnerungenCard.jsx) — kumulative Tageswerte
+    // ohne Einzeltermin, daher nur Erinnerung + Vorab-Erinnerung, kein
+    // Nachfass-Fenster (keine bestätigbare Einzelaktion mit eigenem Log).
+    const ZEITEN_KATEGORIEN: { kategorie: string; icon: string; einheit: string; mitMenge: boolean }[] = [
+      { kategorie: "hydration", icon: "💧", einheit: "Trinken", mitMenge: true },
+      { kategorie: "tageslicht", icon: "☀️", einheit: "Tageslicht/Raus gehen", mitMenge: false },
+      { kategorie: "schlaf", icon: "🌙", einheit: "Schlafenszeit", mitMenge: false },
+    ];
+    for (const zk of ZEITEN_KATEGORIEN) {
+      for (const [userId, info] of nutzerInfo) {
+        const einstellung = info.erinnerungen[zk.kategorie] as { aktiv?: boolean; zeiten?: { zeit?: string; menge?: string; startDatum?: string }[] } | undefined;
+        if (!einstellung?.aktiv || !Array.isArray(einstellung.zeiten)) continue;
 
-      const treffer = hydration.zeiten.filter((z) => z.zeit === info.jetzt && (!z.startDatum || z.startDatum <= info.heute));
-      if (treffer.length > 0) {
-        const mengen = treffer.map((z) => z.menge).filter(Boolean);
-        merken(userId, "💧", mengen.length > 0 ? `Trinken: ${mengen.join(", ")}` : "Zeit zu trinken");
-      }
+        const treffer = einstellung.zeiten.filter((z) => z.zeit === info.jetzt && (!z.startDatum || z.startDatum <= info.heute));
+        if (treffer.length > 0) {
+          const mengen = zk.mitMenge ? treffer.map((z) => z.menge).filter(Boolean) : [];
+          merken(userId, zk.icon, mengen.length > 0 ? `${zk.einheit}: ${mengen.join(", ")}` : zk.einheit);
+        }
 
-      const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
-      if (vorabZiel) {
-        const vorabTreffer = hydration.zeiten.filter((z) => z.zeit === vorabZiel && (!z.startDatum || z.startDatum <= info.heute));
-        if (vorabTreffer.length > 0) {
-          const mengen = vorabTreffer.map((z) => z.menge).filter(Boolean);
-          merken(userId, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): Trinken${mengen.length > 0 ? ` (${mengen.join(", ")})` : ""}`);
+        const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+        if (vorabZiel) {
+          const vorabTreffer = einstellung.zeiten.filter((z) => z.zeit === vorabZiel && (!z.startDatum || z.startDatum <= info.heute));
+          if (vorabTreffer.length > 0) {
+            const mengen = zk.mitMenge ? vorabTreffer.map((z) => z.menge).filter(Boolean) : [];
+            merken(userId, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${zk.einheit}${mengen.length > 0 ? ` (${mengen.join(", ")})` : ""}`);
+          }
         }
       }
     }
@@ -339,6 +354,106 @@ Deno.serve(async (req) => {
             const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
             if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.id}__${info.heute}`)) {
               merken(row.user_id, "❗", `Noch offen: ${row.name || "Gewohnheit"} (${NACHFASS_MINUTEN} Min. überfällig)`);
+            }
+          }
+        }
+      }
+    }
+
+    // --- Training: Wochenplan mit Uhrzeit, aber ohne Intervallsystem ----
+    // (training_wochenplan: höchstens ein Eintrag pro Wochentag). Nachfass-
+    // Check gegen training_sessions (kein direkter Fremdschlüssel zum
+    // Wochenplan-Eintrag — Abgleich über Datum + Trainingsart).
+    {
+      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen.training).map(([id]) => id);
+      if (userIds.length > 0) {
+        const { data: rows, error } = await admin
+          .from("training_wochenplan")
+          .select("user_id, wochentag, art, uhrzeit")
+          .in("user_id", userIds);
+        if (error) {
+          console.error("Abfrage training_wochenplan fehlgeschlagen:", error);
+        } else {
+          const heuteWerte = [...new Set(userIds.map((id) => nutzerInfo.get(id)!.heute))];
+          const { data: logs, error: logError } = await admin
+            .from("training_sessions")
+            .select("user_id, datum, art")
+            .in("user_id", userIds)
+            .in("datum", heuteWerte);
+          if (logError) console.error("Abfrage training_sessions fehlgeschlagen:", logError);
+          const erledigtSet = new Set((logs || []).map((log) => `${log.user_id}__${log.datum}__${log.art}`));
+
+          for (const row of rows || []) {
+            const info = nutzerInfo.get(row.user_id);
+            if (!info || !row.uhrzeit) continue;
+            if (row.wochentag !== WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()]) continue;
+            const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
+            const name = row.art || "Training";
+
+            if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🏋️", name);
+
+            const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+            if (vorabZiel && uhrzeitKurz === vorabZiel) {
+              merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${name}`);
+            }
+
+            const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
+            if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.user_id}__${info.heute}__${row.art}`)) {
+              merken(row.user_id, "❗", `Noch offen: ${name} (${NACHFASS_MINUTEN} Min. überfällig)`);
+            }
+          }
+        }
+      }
+    }
+
+    // --- Ernährung: Wochenplan mit Uhrzeit pro Mahlzeit -------------------
+    // (meal_wochenplan, beliebig viele Mahlzeiten pro Tag normal). Name
+    // separat über meals nachgeschlagen statt per Embedded-Join, um keine
+    // Annahmen über die genaue PostgREST-Join-Form treffen zu müssen.
+    {
+      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen.ernaehrung).map(([id]) => id);
+      if (userIds.length > 0) {
+        const { data: rows, error } = await admin
+          .from("meal_wochenplan")
+          .select("user_id, wochentag, uhrzeit, meal_id")
+          .in("user_id", userIds);
+        if (error) {
+          console.error("Abfrage meal_wochenplan fehlgeschlagen:", error);
+        } else {
+          const mealIds = [...new Set((rows || []).map((r) => r.meal_id))];
+          const { data: meals, error: mealsError } = mealIds.length
+            ? await admin.from("meals").select("id, name").in("id", mealIds)
+            : { data: [] as { id: string; name: string }[], error: null };
+          if (mealsError) console.error("Abfrage meals fehlgeschlagen:", mealsError);
+          const nameByMealId = new Map((meals || []).map((m) => [m.id, m.name]));
+
+          const heuteWerte = [...new Set(userIds.map((id) => nutzerInfo.get(id)!.heute))];
+          const { data: logs, error: logError } = await admin
+            .from("meal_logs")
+            .select("meal_id, log_date, tageszeit")
+            .in("user_id", userIds)
+            .in("log_date", heuteWerte)
+            .eq("erledigt", true);
+          if (logError) console.error("Abfrage meal_logs fehlgeschlagen:", logError);
+          const erledigtSet = new Set((logs || []).map((log) => `${log.meal_id}__${log.log_date}__${log.tageszeit}`));
+
+          for (const row of rows || []) {
+            const info = nutzerInfo.get(row.user_id);
+            if (!info || !row.uhrzeit) continue;
+            if (row.wochentag !== WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()]) continue;
+            const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
+            const name = nameByMealId.get(row.meal_id) || "Mahlzeit";
+
+            if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🍽️", name);
+
+            const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+            if (vorabZiel && uhrzeitKurz === vorabZiel) {
+              merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${name}`);
+            }
+
+            const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
+            if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.meal_id}__${info.heute}__${uhrzeitKurz}`)) {
+              merken(row.user_id, "❗", `Noch offen: ${name} (${NACHFASS_MINUTEN} Min. überfällig)`);
             }
           }
         }

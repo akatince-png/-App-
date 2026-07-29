@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, TextArea, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
-import HydrationErinnerungenCard from "../../ui/HydrationErinnerungenCard";
+import ZeitErinnerungenCard from "../../ui/ZeitErinnerungenCard";
 import WochenplanEditor from "../../ui/WochenplanEditor";
 import TimeWheelField from "../../ui/TimeWheelField";
 import NumberWheelField from "../../ui/NumberWheelField";
@@ -429,9 +429,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   };
   const alleTageVergeben = WOCHENTAGE.every((t) => schlafBloecke.some((b) => b.wochentage.includes(t)));
 
-  // Hydration hat ein eigenes Erinnerungszeiten-Feld (HydrationErinnerungenCard)
-  // statt nur eines Ja/Nein-Schalters — dieser generische Handler bleibt nur
-  // noch für die übrigen Kategorien relevant.
+  // Hydration/Tageslicht/Schlaf haben ein eigenes Erinnerungszeiten-Feld
+  // (ZeitErinnerungenCard) statt nur eines Ja/Nein-Schalters — dieser
+  // generische Handler bleibt nur noch für die übrigen Kategorien relevant.
   const handleErinnerungChange = (v) => setErinnerung(step.key, v);
 
   // ---------------------------------------------------------------------
@@ -1005,6 +1005,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   </div>
                 </>
               )}
+              <div style={{ marginTop: 16 }}>
+                <ZeitErinnerungenCard kategorie="schlaf" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="22:00" />
+              </div>
             </>
           )}
 
@@ -1020,7 +1023,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               <div style={{ fontSize: 11, color: textMuted, marginTop: 4, marginBottom: 18 }}>{t("onboarding.hydration.tagesziel.hinweis")}</div>
 
               <div style={{ marginBottom: 16 }}>
-                <HydrationErinnerungenCard />
+                <ZeitErinnerungenCard
+                  kategorie="hydration"
+                  labelKey="onboarding.hydration.erinnerungszeiten.label"
+                  mengeLabel="ml"
+                  mengeStandard="300"
+                />
               </div>
 
               <CheckRow
@@ -1046,9 +1054,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                 onChange={setTageslichtMinuten}
                 placeholder={tageslichtZielMinuten ? String(tageslichtZielMinuten) : "z. B. 30"}
               />
-              <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: textMuted, marginTop: 4, marginBottom: 18 }}>
                 {tLabel("Wie viele Minuten am Tag möchtest du bewusst im Freien/Tageslicht verbringen?")}
               </div>
+              <ZeitErinnerungenCard kategorie="tageslicht" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="12:00" />
             </>
           )}
 

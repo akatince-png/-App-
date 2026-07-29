@@ -3,7 +3,7 @@ import { Shell, Card, Label, Pill, PrimaryButton, TextArea, CheckRow } from "../
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
-import HydrationErinnerungenCard from "../ui/HydrationErinnerungenCard";
+import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
@@ -90,7 +90,7 @@ export default function HydrationView({ onHome, embedded = false }) {
 
   // Übergabe an <KiChat onUebernehmen>: setzt ein evtl. besprochenes neues
   // Tagesziel und hängt neue Erinnerungszeiten an bestehende an (nichts wird
-  // dabei entfernt) — über denselben Weg wie HydrationErinnerungenCard.
+  // dabei entfernt) — über denselben Weg wie ZeitErinnerungenCard.
   const handleHydrationUebernehmen = async (verlauf) => {
     const { zielMl, zeiten } = await AIService.hydrationAusChat({ verlauf, coachName: getCoachName() });
     if (zielMl) {
@@ -250,7 +250,12 @@ export default function HydrationView({ onHome, embedded = false }) {
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>
       <Card style={{ marginBottom: 14 }}>
-        <HydrationErinnerungenCard />
+        <ZeitErinnerungenCard
+          kategorie="hydration"
+          labelKey="onboarding.hydration.erinnerungszeiten.label"
+          mengeLabel="ml"
+          mengeStandard="300"
+        />
       </Card>
 
       {hydrationEintraege.length > 0 && (

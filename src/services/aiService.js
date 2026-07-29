@@ -338,7 +338,7 @@ export const AIService = {
   /**
    * Extrahiert aus einem geführten Hydrations-Gespräch (siehe coachChat())
    * ein optionales neues Tagesziel und/oder neue Erinnerungszeiten — Format
-   * der Zeiten entspricht dem, was HydrationErinnerungenCard erwartet
+   * der Zeiten entspricht dem, was ZeitErinnerungenCard erwartet
    * ({zeit, menge}), lässt sich also direkt an die bestehende Liste anhängen.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params

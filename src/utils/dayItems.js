@@ -26,6 +26,7 @@ export const KATEGORIE_META = {
   hydration: { bg: "#EAF3F8", text: "#2F6E8C", dot: "#4A93B8", label: "Hydration" },
   tageslicht: { bg: "#FDF3E3", text: "#8C6A1F", dot: "#D9A62E", label: "Tageslicht" },
   schlaf: { bg: "#ECEDF7", text: "#3F4380", dot: "#5B5FA6", label: "Schlaf" },
+  notfallmodus: { bg: "#FBEAE7", text: "#A63B32", dot: "#C24545", label: "Notfallmodus" },
 };
 
 // Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —
