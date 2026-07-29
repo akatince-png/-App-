@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect, useRef } from "react";
+import { pruefeAusgefalleneEintraege } from "../utils/ausgefallenSweep";
 import { useAuth } from "./AuthContext";
 import { useProfileData } from "../data/useProfileData";
 import { useProtocolData } from "../data/useProtocolData";
@@ -92,6 +93,19 @@ export function AppDataProvider({ children }) {
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,
   };
+
+  // Einmal pro Kalendertag und pro echtem App-Start prüfen, was gestern
+  // (bzw. seit dem letzten Öffnen) geplant, aber nie bestätigt wurde, und
+  // automatisch als "ausgefallen" im Änderungsprotokoll vermerken — siehe
+  // utils/ausgefallenSweep.js. sweepLaufendRef verhindert einen zweiten
+  // Lauf durch StrictMode/Re-Renders innerhalb derselben Sitzung.
+  const sweepLaufendRef = useRef(false);
+  useEffect(() => {
+    if (value.loading || !userId || sweepLaufendRef.current) return;
+    sweepLaufendRef.current = true;
+    pruefeAusgefalleneEintraege(value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.loading, userId]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }
