@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Card, Label, Pill, TextInput } from "../../ui/primitives";
 import { accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
@@ -24,8 +24,9 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     erinnerungen,
     setErinnerung,
     spotifyVerbunden,
-    spotifyPlaylistUri,
-    spotifyPlaylistSpeichern,
+    spotifyPlaylists,
+    spotifyPlaylistHinzufuegen,
+    spotifyPlaylistLoeschen,
     spotifyVerbindungTrennen,
     spotifyAbspielen,
     spotifyTestet,
@@ -35,17 +36,15 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
   const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
   const [testMsg, setTestMsg] = useState(null);
-  const [playlistEingabe, setPlaylistEingabe] = useState(spotifyPlaylistUri || "");
-  const [playlistGespeichert, setPlaylistGespeichert] = useState(false);
+  const [neuerPlaylistName, setNeuerPlaylistName] = useState("");
+  const [neuerPlaylistLink, setNeuerPlaylistLink] = useState("");
+  const [playlistFehler, setPlaylistFehler] = useState(null);
+  const [testetPlaylistId, setTestetPlaylistId] = useState(null);
   const [kiLadend, setKiLadend] = useState(false);
   const [kiAntwort, setKiAntwort] = useState(null);
   const [kiFehler, setKiFehler] = useState(null);
   const [coachName, setCoachNameState] = useState(getCoachName());
   const [kiAktiv, setKiAktivState] = useState(() => getKiAktiv());
-
-  useEffect(() => {
-    setPlaylistEingabe(spotifyPlaylistUri || "");
-  }, [spotifyPlaylistUri]);
 
   const handleKiAktivUmschalten = (next) => {
     setKiAktivState(next);
@@ -75,10 +74,25 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     setTestMsg(result?.ok ? t("mehr.push.test.success") : result?.error || t("mehr.push.test.error"));
   };
 
-  const handlePlaylistSpeichern = async () => {
-    setPlaylistGespeichert(false);
-    await spotifyPlaylistSpeichern(spotifyPlaylistUriNormalisieren(playlistEingabe));
-    setPlaylistGespeichert(true);
+  const handlePlaylistHinzufuegen = async () => {
+    setPlaylistFehler(null);
+    if (!neuerPlaylistName.trim() || !neuerPlaylistLink.trim()) {
+      setPlaylistFehler("Bitte Name und Link eintragen.");
+      return;
+    }
+    const result = await spotifyPlaylistHinzufuegen(neuerPlaylistName, spotifyPlaylistUriNormalisieren(neuerPlaylistLink));
+    if (!result.ok) {
+      setPlaylistFehler(result.error);
+      return;
+    }
+    setNeuerPlaylistName("");
+    setNeuerPlaylistLink("");
+  };
+
+  const handlePlaylistTesten = async (playlist) => {
+    setTestetPlaylistId(playlist.id);
+    await spotifyAbspielen(playlist.uri);
+    setTestetPlaylistId(null);
   };
 
   // Erster Testaufruf des ADHS-Coach-Moduls direkt aus der App heraus — prüft
@@ -241,28 +255,57 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
               <span style={{ color: success, fontWeight: 700 }}>✓</span>
               <span style={{ fontSize: 13, color: textMuted }}>Spotify ist verbunden.</span>
             </div>
-            <Label>Playlist (Link aus der Spotify-App einfügen)</Label>
-            <TextInput value={playlistEingabe} onChange={setPlaylistEingabe} placeholder="https://open.spotify.com/playlist/..." />
-            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-              <button
-                onClick={handlePlaylistSpeichern}
-                style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: "none", fontSize: 13.5, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
-              >
-                Speichern
-              </button>
-              <button
-                onClick={spotifyAbspielen}
-                disabled={spotifyTestet || !spotifyPlaylistUri}
-                style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 13.5, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark, opacity: spotifyPlaylistUri ? 1 : 0.5 }}
-              >
-                {spotifyTestet ? "Startet…" : "Jetzt testen"}
-              </button>
+
+            <div style={{ fontSize: 12, color: textMuted, marginBottom: 12, lineHeight: 1.5 }}>
+              Lege beliebig viele Playlists mit eigenem Namen an — dein Assistent hört im Gespräch selbst heraus, welche
+              gemeint ist (z. B. "spiel meine Trainingsplaylist" oder "ich brauch was zum Runterkommen"), du musst dafür
+              keine festen Kategorien einstellen.
             </div>
-            {playlistGespeichert && <div style={{ fontSize: 12, color: success, marginTop: 8 }}>Playlist gespeichert.</div>}
+
+            {spotifyPlaylists?.map((p) => (
+              <div
+                key={p.id}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 0", borderBottom: `1px solid ${cardBorder}` }}
+              >
+                <span style={{ fontSize: 13.5, fontWeight: 700 }}>{p.name}</span>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <button
+                    onClick={() => handlePlaylistTesten(p)}
+                    disabled={spotifyTestet}
+                    style={{ padding: "7px 12px", borderRadius: 10, border: `1px solid ${accentDark}`, fontSize: 12, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
+                  >
+                    {testetPlaylistId === p.id ? "Startet…" : "Testen"}
+                  </button>
+                  <button
+                    onClick={() => spotifyPlaylistLoeschen(p.id)}
+                    style={{ padding: "7px 10px", borderRadius: 10, border: "none", background: "transparent", color: danger, fontSize: 12, cursor: "pointer" }}
+                  >
+                    Löschen
+                  </button>
+                </div>
+              </div>
+            ))}
             {spotifyFehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{spotifyFehler}</div>}
+
+            <div style={{ marginTop: 16 }}>
+              <Label>Neue Playlist: Name (z. B. "Training", "Chillen abends")</Label>
+              <TextInput value={neuerPlaylistName} onChange={setNeuerPlaylistName} placeholder="Name" />
+              <Label>Link aus der Spotify-App</Label>
+              <TextInput value={neuerPlaylistLink} onChange={setNeuerPlaylistLink} placeholder="https://open.spotify.com/playlist/..." />
+              <div style={{ marginTop: 10 }}>
+                <button
+                  onClick={handlePlaylistHinzufuegen}
+                  style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", fontSize: 13.5, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
+                >
+                  Playlist hinzufügen
+                </button>
+              </div>
+              {playlistFehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{playlistFehler}</div>}
+            </div>
+
             <button
               onClick={spotifyVerbindungTrennen}
-              style={{ width: "100%", marginTop: 12, padding: "10px 16px", borderRadius: 12, border: "none", background: "transparent", color: textMuted, fontSize: 12, cursor: "pointer" }}
+              style={{ width: "100%", marginTop: 16, padding: "10px 16px", borderRadius: 12, border: "none", background: "transparent", color: textMuted, fontSize: 12, cursor: "pointer" }}
             >
               Spotify trennen
             </button>

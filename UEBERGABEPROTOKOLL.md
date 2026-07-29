@@ -1043,12 +1043,55 @@ muss auf dem Handy zumindest kürzlich geöffnet gewesen sein (sonst kein
 8. Nach Vercel-Neubau: unter "Mehr" → "Musik (Spotify)" → "Mit Spotify
    verbinden".
 
-**Nächster Schritt (noch nicht begonnen):** die eigentliche geführte
-Morgenroutine — Weckzeit als Push-Erinnerung, die beim Antippen direkt in
-einen neuen Ablauf-Screen führt, der die vorher mit Aka geplanten Schritte
-per Sprache durchgeht (Musik starten, Ansagen, Wartezeiten abzählen,
-Nachfragen, Abschluss). Perspektivisch dieselbe Struktur für
-Abend-/Trainingsroutine.
+**✅ Deployt (29.07.).** Die Nutzerin hat verbunden, es funktioniert.
+
+### Nachtrag 29.07., direkt danach — mehrere benannte Playlists + Aka löst sie im Gespräch selbst aus
+
+Erster Live-Test zeigte: die Spotify-Verbindung selbst lief, aber Aka
+konnte im Chat nichts damit anfangen ("ich hab keinen Zugriff") — die
+Wiedergabe existierte bisher nur als manueller Knopf unter "Mehr", nicht
+als etwas, das der Assistent selbst auslösen kann. Zusätzlicher Wunsch:
+mehrere Playlists (Morgen, Abend/Chillen, Notfallmodus/Erholung, Training,
+Arbeit/Workflow, ...), OHNE feste Kategorien im Code — Aka soll frei
+zuordnen, welche Playlist zu einer Bitte passt.
+
+- `supabase/migrations/0038_spotify_playlists.sql` — NOCH NICHT DEPLOYT.
+  Neue Tabelle `spotify_playlists` (user_id, name, uri) statt der bisherigen
+  einzelnen `playlist_uri`-Spalte — beliebig viele, frei benannt.
+- `src/data/useSpotifyVerbindung.js` — erweitert um
+  `spotifyPlaylists`/`spotifyPlaylistHinzufuegen`/`spotifyPlaylistLoeschen`;
+  `spotifyAbspielen(uri)` nimmt jetzt optional eine konkrete Playlist-URI
+  entgegen (Edge Function `spotify-play` unterstützte das `playlistUri`-Feld
+  bereits, brauchte keine Änderung).
+- **`src/ui/KiChat.jsx` — das eigentliche Herzstück:** die Namen aller
+  gespeicherten Playlists fließen als Kontext in JEDE Coach-Anfrage ein
+  (gleicher Mechanismus wie die Admin-Hinweise, Abschnitt 4c), mit der
+  Anweisung, bei einer passenden Bitte (auch sinngemäß wie "ich brauch was
+  zum Runterkommen") GENAU EINMAL einen Marker `[[SPOTIFY_PLAY:<Name>]]`
+  in die Antwort zu schreiben. `senden()` erkennt den Marker per Regex,
+  entfernt ihn aus dem angezeigten/vorgelesenen Text (die Person sieht ihn
+  nie), löst darüber die Wiedergabe der passenden Playlist aus und zeigt
+  bei Fehlschlag (z. B. kein aktives Spotify-Gerät) einen kurzen Hinweis.
+  Bewusst kein "echtes" KI-Tool-Calling, weil das je nach Provider
+  (Groq/Gemini/Ollama) uneinheitlich unterstützt wird — der Marker-Trick
+  ist provider-unabhängig und reiht sich in denselben Chat-Text ein.
+- `src/views/plan/MehrTab.jsx` — Playlist-Verwaltung umgebaut: Liste
+  bestehender Playlists (Name, Testen-Knopf, Löschen), Formular für neue
+  Playlist (Name + Spotify-Link).
+
+**⚠️ Für die Nutzerin — noch ein Deploy-Schritt:** Migration
+`0038_spotify_playlists.sql` im SQL Editor ausführen. Keine neuen
+Edge-Function- oder Vercel-Schritte nötig.
+
+**Nächster Schritt (noch nicht begonnen), explizit von der Nutzerin
+gewünscht:** ein echter Wecker im Schlaf-Bereich mit Playlist-Auswahl
+("zum Wecker geweckt werden mit Playlist X"), und darauf aufbauend die
+eigentliche geführte Morgenroutine — Weckzeit als Push-Erinnerung, die
+beim Antippen direkt in einen neuen Ablauf-Screen führt, der die vorher
+mit Aka geplanten Schritte per Sprache durchgeht (Musik läuft im
+Hintergrund weiter, Ansagen, Wartezeiten abzählen, Nachfragen wie "schon
+ausgetrunken?", Abschluss "wir hören uns bei der Medigabe"). Perspektivisch
+dieselbe Struktur für Abend-/Trainingsroutine.
 
 ---
 
@@ -1228,28 +1271,27 @@ live — Migration 0035 + Edge Function `admin-create-proband` sind
 eingespielt, die Nutzerin ist als Admin markiert und sieht das Dashboard
 unter "Mehr".
 
-**Neu, NOCH NICHT deployt:** Admin-Hinweise über den Assistenten
-zustellen (Abschnitt 4c) — Aka kann jetzt Hintergrundwissen oder direkte
-Nachrichten bekommen, die der Admin pro Proband hinterlässt, ohne dass es
-wie ein separates Verwaltungs-Postfach wirkt. Braucht noch Migration
-`0036_admin_notizen.sql` im Supabase-Dashboard (SQL Editor, gleiches
-Vorgehen wie bei 0035) — kein neuer Edge-Function-Schritt, kein erneutes
-`is_admin`-Setzen nötig.
+**Admin-Hinweise über den Assistenten zustellen** (Abschnitt 4c) — Aka
+kann Hintergrundwissen oder direkte Nachrichten bekommen, die der Admin
+pro Proband hinterlässt, ohne dass es wie ein separates
+Verwaltungs-Postfach wirkt. **✅ Deployt (29.07.)**, Migration 0036 lief
+erfolgreich.
 
-**Neu, NOCH NICHT deployt:** Spotify-Anbindung (Abschnitt 4d) — Grundlage
-für die von der Nutzerin gewünschte "geführte Morgenroutine" (Aka weckt,
-startet Musik, führt per Sprache durch die Schritte). Braucht Migration
-`0037_spotify_verbindung.sql`, zwei neue Edge Functions
-(`spotify-auth-callback`, `spotify-play`) UND einmalig ein Spotify-
-Entwickler-Konto der Nutzerin (Client-ID/Secret) — mehrstufiger
-Deploy, genaue Schritte in Abschnitt 4d. Die eigentliche geführte Routine
-(Timer, Sprachführung, Nachfragen) ist danach der nächste große Baustein,
-noch nicht begonnen.
+**Spotify-Anbindung** (Abschnitt 4d) — Grundlage für die von der Nutzerin
+gewünschte "geführte Morgenroutine". **✅ Deployt und im Live-Test
+bestätigt (29.07.):** Migration 0037, beide Edge Functions
+(`spotify-auth-callback`, `spotify-play`), Spotify-Entwickler-Konto,
+Vercel-Variable — Verbindung funktioniert. Direkt im Anschluss ergänzt:
+mehrere benannte Playlists + Aka löst die passende im Gespräch selbst aus
+(Marker-Mechanismus in `KiChat.jsx`, siehe Abschnitt 4d, Nachtrag) —
+**Migration 0038 NOCH NICHT deployt.**
 
-Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy der drei
-offenen Bausteine helfen (0036 Admin-Hinweise, 0037 Spotify + Edge
-Functions + Spotify-Entwickler-Konto, analog zum `send-due-reminders`-
-Deploy), danach die geführte Morgenroutine selbst bauen, danach
-verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a. Punkte 4-7,
-alle bewusst zurückgestellt/verworfen, kein akuter Handlungsbedarf) oder
-auf neue Rückmeldung der Nutzerin warten.
+Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy von Migration
+0038 helfen (SQL Editor, kein neuer Edge-Function-/Vercel-Schritt), dann
+gemeinsam live testen, ob Aka die richtige Playlist im Gespräch trifft.
+Danach von der Nutzerin explizit gewünscht: ein echter Wecker mit
+Playlist-Auswahl im Schlaf-Bereich, darauf aufbauend die eigentliche
+geführte Morgenroutine (Abschnitt 4d, Nachtrag, letzter Absatz) — noch
+nicht begonnen. Alternativ verbleibende offene Punkte in Abschnitt 6
+durchgehen (v. a. Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein
+akuter Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.

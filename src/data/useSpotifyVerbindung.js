@@ -8,52 +8,78 @@ import { supabase } from "../lib/supabaseClient";
 // Spotify — hier nur Lesen/Playlist pflegen/Wiedergabe anstoßen.
 export function useSpotifyVerbindung(userId) {
   const [spotifyVerbunden, setSpotifyVerbunden] = useState(false);
-  const [spotifyPlaylistUri, setSpotifyPlaylistUriState] = useState("");
+  const [spotifyPlaylists, setSpotifyPlaylists] = useState([]); // [{ id, name, uri }]
   const [spotifyTestet, setSpotifyTestet] = useState(false);
   const [spotifyFehler, setSpotifyFehler] = useState(null);
 
   const spotifyVerbindungNeuLaden = useCallback(async () => {
     if (!userId) return;
-    const { data } = await supabase.from("spotify_verbindung").select("playlist_uri").eq("user_id", userId).maybeSingle();
-    setSpotifyVerbunden(!!data);
-    setSpotifyPlaylistUriState(data?.playlist_uri || "");
+    const [{ data: verbindung }, { data: playlists }] = await Promise.all([
+      supabase.from("spotify_verbindung").select("user_id").eq("user_id", userId).maybeSingle(),
+      supabase.from("spotify_playlists").select("id, name, uri").eq("user_id", userId).order("erstellt_am"),
+    ]);
+    setSpotifyVerbunden(!!verbindung);
+    setSpotifyPlaylists(playlists || []);
   }, [userId]);
 
   useEffect(() => {
     spotifyVerbindungNeuLaden();
   }, [spotifyVerbindungNeuLaden]);
 
-  const spotifyPlaylistSpeichern = useCallback(
-    async (uri) => {
-      setSpotifyPlaylistUriState(uri);
-      const { error } = await supabase.from("spotify_verbindung").update({ playlist_uri: uri }).eq("user_id", userId);
-      if (error) console.error(error);
+  const spotifyPlaylistHinzufuegen = useCallback(
+    async (name, uri) => {
+      const { data, error } = await supabase
+        .from("spotify_playlists")
+        .insert({ user_id: userId, name: name.trim(), uri })
+        .select("id, name, uri")
+        .single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      setSpotifyPlaylists((prev) => [...prev, data]);
+      return { ok: true };
     },
     [userId]
   );
 
+  const spotifyPlaylistLoeschen = useCallback(async (id) => {
+    await supabase.from("spotify_playlists").delete().eq("id", id);
+    setSpotifyPlaylists((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
   const spotifyVerbindungTrennen = useCallback(async () => {
     await supabase.from("spotify_verbindung").delete().eq("user_id", userId);
+    await supabase.from("spotify_playlists").delete().eq("user_id", userId);
     setSpotifyVerbunden(false);
-    setSpotifyPlaylistUriState("");
+    setSpotifyPlaylists([]);
   }, [userId]);
 
-  const spotifyAbspielen = useCallback(async () => {
-    setSpotifyTestet(true);
-    setSpotifyFehler(null);
-    const { data, error } = await supabase.functions.invoke("spotify-play", { body: { targetUserId: userId } });
-    setSpotifyTestet(false);
-    if (error || data?.error) {
-      setSpotifyFehler(data?.error || error.message);
-      return { ok: false };
-    }
-    return { ok: true };
-  }, [userId]);
+  // playlistUri: explizit, wenn Aka im Chat eine bestimmte Playlist erkannt
+  // hat (siehe KiChat.jsx, SPOTIFY_PLAY-Marker) — ohne Angabe nutzt die
+  // Edge Function die hinterlegte Standard-Playlist (falls vorhanden).
+  const spotifyAbspielen = useCallback(
+    async (playlistUri) => {
+      setSpotifyTestet(true);
+      setSpotifyFehler(null);
+      const { data, error } = await supabase.functions.invoke("spotify-play", {
+        body: { targetUserId: userId, ...(playlistUri ? { playlistUri } : {}) },
+      });
+      setSpotifyTestet(false);
+      if (error || data?.error) {
+        setSpotifyFehler(data?.error || error.message);
+        return { ok: false };
+      }
+      return { ok: true };
+    },
+    [userId]
+  );
 
   return {
     spotifyVerbunden,
-    spotifyPlaylistUri,
-    spotifyPlaylistSpeichern,
+    spotifyPlaylists,
+    spotifyPlaylistHinzufuegen,
+    spotifyPlaylistLoeschen,
     spotifyVerbindungTrennen,
     spotifyAbspielen,
     spotifyTestet,

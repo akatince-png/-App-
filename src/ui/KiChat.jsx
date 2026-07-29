@@ -18,6 +18,12 @@ import VorlesenToggle from "./VorlesenToggle";
 // gekappt.
 const KI_KONTEXT_LIMIT = 24;
 
+// Erkennt den von der KI gesetzten Spotify-Auslöser in ihrer eigenen
+// Antwort (siehe spotifyKontextText weiter unten) — leichte Alternative zu
+// echtem KI-"Tool calling", das Groq/Gemini in diesem Setup nicht
+// einheitlich unterstützen.
+const SPOTIFY_PLAY_MARKER = /\[\[SPOTIFY_PLAY:([^\]]+)\]\]/;
+
 // Wiederverwendbare Chat-Oberfläche für den ADHS Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).
 // Zwei Phasen: 1) frei mit dem Coach reden/nachjustieren, 2) per eigenem
@@ -83,7 +89,7 @@ export default function KiChat({
   autoStart = false,
 }) {
   const appData = useAppData();
-  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext } = appData;
+  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext, spotifyPlaylists, spotifyAbspielen } = appData;
   // "Background Brain" für den ADHS Coach — statische Wissens-Basis (siehe
   // src/wissen/) + aktuelle Trackingdaten-Zusammenfassung, automatisch an
   // JEDE Coach-Anfrage angehängt, in allen Bereichen (nicht nur Home) —
@@ -93,14 +99,27 @@ export default function KiChat({
   // z. B. "beim nächsten Mal Übung X genauer erklären" — der Coach baut sie
   // von sich aus ein, es wird NIE wörtlich als "Nachricht vom Admin" gezeigt
   // (Nutzerin-Vorgabe: der Assistent soll wie ihr Mitarbeiter wirken).
+  // Spotify-Playlists (0038_spotify_playlists.sql) als Aktions-Möglichkeit:
+  // die KI bekommt nur die Namen, KEINE festen Kategorien vom Code
+  // vorgegeben (Nutzerin-Vorgabe 29.07.) — sie entscheidet selbst anhand
+  // des Namens, welche Playlist zur Bitte der Person passt, und löst das
+  // Abspielen über einen Marker in ihrer Antwort aus (siehe SPOTIFY_PLAY
+  // weiter unten in senden()).
+  const spotifyKontextText = useMemo(() => {
+    if (!spotifyPlaylists?.length) return "";
+    const liste = spotifyPlaylists.map((p) => `- "${p.name}"`).join("\n");
+    return `\n\nSPOTIFY: Die Person hat folgende Playlists hinterlegt:\n${liste}\nWenn die Person möchte, dass Musik/eine bestimmte Playlist läuft (egal ob direkt gefordert oder sinngemäß, z. B. "ich brauch was zum Runterkommen", "leg was fürs Training auf"), wähle die inhaltlich passendste Playlist aus der Liste und schreibe irgendwo in deiner Antwort GENAU EINMAL exakt: [[SPOTIFY_PLAY:<Name>]] mit dem exakten Namen aus der Liste. Erfinde keine Namen, die nicht in der Liste stehen, und nutze den Marker nur, wenn wirklich Musik gestartet werden soll.`;
+  }, [spotifyPlaylists]);
+
   const hintergrundKontext = useMemo(() => {
     const hinweise = (adminNotizenKontext || []).filter((n) => !n.bereich || n.bereich === bereich);
     const hinweiseText = hinweise.length
       ? `\n\nHINWEISE FÜR DICH ALS ASSISTENT (nicht wörtlich vorlesen oder als "Hinweis" ankündigen, einfach natürlich ins Gespräch einbauen):\n${hinweise.map((h) => `- ${h.text}`).join("\n")}`
       : "";
-    return `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}${hinweiseText}`;
+    return `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}${hinweiseText}${spotifyKontextText}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, adminNotizenKontext, bereich]);
+  }, [appData, adminNotizenKontext, bereich, spotifyKontextText]);
+  const [spotifyHinweis, setSpotifyHinweis] = useState(null);
   const [offen, setOffen] = useState(() => autoStart);
   const [verlauf, setVerlauf] = useState([]);
   const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);
@@ -169,14 +188,29 @@ export default function KiChat({
     setLaden(true);
     setFehler(null);
     setStreamText("");
+    setSpotifyHinweis(null);
     if (bereich) coachNachrichtSpeichern(bereich, "nutzer", nachricht);
     try {
-      const antwort = await AIService.coachChatStreamend({
+      const rohAntwort = await AIService.coachChatStreamend({
         systemPrompt: `${systemPrompt}\n\n${hintergrundKontext}`,
         verlauf: neuerVerlauf.slice(-KI_KONTEXT_LIMIT),
         coachName: getCoachName(),
         onTeilantwort: setStreamText,
       });
+      // Marker aus der Anzeige/Vorlese-Version entfernen, aber vorher den
+      // gewünschten Playlist-Namen auslesen und die Wiedergabe anstoßen —
+      // die Person sieht/hört nie den technischen Marker selbst.
+      const markerTreffer = rohAntwort.match(SPOTIFY_PLAY_MARKER);
+      const antwort = rohAntwort.replace(SPOTIFY_PLAY_MARKER, "").trim();
+      if (markerTreffer) {
+        const name = markerTreffer[1].trim();
+        const playlist = spotifyPlaylists?.find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+        if (playlist) {
+          spotifyAbspielen(playlist.uri).then((r) => {
+            if (!r.ok) setSpotifyHinweis(`Playlist "${name}" konnte nicht gestartet werden — Spotify-App auf dem Handy einmal öffnen und nochmal versuchen.`);
+          });
+        }
+      }
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
       if (bereich) coachNachrichtSpeichern(bereich, "coach", antwort);
       const kannHoeren = spracherkennungVerfuegbar();
@@ -396,6 +430,7 @@ export default function KiChat({
             <div style={{ fontSize: 12.5, color: textMuted, fontStyle: "italic", maxWidth: "90%" }}>„{letzteNutzerNachricht.text}"</div>
           )}
           <div style={{ fontSize: 16, lineHeight: 1.6, color: textMain, whiteSpace: "pre-wrap", maxWidth: "95%" }}>{grosseAntwort}</div>
+          {spotifyHinweis && <div style={{ fontSize: 12, color: danger, maxWidth: "90%" }}>{spotifyHinweis}</div>}
           {!laden && letzteCoachNachricht && sprachausgabeVerfuegbar() && (
             <button
               type="button"
