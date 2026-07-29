@@ -1,7 +1,7 @@
 import React from "react";
 import { Shell } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { cardBorder, textMuted } from "../../ui/theme";
+import { accent, cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
 import { KATEGORIE_META } from "../../utils/dayItems";
 import Icon from "../../ui/Icon";
@@ -57,7 +57,12 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
 
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {PLAENE_TABS.map((t) => {
-          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot;
+          // Fällt auf die generische Akzentfarbe zurück, wenn die Kategorie
+          // (aktuell nur "wochenuebersicht") keine eigene KATEGORIE_META-Farbe
+          // hat — sonst wurden Hintergrund UND Text beide weiß (weil beide
+          // auf denselben "dot"-Wert zurückfielen) und der aktive Reiter
+          // wirkte beim Antippen unsichtbar/leer (bestätigter Bug, 29.07.).
+          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || accent;
           const aktiv = planeTab === t.id;
           return (
             <button
@@ -67,8 +72,8 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
                 flex: "1 1 30%",
                 padding: "9px 4px",
                 borderRadius: 10,
-                border: `1px solid ${aktiv ? dot || cardBorder : cardBorder}`,
-                background: aktiv ? dot || "#fff" : "#fff",
+                border: `1px solid ${aktiv ? dot : cardBorder}`,
+                background: aktiv ? dot : "#fff",
                 color: aktiv ? "#fff" : textMuted,
                 fontSize: 12,
                 fontWeight: 700,
