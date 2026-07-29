@@ -49,6 +49,15 @@ const TAB_ZU_KATEGORIE = {
 // beim Anwählen identisch aussehen (bestätigter Bug, 29.07.).
 const WOCHENUEBERSICHT_FARBE = "#64748B";
 
+// Eigene, kleine Liste statt eines einzelnen Knopfes (Nutzerinnen-Vorgabe,
+// 29.07.): Gewohnheiten lassen sich hier NICHT wie die 9 Reiter oben mit
+// Zeiten/Zielen "aktiv planen", gehören inhaltlich aber trotzdem zu "Alle
+// Pläne" — deshalb ein eigener Abschnitt darunter statt ein zehnter Reiter.
+// Bewusst als Liste angelegt, nicht als einzelner Knopf: Morgenroutine/
+// Abendroutine (noch nicht gebaut, siehe UEBERGABEPROTOKOLL.md Abschnitt 4d)
+// reihen sich hier später einfach als weitere Einträge ein.
+const ROUTINEN_EINTRAEGE = [{ id: "routinen", icon: "target", label: "Gewohnheiten" }];
+
 // "Alle Pläne"-Hub — bündelt die 7 Kategorien, die aktiv mit Zeiten/Zielen
 // geplant werden, unter einem gemeinsamen Reiter-Kopf statt als eigene
 // Dashboard-Kacheln. Gleiches Muster wie PlanView.jsx (Statistik/Profil/
@@ -94,6 +103,33 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
       </div>
 
       <Aktiv embedded initialSessionId={initialSessionId} onConsumedInitialSession={onConsumedInitialSession} />
+
+      <div style={{ fontSize: 14, fontWeight: 800, margin: "24px 0 8px" }}>Routinen</div>
+      {ROUTINEN_EINTRAEGE.map((r) => (
+        <button
+          key={r.id}
+          onClick={() => setPlaneTab(r.id)}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${cardBorder}`,
+            background: "#fff",
+            marginBottom: 8,
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Icon name={r.icon} size={16} color={KATEGORIE_META.gewohnheit.dot} />
+            <span style={{ fontSize: 14, fontWeight: 700 }}>{r.label}</span>
+          </div>
+          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+        </button>
+      ))}
     </Shell>
   );
 }
