@@ -17,7 +17,7 @@ const SLIDES = [
   { Illustration: RuheIllustration, titelKey: "welcome.slide3.titel", textKey: "welcome.slide3.text" },
 ];
 
-export default function WelcomeView({ onDone }) {
+export default function WelcomeView({ onDone, onCancel }) {
   const { t, tLabel, lang } = useT();
   const { setLang } = useLanguage();
   const [index, setIndex] = useState(0);
@@ -110,6 +110,17 @@ export default function WelcomeView({ onDone }) {
       </div>
 
       <PrimaryButton onClick={weiter}>{isLast ? t("welcome.button.los") : tLabel("Weiter")}</PrimaryButton>
+
+      {onCancel && (
+        <div style={{ textAlign: "center", marginTop: 18 }}>
+          <button
+            onClick={onCancel}
+            style={{ border: "none", background: "transparent", color: textMuted, fontSize: 13, cursor: "pointer", padding: "8px 12px" }}
+          >
+            {t("mehr.konto.abmelden")}
+          </button>
+        </div>
+      )}
     </Shell>
   );
 }

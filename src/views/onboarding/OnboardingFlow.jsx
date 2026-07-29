@@ -33,7 +33,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
 
   if (phase === "welcome") {
-    return <WelcomeView onDone={() => setPhase("hauptprotokoll")} />;
+    return <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
   }
 
   if (phase === "hauptprotokoll") {

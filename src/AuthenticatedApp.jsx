@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Shell } from "./ui/primitives";
 import { textMuted } from "./ui/theme";
 import { useAppData } from "./context/AppDataContext";
+import { useAuth } from "./context/AuthContext";
 import HomeView from "./views/HomeView";
 import LexikonView from "./views/LexikonView";
 import TagesplanView from "./views/TagesplanView";
@@ -40,6 +41,7 @@ function LoadingScreen() {
 
 export default function AuthenticatedApp() {
   const appData = useAppData();
+  const { signOut } = useAuth();
   const {
     loading,
     onboardingComplete,
@@ -96,11 +98,17 @@ export default function AuthenticatedApp() {
 
   if (view === "form") {
     screen = !onboardingComplete ? (
+      // onCancel=signOut: ohne abgeschlossenes Onboarding gibt es noch keine
+      // "home"-Ansicht, in die man abbrechen könnte — einzig sinnvoller
+      // Ausweg ist das Abmelden (Bug: Nutzerin blieb sonst ohne jeden Ausgang
+      // im Willkommens-Screen hängen, wenn sie das Onboarding nicht in einem
+      // Zug durchlief).
       <OnboardingFlow
         onDone={() => {
           completeOnboarding();
           setView("home");
         }}
+        onCancel={signOut}
       />
     ) : (
       // Bestehendes Konto durchläuft hier denselben Fragebogen-Ablauf wie
