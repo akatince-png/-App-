@@ -1,6 +1,7 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-**Stand: 30.07.2026 — Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
+**Stand: 31.07.2026, nachts (Zwischenstand, Fortsetzung folgt) — Branch
+`claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
 Dieses Dokument wurde komplett neu geschrieben (nicht nur ergänzt), um die
 vielen "Nachtrag"-Schichten der letzten Sessions in einen einzigen
@@ -1356,6 +1357,40 @@ bis der Deploy-Schritt erledigt ist.
 - Kein Live-Test möglich in dieser Sandbox (kein Netzwerkzugriff auf
   Supabase/Google) — Verifikation nur über Rückmeldung der Nutzerin nach
   dem Deploy.
+
+### 🔴 Live-Stand des Deploys, Nacht 30./31.07. — HIER GEHT ES MORGEN WEITER
+
+Die Nutzerin ist mitten im Deploy-Schritt 1-4 oben, live per Screenshots
+durch die Google Cloud Console begleitet. Genauer Stand:
+
+- ✅ Google-Cloud-Projekt **"My First Project"** angelegt (Organisation
+  `aka-t-ince-org`), Projekt-ID `project-8895de46-f187-44d0-bd1`.
+- ✅ Kostenloses Google-Cloud-Testguthaben aktiviert (300 $, davon noch
+  262,60 € übrig, 90 Tage Laufzeit) — nicht zwingend nötig gewesen, schadet
+  aber nicht, deckt jegliche Kosten für die nächsten 90 Tage ab.
+- ✅ **Cloud Text-to-Speech API aktiviert** (Status "Aktiviert" bestätigt).
+- 🔴 **API-Schlüssel noch NICHT erstellt.** Erster Versuch führte über
+  "Anmeldedaten erstellen" auf der API-Detailseite in einen
+  Auswahl-Assistenten ("Art der Qualifikation"), der bei "Anwendungsdaten"
+  zu einem **Dienstkonto** (Service Account) geleitet hat — das ist der
+  FALSCHE, zu komplexe Weg für unseren Code (der erwartet einen einfachen
+  `?key=...`-API-Schlüssel, kein Dienstkonto mit JSON-Schlüsseldatei).
+  Dienstkonto-Erstellung wurde abgebrochen, ohne etwas zu speichern.
+- **Nächster Schritt morgen:** über die Suche zu **"APIs und Dienste"**
+  navigieren → linkes Menü **"Anmeldedaten"** → oben **"+ Anmeldedaten
+  erstellen"** → diesmal direkt **"API-Schlüssel"** wählen (NICHT über die
+  API-Detailseite gehen, das öffnet wieder den falschen Assistenten). Das
+  sollte ohne Umweg sofort einen fertigen Schlüssel anzeigen.
+- Danach weiter mit Schritt 4-6 der Anleitung oben: Schlüssel kopieren →
+  Edge Function `text-to-speech` im Supabase-Dashboard anlegen (Code aus
+  `supabase/functions/text-to-speech/index.ts`) → Schlüssel dort als Secret
+  `GOOGLE_TTS_API_KEY` hinterlegen → fertig, kein Vercel-Schritt nötig.
+
+**Außerdem weiterhin offen (unabhängig von der Cloud-Stimme):** das
+Gemini-429-Kontingentproblem von vorhin (nur 20 Freianfragen/Tag bei
+`gemini-3.6-flash`) — die Nutzerin muss sich noch entscheiden zwischen
+Modellwechsel (kostenlos, `gemini-3.5-flash-lite`) oder Abrechnung im
+Gemini-Projekt aktivieren, siehe Abschnitt 6, Punkt 14.
 
 ---
 
