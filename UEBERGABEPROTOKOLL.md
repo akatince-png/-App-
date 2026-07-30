@@ -713,6 +713,17 @@ Code-Zugriff.
 3. **`VITE_AI_MODEL`/`VITE_AI_PROVIDER` bei Vercel ändern reicht allein
    nicht** — Vite bäckt diese Variablen beim Build ein, nicht zur
    Laufzeit. Nach jeder Änderung braucht es einen manuellen Redeploy.
+4b. **Kostenloses Tageskontingent ist je nach Modell sehr unterschiedlich
+   hoch — bei `gemini-3.6-flash` nur 20 Anfragen/Tag** (Nachtrag 30.07.,
+   live erlebt: 429 "Quota exceeded" nach einem intensiven Testtag). Ältere/
+   kleinere Modelle wie `gemini-3.5-flash-lite` haben laut Google-Dashboard
+   das übliche, viel großzügigere Freikontingent (1.500 Anfragen/Tag) — bei
+   "model not found"/429-Fehlern also nicht nur den Modellnamen, sondern
+   auch das jeweils aktuelle Freikontingent für GENAU dieses Modell prüfen.
+   Für eine App, mit der ganztägig gesprochen wird, ist das kostenlose
+   Kontingent auf Dauer ohnehin zu knapp — siehe offener Punkt in
+   Abschnitt 6 (Nutzerin muss sich noch entscheiden: günstigeres Modell
+   oder Abrechnung aktivieren).
 4. **Ein über den Supabase-Browser-Editor deployter Funktions-Slug lässt
    sich im Nachhinein nicht umbenennen** — das "Name"-Feld in den
    Function-Settings ändert nur die Anzeige, nicht die echte Adresse
@@ -1251,6 +1262,103 @@ von der Nutzerin gemeldet und noch am selben Tag behoben:
 
 ---
 
+## 4f. Nachtrag 30.07. — Cloud-Sprachausgabe (Google Cloud TTS) statt robotischer Browser-Stimme
+
+**Auslöser:** Ein Gemini-Kontingent-Fehler (429, "You exceeded your current
+quota" — das kostenlose Kontingent von `gemini-3.6-flash` liegt bei nur 20
+Anfragen/Tag, dazu mehr unten) führte zur Frage der Nutzerin nach besseren
+kostenpflichtigen Modellen — dabei kam heraus, dass ihre eigentliche
+Unzufriedenheit weniger den Text-Antworten galt, sondern der **Stimme**
+("noch sehr robotisch"). Wichtige Klarstellung, die in diesem Gespräch
+herausgearbeitet wurde: **Die Stimme hat nichts mit dem Gemini-Modell zu
+tun** — sie kam bisher komplett separat von der geräteeigenen Browser-
+Sprachausgabe (Web Speech API), unabhängig davon, welches KI-Modell den Text
+liefert.
+
+**Umsetzung — Google Cloud Text-to-Speech (WaveNet-Stimme) gewählt, nicht
+ElevenLabs:** deutlich natürlicher als die Browser-Stimme, und bei
+Ein-Personen-Nutzung voraussichtlich im oder nur knapp über dem kostenlosen
+Kontingent (1 Mio. Zeichen/Monat gratis bei WaveNet-Stimmen, danach nur 4 €
+pro weitere Million Zeichen) — ElevenLabs klingt zwar noch etwas natürlicher,
+kostet aber bei täglicher Nutzung schon spürbar mehr (Schätzung damals: eher
+20-25 €/Monat). Bei Bedarf später als Zweitschritt nachrüstbar, falls die
+WaveNet-Stimme der Nutzerin nicht reicht.
+
+**Architektur — automatischer, lückenloser Rückfall auf die alte
+Browser-Stimme:** `src/utils/speech.js` behält seine öffentliche
+Schnittstelle exakt bei (`sprich(text, { onEnde })`,
+`sprachausgabeStoppen()`, `sprachausgabeVerfuegbar()`) — kein Aufrufer in
+`KiChat.jsx`/den Onboarding-Screens musste angepasst werden. Intern probiert
+`sprich()` zuerst die neue Cloud-Sprachausgabe; schlägt sie aus irgendeinem
+Grund fehl (Funktion noch nicht deployt, kein Netz, Google-Fehler, nicht
+angemeldet, ...), fängt ein `.catch()` das ab und spielt denselben Text
+stattdessen komplett über die alte, bisherige Web-Speech-Logik ab. Die App
+ist dadurch **schon vor dem Deploy** (unten) genauso nutzbar wie bisher —
+nichts wird stummer oder bricht, es klingt nur so lange weiter wie vorher,
+bis der Deploy-Schritt erledigt ist.
+
+- **`supabase/functions/text-to-speech/index.ts`** (neu) — reiner
+  Durchreicher zu Googles `text:synthesize`-Endpunkt (gleiches Muster wie
+  `gemini-chat`), `GOOGLE_TTS_API_KEY` nur serverseitig als Secret. Stimme
+  fest im Code als `STIMME = "de-DE-Wavenet-F"` hinterlegt (leicht änderbar,
+  Google bietet `de-DE-Wavenet-A` bis `-F` mit unterschiedlichen
+  Klangfarben).
+- **`src/utils/speech.js`** — `cloudSprich()` teilt lange Antworten in
+  Textblöcke (max. 800 Zeichen, an Satzgrenzen) auf, ruft die Edge Function
+  Block für Block auf und spielt jeden Block als `Audio`-Objekt
+  (Data-URI aus dem von Google gelieferten Base64-MP3) nacheinander ab —
+  damit ist die Antwort schneller hörbar, als wenn erst der komplette,
+  oft längere Text auf einmal synthetisiert werden müsste. Ein interner
+  `generation`-Zähler ersetzt das bei Web Speech eingebaute automatische
+  "neu spricht = alt wird sofort verworfen"-Verhalten, damit Barge-in
+  (eigenes Sprechen/erneutes Antippen des Orbs unterbricht sofort) auch bei
+  einer noch laufenden Cloud-Anfrage zuverlässig funktioniert.
+- Keine Änderung an `KiChat.jsx` oder den Onboarding-Screens nötig — die
+  nutzen ausschließlich die unveränderte öffentliche Schnittstelle.
+
+**⚠️ Für die Nutzerin — Deploy-Schritte, bevor die neue Stimme aktiv ist:**
+1. In der [Google Cloud Console](https://console.cloud.google.com/) (mit
+   demselben Google-Konto wie für Gemini, oder einem neuen Projekt) die
+   **"Cloud Text-to-Speech API"** aktivieren (Suchfeld oben, "API aktivieren").
+2. Unter "APIs & Dienste" → "Anmeldedaten" einen neuen **API-Schlüssel**
+   erstellen. Empfehlenswert (nicht zwingend): den Schlüssel auf die
+   Text-to-Speech-API einschränken ("Schlüssel einschränken" →
+   "Cloud Text-to-Speech API"), damit er für nichts anderes missbraucht
+   werden kann, falls er je durchsickert.
+3. Damit das Kostenlos-Kontingent überhaupt greift, muss für das
+   Google-Cloud-Projekt eine **Abrechnung/Zahlungsmethode** hinterlegt sein
+   (wie bei den meisten Google-Cloud-Diensten) — ohne Abrechnung funktioniert
+   die API gar nicht, auch nicht innerhalb des Freikontingents. Das ist
+   normal und bedeutet nicht automatisch Kosten, solange man unter der
+   Freigrenze bleibt.
+4. Den API-Schlüssel als Secret `GOOGLE_TTS_API_KEY` bei der Edge Function
+   `text-to-speech` hinterlegen (Supabase Dashboard → Edge Functions →
+   `text-to-speech` → Secrets — die Funktion selbst muss dafür erst einmal
+   angelegt/deployt sein, siehe nächster Punkt).
+5. Neue Edge Function `text-to-speech` im Supabase-Dashboard unter
+   "Edge Functions" → "Deploy a new function" mit dem Inhalt von
+   `supabase/functions/text-to-speech/index.ts` anlegen.
+6. Kein Vercel-Schritt nötig (keine neue `VITE_...`-Variable) — sobald die
+   Edge Function + das Secret stehen, greift die neue Stimme beim nächsten
+   Öffnen der App automatisch.
+
+**Noch nicht umgesetzt/geprüft (bewusst zurückgestellt):**
+- Keine Stimmauswahl in der UI (Stimme ist fest im Code hinterlegt) — bei
+  Bedarf leicht nachrüstbar (Pill-Auswahl unter "Mehr", analog zum
+  Sprachgeschwindigkeits-Wunsch der Nutzerin).
+- **Sprechgeschwindigkeit** wurde von der Nutzerin explizit mitgenannt
+  ("Sprichgeschwindigkeit ... gefällt mir nicht"), aber noch nicht separat
+  einstellbar gemacht — Google Cloud TTS unterstützt `speakingRate` als
+  Parameter (0.25-4.0), aktuell nicht gesetzt (= Standardgeschwindigkeit
+  1.0). Falls die Nutzerin nach dem Testen der neuen Stimme immer noch zu
+  schnell/langsam findet: einfacher Folgeschritt (Parameter in der Edge
+  Function ergänzen, optional als Regler unter "Mehr").
+- Kein Live-Test möglich in dieser Sandbox (kein Netzwerkzugriff auf
+  Supabase/Google) — Verifikation nur über Rückmeldung der Nutzerin nach
+  dem Deploy.
+
+---
+
 ## 5. Erinnerungs-/Push-System
 
 **Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
@@ -1341,10 +1449,12 @@ ankommen.
 | 7 | Multi-User-/"jeder Teilnehmer bekommt eigenen Coach"-Vision | Zurückgestellt — mit Gemini technisch näher, aber noch nicht umgesetzt | Bei Bedarf besprechen |
 | 8 | `bereichErkennen()`-Routing auf weitere Einstiegspunkte | Erledigt für Home/Tagesplan/Wochenübersicht | Bei Bedarf auf weitere Screens ausweiten |
 | 9 | Farbige Icon-Hintergründe in Onboarding-Kategorie-Headern | Bewusst zurückgestellt beim Design-Umbau (Zeitgrenze) | Nur Politur, kein funktionaler Gap |
-| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ❌ Verworfen — würde laufende Kosten bedeuten (z. B. ElevenLabs, Google Cloud TTS) | — |
+| 10 | Echte Cloud-TTS-Stimme statt Web Speech API | ✅ Umgesetzt (30.07., Google Cloud TTS/WaveNet) — Code fertig, Deploy steht noch aus, siehe Abschnitt 4f | Nutzerin: Deploy-Schritte aus 4f durchführen |
 | 11 | Globaler Plus-Button auf allen Screens statt nur Home | ❌ Verworfen — bleibt wie es ist | — |
 | 12 | Sprachauswahl (DE/EN/TR) auf den Assistenten ausweiten | Nur UI-Texte sind aktuell mehrsprachig, der Assistent antwortet immer auf Deutsch (fest in ~15 System-Prompts) | Bei explizitem Wunsch: zentrale Sprachanweisung statt der verteilten "Antworte auf Deutsch"-Zeilen |
 | 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | ✅ Vollständig erledigt (29.07.), siehe Abschnitt 4a im Detail — Erinnerungen jetzt für alle 9 Bereiche (inkl. Deploy von `send-due-reminders` durch die Nutzerin bestätigt), automatische "ausgefallen"-Erfassung, Notfallmodus-Dokumentation, KI an/aus-Schalter, Korrelationserkennung, Compliance für alle 9 Bereiche | — |
+| 14 | Gemini-Kontingent: `gemini-3.6-flash` hat nur 20 kostenlose Anfragen/Tag, App lief am 30.07. deshalb abends leer (429) | 🔴 Offen, noch nicht entschieden | Nutzerin entscheidet: (a) kostenlos auf `gemini-3.5-flash-lite` wechseln (Vercel-Variable `VITE_AI_MODEL` + Redeploy) oder (b) Abrechnung im Google-Cloud-Projekt aktivieren (Kosten gering, siehe Abschnitt 4, Gemini-Fallstrick 4b) |
+| 15 | Cloud-Sprachausgabe (Google Cloud TTS/WaveNet statt robotischer Browser-Stimme) | ✅ Code fertig (30.07.), siehe Abschnitt 4f — Deploy durch Nutzerin steht noch aus | Deploy-Schritte aus 4f durchführen, danach testen |
 
 ---
 
@@ -1453,7 +1563,15 @@ Sitzung zum iOS-Kurzbefehl fortgesetzt (rein extern, kein Code) sowie
 ausführliche Recherche/Beratung zu einer Smart-Speaker-Lösung als
 Zielbild (Echo Dot + Alexa-Routine, siehe neuer Abschnitt "Vertiefung:
 Smart Speaker als Zielbild" unter 4d) — reine Konzept-/Kaufberatung,
-noch nichts angeschafft oder umgesetzt.
+noch nichts angeschafft oder umgesetzt. Außerdem **Cloud-Sprachausgabe
+gebaut** (Google Cloud TTS/WaveNet statt der robotischen Browser-Stimme,
+Abschnitt 4f) — Code fertig mit automatischem Rückfall auf die alte
+Stimme, falls der Deploy noch aussteht; Auslöser war ein Gemini-429-
+Kontingentfehler (nur 20 kostenlose Anfragen/Tag bei `gemini-3.6-flash`),
+der im selben Gespräch mit besprochen, aber noch nicht behoben wurde (die
+Nutzerin muss sich noch zwischen Modellwechsel auf ein Modell mit
+höherem Freikontingent oder Abrechnung aktivieren entscheiden — siehe
+neuer offener Punkt unten).
 
 **Besprochen, aber bewusst NICHT begonnen (nächste Schritte):**
 1. **Echter Wecker mit Playlist-Auswahl** im Schlaf-Bereich, darauf
