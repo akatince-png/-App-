@@ -1109,12 +1109,26 @@ Kurzbefehl** (Shortcuts-App) als Übergangslösung: eine "Persönliche
 Automation" mit Auslöser "Uhrzeit" (täglich, Weckzeit), Aktion "URLs
 öffnen" mit dem kopierten Spotify-Playlist-Link, "Vor dem Ausführen
 fragen" ausgeschaltet. Läuft komplett außerhalb von AKA — kein Code
-in diesem Repo, keine Rückwirkung auf die App. Zwei Stolpersteine, die
+in diesem Repo, keine Rückwirkung auf die App. Drei Stolpersteine, die
 ihr mitgegeben wurden: (1) das ist normale Musikwiedergabe, kein
 iOS-Alarmton — bei Stummschaltung/leiser Lautstärke bleibt es leise,
 anders als ein echter Wecker; (2) Spotify-App muss in den letzten Tagen
 mal geöffnet gewesen sein, sonst "kein aktives Gerät" wie beim
-"Testen"-Knopf in der App.
+"Testen"-Knopf in der App; (3) **live erlebt in der Nacht 30./31.07.:
+Spotify spielt nach dem automatischen Öffnen NICHT von selbst los** —
+anders als Apple Music unterstützt Spotify kein echtes Autoplay über
+geöffnete Links/Shortcuts, das ist eine bekannte, dokumentierte
+Spotify-Einschränkung (viele Berichte in der Spotify-Community, kein
+Fehler im Kurzbefehl-Aufbau). Der Kurzbefehl bringt die Nutzerin also
+morgens automatisch bis zur richtigen Playlist, ein letzter manueller
+Play-Tap bleibt aber nötig. Ein community-bekannter Trick (`&context=
+spotify:playlist:<ID>` an den Link anhängen) wurde als Versuch
+mitgegeben, gilt aber als unzuverlässig (Spotify hat das nach
+App-Updates wiederholt abgeschaltet) — nicht verlässlich genug, um
+sich darauf zu verlassen. Der einzige wirklich zuverlässige Weg zu
+echtem Autoplay bleibt der Smart-Speaker-Weg (Echo Dot + Alexa-Routine,
+siehe "Vertiefung: Smart Speaker als Zielbild" weiter unten) — dort
+sendet Alexa einen echten Wiedergabe-Befehl statt nur die App zu öffnen.
 
 ### Diskussion: "Wie Alexa" — native App vs. PWA (Nachtrag 29.07.)
 
