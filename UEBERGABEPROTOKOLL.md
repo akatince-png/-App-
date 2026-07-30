@@ -1093,6 +1093,110 @@ Hintergrund weiter, Ansagen, Wartezeiten abzählen, Nachfragen wie "schon
 ausgetrunken?", Abschluss "wir hören uns bei der Medigabe"). Perspektivisch
 dieselbe Struktur für Abend-/Trainingsroutine.
 
+### Zwischenlösung: iOS-Kurzbefehl statt App-Funktion (Nachtrag 29.07.)
+
+Bis der echte Wecker gebaut ist, testet die Nutzerin einen **iOS-
+Kurzbefehl** (Shortcuts-App) als Übergangslösung: eine "Persönliche
+Automation" mit Auslöser "Uhrzeit" (täglich, Weckzeit), Aktion "URLs
+öffnen" mit dem kopierten Spotify-Playlist-Link, "Vor dem Ausführen
+fragen" ausgeschaltet. Läuft komplett außerhalb von AKA — kein Code
+in diesem Repo, keine Rückwirkung auf die App. Zwei Stolpersteine, die
+ihr mitgegeben wurden: (1) das ist normale Musikwiedergabe, kein
+iOS-Alarmton — bei Stummschaltung/leiser Lautstärke bleibt es leise,
+anders als ein echter Wecker; (2) Spotify-App muss in den letzten Tagen
+mal geöffnet gewesen sein, sonst "kein aktives Gerät" wie beim
+"Testen"-Knopf in der App.
+
+### Diskussion: "Wie Alexa" — native App vs. PWA (Nachtrag 29.07.)
+
+Nutzerin-Frage: kann Aka Spotify irgendwann so bedienen wie ein Amazon-
+Echo/Alexa? Eingeordnet:
+- **Offline-Downloads helfen nicht** — die betreffen nur "Songs ohne
+  Internet abspielbar", nicht die "aktives Gerät"-Regel von Spotify.
+- **Der eigentliche Weg dahin wäre eine echte native App** statt einer
+  zum Homescreen hinzugefügten Website (PWA) — mit Zugriff auf Spotifys
+  eigenes App-SDK statt der eingeschränkten Web-API und auf iOS'
+  Hintergrund-Mechanismen. Deutlich größeres Projekt (Apple-
+  Entwickler-Konto, eigene App-Entwicklung, TestFlight oder App Store) —
+  bewusst NICHT begonnen, nur als Vision im Hinterkopf behalten.
+- **Schneller Zwischenweg, falls die Nutzerin einen Smart Speaker
+  (Echo/Nest/Sonos mit Spotify Connect) im Schlafzimmer hat oder sich
+  zulegt:** der bleibt technisch dauerhaft "aktives Gerät" bei Spotify
+  (anders als ein schlafendes Handy) — Aka könnte darüber schon HEUTE mit
+  dem bestehenden `spotify-play` zuverlässig Musik starten, ganz ohne
+  neue Entwicklung. Empfehlung an die Nutzerin: das zuerst probieren,
+  bevor über eine native App nachgedacht wird.
+
+---
+
+## 4e. Nachtrag 29.07. — Politur-Runde (UI-Fixes, Logo/Icon, Größen)
+
+Sammel-Nachtrag für kleinere Korrekturen im Laufe des Tages, jede einzeln
+von der Nutzerin gemeldet und noch am selben Tag behoben:
+
+- **Onboarding-Abmelden-Fix** siehe Nachtrag bei den Willkommens-Folien
+  (Abschnitt 3) — Erst-Onboarding hatte keinen Ausweg, wenn nicht in
+  einem Zug durchlaufen.
+- **Aka-Orb (schwebender Chat-Auslöser, `KiChat.jsx`) verdeckte
+  Karteninhalt:** erst nach rechts unten verschoben, dann auf
+  ausdrücklichen Wunsch der Nutzerin wieder MITTIG unten (Referenz:
+  zentriertes Sprachassistenten-Overlay bei Gemini) — stattdessen bekommt
+  jede Seite (`Shell` in `primitives.jsx`) jetzt unten zusätzlichen
+  Freiraum (`padding-bottom` erhöht), damit zumindest der letzte
+  Karteninhalt nicht mehr dauerhaft verdeckt wird.
+- **"Wochenübersicht"-Reiter in "Alle Pläne" (`PlaeneView.jsx`) wurde beim
+  Anwählen unsichtbar:** Hintergrund UND Text fielen beide auf denselben
+  fehlenden Farbwert zurück (weißer Text auf weißem Grund). Zwei Runden:
+  erst Fallback auf die generische Akzentfarbe (behob die Unsichtbarkeit),
+  dann eigene Slate-Farbe (`#64748B`), weil die Akzentfarbe bereits fest
+  an "Peptide" vergeben war und beide Reiter sonst gleich aussahen.
+- **Peptide hatte versehentlich dieselbe Farbe wie die generische
+  Marken-Akzentfarbe** (`utils/dayItems.js`, `KATEGORIE_META.peptid`) —
+  Rest eines alten Kommentars ("Peptide = Marken-Grün"), der beim
+  Indigo-Redesign nicht mehr umgesetzt wurde. Jetzt eigenständiges Grün
+  (`dot: "#4F9153"`), wirkt sich global überall aus, wo die Peptide-
+  Bereichsfarbe verwendet wird.
+- **"Routinen" in "Alle Pläne" ergänzt und nach oben verschoben:**
+  Gewohnheiten war vorher nur über die Home-Kachel erreichbar. Neuer
+  Abschnitt "Routinen" (Listen-Button-Stil, aktuell ein Eintrag
+  "Gewohnheiten", später erweiterbar um Morgen-/Abendroutine) — auf
+  Nutzerinnen-Wunsch VOR der 9er-Reiter-Zeile "Pläne", nicht dahinter
+  (Priorität).
+- **Neues Logo + App-Icon:** von der Nutzerin ausgewählte, eigens
+  gestaltete Motive (Gehirn-Symbol) ersetzen den bisherigen Ring-
+  Schriftzug — `public/logo-mark.png` (Header/Login, über `Logo.jsx`)
+  sowie `public/icons/icon-192.png` / `icon-512.png` /
+  `apple-touch-icon.png` (Homescreen-Symbol). Aus Screenshots
+  zugeschnitten (Python/Pillow, Bounding-Box-Erkennung), Bildschärfe
+  entsprechend etwas weicher als ein echter Export — bei Bedarf später
+  mit einer schärferen Quelle nachziehen. **Wichtig für die Nutzerin:**
+  ein bereits vorhandenes Homescreen-Symbol aktualisiert sich nicht von
+  selbst — altes Symbol löschen und über Safari neu "Zum Home-Bildschirm"
+  hinzufügen.
+- **Logo/Schriftzug/Begrüßung vergrößert:** `ViewHeader.jsx` (Logo
+  30→38, Titel 15→16), `LoginView.jsx` (Logo 64→84, "AKA" 22→28,
+  Untertitel 13→14.5), `HomeView.jsx` (Logo 40→52, "AKA" 16→19,
+  Begrüßung 16→18, Überschrift 22→24).
+- **Bugfix: Aka wiederholte bei jedem Öffnen das alte Gespräch.** Bisher
+  wurde beim Öffnen automatisch die letzte gespeicherte Coach-Nachricht
+  vorgelesen/prominent gezeigt ("damit man weiß, wo man stand") —
+  Nutzerin empfand das als "fängt immer wieder mit dem alten Thema an"
+  und musste Aka jedes Mal unterbrechen. `KiChat.jsx`: neuer
+  `altVerlaufBisRef` markiert, wie viele Nachrichten beim Öffnen aus
+  früheren Sitzungen bereits geladen waren — die große Anzeige, das
+  automatische Vorlesen und der "Übernehmen"-Knopf reagieren jetzt nur
+  noch auf das, was in der AKTUELLEN Sitzung neu dazukommt. Der volle
+  Verlauf lädt weiterhin (Klapp-Verlauf + KI-Gedächtnis über die Zeit),
+  treibt aber die prominente Anzeige nicht mehr.
+- **Bugfix: Edge-Function-Fehlermeldungen kamen im Client nie an.**
+  `supabase-js` verschluckt bei jedem Nicht-2xx-Status den JSON-Body
+  ("Edge Function returned a non-2xx status code" statt der echten
+  Meldung) — betraf `admin-create-proband`, `spotify-auth-callback`,
+  `spotify-play`. Alle drei geben erwartete/behandelte Fehler jetzt mit
+  HTTP 200 + `{ error }` im Body zurück; das Frontend unterschied ohnehin
+  schon per `data.error`, nicht per Status. **Bereits redeployt von der
+  Nutzerin.**
+
 ---
 
 ## 5. Erinnerungs-/Push-System
@@ -1253,45 +1357,59 @@ ankommen.
 
 ---
 
-**Letzte Aktualisierung:** 29.07.2026. Coach ist jetzt exekutiver
-Assistent (nicht "Coach") in allen 9 Bereichen + Home/Tagesplan/
-Wochenübersicht, Onboarding hat zwei gleichwertige Begleitungs-Phasen,
-Design ist auf weißen Untergrund + bereichseigene Farben umgestellt.
-Das Erinnerungs-/Push-System deckt jetzt **alle 9 Kategorien** ab und ist
-**deployt und bestätigt aktiv** (siehe Abschnitt 5). Alle Punkte aus der
-letzten großen Bestandsaufnahme sind abgearbeitet: Notfallmodus-
-Dokumentation, KI an/aus-Schalter, automatische "ausgefallen"-Erfassung,
-Compliance für alle 9 Bereiche, Korrelationserkennung (Abschnitt 4a).
-Zusätzlich behoben: Erst-Onboarding hatte keinen Abmelden-Ausweg, wenn es
-nicht in einem Zug durchlaufen wurde (siehe Nachtrag 29.07. bei den
-Willkommens-Folien) — gefixt, reine Frontend-Änderung.
+**Letzte Aktualisierung:** 29.07.2026 — sehr langer, ereignisreicher
+Sitzungstag, hier bewusst ausführlich zusammengefasst, damit möglichst
+wenig Kontext für die nächste Sitzung verloren geht.
 
-**Admin-Dashboard** ("Verwalten als"-Modus, Abschnitt 4b) ist deployt und
-live — Migration 0035 + Edge Function `admin-create-proband` sind
-eingespielt, die Nutzerin ist als Admin markiert und sieht das Dashboard
-unter "Mehr".
+**Ausgangslage vor heute:** Coach ist exekutiver Assistent (nicht
+"Coach") in allen 9 Bereichen + Home/Tagesplan/Wochenübersicht,
+Onboarding hat zwei gleichwertige Begleitungs-Phasen, Design auf weißem
+Untergrund + bereichseigene Farben. Erinnerungs-/Push-System deckt alle
+9 Kategorien ab, deployt und bestätigt aktiv (Abschnitt 5).
 
-**Admin-Hinweise über den Assistenten zustellen** (Abschnitt 4c) — Aka
-kann Hintergrundwissen oder direkte Nachrichten bekommen, die der Admin
-pro Proband hinterlässt, ohne dass es wie ein separates
-Verwaltungs-Postfach wirkt. **✅ Deployt (29.07.)**, Migration 0036 lief
-erfolgreich.
+**Heute neu gebaut UND vollständig deployt/bestätigt:**
+- **Admin-Dashboard** ("Verwalten als"-Modus, Abschnitt 4b) — die
+  Nutzerin kann sich als Admin anmelden, alle Konten einsehen und
+  stellvertretend die App für jemanden bedienen (z. B. Eltern, die noch
+  nicht selbst mit der KI ihren Plan aufbauen können). Migration 0035 +
+  Edge Function `admin-create-proband` live, Nutzerin ist als Admin
+  markiert.
+- **Admin-Hinweise über den Assistenten** (Abschnitt 4c) — der Admin kann
+  Aka pro Proband Hintergrundwissen oder direkte Nachrichten mitgeben,
+  die wie ganz normale Aka-Antworten wirken, kein separates Postfach.
+  Migration 0036 live.
+- **Spotify-Anbindung inkl. mehrerer Playlists** (Abschnitt 4d) —
+  OAuth-Verbindung, beliebig viele benannte Playlists, Aka erkennt im
+  Gespräch selbst (Marker-Mechanismus, kein festes Trigger-Wort nötig),
+  welche gemeint ist, und startet sie. Migrationen 0037 + 0038, beide
+  Edge Functions, Spotify-Entwickler-Konto, Vercel-Variable — alles live,
+  im Gespräch mit Aka erfolgreich getestet.
+- **Diverse UI-Bugfixes und Politur** (Abschnitt 4e) — u. a. Aka-Orb
+  verdeckte keine Karteninhalte mehr, Farbverwechslungen bei
+  Wochenübersicht/Peptide behoben, neuer "Routinen"-Abschnitt (Priorität
+  vor den 9 Plan-Reitern), neues Logo + App-Icon nach Nutzerinnen-Vorgabe,
+  Logo/Schriftzug/Begrüßung vergrößert, Aka wiederholt beim Öffnen nicht
+  mehr automatisch alte Gespräche, Edge-Function-Fehlermeldungen kommen
+  jetzt im Client an (waren vorher stumm verschluckt).
 
-**Spotify-Anbindung** (Abschnitt 4d) — Grundlage für die von der Nutzerin
-gewünschte "geführte Morgenroutine". **✅ Deployt und im Live-Test
-bestätigt (29.07.):** Migration 0037, beide Edge Functions
-(`spotify-auth-callback`, `spotify-play`), Spotify-Entwickler-Konto,
-Vercel-Variable — Verbindung funktioniert. Direkt im Anschluss ergänzt:
-mehrere benannte Playlists + Aka löst die passende im Gespräch selbst aus
-(Marker-Mechanismus in `KiChat.jsx`, siehe Abschnitt 4d, Nachtrag) —
-**Migration 0038 NOCH NICHT deployt.**
+**Heute besprochen, aber bewusst NICHT begonnen (nächste Schritte):**
+1. **Echter Wecker mit Playlist-Auswahl** im Schlaf-Bereich, darauf
+   aufbauend die **geführte Morgenroutine** (Weckzeit als Push-
+   Erinnerung → Ablauf-Screen, der die mit Aka geplanten Schritte per
+   Sprache durchgeht, Musik läuft mit, Wartezeiten/Nachfragen, Abschluss)
+   — von der Nutzerin klar priorisiert, siehe Abschnitt 4d. Übergangs-
+   weise nutzt sie dafür einen iOS-Kurzbefehl außerhalb der App (siehe
+   Abschnitt 4d, "Zwischenlösung").
+2. **"Wie Alexa"-Vision für Spotify-Steuerung** (Abschnitt 4d,
+   Diskussion) — Empfehlung: erst Smart Speaker probieren (funktioniert
+   schon mit dem bestehenden System), native App nur als langfristige
+   Idee im Hinterkopf.
+3. Im ursprünglichen Onboarding fehlen noch Detailfragen zum
+   Sport-Istzustand/zur Körperkomposition (von der Nutzerin beim
+   Admin-Dashboard-Auftrag erwähnt, dort bewusst zurückgestellt).
 
-Nächster sinnvoller Ansatzpunkt: der Nutzerin beim Deploy von Migration
-0038 helfen (SQL Editor, kein neuer Edge-Function-/Vercel-Schritt), dann
-gemeinsam live testen, ob Aka die richtige Playlist im Gespräch trifft.
-Danach von der Nutzerin explizit gewünscht: ein echter Wecker mit
-Playlist-Auswahl im Schlaf-Bereich, darauf aufbauend die eigentliche
-geführte Morgenroutine (Abschnitt 4d, Nachtrag, letzter Absatz) — noch
-nicht begonnen. Alternativ verbleibende offene Punkte in Abschnitt 6
+Nächster sinnvoller Ansatzpunkt: Punkt 1 oben (Wecker + geführte
+Morgenroutine) ist die von der Nutzerin priorisierte nächste große
+Baustelle. Alternativ verbleibende offene Punkte in Abschnitt 6
 durchgehen (v. a. Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein
 akuter Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.
