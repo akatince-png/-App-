@@ -1,6 +1,6 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-**Stand: 28.07.2026, nachts — Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
+**Stand: 30.07.2026 — Branch `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
 Dieses Dokument wurde komplett neu geschrieben (nicht nur ergänzt), um die
 vielen "Nachtrag"-Schichten der letzten Sessions in einen einzigen
@@ -868,8 +868,7 @@ der eigenen. Dadurch ist "gleiches Design/gleicher Stil" automatisch erfüllt
   sichtbar wenn `appData.isAdmin` true ist (aus `useProfileData.js`, liest
   `profiles.is_admin`).
 
-**Datenbank (`supabase/migrations/0035_admin_dashboard.sql` — NOCH NICHT
-DEPLOYT):**
+**Datenbank (`supabase/migrations/0035_admin_dashboard.sql` — ✅ deployt):**
 - `profiles.is_admin boolean default false`, `profiles.vorname text`.
 - `public.is_admin(uid)` — Hilfsfunktion.
 - `public.admin_liste_probanden()` — liefert die Probandenliste inkl.
@@ -881,8 +880,8 @@ DEPLOYT):**
   automatisch per OR. Reines Hinzufügen, kein Risiko für bestehende
   Nutzer:innen.
 
-**Edge Function `supabase/functions/admin-create-proband/index.ts` — NOCH
-NICHT DEPLOYT:** legt aus dem Dashboard heraus ein neues Konto an
+**Edge Function `supabase/functions/admin-create-proband/index.ts` — ✅
+deployt:** legt aus dem Dashboard heraus ein neues Konto an
 (service-role-basiert). Wichtig: ein normales `supabase.auth.signUp()` im
 Browser hätte die eigene Admin-Session durch die neue ersetzt — deshalb
 läuft das Anlegen serverseitig mit dem (automatisch bereitstehenden)
@@ -930,7 +929,7 @@ der nächsten Aktion in einem Bereich bekommt. Explizit NICHT als separates
 Aka selbst.
 
 **Zwei Modi, beide über `admin_notizen` (Migration
-`0036_admin_notizen.sql` — NOCH NICHT DEPLOYT):**
+`0036_admin_notizen.sql` — ✅ deployt):**
 - **`kontext`** — Hintergrundwissen, fließt bei JEDER Chat-Anfrage im
   passenden Bereich in den ohnehin schon bestehenden "Background
   Brain"-Kontext ein (`KiChat.jsx`, `hintergrundKontext`, direkt neben
@@ -966,10 +965,8 @@ markieren, NICHT selbst welche anlegen oder löschen. Nur der Admin kann
 schreiben/löschen (über `is_admin(auth.uid())`, dieselbe Hilfsfunktion
 wie in 0035).
 
-**⚠️ Für die Nutzerin — noch ein Deploy-Schritt:** Migration
-`0036_admin_notizen.sql` im Supabase-Dashboard unter "SQL Editor"
-einfügen und ausführen (gleiches Vorgehen wie bei 0035). Kein neuer
-Edge-Function-Schritt nötig, kein erneutes `is_admin`-Setzen.
+**✅ Deployt (29.07.).** Migration `0036_admin_notizen.sql` ist von der
+Nutzerin über das Supabase-Dashboard ausgeführt worden.
 
 ---
 
@@ -995,18 +992,18 @@ muss auf dem Handy zumindest kürzlich geöffnet gewesen sein (sonst kein
 "aktives Wiedergabegerät", Fehler 404 von Spotify).
 
 **Umsetzung (OAuth Authorization-Code-Flow):**
-- `supabase/migrations/0037_spotify_verbindung.sql` — NOCH NICHT DEPLOYT.
-  Neue Tabelle `spotify_verbindung` (user_id, refresh_token, access_token,
+- `supabase/migrations/0037_spotify_verbindung.sql` — ✅ deployt. Neue
+  Tabelle `spotify_verbindung` (user_id, refresh_token, access_token,
   token_laeuft_ab, playlist_uri) mit eigener Zeile-Policy + Admin-Bypass
   (Admin kann die Verbindung auch im "Verwalten als"-Modus für eine
   Probandin/einen Probanden herstellen/pflegen).
-- `supabase/functions/spotify-auth-callback/index.ts` — NOCH NICHT
-  DEPLOYT. Tauscht den OAuth-Code gegen Access-/Refresh-Token (braucht
+- `supabase/functions/spotify-auth-callback/index.ts` — ✅ deployt.
+  Tauscht den OAuth-Code gegen Access-/Refresh-Token (braucht
   `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` als Edge-Function-Secrets,
   Secret NIE im Browser).
-- `supabase/functions/spotify-play/index.ts` — NOCH NICHT DEPLOYT.
-  Erneuert das Access-Token bei Bedarf und startet die hinterlegte
-  Playlist über die Spotify-Web-API.
+- `supabase/functions/spotify-play/index.ts` — ✅ deployt. Erneuert das
+  Access-Token bei Bedarf und startet die hinterlegte Playlist über die
+  Spotify-Web-API.
 - `src/services/spotify.js` — baut die Spotify-Autorisierungs-URL
   (`VITE_SPOTIFY_CLIENT_ID`, neue öffentliche Env-Var, siehe
   `.env.example`), ruft die Edge Functions auf, normalisiert
@@ -1055,8 +1052,8 @@ mehrere Playlists (Morgen, Abend/Chillen, Notfallmodus/Erholung, Training,
 Arbeit/Workflow, ...), OHNE feste Kategorien im Code — Aka soll frei
 zuordnen, welche Playlist zu einer Bitte passt.
 
-- `supabase/migrations/0038_spotify_playlists.sql` — NOCH NICHT DEPLOYT.
-  Neue Tabelle `spotify_playlists` (user_id, name, uri) statt der bisherigen
+- `supabase/migrations/0038_spotify_playlists.sql` — ✅ deployt. Neue
+  Tabelle `spotify_playlists` (user_id, name, uri) statt der bisherigen
   einzelnen `playlist_uri`-Spalte — beliebig viele, frei benannt.
 - `src/data/useSpotifyVerbindung.js` — erweitert um
   `spotifyPlaylists`/`spotifyPlaylistHinzufuegen`/`spotifyPlaylistLoeschen`;
@@ -1079,9 +1076,9 @@ zuordnen, welche Playlist zu einer Bitte passt.
   bestehender Playlists (Name, Testen-Knopf, Löschen), Formular für neue
   Playlist (Name + Spotify-Link).
 
-**⚠️ Für die Nutzerin — noch ein Deploy-Schritt:** Migration
-`0038_spotify_playlists.sql` im SQL Editor ausführen. Keine neuen
-Edge-Function- oder Vercel-Schritte nötig.
+**✅ Deployt (29.07.).** Migration `0038_spotify_playlists.sql` ist
+ausgeführt, mehrere Playlists angelegt und im Gespräch mit Aka erfolgreich
+getestet (Playlist wurde per Marker erkannt und abgespielt).
 
 **Nächster Schritt (noch nicht begonnen), explizit von der Nutzerin
 gewünscht:** ein echter Wecker im Schlaf-Bereich mit Playlist-Auswahl
@@ -1126,6 +1123,61 @@ Echo/Alexa? Eingeordnet:
   dem bestehenden `spotify-play` zuverlässig Musik starten, ganz ohne
   neue Entwicklung. Empfehlung an die Nutzerin: das zuerst probieren,
   bevor über eine native App nachgedacht wird.
+
+### Vertiefung: Smart Speaker als Zielbild statt iOS-Kurzbefehl (Nachtrag 30.07.)
+
+Direkt im Anschluss an den iOS-Kurzbefehl-Test (siehe unten) wollte die
+Nutzerin genauer wissen, wie eine "wie Alexa"-Lösung konkret aussehen
+würde — explizit **kostengünstig, ohne Lizenz-/Zertifizierungsaufwand**,
+und **plattformunabhängig** (auch für Probandinnen/Probanden ohne iOS,
+z. B. ihre Eltern). Wichtige Klarstellung, zweigeteilt:
+
+1. **"Aka, starte meine Playlist" mitten im Gespräch** funktioniert
+   bereits heute — das ist genau der Marker-Mechanismus aus 4d oben,
+   solange irgendein Spotify-"aktives Gerät" existiert.
+2. **Automatisch beim Aufwachen, ohne jede Interaktion** — das kann
+   grundsätzlich **kein** Anbieter aus einer Web-App/PWA heraus lösen
+   (Spotifys "aktives Gerät"-Regel, s. o.), auch nicht mit mehr Code.
+   Alexa-Lautsprecher lösen das nur, weil der Lautsprecher SELBST
+   permanent ein aktives Gerät ist.
+
+**Empfohlener, günstigster Weg — Echo Dot + Alexa-Routine (kein
+Entwickler-/Lizenzaufwand):**
+- Hardware: **Amazon Echo Dot (5. Generation)**, ca. 38–40 € — aktuell
+  klar günstiger/verfügbarer als die Google-Alternative (Google Nest Mini
+  ist eingestellt worden, nur noch Restbestände zu 99–140 €).
+- Ablauf: Echo Dot per Alexa-App einrichten → **Einstellungen → Musik &
+  Podcasts → Standard-Musikdienst → Spotify verknüpfen** (normaler
+  Endnutzer-Login mit dem Premium-Konto, KEIN Entwicklerkonto nötig) →
+  in der Alexa-App eine **Routine** anlegen (Auslöser Uhrzeit 06:15
+  täglich → Aktion "Spotify abspielen: <Playlist>" auf dem Echo Dot).
+  Läuft danach vollautomatisch, ohne dass Aka oder die Nutzerin
+  irgendwas tun müssen — in diesem Szenario startet **Alexa** die Musik,
+  nicht Aka.
+- Das ist bewusst NICHT dasselbe wie "Aka steuert den Lautsprecher" —
+  falls das später zusätzlich gewünscht wird (Aka spricht den Lautsprecher
+  per Chat-Befehl gezielt an), bräuchte es eine eigene Alexa-Skill
+  (kostenloses Amazon-Entwicklerkonto + Skill-Code). Wichtig für die
+  Kostenfrage: Für **reine Privatnutzung** (nur die Nutzerin selbst bzw.
+  eingeladene Test-Probandinnen/-Probanden) ist **keine öffentliche
+  Zertifizierung** bei Amazon nötig — eine Skill kann dauerhaft im
+  Entwicklungsmodus bleiben. Deutlich mehr Aufwand als die reine
+  Routine oben, deshalb bewusst als möglicher, aber nicht begonnener
+  nächster Schritt eingeordnet.
+- **Plattformfrage (Android-Probandinnen/-Probanden):** keine
+  Universallösung — jede Plattform bräuchte ihren eigenen
+  Automatisierungsweg (Android-Äquivalent wäre z. B. "Tasker"). Noch
+  nicht weiter untersucht, nur als bekannte Lücke vermerkt.
+
+**Stand iOS-Kurzbefehl (parallel dazu, 30.07.):** Die Aktion "URLs
+öffnen" ist nach mehreren erfolglosen Direktsuchen (Suche nach
+"URL"/"Safari"/"Spotify" lieferte in dieser Shortcuts-Installation
+durchgehend keine Treffer) über den Umweg **Suche nach "Öffnen" →
+komplette Ergebnisliste durchscrollen** gefunden worden (lag unter
+Safari-Aktionen). Automation "15 Minuten vor Sonnenaufgang, täglich"
+(bewusst Sonnenaufgang statt fester Uhrzeit, Nutzerinnen-Entscheidung)
+war zuletzt kurz davor, mit dem Playlist-Link befüllt zu werden — im
+nächsten Gespräch ggf. nachfragen, ob das fertiggestellt wurde.
 
 ---
 
@@ -1357,9 +1409,10 @@ ankommen.
 
 ---
 
-**Letzte Aktualisierung:** 29.07.2026 — sehr langer, ereignisreicher
-Sitzungstag, hier bewusst ausführlich zusammengefasst, damit möglichst
-wenig Kontext für die nächste Sitzung verloren geht.
+**Letzte Aktualisierung:** 30.07.2026 — Fortsetzung des sehr langen,
+ereignisreichen 29.07.-Sitzungstags, hier bewusst ausführlich
+zusammengefasst, damit möglichst wenig Kontext für die nächste Sitzung
+verloren geht.
 
 **Ausgangslage vor heute:** Coach ist exekutiver Assistent (nicht
 "Coach") in allen 9 Bereichen + Home/Tagesplan/Wochenübersicht,
@@ -1392,24 +1445,40 @@ Untergrund + bereichseigene Farben. Erinnerungs-/Push-System deckt alle
   mehr automatisch alte Gespräche, Edge-Function-Fehlermeldungen kommen
   jetzt im Client an (waren vorher stumm verschluckt).
 
-**Heute besprochen, aber bewusst NICHT begonnen (nächste Schritte):**
+**Am 30.07. zusätzlich:** Migrationen 0035–0038 sind jetzt durchgängig
+als "✅ deployt" markiert (vorher stellenweise noch als "NOCH NICHT
+DEPLOYT" stehen geblieben, obwohl die Nutzerin sie längst ausgeführt
+hatte — reiner Dokumentationsfehler, jetzt korrigiert). Live-Support-
+Sitzung zum iOS-Kurzbefehl fortgesetzt (rein extern, kein Code) sowie
+ausführliche Recherche/Beratung zu einer Smart-Speaker-Lösung als
+Zielbild (Echo Dot + Alexa-Routine, siehe neuer Abschnitt "Vertiefung:
+Smart Speaker als Zielbild" unter 4d) — reine Konzept-/Kaufberatung,
+noch nichts angeschafft oder umgesetzt.
+
+**Besprochen, aber bewusst NICHT begonnen (nächste Schritte):**
 1. **Echter Wecker mit Playlist-Auswahl** im Schlaf-Bereich, darauf
    aufbauend die **geführte Morgenroutine** (Weckzeit als Push-
    Erinnerung → Ablauf-Screen, der die mit Aka geplanten Schritte per
    Sprache durchgeht, Musik läuft mit, Wartezeiten/Nachfragen, Abschluss)
    — von der Nutzerin klar priorisiert, siehe Abschnitt 4d. Übergangs-
    weise nutzt sie dafür einen iOS-Kurzbefehl außerhalb der App (siehe
-   Abschnitt 4d, "Zwischenlösung").
-2. **"Wie Alexa"-Vision für Spotify-Steuerung** (Abschnitt 4d,
-   Diskussion) — Empfehlung: erst Smart Speaker probieren (funktioniert
-   schon mit dem bestehenden System), native App nur als langfristige
-   Idee im Hinterkopf.
+   Abschnitt 4d, "Zwischenlösung" + "Stand iOS-Kurzbefehl" im neuen
+   30.07.-Abschnitt — zuletzt kurz vor Fertigstellung).
+2. **Smart-Speaker-Weg als Alternative zum Kurzbefehl** (Abschnitt 4d,
+   neuer Vertiefungs-Abschnitt) — konkrete Kaufempfehlung (Echo Dot,
+   ~38–40 €) und Einrichtungsschritte liegen vor, aber noch nicht
+   angeschafft/umgesetzt. Eine eigene Alexa-Skill (Aka steuert den
+   Lautsprecher aktiv) wäre ein separater, deutlich größerer Folgeschritt
+   — nur bei explizitem späteren Wunsch angehen.
 3. Im ursprünglichen Onboarding fehlen noch Detailfragen zum
    Sport-Istzustand/zur Körperkomposition (von der Nutzerin beim
    Admin-Dashboard-Auftrag erwähnt, dort bewusst zurückgestellt).
 
 Nächster sinnvoller Ansatzpunkt: Punkt 1 oben (Wecker + geführte
 Morgenroutine) ist die von der Nutzerin priorisierte nächste große
-Baustelle. Alternativ verbleibende offene Punkte in Abschnitt 6
-durchgehen (v. a. Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein
-akuter Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.
+Baustelle — dabei auch klären, ob sie sich für den iOS-Kurzbefehl oder
+einen Echo Dot als Auslöser entscheidet, das beeinflusst das Design des
+Ablauf-Screens (Push-Tap vs. sprachgesteuert vom Lautsprecher aus).
+Alternativ verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a.
+Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein akuter
+Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.
