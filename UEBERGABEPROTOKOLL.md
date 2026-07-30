@@ -1408,6 +1408,63 @@ Gemini-Projekt aktivieren, siehe Abschnitt 6, Punkt 14.
 
 ---
 
+## 4g. Nachtrag 31.07. — Auto-Play-Schlüssel: volle Spotify-Automatik ohne neue Hardware
+
+**Auslöser:** Beim Live-Test des iOS-Kurzbefehls (Abschnitt 4d) zeigte sich,
+dass Spotify nach dem automatischen Öffnen NICHT von selbst losspielt
+(bekannte Spotify/Shortcuts-Einschränkung, siehe dort). Die Nutzerin hatte
+danach selbst die richtige Idee: Wenn der Kurzbefehl Spotify öffnet, zählt
+das Gerät (Handy/Tablet) ab dann als "aktives Spotify-Gerät" — **Aka
+bräuchte danach nur noch die Chance, den eigentlichen Play-Befehl zu
+schicken.** Bisher konnte das nur die App selbst (mit einer normalen,
+~1 Std. gültigen Anmeldung) — ein externer Aufrufer wie ein Kurzbefehl
+hatte keinen Weg dazu. Jetzt behoben, kostenlos, ganz ohne Hardware-Kauf.
+
+**Umsetzung:**
+- `supabase/migrations/0039_spotify_auto_play_token.sql` — NOCH NICHT
+  DEPLOYT. Neue Spalte `spotify_verbindung.auto_play_token` (langer,
+  zufälliger Schlüssel, pro Person eindeutig). Keine neue RLS-Policy nötig
+  — die bestehende "eigene Zeile"-Policy deckt die neue Spalte automatisch
+  mit ab.
+- `supabase/functions/spotify-play/index.ts` — NOCH NICHT (erneut)
+  DEPLOYT. Akzeptiert jetzt zusätzlich zum bisherigen Anmelde-Weg einen
+  `?token=...`-Query-Parameter (GET oder POST) — findet darüber direkt die
+  Person, ganz ohne Supabase-Anmeldung, keine Ablaufzeit. Zusätzlich
+  optional `&playlist=<Name>`, um statt der Standard-Playlist eine der
+  benannten Playlists zu starten (z. B. für eine zweite Automation
+  "Abendroutine"). Wer den Schlüssel kennt, kann ausschließlich Musik für
+  genau diese eine Person starten — kein Zugriff auf sonstige Daten.
+- `src/data/useSpotifyVerbindung.js` — `spotifyAutoPlayToken` (aktueller
+  Schlüssel oder `null`) + `spotifyAutoPlayTokenErzeugen()` (erzeugt per
+  `crypto.getRandomValues` einen neuen 192-Bit-Zufallsschlüssel, ersetzt
+  einen vorhandenen — macht ihn damit ungültig, falls er mal weitergegeben
+  wurde und zurückgezogen werden soll).
+- `src/views/plan/MehrTab.jsx` — neuer Abschnitt "Automatischer Start"
+  unter "Musik (Spotify)": Knopf "Automatik-Link erzeugen", danach Anzeige
+  der fertigen URL + "Link kopieren"/"Neu erzeugen".
+
+**⚠️ Für die Nutzerin — Deploy-Schritte:**
+1. Migration `0039_spotify_auto_play_token.sql` im Supabase-Dashboard unter
+   "SQL Editor" ausführen.
+2. Edge Function `spotify-play` im Supabase-Dashboard **neu deployen**
+   (bestehende Funktion, Inhalt komplett ersetzen durch den neuen Code aus
+   `supabase/functions/spotify-play/index.ts`) — kein neues Secret nötig,
+   nutzt dieselben `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` wie bisher.
+3. In der App unter "Mehr" → "Musik (Spotify)" → "Automatischer Start" →
+   "Automatik-Link erzeugen" → Link kopieren.
+4. Im iOS-Kurzbefehl (die "15 Minuten vor Sonnenaufgang"-Automation)
+   **nach** der "URLs öffnen"-Aktion zwei weitere Aktionen ergänzen:
+   - **"Warten"** (2-3 Sekunden, damit Spotify Zeit hat zu laden).
+   - **"URL-Inhalt abrufen"** ("Get Contents of URL") mit dem kopierten
+     Link als Ziel-URL, Methode GET (Standard) — kein Body, keine
+     zusätzlichen Kopfzeilen nötig, der Schlüssel steckt direkt in der URL.
+
+Sobald das steht, läuft die morgendliche Musik **komplett automatisch**,
+ohne dass die Nutzerin irgendetwas antippt oder zu Aka sagen muss — sowohl
+auf dem Handy als auch auf dem Tablet, kein Hardware-Kauf nötig.
+
+---
+
 ## 5. Erinnerungs-/Push-System
 
 **Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
@@ -1504,6 +1561,7 @@ ankommen.
 | 13 | Protokoll-Journal (jeder Schritt dokumentiert, auch verspätet/ausgesetzt) + Erinnerung ab 10 Min. Verspätung + Vorab-Erinnerungen + KI an/aus-Schalter + Korrelationen | ✅ Vollständig erledigt (29.07.), siehe Abschnitt 4a im Detail — Erinnerungen jetzt für alle 9 Bereiche (inkl. Deploy von `send-due-reminders` durch die Nutzerin bestätigt), automatische "ausgefallen"-Erfassung, Notfallmodus-Dokumentation, KI an/aus-Schalter, Korrelationserkennung, Compliance für alle 9 Bereiche | — |
 | 14 | Gemini-Kontingent: `gemini-3.6-flash` hat nur 20 kostenlose Anfragen/Tag, App lief am 30.07. deshalb abends leer (429) | 🔴 Offen, noch nicht entschieden | Nutzerin entscheidet: (a) kostenlos auf `gemini-3.5-flash-lite` wechseln (Vercel-Variable `VITE_AI_MODEL` + Redeploy) oder (b) Abrechnung im Google-Cloud-Projekt aktivieren (Kosten gering, siehe Abschnitt 4, Gemini-Fallstrick 4b) |
 | 15 | Cloud-Sprachausgabe (Google Cloud TTS/WaveNet statt robotischer Browser-Stimme) | ✅ Code fertig (30.07.), siehe Abschnitt 4f — Deploy durch Nutzerin steht noch aus | Deploy-Schritte aus 4f durchführen, danach testen |
+| 16 | Auto-Play-Schlüssel für vollautomatischen Spotify-Start (iOS-Kurzbefehl, kein Hardware-Kauf) | ✅ Code fertig (31.07.), siehe Abschnitt 4g — Deploy durch Nutzerin steht noch aus | Deploy-Schritte aus 4g durchführen (Migration 0039 + `spotify-play` neu deployen), dann Kurzbefehl um "Warten" + "URL-Inhalt abrufen" ergänzen |
 
 ---
 

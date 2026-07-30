@@ -31,6 +31,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     spotifyAbspielen,
     spotifyTestet,
     spotifyFehler,
+    spotifyAutoPlayToken,
+    spotifyAutoPlayTokenErzeugen,
   } = useAppData();
   const { lang, setLang } = useLanguage();
   const { t, tLabel } = useT();
@@ -40,6 +42,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
   const [neuerPlaylistLink, setNeuerPlaylistLink] = useState("");
   const [playlistFehler, setPlaylistFehler] = useState(null);
   const [testetPlaylistId, setTestetPlaylistId] = useState(null);
+  const [autoPlayLaedt, setAutoPlayLaedt] = useState(false);
+  const [autoPlayKopiert, setAutoPlayKopiert] = useState(false);
   const [kiLadend, setKiLadend] = useState(false);
   const [kiAntwort, setKiAntwort] = useState(null);
   const [kiFehler, setKiFehler] = useState(null);
@@ -93,6 +97,23 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     setTestetPlaylistId(playlist.id);
     await spotifyAbspielen(playlist.uri);
     setTestetPlaylistId(null);
+  };
+
+  const handleAutoPlayTokenErzeugen = async () => {
+    setAutoPlayLaedt(true);
+    await spotifyAutoPlayTokenErzeugen();
+    setAutoPlayLaedt(false);
+  };
+
+  const autoPlayUrl = spotifyAutoPlayToken
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/spotify-play?token=${spotifyAutoPlayToken}`
+    : null;
+
+  const handleAutoPlayUrlKopieren = async () => {
+    if (!autoPlayUrl) return;
+    await navigator.clipboard.writeText(autoPlayUrl);
+    setAutoPlayKopiert(true);
+    setTimeout(() => setAutoPlayKopiert(false), 2000);
   };
 
   // Erster Testaufruf des ADHS-Coach-Moduls direkt aus der App heraus — prüft
@@ -301,6 +322,61 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
                 </button>
               </div>
               {playlistFehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{playlistFehler}</div>}
+            </div>
+
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${cardBorder}` }}>
+              <Label>Automatischer Start (z. B. per iOS-Kurzbefehl)</Label>
+              <div style={{ fontSize: 12, color: textMuted, marginBottom: 10, lineHeight: 1.5 }}>
+                Ein eigener Link, den z. B. ein Kurzbefehl morgens nach dem Öffnen von Spotify aufrufen kann — startet dann
+                deine Standard-Playlist, ganz ohne dass du dich extra anmelden musst. Optional{" "}
+                <code style={{ fontSize: 11 }}>&playlist=Name</code> anhängen, um eine bestimmte Playlist statt der
+                Standard-Playlist zu starten.
+              </div>
+              {autoPlayUrl ? (
+                <>
+                  <div
+                    style={{
+                      fontSize: 11.5,
+                      wordBreak: "break-all",
+                      background: "#FAFBFA",
+                      border: `1px solid ${cardBorder}`,
+                      borderRadius: 10,
+                      padding: "10px 12px",
+                      marginBottom: 8,
+                      color: textMuted,
+                    }}
+                  >
+                    {autoPlayUrl}
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={handleAutoPlayUrlKopieren}
+                      style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${accentDark}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      {autoPlayKopiert ? "Kopiert ✓" : "Link kopieren"}
+                    </button>
+                    <button
+                      onClick={handleAutoPlayTokenErzeugen}
+                      disabled={autoPlayLaedt}
+                      style={{ padding: "10px 14px", borderRadius: 10, border: "none", background: "transparent", color: textMuted, fontSize: 12, cursor: "pointer" }}
+                    >
+                      {autoPlayLaedt ? "…" : "Neu erzeugen"}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 11, color: textMuted, marginTop: 6, lineHeight: 1.5 }}>
+                    "Neu erzeugen" macht den bisherigen Link ungültig — nützlich, falls er mal in falsche Hände geraten
+                    sein sollte.
+                  </div>
+                </>
+              ) : (
+                <button
+                  onClick={handleAutoPlayTokenErzeugen}
+                  disabled={autoPlayLaedt}
+                  style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", fontSize: 13.5, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
+                >
+                  {autoPlayLaedt ? "Erzeugt…" : "Automatik-Link erzeugen"}
+                </button>
+              )}
             </div>
 
             <button

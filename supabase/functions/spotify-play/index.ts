@@ -4,6 +4,17 @@
 // (Spotify-App auf dem Handy muss zumindest kürzlich geöffnet gewesen
 // sein) — ohne das lehnt Spotify mit 404 "NO_ACTIVE_DEVICE" ab, das geben
 // wir als verständliche Fehlermeldung durch.
+//
+// Zwei Aufrufwege:
+// 1. Normale Anmeldung (Authorization: Bearer <Supabase-Sitzungs-Token>) —
+//    genutzt von der App selbst (KiChat-Marker, "Testen"-Knopf in MehrTab).
+// 2. Auto-Play-Schlüssel (?token=... als Query-Parameter, GET oder POST) —
+//    ein langlebiger, pro Person erzeugter Schlüssel (siehe
+//    0039_spotify_auto_play_token.sql), braucht KEINE Anmeldung. Gedacht
+//    für externe Automationen wie einen iOS-Kurzbefehl, deren Sitzung sonst
+//    nach ~1 Std. ablaufen würde. Wer den Schlüssel kennt, kann NUR die
+//    hinterlegte(n) Playlist(s) dieser einen Person abspielen — sonst keine
+//    Rechte (kein Lesezugriff auf andere Daten).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -49,36 +60,60 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Nicht angemeldet." }, 200);
-
-    const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const {
-      data: { user },
-    } = await callerClient.auth.getUser();
-    if (!user) return json({ error: "Nicht angemeldet." }, 200);
-
-    const { targetUserId, playlistUri } = await req.json().catch(() => ({}));
+    const url = new URL(req.url);
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const autoPlayToken = url.searchParams.get("token") || body.token;
+    const playlistName = url.searchParams.get("playlist") || undefined;
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    let userId = user.id;
-    if (targetUserId && targetUserId !== user.id) {
-      const { data: callerProfile } = await adminClient.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
-      if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen für eine andere Person abspielen." }, 200);
-      userId = targetUserId;
+    let verbindung;
+
+    if (autoPlayToken) {
+      // Auto-Play-Schlüssel-Weg: braucht keine Anmeldung, findet die Person
+      // direkt über den (langen, zufälligen) Schlüssel.
+      const { data, error } = await adminClient
+        .from("spotify_verbindung")
+        .select("*")
+        .eq("auto_play_token", autoPlayToken)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, 200);
+      if (!data) return json({ error: "Ungültiger Auto-Play-Schlüssel." }, 200);
+      verbindung = data;
+    } else {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) return json({ error: "Nicht angemeldet." }, 200);
+
+      const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const {
+        data: { user },
+      } = await callerClient.auth.getUser();
+      if (!user) return json({ error: "Nicht angemeldet." }, 200);
+
+      let userId = user.id;
+      if (body.targetUserId && body.targetUserId !== user.id) {
+        const { data: callerProfile } = await adminClient.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+        if (!callerProfile?.is_admin) return json({ error: "Nur Admins dürfen für eine andere Person abspielen." }, 200);
+        userId = body.targetUserId;
+      }
+
+      const { data, error: ladeFehler } = await adminClient.from("spotify_verbindung").select("*").eq("user_id", userId).maybeSingle();
+      if (ladeFehler) return json({ error: ladeFehler.message }, 200);
+      if (!data) return json({ error: "Spotify ist noch nicht verbunden." }, 200);
+      verbindung = data;
     }
 
-    const { data: verbindung, error: ladeFehler } = await adminClient
-      .from("spotify_verbindung")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (ladeFehler) return json({ error: ladeFehler.message }, 200);
-    if (!verbindung) return json({ error: "Spotify ist noch nicht verbunden." }, 200);
-
-    const uri = playlistUri || verbindung.playlist_uri;
+    let uri = body.playlistUri || verbindung.playlist_uri;
+    if (playlistName) {
+      const { data: benannte } = await adminClient
+        .from("spotify_playlists")
+        .select("uri")
+        .eq("user_id", verbindung.user_id)
+        .ilike("name", playlistName)
+        .maybeSingle();
+      if (benannte?.uri) uri = benannte.uri;
+    }
     if (!uri) return json({ error: "Keine Playlist hinterlegt." }, 200);
 
     const accessToken = await frischesAccessToken(adminClient, verbindung);

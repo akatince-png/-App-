@@ -9,16 +9,18 @@ import { supabase } from "../lib/supabaseClient";
 export function useSpotifyVerbindung(userId) {
   const [spotifyVerbunden, setSpotifyVerbunden] = useState(false);
   const [spotifyPlaylists, setSpotifyPlaylists] = useState([]); // [{ id, name, uri }]
+  const [spotifyAutoPlayToken, setSpotifyAutoPlayToken] = useState(null);
   const [spotifyTestet, setSpotifyTestet] = useState(false);
   const [spotifyFehler, setSpotifyFehler] = useState(null);
 
   const spotifyVerbindungNeuLaden = useCallback(async () => {
     if (!userId) return;
     const [{ data: verbindung }, { data: playlists }] = await Promise.all([
-      supabase.from("spotify_verbindung").select("user_id").eq("user_id", userId).maybeSingle(),
+      supabase.from("spotify_verbindung").select("user_id, auto_play_token").eq("user_id", userId).maybeSingle(),
       supabase.from("spotify_playlists").select("id, name, uri").eq("user_id", userId).order("erstellt_am"),
     ]);
     setSpotifyVerbunden(!!verbindung);
+    setSpotifyAutoPlayToken(verbindung?.auto_play_token || null);
     setSpotifyPlaylists(playlists || []);
   }, [userId]);
 
@@ -53,6 +55,22 @@ export function useSpotifyVerbindung(userId) {
     await supabase.from("spotify_playlists").delete().eq("user_id", userId);
     setSpotifyVerbunden(false);
     setSpotifyPlaylists([]);
+    setSpotifyAutoPlayToken(null);
+  }, [userId]);
+
+  // Erzeugt (bzw. ersetzt) den langlebigen Auto-Play-Schlüssel für externe
+  // Automationen (z. B. einen iOS-Kurzbefehl) — siehe spotify-play Edge
+  // Function. Neu erzeugen macht den vorherigen Schlüssel ungültig, falls er
+  // mal weitergegeben wurde und zurückgezogen werden soll.
+  const spotifyAutoPlayTokenErzeugen = useCallback(async () => {
+    const zufallsBytes = crypto.getRandomValues(new Uint8Array(24));
+    const token = Array.from(zufallsBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const { error } = await supabase.from("spotify_verbindung").update({ auto_play_token: token }).eq("user_id", userId);
+    if (error) return { ok: false, error: error.message };
+    setSpotifyAutoPlayToken(token);
+    return { ok: true };
   }, [userId]);
 
   // playlistUri: explizit, wenn Aka im Chat eine bestimmte Playlist erkannt
@@ -85,5 +103,7 @@ export function useSpotifyVerbindung(userId) {
     spotifyTestet,
     spotifyFehler,
     spotifyVerbindungNeuLaden,
+    spotifyAutoPlayToken,
+    spotifyAutoPlayTokenErzeugen,
   };
 }
