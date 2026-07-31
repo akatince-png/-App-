@@ -58,6 +58,42 @@ const WOCHENUEBERSICHT_FARBE = "#64748B";
 // reihen sich hier später einfach als weitere Einträge ein.
 const ROUTINEN_EINTRAEGE = [{ id: "routinen", icon: "target", label: "Gewohnheiten" }];
 
+// Nachvollziehbarkeit (Nutzerinnen-Vorgabe, 31.07.): "Alle Pläne" soll auch
+// der Ort sein, an dem man sieht, was tatsächlich passiert ist — inkl. was
+// Aka im Gespräch für einen angelegt hat (z. B. ein mit Aka erstellter
+// Trainingsplan). Verlinkt auf denselben "📖 Akas fertige Protokolle"-
+// Screen, den es unter "Archiv" schon gibt (ProtokollLogView, über den
+// PlanView-Tab "verlauf") — keine neue Ansicht, nur ein zweiter, näher
+// liegender Einstiegspunkt dorthin.
+const NACHVOLLZIEHEN_EINTRAEGE = [{ id: "verlauf", icon: "archive", label: "Protokolle" }];
+
+function ListenEintrag({ eintrag, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="mp-tap"
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "13px 16px",
+        borderRadius: 14,
+        border: `1px solid ${cardBorder}`,
+        background: "#fff",
+        marginBottom: 8,
+        cursor: "pointer",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Icon name={eintrag.icon} size={16} color={KATEGORIE_META.gewohnheit.dot} />
+        <span style={{ fontSize: 14, fontWeight: 700 }}>{eintrag.label}</span>
+      </div>
+      <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+    </button>
+  );
+}
+
 // "Alle Pläne"-Hub — bündelt die 7 Kategorien, die aktiv mit Zeiten/Zielen
 // geplant werden, unter einem gemeinsamen Reiter-Kopf statt als eigene
 // Dashboard-Kacheln. Gleiches Muster wie PlanView.jsx (Statistik/Profil/
@@ -74,29 +110,7 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
           Priorität) — nicht nachträglich angehängt. */}
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Routinen</div>
       {ROUTINEN_EINTRAEGE.map((r) => (
-        <button
-          key={r.id}
-          onClick={() => setPlaneTab(r.id)}
-          className="mp-tap"
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "13px 16px",
-            borderRadius: 14,
-            border: `1px solid ${cardBorder}`,
-            background: "#fff",
-            marginBottom: 8,
-            cursor: "pointer",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Icon name={r.icon} size={16} color={KATEGORIE_META.gewohnheit.dot} />
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{r.label}</span>
-          </div>
-          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
-        </button>
+        <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
       ))}
 
       <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Pläne</div>
@@ -133,6 +147,11 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
       </div>
 
       <Aktiv embedded initialSessionId={initialSessionId} onConsumedInitialSession={onConsumedInitialSession} />
+
+      <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Nachvollziehen</div>
+      {NACHVOLLZIEHEN_EINTRAEGE.map((r) => (
+        <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
+      ))}
     </Shell>
   );
 }

@@ -94,7 +94,8 @@ export default function HydrationView({ onHome, embedded = false }) {
   const handleHydrationUebernehmen = async (verlauf) => {
     const { zielMl, zeiten } = await AIService.hydrationAusChat({ verlauf, coachName: getCoachName() });
     if (zielMl) {
-      await hydrationZielSetzen(zielMl);
+      const result = await hydrationZielSetzen(zielMl);
+      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
     }
     if (zeiten.length > 0) {
       const bestehende = Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : [];

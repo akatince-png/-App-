@@ -102,7 +102,10 @@ export function useUniversellerCoach() {
       }
       case "hydration": {
         const { zielMl, zeiten } = await AIService.hydrationAusChat({ verlauf, coachName });
-        if (zielMl) await hydrationZielSetzen(zielMl);
+        if (zielMl) {
+          const result = await hydrationZielSetzen(zielMl);
+          if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+        }
         if (zeiten.length > 0) {
           const bestehende = Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : [];
           const neue = zeiten.map((z) => ({ zeit: z.zeit, menge: z.menge, startDatum: "" }));
