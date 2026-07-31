@@ -503,7 +503,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     // (aenderungVermerken in handleWochenplanHinzufuegen) in derselben
     // Reihenfolge wie die KI-Antwort entstehen.
     for (const einheit of einheiten) {
-      await handleWochenplanHinzufuegen(einheit);
+      const result = await handleWochenplanHinzufuegen(einheit);
+      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
     }
     return einheiten;
   };

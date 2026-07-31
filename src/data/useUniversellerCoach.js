@@ -120,9 +120,10 @@ export function useUniversellerCoach() {
       case "training": {
         const einheiten = await AIService.trainingsplanAusChat({ verlauf, coachName });
         for (const einheit of einheiten) {
+          const result = await wochenplanHinzufuegen(einheit);
+          if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
           const detail = [einheit.uhrzeit, (einheit.arten || []).join(" + ")].filter(Boolean).join(" · ");
           aenderungVermerken({ kategorie: "training", itemName: einheit.wochentag, aktion: "hinzugefügt", detail });
-          await wochenplanHinzufuegen(einheit);
         }
         return { bereich: "training", daten: einheiten };
       }
