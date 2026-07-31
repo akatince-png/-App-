@@ -29,6 +29,21 @@ export function sprachausgabeVerfuegbar() {
  * Senden noch korrigiert werden können.
  * @returns {() => void} stop-Funktion
  */
+// Übersetzt die von der Web Speech API gelieferten Fehlercodes (englisch,
+// technisch) in verständliche deutsche Meldungen — vorher landete z. B. das
+// rohe "not-allowed" unübersetzt direkt im Chat-Fenster.
+function spracherkennungFehlertext(code) {
+  const texte = {
+    "not-allowed": "Kein Mikrofon-Zugriff — bitte in den Einstellungen des Browsers/der App das Mikrofon für diese Seite erlauben.",
+    "service-not-allowed": "Kein Mikrofon-Zugriff — bitte in den Einstellungen des Browsers/der App das Mikrofon für diese Seite erlauben.",
+    "no-speech": "Ich habe nichts gehört. Bitte nochmal versuchen.",
+    "audio-capture": "Kein Mikrofon gefunden.",
+    network: "Netzwerkproblem bei der Spracherkennung. Bitte nochmal versuchen.",
+    aborted: "Spracherkennung wurde abgebrochen.",
+  };
+  return texte[code] || `Unbekannter Fehler bei der Spracherkennung (${code}).`;
+}
+
 export function starteSprachErkennung({ onZwischenergebnis, onErgebnis, onEnde, onFehler }) {
   const Recognition = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
   if (!Recognition) {
@@ -51,7 +66,7 @@ export function starteSprachErkennung({ onZwischenergebnis, onErgebnis, onEnde, 
     if (final) onErgebnis(final.trim());
     onZwischenergebnis?.(interim.trim());
   };
-  erkennung.onerror = (e) => onFehler?.(e.error || "Unbekannter Fehler bei der Spracherkennung.");
+  erkennung.onerror = (e) => onFehler?.(spracherkennungFehlertext(e.error));
   erkennung.onend = () => onEnde?.();
   erkennung.start();
   return () => erkennung.stop();
