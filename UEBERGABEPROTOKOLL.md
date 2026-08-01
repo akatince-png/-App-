@@ -1,6 +1,6 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-**Stand: 31.07.2026, nachts (Zwischenstand, Fortsetzung folgt) — Branch
+**Stand: 31.07.2026, spät nachts — Branch
 `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
 Dieses Dokument wurde komplett neu geschrieben (nicht nur ergänzt), um die
@@ -1465,6 +1465,77 @@ auf dem Handy als auch auf dem Tablet, kein Hardware-Kauf nötig.
 
 ---
 
+## 4h. Nachtrag 31.07. — "Übernehmen"-Bugfixes (Training, Hydration) + Nachvollziehbarkeit unter "Alle Pläne"
+
+**Auslöser:** Nutzerin konnte einen gemeinsam mit Aka erstellten Trainingsplan
+nicht wiederfinden ("Aka kann den Trainingsplan nicht übertragen"). Zwei
+Ursachen identifiziert, eine davon ein echter, jetzt behobener Bug:
+
+1. **Silent-Failure-Bug (behoben):** Anders als bei allen anderen Bereichen
+   prüfte der Code beim Übernehmen eines KI-erstellten **Trainingsplans**
+   NICHT, ob das Speichern in der Datenbank wirklich geklappt hat — schlug
+   es fehl, zeigte die App trotzdem "Plan übernommen" an. Beim Durchgehen
+   aller sieben anderen Bereiche (Gewohnheiten, Supplemente, Medikamente,
+   Hydration, Tageslicht, Schlaf, Ernährung) hatte **auch Hydration**
+   denselben fehlenden Check. Betroffen jeweils zwei Stellen pro Bereich:
+   der dedizierte Bereichs-Chat (`TrainingView.jsx`/`HydrationView.jsx`)
+   UND der universelle Home-Coach (`src/data/useUniversellerCoach.js`).
+   Jetzt überall wie bei den übrigen Bereichen: `if (!result?.ok) throw
+   new Error(...)` — ein Fehlschlag wird jetzt als echter Fehler im Chat
+   angezeigt, keine falsche Erfolgsmeldung mehr. Reine Frontend-Änderung,
+   kein Supabase-Deploy nötig, nach dem nächsten Vercel-Build aktiv.
+2. **Wahrscheinlichere Ursache in der Praxis:** das zu diesem Zeitpunkt
+   bereits bekannte, weiterhin ungelöste Gemini-429-Kontingentproblem (nur
+   20 Freianfragen/Tag bei `gemini-3.6-flash`, siehe Abschnitt 4, Gemini-
+   Fallstrick 4b, und offener Punkt in Abschnitt 6) — der Trainingsplan-
+   Schritt braucht ebenfalls eine Gemini-Anfrage und würde damit genauso
+   fehlschlagen wie der Chat an dem Abend. **Noch nicht behoben** — die
+   Nutzerin muss sich noch entscheiden (Modellwechsel auf
+   `gemini-3.5-flash-lite` vs. Abrechnung aktivieren).
+
+**Zusätzlich, selber Anlass — Nachvollziehbarkeit unter "Alle Pläne"
+(`PlaeneView.jsx`):** Die Nutzerin wollte unter "Pläne" sehen können, was
+mit Aka erstellt wurde — es gab dafür schon eine fertige Ansicht
+(`ProtokollLogView.jsx`, "📖 Akas fertige Protokolle" mit Tagesverlauf +
+abgeschlossenem Training), aber nur erreichbar über den separaten
+"Archiv"-Tab (`PlanView.jsx`, **singular** — nicht zu verwechseln mit
+`PlaeneView.jsx`, **plural**, dem "Alle Pläne"-Hub mit den 9
+Kategorie-Reitern + Routinen). Neuer Abschnitt **"Nachvollziehen"** unter
+"Alle Pläne" mit Eintrag **"Protokolle"** (gleiches Listen-Button-Muster
+wie "Routinen") — verlinkt per `setPlaneTab("verlauf")` auf exakt dieselbe,
+schon bestehende Ansicht (keine neue Komponente, nur ein zweiter,
+näherliegender Einstiegspunkt). Kleine Begriffsklärung, die dabei
+herauskam und für künftige Sessions wichtig ist: "Protokolle"
+(Tagesverlauf/Änderungsprotokoll, ein **Verlauf/Tagebuch** — wann wurde
+was erstellt/geändert/erledigt) ist NICHT dasselbe wie die **Tabelle des
+aktuell geplanten** Trainings — die gibt's separat und schon länger unter
+Training → "📅 Wochenplan bearbeiten" (`WochenplanEditor.jsx`), zeigt den
+tatsächlichen, noch nicht ausgeführten Wochenplan nach Tag sortiert.
+
+**Nebenbei behoben, selber Abend — Spracherkennungs-Fehler auf Deutsch:**
+Live beobachtet: der rohe, unübersetzte Web-Speech-API-Fehlercode
+`"not-allowed"` (Mikrofon-Zugriff verweigert) erschien direkt im
+Chat-Fenster, unverständlich für eine nicht-technische Nutzerin. Neue
+Übersetzungstabelle `spracherkennungFehlertext()` in `src/utils/speech.js`
+für die gängigen Web-Speech-API-Fehlercodes (`not-allowed`, `no-speech`,
+`audio-capture`, `network`, `aborted`, ...) — greift überall, wo
+`starteSprachErkennung()` genutzt wird (KiChat + alle Onboarding-Coach-
+Screens), keine Änderung an den Aufrufstellen nötig.
+
+**Live-Troubleshooting am selben Abend, noch NICHT gelöst (externe
+Geräte-Einstellung, kein Code):** Der konkrete "not-allowed"-Fehler kam
+daher, dass Safari der App aktuell keinen Mikrofon-Zugriff mehr gewährt.
+Wichtige Erkenntnis für die nächste Sitzung: **AKA taucht NICHT** unter
+Einstellungen → Datenschutz & Sicherheit → Mikrofon auf (dort stehen nur
+"echte" native Apps wie ChatGPT/Claude/WhatsApp) — das ist normal, keine
+Fehlkonfiguration. Die richtige Stelle ist **Einstellungen → Safari →
+"Einstellungen für Websites" → Mikrofon** (dort auf "Erlauben" stellen,
+generell oder gezielt für die AKA-Adresse). War beim Schreiben dieses
+Absatzes noch nicht bestätigt behoben — nächste Sitzung ggf. nachfragen,
+ob's geklappt hat.
+
+---
+
 ## 5. Erinnerungs-/Push-System
 
 **Befund (28.07.):** Die UI bietet in JEDER Kategorie (Onboarding,
@@ -1562,6 +1633,10 @@ ankommen.
 | 14 | Gemini-Kontingent: `gemini-3.6-flash` hat nur 20 kostenlose Anfragen/Tag, App lief am 30.07. deshalb abends leer (429) | 🔴 Offen, noch nicht entschieden | Nutzerin entscheidet: (a) kostenlos auf `gemini-3.5-flash-lite` wechseln (Vercel-Variable `VITE_AI_MODEL` + Redeploy) oder (b) Abrechnung im Google-Cloud-Projekt aktivieren (Kosten gering, siehe Abschnitt 4, Gemini-Fallstrick 4b) |
 | 15 | Cloud-Sprachausgabe (Google Cloud TTS/WaveNet statt robotischer Browser-Stimme) | ✅ Code fertig (30.07.), siehe Abschnitt 4f — Deploy durch Nutzerin steht noch aus | Deploy-Schritte aus 4f durchführen, danach testen |
 | 16 | Auto-Play-Schlüssel für vollautomatischen Spotify-Start (iOS-Kurzbefehl, kein Hardware-Kauf) | ✅ Code fertig (31.07.), siehe Abschnitt 4g — Deploy durch Nutzerin steht noch aus | Deploy-Schritte aus 4g durchführen (Migration 0039 + `spotify-play` neu deployen), dann Kurzbefehl um "Warten" + "URL-Inhalt abrufen" ergänzen |
+| 17 | "Übernehmen"-Silent-Failure-Bug bei Training + Hydration (falsche Erfolgsmeldung trotz Speicherfehler) | ✅ Behoben (31.07.), siehe Abschnitt 4h — reine Frontend-Änderung, bereits gepusht/gemergt | — |
+| 18 | Nachvollziehbarkeit unter "Alle Pläne" (Nutzerin fand mit Aka erstellten Trainingsplan nicht wieder) | ✅ Behoben (31.07.), siehe Abschnitt 4h — neuer "Nachvollziehen"-Abschnitt mit Link zu Akas Protokollen | — |
+| 19 | Spracherkennungs-Fehlercodes unübersetzt (z. B. rohes "not-allowed" im Chat) | ✅ Behoben (31.07.), siehe Abschnitt 4h | — |
+| 20 | Mikrofon-Zugriff für AKA in Safari aktuell blockiert ("not-allowed" live erlebt) | 🔴 Offen, externe Geräte-Einstellung, kein Code — siehe Abschnitt 4h für den genauen Klickpfad | Nutzerin: Einstellungen → Safari → "Einstellungen für Websites" → Mikrofon → Erlauben. Nächste Sitzung: nachfragen, ob es geklappt hat |
 
 ---
 
@@ -1626,84 +1701,95 @@ ankommen.
 
 ---
 
-**Letzte Aktualisierung:** 30.07.2026 — Fortsetzung des sehr langen,
-ereignisreichen 29.07.-Sitzungstags, hier bewusst ausführlich
-zusammengefasst, damit möglichst wenig Kontext für die nächste Sitzung
-verloren geht.
+**Letzte Aktualisierung:** 31.07.2026, spät nachts — Abschluss eines sehr
+langen, ereignisreichen Sitzungsblocks (29.–31.07.), komplett neu
+geschrieben statt weiterer Nachtrag-Absätze, damit ein neuer Chat/Ordner
+hier nahtlos und vollständig informiert einsteigen kann.
 
-**Ausgangslage vor heute:** Coach ist exekutiver Assistent (nicht
-"Coach") in allen 9 Bereichen + Home/Tagesplan/Wochenübersicht,
-Onboarding hat zwei gleichwertige Begleitungs-Phasen, Design auf weißem
-Untergrund + bereichseigene Farben. Erinnerungs-/Push-System deckt alle
-9 Kategorien ab, deployt und bestätigt aktiv (Abschnitt 5).
+### Wo die App gerade steht (Gesamtbild)
 
-**Heute neu gebaut UND vollständig deployt/bestätigt:**
-- **Admin-Dashboard** ("Verwalten als"-Modus, Abschnitt 4b) — die
-  Nutzerin kann sich als Admin anmelden, alle Konten einsehen und
-  stellvertretend die App für jemanden bedienen (z. B. Eltern, die noch
-  nicht selbst mit der KI ihren Plan aufbauen können). Migration 0035 +
-  Edge Function `admin-create-proband` live, Nutzerin ist als Admin
-  markiert.
-- **Admin-Hinweise über den Assistenten** (Abschnitt 4c) — der Admin kann
-  Aka pro Proband Hintergrundwissen oder direkte Nachrichten mitgeben,
-  die wie ganz normale Aka-Antworten wirken, kein separates Postfach.
-  Migration 0036 live.
-- **Spotify-Anbindung inkl. mehrerer Playlists** (Abschnitt 4d) —
-  OAuth-Verbindung, beliebig viele benannte Playlists, Aka erkennt im
-  Gespräch selbst (Marker-Mechanismus, kein festes Trigger-Wort nötig),
-  welche gemeint ist, und startet sie. Migrationen 0037 + 0038, beide
-  Edge Functions, Spotify-Entwickler-Konto, Vercel-Variable — alles live,
-  im Gespräch mit Aka erfolgreich getestet.
-- **Diverse UI-Bugfixes und Politur** (Abschnitt 4e) — u. a. Aka-Orb
-  verdeckte keine Karteninhalte mehr, Farbverwechslungen bei
-  Wochenübersicht/Peptide behoben, neuer "Routinen"-Abschnitt (Priorität
-  vor den 9 Plan-Reitern), neues Logo + App-Icon nach Nutzerinnen-Vorgabe,
-  Logo/Schriftzug/Begrüßung vergrößert, Aka wiederholt beim Öffnen nicht
-  mehr automatisch alte Gespräche, Edge-Function-Fehlermeldungen kommen
-  jetzt im Client an (waren vorher stumm verschluckt).
+Aka ist ein exekutiver Assistent (bewusst kein "Coach") in allen 9
+Lebensbereichen + Home/Tagesplan/Wochenübersicht, immer mit zwei
+gleichwertigen Bedienwegen (manuell UND per KI-Gespräch, siehe Leitprinzip
+Abschnitt 1). Onboarding hat zwei Begleitungs-Phasen, Design ist weiß mit
+bereichseigenen Farben. Erinnerungs-/Push-System deckt alle 9 Kategorien
+ab (Abschnitt 5). Seit dieser Woche zusätzlich: ein Admin-Dashboard mit
+"Verwalten als"-Modus (Abschnitt 4b/4c), eine Spotify-Anbindung mit
+mehreren Playlists, die Aka im Gespräch selbst zuordnet (Abschnitt 4d),
+und — ganz neu, Code fertig, Deploy z. T. noch offen — eine natürlichere
+Cloud-Stimme (4f) sowie ein Weg zur vollautomatischen morgendlichen
+Musik ganz ohne Hardware-Kauf (4g).
 
-**Am 30.07. zusätzlich:** Migrationen 0035–0038 sind jetzt durchgängig
-als "✅ deployt" markiert (vorher stellenweise noch als "NOCH NICHT
-DEPLOYT" stehen geblieben, obwohl die Nutzerin sie längst ausgeführt
-hatte — reiner Dokumentationsfehler, jetzt korrigiert). Live-Support-
-Sitzung zum iOS-Kurzbefehl fortgesetzt (rein extern, kein Code) sowie
-ausführliche Recherche/Beratung zu einer Smart-Speaker-Lösung als
-Zielbild (Echo Dot + Alexa-Routine, siehe neuer Abschnitt "Vertiefung:
-Smart Speaker als Zielbild" unter 4d) — reine Konzept-/Kaufberatung,
-noch nichts angeschafft oder umgesetzt. Außerdem **Cloud-Sprachausgabe
-gebaut** (Google Cloud TTS/WaveNet statt der robotischen Browser-Stimme,
-Abschnitt 4f) — Code fertig mit automatischem Rückfall auf die alte
-Stimme, falls der Deploy noch aussteht; Auslöser war ein Gemini-429-
-Kontingentfehler (nur 20 kostenlose Anfragen/Tag bei `gemini-3.6-flash`),
-der im selben Gespräch mit besprochen, aber noch nicht behoben wurde (die
-Nutzerin muss sich noch zwischen Modellwechsel auf ein Modell mit
-höherem Freikontingent oder Abrechnung aktivieren entscheiden — siehe
-neuer offener Punkt unten).
+### Vollständig fertig UND live bestätigt
 
-**Besprochen, aber bewusst NICHT begonnen (nächste Schritte):**
+- **Admin-Dashboard** (4b) + **Admin-Hinweise über den Assistenten** (4c)
+  — Migrationen 0035/0036 deployt, Nutzerin als Admin markiert.
+- **Spotify-Anbindung mit mehreren Playlists** (4d) — OAuth, Marker-
+  Mechanismus im Chat, Migrationen 0037/0038 deployt, live getestet.
+- **Diverse UI-Politur** (4e) — Orb-Position, Farbfehler behoben, neues
+  Logo/Icon, größere Schrift, KiChat wiederholt keine alten Gespräche
+  mehr, Edge-Function-Fehler kommen jetzt im Client an.
+- **"Übernehmen"-Bugfixes + Nachvollziehbarkeit** (4h) — Training UND
+  Hydration zeigten fälschlich Erfolg trotz Speicherfehler, jetzt
+  behoben; neuer "Nachvollziehen"-Abschnitt unter "Alle Pläne" verlinkt
+  auf Akas Protokolle. Reiner Frontend-Fix, nichts zu deployen.
+- **Spracherkennungs-Fehler auf Deutsch** (4h) — kein rohes "not-allowed"
+  mehr im Chat.
+
+### Fertig gebaut, Deploy/Einrichtung durch die Nutzerin noch nicht abgeschlossen
+
+- **Cloud-Sprachausgabe** (Google Cloud TTS/WaveNet, Abschnitt 4f) — Code
+  fällt automatisch auf die alte Stimme zurück, solange der Deploy
+  aussteht, nichts bricht. Live-Stand: Google-Cloud-Projekt + Testguthaben
+  + Text-to-Speech-API sind fertig aktiviert, **der API-Schlüssel selbst
+  wurde noch nicht fertig erstellt** (erster Versuch landete fälschlich
+  bei "Dienstkonto" statt einfachem API-Schlüssel, siehe genauer
+  Klickpfad im "🔴 Live-Stand"-Absatz in 4f) — danach noch Edge Function
+  `text-to-speech` deployen + Secret `GOOGLE_TTS_API_KEY` setzen.
+- **Auto-Play-Schlüssel für Spotify** (Abschnitt 4g) — löst das live
+  entdeckte Problem, dass der iOS-Kurzbefehl Spotify zwar öffnet, aber
+  nicht selbst abspielt (bestätigte Spotify/Shortcuts-Einschränkung).
+  Migration 0039 + `spotify-play`-Redeploy stehen noch aus, danach
+  Kurzbefehl um zwei Schritte ("Warten" + "URL-Inhalt abrufen") ergänzen
+  — danach läuft die Morgenmusik komplett automatisch, kein Kauf nötig.
+
+### Offen, noch nicht entschieden/behoben
+
+- **Gemini-429-Kontingentproblem** (nur 20 Freianfragen/Tag bei
+  `gemini-3.6-flash`, seit dem Abend des 30.07. mehrfach live erlebt,
+  auch als vermutliche Ursache für gescheiterte "Übernehmen"-Versuche) —
+  Nutzerin muss sich entscheiden: kostenlos auf `gemini-3.5-flash-lite`
+  wechseln (Vercel-Variable `VITE_AI_MODEL`) oder Abrechnung im
+  Google-Cloud-Projekt aktivieren. **Das ist vermutlich der Punkt mit der
+  größten Alltagsauswirkung gerade** — betrifft potenziell jede
+  KI-Funktion in der App, nicht nur Training.
+- **Mikrofon-Zugriff für AKA in Safari aktuell blockiert** ("not-allowed"
+  live erlebt) — externe Geräte-Einstellung, kein Code. Genauer
+  Klickpfad in Abschnitt 4h. War beim Schreiben dieses Absatzes noch
+  nicht bestätigt behoben.
+
+### Besprochen, aber bewusst nicht begonnen — nächste große Baustellen
+
 1. **Echter Wecker mit Playlist-Auswahl** im Schlaf-Bereich, darauf
-   aufbauend die **geführte Morgenroutine** (Weckzeit als Push-
-   Erinnerung → Ablauf-Screen, der die mit Aka geplanten Schritte per
-   Sprache durchgeht, Musik läuft mit, Wartezeiten/Nachfragen, Abschluss)
-   — von der Nutzerin klar priorisiert, siehe Abschnitt 4d. Übergangs-
-   weise nutzt sie dafür einen iOS-Kurzbefehl außerhalb der App (siehe
-   Abschnitt 4d, "Zwischenlösung" + "Stand iOS-Kurzbefehl" im neuen
-   30.07.-Abschnitt — zuletzt kurz vor Fertigstellung).
-2. **Smart-Speaker-Weg als Alternative zum Kurzbefehl** (Abschnitt 4d,
-   neuer Vertiefungs-Abschnitt) — konkrete Kaufempfehlung (Echo Dot,
-   ~38–40 €) und Einrichtungsschritte liegen vor, aber noch nicht
-   angeschafft/umgesetzt. Eine eigene Alexa-Skill (Aka steuert den
-   Lautsprecher aktiv) wäre ein separater, deutlich größerer Folgeschritt
-   — nur bei explizitem späteren Wunsch angehen.
+   aufbauend die **geführte Morgenroutine** (Ablauf-Screen, der die mit
+   Aka geplanten Schritte per Sprache durchgeht, Musik läuft mit,
+   Wartezeiten/Nachfragen, Abschluss "wir hören uns bei der Medigabe")
+   — von der Nutzerin klar priorisiert, siehe Abschnitt 4d. Der
+   Auto-Play-Schlüssel (4g) macht die Musik-Seite davon jetzt schon
+   automatisch — der Ablauf-Screen selbst ist der eigentlich noch offene
+   Teil.
+2. **Smart-Speaker als langfristiges Zielbild** (Abschnitt 4d) — Echo Dot
+   (~38–40 €) recherchiert und empfohlen, Sonos (Era 300/Move 2,
+   ~400–500 €) als Premium-Alternative mit eingebautem Spotify-Wecker,
+   falls Preis egal ist. Noch nichts angeschafft — durch den kostenlosen
+   Auto-Play-Schlüssel (4g) inzwischen weniger dringend.
 3. Im ursprünglichen Onboarding fehlen noch Detailfragen zum
-   Sport-Istzustand/zur Körperkomposition (von der Nutzerin beim
-   Admin-Dashboard-Auftrag erwähnt, dort bewusst zurückgestellt).
+   Sport-Istzustand/zur Körperkomposition (beim Admin-Dashboard-Auftrag
+   erwähnt, dort bewusst zurückgestellt).
 
-Nächster sinnvoller Ansatzpunkt: Punkt 1 oben (Wecker + geführte
-Morgenroutine) ist die von der Nutzerin priorisierte nächste große
-Baustelle — dabei auch klären, ob sie sich für den iOS-Kurzbefehl oder
-einen Echo Dot als Auslöser entscheidet, das beeinflusst das Design des
-Ablauf-Screens (Push-Tap vs. sprachgesteuert vom Lautsprecher aus).
-Alternativ verbleibende offene Punkte in Abschnitt 6 durchgehen (v. a.
-Punkte 4-7, alle bewusst zurückgestellt/verworfen, kein akuter
-Handlungsbedarf) oder auf neue Rückmeldung der Nutzerin warten.
+**Empfohlener nächster Einstieg für eine neue Sitzung:** zuerst kurz
+nachfragen, ob (a) das Gemini-Kontingent inzwischen gelöst ist, (b) der
+Mikrofon-Zugriff funktioniert, (c) die TTS-/Auto-Play-Deploys
+abgeschlossen sind — das sind die drei "hängenden" Punkte von heute Nacht.
+Danach: entweder die Deploys zusammen fertigstellen, oder direkt mit
+Punkt 1 oben (geführte Morgenroutine) weitermachen, wenn alles läuft.
