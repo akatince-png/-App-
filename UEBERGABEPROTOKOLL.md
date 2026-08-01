@@ -1,6 +1,6 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-**Stand: 31.07.2026, spät nachts — Branch
+**Stand: 01.08.2026 — Branch
 `claude/app-uebergabeprotokoll-improvements-03r3b3`**
 
 Dieses Dokument wurde komplett neu geschrieben (nicht nur ergänzt), um die
@@ -1736,16 +1736,30 @@ Musik ganz ohne Hardware-Kauf (4g).
 - **Spracherkennungs-Fehler auf Deutsch** (4h) — kein rohes "not-allowed"
   mehr im Chat.
 
-### Fertig gebaut, Deploy/Einrichtung durch die Nutzerin noch nicht abgeschlossen
+### ⭐ Priorität für heute Abend (01.08.), explizit von der Nutzerin so vorgegeben
 
-- **Cloud-Sprachausgabe** (Google Cloud TTS/WaveNet, Abschnitt 4f) — Code
-  fällt automatisch auf die alte Stimme zurück, solange der Deploy
-  aussteht, nichts bricht. Live-Stand: Google-Cloud-Projekt + Testguthaben
-  + Text-to-Speech-API sind fertig aktiviert, **der API-Schlüssel selbst
-  wurde noch nicht fertig erstellt** (erster Versuch landete fälschlich
-  bei "Dienstkonto" statt einfachem API-Schlüssel, siehe genauer
-  Klickpfad im "🔴 Live-Stand"-Absatz in 4f) — danach noch Edge Function
-  `text-to-speech` deployen + Secret `GOOGLE_TTS_API_KEY` setzen.
+**Cloud-Sprachausgabe fertigstellen (Google Cloud TTS/WaveNet, Abschnitt
+4f)** — ausdrücklich EIN eigenständiges Thema, **unabhängig vom
+Gemini-Kontingentproblem** (das ist ein separates, davon losgelöstes
+Vorhaben: weg von der robotischen Browser-Stimme, hin zu Google Cloud
+TTS). Die Nutzerin hat dafür bereits eine Zahlungsmethode im
+Google-Cloud-Projekt hinterlegt ("ich hatte auch schon Geld bezahlt") —
+das Geld/die Einrichtung ist also schon investiert, nur der letzte Schritt
+fehlt noch. Live-Stand: Google-Cloud-Projekt + Testguthaben +
+Text-to-Speech-API sind fertig aktiviert, **der API-Schlüssel selbst
+wurde noch nicht fertig erstellt** (erster Versuch landete fälschlich bei
+"Dienstkonto" statt einfachem API-Schlüssel — richtiger Weg: "APIs und
+Dienste" → linkes Menü **"Anmeldedaten"** → **"+ Anmeldedaten erstellen"**
+→ direkt **"API-Schlüssel"** wählen, NICHT über die API-Detailseite gehen,
+das öffnet wieder den falschen Assistenten. Genauer Klickpfad auch im
+"🔴 Live-Stand"-Absatz in 4f). Danach noch: Edge Function
+`text-to-speech` im Supabase-Dashboard anlegen (Code aus
+`supabase/functions/text-to-speech/index.ts`) + den Schlüssel dort als
+Secret `GOOGLE_TTS_API_KEY` hinterlegen — dann sofort aktiv, kein
+Vercel-Schritt nötig. **Das ist der Einstiegspunkt für die heutige
+Abend-Sitzung**, bevor irgendwas anderes angegangen wird.
+
+### Ebenfalls fertig gebaut, Deploy/Einrichtung noch nicht abgeschlossen
 - **Auto-Play-Schlüssel für Spotify** (Abschnitt 4g) — löst das live
   entdeckte Problem, dass der iOS-Kurzbefehl Spotify zwar öffnet, aber
   nicht selbst abspielt (bestätigte Spotify/Shortcuts-Einschränkung).
@@ -1787,9 +1801,13 @@ Musik ganz ohne Hardware-Kauf (4g).
    Sport-Istzustand/zur Körperkomposition (beim Admin-Dashboard-Auftrag
    erwähnt, dort bewusst zurückgestellt).
 
-**Empfohlener nächster Einstieg für eine neue Sitzung:** zuerst kurz
-nachfragen, ob (a) das Gemini-Kontingent inzwischen gelöst ist, (b) der
-Mikrofon-Zugriff funktioniert, (c) die TTS-/Auto-Play-Deploys
-abgeschlossen sind — das sind die drei "hängenden" Punkte von heute Nacht.
-Danach: entweder die Deploys zusammen fertigstellen, oder direkt mit
-Punkt 1 oben (geführte Morgenroutine) weitermachen, wenn alles läuft.
+**Empfohlener nächster Einstieg für die heutige Abend-Sitzung (01.08.):**
+**direkt mit der Cloud-Sprachausgabe weitermachen** (siehe "⭐ Priorität
+für heute Abend" oben) — das ist der von der Nutzerin explizit gewünschte
+Startpunkt, unabhängig vom Gemini-Kontingent. Konkret: Google Cloud
+Console öffnen, zu "Anmeldedaten" navigieren, einen einfachen
+API-Schlüssel erstellen (nicht über "Dienstkonto"), dann Edge Function
+`text-to-speech` deployen. Erst danach, falls noch Zeit/Bedarf: Gemini-
+Kontingent klären, Mikrofon-Zugriff prüfen, Auto-Play-Schlüssel (4g)
+fertig deployen, oder mit der geführten Morgenroutine (Punkt 1 oben)
+weitermachen.
