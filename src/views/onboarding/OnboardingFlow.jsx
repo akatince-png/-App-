@@ -5,15 +5,21 @@ import OnboardingIntroView from "./OnboardingIntroView";
 import OnboardingZieleView from "./OnboardingZieleView";
 import OnboardingProfilView from "./OnboardingProfilView";
 import OnboardingLaborwerteView from "./OnboardingLaborwerteView";
+import OnboardingRoutinenView from "./OnboardingRoutinenView";
 import OnboardingCategoriesView from "./OnboardingCategoriesView";
 import OnboardingCompletionView from "./OnboardingCompletionView";
 
 // Koordiniert den einmaligen Einrichtungs-Ablauf nach der Registrierung:
 // Willkommens-Folien → Hauptprotokoll anlegen (Name + Startdatum) →
-// Ziel & Grund → Profil & Ausgangslage → Laborwerte → Kategorien
-// (Schlaf/Hydration/Ernährung/Training/Gewohnheiten/Supplemente/
-// Medikamente/Peptid-Plan, je einzeln überspringbar, alle mit derselben
-// "Jetzt einrichten?"-Gate-Seite) → Abschluss-Screen.
+// Ziel & Grund → Profil & Ausgangslage → Laborwerte → Morgen-/Abendroutine
+// → Kategorien (Schlaf/Hydration/Ernährung/Training/Gewohnheiten/
+// Supplemente/Medikamente/Peptid-Plan, je einzeln überspringbar, alle mit
+// derselben "Jetzt einrichten?"-Gate-Seite) → Abschluss-Screen.
+//
+// Morgen-/Abendroutine bewusst VOR den Kategorien (Nutzerinnen-Vorgabe,
+// 13.08.): der eigentliche Ursprungsgedanke der App war ADHS-gerechte
+// Tagesstruktur, nicht Peptid-/Supplement-Tracking — alle Kategorien sind
+// aus dieser Sicht Bausteine, die sich später der Routine zuordnen.
 //
 // Ziel & Grund, Profil und Laborwerte kommen bewusst VOR den Plänen: erst
 // klären, warum und von welcher Ausgangslage aus geplant wird, dann planen.
@@ -29,7 +35,7 @@ import OnboardingCompletionView from "./OnboardingCompletionView";
 // echten Abbrechen-Knopf, den es beim ursprünglichen Erst-Onboarding nicht
 // gibt.
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | intro | ziele | profil | laborwerte | categories | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | intro | ziele | profil | laborwerte | routinen | categories | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
 
   if (phase === "welcome") {
@@ -63,14 +69,18 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   }
 
   if (phase === "laborwerte") {
-    return <OnboardingLaborwerteView onDone={() => setPhase("categories")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
+    return <OnboardingLaborwerteView onDone={() => setPhase("routinen")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
+  }
+
+  if (phase === "routinen") {
+    return <OnboardingRoutinenView onDone={() => setPhase("categories")} onBack={() => setPhase("laborwerte")} onCancel={onCancel} />;
   }
 
   if (phase === "categories") {
     return (
       <OnboardingCategoriesView
         onCancel={onCancel}
-        onBackToStart={() => setPhase("laborwerte")}
+        onBackToStart={() => setPhase("routinen")}
         onFinished={(bereiche) => {
           setEingerichteteBereiche(bereiche);
           setPhase("celebration");

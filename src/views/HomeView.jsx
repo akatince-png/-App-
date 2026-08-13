@@ -506,7 +506,7 @@ export default function HomeView({ onOpenView }) {
           style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer", background: blueSoft, border: "none" }}
           onClick={() => onOpenView("routinen")}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, color: blue, marginBottom: 16 }}>{tLabel("Gewohnheiten")}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: blue, marginBottom: 16 }}>{tLabel("Routinen")}</div>
           <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={110} stroke={9} color={blue} />
           <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 16, color: blue }}>
             {gewohnheitHeuteItems.length === 0
@@ -696,7 +696,7 @@ export default function HomeView({ onOpenView }) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Icon name="target" size={22} color={accentDark} />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>{tLabel("Gewohnheiten")}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>{tLabel("Routinen")}</div>
             <div style={{ fontSize: 12, color: accentDark, opacity: 0.8 }}>{t("home.gewohnheiten.cta.desc")}</div>
           </div>
         </div>

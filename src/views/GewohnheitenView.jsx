@@ -10,6 +10,8 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { verspaetungText } from "../utils/dates";
+import RoutineAblauf from "../ui/RoutineAblauf";
+import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -132,11 +134,21 @@ export default function GewohnheitenView({ onHome }) {
     gesamtTage,
     aktuelleSerie,
     aenderungVermerken,
+    routineSchritte,
+    routineSchrittHinzufuegen,
+    routineSchrittEntfernen,
+    routineSchrittVerschieben,
+    routineDurchlaufSpeichern,
   } = useAppData();
 
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
   const [fehler, setFehler] = useState(null);
   const heute = new Date().toISOString().slice(0, 10);
+  // Morgen-/Abendroutine bekommt hier einen prominenten Einstieg, seit
+  // "Gewohnheiten" im Home-Menü zu "Routinen" wurde (Nutzerinnen-Vorgabe,
+  // 13.08.) — derselbe geführte Ablauf-Screen wie im Tagesplan.
+  const [ablaufRoutine, setAblaufRoutine] = useState(null);
+  const [schritteBearbeiten, setSchritteBearbeiten] = useState({ morgen: false, abend: false });
 
   // Lückenloses Tagesprotokoll (Nutzerinnen-Vorgabe 28.07.): beim Abhaken
   // (nicht beim Zurücknehmen) wird die Erledigung — inkl. Verspätung
@@ -212,12 +224,65 @@ export default function GewohnheitenView({ onHome }) {
     gewohnheitZielAktualisieren(g.id, neuesZiel);
   };
 
+  if (ablaufRoutine) {
+    const schritteFuerRoutine = routineSchritte.filter((s) => s.routine === ablaufRoutine).sort((a, b) => a.reihenfolge - b.reihenfolge);
+    return (
+      <RoutineAblauf
+        routine={ablaufRoutine}
+        schritte={schritteFuerRoutine}
+        onAbschluss={() => setAblaufRoutine(null)}
+        onAbbrechen={() => setAblaufRoutine(null)}
+        routineDurchlaufSpeichern={routineDurchlaufSpeichern}
+      />
+    );
+  }
+
   return (
     <Shell bereich="gewohnheit">
-      <ViewHeader title="🌱 Gewohnheiten" onHome={onHome} />
+      <ViewHeader title="🌱 Routinen" onHome={onHome} />
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 18 }}>
         Baue neue Gewohnheiten auf — Achtsamkeit, Lesen oder was du dir vornimmst. Erscheint mit Uhrzeit auch im Tagesplan zum Abhaken.
       </div>
+
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌅🌙 Morgen- & Abendroutine</div>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+          Lass dich Schritt für Schritt durch deinen Morgen/Abend begleiten.
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+          <div style={{ flex: 1 }}>
+            <PrimaryButton onClick={() => setAblaufRoutine("morgen")}>▶️ Morgenroutine</PrimaryButton>
+          </div>
+          <div style={{ flex: 1 }}>
+            <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine</PrimaryButton>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSchritteBearbeiten((p) => ({ ...p, morgen: !p.morgen || !p.abend, abend: !p.morgen || !p.abend }))}
+            style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "#fff", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
+          >
+            ⚙️
+          </button>
+        </div>
+        {(schritteBearbeiten.morgen || schritteBearbeiten.abend) && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 10 }}>🌅 Morgenroutine-Schritte</div>
+            <RoutineSchritteEditor
+              schritte={routineSchritte.filter((s) => s.routine === "morgen")}
+              onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
+              onEntfernen={routineSchrittEntfernen}
+              onVerschieben={routineSchrittVerschieben}
+            />
+            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
+            <RoutineSchritteEditor
+              schritte={routineSchritte.filter((s) => s.routine === "abend")}
+              onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
+              onEntfernen={routineSchrittEntfernen}
+              onVerschieben={routineSchrittVerschieben}
+            />
+          </>
+        )}
+      </Card>
 
       <div style={{ marginBottom: 16 }}>
         <KiChat
