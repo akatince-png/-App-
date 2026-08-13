@@ -279,6 +279,12 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
               Diagnose: Spotify-App-ID ist {import.meta.env.VITE_SPOTIFY_CLIENT_ID ? "hinterlegt" : "NICHT hinterlegt"}
               {import.meta.env.VITE_SPOTIFY_CLIENT_ID ? ` (endet auf …${import.meta.env.VITE_SPOTIFY_CLIENT_ID.slice(-4)})` : ""}.
             </div>
+            <div style={{ fontSize: 10.5, color: textMuted, marginTop: 6 }}>
+              Falls der Knopf oben nicht reagiert, tippe direkt auf diesen Link:
+            </div>
+            <a href={spotifyAutorisierenUrl()} style={{ fontSize: 10.5, color: accentDark, wordBreak: "break-all", display: "block", marginTop: 2 }}>
+              {spotifyAutorisierenUrl()}
+            </a>
           </>
         ) : (
           <>
