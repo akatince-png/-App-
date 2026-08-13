@@ -151,7 +151,8 @@ export const KRAFTUEBUNGEN = [
   "Fliegende / Kurzhantel Schrägbank", "Cable Crossover / Von oben", "Cable Crossover / Von unten",
   "Cable Crossover / Mittig", "Dips / Brust-Variante", "Liegestütze / Standard",
   "Liegestütze / Schräg (Beine erhöht)", "Liegestütze / Breiter Griff",
-  "Liegestütze / Enger Griff (Diamant)", "Pec Deck",
+  "Liegestütze / Enger Griff (Diamant)", "Pec Deck", "Bankdrücken / Reverse-Grip (Untergriff)",
+  "Landmine Press", "Svend Press", "Pullover / Kurzhantel", "Liegestütze / Klatsch (Plyometrisch)",
   // Rücken
   "Klimmzüge / Weiter Griff", "Klimmzüge / Enger Griff", "Klimmzüge / Neutraler Griff",
   "Klimmzüge / Kinn zur Stange (Chin-ups)", "Klimmzüge / Unterstützt (Maschine/Band)",
@@ -162,6 +163,8 @@ export const KRAFTUEBUNGEN = [
   "Kreuzheben / Rumänisch", "Kreuzheben / Gestreckte Beine", "Kreuzheben / Trap Bar",
   "Kreuzheben / Deficit", "Good Mornings", "Hyperextensions",
   "Shrugs (Nackenheben) / Langhantel", "Shrugs (Nackenheben) / Kurzhantel",
+  "Klimmzüge / Mit Zusatzgewicht", "Latzug / Einarmig am Kabel", "Rudern / Landmine",
+  "Rudern / Pendlay", "Kreuzheben / Snatch-Grip", "Reverse Hyperextensions",
   // Schulter
   "Schulterdrücken / Stehend (Langhantel)", "Schulterdrücken / Sitzend (Langhantel)",
   "Schulterdrücken / Stehend (Kurzhantel)", "Schulterdrücken / Sitzend (Kurzhantel)",
@@ -169,15 +172,19 @@ export const KRAFTUEBUNGEN = [
   "Seitheben / Kabel", "Seitheben / Maschine", "Frontheben / Kurzhantel", "Frontheben / Langhantel",
   "Frontheben / Kabel", "Reverse Butterfly / Maschine", "Face Pulls / Kabel",
   "Aufrechtes Rudern / Langhantel", "Aufrechtes Rudern / Kabel",
+  "Schulterdrücken / Landmine", "Cuban Press", "Bus Drivers", "Lu Raises", "Y-Raises",
   // Arme (Bizeps)
   "Bizepscurls / Langhantel", "Bizepscurls / SZ-Stange", "Bizepscurls / Kurzhantel",
-  "Bizepscurls / Kabel", "Hammercurls / Kurzhantel", "Hammercurls / Kabel (Seil)",
-  "Konzentrationscurls", "Scott-Curls / Kurzhantel", "Scott-Curls / SZ-Stange", "21er-Curls",
+  "Bizepscurls / Kabel", "Bizepscurls / Schrägbank (Kurzhantel)", "Hammercurls / Kurzhantel",
+  "Hammercurls / Kabel (Seil)", "Konzentrationscurls", "Scott-Curls / Kurzhantel",
+  "Scott-Curls / SZ-Stange", "Scott-Curls / Maschine (Preacher Curls)", "21er-Curls",
+  "Reverse Curls / Langhantel", "Zottman Curls", "Cross-Body Hammercurls", "Drag Curls",
   // Arme (Trizeps)
   "French Press / Langhantel", "French Press / Kurzhantel", "French Press / SZ-Stange",
   "French Press / Kabel", "Trizepsdrücken am Kabel / Stange", "Trizepsdrücken am Kabel / Seil",
   "Trizeps-Kickback / Kurzhantel", "Trizeps-Kickback / Kabel", "Enges Bankdrücken",
   "Overhead Extension / Kurzhantel", "Overhead Extension / Kabel", "Dips / Trizeps-Variante",
+  "Skull Crushers / Langhantel", "Skull Crushers / Kurzhantel", "JM Press", "Trizepsdips an Bank",
   // Beine
   "Kniebeuge / Langhantel (High-Bar)", "Kniebeuge / Langhantel (Low-Bar)", "Kniebeuge / Front",
   "Kniebeuge / Goblet", "Kniebeuge / Zercher", "Kniebeuge / Box", "Kniebeuge / Hack",
@@ -186,14 +193,25 @@ export const KRAFTUEBUNGEN = [
   "Ausfallschritte / Stehend", "Ausfallschritte / Gehend", "Ausfallschritte / Rückwärts",
   "Wadenheben / Stehend", "Wadenheben / Sitzend", "Wadenheben / Eselwadenheben (Donkey Calf Raise)",
   "Hip Thrust / Langhantel", "Hip Thrust / Maschine", "Step-ups", "Sissy Squats",
+  "Kniebeuge / Pause Squat", "Kniebeuge / Safety-Bar", "Beinpresse / Einbeinig",
+  "Wadenheben / Beinpresse", "Cossack Squat", "Glute Ham Raise",
   // Bauch/Core
   "Crunches / Klassisch", "Crunches / Kabel (Cable Crunch)", "Crunches / Maschine", "Sit-ups",
   "Beinheben / Hängend", "Beinheben / Liegend", "Plank / Standard", "Plank / Seitlich (Side Plank)",
   "Russian Twist", "Ab Wheel Rollout", "Hollow Body Hold", "Dragon Flag",
-  // Ganzkörper / Kettlebell
-  "Kettlebell Swing / Einarmig", "Kettlebell Swing / Beidarmig", "Kettlebell Goblet Squat",
-  "Kettlebell Turkish Get-up", "Kettlebell Clean", "Kettlebell Clean and Press",
-  "Kettlebell Snatch", "Kettlebell Windmill", "Kettlebell Halo", "Kettlebell Figure 8",
+  "Woodchoppers / Kabel", "Pallof Press", "Toes to Bar", "Beinheben / Captain's Chair",
+  // Ganzkörper / Kettlebell (bewusst ausführlich — Nutzerinnen-Vorgabe, 13.08.:
+  // will Kettlebell-Übungen gezielt und möglicherweise auch als eigene
+  // wöchentliche Einheiten einsetzen)
+  "Kettlebell Swing / Einarmig", "Kettlebell Swing / Beidarmig", "Kettlebell Swing / American (über Kopf)",
+  "Kettlebell Goblet Squat", "Kettlebell Front Squat / Doppelt", "Kettlebell Turkish Get-up",
+  "Kettlebell Clean", "Kettlebell Clean and Press", "Kettlebell Snatch", "Kettlebell Windmill",
+  "Kettlebell Halo", "Kettlebell Figure 8", "Kettlebell Renegade Row", "Kettlebell Thruster",
+  "Kettlebell Push Press", "Kettlebell Overhead Press / Einarmig", "Kettlebell Rudern / Einarmig",
+  "Kettlebell Kreuzheben / Beidarmig", "Kettlebell Kreuzheben / Einarmig",
+  "Kettlebell Ausfallschritte / Vorne gehalten", "Kettlebell Suitcase Carry",
+  "Kettlebell High Pull", "Kettlebell Around the World", "Kettlebell Sit-up mit Press",
+  "Kettlebell Floor Press", "Kettlebell Bottoms-Up Press", "Kettlebell Einbeiniges Kreuzheben",
   "Farmer's Walk / Kurzhantel", "Farmer's Walk / Kettlebell",
 ];
 
@@ -210,6 +228,9 @@ export const BODYWEIGHT_UEBUNGEN = [
   "Beinheben / Hängend", "Superman", "Hollow Body Hold", "Jumping Jacks", "Bear Crawl",
   "Australian Pull-ups (Inverted Rows)", "Skater Jumps", "Box Jumps", "Wall Sit",
   "Glute Bridge", "Nordic Curls", "Dragon Flag", "Pike Push-ups", "Clap Push-ups",
+  "Klimmzüge / Archer", "Klimmzüge / Typewriter", "Klimmzüge / Commando",
+  "Cossack Squat", "Shrimp Squat", "Broad Jumps", "Tuck Jumps", "Reverse Plank",
+  "Bird Dog", "Toes to Bar",
 ];
 
 // Kombinierter Katalog für Felder, in denen mehrere Übungen zusammen in
