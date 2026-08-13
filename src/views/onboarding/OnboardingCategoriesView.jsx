@@ -681,11 +681,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         setSchlafIntervallTyp("fixed");
         if (s.bettzeit) setBlockFeld(0, "bettzeit", s.bettzeit);
         if (s.aufwachzeit) setBlockFeld(0, "aufwachzeit", s.aufwachzeit);
+        if (s.istZustand) setIstZustandFeld("aktuell", s.istZustand);
         return s;
       }
       case "hydration": {
         const h = await AIService.hydrationAusChat({ verlauf, coachName });
         if (h.zielMl) setHydrationMl(String(h.zielMl));
+        if (h.istZustandMenge) setIstZustandFeld("menge", h.istZustandMenge);
+        if (h.istZustandGetraenke) setIstZustandFeld("getraenke", h.istZustandGetraenke);
         return h;
       }
       case "tageslicht": {
@@ -706,6 +709,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           setMahlIntervallTyp("fixed");
           setMahlTage([...WOCHENTAGE]);
         }
+        if (m.istZustand) setIstZustandFeld("aktuell", m.istZustand);
         return m;
       }
       case "training": {

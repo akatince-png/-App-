@@ -24,6 +24,14 @@ const KI_KONTEXT_LIMIT = 24;
 // einheitlich unterstützen.
 const SPOTIFY_PLAY_MARKER = /\[\[SPOTIFY_PLAY:([^\]]+)\]\]/;
 
+// Nur angehängt, wenn ein onUebernehmen-Knopf existiert (siehe unten): ohne
+// diesen Hinweis behauptet das Modell teils fälschlich, es habe Angaben
+// schon "im Hintergrund gespeichert" — tatsächlich füllt "Übernehmen" nur
+// die Formularfelder, gespeichert wird erst beim anschließenden "Weiter"
+// bzw. manuellen Speichern-Knopf (live beobachtet: Schlafqualität, 13.08.).
+const NICHTS_AUTOMATISCH_GESPEICHERT_HINWEIS =
+  ' Wichtig: Du trägst während des Gesprächs nichts automatisch ein und speicherst nichts im Hintergrund — behaupte das auch nicht. Die Person muss danach noch bewusst auf "Übernehmen" tippen, damit die Felder ausgefüllt werden, und je nach Bereich anschließend noch speichern.';
+
 // Wiederverwendbare Chat-Oberfläche für den ADHS Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).
 // Zwei Phasen: 1) frei mit dem Coach reden/nachjustieren, 2) per eigenem
@@ -202,7 +210,7 @@ export default function KiChat({
     if (bereich) coachNachrichtSpeichern(bereich, "nutzer", nachricht);
     try {
       const rohAntwort = await AIService.coachChatStreamend({
-        systemPrompt: `${systemPrompt}\n\n${hintergrundKontext}`,
+        systemPrompt: `${systemPrompt}${onUebernehmen ? NICHTS_AUTOMATISCH_GESPEICHERT_HINWEIS : ""}\n\n${hintergrundKontext}`,
         verlauf: neuerVerlauf.slice(-KI_KONTEXT_LIMIT),
         coachName: getCoachName(),
         onTeilantwort: setStreamText,

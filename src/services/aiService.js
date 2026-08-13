@@ -342,7 +342,7 @@ export const AIService = {
    * ({zeit, menge}), lässt sich also direkt an die bestehende Liste anhängen.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{zielMl: number|null, zeiten: Array<{zeit: string, menge: string}>}>}
+   * @returns {Promise<{zielMl: number|null, zeiten: Array<{zeit: string, menge: string}>, istZustandMenge: string, istZustandGetraenke: string}>}
    */
   async hydrationAusChat({ verlauf, coachName }) {
     const system = mitPersona(
@@ -353,7 +353,9 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "zielMl": number|null (Tagesziel in ml, null wenn nicht genannt/unverändert), ' +
-          '"zeiten": [ { "zeit": "HH:MM", "menge": string (z. B. "300") } ] (leeres Array wenn keine Erinnerungszeiten besprochen wurden) }',
+          '"zeiten": [ { "zeit": "HH:MM", "menge": string (z. B. "300") } ] (leeres Array wenn keine Erinnerungszeiten besprochen wurden), ' +
+          '"istZustandMenge": string (wie viel die Person laut Gespräch aktuell täglich trinkt, z. B. "ca. 1 Liter" — leer wenn nicht genannt), ' +
+          '"istZustandGetraenke": string (was sie außer Wasser trinkt, z. B. "viel Kaffee, ab und zu Saft" — leer wenn nicht genannt) }',
       ].join(" ")
     );
     const messages = [
@@ -568,7 +570,7 @@ export const AIService = {
    * um ein Ziel/Rhythmus, nicht um einen Eintrag für eine bestimmte Nacht.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{bettzeit: string, aufwachzeit: string}>}
+   * @returns {Promise<{bettzeit: string, aufwachzeit: string, istZustand: string}>}
    */
   async schlafzielAusChat({ verlauf, coachName }) {
     const system = mitPersona(
@@ -577,7 +579,8 @@ export const AIService = {
         "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines gewünschten Schlafrhythmus hilft (übliche Bett- und Aufwachzeit, nicht ein einzelner Eintrag für eine Nacht).",
         "Fasse das vorangegangene Gespräch jetzt zusammen.",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bettzeit": string ("HH:MM"), "aufwachzeit": string ("HH:MM") }',
+        'Format exakt: { "bettzeit": string ("HH:MM"), "aufwachzeit": string ("HH:MM"), ' +
+          '"istZustand": string (Zusammenfassung, wie der aktuelle/bisherige Schlaf der Person laut Gespräch ist — z. B. "unruhig, wacht oft auf, schläft meist erst nach 23 Uhr ein" — leer wenn nichts dazu gesagt wurde) }',
       ].join(" ")
     );
     const messages = [
@@ -596,7 +599,7 @@ export const AIService = {
    * es hier um einen einzelnen Mahlzeit-Slot im Wochenplan.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{name: string, zutaten: Array<{name: string, menge: string}>, wochentage: string[], uhrzeit: string}>}
+   * @returns {Promise<{name: string, zutaten: Array<{name: string, menge: string}>, wochentage: string[], uhrzeit: string, istZustand: string}>}
    */
   async mahlzeitplanAusChat({ verlauf, coachName }) {
     const system = mitPersona(
@@ -608,7 +611,8 @@ export const AIService = {
         "Format exakt:",
         '{ "name": string, "zutaten": [ { "name": string, "menge": string } ] (leeres Array wenn keine genannt), ' +
           '"wochentage": string[] (aus "Mo","Di","Mi","Do","Fr","Sa","So" — alle 7, wenn "täglich" gesagt wurde), ' +
-          '"uhrzeit": string ("HH:MM", Standard "08:00" wenn nicht genannt) }',
+          '"uhrzeit": string ("HH:MM", Standard "08:00" wenn nicht genannt), ' +
+          '"istZustand": string (Zusammenfassung, wie sich die Person laut Gespräch aktuell ernährt — leer wenn nichts dazu gesagt wurde) }',
       ].join(" ")
     );
     const messages = [
