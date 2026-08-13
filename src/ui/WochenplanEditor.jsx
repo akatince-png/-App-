@@ -152,6 +152,7 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
         >
           {t("onboarding.training.einheit.hinzufuegen")}
         </button>
+        {!wochentag && <div style={{ fontSize: 11.5, color: danger, marginTop: 6, textAlign: "center" }}>Bitte oben zuerst einen Wochentag auswählen.</div>}
       </Card>
 
       {nachTagGruppiert.length > 0 && (

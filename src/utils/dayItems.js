@@ -1,5 +1,6 @@
 import { keyOf, sameDay, toLocalISODate } from "./dates";
 import { faelltAnTag } from "./schedule";
+import { uebungGewichtText } from "../ui/UebungenEditor";
 
 // getDay()-indexiert (0 = Sonntag), passend zu JS' Date#getDay().
 const GETDAY_TO_LABEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -42,7 +43,10 @@ export function wochenplanUebungenText(zuweisung) {
   if (zuweisung.uebungenListe?.length) {
     return zuweisung.uebungenListe
       .filter((u) => u.name)
-      .map((u) => `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${u.gewicht ? ` ${u.gewicht}` : ""}`)
+      .map((u) => {
+        const gewichtText = uebungGewichtText(u);
+        return `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${gewichtText ? ` ${gewichtText}` : ""}`;
+      })
       .join(", ");
   }
   if (zuweisung.uebungen) {
@@ -58,7 +62,10 @@ export function trainingDetail(t) {
   if (t.art === "Krafttraining" || (t.art === "Bodyweight" && (t.uebungen || []).length > 0)) {
     return (t.uebungen || [])
       .filter((u) => u.name)
-      .map((u) => `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${u.gewicht ? ` ${u.gewicht}` : ""}`)
+      .map((u) => {
+        const gewichtText = uebungGewichtText(u);
+        return `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${gewichtText ? ` ${gewichtText}` : ""}`;
+      })
       .join(", ");
   }
   const teile = [];

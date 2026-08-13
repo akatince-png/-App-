@@ -3,6 +3,7 @@ import { Shell, Card } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { accent, accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
 import { KATEGORIE_META } from "../utils/dayItems";
+import { uebungGewichtText } from "../ui/UebungenEditor";
 import { useAppData } from "../context/AppDataContext";
 import ProtokollSeitenView from "./plan/ProtokollSeitenView";
 
@@ -43,7 +44,7 @@ function TrainingProtokollKarte({ e }) {
               <div key={i} style={{ padding: "8px 0", borderTop: i > 0 ? `1px solid ${cardBorder}` : "none" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>{u.name}</div>
                 <div style={{ fontSize: 12, color: accentDark, fontWeight: 700, marginTop: 1 }}>
-                  {u.saetze || "?"} Sätze × {u.wiederholungen || "?"} Wdh.{u.gewicht && ` · ${u.gewicht}`}
+                  {u.saetze || "?"} Sätze × {u.wiederholungen || "?"} Wdh.{uebungGewichtText(u) && ` · ${uebungGewichtText(u)}`}
                 </div>
                 {u.pauseSekunden && <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>Pause: {u.pauseSekunden}s zwischen den Sätzen</div>}
               </div>
