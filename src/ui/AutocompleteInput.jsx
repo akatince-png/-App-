@@ -4,14 +4,31 @@ import { accentSoft, cardBorder, textMain } from "./theme";
 // Freitextfeld mit Tipp-Vorschlägen aus einer festen Liste (z. B.
 // Übungsnamen) — Vorschläge sind Hilfe, keine Pflicht: freie Eingabe
 // bleibt jederzeit möglich, nichts wird gegen die Liste validiert.
-export default function AutocompleteInput({ value, onChange, options, placeholder }) {
+//
+// mehrfach: für Felder, in denen mehrere Einträge kommagetrennt in einem
+// Textfeld gesammelt werden (z. B. "Bankdrücken, Klimmzüge, ..." — siehe
+// WochenplanEditor.jsx). Vorschläge beziehen sich dann nur auf das gerade
+// getippte letzte Segment nach dem letzten Komma; eine Auswahl ersetzt nur
+// dieses Segment und hängt ", " an, damit direkt der nächste Eintrag
+// weitergetippt werden kann, statt die bisherige Liste zu überschreiben.
+export default function AutocompleteInput({ value, onChange, options, placeholder, mehrfach = false }) {
   const [fokussiert, setFokussiert] = useState(false);
 
+  const { praefix, aktuellesSegment } = useMemo(() => {
+    if (!mehrfach) return { praefix: "", aktuellesSegment: value || "" };
+    const teile = (value || "").split(",");
+    const letztes = teile[teile.length - 1];
+    const davor = teile.slice(0, -1).join(",");
+    return { praefix: davor ? `${davor}, ` : "", aktuellesSegment: letztes.trimStart() };
+  }, [value, mehrfach]);
+
   const treffer = useMemo(() => {
-    const query = (value || "").trim().toLowerCase();
+    const query = aktuellesSegment.trim().toLowerCase();
     if (!query) return options.slice(0, 8);
     return options.filter((o) => o.toLowerCase().includes(query)).slice(0, 8);
-  }, [value, options]);
+  }, [aktuellesSegment, options]);
+
+  const auswaehlen = (o) => onChange(mehrfach ? `${praefix}${o}, ` : o);
 
   const zeigeVorschlaege = fokussiert && treffer.length > 0;
 
@@ -57,7 +74,7 @@ export default function AutocompleteInput({ value, onChange, options, placeholde
           {treffer.map((o) => (
             <div
               key={o}
-              onMouseDown={() => onChange(o)}
+              onMouseDown={() => auswaehlen(o)}
               style={{
                 padding: "10px 14px",
                 fontSize: 13.5,

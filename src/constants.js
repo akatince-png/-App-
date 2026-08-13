@@ -135,40 +135,88 @@ export const CARDIO_ARTEN = ["Laufen", "Fahrradfahren", "Springseilspringen", "S
 export const CARDIO_MODI_STRECKE = ["Strecke", "Intervall", "Sprints"];
 export const CARDIO_MODI_SPRUNGSEIL = ["Dauer", "Intervall"];
 
+// Bewusst sehr feingliedrig (Basisübung / Variante), statt nur die
+// Basisübung zu listen — Nutzerinnen-Vorgabe (13.08.): beim Tippen von
+// Kürzeln wie "BA" sollen möglichst alle gängigen Ausführungsvarianten
+// (Gerät, Winkel, Griff) als eigene Vorschläge auftauchen, ähnlich wie in
+// professionellen Trainings-Apps (Strong, Fitbod u. Ä.), nicht nur eine
+// generische "Bankdrücken"-Option.
 export const KRAFTUEBUNGEN = [
   // Brust
-  "Bankdrücken", "Schrägbankdrücken", "Negativbankdrücken", "Kurzhantel-Bankdrücken",
-  "Butterfly", "Fliegende (Kurzhantel)", "Dips", "Cable Crossover", "Liegestütze",
+  "Bankdrücken / Flachbank (Langhantel)", "Bankdrücken / Flachbank (Kurzhantel)",
+  "Bankdrücken / Flachbank (Multipresse)", "Bankdrücken / Schrägbank (Langhantel)",
+  "Bankdrücken / Schrägbank (Kurzhantel)", "Bankdrücken / Schrägbank (Multipresse)",
+  "Bankdrücken / Negativbank (Langhantel)", "Bankdrücken / Negativbank (Kurzhantel)",
+  "Bankdrücken / Enger Griff", "Butterfly / Maschine", "Fliegende / Kurzhantel Flachbank",
+  "Fliegende / Kurzhantel Schrägbank", "Cable Crossover / Von oben", "Cable Crossover / Von unten",
+  "Cable Crossover / Mittig", "Dips / Brust-Variante", "Liegestütze / Standard",
+  "Liegestütze / Schräg (Beine erhöht)", "Liegestütze / Breiter Griff",
+  "Liegestütze / Enger Griff (Diamant)", "Pec Deck",
   // Rücken
-  "Klimmzüge", "Latzug", "Rudern vorgebeugt", "Kurzhantelrudern", "Kabelzug sitzend",
-  "T-Bar-Rudern", "Kreuzheben", "Rumänisches Kreuzheben", "Sumo-Kreuzheben",
-  "Good Mornings", "Hyperextensions", "Klimmzüge eng", "Klimmzüge weit",
+  "Klimmzüge / Weiter Griff", "Klimmzüge / Enger Griff", "Klimmzüge / Neutraler Griff",
+  "Klimmzüge / Kinn zur Stange (Chin-ups)", "Klimmzüge / Unterstützt (Maschine/Band)",
+  "Latzug / Weiter Griff", "Latzug / Enger Griff", "Latzug / Neutraler Griff",
+  "Latzug / Hinter dem Nacken", "Rudern / Langhantel vorgebeugt", "Rudern / Kurzhantel einarmig",
+  "Rudern / T-Bar", "Rudern / Kabel sitzend (enger Griff)", "Rudern / Kabel sitzend (weiter Griff)",
+  "Rudern / Maschine", "Rudern / Meadows", "Kreuzheben / Klassisch", "Kreuzheben / Sumo",
+  "Kreuzheben / Rumänisch", "Kreuzheben / Gestreckte Beine", "Kreuzheben / Trap Bar",
+  "Kreuzheben / Deficit", "Good Mornings", "Hyperextensions",
+  "Shrugs (Nackenheben) / Langhantel", "Shrugs (Nackenheben) / Kurzhantel",
   // Schulter
-  "Schulterdrücken", "Kurzhantel-Schulterdrücken", "Seitheben", "Frontheben",
-  "Reverse Butterfly", "Aufrechtes Rudern", "Arnold Press", "Shrugs (Nackenheben)",
-  // Arme
-  "Bizepscurls", "Hammercurls", "Konzentrationscurls", "Kabelcurls", "SZ-Curls",
-  "Trizepsdrücken", "French Press", "Trizeps-Kickback", "Enges Bankdrücken",
-  "Trizepsdrücken am Kabel",
+  "Schulterdrücken / Stehend (Langhantel)", "Schulterdrücken / Sitzend (Langhantel)",
+  "Schulterdrücken / Stehend (Kurzhantel)", "Schulterdrücken / Sitzend (Kurzhantel)",
+  "Schulterdrücken / Maschine", "Schulterdrücken / Arnold Press", "Seitheben / Kurzhantel",
+  "Seitheben / Kabel", "Seitheben / Maschine", "Frontheben / Kurzhantel", "Frontheben / Langhantel",
+  "Frontheben / Kabel", "Reverse Butterfly / Maschine", "Face Pulls / Kabel",
+  "Aufrechtes Rudern / Langhantel", "Aufrechtes Rudern / Kabel",
+  // Arme (Bizeps)
+  "Bizepscurls / Langhantel", "Bizepscurls / SZ-Stange", "Bizepscurls / Kurzhantel",
+  "Bizepscurls / Kabel", "Hammercurls / Kurzhantel", "Hammercurls / Kabel (Seil)",
+  "Konzentrationscurls", "Scott-Curls / Kurzhantel", "Scott-Curls / SZ-Stange", "21er-Curls",
+  // Arme (Trizeps)
+  "French Press / Langhantel", "French Press / Kurzhantel", "French Press / SZ-Stange",
+  "French Press / Kabel", "Trizepsdrücken am Kabel / Stange", "Trizepsdrücken am Kabel / Seil",
+  "Trizeps-Kickback / Kurzhantel", "Trizeps-Kickback / Kabel", "Enges Bankdrücken",
+  "Overhead Extension / Kurzhantel", "Overhead Extension / Kabel", "Dips / Trizeps-Variante",
   // Beine
-  "Kniebeuge", "Frontkniebeuge", "Beinpresse", "Ausfallschritte", "Bulgarian Split Squat",
-  "Beinstrecker", "Beinbeuger", "Wadenheben stehend", "Wadenheben sitzend",
-  "Hip Thrust", "Kreuzheben gestreckte Beine", "Goblet Squat", "Step-ups",
+  "Kniebeuge / Langhantel (High-Bar)", "Kniebeuge / Langhantel (Low-Bar)", "Kniebeuge / Front",
+  "Kniebeuge / Goblet", "Kniebeuge / Zercher", "Kniebeuge / Box", "Kniebeuge / Hack",
+  "Kniebeuge / Smith Machine", "Kniebeuge / Bulgarian Split Squat", "Beinpresse / 45 Grad",
+  "Beinpresse / Liegend", "Beinstrecker", "Beinbeuger / Liegend", "Beinbeuger / Sitzend",
+  "Ausfallschritte / Stehend", "Ausfallschritte / Gehend", "Ausfallschritte / Rückwärts",
+  "Wadenheben / Stehend", "Wadenheben / Sitzend", "Wadenheben / Eselwadenheben (Donkey Calf Raise)",
+  "Hip Thrust / Langhantel", "Hip Thrust / Maschine", "Step-ups", "Sissy Squats",
   // Bauch/Core
-  "Crunches", "Sit-ups", "Beinheben hängend", "Plank", "Russian Twist",
-  "Cable Crunch", "Ab Wheel Rollout",
-  // Ganzkörper
-  "Kettlebell Swing", "Farmer's Walk", "Clean and Press", "Snatch",
+  "Crunches / Klassisch", "Crunches / Kabel (Cable Crunch)", "Crunches / Maschine", "Sit-ups",
+  "Beinheben / Hängend", "Beinheben / Liegend", "Plank / Standard", "Plank / Seitlich (Side Plank)",
+  "Russian Twist", "Ab Wheel Rollout", "Hollow Body Hold", "Dragon Flag",
+  // Ganzkörper / Kettlebell
+  "Kettlebell Swing / Einarmig", "Kettlebell Swing / Beidarmig", "Kettlebell Goblet Squat",
+  "Kettlebell Turkish Get-up", "Kettlebell Clean", "Kettlebell Clean and Press",
+  "Kettlebell Snatch", "Kettlebell Windmill", "Kettlebell Halo", "Kettlebell Figure 8",
+  "Farmer's Walk / Kurzhantel", "Farmer's Walk / Kettlebell",
 ];
 
 export const BODYWEIGHT_UEBUNGEN = [
-  "Liegestütze", "Diamant-Liegestütze", "Archer Push-ups", "Klimmzüge", "Chin-ups",
-  "Muscle-up", "Dips", "Ring Dips", "Pistol Squat", "Air Squats", "Ausfallschritte",
-  "Plank", "Side Plank", "L-Sit", "Handstand", "Handstand-Liegestütze",
-  "Wandliegestütze (Handstand)", "Burpees", "Mountain Climbers", "Beinheben hängend",
-  "Superman", "Hollow Body Hold", "Jumping Jacks", "Bear Crawl", "Australian Pull-ups",
-  "Skater Jumps", "Box Jumps", "Wall Sit", "Glute Bridge", "Nordic Curls",
+  "Liegestütze / Standard", "Liegestütze / Schräg (Beine erhöht)", "Liegestütze / Diamant",
+  "Liegestütze / Archer", "Liegestütze / Breiter Griff", "Liegestütze / Ein Arm",
+  "Liegestütze / Pike (Schulter)", "Liegestütze / Decline (Beine erhöht)",
+  "Klimmzüge / Weiter Griff", "Klimmzüge / Enger Griff", "Klimmzüge / Neutraler Griff",
+  "Klimmzüge / Kinn zur Stange (Chin-ups)", "Muscle-up", "Dips / Bank", "Dips / Barren",
+  "Ring Dips", "Pistol Squat", "Air Squats", "Ausfallschritte / Gehend",
+  "Ausfallschritte / Rückwärts", "Bulgarian Split Squat", "Plank / Standard",
+  "Plank / Seitlich (Side Plank)", "L-Sit", "Handstand / Freistehend",
+  "Handstand-Liegestütze / Wandgestützt", "Burpees", "Mountain Climbers",
+  "Beinheben / Hängend", "Superman", "Hollow Body Hold", "Jumping Jacks", "Bear Crawl",
+  "Australian Pull-ups (Inverted Rows)", "Skater Jumps", "Box Jumps", "Wall Sit",
+  "Glute Bridge", "Nordic Curls", "Dragon Flag", "Pike Push-ups", "Clap Push-ups",
 ];
+
+// Kombinierter Katalog für Felder, in denen mehrere Übungen zusammen in
+// einem Feld eingetragen werden (siehe WochenplanEditor.jsx) — deckt sowohl
+// Kraft- als auch Bodyweight-Übungen ab, da eine Trainingseinheit mehrere
+// Arten gleichzeitig kombinieren kann.
+export const ALLE_UEBUNGEN = [...new Set([...KRAFTUEBUNGEN, ...BODYWEIGHT_UEBUNGEN])];
 
 export const ENERGIELEVEL_OPTIONEN = ["😩", "😐", "🙂", "⚡"];
 

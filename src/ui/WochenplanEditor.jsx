@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Card, CheckRow, Label, Pill, TextInput } from "./primitives";
 import TimeWheelField from "./TimeWheelField";
 import NumberWheelField from "./NumberWheelField";
+import AutocompleteInput from "./AutocompleteInput";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
-import { TRAININGSARTEN, WOCHENTAGE } from "../constants";
+import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
 import { useT } from "../i18n/translate";
 
 export const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
@@ -96,7 +97,7 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
           </div>
         </div>
         <Label>{t("onboarding.training.einheit.uebungen.label")}</Label>
-        <TextInput value={uebungen} onChange={setUebungen} placeholder={t("onboarding.training.einheit.uebungen.placeholder")} />
+        <AutocompleteInput value={uebungen} onChange={setUebungen} options={ALLE_UEBUNGEN} placeholder={t("onboarding.training.einheit.uebungen.placeholder")} mehrfach />
 
         <div style={{ marginTop: 14 }}>
           <CheckRow label={t("onboarding.training.einheit.warmup.label")} checked={warmup.aktiv} onToggle={() => setWarmup((p) => ({ ...p, aktiv: !p.aktiv }))} />
