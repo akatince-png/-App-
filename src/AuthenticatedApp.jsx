@@ -72,12 +72,27 @@ export default function AuthenticatedApp() {
   // ?code=...&state=... zurück auf die App) — Code gegen Zugangsdaten
   // tauschen (siehe spotify-auth-callback Edge Function) und danach direkt
   // wieder bei "Mehr" landen, wo die Verbindung angestoßen wurde.
+  //
+  // Bei Ablehnung/Fehler auf Spotify-Seite (z. B. falsche App-Konfiguration,
+  // Nutzerin bricht ab) kommt STATT ?code=... ein ?error=...-Parameter
+  // zurück — wurde bisher komplett ignoriert (Bug-Report: "Seite lädt neu,
+  // aber nichts passiert", ohne jede sichtbare Fehlermeldung, weil der
+  // frühere `if (!code) return;` diesen Fall stillschweigend überging, noch
+  // bevor überhaupt eine Fehlermeldung gesetzt werden konnte).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    if (!code || params.get("state") !== "aka_spotify_connect" || !userId) return;
+    const authFehler = params.get("error");
+    if ((!code && !authFehler) || params.get("state") !== "aka_spotify_connect" || !userId) return;
     window.history.replaceState({}, "", window.location.pathname);
     setSpotifyVerbindungFehler?.(null);
+
+    if (authFehler) {
+      setSpotifyVerbindungFehler?.(`Spotify hat die Verbindung abgelehnt: ${authFehler}`);
+      setView("mehr");
+      return;
+    }
+
     spotifyCodeAustauschen(code, userId)
       .then(() => spotifyVerbindungNeuLaden?.())
       .catch((err) => {
