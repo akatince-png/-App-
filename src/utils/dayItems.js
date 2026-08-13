@@ -220,7 +220,15 @@ export function buildDayItems(
           name: zuweisung.arten?.length ? zuweisung.arten.join(" + ") : "Training",
           detail: detailTeile.length ? detailTeile.join(" · ") : "Laut Wochenplan",
           done: false,
-          raw: { virtuell: true, datum: tagStr, arten: zuweisung.arten, uhrzeit },
+          raw: {
+            virtuell: true,
+            datum: tagStr,
+            arten: zuweisung.arten,
+            uhrzeit,
+            uebungenListe: zuweisung.uebungenListe,
+            warmup: zuweisung.warmup,
+            cooldown: zuweisung.cooldown,
+          },
         });
       });
   }

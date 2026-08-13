@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import {
   NEBENWIRKUNGEN_OPTIONEN,
   STAERKE_OPTIONEN,
@@ -173,6 +173,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   const [abendOffen, setAbendOffen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [feedbackKategorie, setFeedbackKategorie] = useState(null);
+  const [trainingFehler, setTrainingFehler] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({
     nebenwirkungen: [],
     staerke: "Keine",
@@ -216,34 +217,41 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   // Ein Trainings-Tagesplan-Punkt ist entweder schon eine echte Zeile (aus
   // trainingEintraege) oder nur virtuell aus dem Wochenplan abgeleitet. Beim
   // Antippen wird ein virtueller Punkt erst zu einer echten Zeile (aus der
-  // Vorlage befüllt) und dann direkt ins Live-Workout geöffnet.
+  // Wochenplan-Einheit befüllt) und dann direkt ins Live-Workout geöffnet.
+  // Eine Wochenplan-Einheit kennt "arten" (Plural, mehrere Trainingsarten
+  // kombinierbar, z. B. Kraft + Cardio, siehe WochenplanEditor) — die
+  // Live-Workout-Ansicht kann aber immer nur eine Art gleichzeitig zeigen,
+  // deshalb hier eine führende Art bestimmen: bevorzugt Krafttraining/
+  // Bodyweight, weil dafür die hinterlegten Übungen greifen, sonst die
+  // erste ausgewählte Art. (Bugfix 13.08.: vorher wurde ein nicht
+  // existierendes `item.raw.art`/`item.raw.template` gelesen — dadurch
+  // schlug das Anlegen mangels Trainingsart immer lautlos fehl.)
   const starteTraining = useCallback(
     async (item) => {
       if (!item.raw.virtuell) {
         onOpenTraining(item.raw.id);
         return;
       }
-      const tpl = item.raw.template;
+      setTrainingFehler(null);
+      const arten = item.raw.arten || [];
+      const art = arten.find((a) => a === "Krafttraining") || arten.find((a) => a === "Bodyweight") || arten[0] || "";
+      const warmupCooldown = [
+        item.raw.warmup?.aktiv ? `Warm-up${item.raw.warmup.dauerMin ? ` ${item.raw.warmup.dauerMin} Min.` : ""}` : "",
+        item.raw.cooldown?.aktiv ? `Cool-down${item.raw.cooldown.dauerMin ? ` ${item.raw.cooldown.dauerMin} Min.` : ""}` : "",
+      ].filter(Boolean);
       const result = await trainingHinzufuegen({
         datum: item.raw.datum,
         uhrzeit: item.raw.uhrzeit || "",
-        art: item.raw.art,
-        name: tpl?.name || "",
-        uebungen: tpl?.uebungen || [],
-        dauerMin: tpl?.dauerMin || "",
-        distanzKm: tpl?.distanzKm || "",
-        puls: tpl?.puls || "",
-        runden: tpl?.runden || "",
-        intervallArbeitSek: tpl?.intervallArbeitSek || "",
-        intervallPauseSek: tpl?.intervallPauseSek || "",
-        rpe: "",
-        kalorien: "",
-        energielevel: "",
-        schmerzen: "",
-        bemerkungen: "",
+        art,
+        uebungen: item.raw.uebungenListe || [],
+        bemerkungen: warmupCooldown.join(" · "),
         erledigt: false,
       });
-      if (result?.ok) onOpenTraining(result.eintrag.id);
+      if (result?.ok) {
+        onOpenTraining(result.eintrag.id);
+        return;
+      }
+      setTrainingFehler(result?.error || "Training konnte nicht gestartet werden.");
     },
     [onOpenTraining, trainingHinzufuegen]
   );
@@ -458,6 +466,20 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   return (
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
+
+      {trainingFehler && (
+        <Card style={{ marginBottom: 16, borderColor: danger }}>
+          <div style={{ fontSize: 13, color: danger, fontWeight: 700, marginBottom: 4 }}>Training konnte nicht gestartet werden</div>
+          <div style={{ fontSize: 12.5, color: textMuted }}>{trainingFehler}</div>
+          <button
+            className="mp-tap"
+            onClick={() => setTrainingFehler(null)}
+            style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: accentDark, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          >
+            Verstanden
+          </button>
+        </Card>
+      )}
 
       <KiChat
         systemPrompt="Du bist ein hilfsbereiter Assistent für eine App zur Selbstverwaltung von Gesundheitsprotokollen. Beantworte Fragen zum Tagesplan der Person. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein neues Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, neue Rezepte), frag von dir aus alle dafür nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — antworte dabei immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
