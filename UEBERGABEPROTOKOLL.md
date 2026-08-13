@@ -1840,6 +1840,40 @@ jederzeit alles wie zuvor erreichbar.
   Coachee-Daten — noch nicht gebaut, erst wenn die Nutzerin das genauer
   durchdacht hat.
 
+### 🆕 Nachtrag (noch selber Tag): Erstbefüllung der Wissens-Basis aus der Praxisakademie
+
+Die Nutzerin hat 4 Dokumente hochgeladen (ihr eigenes 12-Wochen-
+Selbsttrainingsprogramm als Coachin "AKA ADHS-Coaching-Praxisakademie",
+ein Coaching-Programm-Pilothandbuch mit denselben Inhalten je Protokoll,
+sowie die App-Feature-Roadmap) mit der Vorgabe, alle darin enthaltenen
+Coaching-Inhalte direkt in Akas Wissens-Basis einzuspeisen.
+
+- **Migration `0047_coach_wissen_seed.sql`** (reine Daten-Migration, kein
+  Schema-Change) — **deployt: NEIN, muss die Nutzerin noch im
+  Supabase-Dashboard ausführen** (SQL wurde ihr im Chat als Text
+  geschickt). Enthält 16 `coach_wissen`-Einträge:
+  - 8 allgemeine (`bereich = null`, gelten überall): Rolle & Grenzen
+    (Coaching ist keine Therapie), aktives Zuhören/GROW-Modell,
+    ADHS-Psychoedukation (Kurz-/Langversion), Umgang mit Scham/Widerstand/
+    Rückschlägen, Medikamente & Supplemente sicher besprechen (Do/Don't),
+    Red-Flag-Krisenprotokoll (inkl. Telefonseelsorge-Nummern), Methodik
+    "aus einem Ziel ein Experiment machen" (Stufenmodell Tiny/Standard/
+    Advanced), Sitzungsstruktur (Intake/Follow-up/Abschluss-Skripte).
+  - 8 protokollspezifische (`bereich` passend zu Schlaf/Hydration/
+    Tageslicht/Ernährung/Training/Gewohnheiten/Supplemente/Medikamente):
+    je wissenschaftlicher Hintergrund, 60-Sekunden-Erklärskript fürs
+    Gespräch, typische Probleme, Coaching-Fragen, gestufte Mini-Experimente,
+    Red-Flag-Trigger für ärztliche Weiterverweisung.
+  - **Bewusst NICHT übernommen**: die reine Trainingscamp-Logistik der
+    Praxisakademie selbst — Rollenspiel-Anleitungen zwischen der Nutzerin
+    und Übungspartner:innen, Selbstbewertungsbögen, wöchentliche
+    Prüfungsfragen, Akquise-/Rekrutierungstexte für die 10 Test-Probanden,
+    leere Formularvorlagen (1-10). Das ist ihr eigenes Lernprogramm als
+    Mensch, kein Wissen, das Aka im Coaching-Gespräch selbst braucht.
+  - Fließt automatisch über den bereits bestehenden `coachWissenText`-
+    Filtermechanismus in `KiChat.jsx` ein (kein Code-Änderung nötig, rein
+    inhaltliche Ergänzung der Tabelle).
+
 ### 🔴 Offen — Gemini-429-Kontingentproblem, Stand unklar
 
 Ursache gefunden: der bisher verwendete `GEMINI_API_KEY` hing an einem
@@ -1887,6 +1921,12 @@ Gemini Project" zurückgewechselt, oder Guthaben gefunden/aufgeladen).
    ADHS-gerechten Morgen-/Abendroutine-Vorgaben durchgehen und Schritt für
    Schritt in konkrete Vorschläge/Defaults übersetzen — ggf. direkt über
    die neue Wissens-Basis-Verwaltung eintragen.
+4b. Prüfen, ob Migration `0047_coach_wissen_seed.sql` inzwischen deployt
+   wurde (Stand bei Sitzungsende: noch nicht bestätigt) — danach live
+   testen, dass die 16 neuen Einträge in `AdminWissenView.jsx` erscheinen
+   und Aka im Chat entsprechend antwortet (z. B. Grenzfrage zu
+   Medikamenten stellen und prüfen, ob die Antwort das Do/Don't-Skript
+   widerspiegelt).
 5. Pyramiden-Gewichte und den geführten Ablauf-Screen (falls noch nicht
    geschehen) gemeinsam live testen — beide deployt, aber Live-Bestätigung
    durch die Nutzerin steht für einzelne Details noch aus.
