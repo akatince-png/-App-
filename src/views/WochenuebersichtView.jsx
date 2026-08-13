@@ -404,6 +404,17 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
               });
             })()}
           </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 14, paddingTop: 12, borderTop: `1px solid ${cardBorder}` }}>
+            {Object.entries(KATEGORIE_META)
+              .filter(([kat]) => kat !== "notfallmodus")
+              .map(([kat, meta]) => (
+                <div key={kat} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: 4, background: meta.dot, flexShrink: 0 }} />
+                  <span style={{ fontSize: 10.5, color: textMuted }}>{meta.label}</span>
+                </div>
+              ))}
+          </div>
         </Card>
       )}
 
