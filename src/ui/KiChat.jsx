@@ -98,7 +98,7 @@ export default function KiChat({
   autoStart = false,
 }) {
   const appData = useAppData();
-  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext, spotifyPlaylists, spotifyAbspielen, isAdmin } = appData;
+  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext, spotifyPlaylists, spotifyAbspielen, isAdmin, coachWissen } = appData;
   // Coach-verwaltetes Modell (13.08.): der KI-Assistent ist für Coachees
   // nicht mehr Teil der App — die Kommunikation läuft über den echten Coach
   // (Nachrichtenfunktion, siehe useCoacheeNachrichten.js). Admin selbst UND
@@ -127,14 +127,25 @@ export default function KiChat({
     return `\n\nSPOTIFY: Die Person hat folgende Playlists hinterlegt:\n${liste}\nWenn die Person möchte, dass Musik/eine bestimmte Playlist läuft (egal ob direkt gefordert oder sinngemäß, z. B. "ich brauch was zum Runterkommen", "leg was fürs Training auf"), wähle die inhaltlich passendste Playlist aus der Liste und schreibe irgendwo in deiner Antwort GENAU EINMAL exakt: [[SPOTIFY_PLAY:<Name>]] mit dem exakten Namen aus der Liste. Erfinde keine Namen, die nicht in der Liste stehen, und nutze den Marker nur, wenn wirklich Musik gestartet werden soll.`;
   }, [spotifyPlaylists]);
 
+  // Wissens-Basis-Verwaltung (13.08., "Aka lernt mit", 0046_coach_wissen.sql):
+  // zusätzlich zur statischen Wissens-Basis (wissensBasisText(), .md-Dateien,
+  // braucht Deploy) trägt die Admin jetzt auch direkt aus der App neues
+  // Wissen ein — dasselbe bereich-Filtermuster wie bei adminNotizenKontext
+  // (kein bereich = überall relevant).
+  const coachWissenText = useMemo(() => {
+    const relevant = (coachWissen || []).filter((w) => !w.bereich || w.bereich === bereich);
+    if (!relevant.length) return "";
+    return `\n\nZUSÄTZLICHES WISSEN (von der Admin gesammelt, als Hintergrundwissen nutzen):\n${relevant.map((w) => `## ${w.titel}\n${w.text}`).join("\n\n")}`;
+  }, [coachWissen, bereich]);
+
   const hintergrundKontext = useMemo(() => {
     const hinweise = (adminNotizenKontext || []).filter((n) => !n.bereich || n.bereich === bereich);
     const hinweiseText = hinweise.length
       ? `\n\nHINWEISE FÜR DICH ALS ASSISTENT (nicht wörtlich vorlesen oder als "Hinweis" ankündigen, einfach natürlich ins Gespräch einbauen):\n${hinweise.map((h) => `- ${h.text}`).join("\n")}`
       : "";
-    return `${wissensBasisText()}\n\n${trackingZusammenfassung(appData)}${hinweiseText}${spotifyKontextText}`;
+    return `${wissensBasisText()}${coachWissenText}\n\n${trackingZusammenfassung(appData)}${hinweiseText}${spotifyKontextText}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, adminNotizenKontext, bereich, spotifyKontextText]);
+  }, [appData, adminNotizenKontext, bereich, spotifyKontextText, coachWissenText]);
   const [spotifyHinweis, setSpotifyHinweis] = useState(null);
   const [offen, setOffen] = useState(() => autoStart);
   const [verlauf, setVerlauf] = useState([]);

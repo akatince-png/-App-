@@ -27,7 +27,7 @@ const BEREICH_OPTIONEN = [
 // selbstständig mit der KI ihren Plan erstellen können. Sobald "Verwalten"
 // gedrückt wird, läuft die komplette App unverändert weiter, nur mit den
 // Daten der ausgewählten Person statt der eigenen (siehe AppDataContext.jsx).
-export default function AdminDashboardView({ onHome, onVerwalteAls }) {
+export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen }) {
   const { user } = useAuth();
   const [probanden, setProbanden] = useState([]);
   const [ladend, setLadend] = useState(true);
@@ -69,6 +69,14 @@ export default function AdminDashboardView({ onHome, onVerwalteAls }) {
         genauso einstellen wie sie selbst. Ein Banner oben zeigt dir jederzeit,
         wessen Konto du gerade bearbeitest, mit einem Knopf zurück hierher.
       </div>
+
+      {onOpenWissen && (
+        <div style={{ marginBottom: 14 }}>
+          <PrimaryButton variant="ghost" onClick={onOpenWissen}>
+            📚 Wissens-Basis verwalten
+          </PrimaryButton>
+        </div>
+      )}
 
       <TextInput value={suche} onChange={setSuche} placeholder="Suchen nach Name oder E-Mail…" />
 
