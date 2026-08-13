@@ -211,6 +211,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setCategoryZiel,
     trainingWochenplan,
     wochenplanHinzufuegen,
+    wochenplanBearbeiten,
     wochenplanEntfernen,
     erinnerungen,
     setErinnerung,
@@ -1154,6 +1155,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               <WochenplanEditor
                 trainingWochenplan={trainingWochenplan}
                 wochenplanHinzufuegen={wochenplanHinzufuegen}
+                wochenplanBearbeiten={wochenplanBearbeiten}
                 wochenplanEntfernen={wochenplanEntfernen}
                 titel={null}
               />

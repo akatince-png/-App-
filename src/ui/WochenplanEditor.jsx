@@ -23,7 +23,7 @@ function toggleInArray(arr, val) {
 // Kurzbeschreibung. Geteilt zwischen TrainingView (laufende Pflege) und dem
 // Onboarding-Trainingsschritt, damit beide Einstiegspunkte denselben
 // tatsächlichen Wochenplan bearbeiten.
-export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufuegen, wochenplanEntfernen, titel }) {
+export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufuegen, wochenplanBearbeiten, wochenplanEntfernen, titel }) {
   const { t, tLabel } = useT();
   const titelAnzeige = titel === undefined ? t("onboarding.training.wochenplan.titel") : titel;
 
@@ -39,6 +39,14 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
   const [warmup, setWarmup] = useState(LEERE_WARMUP);
   const [cooldown, setCooldown] = useState(LEERE_WARMUP);
   const [saving, setSaving] = useState(false);
+  // Statt Löschen + Neuanlegen lässt sich eine bestehende Einheit jetzt
+  // direkt bearbeiten (Nutzerinnen-Vorgabe, 13.08. — z. B. nachträglich
+  // Aufwärmen/Cool-down bei einer schon gespeicherten Einheit ergänzen).
+  // bearbeitenId != null: das Formular oben zeigt/speichert diese eine
+  // bestehende Zeile statt neue anzulegen; Wochentag-Auswahl wird dabei auf
+  // Einfachauswahl umgeschaltet, weil eine bestehende Zeile nur zu einem Tag
+  // gehört.
+  const [bearbeitenId, setBearbeitenId] = useState(null);
 
   const reset = () => {
     setWochentage([]);
@@ -47,6 +55,17 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
     setUebungenListe([{ ...LEERE_UEBUNG }]);
     setWarmup(LEERE_WARMUP);
     setCooldown(LEERE_WARMUP);
+    setBearbeitenId(null);
+  };
+
+  const starteBearbeiten = (e) => {
+    setBearbeitenId(e.id);
+    setWochentage([e.wochentag]);
+    setUhrzeit(e.uhrzeit || "08:00");
+    setArten(e.arten || []);
+    setUebungenListe(e.uebungenListe?.length ? e.uebungenListe.map((u) => ({ ...LEERE_UEBUNG, ...u })) : [{ ...LEERE_UEBUNG }]);
+    setWarmup(e.warmup || LEERE_WARMUP);
+    setCooldown(e.cooldown || LEERE_WARMUP);
   };
 
   const uebungAendern = (index, feld, wert) =>
@@ -54,14 +73,18 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
   const uebungHinzufuegen = () => setUebungenListe((prev) => [...prev, { ...LEERE_UEBUNG }]);
   const uebungEntfernen = (index) => setUebungenListe((prev) => prev.filter((_, i) => i !== index));
 
-  const hinzufuegen = async () => {
+  const speichern = async () => {
     if (!wochentage.length || !uhrzeit || saving) return;
     setSaving(true);
     const uebungenGefuellt = uebungenListe.filter((u) => u.name.trim());
-    // Nacheinander statt Promise.all, damit bei einem Fehler mitten in der
-    // Reihe nichts unbemerkt durcheinandergerät.
-    for (const tag of wochentage) {
-      await wochenplanHinzufuegen({ wochentag: tag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+    if (bearbeitenId) {
+      await wochenplanBearbeiten(bearbeitenId, { wochentag: wochentage[0], uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+    } else {
+      // Nacheinander statt Promise.all, damit bei einem Fehler mitten in der
+      // Reihe nichts unbemerkt durcheinandergerät.
+      for (const tag of wochentage) {
+        await wochenplanHinzufuegen({ wochentag: tag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+      }
     }
     setSaving(false);
     reset();
@@ -78,21 +101,23 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
       <Card style={{ marginBottom: 14 }}>
         <Label>{t("onboarding.training.einheit.wochentag.label")}</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
-          <Pill
-            label={t("onboarding.schlaf.alle")}
-            selected={wochentage.length === WOCHENTAGE.length}
-            onClick={() => setWochentage(wochentage.length === WOCHENTAGE.length ? [] : [...WOCHENTAGE])}
-          />
+          {!bearbeitenId && (
+            <Pill
+              label={t("onboarding.schlaf.alle")}
+              selected={wochentage.length === WOCHENTAGE.length}
+              onClick={() => setWochentage(wochentage.length === WOCHENTAGE.length ? [] : [...WOCHENTAGE])}
+            />
+          )}
           {WOCHENTAGE.map((tag) => (
             <Pill
               key={tag}
               label={tLabel(WOCHENTAGE_VOLL[tag])}
               selected={wochentage.includes(tag)}
-              onClick={() => setWochentage((prev) => toggleInArray(prev, tag))}
+              onClick={() => setWochentage(bearbeitenId ? [tag] : (prev) => toggleInArray(prev, tag))}
             />
           ))}
         </div>
-        {wochentage.length > 1 && (
+        {!bearbeitenId && wochentage.length > 1 && (
           <div style={{ fontSize: 11, color: textMuted, marginTop: -6, marginBottom: 8 }}>
             Wird für {wochentage.length} Tage gleichzeitig angelegt.
           </div>
@@ -155,27 +180,38 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={hinzufuegen}
-          disabled={!wochentage.length || !uhrzeit || saving}
-          className="mp-tap"
-          style={{
-            width: "100%",
-            marginTop: 16,
-            minHeight: 48,
-            padding: "12px",
-            borderRadius: 14,
-            border: "none",
-            background: !wochentage.length || !uhrzeit ? "#B7D8D1" : accentDark,
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: !wochentage.length || !uhrzeit ? "not-allowed" : "pointer",
-          }}
-        >
-          {t("onboarding.training.einheit.hinzufuegen")}
-        </button>
+        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+          {bearbeitenId && (
+            <button
+              type="button"
+              onClick={reset}
+              className="mp-tap"
+              style={{ flex: 1, minHeight: 48, padding: "12px", borderRadius: 14, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+            >
+              Abbrechen
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={speichern}
+            disabled={!wochentage.length || !uhrzeit || saving}
+            className="mp-tap"
+            style={{
+              flex: 2,
+              minHeight: 48,
+              padding: "12px",
+              borderRadius: 14,
+              border: "none",
+              background: !wochentage.length || !uhrzeit ? "#B7D8D1" : accentDark,
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: !wochentage.length || !uhrzeit ? "not-allowed" : "pointer",
+            }}
+          >
+            {bearbeitenId ? "Änderungen speichern" : t("onboarding.training.einheit.hinzufuegen")}
+          </button>
+        </div>
         {!wochentage.length && (
           <div style={{ fontSize: 11.5, color: danger, marginTop: 6, textAlign: "center" }}>Bitte oben zuerst mindestens einen Wochentag auswählen.</div>
         )}
@@ -213,13 +249,25 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
                         .join(" · ")}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => wochenplanEntfernen(e.id)}
-                    style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px", flexShrink: 0 }}
-                  >
-                    ×
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                    {wochenplanBearbeiten && (
+                      <button
+                        type="button"
+                        onClick={() => starteBearbeiten(e)}
+                        title="Bearbeiten"
+                        style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: "0 4px" }}
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => wochenplanEntfernen(e.id)}
+                      style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

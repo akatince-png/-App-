@@ -131,12 +131,39 @@ export function useTrainingTemplates(userId) {
     if (error) console.error(error);
   }, []);
 
+  // Bearbeitet eine bestehende Einheit, statt sie löschen + neu anlegen zu
+  // müssen (Nutzerinnen-Vorgabe, 13.08. — z. B. nachträglich Aufwärmen/
+  // Cool-down bei einer schon gespeicherten Einheit ergänzen).
+  const wochenplanBearbeiten = useCallback(async (id, einheit) => {
+    const row = {
+      wochentag: einheit.wochentag,
+      uhrzeit: einheit.uhrzeit || null,
+      arten: einheit.arten || [],
+      uebungen_liste: einheit.uebungenListe || [],
+      warmup_aktiv: !!einheit.warmup?.aktiv,
+      warmup_dauer_min: einheit.warmup?.dauerMin ? Number(einheit.warmup.dauerMin) : null,
+      warmup_beschreibung: einheit.warmup?.beschreibung || null,
+      cooldown_aktiv: !!einheit.cooldown?.aktiv,
+      cooldown_dauer_min: einheit.cooldown?.dauerMin ? Number(einheit.cooldown.dauerMin) : null,
+      cooldown_beschreibung: einheit.cooldown?.beschreibung || null,
+    };
+    const { data, error } = await supabase.from("training_wochenplan").update(row).eq("id", id).select().single();
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    const aktualisiert = rowToWochenplan(data);
+    setWochenplan((prev) => prev.map((w) => (w.id === id ? aktualisiert : w)));
+    return { ok: true, einheit: aktualisiert };
+  }, []);
+
   return {
     trainingTemplates: templates,
     templateSpeichern,
     templateEntfernen,
     trainingWochenplan: wochenplan,
     wochenplanHinzufuegen,
+    wochenplanBearbeiten,
     wochenplanEntfernen,
   };
 }

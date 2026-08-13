@@ -331,6 +331,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     templateSpeichern,
     trainingWochenplan,
     wochenplanHinzufuegen,
+    wochenplanBearbeiten,
     wochenplanEntfernen,
     aenderungVermerken,
   } = useAppData();
@@ -422,6 +423,12 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     return wochenplanHinzufuegen(einheit);
   };
 
+  const handleWochenplanBearbeiten = async (id, einheit) => {
+    const detail = [einheit.uhrzeit, einheit.arten.join(" + ")].filter(Boolean).join(" · ");
+    aenderungVermerken({ kategorie: "training", itemName: WOCHENTAGE_VOLL[einheit.wochentag], aktion: "geändert", detail });
+    return wochenplanBearbeiten(id, einheit);
+  };
+
   const handleWochenplanEntfernen = (id) => {
     const vorher = trainingWochenplan.find((w) => w.id === id);
     if (vorher) {
@@ -509,6 +516,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           <WochenplanEditor
             trainingWochenplan={trainingWochenplan}
             wochenplanHinzufuegen={handleWochenplanHinzufuegen}
+            wochenplanBearbeiten={handleWochenplanBearbeiten}
             wochenplanEntfernen={handleWochenplanEntfernen}
           />
 
