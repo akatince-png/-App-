@@ -7,18 +7,33 @@ import { accentDark, cardBorder, danger, textMuted } from "./theme";
 // Leere Übung: Name + Sätze/Wiederholungen + Pause zwischen Sätzen — dieselbe
 // Struktur überall, wo eine Liste einzelner Übungen mit eigenen Werten
 // gebraucht wird (echtes Trainingslog UND Wochenplan-Vorlage).
-// Gewicht: normalerweise EIN Wert für alle Sätze (gewicht) — optional lässt
-// sich stattdessen "pyramide" aktivieren, dann gibt es ein eigenes Gewicht
-// je Satz (gewichtProSatz), z. B. für steigende/fallende Pyramidensätze
+// Wiederholungen/Gewicht: normalerweise je EIN Wert für alle Sätze — optional
+// lässt sich stattdessen "pyramide" aktivieren, dann gibt es eigene
+// Wiederholungen UND ein eigenes Gewicht je Satz (wiederholungenProSatz/
+// gewichtProSatz), z. B. für steigende/fallende Pyramidensätze mit
+// gleichbleibendem Gewicht aber wechselnden Wiederholungen oder umgekehrt
 // (Nutzerinnen-Vorgabe, 13.08.).
-export const LEERE_UEBUNG = { name: "", saetze: "", wiederholungen: "", gewicht: "", pyramide: false, gewichtProSatz: [], pauseSekunden: "180" };
+export const LEERE_UEBUNG = {
+  name: "",
+  saetze: "",
+  wiederholungen: "",
+  gewicht: "",
+  pyramide: false,
+  wiederholungenProSatz: [],
+  gewichtProSatz: [],
+  pauseSekunden: "180",
+};
 
-// Text-Zusammenfassung des Gewichts einer Übung für Anzeige-Zeilen (Tagesplan,
-// Wochenplan-Liste, Protokoll) — normales Gewicht oder, bei Pyramide, alle
-// Satz-Gewichte durch "/" getrennt.
+// Text-Zusammenfassungen von Wiederholungen/Gewicht einer Übung für
+// Anzeige-Zeilen (Tagesplan, Wochenplan-Liste, Protokoll) — normaler Wert
+// oder, bei Pyramide, alle Satz-Werte durch "/" getrennt.
 export function uebungGewichtText(u) {
   if (u.pyramide && u.gewichtProSatz?.some((g) => g)) return u.gewichtProSatz.map((g) => g || "?").join("/");
   return u.gewicht || "";
+}
+export function uebungWiederholungenText(u) {
+  if (u.pyramide && u.wiederholungenProSatz?.some((w) => w)) return u.wiederholungenProSatz.map((w) => w || "?").join("/");
+  return u.wiederholungen || "";
 }
 
 // Übungsliste (Name + Sätze/Wdh/Gewicht + Pause) — geteilt zwischen
@@ -51,26 +66,40 @@ export default function UebungenEditor({ uebungen, optionen, gewichtPlatzhalter,
             <div style={{ flex: 1 }}>
               <NumberWheelField value={u.saetze} onChange={(v) => onAendern(i, "saetze", v)} min={1} max={20} placeholder="Sätze" />
             </div>
-            <div style={{ flex: 1 }}>
-              <NumberWheelField value={u.wiederholungen} onChange={(v) => onAendern(i, "wiederholungen", v)} min={1} max={50} placeholder="Wdh." />
-            </div>
             {!u.pyramide && (
-              <div style={{ flex: 1 }}>
-                <TextInput value={u.gewicht} onChange={(v) => onAendern(i, "gewicht", v)} placeholder={gewichtPlatzhalter} />
-              </div>
+              <>
+                <div style={{ flex: 1 }}>
+                  <NumberWheelField value={u.wiederholungen} onChange={(v) => onAendern(i, "wiederholungen", v)} min={1} max={50} placeholder="Wdh." />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <TextInput value={u.gewicht} onChange={(v) => onAendern(i, "gewicht", v)} placeholder={gewichtPlatzhalter} />
+                </div>
+              </>
             )}
           </div>
           <CheckRow
-            label="Gewicht ändert sich pro Satz (Pyramide)"
+            label="Wiederholungen und/oder Gewicht ändern sich pro Satz (Pyramide)"
             checked={!!u.pyramide}
             onToggle={() => onAendern(i, "pyramide", !u.pyramide)}
           />
           {u.pyramide && (
             <div style={{ marginTop: 8, marginBottom: 6 }}>
-              <Label>Gewicht je Satz — falls schon bekannt</Label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {Array.from({ length: Number(u.saetze) || 1 }).map((_, satzIndex) => (
-                  <div key={satzIndex} style={{ width: 90 }}>
+              <Label>Je Satz — falls schon bekannt, sonst leer lassen</Label>
+              {Array.from({ length: Number(u.saetze) || 1 }).map((_, satzIndex) => (
+                <div key={satzIndex} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ width: 46, fontSize: 11, color: textMuted, flexShrink: 0 }}>Satz {satzIndex + 1}</div>
+                  <div style={{ flex: 1 }}>
+                    <TextInput
+                      value={u.wiederholungenProSatz?.[satzIndex] || ""}
+                      onChange={(v) => {
+                        const neu = [...(u.wiederholungenProSatz || [])];
+                        neu[satzIndex] = v;
+                        onAendern(i, "wiederholungenProSatz", neu);
+                      }}
+                      placeholder="Wdh."
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
                     <TextInput
                       value={u.gewichtProSatz?.[satzIndex] || ""}
                       onChange={(v) => {
@@ -78,12 +107,14 @@ export default function UebungenEditor({ uebungen, optionen, gewichtPlatzhalter,
                         neu[satzIndex] = v;
                         onAendern(i, "gewichtProSatz", neu);
                       }}
-                      placeholder={`Satz ${satzIndex + 1}`}
+                      placeholder={gewichtPlatzhalter}
                     />
                   </div>
-                ))}
+                </div>
+              ))}
+              <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>
+                Nur eins von beiden ausfüllen geht auch — z. B. gleiches Gewicht, aber wechselnde Wiederholungen.
               </div>
-              <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>Optional — leer lassen, was du noch nicht weißt.</div>
             </div>
           )}
           <Label>Pause zwischen Sätzen (Sek.)</Label>
