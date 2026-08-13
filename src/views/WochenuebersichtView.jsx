@@ -357,9 +357,12 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                 if (!d) return <div key={`empty-${idx}`}></div>;
 
                 const items = buildDayItems(d, appData);
-                const dotsToShow = items
-                  .filter((item) => ["peptide", "hormon", "supplement", "medikament"].includes(item.kategorie))
-                  .slice(0, 5);
+                // Alle geplanten Kategorien zeigen ihren Punkt, nicht nur
+                // Substanzen — Nutzerinnen-Vorgabe (13.08.): auch Training
+                // (und Schlaf/Hydration/... ) sollen im Monatsraster farblich
+                // erkennbar sein, nicht nur in der Tages-/Wochenansicht.
+                // "notfallmodus" bewusst ausgenommen, kein geplanter Termin.
+                const dotsToShow = items.filter((item) => item.kategorie !== "notfallmodus").slice(0, 6);
 
                 return (
                   <div
