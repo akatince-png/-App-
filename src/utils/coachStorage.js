@@ -55,6 +55,31 @@ export function saveVorlesenAktiv(aktiv) {
   }
 }
 
+// Ob die Person Aka schon einmal "kennengelernt" hat — ab dann fällt das
+// "Hi, ich bin <Name>!" am Anfang jeder Begrüßung weg (Nutzerinnen-Vorgabe,
+// 13.08.: das wiederholte Vorstellen bei jedem Öffnen wirkte unnötig,
+// sobald man sich schon kennt). Bewusst global statt je Bereich — man lernt
+// Aka einmal kennen, nicht neu in jedem der 9 Lebensbereiche.
+const VORGESTELLT_KEY = "kiCoachVorgestellt";
+
+export function getCoachVorgestellt() {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(VORGESTELLT_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function saveCoachVorgestellt() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(VORGESTELLT_KEY, "true");
+  } catch {
+    // LocalStorage nicht verfügbar — gilt dann nur für diese Sitzung.
+  }
+}
+
 // Globaler An/Aus-Schalter für den Assistenten (Einstellungen → "Mehr") —
 // Default AN. Bei "Aus" rendert KiChat.jsx überhaupt nicht mehr (kein
 // schwebender Orb, kein Chat-Fenster) — die manuellen Formulare bleiben

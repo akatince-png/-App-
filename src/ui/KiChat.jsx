@@ -4,7 +4,7 @@ import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted
 import CoachOrb from "./CoachOrb";
 import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
-import { getCoachName, getVorlesenAktiv, getKiAktiv } from "../utils/coachStorage";
+import { getCoachName, getVorlesenAktiv, getKiAktiv, getCoachVorgestellt, saveCoachVorgestellt } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
 import { wissensBasisText } from "../utils/wissensBasis";
 import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
@@ -140,6 +140,20 @@ export default function KiChat({
   const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const [streamText, setStreamText] = useState("");
   const [erkannterBereich, setErkannterBereich] = useState(null);
+  // Beim allerersten Kontakt stellt sich Aka noch per Namen vor ("Hi, ich
+  // bin Aka!"); ab dann (getCoachVorgestellt()) wird genau dieser Anfang
+  // aus jeder künftigen Begrüßung rausgeschnitten — einmal berechnet bei
+  // Erststart dieser Karte, damit sich die Anzeige nicht mitten in der
+  // Sitzung nochmal ändert.
+  const [effektiveEinleitung] = useState(() => {
+    if (!einleitung) return einleitung;
+    const prefix = `Hi, ich bin ${getCoachName()}! `;
+    return getCoachVorgestellt() && einleitung.startsWith(prefix) ? einleitung.slice(prefix.length) : einleitung;
+  });
+  useEffect(() => {
+    if (einleitung) saveCoachVorgestellt();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const stopErkennungRef = useRef(null);
   const verlaufGeladenRef = useRef(false);
   const eingeleitetRef = useRef(false);
@@ -304,8 +318,8 @@ export default function KiChat({
       altVerlaufBisRef.current = gespeichert.length;
     }
     const kannHoeren = spracherkennungVerfuegbar();
-    if (vorlesenAktiv && einleitung) {
-      sprich(einleitung, { onEnde: () => kannHoeren && mikrofonStarten() });
+    if (vorlesenAktiv && effektiveEinleitung) {
+      sprich(effektiveEinleitung, { onEnde: () => kannHoeren && mikrofonStarten() });
     } else if (kannHoeren) {
       mikrofonStarten();
     }
@@ -342,7 +356,7 @@ export default function KiChat({
     }
   };
 
-  const alleNachrichten = einleitung ? [{ rolle: "coach", text: einleitung }, ...verlauf] : verlauf;
+  const alleNachrichten = effektiveEinleitung ? [{ rolle: "coach", text: effektiveEinleitung }, ...verlauf] : verlauf;
   const orbZustand = hoert ? "hoert" : laden ? (streamText ? "spricht" : "denkt") : "ruhe";
   // Nur Nachrichten AUS DIESER Sitzung (nicht der geladene alte Verlauf)
   // treiben die große, prominente Anzeige — sonst wirkt jedes Öffnen wie
@@ -352,7 +366,7 @@ export default function KiChat({
   const neueSitzungVerlauf = verlauf.slice(altVerlaufBisRef.current);
   const letzteNutzerNachricht = [...neueSitzungVerlauf].reverse().find((n) => n.rolle === "nutzer");
   const letzteCoachNachricht = [...neueSitzungVerlauf].reverse().find((n) => n.rolle === "coach");
-  const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || einleitung || "";
+  const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || effektiveEinleitung || "";
   const zeigeUebernehmenKnopf = onUebernehmen && neueSitzungVerlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
   const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel || `An ${getCoachName()} übermitteln`;
 
