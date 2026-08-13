@@ -151,6 +151,14 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
 
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
   const [selectedDate, setSelectedDate] = useState(new Date());
+  // Morgen-/Abendroutine: rein visuelle Gruppierung der ohnehin geplanten
+  // Punkte nach Uhrzeit, kein eigenes Datenmodell — zugeklappt nur eine
+  // Zusammenfassung, damit ein voller Tag (Tageslicht + Supplemente +
+  // Training + ...) nicht als lange Einzelliste wirkt (Nutzerinnen-Vorgabe,
+  // 13.08.). Standardmäßig zugeklappt, "Sonstige Zeiten"-Punkte (keine feste
+  // Uhrzeit) bleiben bewusst außen vor, da nicht eindeutig morgens/abends.
+  const [morgenOffen, setMorgenOffen] = useState(false);
+  const [abendOffen, setAbendOffen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [feedbackKategorie, setFeedbackKategorie] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({
@@ -286,15 +294,29 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
 
-  const buckets = useMemo(() => {
+  const bucketsFor = useCallback((items) => {
     const map = new Map();
-    tagesItems.forEach((item) => {
+    items.forEach((item) => {
       const key = item.hour || "";
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(item);
     });
     return Array.from(map.entries()).sort(([a], [b]) => (a || "99").localeCompare(b || "99"));
-  }, [tagesItems]);
+  }, []);
+
+  const buckets = useMemo(() => bucketsFor(tagesItems), [tagesItems, bucketsFor]);
+
+  // Morgens: vor 11 Uhr. Abends: ab 18 Uhr. Ohne feste Uhrzeit ("Sonstige
+  // Zeiten") gehört zu keiner Routine, da nicht eindeutig zuordenbar.
+  const morgenItems = useMemo(() => tagesItems.filter((i) => i.hour && i.hour < "11"), [tagesItems]);
+  const abendItems = useMemo(() => tagesItems.filter((i) => i.hour && i.hour >= "18"), [tagesItems]);
+  const restItems = useMemo(() => tagesItems.filter((i) => !i.hour || (i.hour >= "11" && i.hour < "18")), [tagesItems]);
+  const restBuckets = useMemo(() => bucketsFor(restItems), [restItems, bucketsFor]);
+
+  function routineZusammenfassung(items) {
+    const kategorien = [...new Set(items.map((i) => KATEGORIE[i.kategorie]?.label).filter(Boolean))];
+    return `${items.length} Schritt${items.length === 1 ? "" : "e"}${kategorien.length ? ` · ${kategorien.join(", ")}` : ""}`;
+  }
 
   // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick
   // erkennbar, ohne die ganze Liste durchgehen zu müssen. Nur relevant, wenn
@@ -308,6 +330,105 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   }, [selectedDate, buckets]);
 
   const erledigtCount = tagesItems.filter((i) => i.done).length;
+
+  // Rendert eine Liste von Stunden-Blöcken (siehe bucketsFor) — geteilt
+  // zwischen der normalen Tagesansicht und den aufgeklappten Morgen-/
+  // Abendroutine-Abschnitten, damit beide exakt dieselbe Zeilen-Darstellung
+  // (inkl. Bestätigen/Bearbeiten/Feedback) nutzen.
+  function renderZeitbloecke(bucketsListe) {
+    return bucketsListe.map(([hour, entries]) => {
+      const istJetzt = hour === jetztHour;
+      const offeneSupplemente = entries.filter((e) => e.kategorie === "supplement" && !e.done);
+      return (
+        <React.Fragment key={hour || "sonstige"}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
+              {istJetzt && (
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: accent, padding: "2px 8px", borderRadius: 8 }}>
+                  JETZT
+                </span>
+              )}
+            </div>
+            {offeneSupplemente.length > 1 && (
+              <button
+                className="mp-tap"
+                onClick={() =>
+                  confirmAlleTageszeit(
+                    toLocalISODate(selectedDate),
+                    offeneSupplemente[0].uhrzeit,
+                    offeneSupplemente.map((e) => e.refId)
+                  )
+                }
+                style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+              >
+                Alle bestätigen
+              </button>
+            )}
+          </div>
+          <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
+            {entries.map((item, i) => {
+              const k = KATEGORIE[item.kategorie];
+              const isOpen = feedbackOpen === item.key;
+              return (
+                <div key={item.key} style={{ padding: "12px 0", borderBottom: i < entries.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 14.5, fontWeight: 700 }}>
+                          {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>}
+                        </div>
+                        {item.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
+                        <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "2px 8px", borderRadius: 8, marginTop: 4 }}>
+                          {k.label}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      {item.kategorie !== "training" && onEditItem && (
+                        <button
+                          className="mp-tap"
+                          onClick={() => onEditItem(item.kategorie, item.refId)}
+                          title="Bearbeiten"
+                          style={{ width: 32, height: 32, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 13, cursor: "pointer" }}
+                        >
+                          ✏️
+                        </button>
+                      )}
+                      {item.done ? (
+                        <StatusBadge status="erledigt" />
+                      ) : (
+                        <button
+                          className="mp-tap"
+                          onClick={item.onConfirm}
+                          style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                        >
+                          {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {["peptid", "hormon", "supplement"].includes(item.kategorie) && isOpen && (
+                    <FeedbackPanel
+                      item={item}
+                      kategorie={item.kategorie}
+                      draftFeedback={draftFeedback}
+                      setDraftFeedback={setDraftFeedback}
+                      toggleDraftNebenwirkung={toggleDraftNebenwirkung}
+                      onSkip={() => handleSkipFeedback(item.doseRef)}
+                      onSave={() => handleSaveFeedback(item.doseRef)}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </Card>
+        </React.Fragment>
+      );
+    });
+  }
 
   return (
     <Shell>
@@ -400,98 +521,39 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
             </Card>
           )}
 
-          {buckets.map(([hour, entries]) => {
-            const istJetzt = hour === jetztHour;
-            const offeneSupplemente = entries.filter((e) => e.kategorie === "supplement" && !e.done);
-            return (
-            <React.Fragment key={hour || "sonstige"}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
-                  {istJetzt && (
-                    <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: accent, padding: "2px 8px", borderRadius: 8 }}>
-                      JETZT
-                    </span>
-                  )}
+          {morgenItems.length > 0 && (
+            <Card style={{ marginBottom: 16 }}>
+              <button
+                className="mp-tap"
+                onClick={() => setMorgenOffen((o) => !o)}
+                style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
+              >
+                <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌅 Morgenroutine</div>
+                <div style={{ fontSize: 11.5, color: textMuted }}>
+                  {routineZusammenfassung(morgenItems)} {morgenOffen ? "▲" : "▼"}
                 </div>
-                {offeneSupplemente.length > 1 && (
-                  <button
-                    className="mp-tap"
-                    onClick={() =>
-                      confirmAlleTageszeit(
-                        toLocalISODate(selectedDate),
-                        offeneSupplemente[0].uhrzeit,
-                        offeneSupplemente.map((e) => e.refId)
-                      )
-                    }
-                    style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
-                  >
-                    Alle bestätigen
-                  </button>
-                )}
-              </div>
-              <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
-                {entries.map((item, i) => {
-                  const k = KATEGORIE[item.kategorie];
-                  const isOpen = feedbackOpen === item.key;
-                  return (
-                    <div key={item.key} style={{ padding: "12px 0", borderBottom: i < entries.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
-                          <div>
-                            <div style={{ fontSize: 14.5, fontWeight: 700 }}>
-                              {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>}
-                            </div>
-                            {item.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
-                            <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "2px 8px", borderRadius: 8, marginTop: 4 }}>
-                              {k.label}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                          {item.kategorie !== "training" && onEditItem && (
-                            <button
-                              className="mp-tap"
-                              onClick={() => onEditItem(item.kategorie, item.refId)}
-                              title="Bearbeiten"
-                              style={{ width: 32, height: 32, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 13, cursor: "pointer" }}
-                            >
-                              ✏️
-                            </button>
-                          )}
-                          {item.done ? (
-                            <StatusBadge status="erledigt" />
-                          ) : (
-                            <button
-                              className="mp-tap"
-                              onClick={item.onConfirm}
-                              style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
-                            >
-                              {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
+              </button>
+              {morgenOffen && <div style={{ marginTop: 12 }}>{renderZeitbloecke(bucketsFor(morgenItems))}</div>}
+            </Card>
+          )}
 
-                      {["peptid", "hormon", "supplement"].includes(item.kategorie) && isOpen && (
-                        <FeedbackPanel
-                          item={item}
-                          kategorie={item.kategorie}
-                          draftFeedback={draftFeedback}
-                          setDraftFeedback={setDraftFeedback}
-                          toggleDraftNebenwirkung={toggleDraftNebenwirkung}
-                          onSkip={() => handleSkipFeedback(item.doseRef)}
-                          onSave={() => handleSaveFeedback(item.doseRef)}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </Card>
-            </React.Fragment>
-            );
-          })}
+          {abendItems.length > 0 && (
+            <Card style={{ marginBottom: 16 }}>
+              <button
+                className="mp-tap"
+                onClick={() => setAbendOffen((o) => !o)}
+                style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
+              >
+                <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌙 Abendroutine</div>
+                <div style={{ fontSize: 11.5, color: textMuted }}>
+                  {routineZusammenfassung(abendItems)} {abendOffen ? "▲" : "▼"}
+                </div>
+              </button>
+              {abendOffen && <div style={{ marginTop: 12 }}>{renderZeitbloecke(bucketsFor(abendItems))}</div>}
+            </Card>
+          )}
+
+          {renderZeitbloecke(restBuckets)}
         </>
       )}
 
