@@ -12,6 +12,12 @@ export function useSpotifyVerbindung(userId) {
   const [spotifyAutoPlayToken, setSpotifyAutoPlayToken] = useState(null);
   const [spotifyTestet, setSpotifyTestet] = useState(false);
   const [spotifyFehler, setSpotifyFehler] = useState(null);
+  // Getrennt von spotifyFehler (Wiedergabefehler): der Fehler beim
+  // Verbinden selbst (spotifyCodeAustauschen in AuthenticatedApp.jsx) wurde
+  // bisher nur in der Browser-Konsole geloggt und war für die Nutzerin
+  // unsichtbar — "es verbindet sich nicht mehr" ließ sich so nicht
+  // diagnostizieren. Jetzt in MehrTab.jsx sichtbar.
+  const [spotifyVerbindungFehler, setSpotifyVerbindungFehler] = useState(null);
   // Anlass → zugeordnete Playlist (13.08., Nachtrag): { morgenroutine:
   // { playlistId, name, uri }, abendroutine: {...}, training: {...},
   // gewohnheiten: {...} } — siehe 0048_spotify_anlass_playlists.sql.
@@ -142,6 +148,8 @@ export function useSpotifyVerbindung(userId) {
     spotifyAbspielen,
     spotifyTestet,
     spotifyFehler,
+    spotifyVerbindungFehler,
+    setSpotifyVerbindungFehler,
     spotifyVerbindungNeuLaden,
     spotifyAutoPlayToken,
     spotifyAutoPlayTokenErzeugen,

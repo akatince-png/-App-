@@ -61,6 +61,7 @@ export default function AuthenticatedApp() {
     isAdmin,
     userId,
     spotifyVerbindungNeuLaden,
+    setSpotifyVerbindungFehler,
   } = appData;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
@@ -76,9 +77,13 @@ export default function AuthenticatedApp() {
     const code = params.get("code");
     if (!code || params.get("state") !== "aka_spotify_connect" || !userId) return;
     window.history.replaceState({}, "", window.location.pathname);
+    setSpotifyVerbindungFehler?.(null);
     spotifyCodeAustauschen(code, userId)
       .then(() => spotifyVerbindungNeuLaden?.())
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        setSpotifyVerbindungFehler?.(err.message || "Verbindung mit Spotify fehlgeschlagen.");
+      })
       .finally(() => setView("mehr"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);

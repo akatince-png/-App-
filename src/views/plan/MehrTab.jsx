@@ -33,6 +33,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
     spotifyFehler,
     spotifyAutoPlayToken,
     spotifyAutoPlayTokenErzeugen,
+    spotifyVerbindungFehler,
   } = useAppData();
   const { lang, setLang } = useLanguage();
   const { t, tLabel } = useT();
@@ -269,6 +270,9 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
                 Mit Spotify verbinden
               </button>
             </a>
+            {spotifyVerbindungFehler && (
+              <div style={{ fontSize: 12, color: danger, marginTop: 10, lineHeight: 1.5 }}>{spotifyVerbindungFehler}</div>
+            )}
           </>
         ) : (
           <>
