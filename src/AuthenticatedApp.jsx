@@ -7,6 +7,7 @@ import { useAdmin } from "./context/AdminContext";
 import HomeView from "./views/HomeView";
 import AdminDashboardView from "./views/admin/AdminDashboardView";
 import AdminWissenView from "./views/admin/AdminWissenView";
+import AdminFormulareView from "./views/admin/AdminFormulareView";
 import LexikonView from "./views/LexikonView";
 import TagesplanView from "./views/TagesplanView";
 import PlanView from "./views/plan/PlanView";
@@ -178,9 +179,18 @@ export default function AuthenticatedApp() {
     // key={proband?.id || "self"}-Remount in App.jsx sorgt dafür, dass
     // dieser view-State beim Betreten/Verlassen des Verwalten-als-Modus
     // ohnehin zurückgesetzt wird.
-    screen = <AdminDashboardView onHome={() => setView("home")} onVerwalteAls={verwalteAls} onOpenWissen={() => setView("admin-wissen")} />;
+    screen = (
+      <AdminDashboardView
+        onHome={() => setView("home")}
+        onVerwalteAls={verwalteAls}
+        onOpenWissen={() => setView("admin-wissen")}
+        onOpenFormulare={() => setView("admin-formulare")}
+      />
+    );
   } else if (view === "admin-wissen") {
     screen = <AdminWissenView onHome={() => setView("admin")} />;
+  } else if (view === "admin-formulare") {
+    screen = <AdminFormulareView onHome={() => setView("admin")} />;
   } else {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }
