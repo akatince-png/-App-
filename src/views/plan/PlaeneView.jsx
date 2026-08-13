@@ -13,8 +13,18 @@ import TrainingView from "../TrainingView";
 import SupplementeView from "../SupplementeView";
 import MedikamenteView from "../MedikamenteView";
 import WochenuebersichtView from "../WochenuebersichtView";
+import RoutineTabView from "../RoutineTabView";
+
+function MorgenroutineTabView(props) {
+  return <RoutineTabView routine="morgen" {...props} />;
+}
+function AbendroutineTabView(props) {
+  return <RoutineTabView routine="abend" {...props} />;
+}
 
 const VIEWS = {
+  morgenroutine: MorgenroutineTabView,
+  abendroutine: AbendroutineTabView,
   schlaf: SchlafView,
   hydration: HydrationView,
   tageslicht: TageslichtView,
@@ -42,11 +52,18 @@ const TAB_ZU_KATEGORIE = {
   medikamente: "hormon",
 };
 
-// Eigene Farbe für den Reiter-Button von "wochenuebersicht" — bewusst NICHT
-// die generische Akzentfarbe (`accent`), weil genau die schon fest an
-// "Medikamente" vergeben ist (KATEGORIE_META.hormon.dot) und beide Reiter
-// sonst beim Anwählen identisch aussehen (bestätigter Bug, 29.07.).
-const WOCHENUEBERSICHT_FARBE = "#64748B";
+// Eigene Farben für Reiter-Buttons ohne KATEGORIE_META-Eintrag: bewusst
+// NICHT die generische Akzentfarbe (`accent`), sonst sehen mehrere Reiter
+// beim Anwählen identisch aus (bestätigter Bug, 29.07., damals Peptide vs.
+// Wochenübersicht). Morgen-/Abendroutine bekommen hier ebenfalls keinen
+// KATEGORIE_META-Eintrag (siehe RoutineTabView.jsx) — sonst tauchen sie als
+// tote Einträge in der Monatsansicht-Farblegende auf, weil buildDayItems()
+// nie Tagesplan-Punkte mit dieser Kategorie erzeugt.
+const EIGENE_TAB_FARBE = {
+  wochenuebersicht: "#64748B",
+  morgenroutine: "#E08A3E",
+  abendroutine: "#4E6690",
+};
 
 // Eigene, kleine Liste statt eines einzelnen Knopfes (Nutzerinnen-Vorgabe,
 // 29.07.): Gewohnheiten lassen sich hier NICHT wie die 9 Reiter oben mit
@@ -115,7 +132,7 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
       <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Pläne</div>
       <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
         {PLAENE_TABS.map((t) => {
-          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || WOCHENUEBERSICHT_FARBE;
+          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || EIGENE_TAB_FARBE[t.id] || "#64748B";
           const aktiv = planeTab === t.id;
           return (
             <button

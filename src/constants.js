@@ -435,11 +435,17 @@ export const F_SLATE = ["#5B7DAE", "#3A5A87"];
 export const F_WARM = ["#C98A4A", "#A96B2E"];
 export const F_PLUM = ["#9B85B8", "#786198"];
 
-// Metadaten für die 7 Reiter im "Alle Pläne"-Hub (PlaeneView.jsx) — alles,
+// Metadaten für die Reiter im "Alle Pläne"-Hub (PlaeneView.jsx) — alles,
 // was aktiv mit Zeiten/Zielen geplant wird (Grundlagen zuerst, dann
 // Substanzen aufsteigend nach Eingriffstiefe). Ersetzt die frühere
 // DASHBOARD_TIERS-"tracker"-Gruppe, jetzt als Reiter statt Dashboard-Kacheln.
+// Morgen-/Abendroutine stehen bewusst ganz vorne (Nutzerinnen-Vorgabe,
+// 13.08.): der eigentliche Ursprungszweck der App (ADHS-gerechte
+// Tagesstruktur) soll sichtbar Priorität vor den Substanz-Plänen haben —
+// zusätzlich zu den aufklappbaren Karten im Tagesplan, nicht statt derer.
 export const PLAENE_TABS = [
+  { id: "morgenroutine", label: "Morgen", icon: "sun", grad: F_WARM },
+  { id: "abendroutine", label: "Abend", icon: "moon", grad: F_PLUM },
   { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
   { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },
   { id: "tageslicht", label: "Tageslicht", icon: "sun", grad: F_WARM },

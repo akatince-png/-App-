@@ -16,6 +16,14 @@ function rowToDurchlauf(r) {
   };
 }
 
+function rowToEinstellung(r) {
+  return {
+    routine: r.routine,
+    startZeit: r.start_zeit ? r.start_zeit.slice(0, 5) : "",
+    endZeit: r.end_zeit ? r.end_zeit.slice(0, 5) : "",
+  };
+}
+
 // Geführte Morgen-/Abendroutine (Phase 1, 13.08.) — Konfiguration
 // (routine_schritte: was gehört dazu, Reihenfolge, geplante Dauer) getrennt
 // von den tatsächlichen Durchläufen (routine_durchlaeufe: was wurde wann
@@ -23,23 +31,51 @@ function rowToDurchlauf(r) {
 export function useRoutinen(userId) {
   const [schritte, setSchritte] = useState([]);
   const [durchlaeufe, setDurchlaeufe] = useState([]);
+  const [einstellungen, setEinstellungen] = useState({});
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: s }, { data: d }] = await Promise.all([
+      const [{ data: s }, { data: d }, { data: e }] = await Promise.all([
         supabase.from("routine_schritte").select("*").eq("user_id", userId).order("routine").order("reihenfolge"),
         supabase.from("routine_durchlaeufe").select("*").eq("user_id", userId).order("gestartet_um", { ascending: false }),
+        supabase.from("routine_einstellungen").select("*").eq("user_id", userId),
       ]);
       if (cancelled) return;
       if (s) setSchritte(s.map(rowToSchritt));
       if (d) setDurchlaeufe(d.map(rowToDurchlauf));
+      if (e) {
+        const next = {};
+        e.map(rowToEinstellung).forEach((einst) => (next[einst.routine] = einst));
+        setEinstellungen(next);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [userId]);
+
+  // Zeitrahmen der Routine (z. B. Morgenroutine 6:00-9:00 Uhr) — Grundlage
+  // für die Überlappungs-Erkennung mit anderen geplanten Punkten.
+  const zeitrahmenSetzen = useCallback(
+    async (routine, startZeit, endZeit) => {
+      const row = { user_id: userId, routine, start_zeit: startZeit || null, end_zeit: endZeit || null };
+      const { data, error } = await supabase
+        .from("routine_einstellungen")
+        .upsert(row, { onConflict: "user_id,routine" })
+        .select()
+        .single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      const neu = rowToEinstellung(data);
+      setEinstellungen((prev) => ({ ...prev, [routine]: neu }));
+      return { ok: true, einstellung: neu };
+    },
+    [userId]
+  );
 
   const schrittHinzufuegen = useCallback(
     async (routine, name, dauerMin) => {
@@ -121,9 +157,11 @@ export function useRoutinen(userId) {
   return {
     routineSchritte: schritte,
     routineDurchlaeufe: durchlaeufe,
+    routineEinstellungen: einstellungen,
     routineSchrittHinzufuegen: schrittHinzufuegen,
     routineSchrittEntfernen: schrittEntfernen,
     routineSchrittVerschieben: schrittVerschieben,
     routineDurchlaufSpeichern: durchlaufSpeichern,
+    routineZeitrahmenSetzen: zeitrahmenSetzen,
   };
 }
