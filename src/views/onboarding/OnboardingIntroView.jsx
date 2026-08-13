@@ -19,10 +19,15 @@ import { useT } from "../../i18n/translate";
  *   automatisch zu, siehe OnboardingCoachFreitext.jsx.
  * Beide decken direkt auch die Ziele- und Profil-Schritte mit ab —
  * OnboardingFlow.jsx überspringt diese Phasen dann.
+ *
+ * `nurManuell` (Coach-verwaltetes Modell, 13.08.): Coachees bekommen den
+ * KI-Assistenten gar nicht erst zu sehen (siehe KiChat.jsx), deshalb macht
+ * hier auch die Auswahl zwischen den beiden Coach-Begleitungs-Varianten
+ * keinen Sinn — die Namens-Eingabe erscheint dann direkt ohne Zwischenfrage.
  */
-export default function OnboardingIntroView({ onDone, onBack, onCancel }) {
+export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManuell = false }) {
   const { t, tLabel } = useT();
-  const [modus, setModus] = useState(null); // null (Frage noch offen) | "manuell" | "begleitet-schritt" | "begleitet-frei"
+  const [modus, setModus] = useState(() => (nurManuell ? "manuell" : null)); // null (Frage noch offen) | "manuell" | "begleitet-schritt" | "begleitet-frei"
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const coachName = getCoachName();
@@ -129,7 +134,7 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel }) {
   return (
     <Shell>
       <OnboardingNavArrows
-        onBack={() => setModus(null)}
+        onBack={() => (nurManuell ? onBack?.() : setModus(null))}
         backLabel={tLabel("Zurück")}
         onForward={handleContinue}
         forwardLabel={loading ? "Einen Moment..." : tLabel("Weiter")}

@@ -4,6 +4,7 @@ import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted
 import CoachOrb from "./CoachOrb";
 import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
+import { useAdmin } from "../context/AdminContext";
 import { getCoachName, getVorlesenAktiv, getKiAktiv, getCoachVorgestellt, saveCoachVorgestellt } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
 import { wissensBasisText } from "../utils/wissensBasis";
@@ -97,7 +98,14 @@ export default function KiChat({
   autoStart = false,
 }) {
   const appData = useAppData();
-  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext, spotifyPlaylists, spotifyAbspielen } = appData;
+  const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext, spotifyPlaylists, spotifyAbspielen, isAdmin } = appData;
+  // Coach-verwaltetes Modell (13.08.): der KI-Assistent ist für Coachees
+  // nicht mehr Teil der App — die Kommunikation läuft über den echten Coach
+  // (Nachrichtenfunktion, siehe useCoacheeNachrichten.js). Admin selbst UND
+  // der "Verwalten als"-Modus behalten den Assistenten (dieselbe Logik wie
+  // in OnboardingFlow.jsx/AuthenticatedApp.jsx).
+  const { proband } = useAdmin();
+  const istAdminModus = proband !== null || isAdmin;
   // "Background Brain" für den ADHS Coach — statische Wissens-Basis (siehe
   // src/wissen/) + aktuelle Trackingdaten-Zusammenfassung, automatisch an
   // JEDE Coach-Anfrage angehängt, in allen Bereichen (nicht nur Home) —
@@ -374,6 +382,7 @@ export default function KiChat({
   // weder der schwebende Orb noch ein offenes Chat-Fenster — die manuellen
   // Formulare rund um diese Stelle bleiben davon komplett unberührt.
   if (!getKiAktiv()) return null;
+  if (!istAdminModus) return null;
 
   if (!offen) {
     return (

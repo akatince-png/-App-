@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Shell, Card } from "../ui/primitives";
+import { Shell, Card, TextArea, PrimaryButton } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
@@ -8,6 +8,7 @@ import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
@@ -78,6 +79,57 @@ const ORDNER = [
   { id: "mehr", labelKey: "home.ordner.mehr.label", descKey: "home.ordner.mehr.desc", icon: "sliders" },
 ];
 
+// Ersetzt für Coachees (istAdminModus === false) den KI-Assistenten als
+// Kontaktweg (13.08., Coach-verwaltetes Modell) — eine einfache Nachricht
+// an den echten Coach statt an Aka, siehe useCoacheeNachrichten.js.
+function NachrichtAnCoachCard({ nachrichten, onSenden }) {
+  const [text, setText] = useState("");
+  const [senden, setSenden] = useState(false);
+  const [fehler, setFehler] = useState(null);
+  const [erfolg, setErfolg] = useState(false);
+
+  const absenden = async () => {
+    setFehler(null);
+    setErfolg(false);
+    setSenden(true);
+    const result = await onSenden(text);
+    setSenden(false);
+    if (!result?.ok) {
+      setFehler(result?.error || "Senden fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    setText("");
+    setErfolg(true);
+  };
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
+        Frag deinen Coach etwas oder gib eine Rückmeldung — er meldet sich bei dir.
+      </div>
+      <Card>
+        <TextArea value={text} onChange={setText} placeholder="Deine Nachricht an deinen Coach ..." />
+        <div style={{ marginTop: 10 }}>
+          <PrimaryButton onClick={absenden} disabled={senden || !text.trim()}>
+            {senden ? "Wird gesendet …" : "Nachricht senden"}
+          </PrimaryButton>
+        </div>
+        {fehler && <div style={{ fontSize: 12, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
+        {erfolg && <div style={{ fontSize: 12, color: accentDark, marginTop: 8 }}>Nachricht gesendet.</div>}
+      </Card>
+      {nachrichten?.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          {nachrichten.slice(0, 3).map((n) => (
+            <div key={n.id} style={{ fontSize: 12, color: textMuted, padding: "6px 2px" }}>
+              {n.gelesen ? "✓ Gelesen" : "Noch nicht gelesen"} · {n.text}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HomeView({ onOpenView }) {
   const { t, tLabel, lang } = useT();
   const {
@@ -100,7 +152,16 @@ export default function HomeView({ onOpenView }) {
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
     aenderungVermerken,
+    isAdmin,
+    coacheeNachrichten,
+    coacheeNachrichtSenden,
   } = useAppData();
+  const { proband } = useAdmin();
+  // Coach-verwaltetes Modell (13.08.): Coachees sehen hier statt des
+  // KI-Assistenten eine einfache Nachricht-an-den-Coach-Karte (siehe
+  // NachrichtAnCoachCard unten) — dieselbe istAdminModus-Logik wie in
+  // KiChat.jsx/OnboardingFlow.jsx/AuthenticatedApp.jsx.
+  const istAdminModus = proband !== null || isAdmin;
 
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
 
@@ -356,6 +417,9 @@ export default function HomeView({ onOpenView }) {
         </div>
       </div>
 
+      {!istAdminModus ? (
+        <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
+      ) : (
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
           Frag alles rund um deine Pläne, oder lass eine neue Gewohnheit anlegen.
@@ -433,6 +497,7 @@ export default function HomeView({ onOpenView }) {
           }}
         />
       </div>
+      )}
 
       {/* ADHS Mode Toggle */}
       <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />

@@ -182,7 +182,11 @@ export default function AuthenticatedApp() {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }
 
-  const zeigeFab = view !== "form";
+  // Coach-verwaltetes Modell (13.08.): "Neues Protokoll" bleibt Admins und
+  // dem "Verwalten als"-Modus vorbehalten — ein Coachee soll nicht selbst
+  // ein komplett neues Protokoll starten können, das läuft über den Coach.
+  const istAdminModus = proband !== null || isAdmin;
+  const zeigeFab = view !== "form" && istAdminModus;
 
   return (
     <>

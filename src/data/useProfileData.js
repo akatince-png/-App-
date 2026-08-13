@@ -19,6 +19,7 @@ export function useProfileData(userId) {
   const [customMesswerte, setCustomMesswerte] = useState([]);
   const [categoryZiele, setCategoryZieleState] = useState({});
   const [erinnerungen, setErinnerungenState] = useState({});
+  const [steckbrief, setSteckbriefState] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -43,6 +44,7 @@ export function useProfileData(userId) {
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
         setCategoryZieleState(profile.category_ziele || {});
         setErinnerungenState(profile.erinnerungen || {});
+        setSteckbriefState(profile.steckbrief || {});
 
         // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und
         // muss wissen, in welcher Zeitzone eine eingetragene Uhrzeit
@@ -172,6 +174,26 @@ export function useProfileData(userId) {
     [userId]
   );
 
+  // Kurzer "Steckbrief" aus dem reduzierten Coachee-Onboarding (13.08.) —
+  // Hintergrundfragen, die NICHT direkt in Supplemente/Training übernommen
+  // werden (die richtet die Admin stellvertretend ein), sondern der Admin
+  // nur als Vorbereitung fürs Erstgespräch dienen. Gleiches jsonb-Muster
+  // wie setCategoryZiel/setErinnerung.
+  const setSteckbrief = useCallback(
+    (felder) => {
+      setSteckbriefState((prev) => {
+        const next = { ...prev, ...felder };
+        supabase
+          .from("profiles")
+          .update({ steckbrief: next })
+          .eq("id", userId)
+          .then(({ error }) => error && console.error(error));
+        return next;
+      });
+    },
+    [userId]
+  );
+
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
   const toggleMesswert = useCallback(
@@ -267,5 +289,7 @@ export function useProfileData(userId) {
     setCategoryZiel,
     erinnerungen,
     setErinnerung,
+    steckbrief,
+    setSteckbrief,
   };
 }
