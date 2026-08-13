@@ -45,8 +45,11 @@ ohne sichtbaren Nutzen.
 
 Abgedeckte Lebensbereiche (jeder mit eigenem Plan/Protokoll): Schlaf,
 Hydration, Ernährung, Training, Gewohnheiten, Supplemente,
-Medikamente/Hormone, Peptide, Tageslicht (wie viel Zeit am Tag im
-Freien/Tageslicht verbracht wird) — **9 Bereiche insgesamt**, plus die
+Medikamente/Hormone (**inkl. Peptide**, seit Sitzung 13.08. datentechnisch
+zusammengelegt — kein eigener Reiter mehr, siehe "Sitzung 13.08." ganz
+unten), Tageslicht (wie viel Zeit am Tag im Freien/Tageslicht verbracht
+wird) — **8 Bereiche insgesamt**, plus Morgen-/Abendroutine (eigener
+Reiter, aber ohne Zeiten/Ziele-Protokoll wie die anderen) und die
 Startseite Home.
 
 Darüber liegt ein **Hauptprotokoll** (Name, Startdatum, Grund/Ziel), unter
@@ -1680,10 +1683,11 @@ ankommen.
 
 ---
 
-## Sitzung 13.08. — Cloud-Sprachausgabe fertiggestellt, mehrere Trainingsplan-/Übersichts-Fixes
+## Sitzung 13.08. — Cloud-Sprachausgabe, Trainingsplan-Restrukturierung, Peptide→Medikamente-Zusammenlegung, Morgen-/Abendroutine als eigener Reiter
 
 **Letzte Aktualisierung:** 13.08.2026 — komplett neu geschrieben statt
-weiterer Nachtrag-Absätze (siehe Hinweis oben im Dokumentkopf).
+weiterer Nachtrag-Absätze (siehe Hinweis oben im Dokumentkopf). Diese
+Sitzung war ungewöhnlich lang und dicht — unten steht der Endstand.
 
 ### Vollständig fertig UND live bestätigt
 
@@ -1692,138 +1696,151 @@ weiterer Nachtrag-Absätze (siehe Hinweis oben im Dokumentkopf).
   direkt "API-Schlüssel", NICHT über die API-Detailseite oder den
   "Art der Qualifikation"-Assistenten, das führt zum Dienstkonto-Umweg),
   Edge Function `text-to-speech` deployt, Secret `GOOGLE_TTS_API_KEY`
-  gesetzt. Stimme live getestet, von der Nutzerin bestätigt ("klingt
-  schon viel natürlicher"). Auf Wunsch von `de-DE-Wavenet-F` auf die
-  männliche Stimme **`de-DE-Wavenet-B`** umgestellt.
-- **Aka stellt sich nur noch beim allerersten Kontakt vor** — "Hi, ich
-  bin Aka!" stand bisher am Anfang JEDER Begrüßung in JEDEM Bereich, bei
-  jedem Öffnen des Chats. Zentral in `KiChat.jsx` gelöst: sobald einmal
-  eine Begrüßung gezeigt wurde (`coachStorage.js` →
-  `getCoachVorgestellt()`/`saveCoachVorgestellt()`, localStorage), fällt
-  der "Hi, ich bin X!"-Anfang aus allen künftigen Begrüßungen weg.
-- **Onboarding-KI-Chat trug "Ist-Zustand"-Antworten nie wirklich ein** —
-  bei Schlaf/Hydration/Ernährung fragte der Chat zwar nach dem aktuellen
-  Zustand (z. B. "Wie ist dein aktueller Schlaf?"), das Ergebnis landete
-  aber nie im entsprechenden Formularfeld, weil `schlafzielAusChat()` /
-  `hydrationAusChat()` / `mahlzeitplanAusChat()` das gar nicht erst aus
-  dem Gespräch extrahiert haben — jetzt behoben (neues `istZustand`-Feld
-  im JSON-Schema + Verdrahtung in `OnboardingCategoriesView.jsx`).
-  Training/Gewohnheiten bewusst NICHT mit angefasst (siehe "Offen"
-  unten). Zusätzlich behauptete Aka im Gespräch teils fälschlich, etwas
-  sei "im Hintergrund schon gespeichert" — zentraler Hinweis im
-  Systemprompt (`KiChat.jsx`, nur wenn ein `onUebernehmen`-Knopf
-  existiert) stellt jetzt klar, dass erst "Übernehmen" + "Weiter"
-  wirklich speichert.
+  gesetzt. Stimme live getestet, von der Nutzerin bestätigt. Auf Wunsch
+  von `de-DE-Wavenet-F` auf die männliche Stimme **`de-DE-Wavenet-B`**
+  umgestellt.
+- **Aka stellt sich nur noch beim allerersten Kontakt vor** —
+  `coachStorage.js` (`getCoachVorgestellt()`/`saveCoachVorgestellt()`),
+  `KiChat.jsx` lässt "Hi, ich bin X!" danach weg.
+- **Onboarding-KI-Chat trägt "Ist-Zustand"-Antworten jetzt wirklich ein**
+  (Schlaf/Hydration/Ernährung) — neues `istZustand`-Feld im JSON-Schema
+  von `schlafzielAusChat()`/`hydrationAusChat()`/`mahlzeitplanAusChat()` +
+  Verdrahtung in `OnboardingCategoriesView.jsx`. Zusätzlich: Systemprompt-
+  Hinweis in `KiChat.jsx` (nur wenn `onUebernehmen` gesetzt ist), damit Aka
+  nicht mehr fälschlich behauptet, etwas sei "schon gespeichert".
+  Training/Gewohnheiten bewusst nicht mit angefasst (siehe "Offen" unten).
 - **Übungskatalog stark erweitert** (`KRAFTUEBUNGEN`/`BODYWEIGHT_UEBUNGEN`
-  in `constants.js`) — einzelne Ausführungsvarianten statt nur der
-  Basisübung (z. B. "Bankdrücken / Schrägbank (Kurzhantel)" statt nur
-  "Bankdrücken"). `AutocompleteInput.jsx` hat jetzt einen `mehrfach`-Modus
-  für kommagetrennte Mehrfach-Felder.
-- **Trainingsplan: jede Übung hat jetzt eigene Sätze/Wiederholungen/
-  Gewicht** — vorher galt für eine ganze Wochenplan-Einheit nur EIN
-  globales Sätze/Wiederholungen-Paar, bei mehreren Übungen ließ sich also
-  gar nichts Individuelles eintragen. Die Übungsliste-Komponente aus dem
-  echten Trainingslog ist jetzt nach `src/ui/UebungenEditor.jsx`
-  ausgelagert und wird von `TrainingView.jsx` UND `WochenplanEditor.jsx`
-  gemeinsam genutzt. Neue Spalte `training_wochenplan.uebungen_liste`
-  (jsonb, Migration 0040, **deployt und live bestätigt**) — alte Spalten
-  bleiben für vorher gespeicherte Einheiten erhalten
-  (`wochenplanUebungenText()` in `dayItems.js` zeigt beide Formate
-  korrekt an). `AIService.trainingsplanAusChat()` liefert jetzt ebenfalls
-  `uebungenListe` statt eines einzigen globalen Paars.
-- **Optionale Pyramiden-Gewichte pro Satz** — je Übung lässt sich
-  "Gewicht ändert sich pro Satz" aktivieren, dann ein Gewichtsfeld je
-  Satz statt eines einzelnen. Keine Migration nötig (jsonb). Noch nicht
-  von der Nutzerin live getestet.
-- **Monatsansicht zeigt jetzt alle Kategorien als farbige Punkte** — war
-  vorher hart auf Peptide/Hormone/Supplemente/Medikamente beschränkt,
-  Training (und alles andere) blieb unsichtbar. Noch nicht von der
-  Nutzerin live getestet.
-- **Morgen-/Abendroutine als einklappbare Gruppierung im Tagesplan** —
-  Punkte vor 11 Uhr bzw. ab 18 Uhr erscheinen zusätzlich unter
-  "🌅 Morgenroutine"/"🌙 Abendroutine", zugeklappt nur eine
-  Kurz-Zusammenfassung, aufgeklappt die volle gewohnte Detailansicht.
-  Reine Darstellungsebene (`TagesplanView.jsx`), kein neues
-  Datenmodell, nichts muss manuell zugeordnet werden. Noch nicht von der
-  Nutzerin live getestet.
+  in `constants.js`, inkl. großem Kettlebell-Abschnitt) — feine
+  Ausführungsvarianten statt nur der Basisübung. `AutocompleteInput.jsx`
+  hat einen `mehrfach`-Modus für kommagetrennte Mehrfach-Felder.
+- **Trainingsplan: jede Übung hat eigene Sätze/Wiederholungen/Gewicht,
+  optional sogar pro Satz (Pyramide)** — vorher galt für eine ganze
+  Wochenplan-Einheit nur EIN globales Paar. Übungsliste-Komponente jetzt
+  gemeinsam in `src/ui/UebungenEditor.jsx` (genutzt von `TrainingView.jsx`
+  UND `WochenplanEditor.jsx`). Neue Spalte
+  `training_wochenplan.uebungen_liste` (jsonb, Migration 0040, **deployt**).
+  Wochenplan-Einheiten erlauben jetzt außerdem Mehrfachauswahl von
+  Wochentagen UND Trainingsarten (`arten`-Array statt einem einzelnen
+  `art`-Feld) sowie nachträgliches Bearbeiten bestehender Einheiten
+  (`wochenplanBearbeiten`).
+- **Monatsansicht zeigt alle Kategorien als farbige Punkte + Farblegende**
+  — vorher hart auf 4 Substanz-Kategorien beschränkt.
+- **Geführter Ablauf-Screen für Morgen-/Abendroutine (Phase 1)** — frei
+  benennbare Schritte mit geplanter Dauer, Countdown mit Vorwarnton kurz
+  vor Ende, "Schritt fertig" jederzeit möglich, Abschluss-Screen,
+  tatsächliche Dauer je Schritt wird mitgeschrieben. Neue Tabellen
+  `routine_schritte`/`routine_durchlaeufe` (Migration 0041, **deployt**),
+  Hook `useRoutinen.js`, Komponenten `RoutineAblauf.jsx`/
+  `RoutineSchritteEditor.jsx`. Zunächst als einklappbare Karten im
+  Tagesplan UND unter "Routinen" (vormals "Gewohnheiten") im Home-Menü.
+- **Peptide vollständig in Medikamente zusammengelegt** (Nutzerinnen-
+  Vorgabe: "das fand ich eigentlich absurd, dass Peptide ein eigener
+  Reiter ist"). Echte Datenzusammenlegung, nicht nur UI: Migration 0042
+  (**deployt, von der Nutzerin bestätigt**) kopiert die Daten des
+  *aktuell aktiven* Protokolls aus `protocol_peptide`/`peptide_logs` nach
+  `hormones`/`hormone_logs` (`kategorie = 'Peptid'`) — additiv, nichts
+  gelöscht, alte Tabellen bleiben als Sicherheitsnetz bestehen. Danach:
+  `MEDIKAMENTE_KATEGORIEN` um `"Peptid"` erweitert, `PEPTIDE_OPTIONEN`
+  (Autocomplete-Namensliste) von 34 auf ca. 130 Einträge erweitert und
+  erstmals in `MedikamenteView.jsx` verdrahtet (war vorher im Code
+  vorhanden, aber nirgends benutzt). Foto-Upload (gab es vorher nur bei
+  Medikamenten/Peptiden) auf Supplemente ausgeweitet (Migration 0043,
+  **deployt, bestätigt**, `setSupplementFoto` in `useSupplementData.js`).
+  **Zum Schluss der eigene "Peptide"-Reiter entfernt**: raus aus
+  `PLAENE_TABS` (`constants.js`), aus `PlaeneView.jsx` (VIEWS-Map +
+  Kategorie-Farbzuordnung), aus `CATEGORY_STEPS`
+  (`onboarding/categorySteps.js`, kein eigener Onboarding-Schritt mehr),
+  aus `KATEGORIE_TO_VIEW` (`AuthenticatedApp.jsx`) und aus
+  `KATEGORIE_META`/der zugehörigen Item-Erzeugung in `dayItems.js`
+  (Peptide laufen jetzt automatisch über den bestehenden "hormon"-Block,
+  weil die Daten in `hormones`/`hormone_logs` liegen). `PeptidView.jsx`
+  selbst sowie die alten Tabellen/Hooks (`protocols`, `protocol_peptide`,
+  `peptide_logs`, `usePeptideLogs.js`, `useProtocolData.js`,
+  `aiService.js`s `peptidAusChat`) bewusst **nicht gelöscht** — totes,
+  aber harmloses Sicherheitsnetz, geringe Priorität/höheres Risiko bei
+  knapper Zeit. Archivierte/vergangene Peptid-Protokollzyklen wurden
+  bewusst NICHT migriert (Nutzerinnen-Vorgabe: "nur das aktuelle zählt").
+- **Bugfix: Training ließ sich aus dem Tagesplan nicht "querbeet"
+  starten** — war ein echter Bug, keine Absicht/Sicherung. Ursache:
+  `starteTraining()` in `TagesplanView.jsx` las für virtuelle,
+  Wochenplan-abgeleitete Tagesplan-Punkte `item.raw.art`/`item.raw.template`
+  — beide Felder gab es seit der Wochenplan-Restrukturierung (`arten`-Array
+  statt `art`, `uebungenListe` statt `template`) nicht mehr, wodurch das
+  Anlegen mangels Trainingsart immer lautlos scheiterte (kein Fehler im
+  UI). Jetzt: führende Trainingsart aus `arten[]` ableiten
+  (Kraft/Bodyweight bevorzugt, weil dafür die hinterlegte Übungsliste
+  greift), Übungsliste + Warm-up/Cool-down aus der Wochenplan-Einheit
+  übernehmen, Fehlschlag sichtbar im Tagesplan melden statt lautlos zu
+  verwerfen.
+- **Morgen-/Abendroutine als eigene Reiter im "Alle Pläne"-Bereich** —
+  zusätzlich zu den Tagesplan-Karten jetzt auch die ersten zwei Reiter
+  oben in `PlaeneView.jsx` (Nutzerinnen-Vorgabe: "der eigentliche Zweck
+  der App soll auch im Onboarding/Homescreen so sichtbar sein"). Neue
+  Komponente `RoutineTabView.jsx` (parametrisiert über `routine="morgen"|
+  "abend"`, von zwei dünnen Wrappern in `PlaeneView.jsx` eingebunden).
+  Zusätzlich: **Zeitrahmen** je Routine (z. B. 6:00–9:00 Uhr) — neue
+  Tabelle `routine_einstellungen` (Migration 0044, **NOCH NICHT deployt,
+  siehe "Muss die Nutzerin noch tun" unten**), `useRoutinen.js` um
+  `routineEinstellungen`/`routineZeitrahmenSetzen` erweitert. Auf Basis
+  des Zeitrahmens: **Überlappungs-Erkennung** — andere heute geplante
+  Punkte (Training, Supplemente, ...), deren Uhrzeit in den Zeitrahmen
+  fällt und die noch nicht als Routine-Schritt existieren, werden mit
+  einem "Übernehmen"-Knopf vorgeschlagen. Bewusst noch OHNE inhaltliche
+  ADHS-Vorgaben (z. B. "Morgenroutine muss Tageslicht + Bewegung
+  enthalten") — die Nutzerin kündigte eine eigene kurze wissenschaftliche
+  Recherche an, um diese Vorgaben Schritt für Schritt gemeinsam
+  festzulegen; das ist bewusst noch nicht vorweggenommen worden.
 
-### 🔴 Offen — Gemini-429-Kontingentproblem, NICHT gelöst
+### 🟡 Muss die Nutzerin noch tun (Migration nicht deployt)
+
+- **Migration `0044_routine_zeitrahmen.sql`** im Supabase-Dashboard-SQL-
+  Editor ausführen (legt Tabelle `routine_einstellungen` an, RLS
+  inklusive) — ohne das läuft `routineZeitrahmenSetzen()` beim Speichern
+  des Zeitrahmens auf einen DB-Fehler (Tabelle existiert nicht). Erst
+  danach die neuen Morgen-/Abendroutine-Reiter + Zeitrahmen + Überlappungs-
+  Erkennung live testen.
+
+### 🔴 Offen — Gemini-429-Kontingentproblem, Stand unklar
 
 Ursache gefunden: der bisher verwendete `GEMINI_API_KEY` hing an einem
-komplett anderen, separaten Google-Cloud-Projekt (**"Default Gemini
-Project"**, `gen-lang-client-0773984217`, automatisch von AI Studio
-angelegt) statt an **"My First Project"** (`project-8895de46-f187-44d0-bd1`,
-dort läuft die Abrechnung/das Testguthaben für die Sprachausgabe). Die
-Nutzerin hat über [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-einen neuen Schlüssel unter "My First Project" erstellt (dabei wichtig:
-Google zeigt teils **zwei Projekte mit identischem Namen** "My First
-Project" — nur an der Projekt-ID `project-8895de46-...` erkennbar, NICHT
-am Namen) und in Supabase als `GEMINI_API_KEY` hinterlegt.
-
-**Trotzdem weiterhin Fehler beim Testen:**
-1. Erster Versuch: `400 API key not valid` — vermutlich nur der
-   abgekürzte Schlüssel aus der Liste kopiert statt des vollständigen.
-2. Nach Neu-Kopieren: `429 "Your prepayment credits are depleted. Please
-   go to AI Studio at https://ai.studio/projects to manage your project
-   and billing."` — Gemini hat offenbar ein **eigenes Prepay-
-   Guthabensystem**, getrennt vom allgemeinen Google-Cloud-Testguthaben.
-   Auf der Seite "Gemini API – Ausgaben" (aistudio.google.com) zeigt "My
-   First Project" zwar **"Preisstufe 1"** (also grundsätzlich
-   zahlungspflichtig erkannt), aber der Fehler trat danach live
-   weiterhin auf — vermutlich muss zusätzlich explizit Guthaben
-   aufgeladen werden, wo genau das geht, wurde in dieser Sitzung nicht
-   mehr geklärt.
-
-**Nächster Schritt:** entweder auf `ai.studio/projects` nach einer
-"Guthaben aufladen"/"Add credits"-Option für "My First Project" suchen,
-oder (kostenlose Übergangslösung) auf einen der drei alten, noch
-existierenden Gemini-Schlüssel unter "Default Gemini Project"
-zurückwechseln (dann gilt wieder die alte 20-Anfragen/Tag-Grenze) — die
-Nutzerin hatte danach gefragt, es ist unklar, ob sie das zwischenzeitlich
-schon gemacht hat. **Bei Sitzungsstart zuerst nachfragen, welcher der
-beiden Zustände gerade aktiv ist**, bevor hier weitergemacht wird.
+komplett anderen Google-Cloud-Projekt ("Default Gemini Project") statt an
+"My First Project" (dort läuft die Abrechnung). Die Nutzerin hat einen
+neuen Schlüssel unter "My First Project" erstellt, stieß danach aber auf
+`429 "Your prepayment credits are depleted"` — Gemini hat offenbar ein
+eigenes Prepay-Guthabensystem, getrennt vom allgemeinen Google-Cloud-
+Testguthaben, und es blieb ungeklärt, wo genau man dafür Guthaben
+auflädt. **Wurde in dieser Sitzung nicht weiterverfolgt — Stand seit
+letzter Sitzung unverändert. Bei Sitzungsstart nachfragen, ob die
+Nutzerin das inzwischen selbst gelöst hat**, bevor hier weitergemacht
+wird (z. B. auf einen alten Freikontingent-Schlüssel unter "Default
+Gemini Project" zurückgewechselt, oder Guthaben gefunden/aufgeladen).
 
 ### Offen, bewusst nicht in dieser Sitzung mit angefasst
 
-- **Ist-Zustand-Auto-Eintragung für Training/Gewohnheiten** — bei Training
-  wäre die zugrundeliegende `trainingsplanAusChat()`-Funktion an zwei
-  Stellen geteilt (Onboarding UND `TrainingView.jsx`), Umbau war riskanter;
-  bei Gewohnheiten sind die vier Ist-Zustand-Fragen (Warum/Schwierigkeiten/
-  fällt schwer/fällt leicht) eher grundsätzliche Reflexionsfragen, die
-  nicht zum bisherigen "Gewohnheit X einrichten"-Gesprächsfluss passen.
-  Nur nachziehen, falls die Nutzerin das explizit will.
-- **Trainingsplan-Button auf der Trainingsplan-Hauptseite** — Aka-Chat
-  erscheint dort nur innerhalb von "Wochenplan bearbeiten", nicht direkt
-  auf der Hauptseite. Nutzerin wurde gefragt, ob das immer sichtbar sein
-  soll — **Antwort: nein, so lassen.** (Entschieden, nicht offen.)
-- **PDF-Export der Trainings-/Routine-Ansicht** — Nutzerin hat gefragt,
-  ob es sowas gibt/geben sollte, aber selbst als "nächster Schritt, jetzt
-  noch nicht" eingeordnet. Es gibt bereits einen allgemeinen PDF-Export
-  im Hauptprotokoll (`utils/pdfExport.js`, "Export & Druck"-Karte) — ob
-  der für die neue Trainings-/Routinen-Darstellung ausreicht oder erst
-  erweitert werden muss, wurde noch nicht geprüft.
-- **Geführte Morgen-/Abendroutine mit Sprachbegleitung** — die einklapp-
-  bare Gruppierung oben ist bewusst die kleine, schnelle Version (reine
-  Darstellung). Die größere, schon länger besprochene Idee — ein
-  geführter Ablauf-Screen, der die Schritte per Sprache mit der Nutzerin
-  durchgeht, mit Wartezeiten/Nachfragen und Musik im Hintergrund — ist
-  weiterhin NICHT begonnen und explizit für später vorgemerkt
-  (Nutzerinnen-Vorgabe 13.08.: "merk dir bitte die zukünftigen Schritte
-  vor").
-- **Mikrofon-Zugriff für AKA in Safari** — Stand aus der letzten Sitzung
-  unverändert, in dieser Sitzung nicht erneut geprüft.
-- **Echter Wecker + Smart-Speaker-Frage** — unverändert seit letzter
-  Sitzung, nicht angefasst.
+- **Ist-Zustand-Auto-Eintragung für Training/Gewohnheiten** — siehe oben,
+  nur nachziehen, falls die Nutzerin das explizit will.
+- **PDF-Export der Trainings-/Routine-Ansicht** — von der Nutzerin selbst
+  als "später" eingeordnet.
+- **Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine** (Tageslicht,
+  Bewegungsdauer, bestimmte Supplemente als halbfeste Bestandteile) — die
+  Nutzerin kündigte eine eigene Recherche an, danach gemeinsam Schritt für
+  Schritt festlegen. Nicht blind vorwegnehmen.
+- **Mikrofon-Zugriff für AKA in Safari** — unverändert, nicht erneut
+  geprüft.
+- **Echter Wecker + Smart-Speaker-Frage** — unverändert, nicht angefasst.
 - Im ursprünglichen Onboarding fehlen weiterhin Detailfragen zum
   Sport-Istzustand/zur Körperkomposition.
 
 ### Empfohlener nächster Einstieg
 
-1. Zuerst klären, ob das Gemini-Kontingentproblem seit Sitzungsende
-   inzwischen doch gelöst wurde (Guthaben aufgeladen?) oder ob die
-   Nutzerin auf einen alten Freikontingent-Schlüssel zurückgewechselt ist.
-2. Danach: Pyramiden-Gewichte, Monatsansicht-Punkte und Morgen-/
-   Abendroutine-Gruppierung gemeinsam live testen (alle drei deployt,
-   aber noch nicht bestätigt).
-3. Falls Zeit/Bedarf: geführter Ablauf-Screen mit Sprachbegleitung
-   (siehe "Offen" oben) als nächstes großes Vorhaben angehen.
+1. Zuerst klären, ob das Gemini-Kontingentproblem seit Sitzungsende gelöst
+   wurde.
+2. Migration `0044_routine_zeitrahmen.sql` deployen lassen (siehe oben),
+   dann Morgen-/Abendroutine-Reiter, Zeitrahmen und Überlappungs-
+   Erkennung gemeinsam live testen.
+3. Mit der Nutzerin die angekündigte "wissenschaftliche Recherche" zu
+   ADHS-gerechten Morgen-/Abendroutine-Vorgaben durchgehen und Schritt für
+   Schritt in konkrete Vorschläge/Defaults übersetzen.
+4. Pyramiden-Gewichte und den geführten Ablauf-Screen (falls noch nicht
+   geschehen) gemeinsam live testen — beide deployt, aber Live-Bestätigung
+   durch die Nutzerin steht für einzelne Details noch aus.
