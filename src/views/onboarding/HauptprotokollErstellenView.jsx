@@ -21,9 +21,24 @@ const BEISPIELE = [
 // Teilprotokoll (Schlaf, Ernährung, ...) eingerichtet wird. Dieses Startdatum
 // ist danach die Vorbelegung für jedes Teilprotokoll, falls dort kein
 // eigenes, abweichendes Startdatum gewählt wird.
-export default function HauptprotokollErstellenView({ onDone, onBack, onCancel }) {
-  const { hauptprotokollErstellen, verknuepfeMitHauptprotokoll } = useAppData();
+//
+// `zeigeBestehendesAlsOption` (13.08., Nachtrag): Nutzerinnen-Bug-Report —
+// jeder erneute Durchlauf des Onboardings (z. B. über "Onboarding erneut
+// durchlaufen" in Mehr, zum Testen) landete stillschweigend wieder hier und
+// legte JEDES Mal ein frisches Hauptprotokoll an, wobei das eigentlich noch
+// laufende automatisch archiviert wurde (`hauptprotokollErstellen` in
+// useHauptprotokollData.js archiviert das bisherige aktive immer beim
+// Anlegen eines neuen). Ist ein Hauptprotokoll schon aktiv, wird jetzt
+// zuerst "Weiter mit diesem Protokoll" angeboten, statt ungefragt ein neues
+// zu erzeugen — nur der explizite "+"-Button ("Neues Protokoll",
+// `startPhase="hauptprotokoll"` in AuthenticatedApp.jsx) bekommt dieses Prop
+// NICHT gesetzt, weil genau dort ein neues Protokoll der ausdrückliche
+// Zweck ist.
+export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, zeigeBestehendesAlsOption = false }) {
+  const { hauptprotokollErstellen, verknuepfeMitHauptprotokoll, aktivesHauptprotokoll } = useAppData();
   const { t, tLabel } = useT();
+  const gibtBestehendesAnGeboten = zeigeBestehendesAlsOption && !!aktivesHauptprotokoll;
+  const [modus, setModus] = useState(gibtBestehendesAnGeboten ? "bestehend" : "neu");
   const [name, setName] = useState("");
   const [startdatum, setStartdatum] = useState(toLocalISODate(new Date()));
   const [saving, setSaving] = useState(false);
@@ -51,6 +66,78 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel }
     }
     onDone();
   };
+
+  if (modus === "bestehend" && aktivesHauptprotokoll) {
+    return (
+      <Shell>
+        <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={t("hauptprotokoll.weiter")} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 12, marginBottom: 24 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 20,
+              background: `linear-gradient(135deg, ${accent}, ${blue})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              marginBottom: 16,
+              boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
+            }}
+          >
+            📋
+          </div>
+          <div style={{ fontSize: 19, fontWeight: 800, textAlign: "center", marginBottom: 8 }}>{t("hauptprotokoll.bestehend.titel")}</div>
+          <div style={{ fontSize: 13, color: textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>{t("hauptprotokoll.bestehend.hinweis")}</div>
+        </div>
+
+        <Card>
+          <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{aktivesHauptprotokoll.name}</div>
+          {aktivesHauptprotokoll.startdatum && (
+            <div style={{ fontSize: 12.5, color: textMuted }}>seit {aktivesHauptprotokoll.startdatum}</div>
+          )}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
+            <PrimaryButton onClick={onDone}>{t("hauptprotokoll.bestehend.weiter", { name: aktivesHauptprotokoll.name })}</PrimaryButton>
+            <button
+              type="button"
+              onClick={() => setModus("neu")}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 12,
+                border: `1px solid ${cardBorder}`,
+                background: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {t("hauptprotokoll.bestehend.neuAnlegen")}
+            </button>
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: "none",
+                  background: "transparent",
+                  color: textMuted,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {tLabel("Abbrechen")}
+              </button>
+            )}
+          </div>
+        </Card>
+      </Shell>
+    );
+  }
 
   return (
     <Shell>
@@ -101,6 +188,15 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel }
           <PrimaryButton onClick={submit} disabled={saving}>
             {saving ? t("onboarding.saving") : t("hauptprotokoll.weiter")}
           </PrimaryButton>
+          {gibtBestehendesAnGeboten && (
+            <button
+              type="button"
+              onClick={() => setModus("bestehend")}
+              style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "transparent", color: accent, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            >
+              {t("hauptprotokoll.neu.zurueck")}
+            </button>
+          )}
           {onCancel && (
             <button
               type="button"

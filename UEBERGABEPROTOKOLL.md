@@ -1874,6 +1874,49 @@ Coaching-Inhalte direkt in Akas Wissens-Basis einzuspeisen.
     Filtermechanismus in `KiChat.jsx` ein (kein Code-Änderung nötig, rein
     inhaltliche Ergänzung der Tabelle).
 
+### 🆕 Nachtrag (noch selber Tag): Onboarding-Wiederholung setzte Hauptprotokoll zurück
+
+Bug-Report der Nutzerin: sie musste sich als Admin gefühlt bei jeder Sitzung
+neu durch das Onboarding klicken und bekam dabei jedes Mal ein frisches
+"Startprotokoll" (Hauptprotokoll), statt einfach im aktuellen App-Zustand
+weiterzumachen. Ursache gefunden: `hauptprotokollErstellen()`
+(`useHauptprotokollData.js`) archiviert beim Anlegen eines neuen
+Hauptprotokolls IMMER das bisherige aktive — das ist beim echten "+"-Button
+("Neues Protokoll") gewollt, wurde aber unbemerkt auch bei jedem erneuten
+Durchlauf des normalen Onboarding-Ablaufs ausgelöst (z. B. über
+"Onboarding erneut durchlaufen" in Mehr, testweise gedacht). Ein
+unvollständig durchgeklickter Testlauf lässt außerdem `onboarding_complete`
+in der DB auf `false` stehen — dadurch landet jeder erneute Login wieder im
+Onboarding, bis der Ablauf einmal ganz zu Ende geführt wird.
+
+**Fix**: `HauptprotokollErstellenView.jsx` bekommt ein neues Prop
+`zeigeBestehendesAlsOption` — ist beim Erreichen dieses Schritts schon ein
+aktives Hauptprotokoll vorhanden, wird zuerst "Weiter mit „Name“"
+angeboten (keine Datenbank-Schreibaktion, einfach `onDone()`), erst über
+einen expliziten "Stattdessen neues Hauptprotokoll anlegen"-Knopf kommt das
+bisherige Anlege-Formular. `OnboardingFlow.jsx` setzt dieses Prop nur beim
+normalen Ablauf (`startPhase !== "hauptprotokoll"`) — der "+"-Button bleibt
+unverändert, dort ist ein neues Protokoll ja der ausdrückliche Zweck.
+Zusätzlich Klarstellung an die Nutzerin: das manuelle "Onboarding erneut
+durchlaufen" existierte schon ausschließlich im Reiter "Mehr" (kein
+automatischer Trigger sonst irgendwo im Code) — das entsprach also schon
+ihrer Vorgabe, nur die versteckte Zerstörung des Hauptprotokolls dabei war
+der eigentliche Bug. Session-Persistenz selbst (angemeldet bleiben nach
+Seiten-Neuladen) läuft über den Standard-Mechanismus von supabase-js
+(`persistSession` via localStorage, keine eigene Konfiguration nötig) —
+kein Code-Bug gefunden; falls sie sich weiterhin unerwartet abgemeldet
+sieht, liegt das eher an Browser-/Gerätefaktoren (privater Modus, iOS
+Safari löscht Website-Daten selten genutzter Seiten) als am App-Code.
+
+**Für die Nutzerin selbst noch zu tun**: ihr aktuelles Konto steckt
+vermutlich noch mit `onboarding_complete = false` fest (von einem
+unvollständigen Test). Einmaliges SQL im Supabase-Dashboard reicht, um sie
+direkt zurück in die App zu holen, ohne den ganzen (jetzt zwar sicheren,
+aber langen) Ablauf erneut durchklicken zu müssen:
+```sql
+update public.profiles set onboarding_complete = true where is_admin = true;
+```
+
 ### 🔴 Offen — Gemini-429-Kontingentproblem, Stand unklar
 
 Ursache gefunden: der bisher verwendete `GEMINI_API_KEY` hing an einem

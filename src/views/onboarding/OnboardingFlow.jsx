@@ -52,13 +52,27 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const istAdminModus = proband !== null || isAdmin;
   const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
+  // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
+  // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
+  // Hauptprotokoll als "Weiter damit"-Option anbieten, statt ungefragt ein
+  // neues anzulegen. Der explizite "+"-Button ("Neues Protokoll") startet
+  // absichtlich direkt mit startPhase="hauptprotokoll" — dort ist ein neues
+  // Protokoll der ganze Zweck, also bleibt es beim bisherigen Verhalten.
+  const [istDirekterNeuStart] = useState(startPhase === "hauptprotokoll");
 
   if (phase === "welcome") {
     return <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
   }
 
   if (phase === "hauptprotokoll") {
-    return <HauptprotokollErstellenView onDone={() => setPhase("intro")} onBack={() => setPhase("welcome")} onCancel={onCancel} />;
+    return (
+      <HauptprotokollErstellenView
+        onDone={() => setPhase("intro")}
+        onBack={() => setPhase("welcome")}
+        onCancel={onCancel}
+        zeigeBestehendesAlsOption={!istDirekterNeuStart}
+      />
+    );
   }
 
   if (phase === "intro") {
