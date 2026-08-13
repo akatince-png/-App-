@@ -368,7 +368,7 @@ bestätigt. Für diese Sitzung relevant:
 | 0045 | `coachee_modell.sql` | `profiles.steckbrief` + `coachee_nachrichten` | ✅ deployt |
 | 0046 | `coach_wissen.sql` | Wissens-Basis-Tabelle | ✅ deployt |
 | 0047 | `coach_wissen_seed.sql` | 16 Wissenseinträge aus der Praxisakademie | ✅ deployt, von Nutzerin bestätigt |
-| 0048 | `spotify_anlass_playlists.sql` | Playlist-Zuordnung je Anlass | ⚠️ **Status unklar — im Chat als Text geschickt, Ausführung durch Nutzerin nicht explizit bestätigt. In der nächsten Sitzung zuerst nachfragen/prüfen.** |
+| 0048 | `spotify_anlass_playlists.sql` | Playlist-Zuordnung je Anlass | ✅ deployt — bestätigt (erneuter Ausführungsversuch scheiterte mit "existiert bereits", also bereits früher erfolgreich gelaufen) |
 
 ---
 
@@ -377,14 +377,13 @@ bestätigt. Für diese Sitzung relevant:
 | # | Thema | Status |
 |---|---|---|
 | 1 | Spotify-Verbinden hängt in Anmelde-Schleife (Apple-ID-Verschachtelung) | 🔴 Offen — siehe Abschnitt 8 für vollständige Diagnose, keine weitere Code-Suche nötig |
-| 2 | Migration 0048 (Spotify-Anlass-Zuordnung) — Deploy-Status prüfen | 🔴 Unbestätigt |
-| 3 | Gemini-429-Kontingentproblem (`gemini-3.6-flash`, nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen — Stand bei Sitzungsstart erfragen, evtl. hat die Nutzerin es selbst gelöst |
-| 4 | Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine (Tageslicht, Bewegung, Supplemente als Bestandteile) | Zurückgestellt — Nutzerin wollte erst selbst recherchieren |
-| 5 | "Fazit"-Feld bei Protokoll-Abschluss als datenschutzfreundliche Alternative zu automatischem Lernen aus Coachee-Daten | Nur als Vorschlag im Raum, noch nicht gebaut |
-| 6 | Per-Gewohnheit-Playlist-Zuordnung (statt einem allgemeinen "gewohnheiten"-Anlass) | Bewusste Scope-Entscheidung, nur bei explizitem Wunsch ausbauen |
-| 7 | Groq als Provider / Groq-Streaming | Zurückgestellt, Code vorbereitet |
-| 8 | Sprachauswahl (DE/EN/TR) auf den Assistenten selbst ausweiten | Nur UI-Texte mehrsprachig, Assistent antwortet immer auf Deutsch |
-| 9 | Sprechgeschwindigkeit der Cloud-Stimme einstellbar machen | Noch nicht umgesetzt, Google-Cloud-TTS unterstützt `speakingRate` |
+| 2 | Gemini-429-Kontingentproblem (`gemini-3.6-flash`, nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen — Stand bei Sitzungsstart erfragen, evtl. hat die Nutzerin es selbst gelöst |
+| 3 | Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine (Tageslicht, Bewegung, Supplemente als Bestandteile) | Zurückgestellt — Nutzerin wollte erst selbst recherchieren |
+| 4 | "Fazit"-Feld bei Protokoll-Abschluss als datenschutzfreundliche Alternative zu automatischem Lernen aus Coachee-Daten | Nur als Vorschlag im Raum, noch nicht gebaut |
+| 5 | Per-Gewohnheit-Playlist-Zuordnung (statt einem allgemeinen "gewohnheiten"-Anlass) | Bewusste Scope-Entscheidung, nur bei explizitem Wunsch ausbauen |
+| 6 | Groq als Provider / Groq-Streaming | Zurückgestellt, Code vorbereitet |
+| 7 | Sprachauswahl (DE/EN/TR) auf den Assistenten selbst ausweiten | Nur UI-Texte mehrsprachig, Assistent antwortet immer auf Deutsch |
+| 8 | Sprechgeschwindigkeit der Cloud-Stimme einstellbar machen | Noch nicht umgesetzt, Google-Cloud-TTS unterstützt `speakingRate` |
 
 ---
 
