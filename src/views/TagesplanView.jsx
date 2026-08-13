@@ -17,6 +17,8 @@ import { useAppData } from "../context/AppDataContext";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import RoutineAblauf from "../ui/RoutineAblauf";
+import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -147,10 +149,20 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     gewohnheiten,
     gewohnheitErledigt,
     toggleGewohnheitErledigt,
+    routineSchritte,
+    routineSchrittHinzufuegen,
+    routineSchrittEntfernen,
+    routineSchrittVerschieben,
+    routineDurchlaufSpeichern,
   } = useAppData();
 
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
   const [selectedDate, setSelectedDate] = useState(new Date());
+  // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
+  // Ansicht, sonst "morgen"/"abend" — ersetzt dann den kompletten Screen,
+  // bis die Routine abgeschlossen oder abgebrochen wird.
+  const [ablaufRoutine, setAblaufRoutine] = useState(null);
+  const [schritteBearbeiten, setSchritteBearbeiten] = useState({ morgen: false, abend: false });
   // Morgen-/Abendroutine: rein visuelle Gruppierung der ohnehin geplanten
   // Punkte nach Uhrzeit, kein eigenes Datenmodell — zugeklappt nur eine
   // Zusammenfassung, damit ein voller Tag (Tageslicht + Supplemente +
@@ -430,6 +442,19 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     });
   }
 
+  if (ablaufRoutine) {
+    const schritteFuerRoutine = routineSchritte.filter((s) => s.routine === ablaufRoutine).sort((a, b) => a.reihenfolge - b.reihenfolge);
+    return (
+      <RoutineAblauf
+        routine={ablaufRoutine}
+        schritte={schritteFuerRoutine}
+        onAbschluss={() => setAblaufRoutine(null)}
+        onAbbrechen={() => setAblaufRoutine(null)}
+        routineDurchlaufSpeichern={routineDurchlaufSpeichern}
+      />
+    );
+  }
+
   return (
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
@@ -521,37 +546,81 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
             </Card>
           )}
 
-          {morgenItems.length > 0 && (
-            <Card style={{ marginBottom: 16 }}>
-              <button
-                className="mp-tap"
-                onClick={() => setMorgenOffen((o) => !o)}
-                style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
-              >
-                <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌅 Morgenroutine</div>
-                <div style={{ fontSize: 11.5, color: textMuted }}>
-                  {routineZusammenfassung(morgenItems)} {morgenOffen ? "▲" : "▼"}
+          <Card style={{ marginBottom: 16 }}>
+            <button
+              className="mp-tap"
+              onClick={() => setMorgenOffen((o) => !o)}
+              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
+            >
+              <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌅 Morgenroutine</div>
+              <div style={{ fontSize: 11.5, color: textMuted }}>
+                {morgenItems.length > 0 ? routineZusammenfassung(morgenItems) : "Noch nichts geplant"} {morgenOffen ? "▲" : "▼"}
+              </div>
+            </button>
+            {morgenOffen && (
+              <div style={{ marginTop: 12 }}>
+                {morgenItems.length > 0 && renderZeitbloecke(bucketsFor(morgenItems))}
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <div style={{ flex: 1 }}>
+                    <PrimaryButton onClick={() => setAblaufRoutine("morgen")}>▶️ Morgenroutine starten</PrimaryButton>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSchritteBearbeiten((p) => ({ ...p, morgen: !p.morgen }))}
+                    style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "#fff", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
+                  >
+                    ⚙️
+                  </button>
                 </div>
-              </button>
-              {morgenOffen && <div style={{ marginTop: 12 }}>{renderZeitbloecke(bucketsFor(morgenItems))}</div>}
-            </Card>
-          )}
+                {schritteBearbeiten.morgen && (
+                  <RoutineSchritteEditor
+                    schritte={routineSchritte.filter((s) => s.routine === "morgen")}
+                    onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
+                    onEntfernen={routineSchrittEntfernen}
+                    onVerschieben={routineSchrittVerschieben}
+                  />
+                )}
+              </div>
+            )}
+          </Card>
 
-          {abendItems.length > 0 && (
-            <Card style={{ marginBottom: 16 }}>
-              <button
-                className="mp-tap"
-                onClick={() => setAbendOffen((o) => !o)}
-                style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
-              >
-                <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌙 Abendroutine</div>
-                <div style={{ fontSize: 11.5, color: textMuted }}>
-                  {routineZusammenfassung(abendItems)} {abendOffen ? "▲" : "▼"}
+          <Card style={{ marginBottom: 16 }}>
+            <button
+              className="mp-tap"
+              onClick={() => setAbendOffen((o) => !o)}
+              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
+            >
+              <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌙 Abendroutine</div>
+              <div style={{ fontSize: 11.5, color: textMuted }}>
+                {abendItems.length > 0 ? routineZusammenfassung(abendItems) : "Noch nichts geplant"} {abendOffen ? "▲" : "▼"}
+              </div>
+            </button>
+            {abendOffen && (
+              <div style={{ marginTop: 12 }}>
+                {abendItems.length > 0 && renderZeitbloecke(bucketsFor(abendItems))}
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <div style={{ flex: 1 }}>
+                    <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine starten</PrimaryButton>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSchritteBearbeiten((p) => ({ ...p, abend: !p.abend }))}
+                    style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "#fff", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
+                  >
+                    ⚙️
+                  </button>
                 </div>
-              </button>
-              {abendOffen && <div style={{ marginTop: 12 }}>{renderZeitbloecke(bucketsFor(abendItems))}</div>}
-            </Card>
-          )}
+                {schritteBearbeiten.abend && (
+                  <RoutineSchritteEditor
+                    schritte={routineSchritte.filter((s) => s.routine === "abend")}
+                    onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
+                    onEntfernen={routineSchrittEntfernen}
+                    onVerschieben={routineSchrittVerschieben}
+                  />
+                )}
+              </div>
+            )}
+          </Card>
 
           {renderZeitbloecke(restBuckets)}
         </>

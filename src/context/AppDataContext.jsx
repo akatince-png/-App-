@@ -25,6 +25,7 @@ import { useCoachVerlauf } from "../data/useCoachVerlauf";
 import { useAdminNotizen } from "../data/useAdminNotizen";
 import { useSpotifyVerbindung } from "../data/useSpotifyVerbindung";
 import { useHauptprotokollData } from "../data/useHauptprotokollData";
+import { useRoutinen } from "../data/useRoutinen";
 
 const AppDataContext = createContext(null);
 
@@ -63,6 +64,7 @@ export function AppDataProvider({ children }) {
   const coachVerlaufData = useCoachVerlauf(userId);
   const adminNotizenData = useAdminNotizen(userId);
   const spotifyData = useSpotifyVerbindung(userId);
+  const routinenData = useRoutinen(userId);
 
   const value = {
     userId,
@@ -103,6 +105,7 @@ export function AppDataProvider({ children }) {
     ...adminNotizenData,
     ...spotifyData,
     ...hauptprotokollData,
+    ...routinenData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,

@@ -18,13 +18,17 @@ function fmt(sekunden) {
  * mehrere Runden, Alarm bei jedem Wechsel). Zeitmessung über echte
  * Timestamps statt Zähl-Ticks, damit nichts wegdriftet.
  */
-export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, pauseSek = 20, runden = 5, onFertig, autoStart = false }) {
+export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, pauseSek = 20, runden = 5, onFertig, autoStart = false, vorwarnungSek = null }) {
   const [status, setStatus] = useState("idle"); // idle | running | paused | done
   const [phase, setPhase] = useState("arbeit");
   const [rundeAktuell, setRundeAktuell] = useState(1);
   const [, setTick] = useState(0);
   const elapsedRef = useRef(0);
   const anchorRef = useRef(null);
+  // Einmaliger Hinweiston kurz vor Ablauf (z. B. "noch 30 Sekunden"), nicht
+  // nur der Schluss-Alarm bei 0 — gegen ADHS-typisches Zeitgefühl-Problem,
+  // Nutzerinnen-Vorgabe 13.08. Nur für countdown relevant, opt-in per Prop.
+  const vorgewarntRef = useRef(false);
 
   useEffect(() => {
     if (status !== "running") return;
@@ -50,6 +54,7 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
     setStatus("idle");
     setPhase("arbeit");
     setRundeAktuell(1);
+    vorgewarntRef.current = false;
   };
   const stoppenUndFertig = () => {
     const sek = Math.round(segmentElapsedMs() / 1000);
@@ -68,6 +73,10 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
   if (status === "running") {
     if (mode === "countdown") {
       const remaining = initialSeconds * 1000 - segmentElapsedMs();
+      if (vorwarnungSek && !vorgewarntRef.current && remaining <= vorwarnungSek * 1000 && remaining > 0) {
+        vorgewarntRef.current = true;
+        playBeep(1);
+      }
       if (remaining <= 0) {
         playBeep(2);
         elapsedRef.current = 0;
