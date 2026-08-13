@@ -23,6 +23,13 @@ export const ZIELE = [
   "Anderes (bitte angeben)",
 ];
 
+// Bewusst sehr umfangreich (Nutzerinnen-Vorgabe, 13.08.: "die vorhandene
+// Liste um hundert weitere mögliche Peptide erweitern") — deckt neben den
+// gängigen Biohacking-Peptiden auch verwandte Peptid-Hormone ab, die in
+// diesem Kontext häufig mit auftauchen (GnRH-Analoga, Somatostatin-Analoga,
+// körpereigene Peptid-Hormone). Vorschläge sind Hilfe, keine Pflicht/
+// Empfehlung — was davon sinnvoll/legal ist, entscheidet die Person bzw.
+// ärztliche Rücksprache, die App bewertet das nicht.
 export const PEPTIDE_OPTIONEN = [
   "Semaglutid",
   "Tirzepatid",
@@ -59,6 +66,103 @@ export const PEPTIDE_OPTIONEN = [
   "LL-37",
   "VIP",
   "Snap-8",
+  // Weitere Wachstumshormon-Sekretagoga/-Releasing-Peptide
+  "Alexamorelin",
+  "Examorelin",
+  "Tabimorelin",
+  "Capromorelin",
+  "HGH Fragment 176-191",
+  "GHRP-1",
+  "PEG-MGF",
+  "MGF (Mechano Growth Factor)",
+  "IGF-1 DES",
+  // GLP-1/GIP/Glukagon-Analoga (Stoffwechsel)
+  "Liraglutid",
+  "Exenatid",
+  "Lixisenatid",
+  "Dulaglutid",
+  "Cagrilintid",
+  "Survodutid",
+  "Mazdutid",
+  "Pramlintid",
+  // Heilung/Regeneration
+  "Larazotid",
+  "ARA-290 (Cibinetide)",
+  "Thymosin Beta-4 Fragment",
+  "GHK",
+  "Copper-Tripeptid-1",
+  // Kognitiv/neuroprotektiv
+  "Dihexa",
+  "Cerebrolysin",
+  "P21",
+  "Cortagin",
+  // Langlebigkeit/Zellgesundheit
+  "SS-31 (Elamipretid)",
+  "FOXO4-DRI",
+  "GDF-11",
+  // Immunmodulation
+  "Thymalin",
+  "Thymogen",
+  "Thymopentin",
+  // Haut/Kosmetik-Peptide
+  "Matrixyl (Palmitoyl-Pentapeptid-4)",
+  "Argireline (Acetyl-Hexapeptid-8)",
+  "Syn-Ake",
+  "Eyeseryl",
+  // Sexuelle Gesundheit
+  "Kisspeptin-54",
+  // Muskelaufbau/Leistung
+  "ACE-031",
+  "Follistatin 315",
+  "Laminin-411",
+  // Körpereigene Peptid-Hormone/Neuropeptide (häufig im Forschungskontext genannt)
+  "Cortistatin-14",
+  "Ghrelin",
+  "Obestatin",
+  "Adropin",
+  "Irisin",
+  "Apelin-13",
+  "Angiotensin (1-7)",
+  "Bradykinin",
+  "Substanz P",
+  "Neuropeptid Y",
+  "Orexin A",
+  "Orexin B",
+  "PACAP-38",
+  "Galanin",
+  "Motilin",
+  "Sekretin",
+  "Urocortin",
+  "CRH (Corticotropin-Releasing Hormone)",
+  "ACTH (Adrenocorticotropes Hormon)",
+  "Calcitonin",
+  "Glukagon",
+  "Amylin",
+  "Relaxin",
+  "Vasopressin",
+  "Desmopressin",
+  // GnRH-Analoga
+  "Gonadorelin",
+  "Triptorelin",
+  "Leuprorelin",
+  "Goserelin",
+  "Buserelin",
+  "Nafarelin",
+  "Cetrorelix",
+  "Ganirelix",
+  // Somatostatin-Analoga
+  "Octreotid",
+  "Lanreotid",
+  "Pasireotid",
+  // Knochenstoffwechsel
+  "Teriparatid",
+  "Abaloparatid",
+  // Magen-Darm
+  "Linaclotid",
+  "Plecanatid",
+  // Sonstige
+  "Icatibant",
+  "Ecallantid",
 ];
 
 // Einnahmearten für Peptide & Medikamente — Injektion ist der Standard, die

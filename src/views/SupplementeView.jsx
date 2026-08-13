@@ -9,13 +9,14 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import ViewHeader from "../ui/ViewHeader";
+import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
 const { dot: accent, text: accentDark } = KATEGORIE_META.supplement;
 
-function SupplementZeile({ s, istLetzte, onAendern, onEntfernen }) {
+function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto }) {
   const [offen, setOffen] = useState(false);
   const [entwurf, setEntwurf] = useState({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis });
   const [grund, setGrund] = useState("");
@@ -29,19 +30,33 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen }) {
     setOffen(false);
   };
 
+  const handleFoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    onFoto(s.id, file);
+    e.target.value = "";
+  };
+
   return (
     <div style={{ padding: "8px 0", borderBottom: istLetzte ? "none" : `1px solid ${cardBorder}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700 }}>{s.name}</div>
-          <div style={{ fontSize: 11, color: textMuted }}>
-            {/* Im Onboarding angelegte Supplemente haben konkrete Uhrzeiten
-                statt der groben Tageszeiten — sonst stünde hier nichts. */}
-            {(s.uhrzeiten?.length ? s.uhrzeiten : s.tageszeiten).join(", ")}
-            {s.menge && ` · ${s.menge}`}
-            {s.hinweis && ` · ${s.hinweis}`}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+          {s.fotoPath && <SignedPhoto path={s.fotoPath} alt={s.name} size={34} />}
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>{s.name}</div>
+            <div style={{ fontSize: 11, color: textMuted }}>
+              {/* Im Onboarding angelegte Supplemente haben konkrete Uhrzeiten
+                  statt der groben Tageszeiten — sonst stünde hier nichts. */}
+              {(s.uhrzeiten?.length ? s.uhrzeiten : s.tageszeiten).join(", ")}
+              {s.menge && ` · ${s.menge}`}
+              {s.hinweis && ` · ${s.hinweis}`}
+            </div>
           </div>
         </div>
+        <input type="file" accept="image/*" id={`supplement-foto-${s.id}`} style={{ display: "none" }} onChange={handleFoto} />
+        <label htmlFor={`supplement-foto-${s.id}`} style={{ cursor: "pointer", fontSize: 16, marginRight: 12 }} title="Foto hinzufügen">
+          📷
+        </label>
         <button
           onClick={() => setOffen((v) => !v)}
           style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", marginRight: 12 }}
@@ -131,6 +146,7 @@ function SupplementeSection() {
     supplementHinzufuegen,
     supplementAendern,
     supplementEntfernen,
+    setSupplementFoto,
     supplementErledigt,
     supplementFeedback,
     saveSupplementFeedback,
@@ -482,7 +498,7 @@ function SupplementeSection() {
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Plan verwalten</div>
           <Card>
             {supplemente.map((s, i) => (
-              <SupplementZeile key={s.id} s={s} istLetzte={i === supplemente.length - 1} onAendern={handleAendern} onEntfernen={handleEntfernen} />
+              <SupplementZeile key={s.id} s={s} istLetzte={i === supplemente.length - 1} onAendern={handleAendern} onEntfernen={handleEntfernen} onFoto={setSupplementFoto} />
             ))}
           </Card>
         </>

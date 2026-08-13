@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { uploadPhoto } from "../lib/storage";
 
 // Supplemente folgen seit Migration 0029 demselben Dosierungs-/Intervall-
 // modell wie Medikamente und Peptide (Wochentage, konkrete Uhrzeiten,
@@ -21,6 +22,7 @@ function rowToSupplement(r) {
     weekdays: r.weekdays || [],
     uhrzeiten: r.uhrzeiten || [],
     eigenerStart: r.eigener_start || "",
+    fotoPath: r.foto_path || null,
   };
 }
 
@@ -118,6 +120,22 @@ export function useSupplementData(userId, hauptprotokollId) {
     if (error) console.error(error);
   }, []);
 
+  // Foto vom Präparat (Fläschchen/Packung) — analog zu setHormonFoto/
+  // setPeptidFoto, jetzt auch für Supplemente (Nutzerinnen-Vorgabe, 13.08.).
+  const setSupplementFoto = useCallback(
+    async (id, file) => {
+      try {
+        const path = await uploadPhoto(userId, file, "praeparate");
+        setSupplemente((prev) => prev.map((s) => (s.id === id ? { ...s, fotoPath: path } : s)));
+        const { error } = await supabase.from("supplements").update({ foto_path: path }).eq("id", id);
+        if (error) console.error(error);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [userId]
+  );
+
   const toggleSupplementErledigt = useCallback(
     async (datum, id, zeit) => {
       const k = `${datum}__${id}__${zeit}`;
@@ -197,6 +215,7 @@ export function useSupplementData(userId, hauptprotokollId) {
     supplementHinzufuegen,
     supplementAendern,
     supplementEntfernen,
+    setSupplementFoto,
     supplementErledigt,
     supplementErledigtAt,
     toggleSupplementErledigt,

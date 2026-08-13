@@ -4,8 +4,9 @@ import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { SignedPhoto } from "../ui/SignedPhoto";
+import AutocompleteInput from "../ui/AutocompleteInput";
 import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
-import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
+import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, PEPTIDE_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -220,7 +221,11 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen (manuell)</div>
         <Label>Name</Label>
-        <TextInput value={neuesMedikament.name} onChange={(v) => handleChange("name", v)} placeholder="z. B. Testosteron Enantat" />
+        {neuesMedikament.kategorie === "Peptid" ? (
+          <AutocompleteInput value={neuesMedikament.name} onChange={(v) => handleChange("name", v)} options={PEPTIDE_OPTIONEN} placeholder="z. B. BPC-157" />
+        ) : (
+          <TextInput value={neuesMedikament.name} onChange={(v) => handleChange("name", v)} placeholder="z. B. Testosteron Enantat" />
+        )}
 
         <Label>Kategorie</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
