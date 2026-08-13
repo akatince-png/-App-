@@ -1,12 +1,12 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-**Stand: 01.08.2026 — Branch
-`claude/app-uebergabeprotokoll-improvements-03r3b3`**
+**Stand: 13.08.2026 — Branch `claude/google-cloud-tts-api-key-yc49xp`**
 
-Dieses Dokument wurde komplett neu geschrieben (nicht nur ergänzt), um die
-vielen "Nachtrag"-Schichten der letzten Sessions in einen einzigen
-aktuellen Stand zusammenzuführen. Ältere Zwischenstände: siehe Git-Historie
-dieser Datei.
+Abschnitte 1–8 (Architektur, KI-Coach-System, Persona, Arbeitsweise) sind
+weiterhin gültig und wurden nicht neu geschrieben. Der Live-Stand ganz
+unten (ab "Sitzung 13.08.") wurde komplett neu geschrieben statt weiter
+Nachtrag-Absätze aufzustapeln — der alte Stand vom 01.08. ist über die
+Git-Historie dieser Datei einsehbar.
 
 ---
 
@@ -1372,39 +1372,18 @@ bis der Deploy-Schritt erledigt ist.
   Supabase/Google) — Verifikation nur über Rückmeldung der Nutzerin nach
   dem Deploy.
 
-### 🔴 Live-Stand des Deploys, Nacht 30./31.07. — HIER GEHT ES MORGEN WEITER
+### ✅ Nachtrag 13.08. — Deploy abgeschlossen
 
-Die Nutzerin ist mitten im Deploy-Schritt 1-4 oben, live per Screenshots
-durch die Google Cloud Console begleitet. Genauer Stand:
-
-- ✅ Google-Cloud-Projekt **"My First Project"** angelegt (Organisation
-  `aka-t-ince-org`), Projekt-ID `project-8895de46-f187-44d0-bd1`.
-- ✅ Kostenloses Google-Cloud-Testguthaben aktiviert (300 $, davon noch
-  262,60 € übrig, 90 Tage Laufzeit) — nicht zwingend nötig gewesen, schadet
-  aber nicht, deckt jegliche Kosten für die nächsten 90 Tage ab.
-- ✅ **Cloud Text-to-Speech API aktiviert** (Status "Aktiviert" bestätigt).
-- 🔴 **API-Schlüssel noch NICHT erstellt.** Erster Versuch führte über
-  "Anmeldedaten erstellen" auf der API-Detailseite in einen
-  Auswahl-Assistenten ("Art der Qualifikation"), der bei "Anwendungsdaten"
-  zu einem **Dienstkonto** (Service Account) geleitet hat — das ist der
-  FALSCHE, zu komplexe Weg für unseren Code (der erwartet einen einfachen
-  `?key=...`-API-Schlüssel, kein Dienstkonto mit JSON-Schlüsseldatei).
-  Dienstkonto-Erstellung wurde abgebrochen, ohne etwas zu speichern.
-- **Nächster Schritt morgen:** über die Suche zu **"APIs und Dienste"**
-  navigieren → linkes Menü **"Anmeldedaten"** → oben **"+ Anmeldedaten
-  erstellen"** → diesmal direkt **"API-Schlüssel"** wählen (NICHT über die
-  API-Detailseite gehen, das öffnet wieder den falschen Assistenten). Das
-  sollte ohne Umweg sofort einen fertigen Schlüssel anzeigen.
-- Danach weiter mit Schritt 4-6 der Anleitung oben: Schlüssel kopieren →
-  Edge Function `text-to-speech` im Supabase-Dashboard anlegen (Code aus
-  `supabase/functions/text-to-speech/index.ts`) → Schlüssel dort als Secret
-  `GOOGLE_TTS_API_KEY` hinterlegen → fertig, kein Vercel-Schritt nötig.
-
-**Außerdem weiterhin offen (unabhängig von der Cloud-Stimme):** das
-Gemini-429-Kontingentproblem von vorhin (nur 20 Freianfragen/Tag bei
-`gemini-3.6-flash`) — die Nutzerin muss sich noch entscheiden zwischen
-Modellwechsel (kostenlos, `gemini-3.5-flash-lite`) oder Abrechnung im
-Gemini-Projekt aktivieren, siehe Abschnitt 6, Punkt 14.
+API-Schlüssel erfolgreich über "Anmeldedaten" → "+ Anmeldedaten
+erstellen" → "API-Schlüssel" erstellt (der Dienstkonto-Umweg trat wie
+erwartet nur auf, wenn man stattdessen über die API-Detailseite oder den
+"Art der Qualifikation"-Assistenten ging). Edge Function `text-to-speech`
+deployt, `GOOGLE_TTS_API_KEY` als Secret hinterlegt, Stimme live
+getestet und bestätigt "klingt schon viel natürlicher". Auf Wunsch der
+Nutzerin von `de-DE-Wavenet-F` auf die männliche Stimme
+`de-DE-Wavenet-B` umgestellt (Code + Deploy). Cloud-Sprachausgabe ist
+damit **fertig, live und bestätigt** — Details siehe "Sitzung 13.08."
+ganz unten.
 
 ---
 
@@ -1701,113 +1680,150 @@ ankommen.
 
 ---
 
-**Letzte Aktualisierung:** 31.07.2026, spät nachts — Abschluss eines sehr
-langen, ereignisreichen Sitzungsblocks (29.–31.07.), komplett neu
-geschrieben statt weiterer Nachtrag-Absätze, damit ein neuer Chat/Ordner
-hier nahtlos und vollständig informiert einsteigen kann.
+## Sitzung 13.08. — Cloud-Sprachausgabe fertiggestellt, mehrere Trainingsplan-/Übersichts-Fixes
 
-### Wo die App gerade steht (Gesamtbild)
-
-Aka ist ein exekutiver Assistent (bewusst kein "Coach") in allen 9
-Lebensbereichen + Home/Tagesplan/Wochenübersicht, immer mit zwei
-gleichwertigen Bedienwegen (manuell UND per KI-Gespräch, siehe Leitprinzip
-Abschnitt 1). Onboarding hat zwei Begleitungs-Phasen, Design ist weiß mit
-bereichseigenen Farben. Erinnerungs-/Push-System deckt alle 9 Kategorien
-ab (Abschnitt 5). Seit dieser Woche zusätzlich: ein Admin-Dashboard mit
-"Verwalten als"-Modus (Abschnitt 4b/4c), eine Spotify-Anbindung mit
-mehreren Playlists, die Aka im Gespräch selbst zuordnet (Abschnitt 4d),
-und — ganz neu, Code fertig, Deploy z. T. noch offen — eine natürlichere
-Cloud-Stimme (4f) sowie ein Weg zur vollautomatischen morgendlichen
-Musik ganz ohne Hardware-Kauf (4g).
+**Letzte Aktualisierung:** 13.08.2026 — komplett neu geschrieben statt
+weiterer Nachtrag-Absätze (siehe Hinweis oben im Dokumentkopf).
 
 ### Vollständig fertig UND live bestätigt
 
-- **Admin-Dashboard** (4b) + **Admin-Hinweise über den Assistenten** (4c)
-  — Migrationen 0035/0036 deployt, Nutzerin als Admin markiert.
-- **Spotify-Anbindung mit mehreren Playlists** (4d) — OAuth, Marker-
-  Mechanismus im Chat, Migrationen 0037/0038 deployt, live getestet.
-- **Diverse UI-Politur** (4e) — Orb-Position, Farbfehler behoben, neues
-  Logo/Icon, größere Schrift, KiChat wiederholt keine alten Gespräche
-  mehr, Edge-Function-Fehler kommen jetzt im Client an.
-- **"Übernehmen"-Bugfixes + Nachvollziehbarkeit** (4h) — Training UND
-  Hydration zeigten fälschlich Erfolg trotz Speicherfehler, jetzt
-  behoben; neuer "Nachvollziehen"-Abschnitt unter "Alle Pläne" verlinkt
-  auf Akas Protokolle. Reiner Frontend-Fix, nichts zu deployen.
-- **Spracherkennungs-Fehler auf Deutsch** (4h) — kein rohes "not-allowed"
-  mehr im Chat.
+- **Cloud-Sprachausgabe (Google Cloud TTS/WaveNet)** — API-Schlüssel
+  erstellt (richtiger Weg: "Anmeldedaten" → "+ Anmeldedaten erstellen" →
+  direkt "API-Schlüssel", NICHT über die API-Detailseite oder den
+  "Art der Qualifikation"-Assistenten, das führt zum Dienstkonto-Umweg),
+  Edge Function `text-to-speech` deployt, Secret `GOOGLE_TTS_API_KEY`
+  gesetzt. Stimme live getestet, von der Nutzerin bestätigt ("klingt
+  schon viel natürlicher"). Auf Wunsch von `de-DE-Wavenet-F` auf die
+  männliche Stimme **`de-DE-Wavenet-B`** umgestellt.
+- **Aka stellt sich nur noch beim allerersten Kontakt vor** — "Hi, ich
+  bin Aka!" stand bisher am Anfang JEDER Begrüßung in JEDEM Bereich, bei
+  jedem Öffnen des Chats. Zentral in `KiChat.jsx` gelöst: sobald einmal
+  eine Begrüßung gezeigt wurde (`coachStorage.js` →
+  `getCoachVorgestellt()`/`saveCoachVorgestellt()`, localStorage), fällt
+  der "Hi, ich bin X!"-Anfang aus allen künftigen Begrüßungen weg.
+- **Onboarding-KI-Chat trug "Ist-Zustand"-Antworten nie wirklich ein** —
+  bei Schlaf/Hydration/Ernährung fragte der Chat zwar nach dem aktuellen
+  Zustand (z. B. "Wie ist dein aktueller Schlaf?"), das Ergebnis landete
+  aber nie im entsprechenden Formularfeld, weil `schlafzielAusChat()` /
+  `hydrationAusChat()` / `mahlzeitplanAusChat()` das gar nicht erst aus
+  dem Gespräch extrahiert haben — jetzt behoben (neues `istZustand`-Feld
+  im JSON-Schema + Verdrahtung in `OnboardingCategoriesView.jsx`).
+  Training/Gewohnheiten bewusst NICHT mit angefasst (siehe "Offen"
+  unten). Zusätzlich behauptete Aka im Gespräch teils fälschlich, etwas
+  sei "im Hintergrund schon gespeichert" — zentraler Hinweis im
+  Systemprompt (`KiChat.jsx`, nur wenn ein `onUebernehmen`-Knopf
+  existiert) stellt jetzt klar, dass erst "Übernehmen" + "Weiter"
+  wirklich speichert.
+- **Übungskatalog stark erweitert** (`KRAFTUEBUNGEN`/`BODYWEIGHT_UEBUNGEN`
+  in `constants.js`) — einzelne Ausführungsvarianten statt nur der
+  Basisübung (z. B. "Bankdrücken / Schrägbank (Kurzhantel)" statt nur
+  "Bankdrücken"). `AutocompleteInput.jsx` hat jetzt einen `mehrfach`-Modus
+  für kommagetrennte Mehrfach-Felder.
+- **Trainingsplan: jede Übung hat jetzt eigene Sätze/Wiederholungen/
+  Gewicht** — vorher galt für eine ganze Wochenplan-Einheit nur EIN
+  globales Sätze/Wiederholungen-Paar, bei mehreren Übungen ließ sich also
+  gar nichts Individuelles eintragen. Die Übungsliste-Komponente aus dem
+  echten Trainingslog ist jetzt nach `src/ui/UebungenEditor.jsx`
+  ausgelagert und wird von `TrainingView.jsx` UND `WochenplanEditor.jsx`
+  gemeinsam genutzt. Neue Spalte `training_wochenplan.uebungen_liste`
+  (jsonb, Migration 0040, **deployt und live bestätigt**) — alte Spalten
+  bleiben für vorher gespeicherte Einheiten erhalten
+  (`wochenplanUebungenText()` in `dayItems.js` zeigt beide Formate
+  korrekt an). `AIService.trainingsplanAusChat()` liefert jetzt ebenfalls
+  `uebungenListe` statt eines einzigen globalen Paars.
+- **Optionale Pyramiden-Gewichte pro Satz** — je Übung lässt sich
+  "Gewicht ändert sich pro Satz" aktivieren, dann ein Gewichtsfeld je
+  Satz statt eines einzelnen. Keine Migration nötig (jsonb). Noch nicht
+  von der Nutzerin live getestet.
+- **Monatsansicht zeigt jetzt alle Kategorien als farbige Punkte** — war
+  vorher hart auf Peptide/Hormone/Supplemente/Medikamente beschränkt,
+  Training (und alles andere) blieb unsichtbar. Noch nicht von der
+  Nutzerin live getestet.
+- **Morgen-/Abendroutine als einklappbare Gruppierung im Tagesplan** —
+  Punkte vor 11 Uhr bzw. ab 18 Uhr erscheinen zusätzlich unter
+  "🌅 Morgenroutine"/"🌙 Abendroutine", zugeklappt nur eine
+  Kurz-Zusammenfassung, aufgeklappt die volle gewohnte Detailansicht.
+  Reine Darstellungsebene (`TagesplanView.jsx`), kein neues
+  Datenmodell, nichts muss manuell zugeordnet werden. Noch nicht von der
+  Nutzerin live getestet.
 
-### ⭐ Priorität für heute Abend (01.08.), explizit von der Nutzerin so vorgegeben
+### 🔴 Offen — Gemini-429-Kontingentproblem, NICHT gelöst
 
-**Cloud-Sprachausgabe fertigstellen (Google Cloud TTS/WaveNet, Abschnitt
-4f)** — ausdrücklich EIN eigenständiges Thema, **unabhängig vom
-Gemini-Kontingentproblem** (das ist ein separates, davon losgelöstes
-Vorhaben: weg von der robotischen Browser-Stimme, hin zu Google Cloud
-TTS). Die Nutzerin hat dafür bereits eine Zahlungsmethode im
-Google-Cloud-Projekt hinterlegt ("ich hatte auch schon Geld bezahlt") —
-das Geld/die Einrichtung ist also schon investiert, nur der letzte Schritt
-fehlt noch. Live-Stand: Google-Cloud-Projekt + Testguthaben +
-Text-to-Speech-API sind fertig aktiviert, **der API-Schlüssel selbst
-wurde noch nicht fertig erstellt** (erster Versuch landete fälschlich bei
-"Dienstkonto" statt einfachem API-Schlüssel — richtiger Weg: "APIs und
-Dienste" → linkes Menü **"Anmeldedaten"** → **"+ Anmeldedaten erstellen"**
-→ direkt **"API-Schlüssel"** wählen, NICHT über die API-Detailseite gehen,
-das öffnet wieder den falschen Assistenten. Genauer Klickpfad auch im
-"🔴 Live-Stand"-Absatz in 4f). Danach noch: Edge Function
-`text-to-speech` im Supabase-Dashboard anlegen (Code aus
-`supabase/functions/text-to-speech/index.ts`) + den Schlüssel dort als
-Secret `GOOGLE_TTS_API_KEY` hinterlegen — dann sofort aktiv, kein
-Vercel-Schritt nötig. **Das ist der Einstiegspunkt für die heutige
-Abend-Sitzung**, bevor irgendwas anderes angegangen wird.
+Ursache gefunden: der bisher verwendete `GEMINI_API_KEY` hing an einem
+komplett anderen, separaten Google-Cloud-Projekt (**"Default Gemini
+Project"**, `gen-lang-client-0773984217`, automatisch von AI Studio
+angelegt) statt an **"My First Project"** (`project-8895de46-f187-44d0-bd1`,
+dort läuft die Abrechnung/das Testguthaben für die Sprachausgabe). Die
+Nutzerin hat über [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+einen neuen Schlüssel unter "My First Project" erstellt (dabei wichtig:
+Google zeigt teils **zwei Projekte mit identischem Namen** "My First
+Project" — nur an der Projekt-ID `project-8895de46-...` erkennbar, NICHT
+am Namen) und in Supabase als `GEMINI_API_KEY` hinterlegt.
 
-### Ebenfalls fertig gebaut, Deploy/Einrichtung noch nicht abgeschlossen
-- **Auto-Play-Schlüssel für Spotify** (Abschnitt 4g) — löst das live
-  entdeckte Problem, dass der iOS-Kurzbefehl Spotify zwar öffnet, aber
-  nicht selbst abspielt (bestätigte Spotify/Shortcuts-Einschränkung).
-  Migration 0039 + `spotify-play`-Redeploy stehen noch aus, danach
-  Kurzbefehl um zwei Schritte ("Warten" + "URL-Inhalt abrufen") ergänzen
-  — danach läuft die Morgenmusik komplett automatisch, kein Kauf nötig.
+**Trotzdem weiterhin Fehler beim Testen:**
+1. Erster Versuch: `400 API key not valid` — vermutlich nur der
+   abgekürzte Schlüssel aus der Liste kopiert statt des vollständigen.
+2. Nach Neu-Kopieren: `429 "Your prepayment credits are depleted. Please
+   go to AI Studio at https://ai.studio/projects to manage your project
+   and billing."` — Gemini hat offenbar ein **eigenes Prepay-
+   Guthabensystem**, getrennt vom allgemeinen Google-Cloud-Testguthaben.
+   Auf der Seite "Gemini API – Ausgaben" (aistudio.google.com) zeigt "My
+   First Project" zwar **"Preisstufe 1"** (also grundsätzlich
+   zahlungspflichtig erkannt), aber der Fehler trat danach live
+   weiterhin auf — vermutlich muss zusätzlich explizit Guthaben
+   aufgeladen werden, wo genau das geht, wurde in dieser Sitzung nicht
+   mehr geklärt.
 
-### Offen, noch nicht entschieden/behoben
+**Nächster Schritt:** entweder auf `ai.studio/projects` nach einer
+"Guthaben aufladen"/"Add credits"-Option für "My First Project" suchen,
+oder (kostenlose Übergangslösung) auf einen der drei alten, noch
+existierenden Gemini-Schlüssel unter "Default Gemini Project"
+zurückwechseln (dann gilt wieder die alte 20-Anfragen/Tag-Grenze) — die
+Nutzerin hatte danach gefragt, es ist unklar, ob sie das zwischenzeitlich
+schon gemacht hat. **Bei Sitzungsstart zuerst nachfragen, welcher der
+beiden Zustände gerade aktiv ist**, bevor hier weitergemacht wird.
 
-- **Gemini-429-Kontingentproblem** (nur 20 Freianfragen/Tag bei
-  `gemini-3.6-flash`, seit dem Abend des 30.07. mehrfach live erlebt,
-  auch als vermutliche Ursache für gescheiterte "Übernehmen"-Versuche) —
-  Nutzerin muss sich entscheiden: kostenlos auf `gemini-3.5-flash-lite`
-  wechseln (Vercel-Variable `VITE_AI_MODEL`) oder Abrechnung im
-  Google-Cloud-Projekt aktivieren. **Das ist vermutlich der Punkt mit der
-  größten Alltagsauswirkung gerade** — betrifft potenziell jede
-  KI-Funktion in der App, nicht nur Training.
-- **Mikrofon-Zugriff für AKA in Safari aktuell blockiert** ("not-allowed"
-  live erlebt) — externe Geräte-Einstellung, kein Code. Genauer
-  Klickpfad in Abschnitt 4h. War beim Schreiben dieses Absatzes noch
-  nicht bestätigt behoben.
+### Offen, bewusst nicht in dieser Sitzung mit angefasst
 
-### Besprochen, aber bewusst nicht begonnen — nächste große Baustellen
+- **Ist-Zustand-Auto-Eintragung für Training/Gewohnheiten** — bei Training
+  wäre die zugrundeliegende `trainingsplanAusChat()`-Funktion an zwei
+  Stellen geteilt (Onboarding UND `TrainingView.jsx`), Umbau war riskanter;
+  bei Gewohnheiten sind die vier Ist-Zustand-Fragen (Warum/Schwierigkeiten/
+  fällt schwer/fällt leicht) eher grundsätzliche Reflexionsfragen, die
+  nicht zum bisherigen "Gewohnheit X einrichten"-Gesprächsfluss passen.
+  Nur nachziehen, falls die Nutzerin das explizit will.
+- **Trainingsplan-Button auf der Trainingsplan-Hauptseite** — Aka-Chat
+  erscheint dort nur innerhalb von "Wochenplan bearbeiten", nicht direkt
+  auf der Hauptseite. Nutzerin wurde gefragt, ob das immer sichtbar sein
+  soll — **Antwort: nein, so lassen.** (Entschieden, nicht offen.)
+- **PDF-Export der Trainings-/Routine-Ansicht** — Nutzerin hat gefragt,
+  ob es sowas gibt/geben sollte, aber selbst als "nächster Schritt, jetzt
+  noch nicht" eingeordnet. Es gibt bereits einen allgemeinen PDF-Export
+  im Hauptprotokoll (`utils/pdfExport.js`, "Export & Druck"-Karte) — ob
+  der für die neue Trainings-/Routinen-Darstellung ausreicht oder erst
+  erweitert werden muss, wurde noch nicht geprüft.
+- **Geführte Morgen-/Abendroutine mit Sprachbegleitung** — die einklapp-
+  bare Gruppierung oben ist bewusst die kleine, schnelle Version (reine
+  Darstellung). Die größere, schon länger besprochene Idee — ein
+  geführter Ablauf-Screen, der die Schritte per Sprache mit der Nutzerin
+  durchgeht, mit Wartezeiten/Nachfragen und Musik im Hintergrund — ist
+  weiterhin NICHT begonnen und explizit für später vorgemerkt
+  (Nutzerinnen-Vorgabe 13.08.: "merk dir bitte die zukünftigen Schritte
+  vor").
+- **Mikrofon-Zugriff für AKA in Safari** — Stand aus der letzten Sitzung
+  unverändert, in dieser Sitzung nicht erneut geprüft.
+- **Echter Wecker + Smart-Speaker-Frage** — unverändert seit letzter
+  Sitzung, nicht angefasst.
+- Im ursprünglichen Onboarding fehlen weiterhin Detailfragen zum
+  Sport-Istzustand/zur Körperkomposition.
 
-1. **Echter Wecker mit Playlist-Auswahl** im Schlaf-Bereich, darauf
-   aufbauend die **geführte Morgenroutine** (Ablauf-Screen, der die mit
-   Aka geplanten Schritte per Sprache durchgeht, Musik läuft mit,
-   Wartezeiten/Nachfragen, Abschluss "wir hören uns bei der Medigabe")
-   — von der Nutzerin klar priorisiert, siehe Abschnitt 4d. Der
-   Auto-Play-Schlüssel (4g) macht die Musik-Seite davon jetzt schon
-   automatisch — der Ablauf-Screen selbst ist der eigentlich noch offene
-   Teil.
-2. **Smart-Speaker als langfristiges Zielbild** (Abschnitt 4d) — Echo Dot
-   (~38–40 €) recherchiert und empfohlen, Sonos (Era 300/Move 2,
-   ~400–500 €) als Premium-Alternative mit eingebautem Spotify-Wecker,
-   falls Preis egal ist. Noch nichts angeschafft — durch den kostenlosen
-   Auto-Play-Schlüssel (4g) inzwischen weniger dringend.
-3. Im ursprünglichen Onboarding fehlen noch Detailfragen zum
-   Sport-Istzustand/zur Körperkomposition (beim Admin-Dashboard-Auftrag
-   erwähnt, dort bewusst zurückgestellt).
+### Empfohlener nächster Einstieg
 
-**Empfohlener nächster Einstieg für die heutige Abend-Sitzung (01.08.):**
-**direkt mit der Cloud-Sprachausgabe weitermachen** (siehe "⭐ Priorität
-für heute Abend" oben) — das ist der von der Nutzerin explizit gewünschte
-Startpunkt, unabhängig vom Gemini-Kontingent. Konkret: Google Cloud
-Console öffnen, zu "Anmeldedaten" navigieren, einen einfachen
-API-Schlüssel erstellen (nicht über "Dienstkonto"), dann Edge Function
-`text-to-speech` deployen. Erst danach, falls noch Zeit/Bedarf: Gemini-
-Kontingent klären, Mikrofon-Zugriff prüfen, Auto-Play-Schlüssel (4g)
-fertig deployen, oder mit der geführten Morgenroutine (Punkt 1 oben)
-weitermachen.
+1. Zuerst klären, ob das Gemini-Kontingentproblem seit Sitzungsende
+   inzwischen doch gelöst wurde (Guthaben aufgeladen?) oder ob die
+   Nutzerin auf einen alten Freikontingent-Schlüssel zurückgewechselt ist.
+2. Danach: Pyramiden-Gewichte, Monatsansicht-Punkte und Morgen-/
+   Abendroutine-Gruppierung gemeinsam live testen (alle drei deployt,
+   aber noch nicht bestätigt).
+3. Falls Zeit/Bedarf: geführter Ablauf-Screen mit Sprachbegleitung
+   (siehe "Offen" oben) als nächstes großes Vorhaben angehen.
