@@ -1790,15 +1790,55 @@ Sitzung war ungewöhnlich lang und dicht — unten steht der Endstand.
   enthalten") — die Nutzerin kündigte eine eigene kurze wissenschaftliche
   Recherche an, um diese Vorgaben Schritt für Schritt gemeinsam
   festzulegen; das ist bewusst noch nicht vorweggenommen worden.
+- **Migration `0044_routine_zeitrahmen.sql`** — deployt, bestätigt.
 
-### 🟡 Muss die Nutzerin noch tun (Migration nicht deployt)
+### 🆕 Nachtrag (noch selber Tag): Coach-verwaltetes Modell + "Aka lernt mit"
 
-- **Migration `0044_routine_zeitrahmen.sql`** im Supabase-Dashboard-SQL-
-  Editor ausführen (legt Tabelle `routine_einstellungen` an, RLS
-  inklusive) — ohne das läuft `routineZeitrahmenSetzen()` beim Speichern
-  des Zeitrahmens auf einen DB-Fehler (Tabelle existiert nicht). Erst
-  danach die neuen Morgen-/Abendroutine-Reiter + Zeitrahmen + Überlappungs-
-  Erkennung live testen.
+Grundlegender Rollenwechsel auf Wunsch der Nutzerin: die App wird nicht
+mehr primär von jeder Person komplett selbst eingerichtet, sondern die
+Nutzerin selbst tritt als **Coach/Admin** auf und richtet die meisten
+Bereiche für ihre **Coachees** (Klient:innen) über den bestehenden
+"Verwalten als"-Modus stellvertretend ein. Alles additiv/versteckend,
+NICHTS wurde gelöscht — über den Admin-/Verwalten-als-Zugang bleibt
+jederzeit alles wie zuvor erreichbar.
+
+- **Onboarding für Coachees reduziert**: nur noch Profil (Name/Alter/
+  Körperwerte) + Ziel + ein neuer kurzer **Steckbrief** (`profiles.steckbrief`
+  jsonb, Migration 0045, **deployt, bestätigt**) — 3 Fragen: Supplemente
+  ja/nein+welche, Sport-Erfahrung, Sport-Menge+Beschreibung
+  (`OnboardingSteckbriefView.jsx`). Laborwerte/Routinen/die 8
+  Kategorie-Schritte entfallen für Coachees komplett, bleiben im Admin-/
+  Verwalten-als-Modus (`istAdminModus = proband !== null || isAdmin`,
+  dieselbe Formel überall) unverändert vollständig. `OnboardingFlow.jsx`
+  verzweigt entsprechend nach der "profil"-Phase.
+- **KI-Assistent (Aka) für Coachees komplett ausgeblendet** — ein
+  zentrales Gate in `KiChat.jsx` direkt neben dem bestehenden "KI aus"-
+  Schalter (`if (!istAdminModus) return null`). Wirkt automatisch in JEDER
+  Ansicht, kein Anfassen der ~15+ einzelnen KiChat-Aufrufstellen nötig.
+  Ersatz für Coachees: eine neue Nachrichtenfunktion Coachee → Coach
+  (Tabelle `coachee_nachrichten`, Migration 0045, **deployt, bestätigt**;
+  Hook `useCoacheeNachrichten.js`; Karte auf `HomeView.jsx` statt KiChat;
+  Admin-Dashboard hat ein neues "Nachrichten"-Panel pro Proband zum
+  Lesen/als-gelesen-Markieren).
+- **"+"-Button ("Neues Protokoll")** ebenfalls nur noch für Admin/
+  Verwalten-als sichtbar (`AuthenticatedApp.jsx`).
+- **Wissens-Basis-Verwaltung ("Aka lernt mit")**: zusätzlich zur
+  statischen `src/wissen/*.md`-Basis (braucht Deploy) jetzt eine
+  DB-gestützte Verwaltung (`coach_wissen`, Migration 0046, **deployt,
+  bestätigt**) — die Admin trägt jederzeit direkt aus der App (auch vom
+  Handy) neues Wissen ein, neue `AdminWissenView.jsx` (Knopf im
+  Admin-Dashboard: "📚 Wissens-Basis verwalten"). Fließt in `KiChat.jsx`
+  neben der statischen Basis in jeden Gesprächskontext ein (gleiches
+  `bereich`-Filtermuster wie `admin_notizen`). Für große Recherche-Texte
+  (z. B. von Perplexity): die Nutzerin gibt sie im Chat, der Agent bereitet
+  sie auf und gibt fertigen Text zum Einfügen zurück.
+- **Bewusst NICHT umgesetzt**: automatisches Lernen aus individuellen
+  Coachee-Protokollergebnissen/-Feedback — wirft eine echte Datenschutz-/
+  Einwilligungsfrage auf (individuelle Daten einer Person würden anderen
+  Coachees zugutekommen). Vorschlag für später: ein von der Admin selbst
+  geschriebenes "Fazit" bei Protokoll-Abschluss statt roher
+  Coachee-Daten — noch nicht gebaut, erst wenn die Nutzerin das genauer
+  durchdacht hat.
 
 ### 🔴 Offen — Gemini-429-Kontingentproblem, Stand unklar
 
@@ -1835,12 +1875,18 @@ Gemini Project" zurückgewechselt, oder Guthaben gefunden/aufgeladen).
 
 1. Zuerst klären, ob das Gemini-Kontingentproblem seit Sitzungsende gelöst
    wurde.
-2. Migration `0044_routine_zeitrahmen.sql` deployen lassen (siehe oben),
-   dann Morgen-/Abendroutine-Reiter, Zeitrahmen und Überlappungs-
-   Erkennung gemeinsam live testen.
-3. Mit der Nutzerin die angekündigte "wissenschaftliche Recherche" zu
+2. Coach-verwaltetes Modell live testen: testweise über "+ Neuen Zugang
+   anlegen" einen zweiten (Nicht-Admin-)Account anlegen, das reduzierte
+   Coachee-Onboarding durchlaufen, prüfen dass KI-Assistent/"+"-Button
+   dort nicht auftauchen und die neue "Nachricht an deinen Coach"-Karte
+   funktioniert (inkl. Admin-seitigem "Nachrichten"-Panel).
+3. Morgen-/Abendroutine-Reiter, Zeitrahmen und Überlappungs-Erkennung
+   gemeinsam live testen (Migration 0044 deployt, aber noch nicht
+   live bestätigt).
+4. Mit der Nutzerin die angekündigte "wissenschaftliche Recherche" zu
    ADHS-gerechten Morgen-/Abendroutine-Vorgaben durchgehen und Schritt für
-   Schritt in konkrete Vorschläge/Defaults übersetzen.
-4. Pyramiden-Gewichte und den geführten Ablauf-Screen (falls noch nicht
+   Schritt in konkrete Vorschläge/Defaults übersetzen — ggf. direkt über
+   die neue Wissens-Basis-Verwaltung eintragen.
+5. Pyramiden-Gewichte und den geführten Ablauf-Screen (falls noch nicht
    geschehen) gemeinsam live testen — beide deployt, aber Live-Bestätigung
    durch die Nutzerin steht für einzelne Details noch aus.
