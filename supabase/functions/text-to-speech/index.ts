@@ -21,7 +21,7 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 // Zeichen), statt laufender Kosten ab dem ersten Zeichen wie bei den
 // höherwertigen Stimmklassen. Bei Bedarf hier einfach eine andere
 // de-DE-Wavenet-*-Stimme eintragen (A-F, unterschiedliche Klangfarben).
-const STIMME = "de-DE-Wavenet-F";
+const STIMME = "de-DE-Wavenet-B";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
