@@ -447,6 +447,5 @@ export const PLAENE_TABS = [
   { id: "training", label: "Training", icon: "dumbbell", grad: F_WARM },
   { id: "supplemente", label: "Supplemente", icon: "capsule", grad: F_WARM },
   { id: "medikamente", label: "Medikamente", icon: "cross", grad: F_SLATE },
-  { id: "peptide", label: "Peptide", icon: "dna", grad: F_EMERALD },
   { id: "wochenuebersicht", label: "Wochenübersicht", icon: "calendarWeek", grad: F_SLATE },
 ];

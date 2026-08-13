@@ -1,4 +1,4 @@
-import { keyOf, sameDay, toLocalISODate } from "./dates";
+import { sameDay, toLocalISODate } from "./dates";
 import { faelltAnTag } from "./schedule";
 import { uebungGewichtText, uebungWiederholungenText } from "../ui/UebungenEditor";
 
@@ -13,16 +13,12 @@ export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 // überall derselben Marken-Akzentfarbe (Nutzerinnen-Vorgabe, 27.07.):
 // Tageslicht = Gelb, Training = Rot, Medikamente = Lila, Hydration = Blau,
 // Schlaf = Indigo (nachtnahes Dunkelblau, unterscheidbar von Medikamente-
-// Lila), Peptide = Grün, Supplemente = Gold, Ernährung = Terrakotta,
-// Gewohnheiten = Teal. `dot` ist die kräftige Version (Icons, Ringe,
-// Buttons), `bg`/`text` die helle Variante für Badges/Chips. Peptide nutzte
-// zwischenzeitlich versehentlich dieselbe Farbe wie die allgemeine
-// Marken-Akzentfarbe (`accent`, seit dem Indigo-Redesign) — dadurch sahen
-// z. B. "Peptide" und andere generisch eingefärbte Elemente identisch aus
-// (bestätigter Bug, 29.07.). Jetzt ein eigenständiges Grün, klar getrennt
-// von `success` (Petrol) und Gewohnheiten (Teal).
+// Lila), Supplemente = Gold, Ernährung = Terrakotta, Gewohnheiten = Teal.
+// `dot` ist die kräftige Version (Icons, Ringe, Buttons), `bg`/`text` die
+// helle Variante für Badges/Chips. Peptide sind seit der Datenzusammen-
+// legung (13.08., Migration 0042) Teil von "hormon" (Medikamente) und
+// haben keine eigene Kategorie mehr.
 export const KATEGORIE_META = {
-  peptid: { bg: "#E7F2E8", text: "#2C5C30", dot: "#4F9153", label: "Peptid" },
   hormon: { bg: "#F1E9F6", text: "#6B3F91", dot: "#8B5CB0", label: "Medikament" },
   supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
@@ -81,9 +77,6 @@ export function trainingDetail(t) {
 export function buildDayItems(
   date,
   {
-    plan,
-    erledigt,
-    dosierung,
     hormonPlan,
     hormonErledigt,
     hormonDosierung,
@@ -100,23 +93,6 @@ export function buildDayItems(
 ) {
   const tagStr = toLocalISODate(date);
   const items = [];
-
-  plan
-    .filter((d) => sameDay(d.date, date))
-    .forEach((d) => {
-      const k = keyOf(d.date, d.peptid, d.uhrzeit);
-      items.push({
-        kategorie: "peptid",
-        key: `p-${k}`,
-        refId: dosierung?.[d.peptid]?.id ?? null,
-        hour: d.uhrzeit.slice(0, 2),
-        uhrzeit: d.uhrzeit,
-        name: d.peptid,
-        detail: d.menge,
-        done: !!erledigt[k],
-        raw: d,
-      });
-    });
 
   hormonPlan
     .filter((d) => sameDay(d.date, date))

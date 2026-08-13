@@ -18,7 +18,6 @@ const BEREICH_OPTIONEN = [
   { value: "schlaf", label: "Schlaf" },
   { value: "supplemente", label: "Supplemente" },
   { value: "medikamente", label: "Medikamente" },
-  { value: "peptide", label: "Peptide" },
   { value: "gewohnheiten", label: "Gewohnheiten" },
 ];
 

@@ -12,7 +12,6 @@ import NutritionView from "../NutritionView";
 import TrainingView from "../TrainingView";
 import SupplementeView from "../SupplementeView";
 import MedikamenteView from "../MedikamenteView";
-import PeptidView from "../PeptidView";
 import WochenuebersichtView from "../WochenuebersichtView";
 
 const VIEWS = {
@@ -23,12 +22,13 @@ const VIEWS = {
   training: TrainingView,
   supplemente: SupplementeView,
   medikamente: MedikamenteView,
-  peptide: PeptidView,
   wochenuebersicht: WochenuebersichtView,
 };
 
 // planeTab-Id → KATEGORIE_META-Schlüssel (weichen an 2 Stellen vom Tab-Namen
-// ab: "ernaehrung"→"mahlzeit", "medikamente"→"hormon", "peptide"→"peptid").
+// ab: "ernaehrung"→"mahlzeit", "medikamente"→"hormon"). Peptide sind seit
+// der Datenzusammenlegung (13.08., Migration 0042) Teil von "medikamente"/
+// "hormon" und haben keinen eigenen Reiter mehr.
 // "wochenuebersicht" bleibt ohne Zuordnung (mischt alle Bereiche, keine
 // einzelne Farbe sinnvoll) — Shell fällt dann auf die generische Akzentfarbe
 // zurück.
@@ -40,13 +40,12 @@ const TAB_ZU_KATEGORIE = {
   training: "training",
   supplemente: "supplement",
   medikamente: "hormon",
-  peptide: "peptid",
 };
 
 // Eigene Farbe für den Reiter-Button von "wochenuebersicht" — bewusst NICHT
 // die generische Akzentfarbe (`accent`), weil genau die schon fest an
-// "Peptide" vergeben ist (KATEGORIE_META.peptid.dot) und beide Reiter sonst
-// beim Anwählen identisch aussehen (bestätigter Bug, 29.07.).
+// "Medikamente" vergeben ist (KATEGORIE_META.hormon.dot) und beide Reiter
+// sonst beim Anwählen identisch aussehen (bestätigter Bug, 29.07.).
 const WOCHENUEBERSICHT_FARBE = "#64748B";
 
 // Eigene, kleine Liste statt eines einzelnen Knopfes (Nutzerinnen-Vorgabe,

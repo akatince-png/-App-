@@ -26,7 +26,6 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "profil", "blutzucker
 // Kategorien landen jetzt alle im "Alle Pläne"-Hub (PlaeneView), der
 // jeweilige `view`-Wert dient dort direkt als aktiver Reiter.
 const KATEGORIE_TO_VIEW = {
-  peptid: "peptide",
   hormon: "medikamente",
   supplement: "supplemente",
   gewohnheit: "routinen",
@@ -169,7 +168,7 @@ export default function AuthenticatedApp() {
       />
     );
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
-    screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("peptide")} />;
+    screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("medikamente")} />;
   } else if (view === "mehr") {
     screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} onOpenAdmin={isAdmin ? () => setView("admin") : undefined} />;
   } else if (view === "admin") {

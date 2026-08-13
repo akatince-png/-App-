@@ -81,8 +81,6 @@ const ORDNER = [
 export default function HomeView({ onOpenView }) {
   const { t, tLabel, lang } = useT();
   const {
-    plan,
-    erledigt,
     hormonPlan,
     hormonErledigt,
     supplemente,
@@ -149,8 +147,6 @@ export default function HomeView({ onOpenView }) {
   const userName = typeof window !== "undefined" ? localStorage.getItem("user_name") : null;
 
   const heuteItems = buildDayItems(today, {
-    plan,
-    erledigt,
     hormonPlan,
     hormonErledigt,
     supplemente,
@@ -210,41 +206,13 @@ export default function HomeView({ onOpenView }) {
     // Aufrufe pro Render statt der nötigen 7).
     const wocheItems = Array.from({ length: 7 }, (_, i) =>
       buildDayItems(addDays(today, i), {
-        plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+        hormonPlan, hormonErledigt, supplemente, supplementErledigt,
         mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
         trainingTemplates, gewohnheiten, gewohnheitErledigt,
       })
     ).flat();
 
-    // Peptide/Hormone
-    {
-      const todayCount = plan.filter((d) => {
-        const key = `${toLocalISODate(d.date)}__${d.peptid}__${d.uhrzeit}`;
-        return erledigt[key];
-      }).length;
-      const weekStart = addDays(today, -((today.getDay() + 6) % 7));
-      const weekEnd = addDays(weekStart, 6);
-      const weekCount = plan.filter((d) => {
-        const key = `${toLocalISODate(d.date)}__${d.peptid}__${d.uhrzeit}`;
-        return (
-          erledigt[key] &&
-          d.date >= weekStart &&
-          d.date <= weekEnd
-        );
-      }).length;
-      widgets.push({
-        name: tLabel("Peptide"),
-        kategorie: "peptid",
-        viewId: "peptide",
-        aktiv: plan.length > 0,
-        dailyCount: todayCount,
-        dailyTotal: plan.filter((d) => sameDay(d.date, today)).length || 1,
-        weeklyCount: weekCount,
-        weeklyTotal: plan.length || 1,
-        isEssential: false,
-      });
-    }
-
+    // Hormone (umfasst seit der Datenzusammenlegung, 13.08., auch Peptide)
     {
       const todayCount = hormonPlan.filter((d) => {
         const key = `${toLocalISODate(d.date)}__${d.name}__${d.uhrzeit}`;
@@ -368,7 +336,7 @@ export default function HomeView({ onOpenView }) {
     // oder nur die tatsächlich genutzten.
     if (isEmergencyMode) return widgets.filter((w) => w.isEssential && w.aktiv);
     return alleWidgetsAnzeigen ? widgets : widgets.filter((w) => w.aktiv);
-  }, [isEmergencyMode, alleWidgetsAnzeigen, plan, erledigt, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+  }, [isEmergencyMode, alleWidgetsAnzeigen, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
       mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan, trainingTemplates,
       gewohnheiten, gewohnheitErledigt, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen,
       tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel]);
