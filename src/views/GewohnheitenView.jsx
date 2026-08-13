@@ -12,6 +12,7 @@ import { KATEGORIE_META } from "../utils/dayItems";
 import { verspaetungText } from "../utils/dates";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
+import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -282,6 +283,16 @@ export default function GewohnheitenView({ onHome }) {
             />
           </>
         )}
+        <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
+        <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
+      </Card>
+
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🎵 Musik für deine Gewohnheiten</div>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 4 }}>
+          Eine Playlist, die zu allen deinen sonstigen Gewohnheiten passt — spielst du dir selbst über "Jetzt testen" an, wenn du startest.
+        </div>
+        <SpotifyAnlassPicker anlass="gewohnheiten" label="" />
       </Card>
 
       <div style={{ marginBottom: 16 }}>

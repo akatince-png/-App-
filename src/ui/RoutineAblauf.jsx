@@ -1,7 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "./primitives";
 import Timer from "./Timer";
 import { textMuted } from "./theme";
+import { useAppData } from "../context/AppDataContext";
+
+const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 const ROUTINE_EMOJI = { morgen: "🌅", abend: "🌙" };
@@ -17,11 +20,21 @@ const ABSCHLUSS_TEXT = {
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen } = useAppData();
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
   const protokollRef = useRef([]);
   const startZeitRef = useRef(Date.now());
   const gestartetUmRef = useRef(new Date().toISOString());
+
+  // Startet automatisch die zugeordnete Playlist (falls unter "Schritte
+  // einrichten" → Playlist eine hinterlegt ist), einmalig beim Start dieses
+  // Durchlaufs — nicht bei jedem Schrittwechsel.
+  useEffect(() => {
+    const uri = spotifyAnlaesse[ROUTINE_ANLASS[routine]]?.uri;
+    if (uri && spotifyVerbunden) spotifyAbspielen(uri);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const aktuell = schritte[index];
 

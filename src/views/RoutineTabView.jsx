@@ -7,6 +7,9 @@ import { useAppData } from "../context/AppDataContext";
 import { buildDayItems } from "../utils/dayItems";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
+import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+
+const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 const ROUTINE_EMOJI = { morgen: "🌅", abend: "🌙" };
@@ -170,6 +173,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
             />
           </div>
         )}
+        <SpotifyAnlassPicker anlass={ROUTINE_ANLASS[routine]} label={`🎵 Playlist für die ${ROUTINE_LABEL[routine]}`} />
       </Card>
 
       <Card style={{ marginBottom: 16 }}>

@@ -6,6 +6,7 @@ import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "../ui/UebungenEditor";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
+import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
@@ -139,6 +140,15 @@ function TrainingFeedbackPanel({ trainingId, onDone }) {
 // für Cardio/HIIT.
 // ---------------------------------------------------------------------------
 function LiveWorkout({ session, onFertig, onSchliessen }) {
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen } = useAppData();
+  // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik
+  // → Zuordnung, siehe SpotifyAnlassPicker), einmalig beim Öffnen dieser
+  // Live-Session — nicht bei jedem Satz-/Übungswechsel.
+  useEffect(() => {
+    const uri = spotifyAnlaesse.training?.uri;
+    if (uri && spotifyVerbunden) spotifyAbspielen(uri);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [uebungIndex, setUebungIndex] = useState(0);
   const [satzAktuell, setSatzAktuell] = useState(1);
   const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' | 'bestaetigen' (Kraft)
@@ -504,6 +514,10 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       )}
 
       {feedbackFuerId && <TrainingFeedbackPanel trainingId={feedbackFuerId} onDone={() => setFeedbackFuerId(null)} />}
+
+      <Card style={{ marginBottom: 14 }}>
+        <SpotifyAnlassPicker anlass="training" label="🎵 Playlist fürs Training" />
+      </Card>
 
       <div style={{ marginBottom: 14 }}>
         <PrimaryButton variant="ghost" onClick={() => setWochenplanOffen((o) => !o)}>

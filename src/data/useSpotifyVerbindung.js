@@ -12,16 +12,26 @@ export function useSpotifyVerbindung(userId) {
   const [spotifyAutoPlayToken, setSpotifyAutoPlayToken] = useState(null);
   const [spotifyTestet, setSpotifyTestet] = useState(false);
   const [spotifyFehler, setSpotifyFehler] = useState(null);
+  // Anlass → zugeordnete Playlist (13.08., Nachtrag): { morgenroutine:
+  // { playlistId, name, uri }, abendroutine: {...}, training: {...},
+  // gewohnheiten: {...} } — siehe 0048_spotify_anlass_playlists.sql.
+  const [spotifyAnlaesse, setSpotifyAnlaesse] = useState({});
 
   const spotifyVerbindungNeuLaden = useCallback(async () => {
     if (!userId) return;
-    const [{ data: verbindung }, { data: playlists }] = await Promise.all([
+    const [{ data: verbindung }, { data: playlists }, { data: zuordnungen }] = await Promise.all([
       supabase.from("spotify_verbindung").select("user_id, auto_play_token").eq("user_id", userId).maybeSingle(),
       supabase.from("spotify_playlists").select("id, name, uri").eq("user_id", userId).order("erstellt_am"),
+      supabase.from("spotify_anlass_playlists").select("anlass, playlist_id, spotify_playlists(name, uri)").eq("user_id", userId),
     ]);
     setSpotifyVerbunden(!!verbindung);
     setSpotifyAutoPlayToken(verbindung?.auto_play_token || null);
     setSpotifyPlaylists(playlists || []);
+    setSpotifyAnlaesse(
+      Object.fromEntries(
+        (zuordnungen || []).map((z) => [z.anlass, { playlistId: z.playlist_id, name: z.spotify_playlists?.name, uri: z.spotify_playlists?.uri }])
+      )
+    );
   }, [userId]);
 
   useEffect(() => {
@@ -48,6 +58,9 @@ export function useSpotifyVerbindung(userId) {
   const spotifyPlaylistLoeschen = useCallback(async (id) => {
     await supabase.from("spotify_playlists").delete().eq("id", id);
     setSpotifyPlaylists((prev) => prev.filter((p) => p.id !== id));
+    // Löscht per on-delete-cascade auch etwaige Anlass-Zuordnungen dieser
+    // Playlist serverseitig — Client-Zustand muss deshalb mit nachziehen.
+    setSpotifyAnlaesse((prev) => Object.fromEntries(Object.entries(prev).filter(([, v]) => v.playlistId !== id)));
   }, []);
 
   const spotifyVerbindungTrennen = useCallback(async () => {
@@ -72,6 +85,33 @@ export function useSpotifyVerbindung(userId) {
     setSpotifyAutoPlayToken(token);
     return { ok: true };
   }, [userId]);
+
+  // Ordnet eine bestehende Playlist einem festen Anlass zu (Morgenroutine,
+  // Abendroutine, Training, Gewohnheiten) — separat von Akas Rate-Logik im
+  // Chat. Upsert, weil pro (user, anlass) immer nur eine Zuordnung gilt.
+  const spotifyAnlassSetzen = useCallback(
+    async (anlass, playlistId) => {
+      const { error } = await supabase
+        .from("spotify_anlass_playlists")
+        .upsert({ user_id: userId, anlass, playlist_id: playlistId }, { onConflict: "user_id,anlass" });
+      if (error) return { ok: false, error: error.message };
+      await spotifyVerbindungNeuLaden();
+      return { ok: true };
+    },
+    [userId, spotifyVerbindungNeuLaden]
+  );
+
+  const spotifyAnlassEntfernen = useCallback(
+    async (anlass) => {
+      await supabase.from("spotify_anlass_playlists").delete().eq("user_id", userId).eq("anlass", anlass);
+      setSpotifyAnlaesse((prev) => {
+        const next = { ...prev };
+        delete next[anlass];
+        return next;
+      });
+    },
+    [userId]
+  );
 
   // playlistUri: explizit, wenn Aka im Chat eine bestimmte Playlist erkannt
   // hat (siehe KiChat.jsx, SPOTIFY_PLAY-Marker) — ohne Angabe nutzt die
@@ -105,5 +145,8 @@ export function useSpotifyVerbindung(userId) {
     spotifyVerbindungNeuLaden,
     spotifyAutoPlayToken,
     spotifyAutoPlayTokenErzeugen,
+    spotifyAnlaesse,
+    spotifyAnlassSetzen,
+    spotifyAnlassEntfernen,
   };
 }
