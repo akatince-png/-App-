@@ -263,16 +263,22 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
               Verbinde Spotify, damit dein Assistent deine Playlist starten kann — z. B. morgens zum Aufwachen. Braucht ein
               Spotify-Premium-Konto.
             </div>
-            <a href={spotifyAutorisierenUrl()} style={{ textDecoration: "none" }}>
-              <button
-                style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
-              >
-                Mit Spotify verbinden
-              </button>
-            </a>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.assign(spotifyAutorisierenUrl());
+              }}
+              style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
+            >
+              Mit Spotify verbinden
+            </button>
             {spotifyVerbindungFehler && (
               <div style={{ fontSize: 12, color: danger, marginTop: 10, lineHeight: 1.5 }}>{spotifyVerbindungFehler}</div>
             )}
+            <div style={{ fontSize: 10.5, color: textMuted, marginTop: 10, wordBreak: "break-all" }}>
+              Diagnose: Spotify-App-ID ist {import.meta.env.VITE_SPOTIFY_CLIENT_ID ? "hinterlegt" : "NICHT hinterlegt"}
+              {import.meta.env.VITE_SPOTIFY_CLIENT_ID ? ` (endet auf …${import.meta.env.VITE_SPOTIFY_CLIENT_ID.slice(-4)})` : ""}.
+            </div>
           </>
         ) : (
           <>
