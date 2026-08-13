@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Card, CheckRow, Label, Pill, TextInput } from "./primitives";
 import TimeWheelField from "./TimeWheelField";
 import NumberWheelField from "./NumberWheelField";
-import AutocompleteInput from "./AutocompleteInput";
+import UebungenEditor, { LEERE_UEBUNG } from "./UebungenEditor";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
+import { wochenplanUebungenText } from "../utils/dayItems";
 import { useT } from "../i18n/translate";
 
 export const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
@@ -29,9 +30,7 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
   const [wochentag, setWochentag] = useState(null);
   const [uhrzeit, setUhrzeit] = useState("08:00");
   const [arten, setArten] = useState([]);
-  const [saetze, setSaetze] = useState("");
-  const [wiederholungen, setWiederholungen] = useState("");
-  const [uebungen, setUebungen] = useState("");
+  const [uebungenListe, setUebungenListe] = useState([{ ...LEERE_UEBUNG }]);
   const [warmup, setWarmup] = useState(LEERE_WARMUP);
   const [cooldown, setCooldown] = useState(LEERE_WARMUP);
   const [saving, setSaving] = useState(false);
@@ -40,17 +39,21 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
     setWochentag(null);
     setUhrzeit("08:00");
     setArten([]);
-    setSaetze("");
-    setWiederholungen("");
-    setUebungen("");
+    setUebungenListe([{ ...LEERE_UEBUNG }]);
     setWarmup(LEERE_WARMUP);
     setCooldown(LEERE_WARMUP);
   };
 
+  const uebungAendern = (index, feld, wert) =>
+    setUebungenListe((prev) => prev.map((u, i) => (i === index ? { ...u, [feld]: wert } : u)));
+  const uebungHinzufuegen = () => setUebungenListe((prev) => [...prev, { ...LEERE_UEBUNG }]);
+  const uebungEntfernen = (index) => setUebungenListe((prev) => prev.filter((_, i) => i !== index));
+
   const hinzufuegen = async () => {
     if (!wochentag || !uhrzeit || saving) return;
     setSaving(true);
-    await wochenplanHinzufuegen({ wochentag, uhrzeit, arten, saetze, wiederholungen, uebungen, warmup, cooldown });
+    const uebungenGefuellt = uebungenListe.filter((u) => u.name.trim());
+    await wochenplanHinzufuegen({ wochentag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
     setSaving(false);
     reset();
   };
@@ -81,23 +84,14 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
           ))}
         </div>
 
-        <Label>{t("onboarding.training.einheit.saetze.label")}</Label>
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <NumberWheelField value={saetze} onChange={setSaetze} min={1} max={20} placeholder={t("onboarding.training.einheit.saetze.placeholder")} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <NumberWheelField
-              value={wiederholungen}
-              onChange={setWiederholungen}
-              min={1}
-              max={50}
-              placeholder={t("onboarding.training.einheit.wiederholungen.placeholder")}
-            />
-          </div>
-        </div>
-        <Label>{t("onboarding.training.einheit.uebungen.label")}</Label>
-        <AutocompleteInput value={uebungen} onChange={setUebungen} options={ALLE_UEBUNGEN} placeholder={t("onboarding.training.einheit.uebungen.placeholder")} mehrfach />
+        <UebungenEditor
+          uebungen={uebungenListe}
+          optionen={ALLE_UEBUNGEN}
+          gewichtPlatzhalter="Gewicht"
+          onAendern={uebungAendern}
+          onEntfernen={uebungEntfernen}
+          onHinzufuegen={uebungHinzufuegen}
+        />
 
         <div style={{ marginTop: 14 }}>
           <CheckRow label={t("onboarding.training.einheit.warmup.label")} checked={warmup.aktiv} onToggle={() => setWarmup((p) => ({ ...p, aktiv: !p.aktiv }))} />
@@ -182,8 +176,7 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
                     </div>
                     <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2 }}>
                       {[
-                        e.uebungen,
-                        e.saetze && e.wiederholungen ? `${e.saetze}×${e.wiederholungen}` : "",
+                        wochenplanUebungenText(e),
                         e.warmup?.aktiv ? `Warm-up ${e.warmup.dauerMin ? `${e.warmup.dauerMin} Min.` : ""}${e.warmup.beschreibung ? ` (${e.warmup.beschreibung})` : ""}` : "",
                         e.cooldown?.aktiv
                           ? `Cool-down ${e.cooldown.dauerMin ? `${e.cooldown.dauerMin} Min.` : ""}${e.cooldown.beschreibung ? ` (${e.cooldown.beschreibung})` : ""}`

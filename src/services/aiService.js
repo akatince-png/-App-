@@ -247,7 +247,7 @@ export const AIService = {
    * wochenplanHinzufuegen() weiterreichen lässt.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<Array<{wochentag: string, arten: string[], saetze: number, wiederholungen: string, uebungen: string}>>}
+   * @returns {Promise<Array<{wochentag: string, arten: string[], uebungenListe: Array<{name: string, saetze: string, wiederholungen: string, gewicht: string}>}>>}
    */
   async trainingsplanAusChat({ verlauf, coachName }) {
     const system = mitPersona(
@@ -255,11 +255,13 @@ export const AIService = {
       [
         "Du bist ein Trainingsplan-Assistent für eine bestehende App.",
         "Fasse das vorangegangene Gespräch jetzt als finalen Plan zusammen.",
+        "Jede Übung bekommt ihre EIGENEN Sätze/Wiederholungen/Gewicht, nicht nur ein einziger Wert für die ganze Einheit.",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "einheiten": [ { "wochentag": "Mo"|"Di"|"Mi"|"Do"|"Fr"|"Sa"|"So", ' +
           '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Sonstiges"), ' +
-          '"saetze": number, "wiederholungen": string, "uebungen": string (kommagetrennte Übungsliste als ein Textfeld) } ] }',
+          '"uebungenListe": [ { "name": string, "saetze": string, "wiederholungen": string, ' +
+          '"gewicht": string (z. B. "20 kg", leer wenn nicht genannt) } ] (leeres Array wenn keine einzelnen Übungen genannt wurden) } ] }',
       ].join(" ")
     );
     const messages = [

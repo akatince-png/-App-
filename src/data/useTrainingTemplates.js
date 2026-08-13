@@ -25,6 +25,11 @@ function rowToWochenplan(r) {
     wochentag: r.wochentag,
     uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
     arten: Array.isArray(r.arten) ? r.arten : [],
+    // Neu: je Übung eigene Sätze/Wiederholungen/Gewicht (13.08.).
+    uebungenListe: Array.isArray(r.uebungen_liste) ? r.uebungen_liste : [],
+    // Alt: ein Freitext + ein einzelnes Sätze/Wiederholungen-Paar für die
+    // ganze Einheit — nur noch für bereits vor der Umstellung gespeicherte
+    // Einheiten relevant (siehe wochenplanUebungenText in dayItems.js).
     saetze: r.saetze || "",
     wiederholungen: r.wiederholungen || "",
     uebungen: r.uebungen || "",
@@ -100,9 +105,7 @@ export function useTrainingTemplates(userId) {
         wochentag: einheit.wochentag,
         uhrzeit: einheit.uhrzeit || null,
         arten: einheit.arten || [],
-        saetze: einheit.saetze || null,
-        wiederholungen: einheit.wiederholungen || null,
-        uebungen: einheit.uebungen || null,
+        uebungen_liste: einheit.uebungenListe || [],
         warmup_aktiv: !!einheit.warmup?.aktiv,
         warmup_dauer_min: einheit.warmup?.dauerMin ? Number(einheit.warmup.dauerMin) : null,
         warmup_beschreibung: einheit.warmup?.beschreibung || null,

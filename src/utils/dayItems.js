@@ -33,6 +33,24 @@ export const KATEGORIE_META = {
   notfallmodus: { bg: "#FBEAE7", text: "#A63B32", dot: "#C24545", label: "Notfallmodus" },
 };
 
+// Kurzbeschreibung der Übungen einer Wochenplan-Einheit (WochenplanEditor.jsx)
+// — neue Einheiten haben je Übung eigene Sätze/Wiederholungen/Gewicht
+// (uebungenListe, seit 13.08.), ältere, davor gespeicherte Einheiten nur
+// einen Freitext + ein einzelnes Sätze/Wiederholungen-Paar für die ganze
+// Einheit (uebungen/saetze/wiederholungen) — beide Formate bleiben lesbar.
+export function wochenplanUebungenText(zuweisung) {
+  if (zuweisung.uebungenListe?.length) {
+    return zuweisung.uebungenListe
+      .filter((u) => u.name)
+      .map((u) => `${u.name} ${u.saetze || "?"}×${u.wiederholungen || "?"}${u.gewicht ? ` ${u.gewicht}` : ""}`)
+      .join(", ");
+  }
+  if (zuweisung.uebungen) {
+    return zuweisung.saetze && zuweisung.wiederholungen ? `${zuweisung.uebungen} (${zuweisung.saetze}×${zuweisung.wiederholungen})` : zuweisung.uebungen;
+  }
+  return "";
+}
+
 // Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —
 // bei Krafttraining mit echten Übungsnamen + Sätzen×Wiederholungen statt nur
 // einer Anzahl, damit auf einen Blick erkennbar ist, was konkret ansteht.
@@ -206,8 +224,7 @@ export function buildDayItems(
       .forEach((zuweisung) => {
         const uhrzeit = zuweisung.uhrzeit || "";
         const detailTeile = [
-          zuweisung.uebungen,
-          zuweisung.saetze && zuweisung.wiederholungen ? `${zuweisung.saetze}×${zuweisung.wiederholungen}` : "",
+          wochenplanUebungenText(zuweisung),
           zuweisung.warmup?.aktiv ? `Warm-up${zuweisung.warmup.dauerMin ? ` ${zuweisung.warmup.dauerMin} Min.` : ""}` : "",
           zuweisung.cooldown?.aktiv ? `Cool-down${zuweisung.cooldown.dauerMin ? ` ${zuweisung.cooldown.dauerMin} Min.` : ""}` : "",
         ].filter(Boolean);

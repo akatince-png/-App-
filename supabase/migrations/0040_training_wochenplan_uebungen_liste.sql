@@ -1,0 +1,12 @@
+-- Wochenplan-Einheiten hatten bisher nur EIN Sätze/Wiederholungen-Paar für
+-- die ganze Einheit + einen Freitext für Übungsnamen — unbrauchbar, sobald
+-- eine Einheit mehrere Übungen mit jeweils eigenen Sätzen/Wiederholungen/
+-- Gewicht enthält (Nutzerinnen-Vorgabe, 13.08.: "Das macht doch kein
+-- Mensch"). Neue Spalte im selben Format wie training_templates.uebungen
+-- (jsonb-Array aus {name, saetze, wiederholungen, gewicht, pauseSekunden}),
+-- analog zur strukturierten Übungsliste beim echten Trainingslog
+-- (TrainingView.jsx). Alte Spalten (saetze/wiederholungen/uebungen) bleiben
+-- unangetastet stehen, damit bereits gespeicherte Einheiten aus der Zeit
+-- davor weiter lesbar bleiben — neue Einheiten befüllen nur noch
+-- uebungen_liste.
+alter table public.training_wochenplan add column if not exists uebungen_liste jsonb not null default '[]'::jsonb;
