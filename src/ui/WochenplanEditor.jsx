@@ -27,7 +27,12 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
   const { t, tLabel } = useT();
   const titelAnzeige = titel === undefined ? t("onboarding.training.wochenplan.titel") : titel;
 
-  const [wochentag, setWochentag] = useState(null);
+  // Mehrfachauswahl statt nur einem Wochentag — Nutzerinnen-Vorgabe
+  // (13.08.): dieselbe Einheit (z. B. eine Cardio-Morgenroutine) soll sich
+  // in einem Zug für beliebig viele/beliebige Tage anlegen lassen, nicht
+  // nur alle-oder-einer. Beim Speichern entsteht pro gewähltem Tag eine
+  // eigene Zeile (unverändertes Datenmodell: eine Zeile = ein Tag).
+  const [wochentage, setWochentage] = useState([]);
   const [uhrzeit, setUhrzeit] = useState("08:00");
   const [arten, setArten] = useState([]);
   const [uebungenListe, setUebungenListe] = useState([{ ...LEERE_UEBUNG }]);
@@ -36,7 +41,7 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
-    setWochentag(null);
+    setWochentage([]);
     setUhrzeit("08:00");
     setArten([]);
     setUebungenListe([{ ...LEERE_UEBUNG }]);
@@ -50,10 +55,14 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
   const uebungEntfernen = (index) => setUebungenListe((prev) => prev.filter((_, i) => i !== index));
 
   const hinzufuegen = async () => {
-    if (!wochentag || !uhrzeit || saving) return;
+    if (!wochentage.length || !uhrzeit || saving) return;
     setSaving(true);
     const uebungenGefuellt = uebungenListe.filter((u) => u.name.trim());
-    await wochenplanHinzufuegen({ wochentag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+    // Nacheinander statt Promise.all, damit bei einem Fehler mitten in der
+    // Reihe nichts unbemerkt durcheinandergerät.
+    for (const tag of wochentage) {
+      await wochenplanHinzufuegen({ wochentag: tag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+    }
     setSaving(false);
     reset();
   };
@@ -69,10 +78,25 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
       <Card style={{ marginBottom: 14 }}>
         <Label>{t("onboarding.training.einheit.wochentag.label")}</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
+          <Pill
+            label={t("onboarding.schlaf.alle")}
+            selected={wochentage.length === WOCHENTAGE.length}
+            onClick={() => setWochentage(wochentage.length === WOCHENTAGE.length ? [] : [...WOCHENTAGE])}
+          />
           {WOCHENTAGE.map((tag) => (
-            <Pill key={tag} label={tLabel(WOCHENTAGE_VOLL[tag])} selected={wochentag === tag} onClick={() => setWochentag(tag)} />
+            <Pill
+              key={tag}
+              label={tLabel(WOCHENTAGE_VOLL[tag])}
+              selected={wochentage.includes(tag)}
+              onClick={() => setWochentage((prev) => toggleInArray(prev, tag))}
+            />
           ))}
         </div>
+        {wochentage.length > 1 && (
+          <div style={{ fontSize: 11, color: textMuted, marginTop: -6, marginBottom: 8 }}>
+            Wird für {wochentage.length} Tage gleichzeitig angelegt.
+          </div>
+        )}
 
         <Label>{t("onboarding.training.einheit.uhrzeit.label")}</Label>
         <TimeWheelField value={uhrzeit} onChange={setUhrzeit} />
@@ -134,7 +158,7 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
         <button
           type="button"
           onClick={hinzufuegen}
-          disabled={!wochentag || !uhrzeit || saving}
+          disabled={!wochentage.length || !uhrzeit || saving}
           className="mp-tap"
           style={{
             width: "100%",
@@ -143,16 +167,18 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
             padding: "12px",
             borderRadius: 14,
             border: "none",
-            background: !wochentag || !uhrzeit ? "#B7D8D1" : accentDark,
+            background: !wochentage.length || !uhrzeit ? "#B7D8D1" : accentDark,
             color: "#fff",
             fontSize: 14,
             fontWeight: 700,
-            cursor: !wochentag || !uhrzeit ? "not-allowed" : "pointer",
+            cursor: !wochentage.length || !uhrzeit ? "not-allowed" : "pointer",
           }}
         >
           {t("onboarding.training.einheit.hinzufuegen")}
         </button>
-        {!wochentag && <div style={{ fontSize: 11.5, color: danger, marginTop: 6, textAlign: "center" }}>Bitte oben zuerst einen Wochentag auswählen.</div>}
+        {!wochentage.length && (
+          <div style={{ fontSize: 11.5, color: danger, marginTop: 6, textAlign: "center" }}>Bitte oben zuerst mindestens einen Wochentag auswählen.</div>
+        )}
       </Card>
 
       {nachTagGruppiert.length > 0 && (
