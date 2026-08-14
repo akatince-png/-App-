@@ -412,6 +412,10 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     wochenplanHinzufuegen,
     wochenplanBearbeiten,
     wochenplanEntfernen,
+    wochenplanErinnerungUmschalten,
+    wochenplanErinnerungenAlleSetzen,
+    erinnerungen,
+    setErinnerung,
     aenderungVermerken,
   } = useAppData();
   const [eintrag, setEintrag] = useState(leererEintrag());
@@ -622,6 +626,10 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           wochenplanHinzufuegen={handleWochenplanHinzufuegen}
           wochenplanBearbeiten={handleWochenplanBearbeiten}
           wochenplanEntfernen={handleWochenplanEntfernen}
+          wochenplanErinnerungUmschalten={wochenplanErinnerungUmschalten}
+          wochenplanErinnerungenAlleSetzen={wochenplanErinnerungenAlleSetzen}
+          erinnerungenTrainingAktiv={!!erinnerungen.training}
+          onErinnerungenTrainingUmschalten={(v) => setErinnerung("training", v)}
           titel={null}
           zeigeFormular={false}
           onZeileAntippen={setWochenplanVorschau}

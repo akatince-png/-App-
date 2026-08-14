@@ -27,6 +27,15 @@ export default function WochenplanEditor({
   wochenplanHinzufuegen,
   wochenplanBearbeiten,
   wochenplanEntfernen,
+  // Push-Erinnerung pro Einheit/für alle auf einmal (14.08., Nutzerin-
+  // Vorgabe: "eine direkte Möglichkeit... für die einzelnen Trainingstage
+  // oder auch für alle gleichzeitig"). Alle drei optional — im Onboarding
+  // (OnboardingCategoriesView.jsx) bleiben sie weiterhin weggelassen, dort
+  // gibt es noch keinen bestehenden Wochenplan zum Umschalten.
+  wochenplanErinnerungUmschalten,
+  wochenplanErinnerungenAlleSetzen,
+  erinnerungenTrainingAktiv,
+  onErinnerungenTrainingUmschalten,
   titel,
   // Formular (neue/bestehende Einheit bearbeiten) und Liste (bestehender
   // Wochenplan als Tabelle) unabhängig ein-/ausblendbar (14.08.,
@@ -57,6 +66,7 @@ export default function WochenplanEditor({
   const [uebungenListe, setUebungenListe] = useState([{ ...LEERE_UEBUNG }]);
   const [warmup, setWarmup] = useState(LEERE_WARMUP);
   const [cooldown, setCooldown] = useState(LEERE_WARMUP);
+  const [erinnerungAktiv, setErinnerungAktiv] = useState(true);
   const [saving, setSaving] = useState(false);
   // Statt Löschen + Neuanlegen lässt sich eine bestehende Einheit jetzt
   // direkt bearbeiten (Nutzerinnen-Vorgabe, 13.08. — z. B. nachträglich
@@ -74,6 +84,7 @@ export default function WochenplanEditor({
     setUebungenListe([{ ...LEERE_UEBUNG }]);
     setWarmup(LEERE_WARMUP);
     setCooldown(LEERE_WARMUP);
+    setErinnerungAktiv(true);
     setBearbeitenId(null);
   };
 
@@ -85,6 +96,7 @@ export default function WochenplanEditor({
     setUebungenListe(e.uebungenListe?.length ? e.uebungenListe.map((u) => ({ ...LEERE_UEBUNG, ...u })) : [{ ...LEERE_UEBUNG }]);
     setWarmup(e.warmup || LEERE_WARMUP);
     setCooldown(e.cooldown || LEERE_WARMUP);
+    setErinnerungAktiv(e.erinnerungAktiv !== false);
   };
 
   const uebungAendern = (index, feld, wert) =>
@@ -97,12 +109,12 @@ export default function WochenplanEditor({
     setSaving(true);
     const uebungenGefuellt = uebungenListe.filter((u) => u.name.trim());
     if (bearbeitenId) {
-      await wochenplanBearbeiten(bearbeitenId, { wochentag: wochentage[0], uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+      await wochenplanBearbeiten(bearbeitenId, { wochentag: wochentage[0], uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv });
     } else {
       // Nacheinander statt Promise.all, damit bei einem Fehler mitten in der
       // Reihe nichts unbemerkt durcheinandergerät.
       for (const tag of wochentage) {
-        await wochenplanHinzufuegen({ wochentag: tag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown });
+        await wochenplanHinzufuegen({ wochentag: tag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv });
       }
     }
     setSaving(false);
@@ -209,6 +221,17 @@ export default function WochenplanEditor({
               </div>
             </div>
           )}
+
+          <div style={{ marginTop: 10 }}>
+            <CheckRow
+              label={`🔔 Erinnerung${wochentage.length > 1 ? " für diese Tage" : ""}`}
+              checked={erinnerungAktiv}
+              onToggle={() => setErinnerungAktiv((v) => !v)}
+            />
+            <div style={{ fontSize: 11, color: textMuted, marginTop: -4 }}>
+              Push nur, wenn Trainings-Erinnerungen insgesamt an sind (siehe unten bzw. „Mehr").
+            </div>
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -249,6 +272,39 @@ export default function WochenplanEditor({
       </Card>
       )}
 
+      {zeigeListe && alleEinheitenSortiert.length > 0 && (onErinnerungenTrainingUmschalten || wochenplanErinnerungenAlleSetzen) && (
+        <Card style={{ marginBottom: 10 }}>
+          {onErinnerungenTrainingUmschalten && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: wochenplanErinnerungenAlleSetzen ? 10 : 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>🔔 Trainings-Erinnerungen (Push)</div>
+              <Pill
+                label={erinnerungenTrainingAktiv ? "An" : "Aus"}
+                selected={!!erinnerungenTrainingAktiv}
+                onClick={() => onErinnerungenTrainingUmschalten(!erinnerungenTrainingAktiv)}
+              />
+            </div>
+          )}
+          {wochenplanErinnerungenAlleSetzen && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => wochenplanErinnerungenAlleSetzen(true)}
+                style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+              >
+                🔔 Für alle Tage an
+              </button>
+              <button
+                type="button"
+                onClick={() => wochenplanErinnerungenAlleSetzen(false)}
+                style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+              >
+                🔕 Für alle Tage aus
+              </button>
+            </div>
+          )}
+        </Card>
+      )}
+
       {zeigeListe && (
         alleEinheitenSortiert.length > 0 ? (
           <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden" }}>
@@ -256,7 +312,7 @@ export default function WochenplanEditor({
               <div style={{ width: 40 }}>Tag</div>
               <div style={{ width: 56 }}>Zeit</div>
               <div style={{ flex: 1 }}>Art</div>
-              <div style={{ width: 60 }} />
+              <div style={{ width: wochenplanErinnerungUmschalten ? 84 : 60 }} />
             </div>
             {alleEinheitenSortiert.map((e) => {
               const anzahlUebungen = (e.uebungenListe || []).filter((u) => u.name).length;
@@ -290,7 +346,17 @@ export default function WochenplanEditor({
                       </div>
                     )}
                   </div>
-                  <div style={{ width: 60, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <div style={{ width: wochenplanErinnerungUmschalten ? 84 : 60, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, flexShrink: 0 }}>
+                    {wochenplanErinnerungUmschalten && (
+                      <button
+                        type="button"
+                        onClick={() => wochenplanErinnerungUmschalten(e.id, e.erinnerungAktiv === false)}
+                        title={e.erinnerungAktiv === false ? "Erinnerung ist aus – antippen zum Einschalten" : "Erinnerung ist an – antippen zum Ausschalten"}
+                        style={{ border: "none", background: "transparent", fontSize: 15, cursor: "pointer", padding: "0 4px", opacity: e.erinnerungAktiv === false ? 0.35 : 1 }}
+                      >
+                        🔔
+                      </button>
+                    )}
                     {wochenplanBearbeiten && (
                       <button
                         type="button"

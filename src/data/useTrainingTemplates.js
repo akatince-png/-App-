@@ -35,6 +35,11 @@ function rowToWochenplan(r) {
     uebungen: r.uebungen || "",
     warmup: { aktiv: !!r.warmup_aktiv, dauerMin: r.warmup_dauer_min ? String(r.warmup_dauer_min) : "", beschreibung: r.warmup_beschreibung || "" },
     cooldown: { aktiv: !!r.cooldown_aktiv, dauerMin: r.cooldown_dauer_min ? String(r.cooldown_dauer_min) : "", beschreibung: r.cooldown_beschreibung || "" },
+    // Push-Erinnerung für diese eine Einheit (14.08., Nutzerin-Vorgabe) —
+    // zusätzlich zum globalen Training-Schalter (profiles.erinnerungen.training,
+    // siehe MehrTab.jsx), damit sich einzelne Tage abweichend stummschalten
+    // lassen. Default true, falls die Spalte bei alten Zeilen noch nicht gesetzt ist.
+    erinnerungAktiv: r.erinnerung_aktiv !== false,
   };
 }
 
@@ -112,6 +117,7 @@ export function useTrainingTemplates(userId) {
         cooldown_aktiv: !!einheit.cooldown?.aktiv,
         cooldown_dauer_min: einheit.cooldown?.dauerMin ? Number(einheit.cooldown.dauerMin) : null,
         cooldown_beschreibung: einheit.cooldown?.beschreibung || null,
+        erinnerung_aktiv: einheit.erinnerungAktiv !== false,
       };
       const { data, error } = await supabase.from("training_wochenplan").insert(row).select().single();
       if (error) {
@@ -146,6 +152,7 @@ export function useTrainingTemplates(userId) {
       cooldown_aktiv: !!einheit.cooldown?.aktiv,
       cooldown_dauer_min: einheit.cooldown?.dauerMin ? Number(einheit.cooldown.dauerMin) : null,
       cooldown_beschreibung: einheit.cooldown?.beschreibung || null,
+      erinnerung_aktiv: einheit.erinnerungAktiv !== false,
     };
     const { data, error } = await supabase.from("training_wochenplan").update(row).eq("id", id).select().single();
     if (error) {
@@ -157,6 +164,26 @@ export function useTrainingTemplates(userId) {
     return { ok: true, einheit: aktualisiert };
   }, []);
 
+  // Schneller Ein-Knopf-Umschalter direkt in der Wochenplan-Tabelle (14.08.,
+  // Nutzerin-Vorgabe) — anders als wochenplanBearbeiten oben ändert das NUR
+  // die Erinnerung, ohne das ganze Formular öffnen zu müssen.
+  const wochenplanErinnerungUmschalten = useCallback(async (id, aktiv) => {
+    setWochenplan((prev) => prev.map((w) => (w.id === id ? { ...w, erinnerungAktiv: aktiv } : w)));
+    const { error } = await supabase.from("training_wochenplan").update({ erinnerung_aktiv: aktiv }).eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
+  // "Für alle gleichzeitig" (14.08., Nutzerin-Vorgabe): ein Tastendruck statt
+  // jede Zeile einzeln umzuschalten.
+  const wochenplanErinnerungenAlleSetzen = useCallback(
+    async (aktiv) => {
+      setWochenplan((prev) => prev.map((w) => ({ ...w, erinnerungAktiv: aktiv })));
+      const { error } = await supabase.from("training_wochenplan").update({ erinnerung_aktiv: aktiv }).eq("user_id", userId);
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
   return {
     trainingTemplates: templates,
     templateSpeichern,
@@ -165,5 +192,7 @@ export function useTrainingTemplates(userId) {
     wochenplanHinzufuegen,
     wochenplanBearbeiten,
     wochenplanEntfernen,
+    wochenplanErinnerungUmschalten,
+    wochenplanErinnerungenAlleSetzen,
   };
 }

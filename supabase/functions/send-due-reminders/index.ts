@@ -16,7 +16,11 @@
 //   Ernährung.
 // Jede Kategorie wird nur geprüft, wenn profiles.erinnerungen[kategorie]
 // für den jeweiligen Nutzer aktiv ist (siehe ErinnerungField.jsx/
-// ZeitErinnerungenCard.jsx/MehrTab.jsx).
+// ZeitErinnerungenCard.jsx/MehrTab.jsx). Training zusätzlich pro Zeile
+// abschaltbar über training_wochenplan.erinnerung_aktiv (siehe
+// WochenplanEditor.jsx) — Nutzerin-Vorgabe, 14.08.: einzelne Trainingstage
+// sollen sich von den restlichen abweichend stummschalten lassen, nicht nur
+// alle auf einmal über den globalen Schalter.
 //
 // Drei Arten von Erinnerungen pro Kategorie (die reine Zeiten-Liste
 // Hydration/Tageslicht/Schlaf nur die ersten zwei, da dort keine einzelne
@@ -369,7 +373,7 @@ Deno.serve(async (req) => {
       if (userIds.length > 0) {
         const { data: rows, error } = await admin
           .from("training_wochenplan")
-          .select("user_id, wochentag, art, uhrzeit")
+          .select("user_id, wochentag, art, uhrzeit, erinnerung_aktiv")
           .in("user_id", userIds);
         if (error) {
           console.error("Abfrage training_wochenplan fehlgeschlagen:", error);
@@ -386,6 +390,7 @@ Deno.serve(async (req) => {
           for (const row of rows || []) {
             const info = nutzerInfo.get(row.user_id);
             if (!info || !row.uhrzeit) continue;
+            if (row.erinnerung_aktiv === false) continue; // Pro Einheit abschaltbar (14.08., Nutzerin-Vorgabe), unabhängig vom globalen Schalter.
             if (row.wochentag !== WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()]) continue;
             const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
             const name = row.art || "Training";
