@@ -179,6 +179,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
         {schritteOffen && (
           <div style={{ marginTop: 10 }}>
             <RoutineSchritteEditor
+              routine={routine}
               schritte={schritteFuerRoutine}
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen(routine, name, dauerMin)}
               onEntfernen={routineSchrittEntfernen}

@@ -269,6 +269,7 @@ export default function GewohnheitenView({ onHome }) {
           <>
             <div style={{ fontSize: 12, fontWeight: 700, marginTop: 10 }}>🌅 Morgenroutine-Schritte</div>
             <RoutineSchritteEditor
+              routine="morgen"
               schritte={routineSchritte.filter((s) => s.routine === "morgen")}
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
               onEntfernen={routineSchrittEntfernen}
@@ -276,6 +277,7 @@ export default function GewohnheitenView({ onHome }) {
             />
             <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
             <RoutineSchritteEditor
+              routine="abend"
               schritte={routineSchritte.filter((s) => s.routine === "abend")}
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
               onEntfernen={routineSchrittEntfernen}

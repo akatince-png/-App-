@@ -596,6 +596,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                 </div>
                 {schritteBearbeiten.morgen && (
                   <RoutineSchritteEditor
+                    routine="morgen"
                     schritte={routineSchritte.filter((s) => s.routine === "morgen")}
                     onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
                     onEntfernen={routineSchrittEntfernen}
@@ -634,6 +635,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                 </div>
                 {schritteBearbeiten.abend && (
                   <RoutineSchritteEditor
+                    routine="abend"
                     schritte={routineSchritte.filter((s) => s.routine === "abend")}
                     onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
                     onEntfernen={routineSchrittEntfernen}

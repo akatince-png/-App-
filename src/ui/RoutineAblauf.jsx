@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "./primitives";
 import Timer from "./Timer";
-import { textMuted } from "./theme";
+import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
@@ -12,6 +12,13 @@ const ABSCHLUSS_TEXT = {
   morgen: "Du bist startklar für den Tag. Wünsch dir einen wunderschönen Tag!",
   abend: "Gut gemacht — Zeit, zur Ruhe zu kommen. Schlaf gut.",
 };
+
+function fmtDauer(sekunden) {
+  const s = Math.max(0, Math.round(sekunden));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
 
 // Geführter Ablauf-Screen (Phase 1, 13.08.): führt Schritt für Schritt durch
 // die konfigurierten Routine-Schritte, mit Countdown + Vorwarnton kurz vor
@@ -26,6 +33,18 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   const protokollRef = useRef([]);
   const startZeitRef = useRef(Date.now());
   const gestartetUmRef = useRef(new Date().toISOString());
+  // Gesamtzeit der Routine (Nutzerin-Vorgabe 14.08., analog zum
+  // Trainings-Gesamtzeit-Timer): läuft unabhängig von den einzelnen
+  // Schritt-Countdowns durch, beginnt beim Start der Routine und endet erst
+  // beim wirklichen Abschluss — damit sichtbar/auswertbar wird, ob die
+  // ganze Routine zu lang oder zu kurz ist, nicht nur einzelne Schritte.
+  const gesamtStartRef = useRef(Date.now());
+  const [gesamtSek, setGesamtSek] = useState(0);
+  useEffect(() => {
+    if (fertig) return;
+    const id = setInterval(() => setGesamtSek(Math.round((Date.now() - gesamtStartRef.current) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [fertig]);
 
   // Startet automatisch die zugeordnete Playlist (falls unter "Schritte
   // einrichten" → Playlist eine hinterlegt ist), einmalig beim Start dieses
@@ -64,20 +83,46 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   }
 
   if (fertig) {
+    const protokoll = protokollRef.current;
     return (
       <Shell>
-        <Card style={{ textAlign: "center" }}>
+        <Card style={{ textAlign: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 30, marginBottom: 8 }}>{ROUTINE_EMOJI[routine]}</div>
           <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{ROUTINE_LABEL[routine]} abgeschlossen!</div>
-          <div style={{ fontSize: 13, color: textMuted, marginBottom: 16 }}>{ABSCHLUSS_TEXT[routine]}</div>
+          <div style={{ fontSize: 13, color: textMuted, marginBottom: 4 }}>{ABSCHLUSS_TEXT[routine]}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Gesamtzeit: {fmtDauer(gesamtSek)}</div>
           <PrimaryButton onClick={onAbschluss}>Zurück zum Tag</PrimaryButton>
         </Card>
+        {protokoll.length > 0 && (
+          <Card>
+            <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>Auswertung — geplant vs. tatsächlich</div>
+            {protokoll.map((p, i) => {
+              const geplantSek = (Number(p.geplantMin) || 0) * 60;
+              const abweichung = p.tatsaechlichSek - geplantSek;
+              return (
+                <div
+                  key={i}
+                  style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: i > 0 ? `1px solid ${cardBorder}` : "none", fontSize: 12.5 }}
+                >
+                  <div>{p.name}</div>
+                  <div style={{ color: Math.abs(abweichung) > 60 ? (abweichung > 0 ? danger : accentDark) : textMuted, fontWeight: 700 }}>
+                    {fmtDauer(p.tatsaechlichSek)} <span style={{ color: textMuted, fontWeight: 400 }}>(geplant {p.geplantMin} Min.)</span>
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+        )}
       </Shell>
     );
   }
 
   return (
     <Shell>
+      <div style={{ textAlign: "center", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 0.3 }}>GESAMTZEIT {ROUTINE_LABEL[routine].toUpperCase()}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{fmtDauer(gesamtSek)}</div>
+      </div>
       <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 8 }}>
         {ROUTINE_EMOJI[routine]} {ROUTINE_LABEL[routine]} · Schritt {index + 1} von {schritte.length}
       </div>

@@ -1,14 +1,44 @@
 import React, { useState } from "react";
-import { Label, TextInput } from "./primitives";
+import { Label, Pill, TextInput } from "./primitives";
 import NumberWheelField from "./NumberWheelField";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
+
+// Beispiel-Schritte je Routine (14.08., Nutzerin-Vorgabe: "ein paar
+// Beispiele, damit jemand, der nicht so einfallsreich ist, darauf kommt,
+// was gemeint ist") — bewusst als direkt antippbare Vorschläge statt nur
+// Text, damit kein zusätzlicher Denkschritt "was könnte ich eintragen"
+// nötig ist (Friction Reduction). Ein Tap trägt den Schritt sofort mit
+// Standarddauer ein; wer's anders will, tippt weiter unten manuell.
+const BEISPIELE = {
+  morgen: [
+    ["Wasser trinken", 2],
+    ["Tageslicht/ans Fenster", 5],
+    ["Medikament nehmen", 2],
+    ["Zähne putzen", 3],
+    ["Duschen", 10],
+    ["Anziehen", 5],
+    ["Frühstück", 10],
+    ["5 Min. Bewegung/Dehnen", 5],
+  ],
+  abend: [
+    ["Licht dimmen", 2],
+    ["Handy weglegen", 2],
+    ["Bett vorbereiten", 5],
+    ["Zähne putzen", 3],
+    ["Progressive Muskelentspannung", 10],
+    ["Atemübung", 5],
+    ["Lesen", 15],
+    ["Brain Dump: To-do für morgen aufschreiben", 5],
+    ["Duschen", 10],
+  ],
+};
 
 // Konfiguration der Morgen-/Abendroutine-Schritte (Phase 1, 13.08.) — frei
 // benennbare Schritte mit geplanter Dauer, nicht an bestehende Kategorien
 // gebunden (z. B. "Duschen", "Kosmetik" sind kein eigener Tracker in der
 // App, aber ein Schritt in der Routine). Reihenfolge per Pfeil-Tasten statt
 // Drag&Drop, reicht für die üblichen wenigen Schritte einer Routine.
-export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfernen, onVerschieben }) {
+export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfernen, onVerschieben, routine }) {
   const [name, setName] = useState("");
   const [dauerMin, setDauerMin] = useState("10");
 
@@ -20,6 +50,8 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
   };
 
   const sortiert = [...schritte].sort((a, b) => a.reihenfolge - b.reihenfolge);
+  const vorhandeneNamen = new Set(sortiert.map((s) => s.name.toLowerCase()));
+  const beispiele = (BEISPIELE[routine] || []).filter(([bname]) => !vorhandeneNamen.has(bname.toLowerCase()));
 
   return (
     <div style={{ marginTop: 10 }}>
@@ -54,6 +86,17 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
           </button>
         </div>
       ))}
+
+      {beispiele.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontSize: 11, color: textMuted, marginBottom: 4 }}>Ideen zum Antippen:</div>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {beispiele.map(([bname, bdauer]) => (
+              <Pill key={bname} label={bname} onClick={() => onHinzufuegen(bname, bdauer)} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "flex-end" }}>
         <div style={{ flex: 1 }}>
