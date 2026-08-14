@@ -17,6 +17,8 @@ const BEREICH_OPTIONEN = [
   { value: "supplemente", label: "Supplemente" },
   { value: "medikamente", label: "Medikamente" },
   { value: "gewohnheiten", label: "Gewohnheiten" },
+  { value: "morgenroutine", label: "Morgenroutine" },
+  { value: "abendroutine", label: "Abendroutine" },
 ];
 
 // Wissens-Basis-Verwaltung (13.08., "Aka lernt mit") — Gegenstück zu den

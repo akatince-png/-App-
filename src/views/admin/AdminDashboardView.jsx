@@ -19,6 +19,8 @@ const BEREICH_OPTIONEN = [
   { value: "supplemente", label: "Supplemente" },
   { value: "medikamente", label: "Medikamente" },
   { value: "gewohnheiten", label: "Gewohnheiten" },
+  { value: "morgenroutine", label: "Morgenroutine" },
+  { value: "abendroutine", label: "Abendroutine" },
 ];
 
 // Admin-Dashboard: Übersicht aller Probandinnen/Probanden + Möglichkeit,

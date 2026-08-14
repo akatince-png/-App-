@@ -307,6 +307,36 @@ export const AIService = {
   },
 
   /**
+   * Extrahiert aus einem geführten Morgen-/Abendroutine-Gespräch (siehe
+   * coachChat()) eine fertige Kette von Routine-Schritten — Format entspricht
+   * 1:1 dem, was routineSchrittHinzufuegen() je Schritt erwartet (siehe
+   * useRoutineData.js), lässt sich also direkt in einer Schleife weiterreichen.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<Array<{name: string, dauerMin: number}>>}
+   */
+  async routineAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der eine Morgen- oder Abendroutine als feste Kette von Schritten anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt als fertige Schritt-Kette zusammen, in der besprochenen Reihenfolge.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "schritte": [ { "name": string, "dauerMin": number (Minuten, Schätzung falls nicht genannt, z. B. 2 oder 5) } ] }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse die oben besprochene Schritt-Kette jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!Array.isArray(data.schritte) || !data.schritte.length) throw new Error("Unerwartetes Format: 'schritte' fehlt oder ist leer.");
+    return data.schritte;
+  },
+
+  /**
    * Extrahiert aus einem geführten Ernährungs-Gespräch (siehe coachChat())
    * die finalen Rezeptvorschläge — gleiches Format wie
    * ernaehrungsplanVorschlag(), damit sich das Ergebnis genauso direkt an

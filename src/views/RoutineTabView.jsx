@@ -2,12 +2,15 @@ import React, { useMemo, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import TimeWheelField from "../ui/TimeWheelField";
-import { cardBorder, textMuted } from "../ui/theme";
+import { accentSoft, cardBorder, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { buildDayItems } from "../utils/dayItems";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import KiChat from "../ui/KiChat";
+import { AIService } from "../services/aiService";
+import { getCoachName } from "../utils/coachStorage";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -120,6 +123,16 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     routineSchrittHinzufuegen(routine, item.name, dauerMin);
   };
 
+  // Übergabe an <KiChat onUebernehmen> weiter unten: lässt Aka aus dem
+  // Gespräch eine ganze Schritt-Kette bauen (z. B. "Wasser, 2 Min. ans
+  // Fenster, Medikament") — legt jeden Schritt über denselben Weg an wie das
+  // manuelle "Schritte einrichten" oben (routineSchrittHinzufuegen).
+  const handleRoutineUebernehmen = async (verlauf) => {
+    const schritte = await AIService.routineAusChat({ verlauf, coachName: getCoachName() });
+    schritte.forEach((s) => routineSchrittHinzufuegen(routine, s.name, s.dauerMin || 5));
+    return schritte;
+  };
+
   if (ablaufAktiv) {
     return (
       <RoutineAblauf
@@ -175,6 +188,21 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
         )}
         <SpotifyAnlassPicker anlass={ROUTINE_ANLASS[routine]} label={`🎵 Playlist für die ${ROUTINE_LABEL[routine]}`} />
       </Card>
+
+      <div style={{ marginBottom: 16 }}>
+        <KiChat
+          bereich={ROUTINE_ANLASS[routine]}
+          systemPrompt={`Du hilfst dabei, eine ${ROUTINE_LABEL[routine]} für eine bestehende App als feste Kette von 3-6 kurzen Schritten aufzubauen. Frag nach, was die Person sowieso schon jeden Tag macht (kein Neuanfang von null), in welcher Reihenfolge, und wie lange jeder Schritt ungefähr dauert, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.`}
+          einleitung={`Hi, ich bin ${getCoachName()}! Lass uns deine ${ROUTINE_LABEL[routine]} als feste Schritt-Kette aufbauen — was machst du morgens/abends sowieso schon?`}
+          onUebernehmen={handleRoutineUebernehmen}
+          uebernehmenLabel="Schritte anlegen"
+          renderErgebnis={(schritte) => (
+            <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+              {schritte.length} Schritte angelegt: {schritte.map((s) => s.name).join(" → ")}
+            </div>
+          )}
+        />
+      </div>
 
       <Card style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>Zeitrahmen</div>
