@@ -13,6 +13,7 @@ import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
+import TrainingVorschau from "../ui/TrainingVorschau";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { getCoachName } from "../utils/coachStorage";
@@ -171,6 +172,7 @@ export default function HomeView({ onOpenView }) {
   // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
   // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
   const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
+  const [trainingVorschau, setTrainingVorschau] = useState(null);
 
   // Notfallmodus-Tage werden jetzt im Tagesverlauf vermerkt (Nutzerinnen-
   // Vorgabe: "Notfallmodus-Tage werden nicht dauerhaft gespeichert") —
@@ -648,7 +650,7 @@ export default function HomeView({ onOpenView }) {
                   >
                     <button
                       className="mp-tap"
-                      onClick={() => onOpenView("tagesplan")}
+                      onClick={() => (item.kategorie === "training" ? setTrainingVorschau(item) : onOpenView("tagesplan"))}
                       style={{
                         flex: 1,
                         display: "flex",
@@ -760,6 +762,18 @@ export default function HomeView({ onOpenView }) {
           </button>
         ))}
       </div>
+
+      {trainingVorschau && (
+        <TrainingVorschau
+          art={trainingVorschau.raw.art || (trainingVorschau.raw.arten || []).join(" + ")}
+          name={trainingVorschau.raw.name}
+          uhrzeit={trainingVorschau.uhrzeit}
+          uebungen={trainingVorschau.raw.uebungen || trainingVorschau.raw.uebungenListe}
+          warmup={trainingVorschau.raw.warmup}
+          cooldown={trainingVorschau.raw.cooldown}
+          onSchliessen={() => setTrainingVorschau(null)}
+        />
+      )}
     </Shell>
   );
 }

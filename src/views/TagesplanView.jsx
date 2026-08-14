@@ -19,6 +19,7 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
+import TrainingVorschau from "../ui/TrainingVorschau";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -174,6 +175,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [feedbackKategorie, setFeedbackKategorie] = useState(null);
   const [trainingFehler, setTrainingFehler] = useState(null);
+  const [trainingVorschau, setTrainingVorschau] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({
     nebenwirkungen: [],
     staerke: "Keine",
@@ -393,7 +395,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
               return (
                 <div key={item.key} style={{ padding: "12px 0", borderBottom: i < entries.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <div
+                      onClick={item.kategorie === "training" ? () => setTrainingVorschau(item) : undefined}
+                      style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: item.kategorie === "training" ? "pointer" : "default" }}
+                    >
                       <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
                       <div>
                         <div style={{ fontSize: 14.5, fontWeight: 700 }}>
@@ -700,6 +705,26 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
             );
           })}
         </>
+      )}
+
+      {trainingVorschau && (
+        <TrainingVorschau
+          art={trainingVorschau.raw.art || (trainingVorschau.raw.arten || []).join(" + ")}
+          name={trainingVorschau.raw.name}
+          uhrzeit={trainingVorschau.uhrzeit}
+          uebungen={trainingVorschau.raw.uebungen || trainingVorschau.raw.uebungenListe}
+          warmup={trainingVorschau.raw.warmup}
+          cooldown={trainingVorschau.raw.cooldown}
+          onSchliessen={() => setTrainingVorschau(null)}
+          onStarten={
+            trainingVorschau.raw.erledigt
+              ? undefined
+              : () => {
+                  trainingVorschau.onConfirm();
+                  setTrainingVorschau(null);
+                }
+          }
+        />
       )}
     </Shell>
   );

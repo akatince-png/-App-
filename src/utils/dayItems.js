@@ -51,9 +51,30 @@ export function wochenplanUebungenText(zuweisung) {
   return "";
 }
 
-// Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-/Verlauf-Zeilen —
-// bei Krafttraining mit echten Übungsnamen + Sätzen×Wiederholungen statt nur
-// einer Anzahl, damit auf einen Blick erkennbar ist, was konkret ansteht.
+// Kompakte Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-Zeilen
+// (14.08., Nutzerin-Vorgabe: die volle Übungsliste als eine lange
+// Kommaliste wirkte dort wie "wirrer Buchstabensalat") — nur Anzahl statt
+// aller Namen/Sätze/Wiederholungen. Die volle Liste gibt's stattdessen als
+// Tabelle in der antippbaren Trainings-Vorschau (siehe TrainingVorschau.jsx).
+export function trainingKompaktDetail(t) {
+  if (t.art === "Krafttraining" || (t.art === "Bodyweight" && (t.uebungen || t.uebungenListe || []).length > 0)) {
+    const anzahl = (t.uebungen || t.uebungenListe || []).filter((u) => u.name).length;
+    return anzahl ? `${anzahl} Übung${anzahl === 1 ? "" : "en"}` : "";
+  }
+  const teile = [];
+  if (t.art === "Cardio" && t.cardioArt) teile.push(t.cardioArt);
+  if (t.dauerMin) teile.push(`${t.dauerMin} min`);
+  if (t.distanzKm) teile.push(`${t.distanzKm} km`);
+  return teile.join(" · ");
+}
+
+// Zusammenfassung einer Trainingseinheit für Verlauf-Zeilen (TrainingView.jsx)
+// — bei Krafttraining mit echten Übungsnamen + Sätzen×Wiederholungen statt nur
+// einer Anzahl, damit auf einen Blick erkennbar ist, was konkret gemacht wurde.
+// Bewusst NICHT mehr für Tagesplan-/Home-Zeilen genutzt (siehe
+// trainingKompaktDetail oben) — dort ist der Verlauf-Kontext (einzelne,
+// bereits erledigte Einheit ansehen) ein anderer als "auf einen Blick sehen,
+// was heute ansteht".
 export function trainingDetail(t) {
   if (t.art === "Krafttraining" || (t.art === "Bodyweight" && (t.uebungen || []).length > 0)) {
     return (t.uebungen || [])
@@ -189,7 +210,7 @@ export function buildDayItems(
       hour: t.uhrzeit ? t.uhrzeit.slice(0, 2) : null,
       uhrzeit: t.uhrzeit || "",
       name: t.name ? `${t.art} · ${t.name}` : t.art,
-      detail: trainingDetail(t),
+      detail: trainingKompaktDetail(t),
       done: !!t.erledigt,
       raw: t,
     });
@@ -206,8 +227,9 @@ export function buildDayItems(
       .filter((w) => w.wochentag === wochentagLabel)
       .forEach((zuweisung) => {
         const uhrzeit = zuweisung.uhrzeit || "";
+        const anzahlUebungen = (zuweisung.uebungenListe || []).filter((u) => u.name).length;
         const detailTeile = [
-          wochenplanUebungenText(zuweisung),
+          anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
           zuweisung.warmup?.aktiv ? `Warm-up${zuweisung.warmup.dauerMin ? ` ${zuweisung.warmup.dauerMin} Min.` : ""}` : "",
           zuweisung.cooldown?.aktiv ? `Cool-down${zuweisung.cooldown.dauerMin ? ` ${zuweisung.cooldown.dauerMin} Min.` : ""}` : "",
         ].filter(Boolean);

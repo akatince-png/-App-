@@ -75,6 +75,27 @@ export default function MiniPlanWidget({
         filter: aktiv ? "none" : "grayscale(1)",
       }}
     >
+      {/* Sichtbarer Hinweis, dass die Kachel antippbar ist (14.08.,
+          Nutzerin-Feedback: die Navigation per Tap gab es zwar schon, war
+          aber ohne jede visuelle Andeutung nicht auffindbar) — dezent in der
+          Ecke statt aufdringlich, damit die Ring-Visualisierung im Fokus
+          bleibt. */}
+      {onClick && !(actionLabel && onAction) && (
+        <div
+          style={{
+            position: "absolute",
+            top: 6,
+            right: 8,
+            color: "#B5B5B5",
+            fontSize: 13,
+            fontWeight: 700,
+            lineHeight: 1,
+          }}
+        >
+          ›
+        </div>
+      )}
+
       {actionLabel && onAction && (
         <button
           type="button"
