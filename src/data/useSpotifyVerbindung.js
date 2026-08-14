@@ -139,6 +139,29 @@ export function useSpotifyVerbindung(userId) {
     [userId]
   );
 
+  // Hintergrund-Steuerung während eines laufenden Intervall-Timers (14.08.,
+  // Nutzerin-Vorgabe) — bewusst OHNE spotifyTestet/spotifyFehler-UI-State:
+  // das sind automatische Sync-Aufrufe im Sekundentakt, kein einzelner
+  // Nutzer-Tastendruck, den man mit einer Fehleranzeige unterbrechen sollte.
+  // Fehler landen nur in der Konsole, der Timer läuft in jedem Fall weiter.
+  const spotifyPausieren = useCallback(async () => {
+    const { error } = await supabase.functions.invoke("spotify-play", { body: { targetUserId: userId, action: "pause" } });
+    if (error) console.error(error);
+  }, [userId]);
+
+  const spotifyFortsetzen = useCallback(async () => {
+    const { error } = await supabase.functions.invoke("spotify-play", { body: { targetUserId: userId, action: "resume" } });
+    if (error) console.error(error);
+  }, [userId]);
+
+  const spotifyLautstaerke = useCallback(
+    async (prozent) => {
+      const { error } = await supabase.functions.invoke("spotify-play", { body: { targetUserId: userId, action: "volume", volumePercent: prozent } });
+      if (error) console.error(error);
+    },
+    [userId]
+  );
+
   return {
     spotifyVerbunden,
     spotifyPlaylists,
@@ -146,6 +169,9 @@ export function useSpotifyVerbindung(userId) {
     spotifyPlaylistLoeschen,
     spotifyVerbindungTrennen,
     spotifyAbspielen,
+    spotifyPausieren,
+    spotifyFortsetzen,
+    spotifyLautstaerke,
     spotifyTestet,
     spotifyFehler,
     spotifyVerbindungFehler,

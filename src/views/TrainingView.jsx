@@ -7,10 +7,13 @@ import TimeWheelField from "../ui/TimeWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "../ui/UebungenEditor";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import MusikModusToggle from "../ui/MusikModusToggle";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import TrainingVorschau from "../ui/TrainingVorschau";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
+import { getIntervallMusikEinstellung, saveIntervallMusikEinstellung } from "../utils/intervallMusikStorage";
+import { useIntervallMusikSync } from "../data/useIntervallMusikSync";
 import KiChat from "../ui/KiChat";
 import {
   TRAININGSARTEN,
@@ -29,6 +32,10 @@ import { useAppData } from "../context/AppDataContext";
 // KATEGORIE_META in dayItems.js) — Training ist Rot, passend zu den bunten
 // Home-Mini-Widgets.
 const { text: accentDark, bg: accentSoft } = KATEGORIE_META.training;
+
+// Sekunden vor Ende eines Arbeitsintervalls, in denen die Musik ausgeblendet
+// wird (siehe useIntervallMusikSync) — gleicher Wert wie im Workflow-Timer.
+const INTERVALL_FADE_SEK = 5;
 
 function leererEintrag() {
   return {
@@ -152,7 +159,7 @@ function fmtDauer(sekunden) {
 // für Cardio/HIIT.
 // ---------------------------------------------------------------------------
 function LiveWorkout({ session, onFertig, onSchliessen }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, uebungsBilder } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, spotifyFortsetzen, spotifyLautstaerke, uebungsBilder } = useAppData();
   // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik
   // → Zuordnung, siehe SpotifyAnlassPicker), einmalig beim Öffnen dieser
   // Live-Session — nicht bei jedem Satz-/Übungswechsel.
@@ -161,6 +168,16 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
     if (uri && spotifyVerbunden) spotifyAbspielen(uri);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Fade/Pause an Intervallgrenzen bei Bodyweight-/Cardio-Intervalltraining
+  // (14.08., Nutzerin-Vorgabe) — Modus wird über den Kurz-Intervalltimer in
+  // TrainingView (MusikModusToggle) geräteweit eingestellt, hier nur gelesen.
+  const intervallMusikSync = useIntervallMusikSync({
+    modus: getIntervallMusikEinstellung("training").modus,
+    fadeSek: INTERVALL_FADE_SEK,
+    spotifyPausieren,
+    spotifyFortsetzen,
+    spotifyLautstaerke,
+  });
   const [uebungIndex, setUebungIndex] = useState(0);
   const [satzAktuell, setSatzAktuell] = useState(1);
   const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' | 'bestaetigen' (Kraft)
@@ -364,6 +381,9 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             arbeitSek={Number(session.intervallArbeitSek) || 40}
             pauseSek={Number(session.intervallPauseSek) || 20}
             runden={Number(session.runden) || 5}
+            fadeVorlaufSek={INTERVALL_FADE_SEK}
+            onPhaseStart={intervallMusikSync.onPhaseStart}
+            onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
             onFertig={() => beenden()}
           />
         </Card>
@@ -374,6 +394,9 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             arbeitSek={Number(session.intervallArbeitSek) || 40}
             pauseSek={Number(session.intervallPauseSek) || 20}
             runden={Number(session.runden) || 5}
+            fadeVorlaufSek={INTERVALL_FADE_SEK}
+            onPhaseStart={intervallMusikSync.onPhaseStart}
+            onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
             onFertig={() => beenden()}
           />
         </Card>
@@ -417,6 +440,11 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     erinnerungen,
     setErinnerung,
     aenderungVermerken,
+    spotifyAnlaesse,
+    spotifyAbspielen,
+    spotifyPausieren,
+    spotifyFortsetzen,
+    spotifyLautstaerke,
   } = useAppData();
   const [eintrag, setEintrag] = useState(leererEintrag());
   // Ansehen (reine Tabelle) und Erstellen (Formular + KI-Chat) getrennt
@@ -442,6 +470,21 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [liveSessionId, setLiveSessionId] = useState(null);
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
   const [feedbackFuerId, setFeedbackFuerId] = useState(null);
+  // Musik-Sync für den Kurz-Intervalltimer (14.08., Nutzerin-Vorgabe: Musik
+  // an Intervallgrenzen leiser/lauter werden lassen, wie beim Workflow-
+  // Timer) — Modus wird geräteweit gemerkt (intervallMusikStorage.js).
+  const [intervallModus, setIntervallModus] = useState(() => getIntervallMusikEinstellung("training").modus);
+  const intervallMusikSync = useIntervallMusikSync({
+    modus: intervallModus,
+    fadeSek: INTERVALL_FADE_SEK,
+    spotifyPausieren,
+    spotifyFortsetzen,
+    spotifyLautstaerke,
+    onErsterStart: () => {
+      const uri = spotifyAnlaesse.training?.uri;
+      if (uri) spotifyAbspielen(uri);
+    },
+  });
 
 
   useEffect(() => {
@@ -718,9 +761,35 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           <>
             {kurzTimer === "stoppuhr" && <Timer mode="stopwatch" onFertig={() => setKurzTimer(null)} />}
             {kurzTimer === "pause" && <Timer mode="countdown" initialSeconds={180} onFertig={() => {}} />}
-            {kurzTimer === "intervall" && <Timer mode="interval" arbeitSek={40} pauseSek={20} runden={8} onFertig={() => {}} />}
+            {kurzTimer === "intervall" && (
+              <>
+                <Timer
+                  mode="interval"
+                  arbeitSek={40}
+                  pauseSek={20}
+                  runden={8}
+                  fadeVorlaufSek={INTERVALL_FADE_SEK}
+                  onPhaseStart={intervallMusikSync.onPhaseStart}
+                  onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
+                  onFertig={() => {}}
+                />
+                <MusikModusToggle
+                  modus={intervallModus}
+                  onChange={(v) => {
+                    setIntervallModus(v);
+                    saveIntervallMusikEinstellung("training", { modus: v });
+                  }}
+                />
+              </>
+            )}
             <div style={{ marginTop: 10 }}>
-              <PrimaryButton variant="ghost" onClick={() => setKurzTimer(null)}>
+              <PrimaryButton
+                variant="ghost"
+                onClick={() => {
+                  intervallMusikSync.reset();
+                  setKurzTimer(null);
+                }}
+              >
                 Schließen
               </PrimaryButton>
             </div>

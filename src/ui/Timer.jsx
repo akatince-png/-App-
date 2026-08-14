@@ -18,17 +18,38 @@ function fmt(sekunden) {
  * mehrere Runden, Alarm bei jedem Wechsel). Zeitmessung über echte
  * Timestamps statt Zähl-Ticks, damit nichts wegdriftet.
  */
-export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, pauseSek = 20, runden = 5, onFertig, autoStart = false, vorwarnungSek = null }) {
+export default function Timer({
+  mode,
+  initialSeconds = 180,
+  arbeitSek = 40,
+  pauseSek = 20,
+  runden = 5,
+  onFertig,
+  autoStart = false,
+  vorwarnungSek = null,
+  // Nur für mode="interval" (14.08., Nutzerin-Vorgabe: Musik-Sync an
+  // Intervallgrenzen, z. B. Spotify pausieren/ausblenden) — beide optional,
+  // ohne sie verhält sich der Timer unverändert wie zuvor.
+  // onPhaseStart(phase, runde): direkt beim Beginn jeder Phase (inkl. der
+  // allerersten "arbeit"-Phase bei Start).
+  // onPhaseEndeNaht(phase): einmalig `fadeVorlaufSek` Sekunden bevor die
+  // AKTUELLE Phase endet.
+  onPhaseStart,
+  onPhaseEndeNaht,
+  fadeVorlaufSek = null,
+}) {
   const [status, setStatus] = useState("idle"); // idle | running | paused | done
   const [phase, setPhase] = useState("arbeit");
   const [rundeAktuell, setRundeAktuell] = useState(1);
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   const elapsedRef = useRef(0);
   const anchorRef = useRef(null);
   // Einmaliger Hinweiston kurz vor Ablauf (z. B. "noch 30 Sekunden"), nicht
   // nur der Schluss-Alarm bei 0 — gegen ADHS-typisches Zeitgefühl-Problem,
   // Nutzerinnen-Vorgabe 13.08. Nur für countdown relevant, opt-in per Prop.
   const vorgewarntRef = useRef(false);
+  // Analoges Einmal-Flag für onPhaseEndeNaht (s. o.), pro Phasen-Segment.
+  const phaseEndeNahtRef = useRef(false);
 
   useEffect(() => {
     if (status !== "running") return;
@@ -40,8 +61,13 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
 
   const start = () => {
     if (status === "done") return;
+    const istErstStart = status === "idle" && mode === "interval";
     anchorRef.current = Date.now();
     setStatus("running");
+    if (istErstStart) {
+      phaseEndeNahtRef.current = false;
+      onPhaseStart?.("arbeit", 1);
+    }
   };
   const pause = () => {
     elapsedRef.current = segmentElapsedMs();
@@ -55,6 +81,7 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
     setPhase("arbeit");
     setRundeAktuell(1);
     vorgewarntRef.current = false;
+    phaseEndeNahtRef.current = false;
   };
   const stoppenUndFertig = () => {
     const sek = Math.round(segmentElapsedMs() / 1000);
@@ -69,8 +96,13 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Prüft bei jedem Tick, ob Countdown/Intervall-Phase abgelaufen ist.
-  if (status === "running") {
+  // Prüft bei jedem Tick, ob Countdown/Intervall-Phase abgelaufen ist — in
+  // einem Effect statt direkt im Render-Body (sonst meldet React "Cannot
+  // update a component while rendering a different component", sobald
+  // onPhaseStart/onPhaseEndeNaht im Elternteil eigenen State setzen, z. B.
+  // useIntervallMusikSync.js).
+  useEffect(() => {
+    if (status !== "running") return;
     if (mode === "countdown") {
       const remaining = initialSeconds * 1000 - segmentElapsedMs();
       if (vorwarnungSek && !vorgewarntRef.current && remaining <= vorwarnungSek * 1000 && remaining > 0) {
@@ -87,17 +119,26 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
     } else if (mode === "interval") {
       const zielSek = phase === "arbeit" ? arbeitSek : pauseSek;
       const remaining = zielSek * 1000 - segmentElapsedMs();
+
+      if (fadeVorlaufSek && !phaseEndeNahtRef.current && remaining <= fadeVorlaufSek * 1000 && remaining > 0) {
+        phaseEndeNahtRef.current = true;
+        onPhaseEndeNaht?.(phase);
+      }
+
       if (remaining <= 0) {
         elapsedRef.current = 0;
+        phaseEndeNahtRef.current = false;
         if (phase === "arbeit") {
           anchorRef.current = Date.now();
           playBeep(1);
           setPhase("pause");
+          onPhaseStart?.("pause", rundeAktuell);
         } else if (rundeAktuell < runden) {
           anchorRef.current = Date.now();
           playBeep(1);
           setRundeAktuell((r) => r + 1);
           setPhase("arbeit");
+          onPhaseStart?.("arbeit", rundeAktuell + 1);
         } else {
           anchorRef.current = null;
           playBeep(3);
@@ -106,7 +147,8 @@ export default function Timer({ mode, initialSeconds = 180, arbeitSek = 40, paus
         }
       }
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, status]);
 
   const remainingSecondsDisplay = () => {
     if (mode === "stopwatch") return segmentElapsedMs() / 1000;

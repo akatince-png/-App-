@@ -15,6 +15,18 @@
 //    nach ~1 Std. ablaufen würde. Wer den Schlüssel kennt, kann NUR die
 //    hinterlegte(n) Playlist(s) dieser einen Person abspielen — sonst keine
 //    Rechte (kein Lesezugriff auf andere Daten).
+//
+// body.action steuert den Endpunkt (14.08., Nutzerin-Vorgabe: Musik in
+// Workflow-/Trainings-Intervallen pausieren/ausblenden können):
+// - "play" (Default): Playlist von vorne starten (bisheriges Verhalten).
+// - "pause"/"resume": Wiedergabe anhalten/fortsetzen, ohne die Playlist neu
+//   zu starten.
+// - "volume": Lautstärke setzen (body.volumePercent, 0–100) — für sanftes
+//   Ein-/Ausblenden an Intervallgrenzen (siehe useIntervallMusikSync.js).
+// Alle drei brauchen wie "play" ein aktives Gerät, geben bei 404 aber
+// still {ok:true} zurück statt eines Fehlers — das sind Hintergrund-
+// Synchronisationsaufrufe während eines laufenden Timers, kein direkter
+// Nutzer-Tastendruck, den man mit einer Fehlermeldung unterbrechen sollte.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -104,6 +116,47 @@ Deno.serve(async (req) => {
       verbindung = data;
     }
 
+    const accessToken = await frischesAccessToken(adminClient, verbindung);
+
+    // Aktion steuert, welcher Spotify-Endpunkt angesprochen wird — Default
+    // "play" ist das ursprüngliche Verhalten (Playlist von vorne starten).
+    // "pause"/"resume"/"volume" neu für die Workflow-/Trainings-Intervall-
+    // Musiksteuerung (14.08., Nutzerin-Vorgabe: Musik soll in Pausen
+    // pausieren/leiser werden können statt nur einmal gestartet zu werden).
+    // Funktioniert nur, solange das Gerät als "aktiv" bei Spotify gilt —
+    // bei gesperrtem Handy/App im Hintergrund kann das ins Leere laufen,
+    // das geben wir hier nicht als harten Fehler durch (kein User-Zutun
+    // möglich), nur bei "play" (dort merkt man's direkt beim Start).
+    const aktion = body.action || "play";
+
+    if (aktion === "pause") {
+      const res = await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.status === 204 || res.status === 404) return json({ ok: true });
+      return json({ error: await res.text() }, 200);
+    }
+
+    if (aktion === "resume") {
+      const res = await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.status === 204 || res.status === 404) return json({ ok: true });
+      return json({ error: await res.text() }, 200);
+    }
+
+    if (aktion === "volume") {
+      const prozent = Math.max(0, Math.min(100, Math.round(Number(body.volumePercent) || 0)));
+      const res = await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${prozent}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.status === 204 || res.status === 404) return json({ ok: true });
+      return json({ error: await res.text() }, 200);
+    }
+
     let uri = body.playlistUri || verbindung.playlist_uri;
     if (playlistName) {
       const { data: benannte } = await adminClient
@@ -115,8 +168,6 @@ Deno.serve(async (req) => {
       if (benannte?.uri) uri = benannte.uri;
     }
     if (!uri) return json({ error: "Keine Playlist hinterlegt." }, 200);
-
-    const accessToken = await frischesAccessToken(adminClient, verbindung);
 
     const playRes = await fetch("https://api.spotify.com/v1/me/player/play", {
       method: "PUT",

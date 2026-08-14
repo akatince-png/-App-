@@ -13,6 +13,7 @@ import { verspaetungText } from "../utils/dates";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import WorkflowTimer from "../ui/WorkflowTimer";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -150,6 +151,9 @@ export default function GewohnheitenView({ onHome }) {
   // 13.08.) — derselbe geführte Ablauf-Screen wie im Tagesplan.
   const [ablaufRoutine, setAblaufRoutine] = useState(null);
   const [schritteBearbeiten, setSchritteBearbeiten] = useState({ morgen: false, abend: false });
+  // Workflow-Intervalltimer (14.08., Nutzerin-Vorgabe): eigener, einfacher
+  // Konzentrations-Timer neben den Gewohnheiten — siehe WorkflowTimer.jsx.
+  const [workflowOffen, setWorkflowOffen] = useState(false);
 
   // Lückenloses Tagesprotokoll (Nutzerinnen-Vorgabe 28.07.): beim Abhaken
   // (nicht beim Zurücknehmen) wird die Erledigung — inkl. Verspätung
@@ -225,6 +229,10 @@ export default function GewohnheitenView({ onHome }) {
     gewohnheitZielAktualisieren(g.id, neuesZiel);
   };
 
+  if (workflowOffen) {
+    return <WorkflowTimer onSchliessen={() => setWorkflowOffen(false)} />;
+  }
+
   if (ablaufRoutine) {
     const schritteFuerRoutine = routineSchritte.filter((s) => s.routine === ablaufRoutine).sort((a, b) => a.reihenfolge - b.reihenfolge);
     return (
@@ -287,6 +295,14 @@ export default function GewohnheitenView({ onHome }) {
         )}
         <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
         <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
+      </Card>
+
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>⏱️ Workflow</div>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+          Konzentriert arbeiten in Intervallen — z. B. 25 Minuten Arbeit, 5 Minuten Pause — mit eigener Playlist.
+        </div>
+        <PrimaryButton onClick={() => setWorkflowOffen(true)}>▶️ Workflow starten</PrimaryButton>
       </Card>
 
       <Card style={{ marginBottom: 16 }}>
