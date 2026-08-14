@@ -1,15 +1,25 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-**Stand: 13.08.2026, spätabends — Branch `claude/google-cloud-tts-api-key-yc49xp`**
+**Stand: 14.08.2026, vormittags — Branch `claude/google-cloud-tts-api-key-yc49xp`**
 
-Komplett neu geschrieben (statt weiterer Nachtrag-Absätze) auf ausdrücklichen
-Wunsch der Nutzerin, als Übergabe für eine neue Chat-Sitzung morgen. Ziel
-dieses Dokuments: ein neuer Agent soll die App vollständig verstehen und
-genau dort weitermachen können, wo diese Sitzung endete — ohne dass die
-Nutzerin irgendetwas noch einmal erklären muss. Die alte, sehr viel
+Ursprünglich am 13.08. komplett neu geschrieben (statt weiterer
+Nachtrag-Absätze), am 14.08. weitergepflegt statt erneut komplett neu
+verfasst — die Sitzung vom 13.08. wurde in einem neuen Chat fortgesetzt.
+Ziel dieses Dokuments bleibt: ein neuer Agent soll die App vollständig
+verstehen und genau dort weitermachen können, wo diese Sitzung endete, ohne
+dass die Nutzerin irgendetwas noch einmal erklären muss. Die alte, sehr viel
 detailliertere Tag-für-Tag-Historie (bis 31.07.) bleibt über die Git-Historie
 dieser Datei einsehbar, falls einzelne frühere Entscheidungen im Detail
 nachvollzogen werden müssen.
+
+**Kurzstand 14.08. für den ganz schnellen Einstieg:** Die Nutzerin wollte
+das Spotify-Verbindungsproblem heute bewusst pausieren (siehe offener Punkt
+1) und stattdessen an Übungsbildern für den Trainings-Katalog arbeiten
+(Abschnitt 5) — das ist ebenfalls kurzfristig pausiert, weil ihre
+Canva-Premium-Nutzung gerade nicht funktioniert. Migration 0049 lässt sie
+sich parallel gerade im Supabase-Dashboard ausführen. Bei Sitzungsbeginn
+freundlich nachfragen, woran sie heute arbeiten möchte, statt automatisch
+eines der beiden pausierten Themen wieder aufzugreifen.
 
 ---
 
@@ -194,7 +204,31 @@ Abendroutine sind bewusst noch nicht vorgegeben** — die Nutzerin wollte das
 erst nach eigener Recherche gemeinsam festlegen; noch nicht nachgezogen.
 
 **Training:** Live-Workout-Screen mit Satz-/Pausen-Timer, Wochenplan mit
-Mehrfachauswahl von Wochentagen/Trainingsarten, großer Übungskatalog.
+Mehrfachauswahl von Wochentagen/Trainingsarten, großer Übungskatalog
+(`KRAFTUEBUNGEN`/`BODYWEIGHT_UEBUNGEN` in `constants.js`, ~200 Einträge).
+
+### 🆕 Übungsbilder (14.08., neu — Bild-Beschaffung aktuell pausiert)
+
+Infrastruktur ist fertig gebaut, damit im Live-Trainings-Screen zu jeder
+Übung ein Bild angezeigt wird: neue **öffentliche** (nicht private) Tabelle
+`uebungs_bilder` (name eindeutig, bild_url) + Storage-Bucket
+`uebungsbilder` (Migration `0049_uebungsbilder.sql` — **von der Nutzerin
+gerade zum Ausführen im Supabase-Dashboard, Status beim nächsten
+Sitzungsstart erfragen**). Admin-Ansicht `AdminUebungsBilderView.jsx`
+("🖼️ Übungsbilder verwalten" im Admin-Dashboard) erlaubt Hochladen eines
+Bildes pro Übung; `TrainingView.jsx`s `LiveWorkout` zeigt es automatisch an,
+sobald eines existiert — reine Anzeige-Logik, kein weiterer Code nötig.
+
+**Bewusst noch OHNE Inhalte:** Die eigentlichen Bilder sollten von der
+Nutzerin in **Canva** erstellt werden (einheitlicher Schwarz-Weiß-Illustrations-
+Stil), dafür wurde ihr eine vollständige Prompt-Liste für alle ~200 Übungen
+geschickt (als Datei, nicht im Repo — grob nach Muskelgruppen gruppiert,
+mit festem Stil-Template oben). **Pausiert, weil die Canva-Premium-Nutzung
+der Nutzerin gerade nicht funktioniert** — sowohl die Bild-Erstellung als
+auch das Hochladen sind deshalb aufgeschoben, kein technisches Problem in
+dieser App. Bei Bedarf die Prompt-Liste neu erzeugen (war eine reine
+Text-Antwort, keine Datei im Repo, ggf. aus dem Chat-Verlauf rekonstruieren
+oder neu schreiben).
 
 ---
 
@@ -369,6 +403,7 @@ bestätigt. Für diese Sitzung relevant:
 | 0046 | `coach_wissen.sql` | Wissens-Basis-Tabelle | ✅ deployt |
 | 0047 | `coach_wissen_seed.sql` | 16 Wissenseinträge aus der Praxisakademie | ✅ deployt, von Nutzerin bestätigt |
 | 0048 | `spotify_anlass_playlists.sql` | Playlist-Zuordnung je Anlass | ✅ deployt — bestätigt (erneuter Ausführungsversuch scheiterte mit "existiert bereits", also bereits früher erfolgreich gelaufen) |
+| 0049 | `uebungsbilder.sql` | Öffentliche Tabelle + Storage-Bucket für Übungsbilder | ⚠️ Wird von der Nutzerin gerade ausgeführt (14.08.) — Status beim nächsten Sitzungsstart bestätigen |
 
 ---
 
@@ -376,14 +411,15 @@ bestätigt. Für diese Sitzung relevant:
 
 | # | Thema | Status |
 |---|---|---|
-| 1 | Spotify-Verbinden hängt in Anmelde-Schleife (Apple-ID-Verschachtelung) | 🔴 Offen — siehe Abschnitt 8 für vollständige Diagnose, keine weitere Code-Suche nötig |
-| 2 | Gemini-429-Kontingentproblem (`gemini-3.6-flash`, nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen — Stand bei Sitzungsstart erfragen, evtl. hat die Nutzerin es selbst gelöst |
-| 3 | Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine (Tageslicht, Bewegung, Supplemente als Bestandteile) | Zurückgestellt — Nutzerin wollte erst selbst recherchieren |
-| 4 | "Fazit"-Feld bei Protokoll-Abschluss als datenschutzfreundliche Alternative zu automatischem Lernen aus Coachee-Daten | Nur als Vorschlag im Raum, noch nicht gebaut |
-| 5 | Per-Gewohnheit-Playlist-Zuordnung (statt einem allgemeinen "gewohnheiten"-Anlass) | Bewusste Scope-Entscheidung, nur bei explizitem Wunsch ausbauen |
-| 6 | Groq als Provider / Groq-Streaming | Zurückgestellt, Code vorbereitet |
-| 7 | Sprachauswahl (DE/EN/TR) auf den Assistenten selbst ausweiten | Nur UI-Texte mehrsprachig, Assistent antwortet immer auf Deutsch |
-| 8 | Sprechgeschwindigkeit der Cloud-Stimme einstellbar machen | Noch nicht umgesetzt, Google-Cloud-TTS unterstützt `speakingRate` |
+| 1 | Spotify-Verbinden funktioniert weiterhin nicht (14.08.: neuer Stand — selbst der reine Klartext-Link navigiert in Safari UND Chrome nicht mehr, Seite "lädt an und bricht ab", identisch in beiden Browsern; Spotify-Passwort statt Apple-ID wurde eingerichtet, half nicht) | 🔴 Offen — Verdacht auf Netzwerk-/Geräte-Ebene (Bildschirmzeit-Webinhalte-Filter oder installiertes VPN/Konfigurationsprofil), Prüfung angefordert aber Ergebnis noch nicht zurückgemeldet. Nutzerin wollte das Thema bewusst pausieren und unabhängig davon weiterarbeiten — siehe Abschnitt 8 für die vollständige bisherige Diagnose, keine weitere Code-Suche nötig, das liegt außerhalb des Repos |
+| 2 | Übungsbilder: Inhalte (die eigentlichen Canva-Bilder) fehlen noch | 🟡 Pausiert (14.08.) — Canva-Premium-Nutzung der Nutzerin funktioniert gerade nicht. Code/Infrastruktur ist fertig (siehe Abschnitt 5), nur die Bild-Erstellung selbst steht aus. Bei Sitzungsstart nachfragen, ob Canva wieder geht |
+| 3 | Gemini-429-Kontingentproblem (`gemini-3.6-flash`, nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen — Stand bei Sitzungsstart erfragen, evtl. hat die Nutzerin es selbst gelöst |
+| 4 | Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine (Tageslicht, Bewegung, Supplemente als Bestandteile) | Zurückgestellt — Nutzerin wollte erst selbst recherchieren |
+| 5 | "Fazit"-Feld bei Protokoll-Abschluss als datenschutzfreundliche Alternative zu automatischem Lernen aus Coachee-Daten | Nur als Vorschlag im Raum, noch nicht gebaut |
+| 6 | Per-Gewohnheit-Playlist-Zuordnung (statt einem allgemeinen "gewohnheiten"-Anlass) | Bewusste Scope-Entscheidung, nur bei explizitem Wunsch ausbauen |
+| 7 | Groq als Provider / Groq-Streaming | Zurückgestellt, Code vorbereitet |
+| 8 | Sprachauswahl (DE/EN/TR) auf den Assistenten selbst ausweiten | Nur UI-Texte mehrsprachig, Assistent antwortet immer auf Deutsch |
+| 9 | Sprechgeschwindigkeit der Cloud-Stimme einstellbar machen | Noch nicht umgesetzt, Google-Cloud-TTS unterstützt `speakingRate` |
 
 ---
 
