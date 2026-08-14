@@ -24,6 +24,7 @@ import { useLexikon } from "../data/useLexikon";
 import { useCoachVerlauf } from "../data/useCoachVerlauf";
 import { useAdminNotizen } from "../data/useAdminNotizen";
 import { useSpotifyVerbindung } from "../data/useSpotifyVerbindung";
+import { useUebungsBilder } from "../data/useUebungsBilder";
 import { useHauptprotokollData } from "../data/useHauptprotokollData";
 import { useRoutinen } from "../data/useRoutinen";
 import { useCoacheeNachrichten } from "../data/useCoacheeNachrichten";
@@ -66,6 +67,7 @@ export function AppDataProvider({ children }) {
   const coachVerlaufData = useCoachVerlauf(userId);
   const adminNotizenData = useAdminNotizen(userId);
   const spotifyData = useSpotifyVerbindung(userId);
+  const uebungsBilderData = useUebungsBilder(userId);
   const routinenData = useRoutinen(userId);
   const coacheeNachrichtenData = useCoacheeNachrichten(userId);
   const coachWissenData = useCoachWissen(userId);
@@ -108,6 +110,7 @@ export function AppDataProvider({ children }) {
     ...coachVerlaufData,
     ...adminNotizenData,
     ...spotifyData,
+    ...uebungsBilderData,
     ...hauptprotokollData,
     ...routinenData,
     ...coacheeNachrichtenData,

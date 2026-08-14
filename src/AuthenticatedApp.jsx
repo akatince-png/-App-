@@ -8,6 +8,7 @@ import HomeView from "./views/HomeView";
 import AdminDashboardView from "./views/admin/AdminDashboardView";
 import AdminWissenView from "./views/admin/AdminWissenView";
 import AdminFormulareView from "./views/admin/AdminFormulareView";
+import AdminUebungsBilderView from "./views/admin/AdminUebungsBilderView";
 import LexikonView from "./views/LexikonView";
 import TagesplanView from "./views/TagesplanView";
 import PlanView from "./views/plan/PlanView";
@@ -205,12 +206,15 @@ export default function AuthenticatedApp() {
         onVerwalteAls={verwalteAls}
         onOpenWissen={() => setView("admin-wissen")}
         onOpenFormulare={() => setView("admin-formulare")}
+        onOpenUebungsBilder={() => setView("admin-uebungsbilder")}
       />
     );
   } else if (view === "admin-wissen") {
     screen = <AdminWissenView onHome={() => setView("admin")} />;
   } else if (view === "admin-formulare") {
     screen = <AdminFormulareView onHome={() => setView("admin")} />;
+  } else if (view === "admin-uebungsbilder") {
+    screen = <AdminUebungsBilderView onHome={() => setView("admin")} />;
   } else {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }

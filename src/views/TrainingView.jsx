@@ -140,7 +140,7 @@ function TrainingFeedbackPanel({ trainingId, onDone }) {
 // für Cardio/HIIT.
 // ---------------------------------------------------------------------------
 function LiveWorkout({ session, onFertig, onSchliessen }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, uebungsBilder } = useAppData();
   // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik
   // → Zuordnung, siehe SpotifyAnlassPicker), einmalig beim Öffnen dieser
   // Live-Session — nicht bei jedem Satz-/Übungswechsel.
@@ -233,6 +233,13 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
                 Übung {uebungIndex + 1} von {uebungen.length}
               </div>
               <Card style={{ textAlign: "center", marginBottom: 14 }}>
+                {uebungsBilder[aktuelleUebung.name] && (
+                  <img
+                    src={uebungsBilder[aktuelleUebung.name]}
+                    alt={aktuelleUebung.name}
+                    style={{ width: "100%", maxWidth: 280, borderRadius: 16, marginBottom: 14, border: `1px solid ${cardBorder}` }}
+                  />
+                )}
                 <div style={{ fontSize: 19, fontWeight: 800, marginBottom: 4 }}>{aktuelleUebung.name}</div>
                 <div style={{ fontSize: 13, color: textMuted, marginBottom: 14 }}>
                   {aktuelleUebung.wiederholungen && `${aktuelleUebung.wiederholungen} Wdh.`}
