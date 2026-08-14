@@ -631,6 +631,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       {wochenplanVorschau && (
         <TrainingVorschau
           art={wochenplanVorschau.arten?.length ? wochenplanVorschau.arten.join(" + ") : "Training"}
+          tag={WOCHENTAGE_VOLL[wochenplanVorschau.tag]}
           uhrzeit={wochenplanVorschau.uhrzeit}
           uebungen={wochenplanVorschau.uebungenListe}
           warmup={wochenplanVorschau.warmup}
@@ -1001,6 +1002,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
         <TrainingVorschau
           art={verlaufVorschau.art}
           name={verlaufVorschau.name}
+          tag={verlaufVorschau.datum}
           uhrzeit={verlaufVorschau.uhrzeit}
           uebungen={verlaufVorschau.uebungen}
           onSchliessen={() => setVerlaufVorschau(null)}

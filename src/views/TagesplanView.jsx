@@ -711,6 +711,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         <TrainingVorschau
           art={trainingVorschau.raw.art || (trainingVorschau.raw.arten || []).join(" + ")}
           name={trainingVorschau.raw.name}
+          tag={fmtDate(selectedDate)}
           uhrzeit={trainingVorschau.uhrzeit}
           uebungen={trainingVorschau.raw.uebungen || trainingVorschau.raw.uebungenListe}
           warmup={trainingVorschau.raw.warmup}

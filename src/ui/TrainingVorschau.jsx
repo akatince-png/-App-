@@ -10,7 +10,7 @@ import { uebungGewichtText, uebungWiederholungenText } from "./UebungenEditor";
 // übersichtliche Tabelle, OHNE das Training gleich starten zu müssen.
 // Bottom-Sheet statt eigener Seite, damit kein neues Routing nötig ist und
 // "nur mal kurz reingucken" sich auch so anfühlt.
-export default function TrainingVorschau({ art, name, uhrzeit, uebungen, warmup, cooldown, onSchliessen, onStarten }) {
+export default function TrainingVorschau({ art, name, tag, uhrzeit, uebungen, warmup, cooldown, onSchliessen, onStarten }) {
   const liste = (uebungen || []).filter((u) => u.name);
   return (
     <div
@@ -41,7 +41,11 @@ export default function TrainingVorschau({ art, name, uhrzeit, uebungen, warmup,
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800 }}>{name ? `${art} · ${name}` : art}</div>
-            {uhrzeit && <div style={{ fontSize: 12.5, color: textMuted, marginTop: 2 }}>{uhrzeit} Uhr</div>}
+            {(tag || uhrzeit) && (
+              <div style={{ fontSize: 12.5, color: textMuted, marginTop: 2, fontWeight: 700 }}>
+                {[tag, uhrzeit ? `${uhrzeit} Uhr` : ""].filter(Boolean).join(" · ")}
+              </div>
+            )}
           </div>
           <button
             type="button"
