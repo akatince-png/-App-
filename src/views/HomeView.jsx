@@ -13,7 +13,6 @@ import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
-import TrainingVorschau from "../ui/TrainingVorschau";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { getCoachName } from "../utils/coachStorage";
@@ -131,7 +130,7 @@ function NachrichtAnCoachCard({ nachrichten, onSenden }) {
   );
 }
 
-export default function HomeView({ onOpenView }) {
+export default function HomeView({ onOpenView, onOpenTraining }) {
   const { t, tLabel, lang } = useT();
   const {
     hormonPlan,
@@ -144,6 +143,7 @@ export default function HomeView({ onOpenView }) {
     trainingEintraege,
     trainingWochenplan,
     trainingTemplates,
+    trainingHinzufuegen,
     gewohnheiten,
     gewohnheitErledigt,
     confirmAlleTageszeit,
@@ -172,7 +172,41 @@ export default function HomeView({ onOpenView }) {
   // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
   // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
   const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
-  const [trainingVorschau, setTrainingVorschau] = useState(null);
+  const [trainingFehler, setTrainingFehler] = useState(null);
+
+  // Tap auf die Trainingszeile in "Als Nächstes" soll direkt in den
+  // Live-Start-Screen führen (Nutzerin-Korrektur 14.08.: eine reine
+  // Vorschau ohne Startmöglichkeit war nicht das, was sie wollte — die
+  // volle Übungstabelle gibt's stattdessen als kleines Icon INNERHALB des
+  // Live-Screens, siehe TrainingView.jsx). Gleiche Logik wie
+  // TagesplanView.starteTraining: reale Einträge direkt öffnen, virtuelle
+  // (aus dem Wochenplan) erst als echten Eintrag anlegen.
+  const starteTrainingVonItem = async (item) => {
+    if (!item.raw.virtuell) {
+      onOpenTraining(item.raw.id);
+      return;
+    }
+    setTrainingFehler(null);
+    const arten = item.raw.arten || [];
+    const art = arten.find((a) => a === "Krafttraining") || arten.find((a) => a === "Bodyweight") || arten[0] || "";
+    const warmupCooldown = [
+      item.raw.warmup?.aktiv ? `Warm-up${item.raw.warmup.dauerMin ? ` ${item.raw.warmup.dauerMin} Min.` : ""}` : "",
+      item.raw.cooldown?.aktiv ? `Cool-down${item.raw.cooldown.dauerMin ? ` ${item.raw.cooldown.dauerMin} Min.` : ""}` : "",
+    ].filter(Boolean);
+    const result = await trainingHinzufuegen({
+      datum: item.raw.datum,
+      uhrzeit: item.raw.uhrzeit || "",
+      art,
+      uebungen: item.raw.uebungenListe || [],
+      bemerkungen: warmupCooldown.join(" · "),
+      erledigt: false,
+    });
+    if (result?.ok) {
+      onOpenTraining(result.eintrag.id);
+      return;
+    }
+    setTrainingFehler(result?.error || "Training konnte nicht gestartet werden.");
+  };
 
   // Notfallmodus-Tage werden jetzt im Tagesverlauf vermerkt (Nutzerinnen-
   // Vorgabe: "Notfallmodus-Tage werden nicht dauerhaft gespeichert") —
@@ -650,7 +684,7 @@ export default function HomeView({ onOpenView }) {
                   >
                     <button
                       className="mp-tap"
-                      onClick={() => (item.kategorie === "training" ? setTrainingVorschau(item) : onOpenView("tagesplan"))}
+                      onClick={() => (item.kategorie === "training" ? starteTrainingVonItem(item) : onOpenView("tagesplan"))}
                       style={{
                         flex: 1,
                         display: "flex",
@@ -763,16 +797,26 @@ export default function HomeView({ onOpenView }) {
         ))}
       </div>
 
-      {trainingVorschau && (
-        <TrainingVorschau
-          art={trainingVorschau.raw.art || (trainingVorschau.raw.arten || []).join(" + ")}
-          name={trainingVorschau.raw.name}
-          uhrzeit={trainingVorschau.uhrzeit}
-          uebungen={trainingVorschau.raw.uebungen || trainingVorschau.raw.uebungenListe}
-          warmup={trainingVorschau.raw.warmup}
-          cooldown={trainingVorschau.raw.cooldown}
-          onSchliessen={() => setTrainingVorschau(null)}
-        />
+      {trainingFehler && (
+        <div
+          onClick={() => setTrainingFehler(null)}
+          style={{
+            position: "fixed",
+            left: 16,
+            right: 16,
+            bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+            background: "#fff",
+            border: "1px solid #E8B4AE",
+            borderRadius: 14,
+            padding: "12px 14px",
+            fontSize: 12.5,
+            color: "#A63B32",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+            zIndex: 60,
+          }}
+        >
+          {trainingFehler} — antippen zum Schließen.
+        </div>
       )}
     </Shell>
   );

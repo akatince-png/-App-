@@ -8,6 +8,7 @@ import UebungenEditor, { LEERE_UEBUNG } from "../ui/UebungenEditor";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import TrainingVorschau from "../ui/TrainingVorschau";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
@@ -161,6 +162,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   const [satzAktuell, setSatzAktuell] = useState(1);
   const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' | 'bestaetigen' (Kraft)
   const [fertig, setFertig] = useState(!!session.erledigt);
+  const [vorschauOffen, setVorschauOffen] = useState(false);
   // Gesamt-Trainingszeit (Nutzerin-Vorgabe 14.08.): läuft unabhängig vom
   // Pausen-Timer zwischen Sätzen durch, beginnt beim Öffnen dieser
   // Live-Session (= "Training starten") und stoppt erst beim wirklichen
@@ -259,8 +261,25 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             </Card>
           ) : (
             <>
-              <div style={{ fontSize: 12, color: textMuted, marginBottom: 8, textAlign: "center" }}>
-                Übung {uebungIndex + 1} von {uebungen.length}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ fontSize: 12, color: textMuted, textAlign: "center" }}>
+                  Übung {uebungIndex + 1} von {uebungen.length}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVorschauOffen(true)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: accentDark,
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    padding: "2px 6px",
+                  }}
+                >
+                  📋 Alle Übungen
+                </button>
               </div>
               <Card style={{ textAlign: "center", marginBottom: 14 }}>
                 {uebungsBilder[aktuelleUebung.name] && (
@@ -360,6 +379,16 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>Stoppuhr</div>
           <Timer mode="stopwatch" onFertig={(sek) => beenden({ dauerMin: Math.round(sek / 60) })} />
         </Card>
+      )}
+
+      {vorschauOffen && (
+        <TrainingVorschau
+          art={session.art}
+          name={session.name}
+          uhrzeit={session.uhrzeit}
+          uebungen={uebungen}
+          onSchliessen={() => setVorschauOffen(false)}
+        />
       )}
     </Shell>
   );

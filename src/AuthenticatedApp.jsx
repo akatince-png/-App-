@@ -216,7 +216,15 @@ export default function AuthenticatedApp() {
   } else if (view === "admin-uebungsbilder") {
     screen = <AdminUebungsBilderView onHome={() => setView("admin")} />;
   } else {
-    screen = <HomeView onOpenView={(id) => setView(id)} />;
+    screen = (
+      <HomeView
+        onOpenView={(id) => setView(id)}
+        onOpenTraining={(id) => {
+          setOffenesTrainingId(id);
+          setView("training");
+        }}
+      />
+    );
   }
 
   // Coach-verwaltetes Modell (13.08.): "Neues Protokoll" bleibt Admins und
