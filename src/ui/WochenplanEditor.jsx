@@ -37,6 +37,11 @@ export default function WochenplanEditor({
   // den eigentlich wichtigeren Überblick verdeckt hat.
   zeigeFormular = true,
   zeigeListe = true,
+  // Optional: Zeile antippen öffnet eine Detailansicht der Übungen (14.08.,
+  // Nutzerin-Vorgabe: dieselbe Vorschau-Tabelle wie auf Home/Tagesplan,
+  // statt hier nur "X Übungen" stehen zu haben ohne Möglichkeit,
+  // nachzusehen, welche). Bekommt die volle Zeile (inkl. uebungenListe).
+  onZeileAntippen,
 }) {
   const { t, tLabel } = useT();
   const titelAnzeige = titel === undefined ? t("onboarding.training.wochenplan.titel") : titel;
@@ -268,7 +273,10 @@ export default function WochenplanEditor({
                 >
                   <div style={{ width: 40, fontWeight: 700 }}>{tLabel(e.tag)}</div>
                   <div style={{ width: 56, color: textMuted }}>{e.uhrzeit}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{ flex: 1, minWidth: 0, cursor: onZeileAntippen ? "pointer" : "default" }}
+                    onClick={onZeileAntippen ? () => onZeileAntippen(e) : undefined}
+                  >
                     <div style={{ fontWeight: 700 }}>{e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—"}</div>
                     {(anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv) && (
                       <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>

@@ -22,7 +22,7 @@ import {
   CARDIO_MODI_STRECKE,
   CARDIO_MODI_SPRUNGSEIL,
 } from "../constants";
-import { trainingDetail, KATEGORIE_META } from "../utils/dayItems";
+import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe (siehe
@@ -54,10 +54,13 @@ function leererEintrag() {
   };
 }
 
-function zusammenfassung(e) {
-  const teile = [trainingDetail(e)].filter(Boolean);
+// Kompakte Verlauf-Zeile (14.08., Nutzerin-Vorgabe): getrackte Dauer statt
+// der vollen Übungsliste als Fließtext — Details gibt's stattdessen per Tap
+// über dieselbe TrainingVorschau-Tabelle wie auf Home/Tagesplan.
+function verlaufKompakt(e) {
+  const teile = [];
+  if (e.dauerMin) teile.push(`${e.dauerMin} Min.`);
   if (e.puls) teile.push(`Ø ${e.puls} bpm`);
-  if (e.runden && e.art !== "Krafttraining") teile.push(`${e.runden} Runden`);
   if (e.rpe) teile.push(`RPE ${e.rpe}`);
   return teile.join(" · ") || "—";
 }
@@ -418,6 +421,16 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   // den eigentlich wichtigeren Überblick über den bestehenden Wochenplan.
   const [wochenplanAnsehenOffen, setWochenplanAnsehenOffen] = useState(false);
   const [trainingsplanErstellenOffen, setTrainingsplanErstellenOffen] = useState(false);
+  // Einzeltraining (14.08., Nutzerin-Vorgabe): abgesetzt von "Trainingsplan
+  // erstellen" (das ist der WIEDERKEHRENDE Wochenplan) — hier geht's um ein
+  // EINMALIGES Training für ein bestimmtes Datum, das auch alle Trainingsarten
+  // inkl. Cardio/Bodyweight-Intervall mit ihren Spezialfeldern abdeckt (Distanz,
+  // Puls, Intervalle) und sich auch nachträglich als "schon erledigt" eintragen
+  // lässt — beides kann der Wochenplan-Formular nicht. Bisher stand das
+  // Formular immer offen und wirkte dadurch wie eine verwirrende Dopplung.
+  const [einzeltrainingOffen, setEinzeltrainingOffen] = useState(false);
+  const [verlaufVorschau, setVerlaufVorschau] = useState(null);
+  const [wochenplanVorschau, setWochenplanVorschau] = useState(null);
   const [vorlageSpeichernOffen, setVorlageSpeichernOffen] = useState(false);
   const [vorlageName, setVorlageName] = useState("");
   const [vorlageFehler, setVorlageFehler] = useState(null);
@@ -611,6 +624,18 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           wochenplanEntfernen={handleWochenplanEntfernen}
           titel={null}
           zeigeFormular={false}
+          onZeileAntippen={setWochenplanVorschau}
+        />
+      )}
+
+      {wochenplanVorschau && (
+        <TrainingVorschau
+          art={wochenplanVorschau.arten?.length ? wochenplanVorschau.arten.join(" + ") : "Training"}
+          uhrzeit={wochenplanVorschau.uhrzeit}
+          uebungen={wochenplanVorschau.uebungenListe}
+          warmup={wochenplanVorschau.warmup}
+          cooldown={wochenplanVorschau.cooldown}
+          onSchliessen={() => setWochenplanVorschau(null)}
         />
       )}
 
@@ -652,10 +677,33 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Nur ein Timer? (ohne Eintrag)</div>
       <Card style={{ marginBottom: 14 }}>
         {!kurzTimer ? (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Pill label="⏱ Stoppuhr" onClick={() => setKurzTimer("stoppuhr")} />
-            <Pill label="⏳ Pausentimer" onClick={() => setKurzTimer("pause")} />
-            <Pill label="🔁 Intervalltimer" onClick={() => setKurzTimer("intervall")} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {[
+              { id: "stoppuhr", icon: "⏱️", label: "Stoppuhr" },
+              { id: "pause", icon: "⏳", label: "Pausentimer" },
+              { id: "intervall", icon: "🔁", label: "Intervalltimer" },
+            ].map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                className="mp-tap"
+                onClick={() => setKurzTimer(o.id)}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "16px 6px",
+                  borderRadius: 14,
+                  border: `1px solid ${cardBorder}`,
+                  background: "#FAFBFA",
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ fontSize: 30, lineHeight: 1 }}>{o.icon}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: textMain }}>{o.label}</span>
+              </button>
+            ))}
           </div>
         ) : (
           <>
@@ -671,7 +719,17 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
         )}
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Training eintragen</div>
+      <div style={{ marginBottom: 14 }}>
+        <PrimaryButton variant="ghost" onClick={() => setEinzeltrainingOffen((o) => !o)}>
+          {einzeltrainingOffen ? "Schließen" : "▶️ Einzeltraining eintragen"}
+        </PrimaryButton>
+      </div>
+
+      {einzeltrainingOffen && (
+      <>
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Für ein einmaliges Training an einem bestimmten Tag — anders als der Wochenplan wiederholt sich das nicht. Auch zum nachträglichen Eintragen, was du schon gemacht hast.
+      </div>
       <Card style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ flex: 1 }}>
@@ -885,51 +943,68 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           </>
         )}
       </Card>
+      </>
+      )}
 
-      {trainingEintraege.length > 0 && (
-        <>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verlauf</div>
-          <Card>
-            {trainingEintraege.map((e, i) => (
-              <div
-                key={e.id}
-                className="mp-tap"
-                onClick={() => !e.erledigt && setLiveSessionId(e.id)}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  padding: "10px 0",
-                  borderBottom: i < trainingEintraege.length - 1 ? `1px solid ${cardBorder}` : "none",
-                  cursor: e.erledigt ? "default" : "pointer",
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>
-                    {e.art}
-                    {e.name && <span style={{ fontWeight: 500 }}> · {e.name}</span>}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>
-                    {e.datum}
-                    {e.uhrzeit && ` · ${e.uhrzeit}`} · {zusammenfassung(e)}
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                  {e.erledigt ? <StatusBadge status="erledigt" /> : <StatusBadge status="geplant" />}
-                  <button
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      handleTrainingEntfernen(e);
+      {(() => {
+        const erledigteEintraege = trainingEintraege.filter((e) => e.erledigt);
+        return (
+          erledigteEintraege.length > 0 && (
+            <>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verlauf</div>
+              <Card>
+                {erledigteEintraege.map((e, i) => (
+                  <div
+                    key={e.id}
+                    className="mp-tap"
+                    onClick={() => setVerlaufVorschau(e)}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      padding: "10px 0",
+                      borderBottom: i < erledigteEintraege.length - 1 ? `1px solid ${cardBorder}` : "none",
+                      cursor: "pointer",
                     }}
-                    style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}
                   >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
-          </Card>
-        </>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>
+                        {e.art}
+                        {e.name && <span style={{ fontWeight: 500 }}> · {e.name}</span>}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>
+                        {e.datum}
+                        {e.uhrzeit && ` · ${e.uhrzeit}`} · {verlaufKompakt(e)}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <StatusBadge status="erledigt" />
+                      <button
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          handleTrainingEntfernen(e);
+                        }}
+                        style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer" }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </Card>
+            </>
+          )
+        );
+      })()}
+
+      {verlaufVorschau && (
+        <TrainingVorschau
+          art={verlaufVorschau.art}
+          name={verlaufVorschau.name}
+          uhrzeit={verlaufVorschau.uhrzeit}
+          uebungen={verlaufVorschau.uebungen}
+          onSchliessen={() => setVerlaufVorschau(null)}
+        />
       )}
     </>
   );

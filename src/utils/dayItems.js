@@ -68,29 +68,6 @@ export function trainingKompaktDetail(t) {
   return teile.join(" · ");
 }
 
-// Zusammenfassung einer Trainingseinheit für Verlauf-Zeilen (TrainingView.jsx)
-// — bei Krafttraining mit echten Übungsnamen + Sätzen×Wiederholungen statt nur
-// einer Anzahl, damit auf einen Blick erkennbar ist, was konkret gemacht wurde.
-// Bewusst NICHT mehr für Tagesplan-/Home-Zeilen genutzt (siehe
-// trainingKompaktDetail oben) — dort ist der Verlauf-Kontext (einzelne,
-// bereits erledigte Einheit ansehen) ein anderer als "auf einen Blick sehen,
-// was heute ansteht".
-export function trainingDetail(t) {
-  if (t.art === "Krafttraining" || (t.art === "Bodyweight" && (t.uebungen || []).length > 0)) {
-    return (t.uebungen || [])
-      .filter((u) => u.name)
-      .map((u) => {
-        const gewichtText = uebungGewichtText(u);
-        return `${u.name} ${u.saetze || "?"}×${uebungWiederholungenText(u) || "?"}${gewichtText ? ` ${gewichtText}` : ""}`;
-      })
-      .join(", ");
-  }
-  const teile = [];
-  if (t.art === "Cardio" && t.cardioArt) teile.push(t.cardioArt);
-  if (t.dauerMin) teile.push(`${t.dauerMin} min`);
-  if (t.distanzKm) teile.push(`${t.distanzKm} km`);
-  return teile.join(" · ");
-}
 
 // Baut die reine Datenliste eines Tages aus allen Trackern zusammen — ohne
 // Bestätigen-Callbacks, damit Tagesplan und Startseite dieselbe Grundlage
