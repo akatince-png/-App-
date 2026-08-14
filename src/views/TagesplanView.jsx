@@ -150,6 +150,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     gewohnheiten,
     gewohnheitErledigt,
     toggleGewohnheitErledigt,
+    projekte,
+    zeitbloecke,
     routineSchritte,
     routineSchrittHinzufuegen,
     routineSchrittEntfernen,
@@ -278,6 +280,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         trainingTemplates,
         gewohnheiten,
         gewohnheitErledigt,
+        projekte,
+        zeitbloecke,
       });
       return items.map((item) => {
         if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
@@ -288,6 +292,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
         if (item.kategorie === "gewohnheit") return { ...item, onConfirm: () => toggleGewohnheitErledigt(tagStr, item.raw.id) };
+        if (item.kategorie === "zeitblock") return item;
         return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit) };
       });
     },
@@ -310,6 +315,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
       gewohnheiten,
       gewohnheitErledigt,
       toggleGewohnheitErledigt,
+      projekte,
+      zeitbloecke,
       starteTraining,
     ]
   );
@@ -399,7 +406,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                       onClick={item.kategorie === "training" ? () => setTrainingVorschau(item) : undefined}
                       style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: item.kategorie === "training" ? "pointer" : "default" }}
                     >
-                      <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, marginTop: 6, flexShrink: 0 }} />
+                      <div style={{ width: 8, height: 8, borderRadius: 4, background: item.farbe || k.dot, marginTop: 6, flexShrink: 0 }} />
                       <div>
                         <div style={{ fontSize: 14.5, fontWeight: 700 }}>
                           {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>}
@@ -411,7 +418,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      {item.kategorie !== "training" && onEditItem && (
+                      {item.kategorie !== "training" && item.kategorie !== "zeitblock" && onEditItem && (
                         <button
                           className="mp-tap"
                           onClick={() => onEditItem(item.kategorie, item.refId)}
@@ -421,7 +428,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                           ✏️
                         </button>
                       )}
-                      {item.done ? (
+                      {item.kategorie === "zeitblock" ? null : item.done ? (
                         <StatusBadge status="erledigt" />
                       ) : (
                         <button
@@ -659,7 +666,11 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         <>
           {wochentage.map((d) => {
             const items = itemsForDate(d);
-            const done = items.filter((i) => i.done).length;
+            // Zeitblöcke sind Kalendereinträge, keine erledigbaren
+            // Aufgaben — würden die "X/Y erledigt"-Quote sonst künstlich
+            // verschlechtern, da sie nie als erledigt zählen können.
+            const erledigbareItems = items.filter((i) => i.kategorie !== "zeitblock");
+            const done = erledigbareItems.filter((i) => i.done).length;
             const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit", "training", "gewohnheit"].map((kat) => ({
               kat,
               count: items.filter((i) => i.kategorie === kat).length,
@@ -686,7 +697,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{fmtDate(d)}</div>
                   <div style={{ fontSize: 12, color: textMuted }}>
-                    {items.length > 0 ? `${done}/${items.length} erledigt` : "nichts geplant"}
+                    {erledigbareItems.length > 0 ? `${done}/${erledigbareItems.length} erledigt` : "nichts geplant"}
                   </div>
                 </div>
                 {items.length > 0 && (

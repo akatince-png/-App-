@@ -28,7 +28,30 @@ export const KATEGORIE_META = {
   tageslicht: { bg: "#FDF3E3", text: "#8C6A1F", dot: "#D9A62E", label: "Tageslicht" },
   schlaf: { bg: "#ECEDF7", text: "#3F4380", dot: "#5B5FA6", label: "Schlaf" },
   notfallmodus: { bg: "#FBEAE7", text: "#A63B32", dot: "#C24545", label: "Notfallmodus" },
+  zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
 };
+
+// Farbrotation für Projekte (14.08., Nutzerin-Vorgabe: "sollen dann
+// verschiedene Farben kriegen, wenn ich neue Projekte hinzufüge") — jedes
+// Projekt bekommt beim Anlegen automatisch die nächste Farbe (siehe
+// useZeitbloecke.js, projektHinzufuegen). Bewusst eigene, gedeckte Töne
+// statt der kräftigeren KATEGORIE_META-Farben, damit Zeitblöcke sich in
+// Tages-/Wochen-/Monatsübersicht klar von den festen Kategorien abheben.
+export const PROJEKT_FARBEN = [
+  "#4F9D5C", // Grün
+  "#3F94A6", // Cyan
+  "#C97B3D", // Orange
+  "#B25A8C", // Mauve
+  "#7A63B0", // Violett
+  "#8A9A45", // Oliv
+  "#A0714F", // Braun
+  "#5C7AAE", // Graublau
+];
+
+export function projektFarbe(projekt) {
+  if (!projekt) return KATEGORIE_META.zeitblock.dot;
+  return PROJEKT_FARBEN[(projekt.farbeIndex || 0) % PROJEKT_FARBEN.length];
+}
 
 // Kurzbeschreibung der Übungen einer Wochenplan-Einheit (WochenplanEditor.jsx)
 // — neue Einheiten haben je Übung eigene Sätze/Wiederholungen/Gewicht
@@ -87,6 +110,8 @@ export function buildDayItems(
     trainingWochenplan = [],
     gewohnheiten = [],
     gewohnheitErledigt = {},
+    projekte = [],
+    zeitbloecke = [],
   }
 ) {
   const tagStr = toLocalISODate(date);
@@ -246,6 +271,26 @@ export function buildDayItems(
       raw: g,
     });
   });
+
+  // Projekte/Zeitblöcke (14.08., Nutzerin-Vorgabe) — farbig je Projekt statt
+  // einer festen Kategorie-Farbe, siehe PROJEKT_FARBEN/projektFarbe() oben.
+  zeitbloecke
+    .filter((z) => z.datum === tagStr)
+    .forEach((z) => {
+      const projekt = projekte.find((p) => p.id === z.projektId);
+      items.push({
+        kategorie: "zeitblock",
+        key: `z-${z.id}`,
+        refId: z.id,
+        hour: z.startUhrzeit.slice(0, 2),
+        uhrzeit: z.startUhrzeit,
+        name: z.titel || projekt?.name || "Zeitblock",
+        detail: [z.titel && projekt ? projekt.name : "", z.endUhrzeit ? `bis ${z.endUhrzeit} Uhr` : ""].filter(Boolean).join(" · "),
+        done: false,
+        farbe: projektFarbe(projekt),
+        raw: z,
+      });
+    });
 
   items.sort((a, b) => {
     const ha = a.hour ?? "99";

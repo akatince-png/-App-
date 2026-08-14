@@ -27,6 +27,7 @@ import { useSpotifyVerbindung } from "../data/useSpotifyVerbindung";
 import { useUebungsBilder } from "../data/useUebungsBilder";
 import { useHauptprotokollData } from "../data/useHauptprotokollData";
 import { useRoutinen } from "../data/useRoutinen";
+import { useZeitbloecke } from "../data/useZeitbloecke";
 import { useCoacheeNachrichten } from "../data/useCoacheeNachrichten";
 import { useCoachWissen } from "../data/useCoachWissen";
 
@@ -69,6 +70,7 @@ export function AppDataProvider({ children }) {
   const spotifyData = useSpotifyVerbindung(userId);
   const uebungsBilderData = useUebungsBilder(userId);
   const routinenData = useRoutinen(userId);
+  const zeitbloeckeData = useZeitbloecke(userId);
   const coacheeNachrichtenData = useCoacheeNachrichten(userId);
   const coachWissenData = useCoachWissen(userId);
 
@@ -113,6 +115,7 @@ export function AppDataProvider({ children }) {
     ...uebungsBilderData,
     ...hauptprotokollData,
     ...routinenData,
+    ...zeitbloeckeData,
     ...coacheeNachrichtenData,
     ...coachWissenData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData

@@ -1,8 +1,9 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Shell, Card, PrimaryButton } from "../ui/primitives";
+import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
-import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../ui/theme";
-import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
+import TimeWheelField from "../ui/TimeWheelField";
+import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { buildDayItems, KATEGORIE_META, projektFarbe } from "../utils/dayItems";
 import { exportElementAsPdf } from "../utils/pdfExport";
 import { describeInterval, activeDoseDays } from "../utils/schedule";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
@@ -32,6 +33,12 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     hormonErledigt = {},
     startdatum,
     dauer,
+    projekte,
+    projektHinzufuegen,
+    projektEntfernen,
+    zeitbloecke,
+    zeitblockHinzufuegen,
+    zeitblockEntfernen,
   } = appData;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -40,6 +47,41 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
   const [exportLaeuft, setExportLaeuft] = useState(false);
   const [vorschauUrl, setVorschauUrl] = useState(null);
   const exportRef = useRef(null);
+
+  // Projekte & Zeitblöcke (14.08., Nutzerin-Vorgabe) — bewusst hier in der
+  // Wochenübersicht statt einer neuen Plan-Seite, damit farbige Zeitblöcke
+  // direkt in Tag/Woche/Monat auftauchen (siehe buildDayItems/dayItems.js).
+  const [neuesProjekt, setNeuesProjekt] = useState("");
+  const [projektFehler, setProjektFehler] = useState(null);
+  const [neuerBlock, setNeuerBlock] = useState({
+    projektId: "",
+    titel: "",
+    datum: toLocalISODate(new Date()),
+    startUhrzeit: "09:00",
+    endUhrzeit: "",
+  });
+  const [blockFehler, setBlockFehler] = useState(null);
+
+  const projektAnlegen = async () => {
+    setProjektFehler(null);
+    const result = await projektHinzufuegen(neuesProjekt);
+    if (!result?.ok) {
+      setProjektFehler(result?.error || "Speichern fehlgeschlagen.");
+      return;
+    }
+    if (!neuerBlock.projektId) setNeuerBlock((p) => ({ ...p, projektId: result.projekt.id }));
+    setNeuesProjekt("");
+  };
+
+  const blockEintragen = async () => {
+    setBlockFehler(null);
+    const result = await zeitblockHinzufuegen(neuerBlock);
+    if (!result?.ok) {
+      setBlockFehler(result?.error || "Speichern fehlgeschlagen.");
+      return;
+    }
+    setNeuerBlock((p) => ({ ...p, titel: "" }));
+  };
 
   const today = new Date();
   const montag = addDays(today, -((today.getDay() + 6) % 7));
@@ -92,6 +134,9 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     while (cursor <= ende && n < 180) {
       const items = buildDayItems(cursor, appData);
       for (const item of items) {
+        // Zeitblöcke sind Kalenderblöcke, keine erledigbaren Aufgaben —
+        // eine "0%"-Quote dafür wäre irreführend, daher ausgenommen.
+        if (item.kategorie === "zeitblock") continue;
         if (!zaehler[item.kategorie]) zaehler[item.kategorie] = { geplant: 0, erledigt: 0 };
         zaehler[item.kategorie].geplant++;
         if (item.done) zaehler[item.kategorie].erledigt++;
@@ -192,6 +237,144 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
         })}
       </div>
 
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>📁 Projekte & Zeitblöcke</div>
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+          Blocke Zeit für Arbeit oder eigene Projekte — taucht farbig in Tag, Woche und Monat auf.
+        </div>
+
+        {projekte.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 10 }}>
+            {projekte.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 10px",
+                  marginRight: 6,
+                  marginBottom: 6,
+                  borderRadius: 20,
+                  border: `1px solid ${cardBorder}`,
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                <div style={{ width: 9, height: 9, borderRadius: 5, background: projektFarbe(p), flexShrink: 0 }} />
+                {p.name}
+                <button
+                  type="button"
+                  onClick={() => projektEntfernen(p.id)}
+                  title="Projekt löschen"
+                  style={{ border: "none", background: "transparent", color: danger, fontSize: 14, cursor: "pointer", padding: 0, marginLeft: 2 }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+          <div style={{ flex: 1 }}>
+            <TextInput value={neuesProjekt} onChange={setNeuesProjekt} placeholder="z. B. Arbeit, Coaching-Ausbildung" />
+          </div>
+          <button
+            type="button"
+            onClick={projektAnlegen}
+            disabled={!neuesProjekt.trim()}
+            style={{
+              padding: "0 16px",
+              borderRadius: 12,
+              border: "none",
+              background: neuesProjekt.trim() ? accentDark : "#B7D8D1",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: neuesProjekt.trim() ? "pointer" : "not-allowed",
+            }}
+          >
+            + Projekt
+          </button>
+        </div>
+        {projektFehler && <div style={{ fontSize: 12, color: danger, marginTop: 4 }}>{projektFehler}</div>}
+
+        {projekte.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+            <Label>Zeitblock eintragen</Label>
+            <div style={{ display: "flex", flexWrap: "wrap" }}>
+              {projekte.map((p) => (
+                <Pill
+                  key={p.id}
+                  label={p.name}
+                  selected={neuerBlock.projektId === p.id}
+                  onClick={() => setNeuerBlock((prev) => ({ ...prev, projektId: p.id }))}
+                />
+              ))}
+            </div>
+
+            <TextInput value={neuerBlock.titel} onChange={(v) => setNeuerBlock((p) => ({ ...p, titel: v }))} placeholder="Titel (optional, sonst Projektname)" />
+
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <div style={{ flex: 1 }}>
+                <Label>Datum</Label>
+                <TextInput type="date" value={neuerBlock.datum} onChange={(v) => setNeuerBlock((p) => ({ ...p, datum: v }))} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Label>Von</Label>
+                <TimeWheelField value={neuerBlock.startUhrzeit} onChange={(v) => setNeuerBlock((p) => ({ ...p, startUhrzeit: v }))} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Label>Bis (optional)</Label>
+                <TimeWheelField value={neuerBlock.endUhrzeit} onChange={(v) => setNeuerBlock((p) => ({ ...p, endUhrzeit: v }))} />
+              </div>
+            </div>
+
+            {blockFehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{blockFehler}</div>}
+            <div style={{ marginTop: 10 }}>
+              <PrimaryButton onClick={blockEintragen} disabled={!neuerBlock.projektId}>
+                Zeitblock eintragen
+              </PrimaryButton>
+            </div>
+          </div>
+        )}
+
+        {zeitbloecke.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+            <Label>Eingetragene Zeitblöcke</Label>
+            {zeitbloecke
+              .slice()
+              .sort((a, b) => (a.datum + a.startUhrzeit).localeCompare(b.datum + b.startUhrzeit))
+              .map((z) => {
+                const projekt = projekte.find((p) => p.id === z.projektId);
+                return (
+                  <div
+                    key={z.id}
+                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}
+                  >
+                    <div style={{ width: 8, height: 8, borderRadius: 4, background: projektFarbe(projekt), flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{z.titel || projekt?.name || "Zeitblock"}</div>
+                      <div style={{ fontSize: 11, color: textMuted }}>
+                        {fmtDate(new Date(z.datum))} · {z.startUhrzeit}
+                        {z.endUhrzeit ? `–${z.endUhrzeit}` : ""} Uhr{z.titel && projekt ? ` · ${projekt.name}` : ""}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => zeitblockEntfernen(z.id)}
+                      style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </Card>
+
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
         <button
           onClick={() => setViewMode("day")}
@@ -263,7 +446,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                       borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
                     }}
                   >
-                    <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
+                    <div style={{ width: 8, height: 8, borderRadius: 4, background: item.farbe || k.dot, flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 700 }}>
                         {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 11.5 }}>· {item.uhrzeit}</span>
@@ -296,7 +479,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                     items.map((item) => {
                       const meta = k[item.kategorie];
                       return (
-                        <div key={item.key} style={{ fontSize: 10, marginBottom: 6, paddingLeft: 6, borderLeft: `2px solid ${meta.dot}` }}>
+                        <div key={item.key} style={{ fontSize: 10, marginBottom: 6, paddingLeft: 6, borderLeft: `2px solid ${item.farbe || meta.dot}` }}>
                           <div style={{ fontWeight: 700 }}>{item.uhrzeit}</div>
                           <div style={{ fontSize: 9, color: textMuted }}>{item.name}</div>
                           {item.detail && <div style={{ fontSize: 8.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
@@ -382,7 +565,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                   >
                     <div style={{ color: textMuted }}>{d.getDate()}</div>
                     <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                      {dotsToShow.map((item, i) => {
+                      {dotsToShow.map((item) => {
                         const meta = KATEGORIE_META[item.kategorie];
                         return (
                           <div
@@ -391,8 +574,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                               width: 6,
                               height: 6,
                               borderRadius: 3,
-                              background: meta.dot,
-                              title: item.name,
+                              background: item.farbe || meta.dot,
                             }}
                             title={item.name}
                           />
@@ -407,13 +589,19 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 14, paddingTop: 12, borderTop: `1px solid ${cardBorder}` }}>
             {Object.entries(KATEGORIE_META)
-              .filter(([kat]) => kat !== "notfallmodus")
+              .filter(([kat]) => kat !== "notfallmodus" && kat !== "zeitblock")
               .map(([kat, meta]) => (
                 <div key={kat} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                   <div style={{ width: 7, height: 7, borderRadius: 4, background: meta.dot, flexShrink: 0 }} />
                   <span style={{ fontSize: 10.5, color: textMuted }}>{meta.label}</span>
                 </div>
               ))}
+            {projekte.map((p) => (
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 7, height: 7, borderRadius: 4, background: projektFarbe(p), flexShrink: 0 }} />
+                <span style={{ fontSize: 10.5, color: textMuted }}>{p.name}</span>
+              </div>
+            ))}
           </div>
         </Card>
       )}
@@ -545,7 +733,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                   {items.map((item) => {
                     const k = KATEGORIE_META[item.kategorie];
                     return (
-                      <div key={item.key} style={{ fontSize: 10, marginBottom: 4, borderLeft: `3px solid ${k.dot}`, paddingLeft: 4 }}>
+                      <div key={item.key} style={{ fontSize: 10, marginBottom: 4, borderLeft: `3px solid ${item.farbe || k.dot}`, paddingLeft: 4 }}>
                         <div style={{ fontWeight: 700 }}>
                           {item.uhrzeit} {item.name}
                         </div>
