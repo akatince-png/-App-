@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import Timer from "../ui/Timer";
@@ -135,6 +135,14 @@ function TrainingFeedbackPanel({ trainingId, onDone }) {
   );
 }
 
+function fmtDauer(sekunden) {
+  const s = Math.max(0, Math.round(sekunden));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}` : `${m}:${String(r).padStart(2, "0")}`;
+}
+
 // ---------------------------------------------------------------------------
 // Live-Workout: Satz-für-Satz-Begleiter für Kraft, Intervall-/Stoppuhr-Timer
 // für Cardio/HIIT.
@@ -153,6 +161,20 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   const [satzAktuell, setSatzAktuell] = useState(1);
   const [phase, setPhase] = useState("uebung"); // 'uebung' | 'pause' | 'bestaetigen' (Kraft)
   const [fertig, setFertig] = useState(!!session.erledigt);
+  // Gesamt-Trainingszeit (Nutzerin-Vorgabe 14.08.): läuft unabhängig vom
+  // Pausen-Timer zwischen Sätzen durch, beginnt beim Öffnen dieser
+  // Live-Session (= "Training starten") und stoppt erst beim wirklichen
+  // Trainingsende (beenden() unten) — nicht beim einzelnen Satz. Echte
+  // Timestamps statt Zähl-Ticks, damit nichts wegdriftet (gleiches Prinzip
+  // wie Timer.jsx).
+  const startZeitRef = useRef(Date.now());
+  const [gesamtSek, setGesamtSek] = useState(0);
+  useEffect(() => {
+    if (fertig) return;
+    const id = setInterval(() => setGesamtSek(Math.round((Date.now() - startZeitRef.current) / 1000)), 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fertig]);
   // Nur direkt nach dem Beenden DIESER Live-Session soll die Nachbereitung
   // erscheinen — beim erneuten Öffnen einer bereits erledigten Session
   // (z. B. aus dem Verlauf) nicht wieder abfragen.
@@ -175,7 +197,8 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   }, [phase, uebungIndex]);
 
   const beenden = (felder = {}) => {
-    onFertig(session.id, felder);
+    const dauerMin = felder.dauerMin ?? Math.max(1, Math.round(gesamtSek / 60));
+    onFertig(session.id, { ...felder, dauerMin });
     setFertig(true);
     setJustFinished(true);
   };
@@ -209,6 +232,13 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   return (
     <Shell bereich="training">
       <ViewHeader title={`🏋️ ${session.art}`} onHome={onSchliessen} homeTitle="Zurück" />
+
+      {!fertig && (
+        <div style={{ textAlign: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 0.3 }}>GESAMTZEIT TRAINING</div>
+          <div style={{ fontSize: 28, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{fmtDauer(gesamtSek)}</div>
+        </div>
+      )}
 
       {fertig ? (
         justFinished && !feedbackErledigt ? (
