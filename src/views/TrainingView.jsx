@@ -412,7 +412,12 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     aenderungVermerken,
   } = useAppData();
   const [eintrag, setEintrag] = useState(leererEintrag());
-  const [wochenplanOffen, setWochenplanOffen] = useState(false);
+  // Ansehen (reine Tabelle) und Erstellen (Formular + KI-Chat) getrennt
+  // statt eines gemeinsamen "Wochenplan bearbeiten"-Umschalters (14.08.,
+  // Nutzerin-Vorgabe): vorher verdeckte das Erstell-Formular immer zuerst
+  // den eigentlich wichtigeren Überblick über den bestehenden Wochenplan.
+  const [wochenplanAnsehenOffen, setWochenplanAnsehenOffen] = useState(false);
+  const [trainingsplanErstellenOffen, setTrainingsplanErstellenOffen] = useState(false);
   const [vorlageSpeichernOffen, setVorlageSpeichernOffen] = useState(false);
   const [vorlageName, setVorlageName] = useState("");
   const [vorlageFehler, setVorlageFehler] = useState(null);
@@ -585,19 +590,39 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
         <SpotifyAnlassPicker anlass="training" label="🎵 Playlist fürs Training" />
       </Card>
 
-      <div style={{ marginBottom: 14 }}>
-        <PrimaryButton variant="ghost" onClick={() => setWochenplanOffen((o) => !o)}>
-          {wochenplanOffen ? "Wochenplan schließen" : "📅 Wochenplan bearbeiten"}
-        </PrimaryButton>
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <div style={{ flex: 1 }}>
+          <PrimaryButton variant="ghost" onClick={() => setWochenplanAnsehenOffen((o) => !o)}>
+            {wochenplanAnsehenOffen ? "Wochenplan schließen" : "🗓️ Wochenplan ansehen"}
+          </PrimaryButton>
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrimaryButton variant="ghost" onClick={() => setTrainingsplanErstellenOffen((o) => !o)}>
+            {trainingsplanErstellenOffen ? "Schließen" : "➕ Trainingsplan erstellen"}
+          </PrimaryButton>
+        </div>
       </div>
 
-      {wochenplanOffen && (
+      {wochenplanAnsehenOffen && (
+        <WochenplanEditor
+          trainingWochenplan={trainingWochenplan}
+          wochenplanHinzufuegen={handleWochenplanHinzufuegen}
+          wochenplanBearbeiten={handleWochenplanBearbeiten}
+          wochenplanEntfernen={handleWochenplanEntfernen}
+          titel={null}
+          zeigeFormular={false}
+        />
+      )}
+
+      {trainingsplanErstellenOffen && (
         <>
           <WochenplanEditor
             trainingWochenplan={trainingWochenplan}
             wochenplanHinzufuegen={handleWochenplanHinzufuegen}
             wochenplanBearbeiten={handleWochenplanBearbeiten}
             wochenplanEntfernen={handleWochenplanEntfernen}
+            titel={null}
+            zeigeListe={false}
           />
 
           <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10, marginTop: 14 }}>

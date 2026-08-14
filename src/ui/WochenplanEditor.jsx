@@ -5,7 +5,6 @@ import NumberWheelField from "./NumberWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "./UebungenEditor";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
-import { wochenplanUebungenText } from "../utils/dayItems";
 import { useT } from "../i18n/translate";
 
 export const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
@@ -23,7 +22,22 @@ function toggleInArray(arr, val) {
 // Kurzbeschreibung. Geteilt zwischen TrainingView (laufende Pflege) und dem
 // Onboarding-Trainingsschritt, damit beide Einstiegspunkte denselben
 // tatsächlichen Wochenplan bearbeiten.
-export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufuegen, wochenplanBearbeiten, wochenplanEntfernen, titel }) {
+export default function WochenplanEditor({
+  trainingWochenplan,
+  wochenplanHinzufuegen,
+  wochenplanBearbeiten,
+  wochenplanEntfernen,
+  titel,
+  // Formular (neue/bestehende Einheit bearbeiten) und Liste (bestehender
+  // Wochenplan als Tabelle) unabhängig ein-/ausblendbar (14.08.,
+  // Nutzerin-Vorgabe): im Onboarding sollen weiterhin beide zusammen
+  // erscheinen (Standardwerte true), in TrainingView.jsx stehen "Wochenplan
+  // ansehen" (nur Liste) und "Trainingsplan erstellen" (nur Formular)
+  // dagegen hinter zwei getrennten Knöpfen, weil das Formular-zuerst bisher
+  // den eigentlich wichtigeren Überblick verdeckt hat.
+  zeigeFormular = true,
+  zeigeListe = true,
+}) {
   const { t, tLabel } = useT();
   const titelAnzeige = titel === undefined ? t("onboarding.training.wochenplan.titel") : titel;
 
@@ -90,14 +104,26 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
     reset();
   };
 
-  const nachTagGruppiert = WOCHENTAGE.map((tag) => ({
-    tag,
-    einheiten: trainingWochenplan.filter((w) => w.wochentag === tag).sort((a, b) => (a.uhrzeit || "").localeCompare(b.uhrzeit || "")),
-  })).filter((g) => g.einheiten.length > 0);
+  // Flache, nach Wochentag+Uhrzeit sortierte Liste statt Tag-Gruppen mit
+  // eigener Überschrift je Tag — für eine echte, kompakte Tabelle (14.08.,
+  // Nutzerin-Vorgabe: "tabellarisch, schöner fürs Auge" statt Fließtext).
+  const alleEinheitenSortiert = WOCHENTAGE.flatMap((tag) =>
+    trainingWochenplan
+      .filter((w) => w.wochentag === tag)
+      .sort((a, b) => (a.uhrzeit || "").localeCompare(b.uhrzeit || ""))
+      .map((e) => ({ ...e, tag }))
+  );
 
   return (
     <>
       {titelAnzeige && <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{titelAnzeige}</div>}
+      {/* Formular auch zeigen, wenn gerade eine bestehende Zeile bearbeitet
+          wird (bearbeitenId gesetzt) — selbst wenn diese Instanz sonst nur
+          die Liste zeigt (zeigeFormular=false): der ✏️-Knopf in der
+          "Wochenplan ansehen"-Tabelle muss ein Formular öffnen können,
+          ohne dass dort dauerhaft ein leeres "neue Einheit"-Formular
+          herumsteht. */}
+      {(zeigeFormular || bearbeitenId) && (
       <Card style={{ marginBottom: 14 }}>
         <Label>{t("onboarding.training.einheit.wochentag.label")}</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
@@ -216,40 +242,47 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
           <div style={{ fontSize: 11.5, color: danger, marginTop: 6, textAlign: "center" }}>Bitte oben zuerst mindestens einen Wochentag auswählen.</div>
         )}
       </Card>
+      )}
 
-      {nachTagGruppiert.length > 0 && (
-        <Card style={{ marginBottom: 14 }}>
-          {nachTagGruppiert.map((gruppe, gi) => (
-            <div key={gruppe.tag} style={{ marginBottom: gi < nachTagGruppiert.length - 1 ? 14 : 0 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 800, marginBottom: 6 }}>{tLabel(WOCHENTAGE_VOLL[gruppe.tag])}</div>
-              {gruppe.einheiten.map((e) => (
+      {zeigeListe && (
+        alleEinheitenSortiert.length > 0 ? (
+          <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", padding: "8px 14px", background: "#FAFBFA", fontSize: 11, fontWeight: 700, color: textMuted }}>
+              <div style={{ width: 40 }}>Tag</div>
+              <div style={{ width: 56 }}>Zeit</div>
+              <div style={{ flex: 1 }}>Art</div>
+              <div style={{ width: 60 }} />
+            </div>
+            {alleEinheitenSortiert.map((e) => {
+              const anzahlUebungen = (e.uebungenListe || []).filter((u) => u.name).length;
+              return (
                 <div
                   key={e.id}
                   style={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    padding: "8px 0",
-                    borderBottom: `1px solid ${cardBorder}`,
+                    alignItems: "center",
+                    padding: "10px 14px",
+                    borderTop: `1px solid ${cardBorder}`,
+                    fontSize: 13,
                   }}
                 >
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>
-                      {e.uhrzeit} Uhr{e.arten.length > 0 ? ` · ${e.arten.map((a) => tLabel(a)).join(" + ")}` : ""}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2 }}>
-                      {[
-                        wochenplanUebungenText(e),
-                        e.warmup?.aktiv ? `Warm-up ${e.warmup.dauerMin ? `${e.warmup.dauerMin} Min.` : ""}${e.warmup.beschreibung ? ` (${e.warmup.beschreibung})` : ""}` : "",
-                        e.cooldown?.aktiv
-                          ? `Cool-down ${e.cooldown.dauerMin ? `${e.cooldown.dauerMin} Min.` : ""}${e.cooldown.beschreibung ? ` (${e.cooldown.beschreibung})` : ""}`
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </div>
+                  <div style={{ width: 40, fontWeight: 700 }}>{tLabel(e.tag)}</div>
+                  <div style={{ width: 56, color: textMuted }}>{e.uhrzeit}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700 }}>{e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—"}</div>
+                    {(anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv) && (
+                      <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>
+                        {[
+                          anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
+                          e.warmup?.aktiv ? "Warm-up" : "",
+                          e.cooldown?.aktiv ? "Cool-down" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                  <div style={{ width: 60, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, flexShrink: 0 }}>
                     {wochenplanBearbeiten && (
                       <button
                         type="button"
@@ -269,10 +302,14 @@ export default function WochenplanEditor({ trainingWochenplan, wochenplanHinzufu
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
-        </Card>
+              );
+            })}
+          </Card>
+        ) : (
+          <Card style={{ marginBottom: 14, textAlign: "center" }}>
+            <div style={{ fontSize: 12.5, color: textMuted }}>Noch kein Wochenplan angelegt.</div>
+          </Card>
+        )
       )}
     </>
   );
