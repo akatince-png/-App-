@@ -790,6 +790,11 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           wochenplanErinnerungenAlleSetzen={wochenplanErinnerungenAlleSetzen}
           erinnerungenTrainingAktiv={!!erinnerungen.training}
           onErinnerungenTrainingUmschalten={(v) => setErinnerung("training", v)}
+          trainingsVorlaufMinuten={erinnerungen.training && typeof erinnerungen.training === "object" ? erinnerungen.training.vorlaufMinuten : undefined}
+          onTrainingsVorlaufAendern={(minuten) => {
+            const bestehend = erinnerungen.training && typeof erinnerungen.training === "object" ? erinnerungen.training : {};
+            setErinnerung("training", { ...bestehend, aktiv: true, vorlaufMinuten: minuten });
+          }}
           titel={null}
           zeigeFormular={false}
           onZeileAntippen={setWochenplanVorschau}

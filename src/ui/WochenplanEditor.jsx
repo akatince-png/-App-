@@ -3,6 +3,7 @@ import { Card, CheckRow, Label, Pill, PrimaryButton, TextInput } from "./primiti
 import TimeWheelField from "./TimeWheelField";
 import NumberWheelField from "./NumberWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "./UebungenEditor";
+import VorlaufFeld from "./VorlaufFeld";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
 import { useT } from "../i18n/translate";
@@ -36,6 +37,12 @@ export default function WochenplanEditor({
   wochenplanErinnerungenAlleSetzen,
   erinnerungenTrainingAktiv,
   onErinnerungenTrainingUmschalten,
+  // Vorab-Hinweis-Vorlauf fürs Training (15.08., Nutzerin-Vorgabe: die
+  // Vorlauf-Auswahl soll überall dort erreichbar sein, wo die Erinnerung
+  // selbst ein-/ausgeschaltet wird, nicht nur zentral unter Mehr) — optional
+  // wie die anderen Erinnerungs-Props, im Onboarding weggelassen.
+  trainingsVorlaufMinuten,
+  onTrainingsVorlaufAendern,
   titel,
   // Formular (neue/bestehende Einheit bearbeiten) und Liste (bestehender
   // Wochenplan als Tabelle) unabhängig ein-/ausblendbar (14.08.,
@@ -356,6 +363,9 @@ export default function WochenplanEditor({
                 onClick={() => onErinnerungenTrainingUmschalten(!erinnerungenTrainingAktiv)}
               />
             </div>
+          )}
+          {onErinnerungenTrainingUmschalten && erinnerungenTrainingAktiv && onTrainingsVorlaufAendern && (
+            <VorlaufFeld value={trainingsVorlaufMinuten} onChange={onTrainingsVorlaufAendern} mitTagen />
           )}
           {wochenplanErinnerungenAlleSetzen && (
             <div style={{ display: "flex", gap: 8 }}>

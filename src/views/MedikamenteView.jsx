@@ -14,6 +14,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
+import KategorieErinnerung from "../ui/KategorieErinnerung";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Medikamente
 // sind Lila, passend zu den bunten Home-Mini-Widgets.
@@ -200,6 +201,11 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       {!embedded && (
         <ViewHeader title="💊 Medikamente" onHome={onHome} />
       )}
+
+      <Card style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 16 }}>
+        <KategorieErinnerung kategorie="medikamente" label="🔔 Erinnerungen Medikamente/Hormone" />
+        <KategorieErinnerung kategorie="peptide" label="🔔 Erinnerungen Peptide" />
+      </Card>
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
         Sag, welches Medikament/Hormon du hinzufügen willst — der Assistent fragt Dosierung, Einnahmeart und Rhythmus ab.

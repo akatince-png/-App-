@@ -14,6 +14,7 @@ import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import WorkflowTimer from "../ui/WorkflowTimer";
+import KategorieErinnerung from "../ui/KategorieErinnerung";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -314,6 +315,14 @@ export default function GewohnheitenView({ onHome }) {
           <SpotifyAnlassPicker anlass="gewohnheiten" label="" />
         </Card>
       </div>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🔔 Erinnerungen</div>
+      <Card style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+        <KategorieErinnerung kategorie="morgenroutine" label="🌅 Morgenroutine" />
+        <KategorieErinnerung kategorie="abendroutine" label="🌆 Abendroutine" />
+        <KategorieErinnerung kategorie="workflow" label="🔁 Workflow" mitTagen />
+        <KategorieErinnerung kategorie="gewohnheiten" label="🌱 Gewohnheiten (alle, siehe unten)" />
+      </Card>
 
       <div style={{ marginBottom: 16 }}>
         <KiChat

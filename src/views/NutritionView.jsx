@@ -14,6 +14,7 @@ import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import KategorieErinnerung from "../ui/KategorieErinnerung";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Ernährung
 // ist Terrakotta, passend zu den bunten Home-Mini-Widgets.
@@ -382,6 +383,10 @@ export default function NutritionView({ onHome, embedded = false }) {
       {!embedded && (
         <ViewHeader title="🥗 Ernährungsplan" onHome={onHome} />
       )}
+
+      <Card style={{ marginBottom: 14 }}>
+        <KategorieErinnerung kategorie="ernaehrung" label="🔔 Erinnerungen" mitTagen />
+      </Card>
 
       {kalorienIst && (
         <Card style={{ marginBottom: 14 }}>

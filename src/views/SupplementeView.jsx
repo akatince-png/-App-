@@ -11,6 +11,7 @@ import KiChat from "../ui/KiChat";
 import ViewHeader from "../ui/ViewHeader";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
+import KategorieErinnerung from "../ui/KategorieErinnerung";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
@@ -111,6 +112,10 @@ export default function SupplementeView({ onHome, embedded = false }) {
       {!embedded && (
         <ViewHeader title="💊 Supplemente" onHome={onHome} />
       )}
+
+      <Card style={{ marginBottom: 14 }}>
+        <KategorieErinnerung kategorie="supplemente" label="🔔 Erinnerungen" />
+      </Card>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
         {UNTERTABS.map((t) => (

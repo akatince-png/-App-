@@ -11,6 +11,7 @@ import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import KiChat from "../ui/KiChat";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
+import KategorieErinnerung from "../ui/KategorieErinnerung";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -194,6 +195,9 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
           </div>
         )}
         <SpotifyAnlassPicker anlass={ROUTINE_ANLASS[routine]} label={`🎵 Playlist für die ${ROUTINE_LABEL[routine]}`} />
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+          <KategorieErinnerung kategorie={ROUTINE_ANLASS[routine]} label={`🔔 Erinnerung ${ROUTINE_LABEL[routine]}`} />
+        </div>
       </Card>
 
       <div style={{ marginBottom: 16 }}>

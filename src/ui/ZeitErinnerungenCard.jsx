@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Label, PrimaryButton, TextInput } from "./primitives";
 import ErinnerungField from "./ErinnerungField";
 import TimeWheelField from "./TimeWheelField";
+import VorlaufFeld from "./VorlaufFeld";
 import { danger } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { useT } from "../i18n/translate";
@@ -64,12 +65,18 @@ export default function ZeitErinnerungenCard({ kategorie, labelKey, mengeLabel, 
     setErinnerung(kategorie, { aktiv: true, zeiten: next });
   };
 
+  const vorlaufMinuten = typeof erinnerungen[kategorie]?.vorlaufMinuten === "number" ? erinnerungen[kategorie].vorlaufMinuten : undefined;
+  const setVorlauf = (minuten) => {
+    setErinnerung(kategorie, { aktiv: true, zeiten, vorlaufMinuten: minuten });
+  };
+
   return (
     <>
       <ErinnerungField value={erinnerungen[kategorie]} onChange={handleErinnerungChange} />
 
       {erinnerungen[kategorie] && (
         <div style={{ marginTop: 12 }}>
+          <VorlaufFeld value={vorlaufMinuten} onChange={setVorlauf} />
           <Label>{t(labelKey)}</Label>
           {zeiten.map((eintrag, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
