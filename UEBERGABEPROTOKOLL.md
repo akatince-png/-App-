@@ -1,5 +1,107 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔴 Update 16.08.2026, nachts (Teil 5) — Erinnerungen liefen NIE wirklich: zwei stille Fehlerquellen gefunden + behoben
+
+Letzte Runde vor Zugangsende der Nutzerin. Direkt im Anschluss an Teil 4
+(VAPID-Fix), noch in derselben Nacht. Committet: `17ec1fd` (Morgenroutine/
+Abendroutine/Workflow-Erinnerungen), `b104732` (Vorab-Hinweis direkt in
+jeder Kategorie-Ansicht statt nur unter Mehr — neue Komponente
+`ui/KategorieErinnerung.jsx`, eingebunden in `GewohnheitenView.jsx`,
+`RoutineTabView.jsx`, `NutritionView.jsx`, `MedikamenteView.jsx`,
+`SupplementeView.jsx`, `ZeitErinnerungenCard.jsx`, `WochenplanEditor.jsx`).
+
+**Ausgangspunkt:** Nutzerin legte testweise eine Gewohnheit mit Uhrzeit in
+2–3 Minuten an, schaltete die Erinnerung dafür ein — keine
+Push-Benachrichtigung kam an, obwohl der VAPID-Fix aus Teil 4 bestätigt
+funktionierte (Test-Erinnerung-Button lief). Zwei **voneinander
+unabhängige**, beide stille (keine Fehlermeldung für die Nutzerin
+sichtbare) Fehlerquellen gefunden, gemeinsam per Screenshots/Supabase-Logs
+im Chat durchdiagnostiziert:
+
+### Fehler 1: `CRON_SECRET`-Mismatch — der automatische Versand lief seit jeher gegen 401
+
+`send-due-reminders → Invocations` zeigte: pg_cron ruft zuverlässig jede
+Minute auf, aber **fast jeder Aufruf wurde mit 401 abgelehnt**. Ursache:
+Migration `0032_erinnerungs_versand.sql` legt den Cron-Job mit einem fest
+im SQL-Text eingetragenen `x-cron-secret`-Header an — dieser Wert ist eine
+**zweite, unabhängige Kopie** desselben Geheimnisses neben dem
+`CRON_SECRET`-Supabase-Secret der Funktion. Beide müssen exakt
+übereinstimmen; taten sie (aus unbekanntem Grund, vermutlich beim
+ursprünglichen Einrichten) nicht. Da Supabase gespeicherte Secrets nicht
+wieder anzeigt, war ein direkter Abgleich unmöglich — stattdessen neuen
+Zufallswert erzeugt und **beide Seiten synchron neu gesetzt**:
+`CRON_SECRET`-Secret aktualisiert UND Migration 0032 mit demselben neuen
+Wert erneut ausgeführt (`cron.schedule()` mit bestehendem Job-Namen
+ersetzt den alten Job automatisch, kein vorheriges `unschedule` nötig).
+
+**Wichtige Nebenerkenntnis fürs Debuggen:** Nach dem Secret-Wechsel allein
+blieb es zunächst bei 401 — die Funktion liest `Deno.env.get("CRON_SECRET")`
+nur einmal beim Modul-Start, ein reines Secret-Update erzwingt keinen
+Neustart einer bereits "warmgehaltenen" Instanz. Erst ein manueller
+Redeploy (Code-Tab → Deploy, ohne Code-Änderung) hat den neuen Wert
+tatsächlich eingelesen. **Für künftige Secret-Änderungen an dieser
+Funktion: immer zusätzlich neu deployen, nicht nur das Secret speichern.**
+
+Diagnostiziert am Ende sauber isoliert über den **"Test"-Button** direkt
+auf der Funktionsseite (oben rechts, neben Docs/Download) — damit lässt
+sich die Funktion mit frei wählbaren Headern aufrufen, unabhängig vom
+nächsten Cron-Tick. Sehr nützlich fürs schnelle Verifizieren, ohne jedes
+Mal eine Minute zu warten.
+
+### Fehler 2: `profiles.erinnerungen` — die Spalte existierte in der echten Datenbank gar nicht
+
+Nach dem Secret-Fix kam über den Test-Button ein neuer 500er:
+`{ code: "42703", message: "column profiles.erinnerungen does not exist" }`.
+Per `select column_name from information_schema.columns where
+table_name = 'profiles'` verifiziert: **Migration `0025_erinnerungen.sql`
+wurde nie ausgeführt**, obwohl spätere UND frühere Migrationen auf
+`profiles` (`category_ziele` aus 0018, `steckbrief` aus 0045, ...)
+nachweislich liefen — vermutlich einfach beim manuellen Durchklicken der
+~69 Migrationen eine einzelne übersprungen. Behoben durch Nachholen von
+Migration 0025 (`alter table public.profiles add column if not exists
+erinnerungen jsonb not null default '{}'::jsonb;`).
+
+**Das ist der eigentlich alarmierende Teil:** Diese fehlende Spalte hat
+**seit Migration 0025 (vor Wochen) niemals einen sichtbaren Fehler
+erzeugt**, weil:
+- Das Laden der Erinnerungen über `.select("*")` läuft
+  (`useProfileData.js`) — eine fehlende Spalte erscheint da einfach als
+  `undefined`, kein Fehler.
+- Das Speichern (`setErinnerung()`, gleiche Datei) wirft zwar einen
+  PostgREST-Fehler zurück, der wird aber nur mit
+  `.then(({ error }) => error && console.error(error))` in die
+  Browser-Konsole geloggt — **nirgends der Nutzerin angezeigt**, und der
+  lokale React-State wird trotzdem optimistisch aktualisiert, sodass die
+  UI (Pill auf "Ja", Vorlauf-Auswahl sichtbar) völlig normal aussah.
+
+**Praktische Konsequenz:** Jede Erinnerungs-Einstellung, die je in der App
+vorgenommen wurde (nicht nur heute Abend), ist wahrscheinlich **nie in der
+Datenbank angekommen**. Die Nutzerin wurde gebeten, nach dem Fix alle
+gewünschten Erinnerungen (Gewohnheiten, Training, Hydration, Vorab-Zeiten,
+Morgenroutine/Abendroutine, Workflow, ...) noch einmal neu einzustellen —
+das war ausdrücklich noch NICHT erledigt, als die Sitzung endete (sie
+wollte das am nächsten Tag nachholen). **Ein künftiger Agent sollte beim
+nächsten Sitzungsstart als Erstes nachfragen, ob sie das schon gemacht
+hat, und falls nicht, aktiv daran erinnern**, sonst bleibt der ganze
+heutige Push-Fix wirkungslos.
+
+**Empfehlung für einen künftigen Agenten (nicht mehr umgesetzt, da die
+Sitzung zu Ende ging):** Das stille Verschlucken von Speicherfehlern in
+`useProfileData.js` (`setErinnerung` und vermutlich weitere `set*`-
+Funktionen nach demselben "optimistic update + `.then(error =>
+console.error)`"-Muster) ist ein struktureller Schwachpunkt — er hat genau
+diesen Bug wochenlang unsichtbar gehalten. Es lohnt sich, mindestens für
+`setErinnerung()` (und stichprobenartig ähnliche Stellen) einen sichtbaren
+Fehlerhinweis zu ergänzen, statt nur in der Konsole zu loggen, damit ein
+fehlgeschlagener Speichervorgang künftig auffällt, statt erst durch
+zufälliges Live-Testen entdeckt zu werden.
+
+**Status bei Sitzungsende:** Beide Fixes bestätigt (Test-Button liefert
+`{"ok":true, ...}` statt Fehler). Automatischer Versand sollte ab jetzt
+technisch funktionieren, **sobald die Nutzerin ihre Erinnerungen neu
+eingestellt hat** (s. o.) — ein Live-Test mit echter Push-Zustellung zu
+einer geplanten Uhrzeit stand bei Sitzungsende noch aus.
+
 ## ⚠️ Update 15.08.2026, nachts (Teil 4) — Aufwachzeit-Spotify, Sekunden-Ticken, konfigurierbarer Vorab-Hinweis
 
 Direkt im Anschluss an Teil 3, noch vor 16.08. Committet: `d938e7f` (Spotify
@@ -622,15 +724,31 @@ läuft oder eine restriktive Coachee-Sitzung.
 
 ## 7. Erinnerungs-/Push-System
 
-**Funktioniert seit heute Abend (15.08.) tatsächlich end-to-end** — vorher
-war das komplette Web-Push-System technisch fertig gebaut, aber praktisch
-tot: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` waren als Supabase-Secret nie
-gesetzt, weshalb sowohl `send-push` (manueller Test-Button) als auch
-`send-due-reminders` (Cron) bei jedem Aufruf sofort beim Start abstürzten
-(`webpush.setVapidDetails` wirft ohne gültigen Key). Neues Schlüsselpaar
-wurde erzeugt, Public Key liegt in `src/lib/pushConfig.js`, Private Key als
-Secret in Supabase — von der Nutzerin bestätigt per Screenshot: eine echte
-Push-Benachrichtigung kam an.
+**Technisch jetzt vollständig repariert (16.08., nachts), aber die
+Nutzerin muss ihre Erinnerungen noch neu einstellen** — drei
+unabhängige, alle stille (keine Fehlermeldung sichtbar) Fehlerquellen
+nacheinander gefunden, siehe Teil 4 + Teil 5 der Update-Chronik oben für
+die volle Diagnose-Geschichte:
+1. `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` waren nie als Supabase-Secret
+   gesetzt → `send-push`/`send-due-reminders` stürzten bei jedem Aufruf
+   sofort ab. Neues Schlüsselpaar erzeugt, behoben.
+2. `CRON_SECRET` im Cron-Job-SQL (Migration 0032) und im Supabase-Secret
+   stimmten nicht überein → automatischer Versand lief seit jeher gegen
+   401. Beide Seiten synchron auf einen neuen Wert gesetzt, behoben.
+3. Migration `0025_erinnerungs.sql` (Spalte `profiles.erinnerungen`)
+   wurde nie ausgeführt → jede je vorgenommene Erinnerungs-Einstellung
+   verpuffte unsichtbar (Laden über `select("*")`, Speichern nur mit
+   `console.error` statt sichtbarem Fehler, siehe `useProfileData.js`
+   `setErinnerung()`). Migration nachgeholt, behoben.
+
+**Offener Punkt, wichtig für den nächsten Sitzungsstart:** Weil Fehler 3
+lange unbemerkt blieb, sind alle bisherigen Erinnerungs-Einstellungen der
+Nutzerin nie in der Datenbank angekommen. Sie wollte sie am 16.08. selbst
+neu einstellen (Gewohnheiten, Training, Hydration, Vorab-Zeiten,
+Morgenroutine/Abendroutine, Workflow, ...) — bei Sitzungsende noch nicht
+erledigt. Bitte nachfragen, ob das inzwischen geschehen ist, und ob ein
+Live-Test (echte Push-Zustellung zu einer geplanten Uhrzeit) erfolgreich
+war.
 
 **`send-due-reminders`** (pg_cron, einmal pro Minute) deckt inzwischen
 **12 Kategorien** ab, je mit bis zu drei Erinnerungs-Arten:
@@ -740,12 +858,23 @@ wichtigsten — für die vollständige Historie: `ls supabase/migrations/`.
 **Kein separates VAPID-Migrations-Skript nötig** für den Push-Fix heute —
 das war ein reines Supabase-Secret, keine Schema-Änderung.
 
+**⚠️ Migration 0025 (`erinnerungen`-Spalte auf `profiles`) fehlte trotz
+"0001–0069 alle deployt"-Status** — erst am 16.08. nachts bemerkt und
+nachgeholt (siehe Abschnitt 7 / Teil 5 der Chronik). Falls beim nächsten
+Sitzungsstart Zweifel an anderen "als deployt markierten" Migrationen
+bestehen: im Zweifel per `select column_name from information_schema.
+columns where table_name = '<tabelle>'` direkt gegenchecken, statt sich
+allein auf frühere Notizen in diesem Dokument zu verlassen — das
+Silent-Failure-Verhalten der App (Abschnitt 7) hätte eine fehlende Spalte
+sonst nie auffallen lassen.
+
 ---
 
 ## 10. Offene Punkte
 
 | # | Thema | Status |
 |---|---|---|
+| 0 | Nutzerin muss alle Erinnerungs-Einstellungen neu vornehmen (waren wegen fehlender DB-Spalte nie gespeichert, s. Abschnitt 7) + Live-Test der Push-Zustellung | 🔴 Wichtigster offener Punkt — bei nächstem Sitzungsstart zuerst danach fragen |
 | 1 | Spotify-"Verbinden" hing zuletzt (14.08.) in einer Anmelde-Schleife | 🟡 Unklar, ob noch aktuell — seither erfolgreiche Wiedergabe beobachtet, siehe Abschnitt 8. Vor erneutem Debugging erst prüfen, ob überhaupt noch nötig |
 | 2 | Übungsbilder: Inhalte (Canva-Bilder) fehlen noch | 🟡 Pausiert — Code/Infrastruktur fertig (Abschnitt 5), Canva-Premium-Problem der Nutzerin zuletzt ungelöst |
 | 3 | Gemini-429-Kontingentproblem (nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen, Stand erneut erfragen |
@@ -758,6 +887,7 @@ das war ein reines Supabase-Secret, keine Schema-Änderung.
 | 10 | Nachfass-Hinweis für Morgenroutine/Abendroutine/Workout-Flow | Fehlt bewusst — keine passende "erledigt"-Log-Tabelle, siehe Abschnitt 7 |
 | 11 | Kalenderverbindung (Google/Apple Calendar oder .ics-Export) | Nur als vage Idee erwähnt, kein konkreter Auftrag |
 | 12 | Native App (Xcode/App Store) | Gewünschtes Fernziel der Nutzerin — siehe Abschnitt 12 |
+| 13 | `useProfileData.js`-Speicherfehler nur in der Browser-Konsole geloggt, nie sichtbar (Muster: optimistic update + `.then(error => console.error(error))`) | 🟡 Empfohlen, aber nicht umgesetzt — hat den Erinnerungen-Bug (Abschnitt 7) wochenlang unsichtbar gehalten. Mindestens `setErinnerung()` sollte Fehler sichtbar zurückmelden, stichprobenartig auf ähnliche `set*`-Funktionen prüfen |
 
 ---
 
