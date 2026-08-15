@@ -24,10 +24,25 @@ export function spotifyAutorisierenUrl() {
 }
 
 export async function spotifyCodeAustauschen(code, targetUserId) {
+  // Diese Funktion läuft direkt nach der Rückkehr von einem vollen
+  // Seiten-Redirect zu accounts.spotify.com und zurück — die App wurde
+  // dabei komplett neu geladen. Das im Browser gespeicherte Supabase-
+  // Sitzungstoken kann in diesem Moment kurz vor Ablauf oder (je nach
+  // Ladereihenfolge) noch nicht ganz frisch sein; ein abgelaufener Token
+  // führt bei der Edge Function zu einem 401 direkt vom Supabase-Gateway,
+  // bevor der eigene Function-Code überhaupt läuft (Bug-Report: "Edge
+  // Function returned a non-2xx status code" direkt nach erfolgreicher
+  // Spotify-Anmeldung). Deshalb hier vorsichtshalber die Sitzung einmal
+  // auffrischen, bevor der eigentliche Aufruf passiert.
+  await supabase.auth.refreshSession();
+
   const { data, error } = await supabase.functions.invoke("spotify-auth-callback", {
     body: { code, redirectUri: spotifyRedirectUri(), targetUserId },
   });
-  if (error || data?.error) throw new Error(data?.error || error.message);
+  if (error || data?.error) {
+    const kontext = typeof error?.context?.json === "function" ? await error.context.json().catch(() => null) : null;
+    throw new Error(data?.error || kontext?.error || error.message);
+  }
   return data;
 }
 
