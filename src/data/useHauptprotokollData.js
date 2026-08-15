@@ -78,11 +78,29 @@ export function useHauptprotokollData(userId) {
     [userId]
   );
 
+  // Endgültiges Löschen eines archivierten Hauptprotokolls — mit
+  // `.eq("status", "archived")` abgesichert, damit sich darüber nie
+  // versehentlich das aktive Hauptprotokoll löschen lässt (gleiches Prinzip
+  // wie protokollLoeschen in useProtocolData.js). teilprotokolle hängen per
+  // "on delete cascade" daran; hormones/supplements/meals/routines mit
+  // hauptprotokoll_id verlieren nur die Zuordnung ("on delete set null",
+  // siehe Migration 0027) — ihre eigentlichen Einträge bleiben erhalten.
+  const hauptprotokollLoeschen = useCallback(async (id) => {
+    const { error } = await supabase.from("hauptprotokolle").delete().eq("id", id).eq("status", "archived");
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setHauptprotokolle((prev) => prev.filter((h) => h.id !== id));
+    return { ok: true };
+  }, []);
+
   return {
     hauptprotokolle,
     teilprotokolle,
     aktivesHauptprotokoll,
     hauptprotokollErstellen,
     teilprotokollSpeichern,
+    hauptprotokollLoeschen,
   };
 }
