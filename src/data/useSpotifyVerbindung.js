@@ -144,8 +144,9 @@ export function useSpotifyVerbindung(userId) {
       });
       setSpotifyTestet(false);
       if (error || data?.error) {
-        setSpotifyFehler(data?.error || error.message);
-        return { ok: false };
+        const meldung = data?.error || error.message;
+        setSpotifyFehler(meldung);
+        return { ok: false, error: meldung };
       }
       return { ok: true };
     },

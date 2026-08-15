@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pill } from "./primitives";
-import { textMuted } from "./theme";
+import { danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 
 // Ordnet eine der unter "Mehr → Musik" angelegten Spotify-Playlists einem
@@ -11,6 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 export default function SpotifyAnlassPicker({ anlass, label = "🎵 Playlist" }) {
   const { spotifyVerbunden, spotifyPlaylists, spotifyAnlaesse, spotifyAnlassSetzen, spotifyAnlassEntfernen, spotifyAbspielen } = useAppData();
   const [testet, setTestet] = useState(false);
+  const [testFehler, setTestFehler] = useState(null);
   const aktuelle = spotifyAnlaesse[anlass];
   const praefix = label ? `${label}: ` : "";
 
@@ -33,8 +34,10 @@ export default function SpotifyAnlassPicker({ anlass, label = "🎵 Playlist" })
   const testen = async () => {
     if (!aktuelle?.uri) return;
     setTestet(true);
-    await spotifyAbspielen(aktuelle.uri);
+    setTestFehler(null);
+    const result = await spotifyAbspielen(aktuelle.uri);
     setTestet(false);
+    if (!result?.ok) setTestFehler(result?.error || "Wiedergabe fehlgeschlagen.");
   };
 
   return (
@@ -56,6 +59,7 @@ export default function SpotifyAnlassPicker({ anlass, label = "🎵 Playlist" })
           {testet ? "Startet…" : "▶️ Jetzt testen"}
         </button>
       )}
+      {testFehler && <div style={{ fontSize: 11, color: danger, marginTop: 4 }}>{testFehler}</div>}
     </div>
   );
 }
