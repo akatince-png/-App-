@@ -38,6 +38,13 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
   const { lang, setLang } = useLanguage();
   const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
+  // Ohne sofortige sichtbare Reaktion tippt man bei der vollen Weiterleitung
+  // zu Spotify (die ein paar Sekunden dauern kann) leicht nochmal — dann
+  // startet ein zweiter Anmelde-Durchlauf parallel, dessen Code beim
+  // Rücksprung schon verbraucht ist (Bug-Report: "ich drücke drauf, es
+  // reagiert nicht", mehrere Aufrufe kurz hintereinander in den Supabase-
+  // Invocations sichtbar). Sperrt den Knopf daher direkt nach dem ersten Tap.
+  const [spotifyVerbindungWirdGestartet, setSpotifyVerbindungWirdGestartet] = useState(false);
   const [testMsg, setTestMsg] = useState(null);
   const [neuerPlaylistName, setNeuerPlaylistName] = useState("");
   const [neuerPlaylistLink, setNeuerPlaylistLink] = useState("");
@@ -265,13 +272,31 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
             </div>
             <button
               type="button"
+              disabled={spotifyVerbindungWirdGestartet}
               onClick={() => {
+                setSpotifyVerbindungWirdGestartet(true);
                 window.location.assign(spotifyAutorisierenUrl());
               }}
-              style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: accentDark, color: "#fff" }}
+              style={{
+                width: "100%",
+                padding: "13px 16px",
+                borderRadius: 12,
+                border: "none",
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: spotifyVerbindungWirdGestartet ? "default" : "pointer",
+                background: accentDark,
+                color: "#fff",
+                opacity: spotifyVerbindungWirdGestartet ? 0.6 : 1,
+              }}
             >
-              Mit Spotify verbinden
+              {spotifyVerbindungWirdGestartet ? "Verbinde …" : "Mit Spotify verbinden"}
             </button>
+            {spotifyVerbindungWirdGestartet && (
+              <div style={{ fontSize: 11.5, color: textMuted, marginTop: 8 }}>
+                Du wirst zu Spotify weitergeleitet — das kann ein paar Sekunden dauern. Bitte nicht nochmal tippen.
+              </div>
+            )}
             {spotifyVerbindungFehler && (
               <div style={{ fontSize: 12, color: danger, marginTop: 10, lineHeight: 1.5 }}>{spotifyVerbindungFehler}</div>
             )}
