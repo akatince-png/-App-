@@ -7,7 +7,7 @@ import { useT } from "../../i18n/translate";
 // Dünner Shell/Header-Wrapper um MehrTab.jsx — "Mehr" ist eine der
 // Ordner-Kacheln auf der Startseite (siehe HomeView.jsx), kein Reiter
 // innerhalb des Archiv-Hubs (PlanView.jsx).
-export default function MehrView({ onHome, onOpenLexikon }) {
+export default function MehrView({ onHome, onOpenLexikon, onOpenFragebogen }) {
   const { t } = useT();
   return (
     <Shell>
@@ -21,7 +21,7 @@ export default function MehrView({ onHome, onOpenLexikon }) {
           ⌂
         </button>
       </div>
-      <MehrTab onOpenLexikon={onOpenLexikon} />
+      <MehrTab onOpenLexikon={onOpenLexikon} onOpenFragebogen={onOpenFragebogen} />
     </Shell>
   );
 }

@@ -407,6 +407,20 @@ export function useProtocolData(userId) {
     await loadArchived();
   }, [protocolId, plan.length, userId, loadArchived]);
 
+  // Endgültiges Löschen eines archivierten Protokolls — bewusst mit
+  // `.eq("status", "archived")` abgesichert, damit sich darüber nie
+  // versehentlich das aktive Protokoll löschen lässt. protocol_peptide/
+  // peptide_logs hängen per "on delete cascade" daran und verschwinden mit.
+  const protokollLoeschen = useCallback(async (id) => {
+    const { error } = await supabase.from("protocols").delete().eq("id", id).eq("status", "archived");
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setAbgeschlosseneProtokolle((prev) => prev.filter((p) => p.id !== id));
+    return { ok: true };
+  }, []);
+
   // Verknüpft das aktuell aktive Peptid-Protokoll nachträglich mit einem
   // neu angelegten Hauptprotokoll. Bewusst kein Feld im Insert der aktiven
   // Protokoll-Zeile (die entsteht oft schon vor der Hauptprotokoll-Auswahl,
@@ -460,6 +474,7 @@ export function useProtocolData(userId) {
     intervallGueltig,
     abgeschlosseneProtokolle,
     protokollArchivieren,
+    protokollLoeschen,
     verknuepfeMitHauptprotokoll,
   };
 }

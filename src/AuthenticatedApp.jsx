@@ -4,6 +4,7 @@ import { textMuted } from "./ui/theme";
 import { useAppData } from "./context/AppDataContext";
 import HomeView from "./views/HomeView";
 import LexikonView from "./views/LexikonView";
+import FragebogenView from "./views/FragebogenView";
 import TagesplanView from "./views/TagesplanView";
 import PlanView from "./views/plan/PlanView";
 import PlaeneView from "./views/plan/PlaeneView";
@@ -111,6 +112,8 @@ export default function AuthenticatedApp() {
     );
   } else if (view === "lexikon") {
     screen = <LexikonView onHome={() => setView("home")} />;
+  } else if (view === "fragebogen") {
+    screen = <FragebogenView onHome={() => setView("home")} />;
   } else if (view === "tagesplan") {
     screen = (
       <TagesplanView
@@ -140,7 +143,7 @@ export default function AuthenticatedApp() {
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
     screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} onEditProtocol={() => setView("peptide")} />;
   } else if (view === "mehr") {
-    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} />;
+    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} onOpenFragebogen={() => setView("fragebogen")} />;
   } else {
     screen = <HomeView onOpenView={(id) => setView(id)} />;
   }

@@ -7,7 +7,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 
-export default function MehrTab({ onOpenLexikon }) {
+export default function MehrTab({ onOpenLexikon, onOpenFragebogen }) {
   const { signOut, user } = useAuth();
   const {
     resetOnboarding,
@@ -64,11 +64,33 @@ export default function MehrTab({ onOpenLexikon }) {
             borderRadius: 14,
             border: `1px solid ${cardBorder}`,
             background: "#fff",
-            marginBottom: 20,
+            marginBottom: 10,
             cursor: "pointer",
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 700 }}>{t("mehr.lexikon")}</span>
+          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+        </button>
+      )}
+
+      {onOpenFragebogen && (
+        <button
+          onClick={onOpenFragebogen}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${cardBorder}`,
+            background: "#fff",
+            marginBottom: 20,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 700 }}>🧭 Coaching-Fragebögen</span>
           <span style={{ color: textMuted, fontSize: 16 }}>›</span>
         </button>
       )}

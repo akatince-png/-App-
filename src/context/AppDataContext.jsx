@@ -19,6 +19,7 @@ import { useAenderungsprotokoll } from "../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../data/useLexikon";
 import { useHauptprotokollData } from "../data/useHauptprotokollData";
+import { useFragebogenData } from "../data/useFragebogenData";
 
 const AppDataContext = createContext(null);
 
@@ -46,6 +47,7 @@ export function AppDataProvider({ children }) {
   const aenderungsprotokollData = useAenderungsprotokoll(userId);
   const wochenprotokollMeilenstein = useWochenprotokollMeilenstein(userId);
   const lexikon = useLexikon();
+  const fragebogenData = useFragebogenData(userId);
 
   const value = {
     userId,
@@ -81,6 +83,7 @@ export function AppDataProvider({ children }) {
     ...wochenprotokollMeilenstein,
     ...lexikon,
     ...hauptprotokollData,
+    ...fragebogenData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,

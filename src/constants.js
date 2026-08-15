@@ -197,6 +197,7 @@ export const LEXIKON_KATEGORIEN = [
   "Muskelaufbau",
   "Haut & Haare",
   "Schlafgesundheit",
+  "ADHS & Lebensrahmenbedingungen",
 ];
 
 export const LEXIKON_BEISPIELE = {
@@ -242,7 +243,131 @@ export const LEXIKON_BEISPIELE = {
     "Was ist Schlafhygiene?",
     "Wie wirkt sich Schlafmangel auf Hormone aus?",
   ],
+  "ADHS & Lebensrahmenbedingungen": [
+    "Was ist das ADHS-Paradoxon?",
+    "Was bedeutet Person-Environment-Fit?",
+    "Welche Schutzfaktoren zeigt die Forschung bei ADHS?",
+    "Warum lehnt das ADHS-Gehirn manche Struktur ab, andere nicht?",
+  ],
 };
+
+// Lebensrahmenbedingungen-Fragebogen ("Der Passungs-Check") — aus dem
+// Curriculum "Das ADHS-Paradoxon" (Coaching-Ergänzung zu den Protokollen,
+// erhebt die lebensweltliche statt der gesundheitlichen Passung). Jeder
+// Abschnitt entspricht einem Lebensbereich aus Teil 3 des Curriculums.
+export const PASSUNGSCHECK_ABSCHNITTE = [
+  {
+    id: "beziehung",
+    titel: "Beziehung & Partnerschaft",
+    fragen: [
+      { id: "dauer", frage: "Lebst du aktuell in einer Beziehung? Wie lange schon?" },
+      { id: "qualitaet", frage: "Wie würdest du die Qualität dieser Beziehung beschreiben — trägt sie dich, oder kostet sie dich Kraft?" },
+      { id: "single", frage: "Falls Single: Ist das gerade eine bewusste Entscheidung oder ein unerfülltes Bedürfnis?" },
+      { id: "rechtfertigung", frage: "Gibt es Menschen in deinem Leben (Partner:in, Familie), bei denen du dich für dein ADHS rechtfertigen musst?" },
+    ],
+  },
+  {
+    id: "arbeit",
+    titel: "Arbeit & Beruf",
+    fragen: [
+      { id: "aktuell", frage: "Was arbeitest du aktuell? Seit wann?" },
+      { id: "zufriedenheit", frage: "Macht dich diese Arbeit zufrieden — nicht nur finanziell, sondern inhaltlich?" },
+      { id: "passform", frage: "Passt die Arbeitsform (Struktur, Tempo, Reizlevel, Autonomie) zu dir, oder kämpfst du ständig dagegen an?" },
+      { id: "geldEgal", frage: "Wenn Geld keine Rolle spielen würde: Würdest du denselben Job machen?" },
+    ],
+  },
+  {
+    id: "zufriedenheit",
+    titel: "Zufriedenheit & Wohlbefinden",
+    fragen: [
+      { id: "skala", frage: "Auf einer Skala von 1–10: Wie zufrieden bist du aktuell mit deinem Leben insgesamt?" },
+      { id: "lebendig", frage: "Was war der letzte Moment, in dem du dich richtig lebendig gefühlt hast? Wie lange ist das her?" },
+      { id: "schlechtGehen", frage: "Woran merkst du, wenn es dir schlecht geht — und was tust du dann meistens?" },
+    ],
+  },
+  {
+    id: "ziele",
+    titel: "Ziele & Visionen",
+    fragen: [
+      { id: "wichtigsteZiele", frage: "Was sind deine wichtigsten Ziele für die nächsten 1–3 Jahre?" },
+      { id: "verschoben", frage: "Gibt es ein Ziel, das du seit Jahren vor dir herschiebst? Warum?" },
+      { id: "nichtScheitern", frage: "Was würdest du tun, wenn du wüsstest, dass du nicht scheitern kannst?" },
+    ],
+  },
+  {
+    id: "hobbys",
+    titel: "Hobbys & Freizeit",
+    fragen: [
+      { id: "aktuelleHobbys", frage: "Welche Hobbys hast du aktuell aktiv?" },
+      { id: "aufgegeben", frage: "Gibt es etwas, das du früher geliebt hast und irgendwann aufgegeben hast? Was war der Grund?" },
+      { id: "erholung", frage: "Wie viel deiner freien Zeit fühlt sich wie echte Erholung an — und wie viel wie „Zeit totschlagen\"?" },
+    ],
+  },
+  {
+    id: "reisen",
+    titel: "Reisen & Erlebnisse",
+    fragen: [
+      { id: "reisewunsch", frage: "Möchtest du reisen? Wohin, und was hält dich bisher davon ab?" },
+      { id: "letztesAbenteuer", frage: "Was war das letzte echte Abenteuer/die letzte neue Erfahrung in deinem Leben?" },
+    ],
+  },
+  {
+    id: "wohnraum",
+    titel: "Wohnraum & Lebensumfeld",
+    fragen: [
+      { id: "rueckzugsort", frage: "Wie ist deine Wohnung/dein Zuhause aktuell gestaltet — fühlt es sich wie ein Rückzugsort an oder eher wie ein weiterer Stressfaktor (Unordnung, Reizüberflutung)?" },
+      { id: "festeOrte", frage: "Hast du feste, sichtbare Orte für die Dinge, die du täglich brauchst — oder suchst du ständig?" },
+      { id: "veraendern", frage: "Was würdest du an deinem Wohnraum verändern, wenn Geld keine Rolle spielt?" },
+    ],
+  },
+  {
+    id: "finanzen",
+    titel: "Finanzen",
+    fragen: [
+      { id: "reichtGeld", frage: "Reicht dein Geld am Monatsende in der Regel, oder ist es eng?" },
+      { id: "ueberblick", frage: "Hast du einen Überblick über deine Finanzen, oder ist das ein Bereich, den du eher vermeidest?" },
+      { id: "stress", frage: "Bereiten dir Finanzen aktuell Stress? (Bei akuten Schulden/Zahlungsproblemen: an eine Schuldnerberatung verweisen.)" },
+    ],
+  },
+  {
+    id: "sozial",
+    titel: "Sozialer Kreis",
+    fragen: [
+      { id: "engsteMenschen", frage: "Wer sind die 3–5 Menschen, mit denen du die meiste Zeit verbringst?" },
+      { id: "erschoepfend", frage: "Gibt es Menschen in deinem Umfeld, nach deren Kontakt du dich regelmäßig erschöpft statt aufgetankt fühlst?" },
+      { id: "reduziert", frage: "Hast du in der Vergangenheit bewusst Kontakt zu jemandem reduziert oder beendet, weil er/sie dir nicht gutgetan hat? Wie war das für dich?" },
+      { id: "verstanden", frage: "Fühlst du dich von den Menschen um dich herum mit deinem ADHS verstanden oder eher belächelt/kritisiert?" },
+    ],
+  },
+  {
+    id: "verbindungProtokolle",
+    titel: "Verbindung zu den Protokollen",
+    fragen: [
+      { id: "einfluss", frage: "Welcher der oben genannten Lebensbereiche beeinflusst nach deinem Gefühl am stärksten, wie gut deine Schlaf-/Bewegungs-/Ernährungsroutinen aktuell funktionieren?" },
+    ],
+  },
+];
+
+export const PASSUNGSCHECK_AUSWERTUNG_FELDER = [
+  { id: "staerksterBereich", label: "Stärkster Lebensbereich (funktioniert bereits gut)" },
+  { id: "groessterLeidensdruck", label: "Bereich mit dem größten Leidensdruck" },
+  { id: "groessteHebelwirkung", label: "Bereich mit der wahrscheinlich größten Hebelwirkung auf alles andere" },
+];
+
+// Registry der Coaching-Fragebögen (aktuell einer, bewusst als Liste
+// angelegt — weitere Fragebögen können hier einfach ergänzt werden, ohne
+// Datenmodell oder View anzufassen; siehe useFragebogenData.js).
+export const FRAGEBOGEN_TYPEN = [
+  {
+    id: "passungscheck",
+    titel: "Der Passungs-Check",
+    untertitel: "Wie gut passt dein Leben zu deinem ADHS-Gehirn?",
+    beschreibung:
+      "Der Lebensrahmenbedingungen-Fragebogen aus dem Curriculum „Das ADHS-Paradoxon\" — Beziehung, Arbeit, Wohnraum, Finanzen, sozialer Kreis und mehr. Ergänzt die gesundheitlichen Protokolle um die lebensweltliche Passung.",
+    abschnitte: PASSUNGSCHECK_ABSCHNITTE,
+    auswertungFelder: PASSUNGSCHECK_AUSWERTUNG_FELDER,
+  },
+];
 
 export const PIE_COLORS = ["#0FB8A3", "#5B9BF0", "#F5A623", "#F2596A", "#9B7EDE", "#4FBF8F"];
 
