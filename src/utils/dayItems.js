@@ -24,6 +24,7 @@ export const KATEGORIE_META = {
   mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
   training: { bg: "#FBEAE7", text: "#A63B32", dot: "#CC5145", label: "Training" },
   gewohnheit: { bg: "#E6F3F2", text: "#286661", dot: "#3E8E8A", label: "Gewohnheit" },
+  workflow: { bg: "#F5E9F1", text: "#8C3F72", dot: "#B0568F", label: "Workflow" },
   hydration: { bg: "#EAF3F8", text: "#2F6E8C", dot: "#4A93B8", label: "Hydration" },
   tageslicht: { bg: "#FDF3E3", text: "#8C6A1F", dot: "#D9A62E", label: "Tageslicht" },
   schlaf: { bg: "#ECEDF7", text: "#3F4380", dot: "#5B5FA6", label: "Schlaf" },
@@ -110,6 +111,8 @@ export function buildDayItems(
     trainingWochenplan = [],
     gewohnheiten = [],
     gewohnheitErledigt = {},
+    workflowPlaene = [],
+    workflowPresets = [],
     projekte = [],
     zeitbloecke = [],
   }
@@ -275,6 +278,38 @@ export function buildDayItems(
       raw: g,
     });
   });
+
+  // Workflows (15.08., Nutzerin-Vorgabe: "auch in meinen Tagesplan mit
+  // einarbeiten, Tage und Uhrzeiten zuordnen, auf eine bestimmte Zeit oder
+  // einen Zeitraum oder unbestimmte Zeit") — wochentage und Gültigkeits-
+  // Zeitraum sind unabhängig kombinierbar (siehe Migration 0062): leere
+  // wochentage gilt wie bei Supplementen als "jeden Tag", ein gesetztes
+  // gueltig_von/-bis grenzt den Zeitraum zusätzlich ein, keins von beiden
+  // gesetzt heißt "unbestimmt". Reiner Kalendereintrag ohne Abhaken (wie
+  // zeitblock) — Start passiert im Routinen-Bereich (WorkflowTimer.jsx).
+  {
+    const wochentagLabel = GETDAY_TO_LABEL[date.getDay()];
+    workflowPlaene
+      .filter((p) => p.aktiv !== false)
+      .filter((p) => !p.wochentage?.length || p.wochentage.includes(wochentagLabel))
+      .filter((p) => !p.gueltigVon || tagStr >= p.gueltigVon)
+      .filter((p) => !p.gueltigBis || tagStr <= p.gueltigBis)
+      .forEach((p) => {
+        const preset = workflowPresets.find((ps) => ps.id === p.presetId);
+        if (!preset) return;
+        items.push({
+          kategorie: "workflow",
+          key: `w-${tagStr}-${p.id}`,
+          refId: p.id,
+          hour: p.uhrzeit ? p.uhrzeit.slice(0, 2) : null,
+          uhrzeit: p.uhrzeit || "",
+          name: preset.name,
+          detail: `${preset.arbeitMin} Min. Arbeit · ${preset.pauseMin} Min. Pause`,
+          done: false,
+          raw: { ...p, preset },
+        });
+      });
+  }
 
   // Projekte/Zeitblöcke (14.08., Nutzerin-Vorgabe) — farbig je Projekt statt
   // einer festen Kategorie-Farbe, siehe PROJEKT_FARBEN/projektFarbe() oben.

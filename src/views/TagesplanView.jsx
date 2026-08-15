@@ -150,6 +150,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     gewohnheiten,
     gewohnheitErledigt,
     toggleGewohnheitErledigt,
+    workflowPlaene,
+    workflowPresets,
     projekte,
     zeitbloecke,
     routineSchritte,
@@ -283,6 +285,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         trainingTemplates,
         gewohnheiten,
         gewohnheitErledigt,
+        workflowPlaene,
+        workflowPresets,
         projekte,
         zeitbloecke,
       });
@@ -318,6 +322,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
       gewohnheiten,
       gewohnheitErledigt,
       toggleGewohnheitErledigt,
+      workflowPlaene,
+      workflowPresets,
       projekte,
       zeitbloecke,
       starteTraining,
@@ -431,7 +437,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
                           ✏️
                         </button>
                       )}
-                      {item.kategorie === "zeitblock" ? null : item.done ? (
+                      {item.kategorie === "zeitblock" || item.kategorie === "workflow" ? null : item.done ? (
                         <StatusBadge status="erledigt" />
                       ) : (
                         <button

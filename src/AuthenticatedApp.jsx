@@ -33,6 +33,7 @@ const KATEGORIE_TO_VIEW = {
   hormon: "medikamente",
   supplement: "supplemente",
   gewohnheit: "routinen",
+  workflow: "routinen",
   hydration: "hydration",
   mahlzeit: "ernaehrung",
 };
