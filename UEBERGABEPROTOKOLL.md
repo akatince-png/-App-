@@ -1,5 +1,62 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 15.08.2026 — Hinweis zur Dokumentationslücke + heutige Änderungen
+
+**Dieses Dokument war bei Sitzungsbeginn nur bis Migration 0049 aktuell,
+tatsächlich lag der Code-Stand aber schon bei Migration 0065** (u. a.
+mehrere `coach_wissen_content_library`-Migrationen, Projekte/Zeitblöcke,
+Trainingsplan-Ordner, Coach-Übersicht — zwischen 14.08. und 15.08. muss also
+mindestens eine weitere, hier nicht dokumentierte Sitzung stattgefunden
+haben). Der Rest dieses Dokuments unterhalb dieses Updates spiegelt nur den
+Stand vom 14.08. wider und ist an mehreren Stellen veraltet (z. B. Abschnitt
+9, Migrationstabelle). Ein künftiger Agent sollte bei Gelegenheit den echten
+Verlauf zwischen 0050 und 0065 aus der Git-Historie rekonstruieren und
+dieses Dokument komplett neu schreiben, statt auf dem 14.08.-Stand
+aufzusetzen.
+
+**Was diese Sitzung (15.08.) hinzugefügt hat**, direkt auf Migration 0065
+aufsetzend, committet als `9801536` auf `main` und
+`claude/google-cloud-tts-api-key-yc49xp` (identisch, wie gewohnt
+fast-forward-gemerged):
+
+1. **Wissens-Basis erweitert** (Migration 0066,
+   `0066_coach_wissen_adhs_paradoxon.sql`, von der Nutzerin noch im
+   Supabase-Dashboard auszuführen): drei neue `coach_wissen`-Einträge
+   (bereich = null, wie die "Sonderthemen" aus 0050) aus dem von der
+   Nutzerin bereitgestellten Curriculum "Das ADHS-Paradoxon" — (a)
+   Schutzfaktoren & Person-Environment-Fit, (b) biografische Beispiele
+   (Biles, Phelps, Branson, Neeleman), (c) das zugehörige Coaching-Framework
+   für Lebensrahmenbedingungen (thematische Reihenfolge, Dreischritt
+   Ist-/Ziel-Zustand/erster Schritt).
+2. **Formular 11 "Der Passungs-Check"** in `formulareVorlagen.js` ergänzt —
+   der Lebensrahmenbedingungen-Fragebogen aus demselben Curriculum (10
+   Lebensbereiche + Auswertung), technisch identisch zu den bestehenden 10
+   Formularen (schema-getrieben über `AdminFormulareView.jsx`, keine
+   Code-Änderung dort nötig, keine DB-Persistenz, PDF-Export). Die Nutzerin
+   wollte ihn selbst als erste "Coachee" durcharbeiten.
+3. **Protokolle/Hauptprotokolle endgültig löschbar** (`ArchivTab.jsx`,
+   `protokollLoeschen` in `useProtocolData.js`,
+   `hauptprotokollLoeschen` in `useHauptprotokollData.js`): Sicherheitsabfrage
+   nennt jeweils den Namen bzw. die Peptidliste des Protokolls, löscht nur
+   archivierte (nie das aktive) Protokoll/Hauptprotokoll. War vorher gar
+   nicht möglich, die Nutzerin hatte sich über liegengebliebene
+   Test-Protokolle beschwert.
+
+**Wichtige Falle in dieser Sitzung, für künftige Agenten relevant:** Diese
+App hat vor dem Vercel/Supabase-Umbenennungsschritt (siehe Abschnitt 2) noch
+ältere, ungepflegte Branches im selben Repo (`claude/claude-md-docs-pxv4bm`,
+`claude/app-uebergabeprotokoll-*`), die noch den alten Projektnamen
+"MyProtocols" tragen und NICHT mit der Live-App unter `akaapp.vercel.app`
+übereinstimmen — trotz identischem GitHub-"About"-Link. Eine vorherige
+Instanz dieser Sitzung hatte versehentlich auf so einem veralteten Branch
+gearbeitet, bevor der Fehler anhand eines App-Screenshots der Nutzerin
+auffiel. **Vor jeder Änderung sicherstellen, dass tatsächlich auf `main`
+bzw. dem in diesem Dokument genannten Feature-Branch gearbeitet wird**, im
+Zweifel `git log -1` / Screenshot der Nutzerin gegenchecken statt sich auf
+den GitHub-Default-Branch oder das Repo-"About"-Feld zu verlassen.
+
+---
+
 **Stand: 14.08.2026, vormittags — Branch `claude/google-cloud-tts-api-key-yc49xp`**
 
 Ursprünglich am 13.08. komplett neu geschrieben (statt weiterer
