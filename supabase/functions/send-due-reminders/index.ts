@@ -128,7 +128,17 @@ type Intervall = {
   eigener_start?: string | null;
 };
 
-function faelltAnTag(d: Intervall, heuteDatum: string): boolean {
+// protokollStart: Fallback-Startdatum aus dem aktiven Protokoll der Person
+// (Tabelle "protocols", status="active"), falls die Zeile selbst kein
+// eigenes eigener_start gesetzt hat — genau das Verhalten, das die
+// Formularhinweise versprechen ("Leer lassen = startet mit dem allgemeinen
+// Startdatum des Protokolls", siehe DosierungFields.jsx) und das die
+// Tagesplan-Anzeige im Browser für Peptide/Medikamente bereits über
+// activeDoseDays()/schedule.js so umsetzt. Ohne diesen Fallback (Bug bis
+// 15.08.) galt jede Zeile ohne eigenes Startdatum als "läuft täglich" —
+// bei "alle 3 Tage" o. ä. kam dann JEDEN Tag eine Push-Erinnerung statt nur
+// an den tatsächlich fälligen Tagen.
+function faelltAnTag(d: Intervall, heuteDatum: string, protokollStart: string | null): boolean {
   const mode = d.intervall_mode || "fixed";
 
   if (mode === "weekdays") {
@@ -137,9 +147,10 @@ function faelltAnTag(d: Intervall, heuteDatum: string): boolean {
     return wanted.size === 0 || wanted.has(heute.getUTCDay());
   }
 
-  if (!d.eigener_start) return true;
+  const startRaw = d.eigener_start || protokollStart;
+  if (!startRaw) return true;
   const heute = new Date(heuteDatum);
-  const start = new Date(d.eigener_start);
+  const start = new Date(startRaw);
   if (heute < start) return false;
   const n = Math.round((heute.getTime() - start.getTime()) / 86400000);
 
@@ -183,7 +194,7 @@ async function frischesSpotifyToken(admin: ReturnType<typeof createClient>, verb
   return tokenData.access_token as string;
 }
 
-type NutzerInfo = { zeitzone: string; jetzt: string; heute: string; erinnerungen: Record<string, unknown> };
+type NutzerInfo = { zeitzone: string; jetzt: string; heute: string; erinnerungen: Record<string, unknown>; protokollStart: string | null };
 
 // Sammelt fällige Einzel-Erinnerungen pro Nutzer — mehrere gleichzeitig
 // fällige Einträge (z. B. zwei Supplemente zur selben Minute, oder
@@ -270,6 +281,20 @@ Deno.serve(async (req) => {
       .select("id, zeitzone, erinnerungen");
     if (profilesError) throw profilesError;
 
+    // Aktives Protokoll-Startdatum je Person, als Fallback für Peptid-/
+    // Medikamenten-/Supplement-Zeilen ohne eigenes eigener_start (siehe
+    // faelltAnTag oben) — eine Abfrage für alle Personen statt einer pro
+    // Dosierungs-Kategorie.
+    const { data: aktiveProtokolle, error: protokolleError } = await admin
+      .from("protocols")
+      .select("user_id, startdatum")
+      .eq("status", "active");
+    if (protokolleError) console.error("Abfrage protocols fehlgeschlagen:", protokolleError);
+    const protokollStartByUser = new Map<string, string>();
+    for (const p of aktiveProtokolle || []) {
+      if (p.startdatum) protokollStartByUser.set(p.user_id as string, p.startdatum as string);
+    }
+
     const nutzerInfo = new Map<string, NutzerInfo>();
     for (const profile of profiles || []) {
       const zeitzone = profile.zeitzone;
@@ -277,7 +302,13 @@ Deno.serve(async (req) => {
       const jetzt = lokaleUhrzeit(zeitzone);
       const heute = lokalesDatum(zeitzone);
       if (!jetzt || !heute) continue;
-      nutzerInfo.set(profile.id, { zeitzone, jetzt, heute, erinnerungen: profile.erinnerungen || {} });
+      nutzerInfo.set(profile.id, {
+        zeitzone,
+        jetzt,
+        heute,
+        erinnerungen: profile.erinnerungen || {},
+        protokollStart: protokollStartByUser.get(profile.id) || null,
+      });
     }
 
     // --- Hydration/Tageslicht/Schlaf: eigene Uhrzeiten-Liste statt ------
@@ -406,7 +437,7 @@ Deno.serve(async (req) => {
         const info = nutzerInfo.get(row.user_id);
         if (!info) continue;
         if (!Array.isArray(row.uhrzeiten)) continue;
-        if (!faelltAnTag(row, info.heute)) continue;
+        if (!faelltAnTag(row, info.heute, info.protokollStart)) continue;
 
         if (row.uhrzeiten.includes(info.jetzt)) {
           merken(row.user_id, kat.icon, row.name ? `${row.name}${row.menge ? ` (${row.menge})` : ""}` : kat.einheit);
