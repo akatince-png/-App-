@@ -46,7 +46,7 @@ export function AppDataProvider({ children }) {
   const pushData = usePushNotifications(userId);
   const aenderungsprotokollData = useAenderungsprotokoll(userId);
   const wochenprotokollMeilenstein = useWochenprotokollMeilenstein(userId);
-  const lexikon = useLexikon();
+  const lexikon = useLexikon(userId);
   const fragebogenData = useFragebogenData(userId);
 
   const value = {
