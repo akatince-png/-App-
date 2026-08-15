@@ -22,7 +22,7 @@ const TABS = [
 // (Protokolle, Archiv, Statistik, Profil/Biomarker, Blutzucker, Community)
 // unter einem gemeinsamen Reiter-Kopf. "Mehr" ist bewusst kein Reiter mehr
 // hier, sondern ein eigenständiges Ziel der unteren Tab-Leiste (MehrView.jsx).
-export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }) {
+export default function PlanView({ planTab, setPlanTab, onHome }) {
   return (
     <Shell>
       <ViewHeader title="Archiv" onHome={onHome} />
@@ -55,24 +55,6 @@ export default function PlanView({ planTab, setPlanTab, onHome, onEditProtocol }
       {planTab === "community" && <CommunityTab />}
       {planTab === "archiv" && <ArchivTab />}
       {planTab === "blutzucker" && <BlutzuckerView embedded />}
-
-      <button
-        onClick={onEditProtocol}
-        style={{
-          width: "100%",
-          padding: "10px",
-          borderRadius: 12,
-          border: `1px solid ${cardBorder}`,
-          background: "#fff",
-          color: textMuted,
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-          marginTop: 4,
-        }}
-      >
-        Zu deinem Peptid-Protokoll
-      </button>
     </Shell>
   );
 }

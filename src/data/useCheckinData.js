@@ -61,5 +61,21 @@ export function useCheckinData(userId) {
     [userId]
   );
 
-  return { gewichtsEintraege, gewichtHinzufuegen };
+  // Löscht einen einzelnen Check-in-Eintrag (Datum ist der eindeutige
+  // Schlüssel je Nutzer, siehe onConflict oben) — für alte Test-Einträge
+  // ohne echte Werte (Nutzerinnen-Vorgabe, 15.08.).
+  const gewichtEntfernen = useCallback(
+    async (datum) => {
+      const { error } = await supabase.from("checkins").delete().eq("user_id", userId).eq("datum", datum);
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      setGewichtsEintraege((prev) => prev.filter((e) => e.datum !== datum));
+      return { ok: true };
+    },
+    [userId]
+  );
+
+  return { gewichtsEintraege, gewichtHinzufuegen, gewichtEntfernen };
 }

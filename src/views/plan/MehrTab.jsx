@@ -10,6 +10,101 @@ import { AIService } from "../../services/aiService";
 import { getCoachName, saveCoachName, STANDARD_COACH_NAME, getKiAktiv, saveKiAktiv } from "../../utils/coachStorage";
 import { spotifyAutorisierenUrl, spotifyPlaylistUriNormalisieren } from "../../services/spotify";
 
+// Bausteine des aktiven Hauptprotokolls, an-/abschaltbar ohne den kompletten
+// Onboarding-Assistenten (der dabei archiviert + neu anlegt) durchlaufen zu
+// müssen (Nutzerinnen-Vorgabe, 15.08. — bewusst HIER unter "Mehr" statt in
+// "Archiv": Archiv soll nur fertige/abgeschlossene Protokolle zeigen, hier
+// ist der Ort fürs laufende, bearbeitbare Protokoll). Schlaf & Hydration
+// sind bewusst nicht abschaltbar ("Kernessenz"), Morgen-/Abendroutine
+// erscheinen hier gar nicht — die sind keine teilprotokolle (siehe
+// RoutineTabView.jsx), sondern ohnehin immer erreichbar. Jede Änderung
+// landet zusätzlich im Tagesverlauf (Archiv → Protokolle) — funktioniert
+// unverändert, wenn ein Admin das Protokoll einer Coachee im
+// "Verwalten"-Modus bearbeitet.
+const BAUSTEINE_KATEGORIEN = [
+  { kategorie: "schlaf", label: "Schlaf", kern: true },
+  { kategorie: "hydration", label: "Hydration", kern: true },
+  { kategorie: "tageslicht", label: "Tageslicht", kern: false },
+  { kategorie: "ernaehrung", label: "Ernährung", kern: false },
+  { kategorie: "training", label: "Training", kern: false },
+  { kategorie: "gewohnheiten", label: "Gewohnheiten", kern: false },
+  { kategorie: "supplemente", label: "Supplemente", kern: false },
+  { kategorie: "medikamente", label: "Medikamente", kern: false },
+];
+
+function AktuellesProtokoll() {
+  const { aktivesHauptprotokoll, teilprotokolle, teilprotokollSpeichern, aenderungVermerken } = useAppData();
+
+  if (!aktivesHauptprotokoll) return null;
+
+  const zeileFuer = (kategorie) => teilprotokolle.find((t) => t.hauptprotokoll_id === aktivesHauptprotokoll.id && t.kategorie === kategorie);
+
+  const seitWoche = (kategorie) => {
+    const zeile = zeileFuer(kategorie);
+    if (!zeile?.aktiv || !zeile.aktiviert_am) return null;
+    const start = new Date(aktivesHauptprotokoll.startdatum);
+    const aktiviert = new Date(zeile.aktiviert_am);
+    const wochen = Math.floor((aktiviert - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
+    return Math.max(1, wochen);
+  };
+
+  const umschalten = (b) => {
+    const bestehend = zeileFuer(b.kategorie);
+    const naechsterZustand = !(bestehend?.aktiv ?? false);
+    teilprotokollSpeichern(aktivesHauptprotokoll.id, b.kategorie, {
+      aktiv: naechsterZustand,
+      eigenerStartdatum: bestehend?.eigenes_startdatum ?? null,
+      laufzeitWochen: bestehend?.laufzeit_wochen ?? null,
+    });
+    aenderungVermerken({
+      kategorie: "protokoll",
+      itemName: b.label,
+      aktion: naechsterZustand ? "aktiviert" : "deaktiviert",
+      detail: `Baustein im Protokoll „${aktivesHauptprotokoll.name}"`,
+    });
+  };
+
+  return (
+    <>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>📋 Aktuelles Protokoll: {aktivesHauptprotokoll.name}</div>
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10, lineHeight: 1.5 }}>
+        Bausteine an-/ausschalten. Zum Bearbeiten der Inhalte in "Alle Pläne" auf den passenden Reiter tippen. Jede Änderung
+        erscheint im Tagesverlauf unter Archiv → Protokolle.
+      </div>
+      <Card style={{ marginBottom: 20 }}>
+        {BAUSTEINE_KATEGORIEN.map((b, i) => {
+          const aktiv = b.kern || !!zeileFuer(b.kategorie)?.aktiv;
+          const woche = b.kern ? 1 : seitWoche(b.kategorie);
+          return (
+            <div
+              key={b.kategorie}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "9px 0",
+                borderBottom: i < BAUSTEINE_KATEGORIEN.length - 1 ? `1px solid ${cardBorder}` : "none",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</div>
+                {aktiv && woche && <div style={{ fontSize: 10.5, color: textMuted, marginTop: 1 }}>Seit Woche {woche}</div>}
+              </div>
+              {b.kern ? (
+                <span style={{ fontSize: 11, fontWeight: 700, color: accentDark, background: accentSoft, padding: "4px 10px", borderRadius: 10 }}>
+                  Immer aktiv
+                </span>
+              ) : (
+                <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
+              )}
+            </div>
+          );
+        })}
+      </Card>
+    </>
+  );
+}
+
 export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
   const { signOut, user } = useAuth();
   const {
@@ -185,6 +280,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
           <span style={{ color: textMuted, fontSize: 16 }}>›</span>
         </button>
       )}
+
+      <AktuellesProtokoll />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.sprache")}</div>
       <Card style={{ marginBottom: 20 }}>

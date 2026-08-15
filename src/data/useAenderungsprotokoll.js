@@ -52,5 +52,18 @@ export function useAenderungsprotokoll(userId) {
     [userId]
   );
 
-  return { protokollEintraege, aenderungVermerken };
+  // Einzelnen Tagesverlauf-Eintrag löschen — für altes Test-Rauschen aus
+  // früheren Sitzungen, das den Tagesverlauf unübersichtlich macht
+  // (Nutzerinnen-Vorgabe, 15.08.).
+  const aenderungEntfernen = useCallback(async (id) => {
+    const { error } = await supabase.from("aenderungsprotokoll").delete().eq("id", id);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setProtokollEintraege((prev) => prev.filter((e) => e.id !== id));
+    return { ok: true };
+  }, []);
+
+  return { protokollEintraege, aenderungVermerken, aenderungEntfernen };
 }

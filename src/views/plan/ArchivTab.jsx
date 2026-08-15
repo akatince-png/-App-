@@ -13,6 +13,7 @@ export default function ArchivTab() {
     hauptprotokollLoeschen,
     blutwerteArchiv,
     gewichtsEintraege,
+    gewichtEntfernen,
     aktiveMesswerte,
     combinedMesswertDefs,
   } = useAppData();
@@ -28,6 +29,11 @@ export default function ArchivTab() {
   const handleHauptprotokollLoeschen = (h) => {
     if (!window.confirm(`Bist du sicher, dass du "${h.name}" endgültig entfernen möchtest? Das kann nicht rückgängig gemacht werden.`)) return;
     hauptprotokollLoeschen(h.id);
+  };
+
+  const handleGewichtEntfernen = (datum) => {
+    if (!window.confirm(`Check-in vom ${datum} endgültig löschen? Das kann nicht rückgängig gemacht werden.`)) return;
+    gewichtEntfernen(datum);
   };
 
   return (
@@ -118,24 +124,33 @@ export default function ArchivTab() {
           .slice()
           .reverse()
           .map((e, i, arr) => (
-            <div key={i} style={{ padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{e.datum}</div>
-              <div style={{ fontSize: 12, color: textMuted, marginBottom: e.fotos?.length ? 6 : 0 }}>
-                {aktiveMesswerte
-                  .map((id) => {
-                    const def = combinedMesswertDefs.find((d) => d.id === id);
-                    return e[id] !== "" && e[id] !== undefined ? `${def?.label}: ${e[id]}${def?.unit ? " " + def.unit : ""}` : null;
-                  })
-                  .filter(Boolean)
-                  .join(" · ")}
-              </div>
-              {e.fotos?.length > 0 && (
-                <div style={{ display: "flex", gap: 6 }}>
-                  {e.fotos.map((f, j) => (
-                    <SignedPhoto key={j} path={f.path} alt={f.kategorie} size={36} />
-                  ))}
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{e.datum}</div>
+                <div style={{ fontSize: 12, color: textMuted, marginBottom: e.fotos?.length ? 6 : 0 }}>
+                  {aktiveMesswerte
+                    .map((id) => {
+                      const def = combinedMesswertDefs.find((d) => d.id === id);
+                      return e[id] !== "" && e[id] !== undefined ? `${def?.label}: ${e[id]}${def?.unit ? " " + def.unit : ""}` : null;
+                    })
+                    .filter(Boolean)
+                    .join(" · ")}
                 </div>
-              )}
+                {e.fotos?.length > 0 && (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {e.fotos.map((f, j) => (
+                      <SignedPhoto key={j} path={f.path} alt={f.kategorie} size={36} />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => handleGewichtEntfernen(e.datum)}
+                title="Endgültig löschen"
+                style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, border: "none", background: "#FDE9EC", color: danger, fontSize: 14, cursor: "pointer" }}
+              >
+                🗑
+              </button>
             </div>
           ))}
       </Card>
