@@ -120,6 +120,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
         <div style={{ fontSize: 13, color: textMuted, marginTop: 10 }}>Keine Konten gefunden.</div>
       )}
 
+      <div className="mp-admin-probanden-grid">
       {gefiltert.map((p) => (
         <Card key={p.id} style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -176,6 +177,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
           {nachrichtenFuer === p.id && <CoacheeNachrichtenPanel proband={p} />}
         </Card>
       ))}
+      </div>
     </Shell>
   );
 }

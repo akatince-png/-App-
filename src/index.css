@@ -138,6 +138,20 @@ body {
   }
 }
 
+/* Admin-Dashboard: Konten-Liste als auto-füllendes Kachel-Raster statt
+   einer langen einspaltigen Liste (Tablet-Umbau, Teil 2). */
+.mp-admin-probanden-grid {
+  display: block;
+}
+@media (min-width: 1024px) {
+  .mp-admin-probanden-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    column-gap: 16px;
+    align-items: start;
+  }
+}
+
 /* Sanftes, spürbares Tap-Feedback für Buttons/Karten — kleine, sofortige
    Rückmeldung statt eines stummen Klicks. Deaktiviert für alle, die
    reduzierte Bewegung eingestellt haben. */
