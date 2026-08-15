@@ -155,6 +155,7 @@ export const LABELS = {
     // --- TRAININGSARTEN / TRAINING_ENERGIELEVEL_OPTIONEN / SCHMERZEN_OPTIONEN ---
     "Krafttraining": "Strength training",
     "Bodyweight": "Bodyweight",
+    "Isometrisches Training": "Isometric training",
     "Niedrig": "Low",
     "Hoch": "High",
 
@@ -497,6 +498,7 @@ export const LABELS = {
     // --- TRAININGSARTEN / TRAINING_ENERGIELEVEL_OPTIONEN / SCHMERZEN_OPTIONEN ---
     "Krafttraining": "Kuvvet antrenmanı",
     "Bodyweight": "Vücut ağırlığı",
+    "Isometrisches Training": "İzometrik antrenman",
     "Niedrig": "Düşük",
     "Hoch": "Yüksek",
 

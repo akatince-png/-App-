@@ -58,6 +58,10 @@ function leererEintrag() {
     bemerkungen: "",
     intervallArbeitSek: "40",
     intervallPauseSek: "20",
+    // Nur für Isometrisches Training: Gesamtdauer als Eingabehilfe, um daraus
+    // die Rundenzahl zu errechnen (15.08., Nutzerin-Vorgabe) — wird nicht
+    // mitgespeichert, nur für die Berechnung im Formular verwendet.
+    isoGesamtDauerMin: "",
   };
 }
 
@@ -400,6 +404,21 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             onFertig={() => beenden()}
           />
         </Card>
+      ) : session.art === "Isometrisches Training" ? (
+        <Card style={{ textAlign: "center" }}>
+          <Timer
+            mode="interval"
+            arbeitSek={Number(session.intervallArbeitSek) || 5}
+            pauseSek={Number(session.intervallPauseSek) || 10}
+            runden={Number(session.runden) || 5}
+            arbeitLabel="HALTEN"
+            vorbereitungSek={15}
+            fadeVorlaufSek={INTERVALL_FADE_SEK}
+            onPhaseStart={intervallMusikSync.onPhaseStart}
+            onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
+            onFertig={() => beenden()}
+          />
+        </Card>
       ) : (
         <Card style={{ textAlign: "center" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>Stoppuhr</div>
@@ -525,7 +544,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     } else {
       payload.uebungen = [];
     }
-    if (payload.art !== "Cardio" && !bodyweightMitIntervall) {
+    if (payload.art !== "Cardio" && payload.art !== "Isometrisches Training" && !bodyweightMitIntervall) {
       payload.intervallArbeitSek = "";
       payload.intervallPauseSek = "";
     }
@@ -957,6 +976,48 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 </div>
               </>
             )}
+          </>
+        )}
+
+        {eintrag.art === "Isometrisches Training" && (
+          <>
+            <Label>Halten & Pause</Label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <TextInput type="number" value={eintrag.intervallArbeitSek} onChange={(v) => setFeld("intervallArbeitSek", v)} placeholder="Halten (Sek.)" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <TextInput type="number" value={eintrag.intervallPauseSek} onChange={(v) => setFeld("intervallPauseSek", v)} placeholder="Pause (Sek.)" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <NumberWheelField value={eintrag.runden} onChange={(v) => setFeld("runden", v)} min={1} max={30} placeholder="Sätze" />
+              </div>
+            </div>
+
+            <Label>Statt Sätze: Gesamtdauer eingeben (optional)</Label>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+              <div style={{ flex: 1 }}>
+                <TextInput type="number" value={eintrag.isoGesamtDauerMin} onChange={(v) => setFeld("isoGesamtDauerMin", v)} placeholder="z. B. 5 (Minuten)" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <PrimaryButton
+                  variant="ghost"
+                  onClick={() => {
+                    const satzSek = Number(eintrag.intervallArbeitSek) || 0;
+                    const pauseSek = Number(eintrag.intervallPauseSek) || 0;
+                    const gesamtSek = (Number(eintrag.isoGesamtDauerMin) || 0) * 60;
+                    if (satzSek + pauseSek <= 0 || gesamtSek <= 0) return;
+                    const errechneteRunden = Math.max(1, Math.round(gesamtSek / (satzSek + pauseSek)));
+                    setFeld("runden", String(errechneteRunden));
+                  }}
+                >
+                  Sätze berechnen
+                </PrimaryButton>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>
+              Nach dem Start läuft erst eine 15-Sekunden-Vorbereitungsphase zum Positionieren, bevor der erste Satz beginnt.
+            </div>
           </>
         )}
 

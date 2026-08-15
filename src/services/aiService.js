@@ -128,7 +128,7 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "einheiten": [ { "wochentag": "Mo"|"Di"|"Mi"|"Do"|"Fr"|"Sa"|"So", ' +
-          '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Sonstiges"), ' +
+          '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Isometrisches Training","Sonstiges"), ' +
           '"saetze": number, "wiederholungen": string, "uebungen": string (kommagetrennte Übungsliste als ein Textfeld) } ] }',
       ].join(" ")
     );
@@ -259,7 +259,7 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "einheiten": [ { "wochentag": "Mo"|"Di"|"Mi"|"Do"|"Fr"|"Sa"|"So", ' +
-          '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Sonstiges"), ' +
+          '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Isometrisches Training","Sonstiges"), ' +
           '"uebungenListe": [ { "name": string, "saetze": string, "wiederholungen": string, ' +
           '"gewicht": string (z. B. "20 kg", leer wenn nicht genannt) } ] (leeres Array wenn keine einzelnen Übungen genannt wurden) } ] }',
       ].join(" ")

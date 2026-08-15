@@ -27,6 +27,16 @@ export default function Timer({
   onFertig,
   autoStart = false,
   vorwarnungSek = null,
+  // Vorbereitungsphase vor dem eigentlichen Start (15.08., Nutzerin-Vorgabe:
+  // "10-15 Sekunden Countdown, um sich zu positionieren", für alle
+  // Trainingsarten gedacht, nicht nur isometrisch) — optional, ohne Angabe
+  // verhält sich der Timer unverändert wie zuvor (sofortiger Start).
+  vorbereitungSek = null,
+  // Nur für mode="interval": Beschriftung der "Arbeit"-Phase anpassbar (z. B.
+  // "HALTEN" bei isometrischem Training statt "ARBEIT") — Standardwert
+  // erhält das bisherige Verhalten.
+  arbeitLabel = "ARBEIT",
+  pauseLabel = "PAUSE",
   // Nur für mode="interval" (14.08., Nutzerin-Vorgabe: Musik-Sync an
   // Intervallgrenzen, z. B. Spotify pausieren/ausblenden) — beide optional,
   // ohne sie verhält sich der Timer unverändert wie zuvor.
@@ -38,12 +48,16 @@ export default function Timer({
   onPhaseEndeNaht,
   fadeVorlaufSek = null,
 }) {
-  const [status, setStatus] = useState("idle"); // idle | running | paused | done
+  const [status, setStatus] = useState("idle"); // idle | vorbereitung | running | paused | done
   const [phase, setPhase] = useState("arbeit");
   const [rundeAktuell, setRundeAktuell] = useState(1);
   const [tick, setTick] = useState(0);
   const elapsedRef = useRef(0);
   const anchorRef = useRef(null);
+  // Eigener Zeitanker für die Vorbereitungsphase — getrennt von
+  // elapsedRef/anchorRef, damit deren Segment-Zeitrechnung für die
+  // eigentliche Übung/Runde unangetastet bleibt.
+  const vorbereitungAnchorRef = useRef(null);
   // Einmaliger Hinweiston kurz vor Ablauf (z. B. "noch 30 Sekunden"), nicht
   // nur der Schluss-Alarm bei 0 — gegen ADHS-typisches Zeitgefühl-Problem,
   // Nutzerinnen-Vorgabe 13.08. Nur für countdown relevant, opt-in per Prop.
@@ -52,22 +66,34 @@ export default function Timer({
   const phaseEndeNahtRef = useRef(false);
 
   useEffect(() => {
-    if (status !== "running") return;
+    if (status !== "running" && status !== "vorbereitung") return;
     const id = setInterval(() => setTick((t) => t + 1), 200);
     return () => clearInterval(id);
   }, [status]);
 
   const segmentElapsedMs = () => elapsedRef.current + (status === "running" && anchorRef.current ? Date.now() - anchorRef.current : 0);
+  const vorbereitungElapsedMs = () => (vorbereitungAnchorRef.current ? Date.now() - vorbereitungAnchorRef.current : 0);
 
-  const start = () => {
-    if (status === "done") return;
-    const istErstStart = status === "idle" && mode === "interval";
+  // Startet die eigentliche Übung/Runde — direkt bei start() (falls keine
+  // Vorbereitungsphase konfiguriert ist) oder nach deren Ablauf.
+  const startEcht = () => {
+    const istErstStart = mode === "interval";
     anchorRef.current = Date.now();
     setStatus("running");
     if (istErstStart) {
       phaseEndeNahtRef.current = false;
       onPhaseStart?.("arbeit", 1);
     }
+  };
+
+  const start = () => {
+    if (status === "done") return;
+    if (status === "idle" && vorbereitungSek) {
+      vorbereitungAnchorRef.current = Date.now();
+      setStatus("vorbereitung");
+      return;
+    }
+    startEcht();
   };
   const pause = () => {
     elapsedRef.current = segmentElapsedMs();
@@ -77,6 +103,7 @@ export default function Timer({
   const reset = () => {
     elapsedRef.current = 0;
     anchorRef.current = null;
+    vorbereitungAnchorRef.current = null;
     setStatus("idle");
     setPhase("arbeit");
     setRundeAktuell(1);
@@ -102,6 +129,14 @@ export default function Timer({
   // onPhaseStart/onPhaseEndeNaht im Elternteil eigenen State setzen, z. B.
   // useIntervallMusikSync.js).
   useEffect(() => {
+    if (status === "vorbereitung") {
+      const remaining = vorbereitungSek * 1000 - vorbereitungElapsedMs();
+      if (remaining <= 0) {
+        playBeep(2);
+        startEcht();
+      }
+      return;
+    }
     if (status !== "running") return;
     if (mode === "countdown") {
       const remaining = initialSeconds * 1000 - segmentElapsedMs();
@@ -151,20 +186,24 @@ export default function Timer({
   }, [tick, status]);
 
   const remainingSecondsDisplay = () => {
+    if (status === "vorbereitung") return Math.max(0, vorbereitungSek - vorbereitungElapsedMs() / 1000);
     if (mode === "stopwatch") return segmentElapsedMs() / 1000;
     if (mode === "countdown") return Math.max(0, initialSeconds - segmentElapsedMs() / 1000);
     const zielSek = phase === "arbeit" ? arbeitSek : pauseSek;
     return Math.max(0, zielSek - segmentElapsedMs() / 1000);
   };
 
-  const ringTotal = mode === "countdown" ? initialSeconds : mode === "interval" ? (phase === "arbeit" ? arbeitSek : pauseSek) : null;
+  const ringTotal = status === "vorbereitung" ? vorbereitungSek : mode === "countdown" ? initialSeconds : mode === "interval" ? (phase === "arbeit" ? arbeitSek : pauseSek) : null;
   const ringDone = ringTotal != null ? Math.max(0, ringTotal - remainingSecondsDisplay()) : null;
 
   return (
     <div style={{ textAlign: "center" }}>
-      {mode === "interval" && status !== "idle" && (
+      {status === "vorbereitung" && (
+        <div style={{ fontSize: 12, fontWeight: 800, color: textMuted, marginBottom: 4 }}>BEREIT MACHEN…</div>
+      )}
+      {mode === "interval" && status !== "idle" && status !== "vorbereitung" && (
         <div style={{ fontSize: 12, fontWeight: 800, color: phase === "arbeit" ? accentDark : textMuted, marginBottom: 4 }}>
-          {phase === "arbeit" ? "ARBEIT" : "PAUSE"} · Runde {rundeAktuell}/{runden}
+          {phase === "arbeit" ? arbeitLabel : pauseLabel} · Runde {rundeAktuell}/{runden}
         </div>
       )}
       {ringTotal != null && (
@@ -177,7 +216,14 @@ export default function Timer({
         <div style={{ fontSize: 12, color: accentDark, fontWeight: 700, marginTop: 4 }}>Fertig! 🎉</div>
       )}
       <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-        {status !== "running" && status !== "done" && (
+        {status === "vorbereitung" && (
+          <div style={{ flex: 1 }}>
+            <PrimaryButton onClick={startEcht} variant="ghost">
+              Schon bereit? Jetzt starten
+            </PrimaryButton>
+          </div>
+        )}
+        {status !== "running" && status !== "done" && status !== "vorbereitung" && (
           <div style={{ flex: 1 }}>
             <PrimaryButton onClick={start}>{status === "paused" ? "Weiter" : "Start"}</PrimaryButton>
           </div>
