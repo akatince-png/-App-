@@ -19,6 +19,7 @@ create table if not exists public.workflow_presets (
 );
 
 alter table public.workflow_presets enable row level security;
+drop policy if exists "workflow_presets: eigene Zeilen" on public.workflow_presets;
 create policy "workflow_presets: eigene Zeilen" on public.workflow_presets for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
@@ -46,5 +47,6 @@ create table if not exists public.workflow_plaene (
 );
 
 alter table public.workflow_plaene enable row level security;
+drop policy if exists "workflow_plaene: eigene Zeilen" on public.workflow_plaene;
 create policy "workflow_plaene: eigene Zeilen" on public.workflow_plaene for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
