@@ -55,6 +55,30 @@ das nur als vage Alternative, "keine Ahnung") — nicht umgesetzt, kein
 konkreter Auftrag. Falls gewünscht: eigenes Thema, vermutlich .ics-Export
 oder eine echte Google/Apple-Calendar-Anbindung, deutlich größerer Umbau.
 
+### 🔴 Nachtrag, noch später: Push-Benachrichtigungen liefen nie — VAPID-Key fehlte
+
+Beim Testen von `send-push` (manueller Test-Button) kam durchgehend
+"Failed to send a request to the Edge Function". Ursache im Log (Supabase →
+Edge Functions → send-push → Errors): `Error: No key set
+vapidDetails.publicKey` — die Funktion stürzt schon beim Modul-Start ab
+(`webpush.setVapidDetails(...)` in Zeile 12), noch bevor sie überhaupt
+antworten kann. Grund: **`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` waren als
+Supabase-Secret nie gesetzt** — Custom-Secrets-Liste enthielt nur
+CRON_SECRET/GEMINI_API_KEY/SPOTIFY_*/GOOGLE_TTS_API_KEY. Betrifft
+`send-due-reminders` identisch (derselbe Aufruf ganz oben in der Datei) —
+Web-Push ist also seit Projektbeginn nie tatsächlich verschickt worden,
+nur alles DRUMHERUM (Subscriptions speichern, UI) hat funktioniert.
+
+**Behoben:** neues VAPID-Schlüsselpaar erzeugt (`npx web-push
+generate-vapid-keys`), Public Key in `src/lib/pushConfig.js` eingetragen
+und committet. **Die Nutzerin muss den Private Key noch selbst als Secret
+`VAPID_PRIVATE_KEY` (und den Public Key als `VAPID_PUBLIC_KEY`) unter
+Supabase → Edge Functions → Secrets eintragen** — der Private Key wurde ihr
+im Chat mitgeteilt, steht bewusst nirgends im Repo. Nach dem Secret-Eintrag
+sollte sie testweise "Erinnerungen deaktivieren" → erneut aktivieren
+(neue Subscription mit dem neuen Public Key, alte wäre mit dem alten Key
+ohnehin nutzlos) und dann "Test-Erinnerung senden" probieren.
+
 ## ⚠️ Update 15.08.2026, spätabends (Teil 3) — Baustein-Versionierung + tote View entfernt
 
 Letzte Runde dieser Sitzung, Nutzerin hat ab 16.08. keinen Zugang mehr.
