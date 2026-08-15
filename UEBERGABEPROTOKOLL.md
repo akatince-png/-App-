@@ -1,5 +1,63 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 15.08.2026, abends (Teil 2) — Feedback-Runde nach dem ersten Update
+
+Direkt im Anschluss an das Update weiter unten kam noch eine Feedback-Runde
+der Nutzerin zur UI-Platzierung der neuen "Bausteine"-Funktion, plus der
+Wunsch nach einem Backcheck vor Sitzungsende (sie hat morgen, 16.08., keinen
+Zugang mehr zu Claude). Zusätzlich committet als `4b41925` und `f6f2677`
+(beide bereits fast-forward-gemerged nach `main`):
+
+1. **"Aktuelles Protokoll" (Bausteine an-/abschalten) von Archiv → Protokolle
+   nach Mehr verschoben.** Begründung der Nutzerin: Archiv soll ausschließlich
+   abgeschlossene/archivierte Protokolle zeigen (nur ansehen + löschen,
+   nichts editierbar), das laufende Protokoll gehört dort nicht hin — jetzt
+   direkt sichtbar (nicht eingeklappt) unter Mehr, oberhalb von "Sprache"
+   (`MehrTab.jsx`, Komponente `AktuellesProtokoll`).
+2. **"Zu deinem Peptid-Protokoll"-Button entfernt** (`PlanView.jsx`, war am
+   Ende jeder Archiv-Unterseite sichtbar, führte zu `setView("medikamente")`
+   — veraltete Terminologie, Nutzerin empfand es als Sackgasse/Schleife).
+   `onEditProtocol`-Prop dafür auch aus `AuthenticatedApp.jsx` entfernt.
+3. **`PeptidView.jsx` komplett gelöscht** — seit der Peptid/Medikamente-
+   Zusammenlegung (Migration 0042) von nirgends mehr importiert, reine
+   Karteileiche. Peptide werden ausschließlich noch über
+   `MedikamenteView.jsx` verwaltet.
+4. **Alte Test-Einträge sind jetzt löschbar:**
+   `gewichtEntfernen(datum)` in `useCheckinData.js` (Check-in-Verlauf,
+   ArchivTab) und `aenderungEntfernen(id)` in `useAenderungsprotokoll.js`
+   (Tagesverlauf, ProtokollLogView) — vorher gab es dafür keine Möglichkeit,
+   die Nutzerin hatte sich über liegengebliebenes Test-Rauschen aus früheren
+   Sitzungen beschwert.
+
+**Bewusst NICHT umgesetzt** (Nutzerin einverstanden, für eine künftige,
+ausgeruhte Sitzung vorgesehen): eine echte **Versionierung** pro Baustein
+— alte Konfiguration bleibt archiviert erhalten, eine neue wird beim
+Bearbeiten aktiv, sichtbar im Archiv als Verlauf. Das bräuchte für jeden
+Baustein-Typ (Schlaf, Training, Ernährung, …) eine eigene Historie der
+tatsächlichen Einstellungen — die haben aktuell alle unterschiedliche
+Datenstrukturen, kein einheitliches Modell. Eigenes, größeres
+Architektur-Thema, absichtlich verschoben statt spät abends reingequetscht.
+
+**Backcheck vor Sitzungsende (15.08., ca. 22 Uhr) durchgeführt:**
+`npm run build` und `npx oxlint` (komplettes Projekt, nicht nur geänderte
+Dateien) liefen sauber durch — keine neuen Warnungen/Fehler durch die
+heutigen Änderungen, nur bereits vorher bestehende harmlose
+`react-refresh`/`no-unused-vars`-Warnungen in unberührten Dateien. Alle
+View-IDs zwischen `AuthenticatedApp.jsx` (`ARCHIV_VIEW_IDS`) und
+`PlanView.jsx` (`TABS`) wurden gegengeprüft, stimmen überein. Kein
+verbliebener Verweis auf "Peptid-Protokoll" im UI-Text (nur noch in
+Code-Kommentaren und `i18n/dict/peptid.js`, dort harmlos ungenutzt).
+
+**Ausstehende SQL-Migrationen zum Zeitpunkt dieses Updates:** Die Nutzerin
+hat 0066 (`coach_wissen`-Einträge ADHS-Paradoxon), 0067
+(`teilprotokolle`-Kategorie-Check inkl. "tageslicht") und 0068
+(`teilprotokolle.aktiviert_am`) im Verlauf dieser Sitzung im Supabase-
+SQL-Editor bestätigt ausgeführt zu haben. Für die Änderungen aus diesem
+Teil-2-Update war keine weitere Migration nötig (nur bestehende
+Spalten/Tabellen verwendet).
+
+---
+
 ## ⚠️ Update 15.08.2026 — Hinweis zur Dokumentationslücke + heutige Änderungen
 
 **Dieses Dokument war bei Sitzungsbeginn nur bis Migration 0049 aktuell,
