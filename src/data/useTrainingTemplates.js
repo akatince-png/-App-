@@ -16,7 +16,13 @@ function rowToTemplate(r) {
     cardioModus: r.cardio_modus || "",
     intervallArbeitSek: r.intervall_arbeit_sek,
     intervallPauseSek: r.intervall_pause_sek,
+    ziel: r.ziel || "",
+    programmId: r.programm_id || null,
   };
+}
+
+function rowToProgramm(r) {
+  return { id: r.id, name: r.name };
 }
 
 function rowToWochenplan(r) {
@@ -53,23 +59,53 @@ function rowToWochenplan(r) {
 export function useTrainingTemplates(userId) {
   const [templates, setTemplates] = useState([]);
   const [wochenplan, setWochenplan] = useState([]);
+  const [trainingProgramme, setTrainingProgramme] = useState([]);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: t }, { data: w }] = await Promise.all([
+      const [{ data: t }, { data: w }, { data: p }] = await Promise.all([
         supabase.from("training_templates").select("*").eq("user_id", userId).order("created_at"),
         supabase.from("training_wochenplan").select("*").eq("user_id", userId),
+        supabase.from("training_programme").select("*").eq("user_id", userId).order("created_at"),
       ]);
       if (cancelled) return;
       if (t) setTemplates(t.map(rowToTemplate));
       if (w) setWochenplan(w.map(rowToWochenplan));
+      if (p) setTrainingProgramme(p.map(rowToProgramm));
     })();
     return () => {
       cancelled = true;
     };
   }, [userId]);
+
+  // Ordner/Programme (15.08., Nutzerin-Vorgabe: "Ordner erstellen für
+  // bestimmte Trainingsroutinen") — rein organisatorische Gruppierung von
+  // Vorlagen, kein eigener Trainingsablauf.
+  const programmHinzufuegen = useCallback(
+    async (name) => {
+      const trimmed = name.trim();
+      if (!trimmed) return { ok: false, error: "Bitte einen Namen für den Ordner eingeben." };
+      const { data, error } = await supabase.from("training_programme").insert({ user_id: userId, name: trimmed }).select().single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      const neu = rowToProgramm(data);
+      setTrainingProgramme((prev) => [...prev, neu]);
+      return { ok: true, programm: neu };
+    },
+    [userId]
+  );
+
+  const programmEntfernen = useCallback(async (id) => {
+    setTrainingProgramme((prev) => prev.filter((p) => p.id !== id));
+    // on-delete-set-null auf training_templates.programm_id — lokal mit nachziehen.
+    setTemplates((prev) => prev.map((t) => (t.programmId === id ? { ...t, programmId: null } : t)));
+    const { error } = await supabase.from("training_programme").delete().eq("id", id);
+    if (error) console.error(error);
+  }, []);
 
   const templateSpeichern = useCallback(
     async (vorlage) => {
@@ -88,6 +124,8 @@ export function useTrainingTemplates(userId) {
         cardio_modus: vorlage.cardioModus || null,
         intervall_arbeit_sek: vorlage.intervallArbeitSek ? Number(vorlage.intervallArbeitSek) : null,
         intervall_pause_sek: vorlage.intervallPauseSek ? Number(vorlage.intervallPauseSek) : null,
+        ziel: vorlage.ziel || null,
+        programm_id: vorlage.programmId || null,
       };
       const { data, error } = await supabase.from("training_templates").insert(row).select().single();
       if (error) {
@@ -104,6 +142,19 @@ export function useTrainingTemplates(userId) {
   const templateEntfernen = useCallback(async (id) => {
     setTemplates((prev) => prev.filter((t) => t.id !== id));
     const { error } = await supabase.from("training_templates").delete().eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
+  // Bisher gab es nur Anlegen/Löschen einer Vorlage, kein nachträgliches
+  // Bearbeiten — für Name/Ziel/Ordner-Zuordnung (15.08., Nutzerin-Vorgabe)
+  // reicht ein einfaches Patch-Update, analog zu workflowPresetAendern.
+  const templateBearbeiten = useCallback(async (id, patch) => {
+    setTemplates((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    const row = {};
+    if (patch.name !== undefined) row.name = patch.name;
+    if (patch.ziel !== undefined) row.ziel = patch.ziel || null;
+    if (patch.programmId !== undefined) row.programm_id = patch.programmId || null;
+    const { error } = await supabase.from("training_templates").update(row).eq("id", id);
     if (error) console.error(error);
   }, []);
 
@@ -201,6 +252,10 @@ export function useTrainingTemplates(userId) {
     trainingTemplates: templates,
     templateSpeichern,
     templateEntfernen,
+    templateBearbeiten,
+    trainingProgramme,
+    programmHinzufuegen,
+    programmEntfernen,
     trainingWochenplan: wochenplan,
     wochenplanHinzufuegen,
     wochenplanBearbeiten,

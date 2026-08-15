@@ -6,6 +6,7 @@ import NumberWheelField from "../ui/NumberWheelField";
 import TimeWheelField from "../ui/TimeWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "../ui/UebungenEditor";
 import WochenplanEditor, { WOCHENTAGE_VOLL } from "../ui/WochenplanEditor";
+import TrainingsplaeneVerwaltung from "../ui/TrainingsplaeneVerwaltung";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import MusikModusToggle from "../ui/MusikModusToggle";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
@@ -62,6 +63,10 @@ function leererEintrag() {
     // die Rundenzahl zu errechnen (15.08., Nutzerin-Vorgabe) — wird nicht
     // mitgespeichert, nur für die Berechnung im Formular verwendet.
     isoGesamtDauerMin: "",
+    // Welche Vorlage dieser Eintrag geladen hat (15.08., Nutzerin-Vorgabe) —
+    // für die vorlagen-eigene Spotify-Playlist beim Live-Start, siehe
+    // TrainingsplaeneVerwaltung.jsx.
+    templateId: null,
   };
 }
 
@@ -167,9 +172,12 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   const [musikFehler, setMusikFehler] = useState(null);
   // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik
   // → Zuordnung, siehe SpotifyAnlassPicker), einmalig beim Öffnen dieser
-  // Live-Session — nicht bei jedem Satz-/Übungswechsel.
+  // Live-Session — nicht bei jedem Satz-/Übungswechsel. Stammt die Session
+  // aus einer Vorlage mit eigener Playlist (siehe TrainingsplaeneVerwaltung.
+  // jsx), hat die vorlagen-eigene Zuordnung Vorrang vor der generischen
+  // "training"-Playlist (15.08., Nutzerin-Vorgabe).
   useEffect(() => {
-    const uri = spotifyAnlaesse.training?.uri;
+    const uri = (session.templateId && spotifyAnlaesse[`training-vorlage:${session.templateId}`]?.uri) || spotifyAnlaesse.training?.uri;
     if (uri && spotifyVerbunden) {
       spotifyAbspielen(uri).then((result) => {
         if (!result?.ok) setMusikFehler(result?.error || "Wiedergabe fehlgeschlagen.");
@@ -468,6 +476,11 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     trainingAbschliessen,
     trainingTemplates,
     templateSpeichern,
+    templateBearbeiten,
+    templateEntfernen,
+    trainingProgramme,
+    programmHinzufuegen,
+    programmEntfernen,
     trainingWochenplan,
     wochenplanHinzufuegen,
     wochenplanBearbeiten,
@@ -503,6 +516,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [vorlageSpeichernOffen, setVorlageSpeichernOffen] = useState(false);
   const [vorlageName, setVorlageName] = useState("");
   const [vorlageFehler, setVorlageFehler] = useState(null);
+  const [trainingsplaeneVerwaltungOffen, setTrainingsplaeneVerwaltungOffen] = useState(false);
   const [fehler, setFehler] = useState(null);
   const [liveSessionId, setLiveSessionId] = useState(null);
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
@@ -663,7 +677,39 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       bodyweightModus: tpl.art === "Bodyweight" ? (tpl.uebungen.length ? "Übungen" : "Intervall") : "",
       intervallArbeitSek: tpl.intervallArbeitSek ? String(tpl.intervallArbeitSek) : p.intervallArbeitSek,
       intervallPauseSek: tpl.intervallPauseSek ? String(tpl.intervallPauseSek) : p.intervallPauseSek,
+      templateId: tpl.id,
     }));
+  };
+
+  // Direkt aus der Vorlagen-Verwaltung heraus live starten (15.08.,
+  // Nutzerin-Vorgabe), ohne den Umweg über "laden ins Formular → Jetzt live
+  // starten tippen" — baut den Payload direkt aus der Vorlage statt aus dem
+  // (evtl. gerade anders befüllten) Formular-State.
+  const templateDirektStarten = async (tpl) => {
+    setFehler(null);
+    const result = await trainingHinzufuegen({
+      datum: new Date().toISOString().slice(0, 10),
+      uhrzeit: tpl.uhrzeit || "",
+      art: tpl.art,
+      name: tpl.name,
+      uebungen: tpl.uebungen?.length ? tpl.uebungen.map((u) => ({ ...u, pauseSekunden: String(u.pauseSekunden || 180) })) : [],
+      dauerMin: tpl.dauerMin ? String(tpl.dauerMin) : "",
+      distanzKm: tpl.distanzKm ? String(tpl.distanzKm) : "",
+      puls: tpl.puls ? String(tpl.puls) : "",
+      runden: tpl.runden ? String(tpl.runden) : "5",
+      cardioArt: tpl.cardioArt || "",
+      cardioModus: tpl.cardioModus || "",
+      intervallArbeitSek: tpl.intervallArbeitSek ? String(tpl.intervallArbeitSek) : "",
+      intervallPauseSek: tpl.intervallPauseSek ? String(tpl.intervallPauseSek) : "",
+      templateId: tpl.id,
+      erledigt: false,
+    });
+    if (!result?.ok) {
+      setFehler(result?.error || "Training konnte nicht gestartet werden.");
+      return;
+    }
+    setTrainingsplaeneVerwaltungOffen(false);
+    setLiveSessionId(result.eintrag.id);
   };
 
   const vorlageSpeichern = async () => {
@@ -704,6 +750,28 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
           </PrimaryButton>
         </div>
       </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <PrimaryButton variant="ghost" onClick={() => setTrainingsplaeneVerwaltungOffen((o) => !o)}>
+          {trainingsplaeneVerwaltungOffen ? "Schließen" : "📋 Trainingspläne verwalten (Vorlagen & Ordner)"}
+        </PrimaryButton>
+      </div>
+
+      {trainingsplaeneVerwaltungOffen && (
+        <>
+          {fehler && <div style={{ fontSize: 12, color: danger, marginBottom: 12 }}>{fehler}</div>}
+          <TrainingsplaeneVerwaltung
+            trainingTemplates={trainingTemplates}
+            trainingProgramme={trainingProgramme}
+            programmHinzufuegen={programmHinzufuegen}
+            programmEntfernen={programmEntfernen}
+            templateBearbeiten={templateBearbeiten}
+            templateEntfernen={templateEntfernen}
+            onDirektStarten={templateDirektStarten}
+            onSchliessen={() => setTrainingsplaeneVerwaltungOffen(false)}
+          />
+        </>
+      )}
 
       {wochenplanAnsehenOffen && (
         <WochenplanEditor

@@ -23,6 +23,7 @@ function rowToEintrag(r) {
     erledigt: r.erledigt,
     intervallArbeitSek: r.intervall_arbeit_sek,
     intervallPauseSek: r.intervall_pause_sek,
+    templateId: r.template_id || null,
   };
 }
 
@@ -71,6 +72,7 @@ export function useTrainingData(userId) {
         erledigt: eintrag.erledigt !== false,
         intervall_arbeit_sek: eintrag.intervallArbeitSek ? Number(eintrag.intervallArbeitSek) : null,
         intervall_pause_sek: eintrag.intervallPauseSek ? Number(eintrag.intervallPauseSek) : null,
+        template_id: eintrag.templateId || null,
       };
       const { data, error } = await supabase.from("training_sessions").insert(row).select().single();
       if (error) {
