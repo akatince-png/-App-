@@ -17,18 +17,51 @@ import { CoacheeNachrichtenPanel } from "./AdminDashboardView";
 // ungelesenen Nachrichten pro Person.
 export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
   const [probanden, setProbanden] = useState([]);
+  const [trainingByUser, setTrainingByUser] = useState({});
   const [ladend, setLadend] = useState(true);
   const [fehler, setFehler] = useState(null);
   const [suche, setSuche] = useState("");
   const [nachrichtenFuer, setNachrichtenFuer] = useState(null);
+  const [trainingFuer, setTrainingFuer] = useState(null);
 
   useEffect(() => {
     (async () => {
       setLadend(true);
       const { data, error } = await supabase.rpc("admin_liste_probanden");
-      if (error) setFehler(error.message);
-      else setProbanden(data || []);
+      if (error) {
+        setFehler(error.message);
+        setLadend(false);
+        return;
+      }
+      setProbanden(data || []);
       setLadend(false);
+
+      // Trainings-Wochenplan + jüngste Sessions über ALLE Coachees auf
+      // einmal laden (15.08., Nutzerin-Vorgabe: "alle Dinge, die der
+      // Coachee mit mir plant, einsehen und beeinflussen können") — RLS
+      // erlaubt Admins vollen Zugriff auf beide Tabellen (siehe 0035), kein
+      // neuer RPC-Umweg nötig, ganz normale Tabellen-Abfrage.
+      const ids = (data || []).map((p) => p.id);
+      if (ids.length === 0) return;
+      const [{ data: wochenplan }, { data: sessions }] = await Promise.all([
+        supabase.from("training_wochenplan").select("user_id, name, wochentag, uhrzeit, arten").in("user_id", ids),
+        supabase.from("training_sessions").select("user_id, datum, art, name, erledigt").in("user_id", ids).order("datum", { ascending: false }),
+      ]);
+      const vorSiebenTagen = new Date();
+      vorSiebenTagen.setDate(vorSiebenTagen.getDate() - 7);
+      const vorSiebenTagenStr = vorSiebenTagen.toISOString().slice(0, 10);
+      const byUser = {};
+      for (const id of ids) byUser[id] = { wochenplan: [], letztesTraining: null, letzte7Tage: 0 };
+      for (const w of wochenplan || []) {
+        if (byUser[w.user_id]) byUser[w.user_id].wochenplan.push(w);
+      }
+      for (const s of sessions || []) {
+        const eintrag = byUser[s.user_id];
+        if (!eintrag || !s.erledigt) continue;
+        if (!eintrag.letztesTraining) eintrag.letztesTraining = s.datum;
+        if (s.datum >= vorSiebenTagenStr) eintrag.letzte7Tage += 1;
+      }
+      setTrainingByUser(byUser);
     })();
   }, []);
 
@@ -67,9 +100,12 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
           <CoacheeKarte
             key={p.id}
             proband={p}
+            training={trainingByUser[p.id]}
             onVerwalteAls={onVerwalteAls}
             nachrichtenOffen={nachrichtenFuer === p.id}
             onToggleNachrichten={() => setNachrichtenFuer((v) => (v === p.id ? null : p.id))}
+            trainingOffen={trainingFuer === p.id}
+            onToggleTraining={() => setTrainingFuer((v) => (v === p.id ? null : p.id))}
           />
         ))}
       </div>
@@ -89,7 +125,9 @@ function protokollFortschritt(p) {
   return { vergangeneTage: Math.min(vergangeneTage, gesamtTage), gesamtTage };
 }
 
-function CoacheeKarte({ proband: p, onVerwalteAls, nachrichtenOffen, onToggleNachrichten }) {
+const WOCHENTAG_REIHENFOLGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
+function CoacheeKarte({ proband: p, training, onVerwalteAls, nachrichtenOffen, onToggleNachrichten, trainingOffen, onToggleTraining }) {
   const fortschritt = protokollFortschritt(p);
   return (
     <Card style={{ marginBottom: 12 }}>
@@ -140,8 +178,55 @@ function CoacheeKarte({ proband: p, onVerwalteAls, nachrichtenOffen, onToggleNac
           </PrimaryButton>
         </div>
       </div>
+      <div style={{ marginTop: 8 }}>
+        <PrimaryButton variant="ghost" onClick={onToggleTraining}>
+          {trainingOffen ? "Training schließen" : "🏋️ Training"}
+        </PrimaryButton>
+      </div>
 
       {nachrichtenOffen && <CoacheeNachrichtenPanel proband={p} />}
+      {trainingOffen && <CoacheeTrainingPanel training={training} onVerwalteAls={() => onVerwalteAls({ id: p.id, email: p.email, vorname: p.vorname })} />}
     </Card>
+  );
+}
+
+// Trainingsplan + jüngste Aktivität EINER Coachee (15.08., Nutzerin-
+// Vorgabe: "alle Dinge, die der Coachee mit mir plant, einsehen und
+// beeinflussen können") — reine Einsicht hier; tatsächliches Ändern läuft
+// weiterhin über "Verwalten" (echte Bearbeitung an dieser Stelle würde eine
+// zweite, parallele Oberfläche zur eigentlichen Trainings-Ansicht bedeuten).
+function CoacheeTrainingPanel({ training, onVerwalteAls }) {
+  const wochenplan = [...(training?.wochenplan || [])].sort(
+    (a, b) => WOCHENTAG_REIHENFOLGE.indexOf(a.wochentag) - WOCHENTAG_REIHENFOLGE.indexOf(b.wochentag)
+  );
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+      <div style={{ fontSize: 12, color: textMuted, marginBottom: 8 }}>
+        {training?.letzte7Tage
+          ? `${training.letzte7Tage} Training${training.letzte7Tage === 1 ? "" : "s"} in den letzten 7 Tagen`
+          : "Kein Training in den letzten 7 Tagen"}
+        {training?.letztesTraining && ` · zuletzt am ${new Date(training.letztesTraining).toLocaleDateString("de-DE")}`}
+      </div>
+
+      {wochenplan.length === 0 ? (
+        <div style={{ fontSize: 12.5, color: textMuted }}>Noch kein Trainingsplan hinterlegt.</div>
+      ) : (
+        wochenplan.map((w, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, padding: "6px 0", borderTop: i > 0 ? `1px solid ${cardBorder}` : "none", fontSize: 12.5 }}>
+            <div style={{ fontWeight: 700, width: 28, flexShrink: 0 }}>{w.wochentag}</div>
+            <div style={{ minWidth: 0 }}>
+              <div>{w.name || (w.arten || []).join(" + ") || "Training"}</div>
+              {w.uhrzeit && <div style={{ color: textMuted, fontSize: 11 }}>{w.uhrzeit.slice(0, 5)} Uhr</div>}
+            </div>
+          </div>
+        ))
+      )}
+
+      <div style={{ marginTop: 10 }}>
+        <PrimaryButton variant="ghost" onClick={onVerwalteAls}>
+          Trainingsplan bearbeiten (Verwalten)
+        </PrimaryButton>
+      </div>
+    </div>
   );
 }
