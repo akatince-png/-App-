@@ -308,7 +308,9 @@ eines der beiden pausierten Themen wieder aufzugreifen.
 **AKA** (Claim: "Deine exekutive rechte Hand") ist eine React+Supabase-Web-App
 zur Selbstverwaltung von Gesundheitsprotokollen, mit starkem Fokus auf
 ADHS-Freundlichkeit (reduzierte Reizüberflutung, Notfallmodus, große
-Bedienelemente, klare Sprache, kleine Schritte statt Überforderung).
+Bedienelemente, klare Sprache, kleine Schritte statt Überforderung). Läuft
+heute als **PWA** ("Zum Home-Bildschirm hinzufügen") — keine native App im
+App Store, siehe Abschnitt 12 für den Plan dorthin.
 
 > ⭐ **Leitprinzip, nicht verhandelbar:** Jede Funktion muss sowohl manuell
 > als auch per KI-Assistent ("Aka") nutzbar sein. Niemals ein manuelles
@@ -316,14 +318,18 @@ Bedienelemente, klare Sprache, kleine Schritte statt Überforderung).
 > gibt. Der Assistenten-Orb öffnet sich nur auf Tap, nie von selbst.
 
 **Die Nutzerin ist nicht technisch versiert** und kommuniziert überwiegend per
-Spracheingabe — Transkriptionsfehler sind normal und meist an einer kleinen
-Verwechslung zu erkennen, nicht an grundsätzlichem Unverständnis (Beispiele
-aus dieser Sitzung: "Acker"/"Ecker" = Aka, "smartifer" = Spotify). Bei
-unklaren/abgeschnittenen Nachrichten lieber kurz nachfragen als eine größere
-Änderung auf eine Vermutung zu bauen — das hat sich in dieser Sitzung mehrfach
-bewährt.
+Spracheingabe (oft mit Tippfehlern/abgehackten Sätzen von Diktierfunktionen)
+und per Screenshot vom iPad — Transkriptionsfehler sind normal und meist an
+einer kleinen Verwechslung zu erkennen, nicht an grundsätzlichem
+Unverständnis (Beispiele aus mehreren Sitzungen: "Acker"/"Ecker" = Aka,
+"smartifer" = Spotify). Bei unklaren/abgeschnittenen Nachrichten lieber kurz
+nachfragen als eine größere Änderung auf eine Vermutung zu bauen. Sie hat auf
+dem iPad öfter Schwierigkeiten mit Kopieren/Einfügen (aus Dateien UND beim
+manuellen Abtippen langer Werte wie API-Keys) — bei kurzen, exakten Werten
+(Base64-Schlüssel o. Ä.) hilft eine kleine Artifact-Seite mit
+"Kopieren"-Knopf zuverlässiger als "markieren und kopieren" oder Abtippen.
 
-### Geschäftsmodell-Pivot (13.08., zentral für alles Weitere)
+### Geschäftsmodell-Pivot (seit 13.08., zentral für alles Weitere)
 
 Die App wird **nicht mehr primär von jeder Person komplett selbst
 eingerichtet**. Die Nutzerin selbst tritt als **Coach/Admin** auf und richtet
@@ -334,11 +340,11 @@ nutzen die App zur reinen Ausführung (Routinen, Logging) — kein KI-Assistent,
 kein "+"-Button, stattdessen eine Nachrichtenfunktion an die Coachin. Details
 in Abschnitt 6.
 
-Parallel dazu baut die Nutzerin gerade ihre eigene Coaching-Praxis auf
+Parallel dazu baut die Nutzerin ihre eigene Coaching-Praxis auf
 (12-Wochen-Selbsttrainingsprogramm "AKA ADHS-Coaching-Praxisakademie", erste
-Pilotgespräche mit realen Menschen geplant) und will währenddessen **Aka**
-(den KI-Assistenten) parallel mit dem coaching-relevanten Wissen füttern, das
-sie sich selbst erarbeitet — mit dem ausdrücklichen Ziel, dass Aka langfristig
+Pilotgespräche mit realen Menschen geplant) und füttert währenddessen **Aka**
+(den KI-Assistenten) parallel mit dem coaching-relevanten Wissen, das sie
+sich selbst erarbeitet — mit dem ausdrücklichen Ziel, dass Aka langfristig
 selbstständig Coachings mitbetreuen kann. **Der Coachee darf nie erfahren,
 dass die Coachin im Hintergrund mit Aka arbeitet.**
 
@@ -350,17 +356,27 @@ dass die Coachin im Hintergrund mit Aka arbeitet.**
 - **Backend:** Supabase (Postgres, Auth, Storage, Row Level Security, Edge
   Functions in Deno/TypeScript).
 - **Hosting:** Vercel. **Aktuelle, bestätigte Live-Adresse:
-  `https://akaapp.vercel.app`** (eine ältere Notiz in einer früheren Version
-  dieses Dokuments nannte noch `myprotocolsapp.vercel.app` — das war der Stand
-  vor der Umbenennung zu "AKA"; falls in einer neuen Sitzung Zweifel an der
-  aktuellen Domain bestehen, sicherheitshalber bei der Nutzerin nachfragen).
-  Automatischer Rebuild bei jedem Push auf `main`.
-- **KI:** Google Gemini (`gemini-3.6-flash`, Vorsicht: Gemini-Modellnamen
-  veralten schnell), angebunden über Supabase-Edge-Function-Proxy
-  (`gemini-chat`). Ollama/Groq sind im Code vorbereitet, aber nicht aktiv.
+  `https://akaapp.vercel.app`** (eine ältere Notiz nannte noch
+  `myprotocolsapp.vercel.app` — Stand vor der Umbenennung zu "AKA"; im
+  Zweifel bei der Nutzerin nachfragen). Automatischer Rebuild bei jedem Push
+  auf `main`.
+- **KI (Chat-Assistent "Aka"):** Google Gemini (`gemini-3.6-flash`, Vorsicht:
+  Gemini-Modellnamen veralten schnell), angebunden über Supabase-Edge-
+  Function-Proxy (`gemini-chat`). Ollama/Groq sind im Code vorbereitet
+  (`groq-chat`-Function existiert), aber nicht als aktiver Standard-Provider
+  geschaltet.
+- **KI (weitere, unabhängig vom Chat-Assistenten):** Anthropic Claude, direkt
+  über zwei eigene Edge Functions — `lexikon` (Lexikon-Fragen beantworten)
+  und `blutwerte-scan` (Laborwerte per Foto auslesen, Bild kommt nie roh vom
+  Client, sondern als Storage-Pfad im privaten `photos`-Bucket).
 - **Sprachausgabe:** Google Cloud Text-to-Speech (WaveNet, Stimme
   `de-DE-Wavenet-B`), mit automatischem Rückfall auf die Browser-eigene Web
   Speech API, falls die Cloud-Funktion mal nicht erreichbar ist.
+- **Musik:** Spotify Web API (OAuth + Wiedergabe-Steuerung, Abschnitt 8).
+- **Web Push:** VAPID-Protokoll über die `web-push`-npm-Bibliothek
+  (Deno-Edge-Function-seitig) + die Browser-eigene Notifications-/Push-API
+  (client-seitig, `public/sw.js`). Funktioniert erst seit heute Abend
+  tatsächlich (Abschnitt 7) — vorher fehlte das Server-Secret komplett.
 - **Supabase-Projekt-Ref:** `xdajxswaclukstteafnk`.
 
 ---
@@ -375,33 +391,53 @@ src/
 │   │   TrainingView.jsx, GewohnheitenView.jsx, SupplementeView.jsx,
 │   │   MedikamenteView.jsx, SchlafView.jsx    8 Protokoll-Bereiche
 │   ├── RoutineTabView.jsx         Morgen-/Abendroutine (eigene Reiter)
+│   ├── LexikonView.jsx            Freies Nachschlagen über Claude
 │   ├── admin/                     AdminDashboardView, AdminWissenView,
-│   │                               AdminFormulareView
+│   │                               AdminFormulareView, AdminUebungsBilderView,
+│   │                               AdminCoachUebersichtView
 │   ├── onboarding/                Onboarding-Flow (siehe Abschnitt 6)
 │   └── plan/                      PlaeneView (Tab-Hub), MehrTab (Coach-Name,
-│                                   Sprache, Erinnerungen, Spotify, Konto)
+│                                   Sprache, Erinnerungen, Spotify, Konto,
+│                                   Bausteine/Protokoll-Verwaltung)
 ├── ui/
 │   ├── primitives.jsx             Shell, Card, PrimaryButton, Pill, CheckRow
 │   ├── BereichColorContext.jsx    Bereichseigene Akzentfarbe je Screen
 │   ├── KiChat.jsx                 Wiederverwendbare Chat-Oberfläche
 │   ├── SpotifyAnlassPicker.jsx    Playlist-Zuordnung je Anlass
 │   ├── RoutineAblauf.jsx          Geführter Morgen-/Abendroutine-Screen
+│   ├── Timer.jsx                  Stoppuhr/Countdown/Intervall (Training,
+│   │                               isometrisches Halten mit Sekunden-Ticken)
+│   ├── WorkflowTimer.jsx          Pomodoro-artiger Arbeits-/Pause-Timer
+│   ├── VorlaufFeld.jsx            Vorab-Hinweis-Auswahl je Erinnerungs-
+│   │                               Kategorie (Minuten/Stunden/Tage)
+│   └── WochenplanEditor.jsx       Training/Ernährung-Wochenplan
 ├── services/
 │   ├── aiProviders.js             Low-Level Ollama/Groq/Gemini
 │   └── aiService.js               Domänenfunktionen, Formular-Extraktoren
-├── data/                          Ein use*.js-Hook pro Datenbereich
+├── data/                          Ein use*.js-Hook pro Datenbereich (u. a.
+│                                   useRoutinen.js, useWorkflowData.js,
+│                                   useBausteinVersionen.js,
+│                                   usePushNotifications.js)
 ├── context/
 │   ├── AppDataContext.jsx         Zentrale Datenverwaltung, kombiniert alle Hooks
 │   ├── AdminContext.jsx           "Verwalten als"-Zustand (proband)
 │   └── AuthContext.jsx            Supabase-Session
+└── lib/
+    └── pushConfig.js               VAPID Public Key fürs Web-Push-Abo
+public/
+└── sw.js                          Service Worker — zeigt eingehende Pushes an
 supabase/
-├── migrations/                    0001–0048, siehe Abschnitt 9
+├── migrations/                    0001–0069, siehe Abschnitt 9
 └── functions/
     ├── gemini-chat/                Sicherer Gemini-Proxy — AKTIV
+    ├── groq-chat/                  Groq-Proxy, vorbereitet, nicht aktiv geschaltet
     ├── text-to-speech/             Google Cloud TTS-Proxy — AKTIV
+    ├── lexikon/                    Claude-gestütztes Lexikon — AKTIV
+    ├── blutwerte-scan/             Laborwerte aus Foto per Claude Vision — AKTIV
     ├── spotify-auth-callback/      OAuth-Code-Austausch
     ├── spotify-play/               Wiedergabe starten (Login ODER Auto-Play-Token)
-    ├── send-due-reminders/         Cron-Job für Push-Erinnerungen
+    ├── send-push/                  Manueller Push-Test-Button (Nutzer-JWT) — AKTIV
+    ├── send-due-reminders/         Cron-Job für alle Push-Erinnerungen — AKTIV
     └── admin-create-proband/       Neues Coachee-Konto anlegen
 ```
 
@@ -447,8 +483,9 @@ schlechtes Gewissen.
 **"Background Brain"** — bei jeder Chat-Anfrage automatisch mitgeschickt:
 - `src/wissen/**/*.md` — statische Wissensbasis (braucht Deploy für Änderungen)
 - `coach_wissen`-Tabelle (DB-gestützt, live editierbar unter Admin → "📚
-  Wissens-Basis verwalten", kein Deploy nötig) — seit heute mit 16 Einträgen
-  aus der Coaching-Praxisakademie der Nutzerin vorbefüllt (siehe Abschnitt 6)
+  Wissens-Basis verwalten", kein Deploy nötig) — mittlerweile mit weit über
+  16 Einträgen aus der Coaching-Praxisakademie der Nutzerin bestückt, u. a.
+  auch das ADHS-Paradoxon-Curriculum (siehe Abschnitt 6)
 - `admin_notizen` (Hintergrundwissen ODER zugestellte Nachricht je Proband)
 - Aggregierte Trackingdaten der letzten 2-4 Wochen
 - Erkannte Auffälligkeiten (Trainingslücken, Korrelationen zwischen Bereichen)
@@ -463,56 +500,69 @@ speichern — immer erst chatten, dann tippt die Person explizit auf
 Frei-erzählen), plus Coach-Begleitung bei Laborwerten und allen
 Kategorie-Schritten — nur im Admin-/Verwalten-als-Modus (siehe Abschnitt 6).
 
+**Separates Lexikon** (`LexikonView.jsx`, eigene Edge Function `lexikon`,
+Claude statt Gemini): freies Nachschlagen von Begriffen unabhängig vom
+eigentlichen Coaching-Gespräch, kein Zugriff auf persönliche Trackingdaten.
+
 ---
 
-## 5. Die 8 Protokoll-Bereiche + Routinen + Training
+## 5. Die 8 Protokoll-Bereiche + Routinen + Training + Workout-Flow
 
 Schlaf, Hydration, Ernährung, Training, Gewohnheiten, Supplemente,
 Medikamente (inkl. Peptide, seit 13.08. datentechnisch zusammengelegt — kein
 eigener Reiter mehr), Tageslicht. Darüber liegt ein **Hauptprotokoll** (Name,
 Startdatum), unter dem alle Kategorien als **Teilprotokolle** laufen
-(`hauptprotokolle`/`teilprotokolle`-Tabellen, Migration 0027/0028).
+(`hauptprotokolle`/`teilprotokolle`-Tabellen). Jeder Baustein einzeln
+an-/abschaltbar ohne den kompletten Onboarding-Assistenten neu zu
+durchlaufen (`MehrTab.jsx`), und seit dem 15.08. **versionierbar**: über
+einen 📌-Button hält man die aktuell geltenden Werte eines Bausteins als
+Snapshot fest (`baustein_versionen`-Tabelle, `useBausteinVersionen.js`),
+sichtbar unter Archiv → Protokolle. Bewusst manuell per Knopfdruck, kein
+automatisches Diffing bei jeder Änderung.
 
-**Morgen-/Abendroutine** (seit 13.08. eigene Reiter im "Alle Pläne"-Bereich,
-zusätzlich zu den Tagesplan-Karten): frei benannte Schritte mit geplanter
-Dauer, geführter Ablauf-Screen mit Countdown + Vorwarnton
-(`RoutineAblauf.jsx`), editierbarer Zeitrahmen (`routine_einstellungen`,
-Migration 0044) mit Überlappungs-Erkennung (andere geplante Punkte, die in
-den Zeitrahmen fallen, werden zur Übernahme als Routine-Schritt
-vorgeschlagen). **Inhaltliche ADHS-Vorgaben für eine "richtige" Morgen-/
-Abendroutine sind bewusst noch nicht vorgegeben** — die Nutzerin wollte das
-erst nach eigener Recherche gemeinsam festlegen; noch nicht nachgezogen.
+**Morgen-/Abendroutine** (eigene Reiter im "Alle Pläne"-Bereich, zusätzlich
+zu den Tagesplan-Karten): frei benannte Schritte mit geplanter Dauer,
+geführter Ablauf-Screen mit Countdown + Vorwarnton (`RoutineAblauf.jsx`),
+editierbarer Zeitrahmen (`routine_einstellungen`) mit Überlappungs-Erkennung
+(andere geplante Punkte, die in den Zeitrahmen fallen, werden zur Übernahme
+als Routine-Schritt vorgeschlagen). Haben seit heute (15.08.) eine eigene
+Push-Erinnerung zum Zeitrahmen-Start (Abschnitt 7). **Inhaltliche
+ADHS-Vorgaben für eine "richtige" Morgen-/Abendroutine sind bewusst noch
+nicht vorgegeben** — die Nutzerin wollte das erst nach eigener Recherche
+gemeinsam festlegen; noch nicht nachgezogen.
 
 **Training:** Live-Workout-Screen mit Satz-/Pausen-Timer, Wochenplan mit
 Mehrfachauswahl von Wochentagen/Trainingsarten, großer Übungskatalog
 (`KRAFTUEBUNGEN`/`BODYWEIGHT_UEBUNGEN` in `constants.js`, ~200 Einträge).
+**Isometrisches Training** hat einen eigenen Intervall-Timer-Modus
+(Halten/Pause, z. B. 5 Sek. halten/4 Sek. Pause) mit Vorbereitungs-Countdown,
+Start-/Ende-Piep pro Phase UND (seit heute) einem leisen Sekunden-Ticken
+während Halten/Pause (`Timer.jsx`, `tickJedeSekunde`-Prop, `playTick()` in
+`utils/beep.js`).
 
-### 🆕 Übungsbilder (14.08., neu — Bild-Beschaffung aktuell pausiert)
+**Workout-Flow** (`workflow_plaene`/`workflow_presets`, seit 15.08.): frei
+konfigurierbare Arbeits-/Pause-Intervall-Presets (Pomodoro-artig,
+`WorkflowTimer.jsx`), die sich — wie Training/Ernährung — festen Wochentagen
+und Uhrzeiten zuordnen lassen, wahlweise mit einem Gültigkeits-Zeitraum
+(ab Datum X, oder zwischen X und Y, oder unbegrenzt). Haben seit heute
+ebenfalls eine eigene Push-Erinnerung (Abschnitt 7).
 
-Infrastruktur ist fertig gebaut, damit im Live-Trainings-Screen zu jeder
-Übung ein Bild angezeigt wird: neue **öffentliche** (nicht private) Tabelle
-`uebungs_bilder` (name eindeutig, bild_url) + Storage-Bucket
-`uebungsbilder` (Migration `0049_uebungsbilder.sql` — **von der Nutzerin
-gerade zum Ausführen im Supabase-Dashboard, Status beim nächsten
-Sitzungsstart erfragen**). Admin-Ansicht `AdminUebungsBilderView.jsx`
-("🖼️ Übungsbilder verwalten" im Admin-Dashboard) erlaubt Hochladen eines
-Bildes pro Übung; `TrainingView.jsx`s `LiveWorkout` zeigt es automatisch an,
-sobald eines existiert — reine Anzeige-Logik, kein weiterer Code nötig.
+### Übungsbilder — Infrastruktur fertig, Inhalte fehlen noch
 
-**Bewusst noch OHNE Inhalte:** Die eigentlichen Bilder sollten von der
-Nutzerin in **Canva** erstellt werden (einheitlicher Schwarz-Weiß-Illustrations-
-Stil), dafür wurde ihr eine vollständige Prompt-Liste für alle ~200 Übungen
-geschickt (als Datei, nicht im Repo — grob nach Muskelgruppen gruppiert,
-mit festem Stil-Template oben). **Pausiert, weil die Canva-Premium-Nutzung
-der Nutzerin gerade nicht funktioniert** — sowohl die Bild-Erstellung als
-auch das Hochladen sind deshalb aufgeschoben, kein technisches Problem in
-dieser App. Bei Bedarf die Prompt-Liste neu erzeugen (war eine reine
-Text-Antwort, keine Datei im Repo, ggf. aus dem Chat-Verlauf rekonstruieren
-oder neu schreiben).
+Im Live-Trainings-Screen kann zu jeder Übung ein Bild angezeigt werden:
+öffentliche Tabelle `uebungs_bilder` (name eindeutig, bild_url) + Storage-
+Bucket `uebungsbilder`. Admin-Ansicht `AdminUebungsBilderView.jsx` ("🖼️
+Übungsbilder verwalten") erlaubt Hochladen eines Bildes pro Übung;
+`TrainingView.jsx`s `LiveWorkout` zeigt es automatisch an, sobald eines
+existiert. **Die eigentlichen Bilder fehlen weiterhin** — sollten von der
+Nutzerin in Canva erstellt werden (einheitlicher Schwarz-Weiß-
+Illustrationsstil, dafür existiert eine Prompt-Liste für alle ~200 Übungen,
+nicht im Repo), war zuletzt wegen Problemen mit ihrer Canva-Premium-Nutzung
+pausiert — Stand bei Sitzungsstart erfragen.
 
 ---
 
-## 6. Coach/Coachee-Modell (Kernthema dieser Sitzung)
+## 6. Coach/Coachee-Modell
 
 `istAdminModus = proband !== null || isAdmin` — diese Formel entscheidet
 überall (KiChat.jsx, OnboardingFlow.jsx, AuthenticatedApp.jsx, HomeView.jsx),
@@ -520,76 +570,105 @@ ob gerade eine echte Admin-Sitzung (eigenes Konto ODER "Verwalten als")
 läuft oder eine restriktive Coachee-Sitzung.
 
 - **Onboarding für Coachees reduziert:** nur Profil (Name/Alter/
-  Körperwerte) + Ziel + kurzer **Steckbrief** (`profiles.steckbrief` jsonb,
-  Migration 0045): Supplemente ja/nein, Sport-Erfahrung, Sport-Menge.
-  Laborwerte/Routinen/die 8 Kategorie-Schritte entfallen komplett für
-  Coachees, bleiben im Admin-/Verwalten-als-Modus unverändert vollständig.
+  Körperwerte) + Ziel + kurzer **Steckbrief** (`profiles.steckbrief` jsonb):
+  Supplemente ja/nein, Sport-Erfahrung, Sport-Menge. Laborwerte/Routinen/die
+  8 Kategorie-Schritte entfallen komplett für Coachees, bleiben im
+  Admin-/Verwalten-als-Modus unverändert vollständig.
 - **KI-Assistent (Aka) und "+"-Button ("Neues Protokoll") sind für Coachees
   komplett ausgeblendet** — zentrales Gate in `KiChat.jsx`
   (`if (!istAdminModus) return null`) bzw. in `AuthenticatedApp.jsx`s
   `zeigeFab`.
 - **Nachrichtenfunktion Coachee → Coach** ersetzt den KI-Assistenten für
-  Coachees: Tabelle `coachee_nachrichten` (Migration 0045), Karte auf
-  `HomeView.jsx` ("Nachricht an deinen Coach"), Admin-Dashboard hat ein
-  "Nachrichten"-Panel pro Proband (Lesen/als-gelesen-Markieren).
+  Coachees: Tabelle `coachee_nachrichten`, Karte auf `HomeView.jsx`
+  ("Nachricht an deinen Coach"), Admin-Dashboard hat ein "Nachrichten"-Panel
+  pro Proband (Lesen/als-gelesen-Markieren). `AdminCoachUebersichtView.jsx`
+  zeigt der Coachin zusätzlich Trainingsplan + Aktivität je Coachee.
 - **Wissens-Basis-Verwaltung ("Aka lernt mit"):** DB-gestützte Tabelle
-  `coach_wissen` (Migration 0046: `bereich` nullable, `titel`, `text`) —
-  Admin trägt jederzeit direkt aus der App neues Wissen ein
-  (`AdminWissenView.jsx`, Knopf im Admin-Dashboard "📚 Wissens-Basis
-  verwalten"). Fließt in JEDEN Gesprächskontext von Aka ein (gefiltert nach
-  `bereich`, `null`/leer = gilt überall). **Migration 0047** hat die
-  Basis heute mit 16 destillierten Einträgen aus den drei von der Nutzerin
-  hochgeladenen Praxisakademie-Dokumenten befüllt: 8 allgemeine
-  (Rolle & Grenzen, aktives Zuhören/GROW, ADHS-Psychoedukation, Umgang mit
-  Scham/Widerstand, Medikamente/Supplemente-Grenzen, Red-Flag-Krisenprotokoll,
-  Experiment-Methodik, Sitzungsstruktur) + 8 protokollspezifische (je einer
-  pro Lebensbereich: Wissenschafts-Hintergrund, Gesprächsskript, typische
-  Probleme, Coaching-Fragen, gestufte Mini-Experimente, Red-Flags). Bewusst
-  NICHT übernommen: die reine Trainingslogistik der Nutzerin selbst
-  (Rollenspiel-Anleitungen, Prüfungsfragen, Formularvorlagen).
+  `coach_wissen` (`bereich` nullable, `titel`, `text`) — Admin trägt
+  jederzeit direkt aus der App neues Wissen ein (`AdminWissenView.jsx`,
+  Knopf im Admin-Dashboard "📚 Wissens-Basis verwalten"). Fließt in JEDEN
+  Gesprächskontext von Aka ein (gefiltert nach `bereich`, `null`/leer = gilt
+  überall). Inhaltlich mittlerweile deutlich gewachsen: die ursprünglichen
+  16 destillierten Einträge aus den drei Praxisakademie-Dokumenten (Rolle &
+  Grenzen, aktives Zuhören/GROW, ADHS-Psychoedukation, Red-Flag-
+  Krisenprotokoll, Experiment-Methodik, ...) PLUS eine umfangreiche
+  "Content-Library" (mehrere Migrationen, grob nach Themenblöcken 01-40,
+  41-80, 60-80, 81-100, 101-122 nummeriert) PLUS Spezialthemen wie
+  Sexualität/Intimität, isometrisches Training und das ADHS-Paradoxon
+  (Schutzfaktoren, Person-Environment-Fit, biografische Beispiele wie Biles/
+  Phelps/Branson/Neeleman, zugehöriges Coaching-Framework für
+  Lebensrahmenbedingungen). Bewusst NICHT übernommen: die reine
+  Trainingslogistik der Nutzerin selbst (Rollenspiel-Anleitungen,
+  Prüfungsfragen, Formularvorlagen).
 - **Bewusst NICHT umgesetzt:** automatisches Lernen aus individuellen
   Coachee-Protokolldaten (Datenschutz-/Einwilligungsfrage — Daten einer
   Person würden anderen Coachees zugutekommen). Vorschlag für später: ein
   von der Admin selbst geschriebenes "Fazit" bei Protokoll-Abschluss statt
-  roher Coachee-Daten — noch nicht gebaut, die Nutzerin wollte das erst
-  genauer durchdenken.
+  roher Coachee-Daten — noch nicht gebaut.
 - **Digitale Coaching-Vorlagen** (`AdminFormulareView.jsx`, erreichbar über
-  Admin-Dashboard "📋 Coaching-Vorlagen"): alle 10 Formulare aus der
+  Admin-Dashboard "📋 Coaching-Vorlagen"): alle Formulare aus der
   Praxisakademie (Erstkontakt, Intake, Routinen-Profil, Sitzungsprotokoll
   GROW, Wochenplan, Red-Flag-Checkliste, Selbstreflexion, Beobachterbogen,
-  Einwilligung, Feedbackbogen) digital ausfüllbar + als PDF exportierbar.
-  Schema-getrieben (`src/data/formulareVorlagen.js`, generischer
-  Feld-Renderer), PDF-Export über dieselbe `exportElementAsPdf()`-Pipeline
-  wie die Wochenübersicht, gegen eine unsichtbare Klartext-Ansicht (native
-  Inputs lassen sich mit html2canvas nicht fotografieren). Rein für die
-  Coachin selbst, komplett getrennt von App-Daten der Coachees und von
-  `coach_wissen`. **Keine Datenbank-Persistenz** — Werte bleiben nur im
-  Browser-Zustand, solange die Ansicht offen ist; PDF-Export ist die Art,
+  Einwilligung, Feedbackbogen, Passungs-Check/Lebensrahmenbedingungen) digital
+  ausfüllbar + als PDF exportierbar. Schema-getrieben
+  (`src/data/formulareVorlagen.js`, generischer Feld-Renderer), PDF-Export
+  über dieselbe `exportElementAsPdf()`-Pipeline wie die Wochenübersicht.
+  Rein für die Coachin selbst, komplett getrennt von App-Daten der Coachees
+  und von `coach_wissen`. **Keine Datenbank-Persistenz** — Werte bleiben nur
+  im Browser-Zustand, solange die Ansicht offen ist; PDF-Export ist die Art,
   sie dauerhaft zu sichern.
-
-### Onboarding-Bug behoben (13.08., wichtig)
-
-Jeder erneute Durchlauf des Onboardings (z. B. "Onboarding erneut
-durchlaufen" in Mehr, zum Testen gedacht) archivierte bisher **ungefragt**
-das laufende Hauptprotokoll und legte ein neues an
-(`hauptprotokollErstellen()` in `useHauptprotokollData.js` archiviert beim
-Anlegen immer das bisherige aktive — das ist beim echten "+"-Button gewollt,
-lief aber unbemerkt auch bei jedem normalen Onboarding-Durchlauf mit). Jetzt
-behoben: `HauptprotokollErstellenView.jsx` bietet bei bereits vorhandenem
-aktivem Hauptprotokoll zuerst "Weiter mit „Name"" an (keine
-Datenbank-Aktion), Neuanlegen nur noch über einen expliziten Knopf. Betraf
-nur den normalen Ablauf (`zeigeBestehendesAlsOption`-Prop), der "+"-Button
-bleibt unverändert.
 
 ---
 
 ## 7. Erinnerungs-/Push-System
 
-`send-due-reminders` (pg_cron, einmal pro Minute) deckt alle 9 Bereiche ab:
-Vorab-Erinnerung 15 Min. vorher, Erinnerung zur geplanten Zeit, Nachfass-
-Erinnerung 10 Min. danach falls noch nicht bestätigt (außer Hydration, keine
-Einzeltermine). Mehrere gleichzeitig fällige Erinnerungen werden zu einer
-Push-Nachricht gebündelt. ✅ Deployt und bestätigt.
+**Funktioniert seit heute Abend (15.08.) tatsächlich end-to-end** — vorher
+war das komplette Web-Push-System technisch fertig gebaut, aber praktisch
+tot: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` waren als Supabase-Secret nie
+gesetzt, weshalb sowohl `send-push` (manueller Test-Button) als auch
+`send-due-reminders` (Cron) bei jedem Aufruf sofort beim Start abstürzten
+(`webpush.setVapidDetails` wirft ohne gültigen Key). Neues Schlüsselpaar
+wurde erzeugt, Public Key liegt in `src/lib/pushConfig.js`, Private Key als
+Secret in Supabase — von der Nutzerin bestätigt per Screenshot: eine echte
+Push-Benachrichtigung kam an.
+
+**`send-due-reminders`** (pg_cron, einmal pro Minute) deckt inzwischen
+**12 Kategorien** ab, je mit bis zu drei Erinnerungs-Arten:
+1. Erinnerung zur geplanten Uhrzeit selbst.
+2. **Vorab-Hinweis** ("Gleich dran") — Zeitspanne **pro Kategorie frei
+   wählbar** (`ui/VorlaufFeld.jsx`, `MehrTab.jsx`): Aus, 5/10/15/30 Min.,
+   1-2 Std., bei Training/Ernährung/Workout-Flow zusätzlich 1-2 Tage (nur
+   dort sinnvoll, weil die anderen Kategorien täglich wiederkehren — "1 Tag
+   vorher" wäre dort gleichbedeutend mit "jeden Tag zur selben Zeit").
+   Gespeichert in der bestehenden `profiles.erinnerungen`-jsonb-Spalte
+   (`{aktiv, vorlaufMinuten}` je Kategorie), Rückfallwert 15 Min.
+3. **Nachfass-Hinweis** 10 Min. danach, falls noch nicht bestätigt — nur bei
+   Kategorien mit einer eindeutigen "erledigt"-Log-Tabelle (Peptide/
+   Medikamente/Supplemente, Gewohnheiten, Training, Ernährung). Fehlt bei
+   Hydration/Tageslicht/Schlaf-Zeitenliste sowie bei den drei neuesten
+   Kategorien unten.
+
+Die 12 Kategorien: Hydration, Tageslicht, Schlaf (eigene Zeiten-Liste),
+Peptide, Medikamente, Supplemente (Dosierungsschema mit Intervall-Logik),
+Gewohnheiten, Training, Ernährung (Wochenplan), sowie **neu seit heute**:
+Morgenroutine, Abendroutine (Zeitrahmen-Start aus `routine_einstellungen`)
+und Workout-Flow (`workflow_plaene`, inkl. Wochentag + optionalem
+Gültigkeits-Zeitraum). Mehrere gleichzeitig fällige Erinnerungen werden zu
+einer einzigen Push-Nachricht gebündelt (`merken()`/`faellig`-Map).
+
+**Eigene Sounds pro Erinnerung sind technisch NICHT möglich** — das ist
+keine Lücke in dieser App, sondern eine harte Grenze von Web-Push: keine
+Browser-Engine (Safari/Chrome/Firefox) bietet eine `sound`-Option in der
+Notification-API, es spielt immer der System-Standardton. Unterscheidbar
+sind Erinnerungen nur über das Emoji im Text (🏋️ Training, 💧 Hydration,
+🌱 Gewohnheit, 🌅 Morgenroutine, 🌆 Abendroutine, 🔁 Workout-Flow, ⏳ Vorab,
+❗ Nachfass, ...). Eigene Sounds gingen nur mit einer nativen App — siehe
+Abschnitt 12.
+
+**Automatischer Spotify-Start** läuft ebenfalls über `send-due-reminders`,
+unabhängig vom Push-System, aber im selben Cron-Tick: zur Bettzeit (1 Min.
+danach) und zur Aufwachzeit (exakt), jeweils nur falls über
+`SpotifyAnlassPicker` eine Playlist zugeordnet wurde — siehe Abschnitt 8.
 
 ---
 
@@ -604,86 +683,62 @@ Push-Nachricht gebündelt. ✅ Deployt und bestätigt.
 - **Auto-Play-Schlüssel** für externe Automationen (iOS-Kurzbefehl) ohne
   normale Anmeldung — `spotify_verbindung.auto_play_token`, Aufruf per
   `?token=...` an `spotify-play`.
-- **Playlist-Zuordnung je Anlass** (13.08., heute gebaut): Migration 0048
-  `spotify_anlass_playlists` (user_id, anlass, playlist_id). Neue
-  wiederverwendbare Komponente `SpotifyAnlassPicker.jsx`, eingebunden in
-  Morgenroutine/Abendroutine (`RoutineTabView.jsx`, `GewohnheitenView.jsx`),
-  Training (`TrainingView.jsx`) und ein allgemeiner "gewohnheiten"-Anlass
-  (`GewohnheitenView.jsx`, manuell per "Jetzt testen" ausgelöst, da einzelne
-  Gewohnheiten keinen festen Start-Moment haben). Automatischer Start beim
-  Öffnen von `RoutineAblauf.jsx` bzw. der Live-Trainingssession.
+- **Playlist-Zuordnung je Anlass** (`spotify_anlass_playlists`:
+  user_id, anlass, playlist_id, Komponente `SpotifyAnlassPicker.jsx`):
+  Morgenroutine, Abendroutine, Training, ein allgemeiner
+  "gewohnheiten"-Anlass (manuell per "Jetzt testen" ausgelöst) — UND, seit
+  15.08., **automatischer serverseitiger Start ohne offene App**: zur
+  Bettzeit (`anlass="schlaf"`, SchlafView.jsx, 1 Min. nach der konfigurierten
+  Schlafenszeit) und zur Aufwachzeit (`anlass="morgenroutine"`, exakt zur
+  Zeit aus `category_ziele.schlaf.bloecke[].aufwachzeit`). Läuft über
+  `send-due-reminders` mit dem gespeicherten Refresh-Token — braucht ein
+  aktives Spotify-Gerät (kann kein schlafendes Gerät wecken), ein
+  Kurzbefehl, der Spotify kurz vorher einmal öffnet, ist empfehlenswert.
 
-### 🔴 Offen, ungelöst — Spotify-Verbinden hängt in einer Anmelde-Schleife
+### 🔴 Zuletzt offen (Stand 14.08.) — Status heute nicht erneut geprüft
 
-**Symptom:** Beim Versuch, Spotify über "Mehr → Musik → Mit Spotify
-verbinden" neu zu koppeln, landet die Nutzerin nach der Anmeldung immer
-wieder auf der AKA-Seite, OHNE dass die App "verbunden" anzeigt — weder eine
-Erfolgs- noch eine Fehlermeldung erscheint. Passiert sowohl in Safari als
-auch in Chrome auf dem iPad.
+**Symptom (14.08.):** Beim Versuch, Spotify über "Mehr → Musik → Mit
+Spotify verbinden" neu zu koppeln, landete die Nutzerin nach der Anmeldung
+immer wieder auf der AKA-Seite, ohne dass die App "verbunden" anzeigte.
+Vollständig ausgeschlossen wurden: Redirect-URI, `VITE_SPOTIFY_CLIENT_ID`,
+Freigabeliste im Spotify-Dashboard, der Navigations-Mechanismus, der
+gesamte Code-Pfad (`spotify-auth-callback` mehrfach zeilenweise geprüft),
+sowie eine neu autorisierte App-Verbindung. Diagnose damals: die Schleife
+trat innerhalb des verschachtelten "Mit Apple anmelden"-Schritts auf
+Spotifys eigener Seite auf, vermutlich eine iOS/WebKit-Restriktion bei
+verschachtelten Drittanbieter-Logins — **außerhalb dessen, was im Code
+dieser App behoben werden kann**.
 
-**Was in dieser Sitzung bereits ausgeschlossen wurde** (alles überprüft und
-bestätigt in Ordnung):
-- Redirect-URI im Spotify-Dashboard (`https://akaapp.vercel.app/`) stimmt
-  exakt mit der Adresse überein, unter der die Nutzerin die App öffnet.
-- `VITE_SPOTIFY_CLIENT_ID` ist korrekt bei Vercel gesetzt (per neu
-  eingebauter Diagnose-Zeile in `MehrTab.jsx` bestätigt, endet auf `…4b9d`).
-- Freigabeliste im Spotify-Dashboard ("Development Mode") enthält ihr Konto.
-- Der reine Navigations-Mechanismus (`window.location.assign()` statt
-  `<a href>`, plus ein sichtbarer Klartext-Link als Fallback) wurde
-  gehärtet — half nicht, das Problem liegt eine Ebene tiefer.
-- Der Code selbst (Redirect-Adresse bauen, Rückkehr-Logik inkl. `?error=`-
-  Behandlung, Server-Funktion `spotify-auth-callback`) wurde mehrfach
-  Zeile für Zeile durchgesehen — keine Fehler gefunden.
-- Die Nutzerin hat eine alte, "hängengebliebene" App-Autorisierung direkt in
-  ihren Spotify-Kontoeinstellungen ("Apps verwalten") entfernt und neu
-  autorisiert — Symptom blieb identisch.
-
-**Aktuelle Diagnose:** Die Schleife passiert beim verschachtelten
-"Mit Apple anmelden"-Schritt INNERHALB von Spotifys eigener
-Autorisierungsseite — bevor Spotify je mit `?code=` oder `?error=` zu
-unserer `redirect_uri` zurückkehrt (bestätigt: im Browser-Verlauf taucht in
-dem Zeitfenster kein `accounts.spotify.com`/`appleid.apple.com`-Eintrag auf,
-der auf eine erfolgreiche Rückkehr hindeutet). Direkte Anmeldung auf
-spotify.com mit Apple-ID (außerhalb des Autorisierungs-Flows) funktioniert
-bei der Nutzerin einwandfrei — das Problem ist spezifisch auf den
-verschachtelten OAuth-Autorisierungs-Kontext beschränkt. Das liegt
-vermutlich an iOS/WebKit-Restriktionen bei verschachtelten
-Drittanbieter-Logins (Chrome auf iOS nutzt technisch dieselbe WebKit-Basis
-wie Safari, daher identisches Verhalten in beiden Browsern) — **außerhalb
-dessen, was im Code dieser App behoben werden kann.**
-
-**Nächste Schritte für morgen** (noch nicht ausprobiert):
-1. Auf der Spotify-Autorisierungsseite explizit NICHT "Mit Apple
-   fortfahren" wählen, sondern direkt E-Mail + Passwort — falls die
-   Nutzerin noch kein eigenes Spotify-Passwort hat, dieses zuerst unter
-   spotify.com → Konto-Einstellungen einrichten (während sie regulär per
-   Apple-ID bei spotify.com selbst angemeldet ist, nicht im
-   Autorisierungs-Flow).
-2. Die Verbindung von einem echten Computer aus herstellen (Laptop/PC,
-   nicht iPad) — dort tritt das Verschachtelungsproblem praktisch nie auf.
-   Die Verbindung gilt danach geräteunabhängig für ihr Konto.
-3. Falls beides nicht möglich ist: mit der Nutzerin klären, ob es
-   grundsätzlich in Ordnung ist, dass Spotify-Verbinden vorerst nur vom
-   Computer aus funktioniert.
-
-**Nicht mehr nötig:** weiteres Code-Debugging in dieser Richtung — die
-Ursache liegt nachweislich außerhalb des Repos.
+**Aber:** die Nutzerin hat seither erfolgreich Spotify-Wiedergabe genutzt
+(automatischer Start zur Bettzeit/Aufwachzeit wurde heute getestet), es ist
+also unklar, ob das Verbindungsproblem in der Zwischenzeit von selbst
+verschwunden ist (z. B. durch ein iOS-Update) oder ob die bestehende
+Verbindung nur nie erneuert werden musste. **Bei Bedarf zuerst nachfragen,
+ob eine NEUE Verbindung überhaupt noch nötig ist**, bevor das alte Problem
+erneut angegangen wird — möglicherweise erledigt sich das von selbst.
 
 ---
 
-## 9. Migrationen — Stand 13.08., spätabends
+## 9. Migrationen
 
-Alle Migrationen 0001–0046 sind laut vorherigen Sitzungen deployt und
-bestätigt. Für diese Sitzung relevant:
+**Stand 15.08., spätabends: 0001–0069, alle als deployt/bestätigt
+dokumentiert.** Diese Tabelle nennt nur die neuesten/für einen neuen Agenten
+wichtigsten — für die vollständige Historie: `ls supabase/migrations/`.
 
-| # | Datei | Inhalt | Status |
-|---|---|---|---|
-| 0044 | `routine_zeitrahmen.sql` | Zeitrahmen je Morgen-/Abendroutine | ✅ deployt |
-| 0045 | `coachee_modell.sql` | `profiles.steckbrief` + `coachee_nachrichten` | ✅ deployt |
-| 0046 | `coach_wissen.sql` | Wissens-Basis-Tabelle | ✅ deployt |
-| 0047 | `coach_wissen_seed.sql` | 16 Wissenseinträge aus der Praxisakademie | ✅ deployt, von Nutzerin bestätigt |
-| 0048 | `spotify_anlass_playlists.sql` | Playlist-Zuordnung je Anlass | ✅ deployt — bestätigt (erneuter Ausführungsversuch scheiterte mit "existiert bereits", also bereits früher erfolgreich gelaufen) |
-| 0049 | `uebungsbilder.sql` | Öffentliche Tabelle + Storage-Bucket für Übungsbilder | ⚠️ Wird von der Nutzerin gerade ausgeführt (14.08.) — Status beim nächsten Sitzungsstart bestätigen |
+| # | Datei | Inhalt |
+|---|---|---|
+| 0061 | `training_wochenplan_intervall.sql` | Intervall-Felder für isometrisches Training im Wochenplan |
+| 0062 | `workflow_presets_und_plaene.sql` | Workout-Flow: Presets + Zeitplanung |
+| 0063 | `trainingsplaene_ordner_und_ziel.sql` | Ordnerstruktur/Ziel für Trainingspläne |
+| 0064 | `training_wochenplan_name.sql` | Freier Name je Wochenplan-Eintrag |
+| 0065 | `coach_uebersicht.sql` | Grundlage für `AdminCoachUebersichtView.jsx` |
+| 0066 | `coach_wissen_adhs_paradoxon.sql` | ADHS-Paradoxon-Wissenseinträge |
+| 0067 | `teilprotokolle_tageslicht.sql` | Tageslicht als Teilprotokoll-Kategorie |
+| 0068 | `teilprotokolle_aktiviert_am.sql` | Aktivierungs-Zeitpunkt je Baustein |
+| 0069 | `baustein_versionen.sql` | Versionierung der Protokoll-Bausteine (📌-Snapshots) |
+
+**Kein separates VAPID-Migrations-Skript nötig** für den Push-Fix heute —
+das war ein reines Supabase-Secret, keine Schema-Änderung.
 
 ---
 
@@ -691,15 +746,18 @@ bestätigt. Für diese Sitzung relevant:
 
 | # | Thema | Status |
 |---|---|---|
-| 1 | Spotify-Verbinden funktioniert weiterhin nicht (14.08.: neuer Stand — selbst der reine Klartext-Link navigiert in Safari UND Chrome nicht mehr, Seite "lädt an und bricht ab", identisch in beiden Browsern; Spotify-Passwort statt Apple-ID wurde eingerichtet, half nicht) | 🔴 Offen — Verdacht auf Netzwerk-/Geräte-Ebene (Bildschirmzeit-Webinhalte-Filter oder installiertes VPN/Konfigurationsprofil), Prüfung angefordert aber Ergebnis noch nicht zurückgemeldet. Nutzerin wollte das Thema bewusst pausieren und unabhängig davon weiterarbeiten — siehe Abschnitt 8 für die vollständige bisherige Diagnose, keine weitere Code-Suche nötig, das liegt außerhalb des Repos |
-| 2 | Übungsbilder: Inhalte (die eigentlichen Canva-Bilder) fehlen noch | 🟡 Pausiert (14.08.) — Canva-Premium-Nutzung der Nutzerin funktioniert gerade nicht. Code/Infrastruktur ist fertig (siehe Abschnitt 5), nur die Bild-Erstellung selbst steht aus. Bei Sitzungsstart nachfragen, ob Canva wieder geht |
-| 3 | Gemini-429-Kontingentproblem (`gemini-3.6-flash`, nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen — Stand bei Sitzungsstart erfragen, evtl. hat die Nutzerin es selbst gelöst |
-| 4 | Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine (Tageslicht, Bewegung, Supplemente als Bestandteile) | Zurückgestellt — Nutzerin wollte erst selbst recherchieren |
-| 5 | "Fazit"-Feld bei Protokoll-Abschluss als datenschutzfreundliche Alternative zu automatischem Lernen aus Coachee-Daten | Nur als Vorschlag im Raum, noch nicht gebaut |
-| 6 | Per-Gewohnheit-Playlist-Zuordnung (statt einem allgemeinen "gewohnheiten"-Anlass) | Bewusste Scope-Entscheidung, nur bei explizitem Wunsch ausbauen |
-| 7 | Groq als Provider / Groq-Streaming | Zurückgestellt, Code vorbereitet |
-| 8 | Sprachauswahl (DE/EN/TR) auf den Assistenten selbst ausweiten | Nur UI-Texte mehrsprachig, Assistent antwortet immer auf Deutsch |
-| 9 | Sprechgeschwindigkeit der Cloud-Stimme einstellbar machen | Noch nicht umgesetzt, Google-Cloud-TTS unterstützt `speakingRate` |
+| 1 | Spotify-"Verbinden" hing zuletzt (14.08.) in einer Anmelde-Schleife | 🟡 Unklar, ob noch aktuell — seither erfolgreiche Wiedergabe beobachtet, siehe Abschnitt 8. Vor erneutem Debugging erst prüfen, ob überhaupt noch nötig |
+| 2 | Übungsbilder: Inhalte (Canva-Bilder) fehlen noch | 🟡 Pausiert — Code/Infrastruktur fertig (Abschnitt 5), Canva-Premium-Problem der Nutzerin zuletzt ungelöst |
+| 3 | Gemini-429-Kontingentproblem (nur 20 Freianfragen/Tag) | 🔴 Offen seit mehreren Sitzungen, Stand erneut erfragen |
+| 4 | Inhaltliche ADHS-Vorgaben für Morgen-/Abendroutine | Zurückgestellt, Nutzerin wollte selbst recherchieren |
+| 5 | "Fazit"-Feld bei Protokoll-Abschluss statt automatischem Lernen aus Coachee-Daten | Nur als Vorschlag im Raum |
+| 6 | Per-Gewohnheit-Playlist-Zuordnung | Bewusste Scope-Entscheidung |
+| 7 | Groq als aktiver Provider | Zurückgestellt, Code vorbereitet |
+| 8 | Sprachauswahl (DE/EN/TR) auf den Assistenten selbst ausweiten | Nur UI-Texte mehrsprachig |
+| 9 | Sprechgeschwindigkeit der Cloud-Stimme einstellbar | Google-Cloud-TTS unterstützt `speakingRate`, noch nicht angebunden |
+| 10 | Nachfass-Hinweis für Morgenroutine/Abendroutine/Workout-Flow | Fehlt bewusst — keine passende "erledigt"-Log-Tabelle, siehe Abschnitt 7 |
+| 11 | Kalenderverbindung (Google/Apple Calendar oder .ics-Export) | Nur als vage Idee erwähnt, kein konkreter Auftrag |
+| 12 | Native App (Xcode/App Store) | Gewünschtes Fernziel der Nutzerin — siehe Abschnitt 12 |
 
 ---
 
@@ -711,25 +769,115 @@ bestätigt. Für diese Sitzung relevant:
   Spracherkennung. Bei Screenshots genau hinschauen — oft eine kleine
   Verwechslung, kein grundsätzliches Unverständnis. Bei unklaren/
   abgeschnittenen Nachrichten kurz nachfragen statt zu raten.
-- **Diese Sandbox hat keinen Netzwerkzugriff auf Supabase/Vercel.**
-  Migrationen/Edge-Function-Änderungen landen im Code, müssen aber von der
-  Nutzerin manuell über das Supabase-Dashboard ausgeführt werden — SQL
-  **immer zusätzlich als reinen Text im Chat** bereitstellen (nicht nur als
-  Datei), sie kopiert von dort direkt, hat auf dem Tablet Schwierigkeiten
-  mit Dateien. Bei Bedarf auch mehrfach auf Anfrage erneut posten.
-- **Live-Verifikation nur über Screenshots der Nutzerin möglich** — bei
-  hartnäckigen Bugs (wie dem Spotify-Problem) lohnt sich systematisches,
-  schrittweises Ausschlussverfahren mit ihrer Hilfe, aber auch die
-  Bereitschaft, ehrlich zu sagen "das liegt nicht in unserem Code", statt
-  endlos weiterzusuchen, wenn die Evidenz das nahelegt.
-- **Git-Workflow:** auf dem Feature-Branch `claude/google-cloud-tts-api-key-yc49xp`
-  arbeiten, nicht direkt auf `main`. Vor jedem Commit (der JS/JSX/SQL
-  berührt): `npm run build` + `npx oxlint <geänderte Dateien>`. Danach:
-  `git fetch origin main && git checkout main && git merge --ff-only origin/main
-  && git merge --ff-only claude/google-cloud-tts-api-key-yc49xp && git push origin main
-  && git checkout claude/google-cloud-tts-api-key-yc49xp && git push -u origin claude/google-cloud-tts-api-key-yc49xp`.
+- **Diese Sandbox hat keinen direkten Netzwerkzugriff auf das Supabase-
+  Dashboard.** Migrationen/Edge-Function-Änderungen landen im Code, müssen
+  aber von der Nutzerin manuell über das Supabase-Dashboard ausgeführt
+  werden (SQL-Editor bzw. Edge-Functions-Code-Tab + Deploy). SQL/Code am
+  besten **sowohl als Datei als auch als reinen Text im Chat**
+  bereitstellen — je nachdem, was auf dem iPad gerade zuverlässiger
+  funktioniert (variiert). Bei kurzen, exakten Werten (Secrets/Keys) hilft
+  eine kleine selbst gebaute Kopieren-Knopf-Seite (Artifact) mehr als
+  Chat-Text, weil manuelles Markieren/Abtippen auf dem Tablet leicht
+  minimal verfälscht (siehe Push-Fix-Historie oben — drei fehlgeschlagene
+  Versuche, jedes Mal ein anderer Tippfehler).
+- **Live-Verifikation nur über Screenshots der Nutzerin möglich** (inkl.
+  Supabase-Dashboard-Logs, die sie bei Bedarf durchklicken kann) — bei
+  hartnäckigen Bugs lohnt sich systematisches, schrittweises
+  Ausschlussverfahren mit ihrer Hilfe, aber auch die Bereitschaft, ehrlich
+  zu sagen "das liegt außerhalb des Codes", statt endlos weiterzusuchen,
+  wenn die Evidenz das nahelegt (Beispiel: Spotify-Loop, Abschnitt 8).
+- **Git-Workflow:** i. d. R. auf einem Feature-Branch arbeiten, dann
+  fast-forward nach `main` mergen und pushen (Vercel deployt automatisch bei
+  Push auf `main`). Vor jedem Commit, der JS/JSX/TS berührt: `npm run
+  build` + `npx oxlint <geänderte Dateien>` — beides muss sauber
+  durchlaufen. Supabase Edge Functions werden NICHT automatisch deployt
+  (kein CI/CD dafür eingerichtet) — jede Änderung an einer
+  `supabase/functions/*/index.ts` muss die Nutzerin zusätzlich manuell im
+  Dashboard nachziehen.
 - **Neue Migrationsdateien** fortlaufend nummeriert ablegen (aktuell zuletzt
-  `0048_...`), reine Datenmigrationen (kein Schema-Change) genauso wie
+  `0069_...`), reine Datenmigrationen (kein Schema-Change) genauso wie
   Schema-Änderungen.
-- **Dieses Dokument aktuell halten** — bei viel Veränderung lieber neu
-  schreiben statt endlos weitere Nachtrag-Absätze aufzustapeln.
+- **Dieses Dokument aktuell halten** — bei viel Veränderung lieber die
+  betroffenen Abschnitte 1-12 direkt überarbeiten, statt nur oben in der
+  Update-Chronik neue Absätze aufzustapeln (die Chronik ganz oben in diesem
+  Dokument bleibt trotzdem wertvoll als Detail-Historie einzelner
+  Sitzungen — beides ergänzt sich).
+
+---
+
+## 12. Zukunftsplan: Eine echte native App über Xcode
+
+Die Nutzerin möchte AKA langfristig als **echte native iOS-App** (App
+Store), nicht mehr nur als PWA. Das ist ein bewusst separates, größeres
+Vorhaben — hier der Fahrplan für einen künftigen Agenten (oder Entwickler
+mit Xcode-Zugang), plus was sich dadurch konkret verbessert.
+
+### Warum überhaupt — was eine native App tatsächlich löst
+
+- **Eigene Benachrichtigungs-Sounds pro Kategorie** (die in dieser Sitzung
+  mehrfach gewünschte, mit Web-Push technisch unmögliche Funktion) — native
+  Apps können über APNs (Apple Push Notification service) den `sound`-Wert
+  im Push-Payload auf eine im App-Bundle mitgelieferte Audiodatei setzen,
+  pro Benachrichtigungstyp unterschiedlich.
+- **Zuverlässigere Hintergrund-Aktionen** (z. B. der Spotify-Auto-Play zur
+  Aufwachzeit, der aktuell ein "aktives Gerät" voraussetzt) — native Apps
+  haben mehr Hintergrund-Ausführungsrechte als eine im Browser laufende PWA.
+- **App-Store-Präsenz** — leichter auffindbar/vertrauenswürdiger für
+  Coachees als "zum Home-Bildschirm hinzufügen".
+- **Echte Vibrations-/Haptik-Muster**, native UI-Komponenten (Datepicker,
+  Kamera-Zugriff für Laborwert-Scans ohne Browser-Umweg), Widgets,
+  potenziell Apple Watch-Anbindung für Trainings-Timer.
+
+### Realistischer Weg — KEIN kompletter Neubau nötig
+
+Der komplette bestehende React-Code muss **nicht** verworfen werden. Zwei
+sinnvolle Wege, absteigend nach Aufwand:
+
+1. **Capacitor (empfohlen als erster Schritt).** Verpackt die bestehende
+   React-App fast unverändert in eine native iOS-Hülle (WebView + native
+   Brücken-APIs). Vorteil: der komplette bestehende Code (alle Views, Hooks,
+   die Supabase-Anbindung) bleibt exakt so bestehen — nur der Zugriff auf
+   native Features (Push über APNs statt Web-Push, Kamera, Haptik) läuft
+   über zusätzliche Capacitor-Plugins statt Browser-APIs. Braucht einen Mac
+   mit Xcode zum Bauen/Signieren/Einreichen, aber keine Neuentwicklung der
+   App selbst. Realistischster erster Schritt für dieses Projekt.
+2. **Echte native Neuentwicklung (SwiftUI) oder React Native.** Deutlich
+   größerer Aufwand — jede View, jeder Hook müsste in Swift/React-Native neu
+   gebaut werden. Nur sinnvoll, falls Capacitor an echte Grenzen stößt
+   (z. B. Performance bei sehr komplexen Screens) oder die Nutzerin explizit
+   eine "richtige" native Optik will, die sich mit einer WebView nicht
+   erreichen lässt.
+
+**Empfehlung für den Einstieg:** Capacitor. Das liefert die von der
+Nutzerin konkret gewünschten Verbesserungen (App-Store, eigene Sounds über
+APNs) mit dem kleinsten Umbau, ohne den bestehenden, funktionierenden
+Code wegzuwerfen.
+
+### Was dafür konkret nötig ist (grober Fahrplan, keiner der Schritte ist begonnen)
+
+1. **Ein Mac mit Xcode** — zwingende Voraussetzung, iOS-Apps lassen sich
+   nicht ohne Apple-Toolchain bauen/signieren (das war der ganze Grund,
+   warum diese Sitzung bewusst den PWA-Weg gegangen ist).
+2. **Apple Developer Account** (99 $/Jahr) für Code-Signing und
+   App-Store-Einreichung.
+3. `npx cap init` + `npx cap add ios` im bestehenden Repo, `vite build`
+   Output als WebView-Inhalt einbinden.
+4. **Push-Migration von Web-Push (VAPID) auf APNs**: eigenes Zertifikat/Key
+   bei Apple, `send-due-reminders`/`send-push` müssten für iOS-Clients
+   APNs statt `web-push` ansprechen (Payload-Format ist unterschiedlich) —
+   realistisch als Zweigleisigkeit (Web-Push für evtl. weiterhin
+   existierende Browser-Nutzer, APNs für die native App) oder als klarer
+   Schnitt, falls die PWA komplett abgelöst wird.
+5. Sound-Dateien pro Erinnerungs-Kategorie festlegen/produzieren (aktuell
+   nur unterschiedliche Emojis im Text, siehe Abschnitt 7) und im
+   App-Bundle mitliefern.
+6. App-Icons/Screenshots/Store-Listing vorbereiten, TestFlight-Beta vor dem
+   eigentlichen Store-Release.
+7. Datenschutzerklärung/App-Store-Datenschutzangaben (Supabase-Datenhaltung,
+   Gesundheitsdaten-Kategorie beachten — Apple prüft das bei
+   Gesundheits-Apps genauer als bei anderen Kategorien).
+
+**Nicht vergessen:** Das Coach/Coachee-Geschäftsmodell (Abschnitt 6) bleibt
+davon unberührt — eine native App ändert nichts an der Architektur
+(Supabase-Backend, Admin-/Verwalten-als-Modus), nur an der Hülle und den
+nativen Zusatzmöglichkeiten.
