@@ -25,11 +25,24 @@ export function useSpotifyVerbindung(userId) {
 
   const spotifyVerbindungNeuLaden = useCallback(async () => {
     if (!userId) return;
-    const [{ data: verbindung }, { data: playlists }, { data: zuordnungen }] = await Promise.all([
+    const [
+      { data: verbindung, error: verbindungFehler },
+      { data: playlists },
+      { data: zuordnungen },
+    ] = await Promise.all([
       supabase.from("spotify_verbindung").select("user_id, auto_play_token").eq("user_id", userId).maybeSingle(),
       supabase.from("spotify_playlists").select("id, name, uri").eq("user_id", userId).order("erstellt_am"),
       supabase.from("spotify_anlass_playlists").select("anlass, playlist_id, spotify_playlists(name, uri)").eq("user_id", userId),
     ]);
+    // Ein DB-Fehler hier (z. B. fehlende Spalte nach einer nicht deployten
+    // Migration) blieb bisher unsichtbar — die Verbindung sah dann trotz
+    // erfolgreichem OAuth-Austausch dauerhaft "nicht verbunden" aus, ohne
+    // jeden Hinweis, woran es lag (Bug-Report: "unverändert" nach Reload).
+    if (verbindungFehler) {
+      console.error(verbindungFehler);
+      setSpotifyVerbindungFehler(`Spotify-Status konnte nicht geladen werden: ${verbindungFehler.message}`);
+      return;
+    }
     setSpotifyVerbunden(!!verbindung);
     setSpotifyAutoPlayToken(verbindung?.auto_play_token || null);
     setSpotifyPlaylists(playlists || []);
