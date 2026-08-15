@@ -237,6 +237,11 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
 
   const beenden = (felder = {}) => {
     const dauerMin = felder.dauerMin ?? Math.max(1, Math.round(gesamtSek / 60));
+    // Musik lief seit dem Live-Start automatisch mit (siehe oben) — beim
+    // Beenden muss sie genauso automatisch wieder aufhören, sonst läuft sie
+    // einfach unbemerkt weiter (Nutzerin-Vorgabe, gleicher Bug wie beim
+    // Workflow-Timer).
+    spotifyPausieren();
     onFertig(session.id, { ...felder, dauerMin });
     setFertig(true);
     setJustFinished(true);
@@ -909,6 +914,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 variant="ghost"
                 onClick={() => {
                   intervallMusikSync.reset();
+                  spotifyPausieren();
                   setKurzTimer(null);
                 }}
               >

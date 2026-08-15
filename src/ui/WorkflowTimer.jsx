@@ -143,6 +143,12 @@ export default function WorkflowTimer({ onSchliessen }) {
 
   const beenden = () => {
     musikSync.reset();
+    // musikSync.reset() räumt nur den internen Fade-Timer auf, stoppt aber
+    // nie tatsächlich die Wiedergabe bei Spotify — Nutzerin-Vorgabe: "sie
+    // beendet es nicht, wenn ich den Workflow beende, die Musik läuft dann
+    // einfach weiter". Gilt für Fertig- UND Abbrechen-Weg gleichermaßen, da
+    // beide hier zusammenlaufen.
+    spotifyPausieren();
     setLaufendesPreset(null);
   };
 

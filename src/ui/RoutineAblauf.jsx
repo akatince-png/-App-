@@ -27,7 +27,7 @@ function fmtDauer(sekunden) {
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren } = useAppData();
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
   const [musikFehler, setMusikFehler] = useState(null);
@@ -69,9 +69,18 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       setIndex((i) => i + 1);
       startZeitRef.current = Date.now();
     } else {
+      // Musik lief seit dem Start automatisch mit — muss beim Abschluss
+      // genauso automatisch aufhören, sonst läuft sie einfach unbemerkt
+      // weiter (gleicher Bug wie beim Workflow-/Trainings-Timer).
+      spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
       setFertig(true);
     }
+  };
+
+  const abbrechen = () => {
+    spotifyPausieren();
+    onAbbrechen();
   };
 
   if (!schritte.length) {
@@ -81,7 +90,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
           <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
             Für die {ROUTINE_LABEL[routine]} sind noch keine Schritte eingerichtet.
           </div>
-          <PrimaryButton onClick={onAbbrechen}>Zurück</PrimaryButton>
+          <PrimaryButton onClick={abbrechen}>Zurück</PrimaryButton>
         </Card>
       </Shell>
     );
@@ -155,7 +164,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       <div style={{ textAlign: "center" }}>
         <button
           type="button"
-          onClick={onAbbrechen}
+          onClick={abbrechen}
           style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12, cursor: "pointer", padding: 8 }}
         >
           Routine abbrechen
