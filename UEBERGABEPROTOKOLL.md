@@ -1,5 +1,60 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 15.08.2026, nachts (Teil 4) — Aufwachzeit-Spotify, Sekunden-Ticken, konfigurierbarer Vorab-Hinweis
+
+Direkt im Anschluss an Teil 3, noch vor 16.08. Committet: `d938e7f` (Spotify
+zur Aufwachzeit) + ein weiterer Commit für die beiden Punkte unten (main +
+Feature-Branch synchron).
+
+1. **Automatischer Spotify-Start zur Aufwachzeit** (`send-due-reminders/
+   index.ts`) — analog zum bestehenden Bettzeit-Block, Quelle ist
+   `category_ziele.schlaf.bloecke[].aufwachzeit`, Auslöser die Playlist-
+   Zuordnung über `SpotifyAnlassPicker(anlass="morgenroutine")`. Braucht ein
+   aktives Spotify-Gerät (kann kein schlafendes Gerät wecken) — Kurzbefehl
+   kurz vor der Aufwachzeit empfohlen. Details siehe Commit-Message.
+2. **Sound-Frage der Nutzerin geklärt** (keine Code-Änderung nötig, reine
+   Plattform-Grenze): Web-Push-Benachrichtigungen (`public/sw.js`,
+   `showNotification()`) können auf keiner Plattform einen eigenen
+   Sound/eine eigene Datei bekommen — die Notifications-API kennt kein
+   `sound`-Feld, nur `silent`. Es spielt immer der System-Standardton. Das
+   ist der Grund, warum es dafür keine Einstellung in der App gibt/geben
+   kann — kein fehlendes Feature, sondern Browser-/OS-Limitierung.
+3. **Sekunden-Ticken beim isometrischen Training** (`utils/beep.js`:
+   `playTick()`, `ui/Timer.jsx`: neue Prop `tickJedeSekunde`, verdrahtet in
+   `TrainingView.jsx` bei `session.art === "Isometrisches Training"`) — ein
+   leiser Klick bei jeder vollen Sekunde während Halten UND Pause, zusätzlich
+   zum bestehenden Start-/Ende-Piep pro Phase (der war schon da, nur ohne
+   Sekunden dazwischen).
+4. **Vorab-Hinweis ("Gleich dran") konfigurierbar statt fest 15 Min.**
+   (Nutzerinnen-Vorgabe: "vor einem Training/einer Gewohnheit... muss ich
+   einstellen können, wie viele Minuten vorher") — neue Komponente
+   `ui/VorlaufFeld.jsx`, eingebunden in `MehrTab.jsx` unter jeder Kategorie
+   in der "Erinnerungen"-Übersicht. Wert landet in
+   `profiles.erinnerungen[kategorie].vorlaufMinuten` (bestehende jsonb-
+   Spalte, **keine neue Migration nötig**). `send-due-reminders/index.ts`
+   liest den Wert über `vorlaufFuer()` mit Fallback auf die alte feste
+   Konstante `VORLAUF_MINUTEN = 15`.
+   - "1 Tag"/"2 Tage vorher" gibt's nur bei **Training** und **Ernährung**
+     (echter Wochenplan mit Wochentag) — dafür neue Funktion
+     `verschobeneUhrzeitMitTag()`, die den Tages-Versatz zurückgibt, damit
+     der Vorab-Check bei Vorläufen über Mitternacht hinweg den WOCHENTAG
+     VON MORGEN prüft statt versehentlich heute nochmal.
+   - Bei den übrigen Kategorien (Gewohnheiten, Peptide/Medikamente/
+     Supplemente, Hydration/Tageslicht/Schlaf-Zeitenliste) bewusst nur
+     Minuten/Stunden wählbar — die wiederholen sich täglich, ein "1 Tag
+     vorher" wäre dort gleichbedeutend mit "jeden Tag zur selben Zeit" und
+     würde nur eine doppelte Benachrichtigung zum selben Zeitpunkt erzeugen.
+   - Wake-Time (Aufwachzeit, Punkt 1 oben) ist bewusst **nicht** Teil davon —
+     lief noch nie über das `erinnerungen`-System, sondern über die
+     Schlaf-Blöcke, und ein Vorlauf vorm Aufwachen ergibt naturgemäß keinen
+     Sinn (Nutzerinnen-Vorgabe: "nur beim Aufwachen ist das nicht
+     realistisch").
+
+**Offen für den nächsten Agenten:** Kalenderverbindung (Nutzerin erwähnte
+das nur als vage Alternative, "keine Ahnung") — nicht umgesetzt, kein
+konkreter Auftrag. Falls gewünscht: eigenes Thema, vermutlich .ics-Export
+oder eine echte Google/Apple-Calendar-Anbindung, deutlich größerer Umbau.
+
 ## ⚠️ Update 15.08.2026, spätabends (Teil 3) — Baustein-Versionierung + tote View entfernt
 
 Letzte Runde dieser Sitzung, Nutzerin hat ab 16.08. keinen Zugang mehr.

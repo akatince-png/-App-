@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "./primitives";
 import ProgressRing from "./ProgressRing";
 import { accentDark, textMuted } from "./theme";
-import { playBeep } from "../utils/beep";
+import { playBeep, playTick } from "../utils/beep";
 
 function fmt(sekunden) {
   const s = Math.max(0, Math.round(sekunden));
@@ -47,6 +47,12 @@ export default function Timer({
   onPhaseStart,
   onPhaseEndeNaht,
   fadeVorlaufSek = null,
+  // Nur für mode="interval": ein leiser Klick bei jeder vollen Sekunde,
+  // sowohl beim Halten als auch in der Pause — für sehr kurze Intervalle
+  // (z. B. 5 Sek. halten / 4 Sek. Pause bei isometrischem Training), bei
+  // denen der reine Start-/Ende-Piep pro Phase zu wenig Zeitgefühl gibt
+  // (15.08., Nutzerin-Vorgabe: "die Zeit ticken hören mit jeder Sekunde").
+  tickJedeSekunde = false,
 }) {
   const [status, setStatus] = useState("idle"); // idle | vorbereitung | running | paused | done
   const [phase, setPhase] = useState("arbeit");
@@ -64,6 +70,9 @@ export default function Timer({
   const vorgewarntRef = useRef(false);
   // Analoges Einmal-Flag für onPhaseEndeNaht (s. o.), pro Phasen-Segment.
   const phaseEndeNahtRef = useRef(false);
+  // Letzte volle Sekunde, für die schon getickt wurde (tickJedeSekunde) —
+  // verhindert Mehrfach-Ticks innerhalb derselben Sekunde bei 200ms-Takt.
+  const letzteTickSekundeRef = useRef(null);
 
   useEffect(() => {
     if (status !== "running" && status !== "vorbereitung") return;
@@ -109,6 +118,7 @@ export default function Timer({
     setRundeAktuell(1);
     vorgewarntRef.current = false;
     phaseEndeNahtRef.current = false;
+    letzteTickSekundeRef.current = null;
   };
   const stoppenUndFertig = () => {
     const sek = Math.round(segmentElapsedMs() / 1000);
@@ -184,6 +194,20 @@ export default function Timer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick, status]);
+
+  // Sekunden-Ticken (s. tickJedeSekunde oben) — eigener Effect, damit er die
+  // Phasenwechsel-Logik oben nicht durchkreuzt. Zählt an der verbleibenden
+  // Zeit runter (5, 4, 3, 2, 1), nicht an der verstrichenen hoch.
+  useEffect(() => {
+    if (!tickJedeSekunde || mode !== "interval" || status !== "running") return;
+    const zielSek = phase === "arbeit" ? arbeitSek : pauseSek;
+    const restSek = Math.ceil(zielSek - segmentElapsedMs() / 1000);
+    if (restSek > 0 && restSek !== letzteTickSekundeRef.current) {
+      letzteTickSekundeRef.current = restSek;
+      playTick();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, status, phase]);
 
   const remainingSecondsDisplay = () => {
     if (status === "vorbereitung") return Math.max(0, vorbereitungSek - vorbereitungElapsedMs() / 1000);

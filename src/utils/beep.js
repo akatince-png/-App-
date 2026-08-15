@@ -24,3 +24,28 @@ export function playBeep(count = 1) {
     console.error(err);
   }
 }
+
+// Leiser, kurzer Klick — bewusst anders als playBeep() (höhere Frequenz,
+// deutlich kürzer, leiser), damit er sich als Sekunden-Ticken anfühlt statt
+// als weiterer Alarm. Für isometrisches Training (15.08., Nutzerin-Vorgabe:
+// "die Zeit ticken hören mit jeder Sekunde").
+export function playTick() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.value = 1600;
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+    setTimeout(() => ctx.close(), 300);
+  } catch (err) {
+    console.error(err);
+  }
+}

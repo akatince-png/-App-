@@ -6,6 +6,7 @@ import { useAppData } from "../../context/AppDataContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
+import VorlaufFeld from "../../ui/VorlaufFeld";
 import { AIService } from "../../services/aiService";
 import { getCoachName, saveCoachName, STANDARD_COACH_NAME, getKiAktiv, saveKiAktiv } from "../../utils/coachStorage";
 import { spotifyAutorisierenUrl, spotifyPlaylistUriNormalisieren } from "../../services/spotify";
@@ -401,29 +402,42 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
 
       <Card style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>{t("mehr.erinnerungen.kategorien.intro")}</div>
-        {CATEGORY_STEPS.map((step, i) => (
-          <div
-            key={step.key}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 10,
-              padding: "10px 0",
-              borderBottom: i < CATEGORY_STEPS.length - 1 ? `1px solid ${cardBorder}` : "none",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 700 }}>
-              <span>{step.icon}</span>
-              <span>{tLabel(step.label)}</span>
+        {CATEGORY_STEPS.map((step, i) => {
+          const wert = erinnerungen[step.key];
+          const vorlaufMinuten = wert && typeof wert === "object" ? wert.vorlaufMinuten : undefined;
+          const setVorlauf = (minuten) => {
+            const bestehend = wert && typeof wert === "object" ? wert : {};
+            setErinnerung(step.key, { ...bestehend, aktiv: true, vorlaufMinuten: minuten });
+          };
+          return (
+            <div
+              key={step.key}
+              style={{
+                padding: "10px 0",
+                borderBottom: i < CATEGORY_STEPS.length - 1 ? `1px solid ${cardBorder}` : "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 700 }}>
+                  <span>{step.icon}</span>
+                  <span>{tLabel(step.label)}</span>
+                </div>
+                <Pill
+                  label={wert ? t("common.erinnerung.ja") : t("common.erinnerung.nein")}
+                  selected={!!wert}
+                  onClick={() => setErinnerung(step.key, !wert)}
+                />
+              </div>
+              {wert && (
+                <VorlaufFeld
+                  value={vorlaufMinuten}
+                  onChange={setVorlauf}
+                  mitTagen={step.key === "training" || step.key === "ernaehrung"}
+                />
+              )}
             </div>
-            <Pill
-              label={erinnerungen[step.key] ? t("common.erinnerung.ja") : t("common.erinnerung.nein")}
-              selected={!!erinnerungen[step.key]}
-              onClick={() => setErinnerung(step.key, !erinnerungen[step.key])}
-            />
-          </div>
-        ))}
+          );
+        })}
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Musik (Spotify)</div>

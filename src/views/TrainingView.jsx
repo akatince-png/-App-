@@ -446,6 +446,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             arbeitLabel="HALTEN"
             vorbereitungSek={15}
             fadeVorlaufSek={INTERVALL_FADE_SEK}
+            tickJedeSekunde
             onPhaseStart={intervallMusikSync.onPhaseStart}
             onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
             onFertig={() => beenden()}

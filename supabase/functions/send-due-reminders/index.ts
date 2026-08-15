@@ -26,14 +26,21 @@
 // Hydration/Tageslicht/Schlaf nur die ersten zwei, da dort keine einzelne
 // bestätigbare Aktion mit eigenem erledigt-Log existiert):
 //   1. Zur geplanten Uhrzeit selbst.
-//   2. Vorab, VORLAUF_MINUTEN vorher ("Gleich dran").
+//   2. Vorab, VORLAUF_MINUTEN vorher ("Gleich dran") — seit 15.08. pro
+//      Kategorie überschreibbar über erinnerungen[kategorie].vorlaufMinuten
+//      (siehe VorlaufFeld.jsx/MehrTab.jsx), VORLAUF_MINUTEN bleibt nur noch
+//      der Rückfallwert für Kategorien ohne eigene Einstellung. 0 = für
+//      diese Kategorie bewusst ausgeschaltet. Bei Training/Ernährung
+//      (echter Wochenplan) sind auch Vorläufe über einen Tag hinweg
+//      möglich (z. B. "1 Tag vorher") — bei täglich wiederkehrenden
+//      Kategorien (Gewohnheiten, Dosierung, Zeiten-Liste) böte das keinen
+//      echten Vorlauf-Effekt (wäre gleichbedeutend mit "jeden Tag zur
+//      selben Zeit"), deshalb dort UI-seitig nicht anwählbar.
 //   3. Nachfass, NACHFASS_MINUTEN danach, aber nur wenn bis dahin noch
 //      nicht bestätigt wurde (Abgleich gegen peptide_logs/hormone_logs/
 //      supplement_logs/routine_logs/training_sessions/meal_logs für den
-//      heutigen Tag).
-// Beide Zeitfenster sind bewusst als feste Werte statt pro Nutzer/Kategorie
-// konfigurierbar gehalten — laut Übergabeprotokoll ein deklarierter erster
-// Schritt, kein Anspruch auf die volle "10-30 Min., je nach Kontext"-Vision.
+//      heutigen Tag). Bleibt bewusst ein fester Wert (nicht Teil der
+//      15.08.-Vorgabe, die betraf nur den Vorab-Hinweis).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
@@ -103,6 +110,53 @@ function verschobeneUhrzeit(uhrzeit: string, deltaMinuten: number): string | nul
   const stunde = String(Math.floor(total / 60)).padStart(2, "0");
   const minute = String(total % 60).padStart(2, "0");
   return `${stunde}:${minute}`;
+}
+
+// Wie verschobeneUhrzeit(), liefert zusätzlich den Tages-Versatz (0 = noch
+// heute, 1 = auf morgen gerutscht, ...) — für Vorläufe über eine volle
+// Stunde/einen Tag hinweg, bei denen "jetzt + deltaMinuten" über Mitternacht
+// hinaus in den nächsten Tag rutscht. Nur an den Stellen genutzt, wo der
+// Wochentag der Ziel-Uhrzeit tatsächlich mitgeprüft wird (Training/
+// Ernährung) — bei rein täglich wiederkehrenden Kategorien spielt der
+// Versatz keine Rolle (siehe Kommentar oben), dort genügt verschobeneUhrzeit().
+function verschobeneUhrzeitMitTag(uhrzeit: string, deltaMinuten: number): { zeit: string; tageVersatz: number } | null {
+  const [h, m] = uhrzeit.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const totalRoh = h * 60 + m + deltaMinuten;
+  const tageVersatz = Math.floor(totalRoh / 1440);
+  const total = ((totalRoh % 1440) + 1440) % 1440;
+  const stunde = String(Math.floor(total / 60)).padStart(2, "0");
+  const minute = String(total % 60).padStart(2, "0");
+  return { zeit: `${stunde}:${minute}`, tageVersatz };
+}
+
+// Akzeptiert sowohl das alte reine Boolean-Format (erinnerungen[kategorie]
+// === true) als auch das neue Objekt-Format ({aktiv, vorlaufMinuten, ...}).
+function istAktiv(wert: unknown): boolean {
+  if (typeof wert === "boolean") return wert;
+  if (wert && typeof wert === "object") return !!(wert as { aktiv?: boolean }).aktiv;
+  return false;
+}
+
+// Pro-Kategorie-Vorlauf, fällt auf VORLAUF_MINUTEN zurück, wenn (noch)
+// keiner hinterlegt ist (altes Boolean-Format oder frisch aktivierte
+// Kategorie ohne eigene Wahl).
+function vorlaufFuer(wert: unknown): number {
+  if (wert && typeof wert === "object") {
+    const v = (wert as { vorlaufMinuten?: number }).vorlaufMinuten;
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+  }
+  return VORLAUF_MINUTEN;
+}
+
+// Kurzform für den Vorab-Hinweistext ("15 Min.", "2 Std.", "1 Tag").
+function formatiereVorlauf(minuten: number): string {
+  if (minuten % 1440 === 0) {
+    const tage = minuten / 1440;
+    return `${tage} Tag${tage === 1 ? "" : "e"}`;
+  }
+  if (minuten % 60 === 0) return `${minuten / 60} Std.`;
+  return `${minuten} Min.`;
 }
 
 const WEEKDAY_INDEX: Record<string, number> = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
@@ -339,12 +393,13 @@ Deno.serve(async (req) => {
           merken(userId, zk.icon, mengen.length > 0 ? `${zk.einheit}: ${mengen.join(", ")}` : zk.einheit);
         }
 
-        const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+        const vorlaufMinuten = vorlaufFuer(einstellung);
+        const vorabZiel = vorlaufMinuten > 0 ? verschobeneUhrzeit(info.jetzt, vorlaufMinuten) : null;
         if (vorabZiel) {
           const vorabTreffer = einstellung.zeiten.filter((z) => z.zeit === vorabZiel && (!z.startDatum || z.startDatum <= info.heute));
           if (vorabTreffer.length > 0) {
             const mengen = zk.mitMenge ? vorabTreffer.map((z) => z.menge).filter(Boolean) : [];
-            merken(userId, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${zk.einheit}${mengen.length > 0 ? ` (${mengen.join(", ")})` : ""}`);
+            merken(userId, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${zk.einheit}${mengen.length > 0 ? ` (${mengen.join(", ")})` : ""}`);
           }
         }
       }
@@ -496,7 +551,7 @@ Deno.serve(async (req) => {
 
     // --- Peptide/Medikamente/Supplemente: gemeinsames Dosierungsschema --
     for (const kat of DOSIERUNGS_KATEGORIEN) {
-      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen[kat.kategorie]).map(([id]) => id);
+      const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen[kat.kategorie])).map(([id]) => id);
       if (userIds.length === 0) continue;
 
       const { data: rows, error } = await admin.from(kat.table).select("*").in("user_id", userIds);
@@ -527,9 +582,10 @@ Deno.serve(async (req) => {
           merken(row.user_id, kat.icon, row.name ? `${row.name}${row.menge ? ` (${row.menge})` : ""}` : kat.einheit);
         }
 
-        const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+        const vorlaufMinuten = vorlaufFuer(info.erinnerungen[kat.kategorie]);
+        const vorabZiel = vorlaufMinuten > 0 ? verschobeneUhrzeit(info.jetzt, vorlaufMinuten) : null;
         if (vorabZiel && row.uhrzeiten.includes(vorabZiel)) {
-          merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${row.name || kat.einheit}`);
+          merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${row.name || kat.einheit}`);
         }
 
         const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
@@ -544,7 +600,7 @@ Deno.serve(async (req) => {
 
     // --- Gewohnheiten: feste Uhrzeit, kein Intervallsystem ---------------
     {
-      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen.gewohnheiten).map(([id]) => id);
+      const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen.gewohnheiten)).map(([id]) => id);
       if (userIds.length > 0) {
         const { data: rows, error } = await admin.from("routines").select("id, user_id, name, uhrzeit").in("user_id", userIds);
         if (error) {
@@ -568,9 +624,10 @@ Deno.serve(async (req) => {
               merken(row.user_id, "🌱", row.name || "Gewohnheit");
             }
 
-            const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
+            const vorlaufMinuten = vorlaufFuer(info.erinnerungen.gewohnheiten);
+            const vorabZiel = vorlaufMinuten > 0 ? verschobeneUhrzeit(info.jetzt, vorlaufMinuten) : null;
             if (vorabZiel && uhrzeitKurz === vorabZiel) {
-              merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${row.name || "Gewohnheit"}`);
+              merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${row.name || "Gewohnheit"}`);
             }
 
             const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
@@ -587,7 +644,7 @@ Deno.serve(async (req) => {
     // Check gegen training_sessions (kein direkter Fremdschlüssel zum
     // Wochenplan-Eintrag — Abgleich über Datum + Trainingsart).
     {
-      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen.training).map(([id]) => id);
+      const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen.training)).map(([id]) => id);
       if (userIds.length > 0) {
         const { data: rows, error } = await admin
           .from("training_wochenplan")
@@ -609,20 +666,30 @@ Deno.serve(async (req) => {
             const info = nutzerInfo.get(row.user_id);
             if (!info || !row.uhrzeit) continue;
             if (row.erinnerung_aktiv === false) continue; // Pro Einheit abschaltbar (14.08., Nutzerin-Vorgabe), unabhängig vom globalen Schalter.
-            if (row.wochentag !== WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()]) continue;
             const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
             const name = row.art || "Training";
+            const heuteWochentag = WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()];
 
-            if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🏋️", name);
+            if (row.wochentag === heuteWochentag) {
+              if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🏋️", name);
 
-            const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
-            if (vorabZiel && uhrzeitKurz === vorabZiel) {
-              merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${name}`);
+              const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
+              if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.user_id}__${info.heute}__${row.art}`)) {
+                merken(row.user_id, "❗", `Noch offen: ${name} (${NACHFASS_MINUTEN} Min. überfällig)`);
+              }
             }
 
-            const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
-            if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.user_id}__${info.heute}__${row.art}`)) {
-              merken(row.user_id, "❗", `Noch offen: ${name} (${NACHFASS_MINUTEN} Min. überfällig)`);
+            // Vorab-Hinweis eigenständig geprüft (nicht nur innerhalb des
+            // obigen "heute"-Zweigs) — bei Vorläufen über Mitternacht hinaus
+            // (z. B. "1 Tag vorher") liegt der Ziel-Wochentag der Übung auf
+            // MORGEN, nicht heute (s. verschobeneUhrzeitMitTag oben).
+            const vorlaufMinuten = vorlaufFuer(info.erinnerungen.training);
+            if (vorlaufMinuten > 0) {
+              const verschoben = verschobeneUhrzeitMitTag(info.jetzt, vorlaufMinuten);
+              const zielWochentag = verschoben ? WEEKDAY_NAMEN[(new Date(info.heute).getUTCDay() + verschoben.tageVersatz + 7) % 7] : null;
+              if (verschoben && row.wochentag === zielWochentag && uhrzeitKurz === verschoben.zeit) {
+                merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${name}`);
+              }
             }
           }
         }
@@ -634,7 +701,7 @@ Deno.serve(async (req) => {
     // separat über meals nachgeschlagen statt per Embedded-Join, um keine
     // Annahmen über die genaue PostgREST-Join-Form treffen zu müssen.
     {
-      const userIds = [...nutzerInfo].filter(([, info]) => info.erinnerungen.ernaehrung).map(([id]) => id);
+      const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen.ernaehrung)).map(([id]) => id);
       if (userIds.length > 0) {
         const { data: rows, error } = await admin
           .from("meal_wochenplan")
@@ -663,20 +730,28 @@ Deno.serve(async (req) => {
           for (const row of rows || []) {
             const info = nutzerInfo.get(row.user_id);
             if (!info || !row.uhrzeit) continue;
-            if (row.wochentag !== WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()]) continue;
             const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
             const name = nameByMealId.get(row.meal_id) || "Mahlzeit";
+            const heuteWochentag = WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()];
 
-            if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🍽️", name);
+            if (row.wochentag === heuteWochentag) {
+              if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🍽️", name);
 
-            const vorabZiel = verschobeneUhrzeit(info.jetzt, VORLAUF_MINUTEN);
-            if (vorabZiel && uhrzeitKurz === vorabZiel) {
-              merken(row.user_id, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${name}`);
+              const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
+              if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.meal_id}__${info.heute}__${uhrzeitKurz}`)) {
+                merken(row.user_id, "❗", `Noch offen: ${name} (${NACHFASS_MINUTEN} Min. überfällig)`);
+              }
             }
 
-            const nachfassZiel = verschobeneUhrzeit(info.jetzt, -NACHFASS_MINUTEN);
-            if (nachfassZiel && uhrzeitKurz === nachfassZiel && !erledigtSet.has(`${row.meal_id}__${info.heute}__${uhrzeitKurz}`)) {
-              merken(row.user_id, "❗", `Noch offen: ${name} (${NACHFASS_MINUTEN} Min. überfällig)`);
+            // s. Kommentar beim Training-Block oben (Vorab-Hinweis kann auf
+            // einen anderen Wochentag als "heute" fallen).
+            const vorlaufMinuten = vorlaufFuer(info.erinnerungen.ernaehrung);
+            if (vorlaufMinuten > 0) {
+              const verschoben = verschobeneUhrzeitMitTag(info.jetzt, vorlaufMinuten);
+              const zielWochentag = verschoben ? WEEKDAY_NAMEN[(new Date(info.heute).getUTCDay() + verschoben.tageVersatz + 7) % 7] : null;
+              if (verschoben && row.wochentag === zielWochentag && uhrzeitKurz === verschoben.zeit) {
+                merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${name}`);
+              }
             }
           }
         }
