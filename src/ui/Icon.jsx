@@ -7,6 +7,13 @@ import React from "react";
 // BottomNav, Ordner-Kacheln) nur einen String statt eines Emoji-Zeichens
 // durchreichen müssen.
 const PATHS = {
+  home: (
+    <>
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" />
+      <path d="M10 20v-6h4v6" />
+    </>
+  ),
   moon: <path d="M12 3c.13 0 .26 0 .39.01A7.5 7.5 0 0 0 21 12.39 9 9 0 1 1 12.39 3.01 9 9 0 0 0 12 3Z" />,
   droplet: <path d="M12 2.5s7 8.2 7 12.7a7 7 0 1 1-14 0c0-4.5 7-12.7 7-12.7Z" />,
   utensils: (

@@ -46,6 +46,45 @@ body {
   }
 }
 
+/* Tablet-/Desktop-Seitenleiste (Nutzerin-Vorgabe 15.08.: "breiter, in einer
+   übersichtlicheren Ansicht", da auf dem Tablet viel mehr Fläche zur
+   Verfügung steht) — ab 1024px eine feste Navigation links statt der
+   Ordner-Kachel-Navigation, siehe AppSidebar.jsx. Unter 1024px bleibt die
+   App exakt wie zuvor: .mp-app-shell/.mp-app-main verhalten sich dort wie
+   ein normaler Block ohne jede Layout-Änderung, die Seitenleiste ist per
+   Media Query komplett ausgeblendet. */
+.mp-app-shell {
+  display: block;
+}
+.mp-app-sidebar {
+  display: none;
+}
+.mp-app-main {
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .mp-app-shell {
+    display: flex;
+    align-items: stretch;
+  }
+  .mp-app-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 232px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid #eaeae5;
+    background: #fafbfa;
+  }
+  .mp-app-main {
+    flex: 1;
+  }
+}
+
 /* Sanftes, spürbares Tap-Feedback für Buttons/Karten — kleine, sofortige
    Rückmeldung statt eines stummen Klicks. Deaktiviert für alle, die
    reduzierte Bewegung eingestellt haben. */

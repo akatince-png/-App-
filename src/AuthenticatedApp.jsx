@@ -17,6 +17,7 @@ import MehrView from "./views/plan/MehrView";
 import GewohnheitenView from "./views/GewohnheitenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import Fab from "./ui/Fab";
+import AppSidebar from "./ui/AppSidebar";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
@@ -232,38 +233,46 @@ export default function AuthenticatedApp() {
   // ein komplett neues Protokoll starten können, das läuft über den Coach.
   const istAdminModus = proband !== null || isAdmin;
   const zeigeFab = view !== "form" && istAdminModus;
+  // Seitenleiste (Tablet/Desktop, siehe .mp-app-sidebar in index.css) nur
+  // außerhalb des geführten Onboarding-Fragebogens — mittendrin woanders
+  // hinzuspringen würde den linearen Ablauf durchbrechen, ohne dass dafür
+  // ein echter Bedarf gemeldet wurde.
+  const zeigeSidebar = view !== "form";
 
   return (
-    <>
-      {proband && (
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 50,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-            padding: "10px 16px",
-            background: "#1E2B29",
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          <span>Du verwaltest gerade: {proband.vorname || proband.email}</span>
-          <button
-            onClick={verlasseVerwaltung}
-            className="mp-tap"
-            style={{ border: "none", background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 10, padding: "7px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+    <div className="mp-app-shell">
+      {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
+      <div className="mp-app-main">
+        {proband && (
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 50,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              padding: "10px 16px",
+              background: "#1E2B29",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
           >
-            Zurück zum Dashboard
-          </button>
-        </div>
-      )}
-      {screen}
-      {zeigeFab && <Fab onClick={neuesProtokoll} />}
-    </>
+            <span>Du verwaltest gerade: {proband.vorname || proband.email}</span>
+            <button
+              onClick={verlasseVerwaltung}
+              className="mp-tap"
+              style={{ border: "none", background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 10, padding: "7px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+            >
+              Zurück zum Dashboard
+            </button>
+          </div>
+        )}
+        {screen}
+        {zeigeFab && <Fab onClick={neuesProtokoll} />}
+      </div>
+    </div>
   );
 }
