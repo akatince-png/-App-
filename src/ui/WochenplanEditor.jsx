@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, CheckRow, Label, Pill, TextInput } from "./primitives";
+import { Card, CheckRow, Label, Pill, PrimaryButton, TextInput } from "./primitives";
 import TimeWheelField from "./TimeWheelField";
 import NumberWheelField from "./NumberWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "./UebungenEditor";
@@ -67,6 +67,13 @@ export default function WochenplanEditor({
   const [warmup, setWarmup] = useState(LEERE_WARMUP);
   const [cooldown, setCooldown] = useState(LEERE_WARMUP);
   const [erinnerungAktiv, setErinnerungAktiv] = useState(true);
+  // Intervall-/Halten-Zeiten (15.08., Nutzerin-Vorgabe: "rüste es nach") —
+  // für Bodyweight-Intervall, Cardio-Intervall und Isometrisches Training,
+  // gemeinsam für die ganze Einheit (analog zu uebungenListe oben).
+  const [intervallArbeitSek, setIntervallArbeitSek] = useState("");
+  const [intervallPauseSek, setIntervallPauseSek] = useState("");
+  const [runden, setRunden] = useState("5");
+  const [gesamtDauerMin, setGesamtDauerMin] = useState("");
   const [saving, setSaving] = useState(false);
   // Statt Löschen + Neuanlegen lässt sich eine bestehende Einheit jetzt
   // direkt bearbeiten (Nutzerinnen-Vorgabe, 13.08. — z. B. nachträglich
@@ -85,6 +92,10 @@ export default function WochenplanEditor({
     setWarmup(LEERE_WARMUP);
     setCooldown(LEERE_WARMUP);
     setErinnerungAktiv(true);
+    setIntervallArbeitSek("");
+    setIntervallPauseSek("");
+    setRunden("5");
+    setGesamtDauerMin("");
     setBearbeitenId(null);
   };
 
@@ -97,6 +108,10 @@ export default function WochenplanEditor({
     setWarmup(e.warmup || LEERE_WARMUP);
     setCooldown(e.cooldown || LEERE_WARMUP);
     setErinnerungAktiv(e.erinnerungAktiv !== false);
+    setIntervallArbeitSek(e.intervallArbeitSek ? String(e.intervallArbeitSek) : "");
+    setIntervallPauseSek(e.intervallPauseSek ? String(e.intervallPauseSek) : "");
+    setRunden(e.runden ? String(e.runden) : "5");
+    setGesamtDauerMin("");
   };
 
   const uebungAendern = (index, feld, wert) =>
@@ -108,13 +123,14 @@ export default function WochenplanEditor({
     if (!wochentage.length || !uhrzeit || saving) return;
     setSaving(true);
     const uebungenGefuellt = uebungenListe.filter((u) => u.name.trim());
+    const einheitFelder = { wochentag: wochentage[0], uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv, intervallArbeitSek, intervallPauseSek, runden };
     if (bearbeitenId) {
-      await wochenplanBearbeiten(bearbeitenId, { wochentag: wochentage[0], uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv });
+      await wochenplanBearbeiten(bearbeitenId, einheitFelder);
     } else {
       // Nacheinander statt Promise.all, damit bei einem Fehler mitten in der
       // Reihe nichts unbemerkt durcheinandergerät.
       for (const tag of wochentage) {
-        await wochenplanHinzufuegen({ wochentag: tag, uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv });
+        await wochenplanHinzufuegen({ ...einheitFelder, wochentag: tag });
       }
     }
     setSaving(false);
@@ -184,6 +200,54 @@ export default function WochenplanEditor({
           onEntfernen={uebungEntfernen}
           onHinzufuegen={uebungHinzufuegen}
         />
+
+        {arten.some((a) => a === "Bodyweight" || a === "Cardio" || a === "Isometrisches Training") && (
+          <>
+            <Label>
+              {arten.includes("Isometrisches Training") && !arten.includes("Bodyweight") && !arten.includes("Cardio")
+                ? "Halten & Pause (optional, für den Intervall-Timer)"
+                : "Intervall (optional, für den Intervall-Timer statt Übungsliste)"}
+            </Label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <TextInput
+                  type="number"
+                  value={intervallArbeitSek}
+                  onChange={setIntervallArbeitSek}
+                  placeholder={arten.includes("Isometrisches Training") && !arten.includes("Bodyweight") && !arten.includes("Cardio") ? "Halten (Sek.)" : "Arbeit (Sek.)"}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <TextInput type="number" value={intervallPauseSek} onChange={setIntervallPauseSek} placeholder="Pause (Sek.)" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <NumberWheelField value={runden} onChange={setRunden} min={1} max={30} placeholder="Runden" />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginTop: 6 }}>
+              <div style={{ flex: 1 }}>
+                <Label>Statt Runden: Gesamtdauer (optional)</Label>
+                <TextInput type="number" value={gesamtDauerMin} onChange={setGesamtDauerMin} placeholder="z. B. 5 (Minuten)" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <PrimaryButton
+                  variant="ghost"
+                  onClick={() => {
+                    const arbeitSek = Number(intervallArbeitSek) || 0;
+                    const pauseSek = Number(intervallPauseSek) || 0;
+                    const gesamtSek = (Number(gesamtDauerMin) || 0) * 60;
+                    if (arbeitSek + pauseSek <= 0 || gesamtSek <= 0) return;
+                    setRunden(String(Math.max(1, Math.round(gesamtSek / (arbeitSek + pauseSek)))));
+                  }}
+                >
+                  Runden berechnen
+                </PrimaryButton>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>Leer lassen = beim Start läuft stattdessen die Übungsliste oben bzw. eine einfache Stoppuhr.</div>
+          </>
+        )}
 
         <div style={{ marginTop: 14 }}>
           <CheckRow label={t("onboarding.training.einheit.warmup.label")} checked={warmup.aktiv} onToggle={() => setWarmup((p) => ({ ...p, aktiv: !p.aktiv }))} />
@@ -334,9 +398,10 @@ export default function WochenplanEditor({
                     onClick={onZeileAntippen ? () => onZeileAntippen(e) : undefined}
                   >
                     <div style={{ fontWeight: 700 }}>{e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—"}</div>
-                    {(anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv) && (
+                    {(anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv || e.intervallArbeitSek) && (
                       <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>
                         {[
+                          e.intervallArbeitSek ? `⏱ ${e.intervallArbeitSek}s/${e.intervallPauseSek || 0}s × ${e.runden || 1}` : "",
                           anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
                           e.warmup?.aktiv ? "Warm-up" : "",
                           e.cooldown?.aktiv ? "Cool-down" : "",

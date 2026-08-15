@@ -231,6 +231,7 @@ export function buildDayItems(
         const uhrzeit = zuweisung.uhrzeit || "";
         const anzahlUebungen = (zuweisung.uebungenListe || []).filter((u) => u.name).length;
         const detailTeile = [
+          zuweisung.intervallArbeitSek ? `⏱ ${zuweisung.intervallArbeitSek}s/${zuweisung.intervallPauseSek || 0}s × ${zuweisung.runden || 1}` : "",
           anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
           zuweisung.warmup?.aktiv ? `Warm-up${zuweisung.warmup.dauerMin ? ` ${zuweisung.warmup.dauerMin} Min.` : ""}` : "",
           zuweisung.cooldown?.aktiv ? `Cool-down${zuweisung.cooldown.dauerMin ? ` ${zuweisung.cooldown.dauerMin} Min.` : ""}` : "",
@@ -252,6 +253,9 @@ export function buildDayItems(
             uebungenListe: zuweisung.uebungenListe,
             warmup: zuweisung.warmup,
             cooldown: zuweisung.cooldown,
+            intervallArbeitSek: zuweisung.intervallArbeitSek,
+            intervallPauseSek: zuweisung.intervallPauseSek,
+            runden: zuweisung.runden,
           },
         });
       });

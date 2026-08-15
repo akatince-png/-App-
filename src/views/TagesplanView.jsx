@@ -250,6 +250,9 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         uebungen: item.raw.uebungenListe || [],
         bemerkungen: warmupCooldown.join(" · "),
         erledigt: false,
+        intervallArbeitSek: item.raw.intervallArbeitSek || "",
+        intervallPauseSek: item.raw.intervallPauseSek || "",
+        runden: item.raw.runden || "",
       });
       if (result?.ok) {
         onOpenTraining(result.eintrag.id);

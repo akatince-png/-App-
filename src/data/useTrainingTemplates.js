@@ -40,6 +40,13 @@ function rowToWochenplan(r) {
     // siehe MehrTab.jsx), damit sich einzelne Tage abweichend stummschalten
     // lassen. Default true, falls die Spalte bei alten Zeilen noch nicht gesetzt ist.
     erinnerungAktiv: r.erinnerung_aktiv !== false,
+    // Intervall-/Halten-Zeiten (15.08.) — analog zu training_sessions/
+    // training_templates, für Bodyweight-Intervall, Cardio-Intervall und
+    // Isometrisches Training, gemeinsam für die ganze Einheit (nicht je
+    // einzelne Art, wie auch uebungenListe schon geteilt ist).
+    intervallArbeitSek: r.intervall_arbeit_sek,
+    intervallPauseSek: r.intervall_pause_sek,
+    runden: r.runden,
   };
 }
 
@@ -118,6 +125,9 @@ export function useTrainingTemplates(userId) {
         cooldown_dauer_min: einheit.cooldown?.dauerMin ? Number(einheit.cooldown.dauerMin) : null,
         cooldown_beschreibung: einheit.cooldown?.beschreibung || null,
         erinnerung_aktiv: einheit.erinnerungAktiv !== false,
+        intervall_arbeit_sek: einheit.intervallArbeitSek ? Number(einheit.intervallArbeitSek) : null,
+        intervall_pause_sek: einheit.intervallPauseSek ? Number(einheit.intervallPauseSek) : null,
+        runden: einheit.runden ? Number(einheit.runden) : null,
       };
       const { data, error } = await supabase.from("training_wochenplan").insert(row).select().single();
       if (error) {
@@ -153,6 +163,9 @@ export function useTrainingTemplates(userId) {
       cooldown_dauer_min: einheit.cooldown?.dauerMin ? Number(einheit.cooldown.dauerMin) : null,
       cooldown_beschreibung: einheit.cooldown?.beschreibung || null,
       erinnerung_aktiv: einheit.erinnerungAktiv !== false,
+      intervall_arbeit_sek: einheit.intervallArbeitSek ? Number(einheit.intervallArbeitSek) : null,
+      intervall_pause_sek: einheit.intervallPauseSek ? Number(einheit.intervallPauseSek) : null,
+      runden: einheit.runden ? Number(einheit.runden) : null,
     };
     const { data, error } = await supabase.from("training_wochenplan").update(row).eq("id", id).select().single();
     if (error) {
