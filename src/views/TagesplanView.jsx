@@ -372,7 +372,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
       const istJetzt = hour === jetztHour;
       const offeneSupplemente = entries.filter((e) => e.kategorie === "supplement" && !e.done);
       return (
-        <React.Fragment key={hour || "sonstige"}>
+        <div key={hour || "sonstige"}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
@@ -460,7 +460,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
               );
             })}
           </Card>
-        </React.Fragment>
+        </div>
       );
     });
   }
@@ -583,6 +583,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
             </Card>
           )}
 
+          <div className="mp-tagesplan-routinen-grid">
           <Card style={{ marginBottom: 16 }}>
             <button
               className="mp-tap"
@@ -660,13 +661,14 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
               </div>
             )}
           </Card>
+          </div>
 
-          {renderZeitbloecke(restBuckets)}
+          <div className="mp-tagesplan-zeitbloecke-grid">{renderZeitbloecke(restBuckets)}</div>
         </>
       )}
 
       {modus === "woche" && (
-        <>
+        <div className="mp-tagesplan-woche-grid">
           {wochentage.map((d) => {
             const items = itemsForDate(d);
             // Zeitblöcke sind Kalendereinträge, keine erledigbaren
@@ -718,7 +720,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
               </button>
             );
           })}
-        </>
+        </div>
       )}
 
       {trainingVorschau && (
