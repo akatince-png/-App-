@@ -13,7 +13,7 @@ import { buildDayItems } from "./dayItems";
 // Medikamente, Supplemente, Mahlzeiten, Gewohnheiten, Training — NICHT
 // Hydration/Tageslicht/Schlaf (kumulative Tageswerte ohne Einzeltermin,
 // siehe UEBERGABEPROTOKOLL.md).
-const SWEEP_KEY = "letzterAusfallSweep";
+const SWEEP_KEY_PRAEFIX = "letzterAusfallSweep";
 const MAX_NACHHOL_TAGE = 14; // Deckel gegen ausufernde Nachhol-Läufe nach langer Abwesenheit.
 
 function ausgefallenDetail(datumStr) {
@@ -25,6 +25,14 @@ export async function pruefeAusgefalleneEintraege(appData) {
 
   const heute = new Date();
   const heuteStr = toLocalISODate(heute);
+  // Pro Person, nicht global (15.08., App-Scan-Fund): ein einzelner
+  // globaler Schlüssel ließ den Sweep für eine zweite Person am selben Tag
+  // ausfallen, sobald "Verwalten als" schon einmal für irgendjemanden
+  // gelaufen war — z. B. Admin öffnet die App (Sweep läuft für sich selbst),
+  // wechselt zu "Verwalten als Coachee X", deren Sweep würde dann für den
+  // Rest des Tages übersprungen, weil der globale Schlüssel schon "heute
+  // erledigt" sagte.
+  const SWEEP_KEY = `${SWEEP_KEY_PRAEFIX}__${appData.userId}`;
 
   let letzterSweep;
   try {
