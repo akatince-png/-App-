@@ -1,11 +1,127 @@
 import React, { useMemo, useState } from "react";
-import { Shell, Card } from "../ui/primitives";
+import { Shell, Card, Pill } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
-import { accent, accentDark, cardBorder, textMain, textMuted } from "../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, textMain, textMuted } from "../ui/theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { uebungGewichtText, uebungWiederholungenText } from "../ui/UebungenEditor";
 import { useAppData } from "../context/AppDataContext";
 import ProtokollSeitenView from "./plan/ProtokollSeitenView";
+
+// Bausteine des aktiven Hauptprotokolls, an-/abschaltbar ohne den kompletten
+// Onboarding-Assistenten (der dabei archiviert + neu anlegt) durchlaufen zu
+// müssen (Nutzerinnen-Vorgabe, 15.08.). Bewusst HIER statt in PlaeneView.jsx:
+// war dort zu groß/prominent für eine selten genutzte Aufgabe ("nimmt total
+// viel Platz weg") — dieser Screen ("Protokolle") ist der Ort, an dem das
+// laufende Protokoll ohnehin eingesehen wird. Schlaf & Hydration sind
+// bewusst nicht abschaltbar ("Kernessenz"), Morgen-/Abendroutine erscheinen
+// hier gar nicht — die sind keine teilprotokolle (siehe RoutineTabView.jsx),
+// sondern ohnehin immer erreichbar. Jede Änderung landet zusätzlich im
+// Tagesverlauf weiter unten (aenderungVermerken) — funktioniert unverändert,
+// wenn ein Admin das Protokoll einer Coachee im "Verwalten"-Modus bearbeitet.
+const BAUSTEINE_KATEGORIEN = [
+  { kategorie: "schlaf", label: "Schlaf", kern: true },
+  { kategorie: "hydration", label: "Hydration", kern: true },
+  { kategorie: "tageslicht", label: "Tageslicht", kern: false },
+  { kategorie: "ernaehrung", label: "Ernährung", kern: false },
+  { kategorie: "training", label: "Training", kern: false },
+  { kategorie: "gewohnheiten", label: "Gewohnheiten", kern: false },
+  { kategorie: "supplemente", label: "Supplemente", kern: false },
+  { kategorie: "medikamente", label: "Medikamente", kern: false },
+];
+
+function AktuellesProtokoll() {
+  const { aktivesHauptprotokoll, teilprotokolle, teilprotokollSpeichern, aenderungVermerken } = useAppData();
+  const [offen, setOffen] = useState(false);
+
+  if (!aktivesHauptprotokoll) return null;
+
+  const zeileFuer = (kategorie) => teilprotokolle.find((t) => t.hauptprotokoll_id === aktivesHauptprotokoll.id && t.kategorie === kategorie);
+
+  const seitWoche = (kategorie) => {
+    const zeile = zeileFuer(kategorie);
+    if (!zeile?.aktiv || !zeile.aktiviert_am) return null;
+    const start = new Date(aktivesHauptprotokoll.startdatum);
+    const aktiviert = new Date(zeile.aktiviert_am);
+    const wochen = Math.floor((aktiviert - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
+    return Math.max(1, wochen);
+  };
+
+  const umschalten = (b) => {
+    const bestehend = zeileFuer(b.kategorie);
+    const naechsterZustand = !(bestehend?.aktiv ?? false);
+    teilprotokollSpeichern(aktivesHauptprotokoll.id, b.kategorie, {
+      aktiv: naechsterZustand,
+      eigenerStartdatum: bestehend?.eigenes_startdatum ?? null,
+      laufzeitWochen: bestehend?.laufzeit_wochen ?? null,
+    });
+    aenderungVermerken({
+      kategorie: "protokoll",
+      itemName: b.label,
+      aktion: naechsterZustand ? "aktiviert" : "deaktiviert",
+      detail: `Baustein im Protokoll „${aktivesHauptprotokoll.name}"`,
+    });
+  };
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <button
+        onClick={() => setOffen((v) => !v)}
+        className="mp-tap"
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "13px 16px",
+          borderRadius: 14,
+          border: `1px solid ${cardBorder}`,
+          background: "#fff",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 800 }}>📋 Aktuelles Protokoll: {aktivesHauptprotokoll.name}</div>
+          <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>Bausteine ansehen und an-/abschalten</div>
+        </div>
+        <span style={{ color: textMuted, fontSize: 16 }}>{offen ? "︿" : "﹀"}</span>
+      </button>
+
+      {offen && (
+        <Card style={{ marginTop: 8 }}>
+          {BAUSTEINE_KATEGORIEN.map((b, i) => {
+            const aktiv = b.kern || !!zeileFuer(b.kategorie)?.aktiv;
+            const woche = b.kern ? 1 : seitWoche(b.kategorie);
+            return (
+              <div
+                key={b.kategorie}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "8px 0",
+                  borderBottom: i < BAUSTEINE_KATEGORIEN.length - 1 ? `1px solid ${cardBorder}` : "none",
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{b.label}</div>
+                  {aktiv && woche && <div style={{ fontSize: 10.5, color: textMuted, marginTop: 1 }}>Seit Woche {woche}</div>}
+                </div>
+                {b.kern ? (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: accentDark, background: accentSoft, padding: "3px 9px", borderRadius: 10 }}>
+                    Immer aktiv
+                  </span>
+                ) : (
+                  <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
+                )}
+              </div>
+            );
+          })}
+        </Card>
+      )}
+    </div>
+  );
+}
 
 function datumLabel(datumStr) {
   const [y, m, d] = datumStr.split("-");
@@ -123,6 +239,8 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
       {!embedded && (
         <ViewHeader title="📖 Akas fertige Protokolle" onHome={onHome} />
       )}
+
+      <AktuellesProtokoll />
 
       {ersteWoche && (
         <button

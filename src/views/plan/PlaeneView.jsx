@@ -1,11 +1,10 @@
 import React from "react";
-import { Shell, Pill } from "../../ui/primitives";
+import { Shell } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { accentDark, accentSoft, cardBorder, textMuted } from "../../ui/theme";
+import { cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
 import { KATEGORIE_META } from "../../utils/dayItems";
 import Icon from "../../ui/Icon";
-import { useAppData } from "../../context/AppDataContext";
 import SchlafView from "../SchlafView";
 import HydrationView from "../HydrationView";
 import TageslichtView from "../TageslichtView";
@@ -84,95 +83,6 @@ const ROUTINEN_EINTRAEGE = [{ id: "routinen", icon: "target", label: "Gewohnheit
 // liegender Einstiegspunkt dorthin.
 const NACHVOLLZIEHEN_EINTRAEGE = [{ id: "verlauf", icon: "archive", label: "Protokolle" }];
 
-// Bausteine des aktiven Hauptprotokolls, an-/abschaltbar ohne den kompletten
-// Onboarding-Assistenten (der dabei archiviert + neu anlegt) durchlaufen zu
-// müssen (Nutzerinnen-Vorgabe, 15.08.: "möchte nicht die Möglichkeit haben,
-// diese Protokolle dann immer irgendwie abzubrechen" — die vorherige einzige
-// Stelle, um teilprotokolle.aktiv zu setzen, war OnboardingCategoriesView).
-// Schlaf & Hydration sind bewusst nicht abschaltbar ("Kernessenz"), Morgen-/
-// Abendroutine erscheinen hier gar nicht — die sind gar keine teilprotokolle
-// (siehe RoutineTabView.jsx), sondern ohnehin immer erreichbar.
-const BAUSTEINE_KATEGORIEN = [
-  { kategorie: "schlaf", label: "Schlaf", kern: true },
-  { kategorie: "hydration", label: "Hydration", kern: true },
-  { kategorie: "tageslicht", label: "Tageslicht", kern: false },
-  { kategorie: "ernaehrung", label: "Ernährung", kern: false },
-  { kategorie: "training", label: "Training", kern: false },
-  { kategorie: "gewohnheiten", label: "Gewohnheiten", kern: false },
-  { kategorie: "supplemente", label: "Supplemente", kern: false },
-  { kategorie: "medikamente", label: "Medikamente", kern: false },
-];
-
-function BausteineUebersicht() {
-  const { aktivesHauptprotokoll, teilprotokolle, teilprotokollSpeichern } = useAppData();
-
-  if (!aktivesHauptprotokoll) return null;
-
-  const zeileFuer = (kategorie) => teilprotokolle.find((t) => t.hauptprotokoll_id === aktivesHauptprotokoll.id && t.kategorie === kategorie);
-
-  const umschalten = (kategorie) => {
-    const bestehend = zeileFuer(kategorie);
-    teilprotokollSpeichern(aktivesHauptprotokoll.id, kategorie, {
-      aktiv: !(bestehend?.aktiv ?? false),
-      eigenerStartdatum: bestehend?.eigenes_startdatum ?? null,
-      laufzeitWochen: bestehend?.laufzeit_wochen ?? null,
-    });
-  };
-
-  // "Seit Woche X" relativ zum Hauptprotokoll-Start — beantwortet direkt die
-  // Nutzerinnen-Vorgabe ("Woche eins nur Schlaf, Woche zwei + Hydration, ...").
-  // Nur eine grobe Orientierung: aktiviert_am wird nur beim Übergang
-  // inaktiv→aktiv aktualisiert (siehe useHauptprotokollData.js), nicht bei
-  // jedem Deaktivieren/Reaktivieren im Detail nachgehalten.
-  const seitWoche = (kategorie) => {
-    const zeile = zeileFuer(kategorie);
-    if (!zeile?.aktiv || !zeile.aktiviert_am) return null;
-    const start = new Date(aktivesHauptprotokoll.startdatum);
-    const aktiviert = new Date(zeile.aktiviert_am);
-    const wochen = Math.floor((aktiviert - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
-    return Math.max(1, wochen);
-  };
-
-  return (
-    <>
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>Bausteine dieses Protokolls</div>
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10, lineHeight: 1.5 }}>
-        An-/ausschalten, ohne das Protokoll abzubrechen. Zum Bearbeiten unten auf den passenden Reiter tippen.
-      </div>
-      <div style={{ marginBottom: 20 }}>
-        {BAUSTEINE_KATEGORIEN.map((b, i) => {
-          const aktiv = b.kern || !!zeileFuer(b.kategorie)?.aktiv;
-          const woche = b.kern ? 1 : seitWoche(b.kategorie);
-          return (
-            <div
-              key={b.kategorie}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "10px 0",
-                borderBottom: i < BAUSTEINE_KATEGORIEN.length - 1 ? `1px solid ${cardBorder}` : "none",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</div>
-                {aktiv && woche && <div style={{ fontSize: 10.5, color: textMuted, marginTop: 1 }}>Seit Woche {woche}</div>}
-              </div>
-              {b.kern ? (
-                <span style={{ fontSize: 11, fontWeight: 700, color: accentDark, background: accentSoft, padding: "4px 10px", borderRadius: 10 }}>
-                  Immer aktiv
-                </span>
-              ) : (
-                <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b.kategorie)} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </>
-  );
-}
-
 function ListenEintrag({ eintrag, onClick }) {
   return (
     <button
@@ -211,8 +121,6 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
   return (
     <Shell bereich={TAB_ZU_KATEGORIE[planeTab]}>
       <ViewHeader title="Deine aktiven Systeme" onHome={onHome} />
-
-      <BausteineUebersicht />
 
       {/* Routinen bewusst VOR den 9 Reitern (Nutzerinnen-Vorgabe, 29.07.:
           Priorität) — nicht nachträglich angehängt. */}
