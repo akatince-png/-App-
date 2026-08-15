@@ -30,6 +30,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen } = useAppData();
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
+  const [musikFehler, setMusikFehler] = useState(null);
   const protokollRef = useRef([]);
   const startZeitRef = useRef(Date.now());
   const gestartetUmRef = useRef(new Date().toISOString());
@@ -51,7 +52,11 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   // Durchlaufs — nicht bei jedem Schrittwechsel.
   useEffect(() => {
     const uri = spotifyAnlaesse[ROUTINE_ANLASS[routine]]?.uri;
-    if (uri && spotifyVerbunden) spotifyAbspielen(uri);
+    if (uri && spotifyVerbunden) {
+      spotifyAbspielen(uri).then((result) => {
+        if (!result?.ok) setMusikFehler(result?.error || "Wiedergabe fehlgeschlagen.");
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -126,6 +131,18 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 8 }}>
         {ROUTINE_EMOJI[routine]} {ROUTINE_LABEL[routine]} · Schritt {index + 1} von {schritte.length}
       </div>
+      {musikFehler && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
+          <span>🎵 Playlist konnte nicht gestartet werden: {musikFehler}</span>
+          <button
+            type="button"
+            onClick={() => setMusikFehler(null)}
+            style={{ border: "none", background: "transparent", color: danger, fontSize: 14, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>
         <Timer key={aktuell.id} mode="countdown" initialSeconds={(Number(aktuell.dauerMin) || 5) * 60} autoStart vorwarnungSek={30} onFertig={weiter} />

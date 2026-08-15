@@ -72,6 +72,7 @@ export default function WorkflowTimer({ onSchliessen }) {
   const [zeitplanOffenFuer, setZeitplanOffenFuer] = useState(null);
   const [zeitplanEntwurf, setZeitplanEntwurf] = useState(LEERER_ZEITPLAN_ENTWURF);
   const [zeitplanFehler, setZeitplanFehler] = useState(null);
+  const [musikFehler, setMusikFehler] = useState(null);
 
   const presetHinzufuegen = async () => {
     const name = neuerName.trim();
@@ -131,8 +132,12 @@ export default function WorkflowTimer({ onSchliessen }) {
 
   const starten = async (preset) => {
     musikSync.reset();
+    setMusikFehler(null);
     const playlist = spotifyAnlaesse[praesetAnlass(preset.id)];
-    if (playlist?.uri) await spotifyAbspielen(playlist.uri);
+    if (playlist?.uri) {
+      const result = await spotifyAbspielen(playlist.uri);
+      if (!result?.ok) setMusikFehler(result?.error || "Wiedergabe fehlgeschlagen.");
+    }
     setLaufendesPreset(preset);
   };
 
@@ -322,6 +327,18 @@ export default function WorkflowTimer({ onSchliessen }) {
         </>
       ) : (
         <Card style={{ textAlign: "center" }}>
+          {musikFehler && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12, textAlign: "left" }}>
+              <span>🎵 Playlist konnte nicht gestartet werden: {musikFehler}</span>
+              <button
+                type="button"
+                onClick={() => setMusikFehler(null)}
+                style={{ border: "none", background: "transparent", color: danger, fontSize: 14, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>{laufendesPreset.name}</div>
           <div style={{ fontSize: 11, color: textMuted, marginBottom: 8 }}>{tatsaechlicheGesamtMin} Min. insgesamt</div>
           <Timer

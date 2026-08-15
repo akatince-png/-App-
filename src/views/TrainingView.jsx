@@ -164,12 +164,17 @@ function fmtDauer(sekunden) {
 // ---------------------------------------------------------------------------
 function LiveWorkout({ session, onFertig, onSchliessen }) {
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, spotifyFortsetzen, spotifyLautstaerke, uebungsBilder } = useAppData();
+  const [musikFehler, setMusikFehler] = useState(null);
   // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik
   // → Zuordnung, siehe SpotifyAnlassPicker), einmalig beim Öffnen dieser
   // Live-Session — nicht bei jedem Satz-/Übungswechsel.
   useEffect(() => {
     const uri = spotifyAnlaesse.training?.uri;
-    if (uri && spotifyVerbunden) spotifyAbspielen(uri);
+    if (uri && spotifyVerbunden) {
+      spotifyAbspielen(uri).then((result) => {
+        if (!result?.ok) setMusikFehler(result?.error || "Wiedergabe fehlgeschlagen.");
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Fade/Pause an Intervallgrenzen bei Bodyweight-/Cardio-Intervalltraining
@@ -258,6 +263,19 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
   return (
     <Shell bereich="training">
       <ViewHeader title={`🏋️ ${session.art}`} onHome={onSchliessen} homeTitle="Zurück" />
+
+      {musikFehler && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
+          <span>🎵 Playlist konnte nicht gestartet werden: {musikFehler}</span>
+          <button
+            type="button"
+            onClick={() => setMusikFehler(null)}
+            style={{ border: "none", background: "transparent", color: danger, fontSize: 14, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {!fertig && (
         <div style={{ textAlign: "center", marginBottom: 14 }}>
@@ -489,6 +507,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [liveSessionId, setLiveSessionId] = useState(null);
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
   const [feedbackFuerId, setFeedbackFuerId] = useState(null);
+  const [kurzTimerMusikFehler, setKurzTimerMusikFehler] = useState(null);
   // Musik-Sync für den Kurz-Intervalltimer (14.08., Nutzerin-Vorgabe: Musik
   // an Intervallgrenzen leiser/lauter werden lassen, wie beim Workflow-
   // Timer) — Modus wird geräteweit gemerkt (intervallMusikStorage.js).
@@ -501,7 +520,11 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     spotifyLautstaerke,
     onErsterStart: () => {
       const uri = spotifyAnlaesse.training?.uri;
-      if (uri) spotifyAbspielen(uri);
+      if (uri) {
+        spotifyAbspielen(uri).then((result) => {
+          if (!result?.ok) setKurzTimerMusikFehler(result?.error || "Wiedergabe fehlgeschlagen.");
+        });
+      }
     },
   });
 
@@ -746,6 +769,18 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Nur ein Timer? (ohne Eintrag)</div>
+      {kurzTimerMusikFehler && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
+          <span>🎵 Playlist konnte nicht gestartet werden: {kurzTimerMusikFehler}</span>
+          <button
+            type="button"
+            onClick={() => setKurzTimerMusikFehler(null)}
+            style={{ border: "none", background: "transparent", color: danger, fontSize: 14, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <Card style={{ marginBottom: 14 }}>
         {!kurzTimer ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
