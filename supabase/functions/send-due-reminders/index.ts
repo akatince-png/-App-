@@ -42,6 +42,11 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
+// Für den automatischen Spotify-Start bei Bettzeit unten — dieselben Werte
+// wie bei spotify-play/spotify-auth-callback, hier zusätzlich als Secret
+// hinterlegen (Dashboard → Edge Functions → send-due-reminders → Secrets).
+const SPOTIFY_CLIENT_ID = Deno.env.get("SPOTIFY_CLIENT_ID");
+const SPOTIFY_CLIENT_SECRET = Deno.env.get("SPOTIFY_CLIENT_SECRET");
 
 const VORLAUF_MINUTEN = 15;
 const NACHFASS_MINUTEN = 10;
@@ -146,6 +151,36 @@ function faelltAnTag(d: Intervall, heuteDatum: string): boolean {
 
   const days = mode === "custom" ? Math.max(1, Number(d.custom_days) || 1) : Math.max(1, Number(d.intervall_days) || 1);
   return n % days === 0;
+}
+
+// Erneuert das Spotify-Access-Token bei Bedarf über das gespeicherte
+// Refresh-Token — Portierung von frischesAccessToken() aus
+// supabase/functions/spotify-play/index.ts, damit der automatische
+// Bettzeit-Start unten nicht auf einen Umweg über diese Function angewiesen
+// ist (spart einen zusätzlichen HTTP-Hop bei jedem Cron-Tick).
+async function frischesSpotifyToken(admin: ReturnType<typeof createClient>, verbindung: Record<string, unknown>) {
+  const nochGueltig =
+    verbindung.token_laeuft_ab && new Date(verbindung.token_laeuft_ab as string).getTime() - Date.now() > 60_000;
+  if (nochGueltig) return verbindung.access_token as string;
+
+  const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: "Basic " + btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`),
+    },
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: verbindung.refresh_token as string }),
+  });
+  const tokenData = await tokenRes.json();
+  if (!tokenRes.ok) throw new Error(tokenData.error_description || "Spotify-Token konnte nicht erneuert werden.");
+
+  const ablauf = new Date(Date.now() + tokenData.expires_in * 1000).toISOString();
+  await admin
+    .from("spotify_verbindung")
+    .update({ access_token: tokenData.access_token, token_laeuft_ab: ablauf, ...(tokenData.refresh_token ? { refresh_token: tokenData.refresh_token } : {}) })
+    .eq("user_id", verbindung.user_id as string);
+
+  return tokenData.access_token as string;
 }
 
 type NutzerInfo = { zeitzone: string; jetzt: string; heute: string; erinnerungen: Record<string, unknown> };
@@ -271,6 +306,74 @@ Deno.serve(async (req) => {
           if (vorabTreffer.length > 0) {
             const mengen = zk.mitMenge ? vorabTreffer.map((z) => z.menge).filter(Boolean) : [];
             merken(userId, "⏳", `Gleich dran (${VORLAUF_MINUTEN} Min.): ${zk.einheit}${mengen.length > 0 ? ` (${mengen.join(", ")})` : ""}`);
+          }
+        }
+      }
+    }
+
+    // --- Schlaf: automatischer Spotify-Start bei Bettzeit (15.08., --------
+    // Nutzerin-Vorgabe) — eine Minute NACH der oben konfigurierten
+    // Schlafenszeit (nicht zeitgleich mit der Push-Erinnerung), FALLS über
+    // SpotifyAnlassPicker(anlass="schlaf") in SchlafView.jsx eine Playlist
+    // zugeordnet wurde (z. B. Regengeräusche). Zuordnung = Aktivierung,
+    // kein separater Schalter. Läuft unabhängig davon, ob die App gerade
+    // offen ist — anders als die anderen Anlässe (die beim Öffnen der
+    // jeweiligen Ansicht im Browser starten), da nachts niemand die App
+    // offen hat.
+    if (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) {
+      const schlafUserIds = [...nutzerInfo]
+        .filter(([, info]) => {
+          const einstellung = info.erinnerungen.schlaf as { aktiv?: boolean; zeiten?: { zeit?: string; startDatum?: string }[] } | undefined;
+          return einstellung?.aktiv && Array.isArray(einstellung.zeiten) && einstellung.zeiten.length > 0;
+        })
+        .map(([id]) => id);
+
+      if (schlafUserIds.length > 0) {
+        const { data: anlaesse, error: anlassError } = await admin
+          .from("spotify_anlass_playlists")
+          .select("user_id, spotify_playlists(uri)")
+          .eq("anlass", "schlaf")
+          .in("user_id", schlafUserIds);
+        if (anlassError) console.error("Abfrage spotify_anlass_playlists (schlaf) fehlgeschlagen:", anlassError);
+
+        const playlistUriByUser = new Map(
+          (anlaesse || [])
+            .filter((a) => (a.spotify_playlists as { uri?: string } | null)?.uri)
+            .map((a) => [a.user_id as string, (a.spotify_playlists as { uri: string }).uri])
+        );
+
+        if (playlistUriByUser.size > 0) {
+          const { data: verbindungen, error: verbindungError } = await admin
+            .from("spotify_verbindung")
+            .select("*")
+            .in("user_id", [...playlistUriByUser.keys()]);
+          if (verbindungError) console.error("Abfrage spotify_verbindung (schlaf-auto-play) fehlgeschlagen:", verbindungError);
+
+          for (const verbindung of verbindungen || []) {
+            const info = nutzerInfo.get(verbindung.user_id as string);
+            const uri = playlistUriByUser.get(verbindung.user_id as string);
+            if (!info || !uri) continue;
+            const einstellung = info.erinnerungen.schlaf as { zeiten: { zeit: string; startDatum?: string }[] };
+            const treffer = einstellung.zeiten.some(
+              (z) => z.zeit && verschobeneUhrzeit(z.zeit, 1) === info.jetzt && (!z.startDatum || z.startDatum <= info.heute)
+            );
+            if (!treffer) continue;
+
+            try {
+              const accessToken = await frischesSpotifyToken(admin, verbindung);
+              const playRes = await fetch("https://api.spotify.com/v1/me/player/play", {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ context_uri: uri }),
+              });
+              // 404 = kein aktives Spotify-Gerät (z. B. Handy/Tablet gesperrt) —
+              // kein harter Fehler, niemand kann nachts noch eingreifen.
+              if (playRes.status !== 204 && playRes.status !== 404) {
+                console.error("Automatischer Spotify-Start (Schlaf) abgelehnt für", verbindung.user_id, await playRes.text());
+              }
+            } catch (err) {
+              console.error("Automatischer Spotify-Start (Schlaf) fehlgeschlagen für", verbindung.user_id, err);
+            }
           }
         }
       }

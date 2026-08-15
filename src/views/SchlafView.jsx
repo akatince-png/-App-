@@ -11,6 +11,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
+import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
 // ist Indigo, passend zu den bunten Home-Mini-Widgets.
@@ -163,6 +164,14 @@ export default function SchlafView({ onHome, embedded = false }) {
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>
       <Card style={{ marginBottom: 14 }}>
         <ZeitErinnerungenCard kategorie="schlaf" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="22:00" />
+        {/* Nutzerin-Vorgabe 15.08.: 1 Min. nach der Schlafenszeit oben
+            automatisch eine Playlist starten (z. B. Regengeräusche) — läuft
+            serverseitig über send-due-reminders, unabhängig davon, ob die
+            App gerade offen ist. Zuordnen = Aktivieren, wie bei den anderen
+            Anlässen (Morgenroutine/Abendroutine/Training/Gewohnheiten). */}
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
+          <SpotifyAnlassPicker anlass="schlaf" label="🎵 Playlist zum Einschlafen (startet automatisch 1 Min. nach der Schlafenszeit oben)" />
+        </div>
       </Card>
 
       {schlafEintraege.length > 0 && (
