@@ -656,4 +656,113 @@ export const FORMULARE = [
       },
     ],
   },
+
+  {
+    id: "passungscheck",
+    kurzTitel: "11. Der Passungs-Check",
+    titel: "Formular 11: Der Passungs-Check (Lebensrahmenbedingungen)",
+    // Aus dem Curriculum "Das ADHS-Paradoxon" (Ergänzung zur AKA-Praxisakademie):
+    // erhebt die lebensweltliche statt der gesundheitlichen Passung — Beziehung,
+    // Arbeit, Wohnraum, Finanzen, sozialer Kreis. Kann mehrfach durchgearbeitet
+    // werden ("Erhebung #"), genau wie die anderen Formulare hier ohne DB-
+    // Persistenz — Export als PDF sichert einen Durchlauf dauerhaft.
+    sections: [
+      {
+        titel: "Kopf",
+        felder: [
+          { key: "coachee", label: "Coachee", typ: "text" },
+          { key: "datum", label: "Datum", typ: "date" },
+          { key: "erhebungNr", label: "Erhebung #", typ: "text" },
+        ],
+      },
+      {
+        titel: "Beziehung & Partnerschaft",
+        felder: [
+          { key: "beziehungDauer", label: "Lebst du aktuell in einer Beziehung? Wie lange schon?", typ: "textarea" },
+          { key: "beziehungQualitaet", label: "Wie würdest du die Qualität dieser Beziehung beschreiben — trägt sie dich, oder kostet sie dich Kraft?", typ: "textarea" },
+          { key: "beziehungSingle", label: "Falls Single: Ist das gerade eine bewusste Entscheidung oder ein unerfülltes Bedürfnis?", typ: "textarea" },
+          { key: "beziehungRechtfertigung", label: "Gibt es Menschen in deinem Leben (Partner:in, Familie), bei denen du dich für dein ADHS rechtfertigen musst?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Arbeit & Beruf",
+        felder: [
+          { key: "arbeitAktuell", label: "Was arbeitest du aktuell? Seit wann?", typ: "textarea" },
+          { key: "arbeitZufriedenheit", label: "Macht dich diese Arbeit zufrieden — nicht nur finanziell, sondern inhaltlich?", typ: "textarea" },
+          { key: "arbeitPassform", label: "Passt die Arbeitsform (Struktur, Tempo, Reizlevel, Autonomie) zu dir, oder kämpfst du ständig dagegen an?", typ: "textarea" },
+          { key: "arbeitGeldEgal", label: "Wenn Geld keine Rolle spielen würde: Würdest du denselben Job machen?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Zufriedenheit & Wohlbefinden",
+        felder: [
+          { key: "zufriedenheitSkala", label: "Wie zufrieden bist du aktuell mit deinem Leben insgesamt?", typ: "skala", max: 10 },
+          { key: "zufriedenheitLebendig", label: "Was war der letzte Moment, in dem du dich richtig lebendig gefühlt hast? Wie lange ist das her?", typ: "textarea" },
+          { key: "zufriedenheitSchlechtGehen", label: "Woran merkst du, wenn es dir schlecht geht — und was tust du dann meistens?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Ziele & Visionen",
+        felder: [
+          { key: "zieleWichtigste", label: "Was sind deine wichtigsten Ziele für die nächsten 1–3 Jahre?", typ: "textarea" },
+          { key: "zieleVerschoben", label: "Gibt es ein Ziel, das du seit Jahren vor dir herschiebst? Warum?", typ: "textarea" },
+          { key: "zieleNichtScheitern", label: "Was würdest du tun, wenn du wüsstest, dass du nicht scheitern kannst?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Hobbys & Freizeit",
+        felder: [
+          { key: "hobbysAktuell", label: "Welche Hobbys hast du aktuell aktiv?", typ: "textarea" },
+          { key: "hobbysAufgegeben", label: "Gibt es etwas, das du früher geliebt hast und irgendwann aufgegeben hast? Was war der Grund?", typ: "textarea" },
+          { key: "hobbysErholung", label: "Wie viel deiner freien Zeit fühlt sich wie echte Erholung an — und wie viel wie „Zeit totschlagen“?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Reisen & Erlebnisse",
+        felder: [
+          { key: "reisenWunsch", label: "Möchtest du reisen? Wohin, und was hält dich bisher davon ab?", typ: "textarea" },
+          { key: "reisenLetztesAbenteuer", label: "Was war das letzte echte Abenteuer/die letzte neue Erfahrung in deinem Leben?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Wohnraum & Lebensumfeld",
+        felder: [
+          { key: "wohnraumRueckzugsort", label: "Fühlt sich dein Zuhause wie ein Rückzugsort an oder eher wie ein weiterer Stressfaktor (Unordnung, Reizüberflutung)?", typ: "textarea" },
+          { key: "wohnraumFesteOrte", label: "Hast du feste, sichtbare Orte für die Dinge, die du täglich brauchst — oder suchst du ständig?", typ: "textarea" },
+          { key: "wohnraumVeraendern", label: "Was würdest du an deinem Wohnraum verändern, wenn Geld keine Rolle spielt?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Finanzen",
+        felder: [
+          { key: "finanzenReicht", label: "Reicht dein Geld am Monatsende in der Regel, oder ist es eng?", typ: "textarea" },
+          { key: "finanzenUeberblick", label: "Hast du einen Überblick über deine Finanzen, oder ist das ein Bereich, den du eher vermeidest?", typ: "textarea" },
+          { key: "finanzenStress", label: "Bereiten dir Finanzen aktuell Stress? (Bei akuten Schulden/Zahlungsproblemen: an Schuldnerberatung verweisen — Formular 6.)", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Sozialer Kreis",
+        felder: [
+          { key: "sozialEngsteMenschen", label: "Wer sind die 3–5 Menschen, mit denen du die meiste Zeit verbringst?", typ: "textarea" },
+          { key: "sozialErschoepfend", label: "Gibt es Menschen in deinem Umfeld, nach deren Kontakt du dich regelmäßig erschöpft statt aufgetankt fühlst?", typ: "textarea" },
+          { key: "sozialReduziert", label: "Hast du in der Vergangenheit bewusst Kontakt zu jemandem reduziert oder beendet, weil er/sie dir nicht gutgetan hat? Wie war das für dich?", typ: "textarea" },
+          { key: "sozialVerstanden", label: "Fühlst du dich von den Menschen um dich herum mit deinem ADHS verstanden oder eher belächelt/kritisiert?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Verbindung zu den Protokollen",
+        felder: [
+          { key: "verbindungEinfluss", label: "Welcher der oben genannten Lebensbereiche beeinflusst am stärksten, wie gut deine Schlaf-/Bewegungs-/Ernährungsroutinen aktuell funktionieren?", typ: "textarea" },
+        ],
+      },
+      {
+        titel: "Auswertung — gemeinsam durchgehen",
+        felder: [
+          { key: "auswertungStaerkster", label: "Stärkster Lebensbereich (funktioniert bereits gut)", typ: "text" },
+          { key: "auswertungLeidensdruck", label: "Bereich mit dem größten Leidensdruck", typ: "text" },
+          { key: "auswertungHebelwirkung", label: "Bereich mit der wahrscheinlich größten Hebelwirkung auf alles andere", typ: "text" },
+        ],
+      },
+    ],
+  },
 ];

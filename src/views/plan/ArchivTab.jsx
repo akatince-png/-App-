@@ -1,11 +1,34 @@
 import React from "react";
 import { Card, PrimaryButton } from "../../ui/primitives";
 import { SignedPhoto } from "../../ui/SignedPhoto";
-import { cardBorder, textMuted } from "../../ui/theme";
+import { cardBorder, danger, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 
 export default function ArchivTab() {
-  const { abgeschlosseneProtokolle, protokollArchivieren, blutwerteArchiv, gewichtsEintraege, aktiveMesswerte, combinedMesswertDefs } = useAppData();
+  const {
+    abgeschlosseneProtokolle,
+    protokollArchivieren,
+    protokollLoeschen,
+    hauptprotokolle,
+    hauptprotokollLoeschen,
+    blutwerteArchiv,
+    gewichtsEintraege,
+    aktiveMesswerte,
+    combinedMesswertDefs,
+  } = useAppData();
+
+  const archivierteHauptprotokolle = hauptprotokolle.filter((h) => h.status === "archived");
+
+  const handleProtokollLoeschen = (p) => {
+    const bezeichnung = p.peptide.join(", ") || `Protokoll vom ${p.datum}`;
+    if (!window.confirm(`Bist du sicher, dass du "${bezeichnung}" (${p.datum}) endgültig entfernen möchtest? Das kann nicht rückgängig gemacht werden.`)) return;
+    protokollLoeschen(p.id);
+  };
+
+  const handleHauptprotokollLoeschen = (h) => {
+    if (!window.confirm(`Bist du sicher, dass du "${h.name}" endgültig entfernen möchtest? Das kann nicht rückgängig gemacht werden.`)) return;
+    hauptprotokollLoeschen(h.id);
+  };
 
   return (
     <>
@@ -23,14 +46,52 @@ export default function ArchivTab() {
       <Card style={{ marginBottom: 14 }}>
         {abgeschlosseneProtokolle.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Noch keine abgeschlossenen Protokolle.</div>}
         {abgeschlosseneProtokolle.map((p, i) => (
-          <div key={p.id || i} style={{ padding: "10px 0", borderBottom: i < abgeschlosseneProtokolle.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>{p.peptide.join(", ") || "—"}</span>
-              <span style={{ fontSize: 12, color: textMuted }}>{p.datum}</span>
+          <div
+            key={p.id || i}
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: i < abgeschlosseneProtokolle.length - 1 ? `1px solid ${cardBorder}` : "none" }}
+          >
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{p.peptide.join(", ") || "—"}</span>
+                <span style={{ fontSize: 12, color: textMuted, flexShrink: 0 }}>{p.datum}</span>
+              </div>
+              <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>
+                {p.ziele.join(", ")} · {p.dauer} Wochen · {p.injektionen} Injektionen
+              </div>
             </div>
-            <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>
-              {p.ziele.join(", ")} · {p.dauer} Wochen · {p.injektionen} Injektionen
+            <button
+              onClick={() => handleProtokollLoeschen(p)}
+              title="Endgültig löschen"
+              style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, border: "none", background: "#FDE9EC", color: danger, fontSize: 14, cursor: "pointer" }}
+            >
+              🗑
+            </button>
+          </div>
+        ))}
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Abgeschlossene Hauptprotokolle</div>
+      <Card style={{ marginBottom: 14 }}>
+        {archivierteHauptprotokolle.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Noch keine abgeschlossenen Hauptprotokolle.</div>}
+        {archivierteHauptprotokolle.map((h, i) => (
+          <div
+            key={h.id}
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: i < archivierteHauptprotokolle.length - 1 ? `1px solid ${cardBorder}` : "none" }}
+          >
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{h.name}</div>
+              <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>
+                Gestartet {h.startdatum}
+                {h.archiviert_am && ` · Archiviert ${h.archiviert_am.slice(0, 10)}`}
+              </div>
             </div>
+            <button
+              onClick={() => handleHauptprotokollLoeschen(h)}
+              title="Endgültig löschen"
+              style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, border: "none", background: "#FDE9EC", color: danger, fontSize: 14, cursor: "pointer" }}
+            >
+              🗑
+            </button>
           </div>
         ))}
       </Card>
