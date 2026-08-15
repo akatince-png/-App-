@@ -9,7 +9,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
-import { verspaetungText } from "../utils/dates";
+import { toLocalISODate, verspaetungText } from "../utils/dates";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
@@ -145,7 +145,7 @@ export default function GewohnheitenView({ onHome }) {
 
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
   const [fehler, setFehler] = useState(null);
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = toLocalISODate(new Date());
   // Morgen-/Abendroutine bekommt hier einen prominenten Einstieg, seit
   // "Gewohnheiten" im Home-Menü zu "Routinen" wurde (Nutzerinnen-Vorgabe,
   // 13.08.) — derselbe geführte Ablauf-Screen wie im Tagesplan.

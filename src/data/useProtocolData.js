@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { activeDoseDays } from "../utils/schedule";
+import { toLocalISODate } from "../utils/dates";
 
 function rowToDosierung(row) {
   return {
@@ -57,7 +58,7 @@ export function useProtocolData(userId) {
   const [peptide, setPeptideState] = useState([]);
   const [einnahmeart, setEinnahmeartState] = useState({});
   const [dosierung, setDosierungState] = useState({});
-  const [startdatum, setStartdatumState] = useState(new Date().toISOString().slice(0, 10));
+  const [startdatum, setStartdatumState] = useState(toLocalISODate(new Date()));
   const [dauer, setDauerState] = useState("12");
   const [notizen, setNotizenState] = useState("");
   const [abgeschlosseneProtokolle, setAbgeschlosseneProtokolle] = useState([]);
@@ -109,7 +110,7 @@ export function useProtocolData(userId) {
       if (!active) {
         const { data: created, error } = await supabase
           .from("protocols")
-          .insert({ user_id: userId, ziele: [], startdatum: new Date().toISOString().slice(0, 10), dauer_wochen: 12, notizen: "" })
+          .insert({ user_id: userId, ziele: [], startdatum: toLocalISODate(new Date()), dauer_wochen: 12, notizen: "" })
           .select()
           .single();
         if (error) {
@@ -433,7 +434,7 @@ export function useProtocolData(userId) {
     }
     const { data: created, error: createErr } = await supabase
       .from("protocols")
-      .insert({ user_id: userId, ziele: [], startdatum: new Date().toISOString().slice(0, 10), dauer_wochen: 12, notizen: "" })
+      .insert({ user_id: userId, ziele: [], startdatum: toLocalISODate(new Date()), dauer_wochen: 12, notizen: "" })
       .select()
       .single();
     if (createErr) {

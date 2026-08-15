@@ -27,6 +27,7 @@ import {
   CARDIO_MODI_SPRUNGSEIL,
 } from "../constants";
 import { KATEGORIE_META } from "../utils/dayItems";
+import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe (siehe
@@ -40,7 +41,7 @@ const INTERVALL_FADE_SEK = 5;
 
 function leererEintrag() {
   return {
-    datum: new Date().toISOString().slice(0, 10),
+    datum: toLocalISODate(new Date()),
     uhrzeit: "08:00",
     art: "",
     name: "",
@@ -693,7 +694,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const templateDirektStarten = async (tpl) => {
     setFehler(null);
     const result = await trainingHinzufuegen({
-      datum: new Date().toISOString().slice(0, 10),
+      datum: toLocalISODate(new Date()),
       uhrzeit: tpl.uhrzeit || "",
       art: tpl.art,
       name: tpl.name,

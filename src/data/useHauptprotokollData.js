@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { toLocalISODate } from "../utils/dates";
 
 // Hauptprotokoll: die neue Ebene über allen Bereichen. Ein Nutzer legt zuerst
 // ein benanntes Hauptprotokoll an (z. B. "Sommer 2026"), danach werden die
@@ -41,7 +42,7 @@ export function useHauptprotokollData(userId) {
 
       const { data, error } = await supabase
         .from("hauptprotokolle")
-        .insert({ user_id: userId, name: trimmedName, beschreibung: beschreibung || "", startdatum: startdatum || new Date().toISOString().slice(0, 10) })
+        .insert({ user_id: userId, name: trimmedName, beschreibung: beschreibung || "", startdatum: startdatum || toLocalISODate(new Date()) })
         .select()
         .single();
       if (error) {

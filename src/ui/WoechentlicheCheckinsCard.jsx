@@ -4,9 +4,10 @@ import { SignedPhoto } from "./SignedPhoto";
 import { accent, accentDark, accentSoft, cardBorder, textMuted } from "./theme";
 import { ENERGIELEVEL_OPTIONEN, FOTO_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+import { toLocalISODate } from "../utils/dates";
 
 function leererEintrag(aktiveMesswerte) {
-  const base = { datum: new Date().toISOString().slice(0, 10) };
+  const base = { datum: toLocalISODate(new Date()) };
   aktiveMesswerte.forEach((id) => (base[id] = ""));
   return base;
 }

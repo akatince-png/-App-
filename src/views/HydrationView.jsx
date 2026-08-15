@@ -12,12 +12,13 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
+import { toLocalISODate } from "../utils/dates";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
 // ist Blau, passend zu den bunten Home-Mini-Widgets.
 const { text: accentDark } = KATEGORIE_META.hydration;
 
-const heute = () => new Date().toISOString().slice(0, 10);
+const heute = () => toLocalISODate(new Date());
 
 const SCHNELLAUSWAHL = [
   { label: "Glas", ml: 200 },

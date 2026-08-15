@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
+import { toLocalISODate } from "../utils/dates";
 
 export function useBiomarkerData(userId) {
   const [biomarker, setBiomarkerState] = useState({});
@@ -67,7 +68,7 @@ export function useBiomarkerData(userId) {
             .upsert({ user_id: userId, name: k, value: String(v), updated_at: new Date().toISOString() }, { onConflict: "user_id,name" });
         }
 
-        const datum = new Date().toISOString().slice(0, 10);
+        const datum = toLocalISODate(new Date());
         await supabase.from("blutwerte_archiv").insert({ user_id: userId, datum, werte: data.werte, foto_path: fotoPath });
         setBlutwerteArchiv((prev) => [{ datum, werte: data.werte }, ...prev]);
         setOcrSuccessCount(entries.length);

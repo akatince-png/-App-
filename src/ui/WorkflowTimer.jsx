@@ -10,6 +10,7 @@ import { cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { useIntervallMusikSync } from "../data/useIntervallMusikSync";
 import { WOCHENTAGE } from "../constants";
+import { toLocalISODate } from "../utils/dates";
 
 const FADE_SEK = 5;
 
@@ -18,8 +19,8 @@ const LEERER_ZEITPLAN_ENTWURF = {
   festeUhrzeit: false,
   uhrzeit: "09:00",
   gueltigkeitModus: "unbestimmt", // 'unbestimmt' | 'abDatum' | 'zeitraum'
-  gueltigVon: new Date().toISOString().slice(0, 10),
-  gueltigBis: new Date().toISOString().slice(0, 10),
+  gueltigVon: toLocalISODate(new Date()),
+  gueltigBis: toLocalISODate(new Date()),
 };
 
 function praesetAnlass(presetId) {

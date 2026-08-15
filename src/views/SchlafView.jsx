@@ -12,13 +12,14 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import { toLocalISODate } from "../utils/dates";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
 // ist Indigo, passend zu den bunten Home-Mini-Widgets.
 const { text: accentDark, dot: blue } = KATEGORIE_META.schlaf;
 
 const LEERER_EINTRAG = {
-  datum: new Date().toISOString().slice(0, 10),
+  datum: toLocalISODate(new Date()),
   stunden: "",
   schlafqualitaet: "",
   einschlafzeit: "",

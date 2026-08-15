@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { toLocalISODate } from "../utils/dates";
 
-const heute = () => new Date().toISOString().slice(0, 10);
+const heute = () => toLocalISODate(new Date());
 
 // Gleicher Aufbau wie useHydrationData.js — ein Log-Eintrag pro Tag mit
 // laufender Gesamtzeit im Tageslicht/Freien (Minuten) statt vieler

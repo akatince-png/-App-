@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { toLocalISODate } from "../utils/dates";
 
 function rowToSchritt(r) {
   return { id: r.id, routine: r.routine, reihenfolge: r.reihenfolge, name: r.name, dauerMin: r.dauer_min };
@@ -137,7 +138,7 @@ export function useRoutinen(userId) {
       const row = {
         user_id: userId,
         routine,
-        datum: new Date().toISOString().slice(0, 10),
+        datum: toLocalISODate(new Date()),
         schritte: schritteProtokoll,
         gestartet_um: gestartetUm,
         abgeschlossen_um: new Date().toISOString(),

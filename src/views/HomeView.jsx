@@ -148,6 +148,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     gewohnheitErledigt,
     workflowPlaene,
     workflowPresets,
+    projekte,
+    zeitbloecke,
     confirmAlleTageszeit,
     hydrationHeuteMl,
     hydrationZielMl,
@@ -263,6 +265,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     gewohnheitErledigt,
     workflowPlaene,
     workflowPresets,
+    projekte,
+    zeitbloecke,
   });
 
   // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
