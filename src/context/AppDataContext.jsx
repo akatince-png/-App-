@@ -31,6 +31,7 @@ import { useZeitbloecke } from "../data/useZeitbloecke";
 import { useCoacheeNachrichten } from "../data/useCoacheeNachrichten";
 import { useCoachWissen } from "../data/useCoachWissen";
 import { useWorkflowData } from "../data/useWorkflowData";
+import { useBausteinVersionen } from "../data/useBausteinVersionen";
 
 const AppDataContext = createContext(null);
 
@@ -75,6 +76,7 @@ export function AppDataProvider({ children }) {
   const coacheeNachrichtenData = useCoacheeNachrichten(userId);
   const coachWissenData = useCoachWissen(userId);
   const workflowData = useWorkflowData(userId);
+  const bausteinVersionenData = useBausteinVersionen(userId);
 
   const value = {
     userId,
@@ -121,6 +123,7 @@ export function AppDataProvider({ children }) {
     ...coacheeNachrichtenData,
     ...coachWissenData,
     ...workflowData,
+    ...bausteinVersionenData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,

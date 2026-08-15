@@ -98,8 +98,79 @@ function AenderungKarte({ e, onLoeschen }) {
   );
 }
 
+const KATEGORIE_LABEL = {
+  schlaf: "Schlaf",
+  hydration: "Hydration",
+  tageslicht: "Tageslicht",
+  ernaehrung: "Ernährung",
+  training: "Training",
+  gewohnheiten: "Gewohnheiten",
+  supplemente: "Supplemente",
+  medikamente: "Medikamente",
+};
+
+// Generischer Snapshot-Renderer statt eigener Formatierung je Kategorie
+// (die haben alle unterschiedliche Datenstrukturen, siehe
+// MehrTab.jsx/snapshotFuer) — zeigt bei Listen Anzahl + soweit vorhanden
+// Namen, sonst den rohen Wert.
+function VersionSnapshot({ snapshot }) {
+  if (!snapshot || (typeof snapshot === "object" && Object.keys(snapshot).length === 0)) {
+    return <div style={{ fontSize: 11.5, color: textMuted, marginTop: 4 }}>Keine Daten zu diesem Zeitpunkt.</div>;
+  }
+  const eintraege = typeof snapshot === "object" ? Object.entries(snapshot) : [["Wert", snapshot]];
+  return (
+    <div style={{ marginTop: 6 }}>
+      {eintraege.map(([key, val]) => (
+        <div key={key} style={{ fontSize: 11.5, color: textMuted, marginTop: 3 }}>
+          <span style={{ fontWeight: 700 }}>{key}: </span>
+          {Array.isArray(val)
+            ? val.length === 0
+              ? "leer"
+              : `${val.length} Eintr${val.length === 1 ? "ag" : "äge"} — ${val
+                  .slice(0, 6)
+                  .map((v) => (typeof v === "object" ? v?.name || v?.wochentag || "?" : String(v)))
+                  .join(", ")}${val.length > 6 ? "…" : ""}`
+            : val && typeof val === "object"
+              ? JSON.stringify(val)
+              : String(val)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VersionKarte({ v, onLoeschen }) {
+  const [offen, setOffen] = useState(false);
+  return (
+    <div style={{ padding: "10px 0", borderBottom: `1px solid ${cardBorder}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <button onClick={() => setOffen((o) => !o)} className="mp-tap" style={{ flex: 1, textAlign: "left", background: "transparent", border: "none", cursor: "pointer", padding: 0, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>{KATEGORIE_LABEL[v.kategorie] || v.kategorie}</div>
+          <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>
+            {new Date(v.erstellt_am).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </div>
+          {v.notiz && <div style={{ fontSize: 12, marginTop: 3, fontStyle: "italic" }}>„{v.notiz}“</div>}
+        </button>
+        <button
+          onClick={() => onLoeschen(v.id)}
+          title="Version löschen"
+          style={{ flexShrink: 0, border: "none", background: "transparent", color: danger, fontSize: 12, cursor: "pointer", padding: "2px 4px" }}
+        >
+          🗑
+        </button>
+      </div>
+      {offen && <VersionSnapshot snapshot={v.snapshot} />}
+    </div>
+  );
+}
+
 export default function ProtokollLogView({ onHome, embedded = false }) {
-  const { trainingEintraege, protokollEintraege, wochenprotokollSnapshots, aenderungEntfernen } = useAppData();
+  const { trainingEintraege, protokollEintraege, wochenprotokollSnapshots, aenderungEntfernen, versionen, versionLoeschen } = useAppData();
+
+  const handleVersionLoeschen = (id) => {
+    if (!window.confirm("Diese Version endgültig löschen?")) return;
+    versionLoeschen(id);
+  };
 
   const handleAenderungLoeschen = (id) => {
     if (!window.confirm("Diesen Eintrag endgültig löschen?")) return;
@@ -188,6 +259,22 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
             </Card>
           </div>
         ))
+      )}
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🗂️ Baustein-Versionen</div>
+      {versionen.length === 0 ? (
+        <Card style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
+            Noch keine Version festgehalten — unter Mehr → Aktuelles Protokoll kannst du bei jedem Baustein mit 📌 die
+            aktuelle Einstellung sichern, bevor du sie änderst.
+          </div>
+        </Card>
+      ) : (
+        <Card style={{ marginBottom: 18 }}>
+          {versionen.map((v) => (
+            <VersionKarte key={v.id} v={v} onLoeschen={handleVersionLoeschen} />
+          ))}
+        </Card>
       )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🏋️ Training</div>

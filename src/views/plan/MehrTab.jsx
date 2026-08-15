@@ -32,12 +32,59 @@ const BAUSTEINE_KATEGORIEN = [
   { kategorie: "medikamente", label: "Medikamente", kern: false },
 ];
 
+// Baut den Schnappschuss der aktuell geltenden Werte je Kategorie — reine
+// Snapshots (kein automatisches Diffing), ausgelöst über "Version
+// festhalten" (Nutzerinnen-Vorgabe, 15.08.: "die alte Einstellung soll noch
+// abgespeichert sein, wenn ich was verändere"). Felder direkt aus den
+// jeweiligen Kategorie-Hooks, siehe deren return-Objekte.
+function snapshotFuer(kategorie, appData) {
+  switch (kategorie) {
+    case "schlaf":
+      return appData.categoryZiele?.schlaf || null;
+    case "hydration":
+      return { zielMl: appData.hydrationZielMl };
+    case "tageslicht":
+      return { zielMinuten: appData.tageslichtZielMinuten };
+    case "ernaehrung":
+      return { mahlzeiten: appData.mahlzeiten, mealWochenplan: appData.mealWochenplan };
+    case "training":
+      return { trainingWochenplan: appData.trainingWochenplan };
+    case "gewohnheiten":
+      return { gewohnheiten: appData.gewohnheiten };
+    case "supplemente":
+      return { supplemente: appData.supplemente };
+    case "medikamente":
+      return { hormone: appData.hormone };
+    default:
+      return null;
+  }
+}
+
 function AktuellesProtokoll() {
-  const { aktivesHauptprotokoll, teilprotokolle, teilprotokollSpeichern, aenderungVermerken } = useAppData();
+  const appData = useAppData();
+  const { aktivesHauptprotokoll, teilprotokolle, teilprotokollSpeichern, aenderungVermerken, versionFesthalten } = appData;
+  const [versionLaeuft, setVersionLaeuft] = useState(null); // kategorie | null
 
   if (!aktivesHauptprotokoll) return null;
 
   const zeileFuer = (kategorie) => teilprotokolle.find((t) => t.hauptprotokoll_id === aktivesHauptprotokoll.id && t.kategorie === kategorie);
+
+  const versionFuerBausteinFesthalten = async (b) => {
+    const notiz = window.prompt(`Kurze Notiz zu dieser Version von "${b.label}" (optional):`, "");
+    if (notiz === null) return; // abgebrochen
+    setVersionLaeuft(b.kategorie);
+    const snapshot = snapshotFuer(b.kategorie, appData);
+    const result = await versionFesthalten(aktivesHauptprotokoll.id, b.kategorie, snapshot, notiz);
+    setVersionLaeuft(null);
+    if (result?.ok) {
+      aenderungVermerken({
+        kategorie: "protokoll",
+        itemName: b.label,
+        aktion: "Version festgehalten",
+        detail: notiz || `Aktuelle Einstellung von „${b.label}" gesichert`,
+      });
+    }
+  };
 
   const seitWoche = (kategorie) => {
     const zeile = zeileFuer(kategorie);
@@ -68,8 +115,9 @@ function AktuellesProtokoll() {
     <>
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>📋 Aktuelles Protokoll: {aktivesHauptprotokoll.name}</div>
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10, lineHeight: 1.5 }}>
-        Bausteine an-/ausschalten. Zum Bearbeiten der Inhalte in "Alle Pläne" auf den passenden Reiter tippen. Jede Änderung
-        erscheint im Tagesverlauf unter Archiv → Protokolle.
+        Bausteine an-/ausschalten. Zum Bearbeiten der Inhalte in "Alle Pläne" auf den passenden Reiter tippen. "📌" hält die
+        aktuelle Einstellung als Version fest, bevor du sie änderst — sichtbar unter Archiv → Protokolle. Jede Änderung
+        erscheint zusätzlich im Tagesverlauf dort.
       </div>
       <Card style={{ marginBottom: 20 }}>
         {BAUSTEINE_KATEGORIEN.map((b, i) => {
@@ -90,13 +138,32 @@ function AktuellesProtokoll() {
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</div>
                 {aktiv && woche && <div style={{ fontSize: 10.5, color: textMuted, marginTop: 1 }}>Seit Woche {woche}</div>}
               </div>
-              {b.kern ? (
-                <span style={{ fontSize: 11, fontWeight: 700, color: accentDark, background: accentSoft, padding: "4px 10px", borderRadius: 10 }}>
-                  Immer aktiv
-                </span>
-              ) : (
-                <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button
+                  onClick={() => versionFuerBausteinFesthalten(b)}
+                  disabled={versionLaeuft === b.kategorie}
+                  title="Aktuelle Einstellung als Version festhalten"
+                  style={{
+                    border: `1px solid ${cardBorder}`,
+                    background: "#fff",
+                    borderRadius: 8,
+                    width: 28,
+                    height: 28,
+                    fontSize: 13,
+                    cursor: versionLaeuft === b.kategorie ? "wait" : "pointer",
+                    opacity: versionLaeuft === b.kategorie ? 0.5 : 1,
+                  }}
+                >
+                  📌
+                </button>
+                {b.kern ? (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: accentDark, background: accentSoft, padding: "4px 10px", borderRadius: 10 }}>
+                    Immer aktiv
+                  </span>
+                ) : (
+                  <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
+                )}
+              </div>
             </div>
           );
         })}
