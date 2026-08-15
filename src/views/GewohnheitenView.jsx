@@ -297,21 +297,23 @@ export default function GewohnheitenView({ onHome }) {
         <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
       </Card>
 
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>⏱️ Workflow</div>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-          Konzentriert arbeiten in Intervallen — z. B. 25 Minuten Arbeit, 5 Minuten Pause — mit eigener Playlist.
-        </div>
-        <PrimaryButton onClick={() => setWorkflowOffen(true)}>▶️ Workflow starten</PrimaryButton>
-      </Card>
+      <div className="mp-routinen-oben-grid">
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>⏱️ Workflow</div>
+          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+            Konzentriert arbeiten in Intervallen — z. B. 25 Minuten Arbeit, 5 Minuten Pause — mit eigener Playlist.
+          </div>
+          <PrimaryButton onClick={() => setWorkflowOffen(true)}>▶️ Workflow starten</PrimaryButton>
+        </Card>
 
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🎵 Musik für deine Gewohnheiten</div>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 4 }}>
-          Eine Playlist, die zu allen deinen sonstigen Gewohnheiten passt — spielst du dir selbst über "Jetzt testen" an, wenn du startest.
-        </div>
-        <SpotifyAnlassPicker anlass="gewohnheiten" label="" />
-      </Card>
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🎵 Musik für deine Gewohnheiten</div>
+          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 4 }}>
+            Eine Playlist, die zu allen deinen sonstigen Gewohnheiten passt — spielst du dir selbst über "Jetzt testen" an, wenn du startest.
+          </div>
+          <SpotifyAnlassPicker anlass="gewohnheiten" label="" />
+        </Card>
+      </div>
 
       <div style={{ marginBottom: 16 }}>
         <KiChat
@@ -392,18 +394,20 @@ export default function GewohnheitenView({ onHome }) {
           </div>
         </Card>
       ) : (
-        gewohnheiten.map((g) => (
-          <GewohnheitKarte
-            key={g.id}
-            g={g}
-            heuteErledigt={!!gewohnheitErledigt[`${heute}__${g.id}`]}
-            onToggleHeute={() => handleToggleHeute(g)}
-            onEntfernen={handleEntfernen}
-            onZielAendern={handleZielAendern}
-            gesamtTage={gesamtTage}
-            aktuelleSerie={aktuelleSerie}
-          />
-        ))
+        <div className="mp-routinen-liste-grid">
+          {gewohnheiten.map((g) => (
+            <GewohnheitKarte
+              key={g.id}
+              g={g}
+              heuteErledigt={!!gewohnheitErledigt[`${heute}__${g.id}`]}
+              onToggleHeute={() => handleToggleHeute(g)}
+              onEntfernen={handleEntfernen}
+              onZielAendern={handleZielAendern}
+              gesamtTage={gesamtTage}
+              aktuelleSerie={aktuelleSerie}
+            />
+          ))}
+        </div>
       )}
     </Shell>
   );
