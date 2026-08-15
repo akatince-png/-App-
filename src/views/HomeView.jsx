@@ -119,11 +119,18 @@ function NachrichtAnCoachCard({ nachrichten, onSenden }) {
       </Card>
       {nachrichten?.length > 0 && (
         <div style={{ marginTop: 10 }}>
-          {nachrichten.slice(0, 3).map((n) => (
-            <div key={n.id} style={{ fontSize: 12, color: textMuted, padding: "6px 2px" }}>
-              {n.gelesen ? "✓ Gelesen" : "Noch nicht gelesen"} · {n.text}
-            </div>
-          ))}
+          {nachrichten.slice(0, 5).map((n) =>
+            n.absender === "coach" ? (
+              <div key={n.id} style={{ fontSize: 12.5, padding: "8px 10px", marginBottom: 6, borderRadius: 10, background: accentSoft, color: accentDark }}>
+                <div style={{ fontSize: 10.5, fontWeight: 700, marginBottom: 2 }}>Dein Coach</div>
+                {n.text}
+              </div>
+            ) : (
+              <div key={n.id} style={{ fontSize: 12, color: textMuted, padding: "6px 2px" }}>
+                {n.gelesen ? "✓ Gelesen" : "Noch nicht gelesen"} · {n.text}
+              </div>
+            )
+          )}
         </div>
       )}
     </div>

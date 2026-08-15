@@ -4,6 +4,7 @@ import ViewHeader from "../../ui/ViewHeader";
 import { accentDark, accentSoft, cardBorder, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext";
+import { coachNachrichtSenden } from "../../data/useCoacheeNachrichten";
 
 // Bereiche, in denen KiChat.jsx tatsächlich mit bereich="..." aufgerufen
 // wird (siehe grep über src/views) — muss exakt übereinstimmen, sonst
@@ -29,7 +30,7 @@ const BEREICH_OPTIONEN = [
 // selbstständig mit der KI ihren Plan erstellen können. Sobald "Verwalten"
 // gedrückt wird, läuft die komplette App unverändert weiter, nur mit den
 // Daten der ausgewählten Person statt der eigenen (siehe AppDataContext.jsx).
-export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen, onOpenFormulare, onOpenUebungsBilder }) {
+export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen, onOpenFormulare, onOpenUebungsBilder, onOpenUebersicht }) {
   const { user } = useAuth();
   const [probanden, setProbanden] = useState([]);
   const [ladend, setLadend] = useState(true);
@@ -71,6 +72,12 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
         genauso einstellen wie sie selbst. Ein Banner oben zeigt dir jederzeit,
         wessen Konto du gerade bearbeitest, mit einem Knopf zurück hierher.
       </div>
+
+      {onOpenUebersicht && (
+        <div style={{ marginBottom: 14 }}>
+          <PrimaryButton onClick={onOpenUebersicht}>📊 Coach-Übersicht (alle Coachees grafisch)</PrimaryButton>
+        </div>
+      )}
 
       {onOpenWissen && (
         <div style={{ marginBottom: 14 }}>
@@ -167,9 +174,31 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
               <button
                 onClick={() => setNachrichtenFuer((v) => (v === p.id ? null : p.id))}
                 className="mp-tap"
-                style={{ padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ position: "relative", padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
               >
                 {nachrichtenFuer === p.id ? "Schließen" : "Nachrichten"}
+                {p.ungelesene_nachrichten > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -6,
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      background: danger,
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0 4px",
+                    }}
+                  >
+                    {p.ungelesene_nachrichten}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -304,20 +333,23 @@ function AdminNotizPanel({ proband, adminId }) {
   );
 }
 
-// Eingehende Nachrichten EINER Person lesen (13.08., Coach-verwaltetes
-// Modell) — Gegenstück zu AdminNotizPanel: läuft in der anderen Richtung
-// (Coachee an Admin, siehe 0045_coachee_modell.sql/useCoacheeNachrichten.js)
-// und OHNE den Umweg über den KI-Assistenten, weil der für Coachees
-// ausgeblendet ist (siehe KiChat.jsx).
-function CoacheeNachrichtenPanel({ proband }) {
+// Nachrichten EINER Person lesen UND senden (13.08., erweitert 15.08. um
+// die Senden-Richtung) — läuft in beide Richtungen über coachee_nachrichten
+// (0045/0065), OHNE den Umweg über den KI-Assistenten (der für Coachees
+// ausgeblendet ist, siehe KiChat.jsx) — die Coachee sieht Coach-Nachrichten
+// stattdessen direkt auf ihrer Startseite (HomeView.jsx, NachrichtAnCoachCard).
+export function CoacheeNachrichtenPanel({ proband }) {
   const [nachrichten, setNachrichten] = useState([]);
   const [ladend, setLadend] = useState(true);
+  const [text, setText] = useState("");
+  const [sendenLaeuft, setSendenLaeuft] = useState(false);
+  const [fehler, setFehler] = useState(null);
 
   const laden = async () => {
     setLadend(true);
     const { data, error } = await supabase
       .from("coachee_nachrichten")
-      .select("id, text, gelesen, erstellt_am")
+      .select("id, text, gelesen, erstellt_am, absender")
       .eq("user_id", proband.id)
       .order("erstellt_am", { ascending: false });
     if (!error) setNachrichten(data || []);
@@ -335,39 +367,66 @@ function CoacheeNachrichtenPanel({ proband }) {
     if (error) console.error(error);
   };
 
+  const senden = async () => {
+    setFehler(null);
+    setSendenLaeuft(true);
+    const result = await coachNachrichtSenden(proband.id, text);
+    setSendenLaeuft(false);
+    if (!result?.ok) {
+      setFehler(result?.error || "Senden fehlgeschlagen.");
+      return;
+    }
+    setText("");
+    laden();
+  };
+
   return (
     <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
-      {ladend && <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>}
-      {!ladend && nachrichten.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Noch keine Nachrichten.</div>}
-      {nachrichten.map((n) => (
-        <div
-          key={n.id}
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 8,
-            padding: "10px 0",
-            borderBottom: `1px solid ${cardBorder}`,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11, color: textMuted, marginBottom: 3 }}>
-              {new Date(n.erstellt_am).toLocaleString("de-DE")} · {n.gelesen ? "gelesen" : "neu"}
+      <TextArea value={text} onChange={setText} placeholder={`Nachricht an ${proband.vorname || proband.email} …`} />
+      <div style={{ marginTop: 8 }}>
+        <PrimaryButton onClick={senden} disabled={sendenLaeuft || !text.trim()}>
+          {sendenLaeuft ? "Sendet…" : "Senden"}
+        </PrimaryButton>
+      </div>
+      {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
+      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 6 }}>
+        Kommt direkt auf ihrer Startseite an, kein Umweg über den Chat.
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        {ladend && <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>}
+        {!ladend && nachrichten.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Noch keine Nachrichten.</div>}
+        {nachrichten.map((n) => (
+          <div
+            key={n.id}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 8,
+              padding: "10px 0",
+              borderBottom: `1px solid ${cardBorder}`,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 11, color: textMuted, marginBottom: 3 }}>
+                {n.absender === "coach" ? "Du" : proband.vorname || "Coachee"} · {new Date(n.erstellt_am).toLocaleString("de-DE")}
+                {n.absender !== "coach" && ` · ${n.gelesen ? "gelesen" : "neu"}`}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: n.absender !== "coach" && !n.gelesen ? 700 : 400 }}>{n.text}</div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: n.gelesen ? 400 : 700 }}>{n.text}</div>
+            {n.absender !== "coach" && !n.gelesen && (
+              <button
+                onClick={() => alsGelesenMarkieren(n.id)}
+                className="mp-tap"
+                style={{ flexShrink: 0, border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "4px 6px" }}
+              >
+                Gelesen
+              </button>
+            )}
           </div>
-          {!n.gelesen && (
-            <button
-              onClick={() => alsGelesenMarkieren(n.id)}
-              className="mp-tap"
-              style={{ flexShrink: 0, border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "4px 6px" }}
-            >
-              Gelesen
-            </button>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
