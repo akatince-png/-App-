@@ -1,5 +1,50 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 15.08.2026, spätabends (Teil 3) — Baustein-Versionierung + tote View entfernt
+
+Letzte Runde dieser Sitzung, Nutzerin hat ab 16.08. keinen Zugang mehr.
+Committet als `f6f2677`, `7ea39c7`, `e0f191c` (main + Feature-Branch synchron):
+
+1. **`PeptidView.jsx` gelöscht** — Karteileiche seit der Peptid/Medikamente-
+   Zusammenlegung (0042), von nirgends mehr importiert. Peptide laufen
+   ausschließlich über `MedikamenteView.jsx`.
+2. **Versionierung der Protokoll-Bausteine** (der Punkt, der in Teil 2 noch
+   bewusst verschoben wurde): neue Tabelle `baustein_versionen` (Migration
+   0069, **inklusive Admin-RLS-Policy** nach dem Muster von
+   `0035_admin_dashboard.sql` — ohne die würde "Version festhalten" im
+   "Verwalten als"-Modus an der Datenbank scheitern, weil `auth.uid()` dabei
+   weiterhin die Admin-ID ist). Hook: `useBausteinVersionen.js`
+   (`versionFesthalten`, `versionLoeschen`).
+   - In `MehrTab.jsx` (`AktuellesProtokoll`) hat jeder Baustein jetzt einen
+     📌-Button: hält die aktuell geltenden Werte als JSON-Snapshot fest
+     (`snapshotFuer()` mappt Kategorie → Felder aus den jeweiligen
+     Kategorie-Hooks — bei neuen Kategorien in `BAUSTEINE_KATEGORIEN` diese
+     Funktion mit erweitern), mit optionaler Notiz per `window.prompt`.
+   - Sichtbar unter Archiv → Protokolle, neue Sektion
+     "🗂️ Baustein-Versionen" (`ProtokollLogView.jsx`), aufklappbar je
+     Eintrag, mit generischem Snapshot-Renderer (`VersionSnapshot`) statt
+     eigener Formatierung pro Kategorie, sowie löschbar.
+   - **Bewusste Vereinfachung**, der Nutzerin so erklärt und von ihr
+     akzeptiert: manuelle Snapshots per Knopfdruck, kein automatisches
+     Diffing/Versionieren bei jeder einzelnen Änderung in den
+     Kategorie-Views selbst (SchlafView, TrainingView, ...) — das hätte eine
+     einheitliche Versionierung über alle unterschiedlichen Datenmodelle
+     hinweg gebraucht, ein größerer Umbau als in dieser Sitzung machbar.
+     Falls die Nutzerin künftig "automatisch bei jeder Änderung eine Version
+     anlegen" möchte, wäre der nächste Schritt, `snapshotFuer()` + einen
+     Aufruf von `versionFesthalten` in die jeweiligen Kategorie-Views
+     einzubauen (z. B. vor jedem `setDose`/`wochenplanHinzufuegen`/...).
+
+**Migration 0069 muss die Nutzerin noch im Supabase-SQL-Editor ausführen**
+(Wortlaut siehe Datei `supabase/migrations/0069_baustein_versionen.sql`),
+sonst schlägt "Version festhalten" mit einem Datenbankfehler fehl (Tabelle
+existiert dann nicht).
+
+**Backcheck am Ende dieser Sitzung:** `npm run build` + kompletter
+`npx oxlint` liefen sauber, keine neuen Warnungen/Fehler.
+
+---
+
 ## ⚠️ Update 15.08.2026, abends (Teil 2) — Feedback-Runde nach dem ersten Update
 
 Direkt im Anschluss an das Update weiter unten kam noch eine Feedback-Runde
