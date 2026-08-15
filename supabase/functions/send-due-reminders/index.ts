@@ -4,7 +4,8 @@
 // pro angemeldetem Nutzer) hier serverseitig über ALLE Nutzer hinweg, mit
 // dem Service-Role-Key statt einem Nutzer-JWT.
 //
-// Deckt jetzt alle 9 Lebensbereiche ab:
+// Deckt jetzt alle 9 Lebensbereiche PLUS Morgen-/Abendroutine und
+// Workout-Flow ab (12 Kategorien insgesamt, Stand 15.08. spätabends):
 // - Eigene Uhrzeiten-Liste (profiles.erinnerungen[kategorie].zeiten, frei
 //   von der Person gepflegt über ZeitErinnerungenCard.jsx): Hydration,
 //   Tageslicht, Schlaf — Kategorien mit kumulativem Tageswert statt
@@ -14,6 +15,10 @@
 // - Feste Uhrzeit ohne Intervallsystem (routines): Gewohnheiten.
 // - Wochenplan mit Uhrzeit (training_wochenplan/meal_wochenplan): Training,
 //   Ernährung.
+// - Zeitrahmen-Start ohne Wochentag (routine_einstellungen): Morgenroutine,
+//   Abendroutine.
+// - Wochenplan mit Uhrzeit + optionalem Gültigkeits-Zeitraum
+//   (workflow_plaene): Workout-Flow.
 // Jede Kategorie wird nur geprüft, wenn profiles.erinnerungen[kategorie]
 // für den jeweiligen Nutzer aktiv ist (siehe ErinnerungField.jsx/
 // ZeitErinnerungenCard.jsx/MehrTab.jsx). Training zusätzlich pro Zeile
@@ -751,6 +756,107 @@ Deno.serve(async (req) => {
               const zielWochentag = verschoben ? WEEKDAY_NAMEN[(new Date(info.heute).getUTCDay() + verschoben.tageVersatz + 7) % 7] : null;
               if (verschoben && row.wochentag === zielWochentag && uhrzeitKurz === verschoben.zeit) {
                 merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${name}`);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // --- Morgen-/Abendroutine: Start des Zeitrahmens (routine_einstellungen) --
+    // (15.08., Nutzerin-Vorgabe: "auch für Morgenroutine, Abendroutine,
+    // Workout-Flow" Erinnerungen). Kein Wochentag-Feld hier (im Gegensatz zu
+    // Training/Ernährung) — läuft wie Gewohnheiten täglich zur selben
+    // start_zeit, daher genügt verschobeneUhrzeit() ohne Tages-Versatz. Kein
+    // Nachfass-Fenster: ein "Durchlauf" (routine_durchlaeufe) lässt sich nicht
+    // eindeutig einer bestimmten start_zeit zuordnen, um "schon
+    // erledigt?" zu prüfen — analog zur Zeiten-Liste oben.
+    const ROUTINE_ERINNERUNG: { routine: string; kategorie: string; icon: string; name: string }[] = [
+      { routine: "morgen", kategorie: "morgenroutine", icon: "🌅", name: "Morgenroutine" },
+      { routine: "abend", kategorie: "abendroutine", icon: "🌆", name: "Abendroutine" },
+    ];
+    for (const re of ROUTINE_ERINNERUNG) {
+      const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen[re.kategorie])).map(([id]) => id);
+      if (userIds.length === 0) continue;
+
+      const { data: rows, error } = await admin
+        .from("routine_einstellungen")
+        .select("user_id, start_zeit")
+        .eq("routine", re.routine)
+        .in("user_id", userIds);
+      if (error) {
+        console.error("Abfrage routine_einstellungen fehlgeschlagen:", error);
+        continue;
+      }
+
+      for (const row of rows || []) {
+        const info = nutzerInfo.get(row.user_id);
+        if (!info || !row.start_zeit) continue;
+        const uhrzeitKurz = String(row.start_zeit).slice(0, 5);
+
+        if (uhrzeitKurz === info.jetzt) merken(row.user_id, re.icon, re.name);
+
+        const vorlaufMinuten = vorlaufFuer(info.erinnerungen[re.kategorie]);
+        const vorabZiel = vorlaufMinuten > 0 ? verschobeneUhrzeit(info.jetzt, vorlaufMinuten) : null;
+        if (vorabZiel && uhrzeitKurz === vorabZiel) {
+          merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${re.name}`);
+        }
+      }
+    }
+
+    // --- Workout-Flow: Zeitplan mit Wochentagen (workflow_plaene) ---------
+    // Wie Training/Ernährung ein echter Wochenplan (wochentage[] + uhrzeit),
+    // zusätzlich mit optionalem Gültigkeits-Zeitraum (gueltig_von/
+    // gueltig_bis) und einem eigenen aktiv-Schalter pro Plan (unabhängig vom
+    // globalen Erinnerungen-Schalter, analog zu training_wochenplan.
+    // erinnerung_aktiv). Leere wochentage[] = an jedem Tag (gleiche
+    // Konvention wie bei den Dosierungs-Kategorien' weekdays-Modus oben).
+    // Kein Nachfass-Fenster (kein Log, das einen Durchlauf eindeutig einem
+    // Zeitplan-Eintrag zuordnet).
+    {
+      const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen.workflow)).map(([id]) => id);
+      if (userIds.length > 0) {
+        const { data: rows, error } = await admin
+          .from("workflow_plaene")
+          .select("user_id, preset_id, wochentage, uhrzeit, gueltig_von, gueltig_bis, aktiv")
+          .in("user_id", userIds);
+        if (error) {
+          console.error("Abfrage workflow_plaene fehlgeschlagen:", error);
+        } else {
+          const presetIds = [...new Set((rows || []).map((r) => r.preset_id))];
+          const { data: presets, error: presetsError } = presetIds.length
+            ? await admin.from("workflow_presets").select("id, name").in("id", presetIds)
+            : { data: [] as { id: string; name: string }[], error: null };
+          if (presetsError) console.error("Abfrage workflow_presets fehlgeschlagen:", presetsError);
+          const nameByPresetId = new Map((presets || []).map((p) => [p.id, p.name]));
+
+          for (const row of rows || []) {
+            const info = nutzerInfo.get(row.user_id);
+            if (!info || !row.uhrzeit || row.aktiv === false) continue;
+            if (row.gueltig_von && info.heute < row.gueltig_von) continue;
+            if (row.gueltig_bis && info.heute > row.gueltig_bis) continue;
+            const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
+            const name = nameByPresetId.get(row.preset_id) || "Workout-Flow";
+            const wochentage: string[] = row.wochentage || [];
+            const heuteWochentag = WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()];
+
+            if (wochentage.length === 0 || wochentage.includes(heuteWochentag)) {
+              if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🔁", name);
+            }
+
+            const vorlaufMinuten = vorlaufFuer(info.erinnerungen.workflow);
+            if (vorlaufMinuten > 0) {
+              const verschoben = verschobeneUhrzeitMitTag(info.jetzt, vorlaufMinuten);
+              if (verschoben) {
+                const zielWochentag = WEEKDAY_NAMEN[(new Date(info.heute).getUTCDay() + verschoben.tageVersatz + 7) % 7];
+                const zielDatum = new Date(info.heute);
+                zielDatum.setUTCDate(zielDatum.getUTCDate() + verschoben.tageVersatz);
+                const zielDatumStr = zielDatum.toISOString().slice(0, 10);
+                const passtWochentag = wochentage.length === 0 || wochentage.includes(zielWochentag);
+                const passtZeitraum = (!row.gueltig_von || zielDatumStr >= row.gueltig_von) && (!row.gueltig_bis || zielDatumStr <= row.gueltig_bis);
+                if (passtWochentag && passtZeitraum && uhrzeitKurz === verschoben.zeit) {
+                  merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): ${name}`);
+                }
               }
             }
           }

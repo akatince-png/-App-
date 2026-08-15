@@ -7,6 +7,22 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import VorlaufFeld from "../../ui/VorlaufFeld";
+
+// Morgen-/Abendroutine und Workout-Flow sind keine der 8 Onboarding-
+// Kategorien (categorySteps.js — die haben je eigene Einrichtungs-Screens,
+// die es für diese drei nicht gibt), deshalb separat gehalten statt dort
+// mit reingemischt. Erinnerungen dafür funktionieren aber nach demselben
+// Muster (erinnerungen[key] = {aktiv, vorlaufMinuten}), s. u. — Nutzerinnen-
+// Vorgabe (15.08., spätabends): "auch für Morgenroutine, Abendroutine,
+// Workout-Flow" (zusätzlich zu den bereits bestehenden Kategorien).
+// mitTagen bei workflow, weil workflow_plaene wie training_wochenplan echte
+// Wochentage kennt — Morgen-/Abendroutine laufen dagegen ohne Wochentag,
+// täglich zum selben Zeitrahmen-Start (routine_einstellungen).
+const WEITERE_ERINNERUNGEN = [
+  { key: "morgenroutine", icon: "🌅", label: "Morgenroutine" },
+  { key: "abendroutine", icon: "🌆", label: "Abendroutine" },
+  { key: "workflow", icon: "🔁", label: "Workout-Flow", mitTagen: true },
+];
 import { AIService } from "../../services/aiService";
 import { getCoachName, saveCoachName, STANDARD_COACH_NAME, getKiAktiv, saveKiAktiv } from "../../utils/coachStorage";
 import { spotifyAutorisierenUrl, spotifyPlaylistUriNormalisieren } from "../../services/spotify";
@@ -402,7 +418,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
 
       <Card style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>{t("mehr.erinnerungen.kategorien.intro")}</div>
-        {CATEGORY_STEPS.map((step, i) => {
+        {[...CATEGORY_STEPS, ...WEITERE_ERINNERUNGEN].map((step, i, alle) => {
           const wert = erinnerungen[step.key];
           const vorlaufMinuten = wert && typeof wert === "object" ? wert.vorlaufMinuten : undefined;
           const setVorlauf = (minuten) => {
@@ -414,7 +430,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
               key={step.key}
               style={{
                 padding: "10px 0",
-                borderBottom: i < CATEGORY_STEPS.length - 1 ? `1px solid ${cardBorder}` : "none",
+                borderBottom: i < alle.length - 1 ? `1px solid ${cardBorder}` : "none",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -432,7 +448,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
                 <VorlaufFeld
                   value={vorlaufMinuten}
                   onChange={setVorlauf}
-                  mitTagen={step.key === "training" || step.key === "ernaehrung"}
+                  mitTagen={step.mitTagen ?? (step.key === "training" || step.key === "ernaehrung")}
                 />
               )}
             </div>

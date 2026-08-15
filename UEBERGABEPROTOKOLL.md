@@ -79,6 +79,47 @@ sollte sie testweise "Erinnerungen deaktivieren" → erneut aktivieren
 (neue Subscription mit dem neuen Public Key, alte wäre mit dem alten Key
 ohnehin nutzlos) und dann "Test-Erinnerung senden" probieren.
 
+**✅ Bestätigt funktionierend** (Screenshot: echte Push-Benachrichtigung
+kam an) — nachdem beide Secrets korrekt gesetzt waren (drei Fehlversuche
+beim manuellen Abtippen der Base64-Werte auf dem iPad, siehe Chat: "No key
+set" → "must be URL safe Base 64" → "should be 65 bytes" → hat sich beim
+Abtippen jedes Mal minimal verändert; gelöst mit einer kleinen Artifact-
+Seite mit Kopieren-Knopf statt manuellem Markieren/Abtippen).
+
+**Ton-Frage der Nutzerin geklärt (zweites Mal, jetzt endgültig):** eigene
+Sounds pro Erinnerung sind mit Web-Push technisch nicht möglich, auf
+keiner Plattform (keine `sound`-Option in der Notification-API). Einzige
+Differenzierung: das Emoji im Text (🏋️ Training, 💧 Hydration, 🌱
+Gewohnheit, ⏳ Vorab-Hinweis, ❗ Nachfass, ...). Nur mit einer nativen App
+(Xcode/App Store) wäre das möglich — bewusst nicht der eingeschlagene Weg.
+
+### Nachtrag: Morgenroutine, Abendroutine, Workout-Flow bekommen jetzt auch Erinnerungen
+
+Nutzerin-Vorgabe direkt im Anschluss: die drei fehlten noch komplett im
+Erinnerungssystem. Neu in `send-due-reminders/index.ts`:
+- **Morgenroutine/Abendroutine** (🌅/🌆): Quelle ist
+  `routine_einstellungen.start_zeit` (der Zeitrahmen-Start, den man beim
+  Einrichten der Routine unter "Routinen" pflegt) — täglich, kein
+  Wochentag-Feld vorhanden, deshalb wie Gewohnheiten ohne Tages-Versatz.
+- **Workout-Flow** (🔁): Quelle ist `workflow_plaene` (echter Wochenplan mit
+  `wochentage[]` + `uhrzeit`, plus optionalem Gültigkeits-Zeitraum
+  `gueltig_von`/`gueltig_bis` und eigenem `aktiv`-Schalter pro Plan) —
+  strukturell wie Training/Ernährung behandelt, inkl. Tages-Versatz bei
+  mehrtägigem Vorlauf (`verschobeneUhrzeitMitTag`).
+
+Alle drei nur Erinnerung + Vorab-Hinweis, **kein Nachfass-Fenster** — es
+gibt keine Log-Tabelle, die einen Durchlauf eindeutig einer bestimmten
+geplanten Uhrzeit zuordnet (anders als bei Training/Ernährung/Dosierung).
+
+UI: bewusst NICHT in `categorySteps.js` (das sind die 8 Onboarding-
+Kategorien mit eigenen Einrichtungs-Screens) — stattdessen eigene, kleine
+Liste `WEITERE_ERINNERUNGEN` direkt in `MehrTab.jsx`, hängt an dieselbe
+"Erinnerungen"-Karte dran und nutzt dieselbe Vorlauf-Logik/UI
+(`VorlaufFeld.jsx`) wie die bestehenden Kategorien.
+
+**Noch nicht deployt** — auch hier muss die Nutzerin `send-due-reminders`
+nochmal im Supabase-Dashboard aktualisieren (siehe oben, Code-Tab, Deploy).
+
 ## ⚠️ Update 15.08.2026, spätabends (Teil 3) — Baustein-Versionierung + tote View entfernt
 
 Letzte Runde dieser Sitzung, Nutzerin hat ab 16.08. keinen Zugang mehr.
