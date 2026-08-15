@@ -832,7 +832,8 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                 {einheiten.length} Einheit{einheiten.length === 1 ? "" : "en"} in den Wochenplan übernommen:
                 {einheiten.map((e, i) => (
                   <div key={i}>
-                    · {e.wochentag}: {(e.arten || []).join(" + ")}
+                    · {e.wochentag}: {e.name ? `${e.name} · ` : ""}
+                    {(e.arten || []).join(" + ")}
                     {e.uebungenListe?.length ? ` (${e.uebungenListe.map((u) => u.name).join(", ")})` : ""}
                   </div>
                 ))}

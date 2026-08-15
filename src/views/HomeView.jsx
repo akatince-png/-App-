@@ -201,6 +201,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       datum: item.raw.datum,
       uhrzeit: item.raw.uhrzeit || "",
       art,
+      name: item.raw.name || "",
       uebungen: item.raw.uebungenListe || [],
       bemerkungen: warmupCooldown.join(" · "),
       erledigt: false,

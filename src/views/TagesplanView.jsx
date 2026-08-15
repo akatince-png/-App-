@@ -249,6 +249,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
         datum: item.raw.datum,
         uhrzeit: item.raw.uhrzeit || "",
         art,
+        name: item.raw.name || "",
         uebungen: item.raw.uebungenListe || [],
         bemerkungen: warmupCooldown.join(" · "),
         erledigt: false,

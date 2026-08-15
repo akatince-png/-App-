@@ -28,6 +28,9 @@ function rowToProgramm(r) {
 function rowToWochenplan(r) {
   return {
     id: r.id,
+    // Eigener Name für die Einheit (15.08., Nutzerin-Vorgabe: "Montagsworkout",
+    // "Brustworkout" statt nur der Kombination der Trainingsarten als Titel).
+    name: r.name || "",
     wochentag: r.wochentag,
     uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
     arten: Array.isArray(r.arten) ? r.arten : [],
@@ -165,6 +168,7 @@ export function useTrainingTemplates(userId) {
     async (einheit) => {
       const row = {
         user_id: userId,
+        name: einheit.name?.trim() || null,
         wochentag: einheit.wochentag,
         uhrzeit: einheit.uhrzeit || null,
         arten: einheit.arten || [],
@@ -203,6 +207,7 @@ export function useTrainingTemplates(userId) {
   // Cool-down bei einer schon gespeicherten Einheit ergänzen).
   const wochenplanBearbeiten = useCallback(async (id, einheit) => {
     const row = {
+      name: einheit.name?.trim() || null,
       wochentag: einheit.wochentag,
       uhrzeit: einheit.uhrzeit || null,
       arten: einheit.arten || [],

@@ -62,6 +62,10 @@ export default function WochenplanEditor({
   // eigene Zeile (unverändertes Datenmodell: eine Zeile = ein Tag).
   const [wochentage, setWochentage] = useState([]);
   const [uhrzeit, setUhrzeit] = useState("08:00");
+  // Eigener Name für die Einheit (15.08., Nutzerin-Vorgabe: "Montagsworkout",
+  // "Brustworkout", "ISO-Training" statt nur der Trainingsarten-Kombination
+  // als Titel) — optional, ohne Namen zeigt die Liste weiterhin die Arten.
+  const [name, setName] = useState("");
   const [arten, setArten] = useState([]);
   const [uebungenListe, setUebungenListe] = useState([{ ...LEERE_UEBUNG }]);
   const [warmup, setWarmup] = useState(LEERE_WARMUP);
@@ -87,6 +91,7 @@ export default function WochenplanEditor({
   const reset = () => {
     setWochentage([]);
     setUhrzeit("08:00");
+    setName("");
     setArten([]);
     setUebungenListe([{ ...LEERE_UEBUNG }]);
     setWarmup(LEERE_WARMUP);
@@ -103,6 +108,7 @@ export default function WochenplanEditor({
     setBearbeitenId(e.id);
     setWochentage([e.wochentag]);
     setUhrzeit(e.uhrzeit || "08:00");
+    setName(e.name || "");
     setArten(e.arten || []);
     setUebungenListe(e.uebungenListe?.length ? e.uebungenListe.map((u) => ({ ...LEERE_UEBUNG, ...u })) : [{ ...LEERE_UEBUNG }]);
     setWarmup(e.warmup || LEERE_WARMUP);
@@ -123,7 +129,7 @@ export default function WochenplanEditor({
     if (!wochentage.length || !uhrzeit || saving) return;
     setSaving(true);
     const uebungenGefuellt = uebungenListe.filter((u) => u.name.trim());
-    const einheitFelder = { wochentag: wochentage[0], uhrzeit, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv, intervallArbeitSek, intervallPauseSek, runden };
+    const einheitFelder = { wochentag: wochentage[0], uhrzeit, name, arten, uebungenListe: uebungenGefuellt, warmup, cooldown, erinnerungAktiv, intervallArbeitSek, intervallPauseSek, runden };
     if (bearbeitenId) {
       await wochenplanBearbeiten(bearbeitenId, einheitFelder);
     } else {
@@ -184,6 +190,9 @@ export default function WochenplanEditor({
 
         <Label>{t("onboarding.training.einheit.uhrzeit.label")}</Label>
         <TimeWheelField value={uhrzeit} onChange={setUhrzeit} />
+
+        <Label>Name (optional)</Label>
+        <TextInput value={name} onChange={setName} placeholder="z. B. Montagsworkout, Brusttag, ISO-Training" />
 
         <Label>{t("onboarding.training.einheit.art.label")}</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
@@ -397,10 +406,13 @@ export default function WochenplanEditor({
                     style={{ flex: 1, minWidth: 0, cursor: onZeileAntippen ? "pointer" : "default" }}
                     onClick={onZeileAntippen ? () => onZeileAntippen(e) : undefined}
                   >
-                    <div style={{ fontWeight: 700 }}>{e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—"}</div>
-                    {(anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv || e.intervallArbeitSek) && (
+                    <div style={{ fontWeight: 700 }}>
+                      {e.name || (e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—")}
+                    </div>
+                    {(e.name || anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv || e.intervallArbeitSek) && (
                       <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>
                         {[
+                          e.name && e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "",
                           e.intervallArbeitSek ? `⏱ ${e.intervallArbeitSek}s/${e.intervallPauseSek || 0}s × ${e.runden || 1}` : "",
                           anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
                           e.warmup?.aktiv ? "Warm-up" : "",
