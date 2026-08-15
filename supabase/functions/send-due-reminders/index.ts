@@ -194,7 +194,14 @@ async function frischesSpotifyToken(admin: ReturnType<typeof createClient>, verb
   return tokenData.access_token as string;
 }
 
-type NutzerInfo = { zeitzone: string; jetzt: string; heute: string; erinnerungen: Record<string, unknown>; protokollStart: string | null };
+type NutzerInfo = {
+  zeitzone: string;
+  jetzt: string;
+  heute: string;
+  erinnerungen: Record<string, unknown>;
+  categoryZiele: Record<string, unknown>;
+  protokollStart: string | null;
+};
 
 // Sammelt fällige Einzel-Erinnerungen pro Nutzer — mehrere gleichzeitig
 // fällige Einträge (z. B. zwei Supplemente zur selben Minute, oder
@@ -278,7 +285,7 @@ Deno.serve(async (req) => {
 
     const { data: profiles, error: profilesError } = await admin
       .from("profiles")
-      .select("id, zeitzone, erinnerungen");
+      .select("id, zeitzone, erinnerungen, category_ziele");
     if (profilesError) throw profilesError;
 
     // Aktives Protokoll-Startdatum je Person, als Fallback für Peptid-/
@@ -307,6 +314,7 @@ Deno.serve(async (req) => {
         jetzt,
         heute,
         erinnerungen: profile.erinnerungen || {},
+        categoryZiele: profile.category_ziele || {},
         protokollStart: protokollStartByUser.get(profile.id) || null,
       });
     }
@@ -404,6 +412,82 @@ Deno.serve(async (req) => {
               }
             } catch (err) {
               console.error("Automatischer Spotify-Start (Schlaf) fehlgeschlagen für", verbindung.user_id, err);
+            }
+          }
+        }
+      }
+    }
+
+    // --- Morgenroutine: automatischer Spotify-Start zur Aufwachzeit -------
+    // (15.08., Nutzerin-Vorgabe) — startet GENAU zur konfigurierten
+    // Aufwachzeit (kein Minuten-Versatz wie beim Schlaf-Block oben, soll
+    // möglichst gleichzeitig mit dem eigenen Wecker laufen), FALLS über
+    // SpotifyAnlassPicker(anlass="morgenroutine") eine Playlist zugeordnet
+    // wurde. Zuordnung = Aktivierung, kein separater Schalter — analog zum
+    // Schlaf-Block. Quelle der Aufwachzeit sind die Schlaf-Blöcke aus dem
+    // Schlaf-Protokoll (categoryZiele.schlaf.bloecke[].aufwachzeit), NICHT
+    // die Erinnerungen-Zeitenliste — die Person pflegt die Aufwachzeit
+    // ohnehin dort beim Einrichten ihres Schlafrhythmus. Läuft wie der
+    // Schlaf-Block unabhängig davon, ob die App offen ist. Für ein
+    // zuverlässiges "aktives Spotify-Gerät" empfiehlt sich ein Kurzbefehl,
+    // der Spotify kurz vor der Aufwachzeit einmal öffnet — der automatische
+    // Start selbst kann kein schlafendes/geschlossenes Gerät wecken (siehe
+    // 404-Fall unten).
+    if (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) {
+      const morgenUserIds = [...nutzerInfo]
+        .filter(([, info]) => {
+          const schlaf = info.categoryZiele.schlaf as { bloecke?: { wochentage?: string[]; aufwachzeit?: string }[] } | undefined;
+          return Array.isArray(schlaf?.bloecke) && schlaf.bloecke.some((b) => b.aufwachzeit);
+        })
+        .map(([id]) => id);
+
+      if (morgenUserIds.length > 0) {
+        const { data: anlaesse, error: anlassError } = await admin
+          .from("spotify_anlass_playlists")
+          .select("user_id, spotify_playlists(uri)")
+          .eq("anlass", "morgenroutine")
+          .in("user_id", morgenUserIds);
+        if (anlassError) console.error("Abfrage spotify_anlass_playlists (morgenroutine) fehlgeschlagen:", anlassError);
+
+        const playlistUriByUser = new Map(
+          (anlaesse || [])
+            .filter((a) => (a.spotify_playlists as { uri?: string } | null)?.uri)
+            .map((a) => [a.user_id as string, (a.spotify_playlists as { uri: string }).uri])
+        );
+
+        if (playlistUriByUser.size > 0) {
+          const { data: verbindungen, error: verbindungError } = await admin
+            .from("spotify_verbindung")
+            .select("*")
+            .in("user_id", [...playlistUriByUser.keys()]);
+          if (verbindungError) console.error("Abfrage spotify_verbindung (morgenroutine-auto-play) fehlgeschlagen:", verbindungError);
+
+          for (const verbindung of verbindungen || []) {
+            const info = nutzerInfo.get(verbindung.user_id as string);
+            const uri = playlistUriByUser.get(verbindung.user_id as string);
+            if (!info || !uri) continue;
+            const schlaf = info.categoryZiele.schlaf as { bloecke: { wochentage?: string[]; aufwachzeit?: string }[] };
+            const heuteKuerzel = WEEKDAY_NAMEN[new Date(info.heute).getUTCDay()];
+            const treffer = schlaf.bloecke.some(
+              (b) => b.aufwachzeit === info.jetzt && (!b.wochentage || b.wochentage.length === 0 || b.wochentage.includes(heuteKuerzel))
+            );
+            if (!treffer) continue;
+
+            try {
+              const accessToken = await frischesSpotifyToken(admin, verbindung);
+              const playRes = await fetch("https://api.spotify.com/v1/me/player/play", {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ context_uri: uri }),
+              });
+              // 404 = kein aktives Spotify-Gerät (z. B. Handy/Tablet
+              // gesperrt/Spotify seit Längerem nicht offen) — kein harter
+              // Fehler, siehe Kommentar beim Schlaf-Block oben.
+              if (playRes.status !== 204 && playRes.status !== 404) {
+                console.error("Automatischer Spotify-Start (Morgenroutine) abgelehnt für", verbindung.user_id, await playRes.text());
+              }
+            } catch (err) {
+              console.error("Automatischer Spotify-Start (Morgenroutine) fehlgeschlagen für", verbindung.user_id, err);
             }
           }
         }
