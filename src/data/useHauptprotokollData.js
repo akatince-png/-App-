@@ -61,12 +61,19 @@ export function useHauptprotokollData(userId) {
   const teilprotokollSpeichern = useCallback(
     async (hauptprotokollId, kategorie, { aktiv = true, eigenerStartdatum = null, laufzeitWochen = null } = {}) => {
       if (!hauptprotokollId) return { ok: false, error: "Kein aktives Hauptprotokoll." };
+      const bestehend = teilprotokolle.find((t) => t.hauptprotokoll_id === hauptprotokollId && t.kategorie === kategorie);
+      const payload = { user_id: userId, hauptprotokoll_id: hauptprotokollId, kategorie, aktiv, eigenes_startdatum: eigenerStartdatum, laufzeit_wochen: laufzeitWochen };
+      // Übergang inaktiv→aktiv (oder Erstanlage aktiv): Aktivierungszeitpunkt
+      // setzen, damit sich später die Woche errechnen lässt, in der dieser
+      // Baustein zum Protokoll dazukam (siehe BausteineUebersicht in
+      // PlaeneView.jsx). Bleibt der Baustein aktiv oder wird nur deaktiviert,
+      // bleibt aktiviert_am unverändert (Spalte fehlt bewusst im Payload).
+      if (aktiv && !bestehend?.aktiv) {
+        payload.aktiviert_am = new Date().toISOString();
+      }
       const { data, error } = await supabase
         .from("teilprotokolle")
-        .upsert(
-          { user_id: userId, hauptprotokoll_id: hauptprotokollId, kategorie, aktiv, eigenes_startdatum: eigenerStartdatum, laufzeit_wochen: laufzeitWochen },
-          { onConflict: "hauptprotokoll_id,kategorie" }
-        )
+        .upsert(payload, { onConflict: "hauptprotokoll_id,kategorie" })
         .select()
         .single();
       if (error) {
@@ -76,7 +83,7 @@ export function useHauptprotokollData(userId) {
       setTeilprotokolle((prev) => [...prev.filter((t) => !(t.hauptprotokoll_id === hauptprotokollId && t.kategorie === kategorie)), data]);
       return { ok: true, teilprotokoll: data };
     },
-    [userId]
+    [userId, teilprotokolle]
   );
 
   // Endgültiges Löschen eines archivierten Hauptprotokolls — mit

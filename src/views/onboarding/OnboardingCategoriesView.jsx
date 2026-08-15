@@ -216,6 +216,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     erinnerungen,
     setErinnerung,
     aktivesHauptprotokoll,
+    teilprotokolle,
     teilprotokollSpeichern,
     peptide,
     togglePeptid,
@@ -229,7 +230,18 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   } = useAppData();
   const { t, tLabel } = useT();
 
-  const [index, setIndex] = useState(0);
+  // "Zwischenspeichern" (Nutzerinnen-Vorgabe, 15.08.): schließt jemand die
+  // App mitten im Kategorien-Assistenten, soll es beim nächsten Öffnen genau
+  // dort weitergehen statt wieder bei Schritt 1 — jede bereits beantwortete
+  // (eingerichtete ODER übersprungene) Kategorie hat schon eine
+  // teilprotokolle-Zeile für das aktive Hauptprotokoll (siehe weiter() unten),
+  // die Anzahl ergibt also direkt den Wiedereinstiegs-Schritt. Bei einem
+  // frisch über "Neues Protokoll" angelegten Hauptprotokoll existieren noch
+  // keine Zeilen, hier greift dann ganz normal Schritt 0.
+  const [index, setIndex] = useState(() => {
+    const beantwortet = CATEGORY_STEPS.filter((s) => teilprotokolle.some((t2) => t2.hauptprotokoll_id === aktivesHauptprotokoll?.id && t2.kategorie === s.key)).length;
+    return Math.min(beantwortet, CATEGORY_STEPS.length - 1);
+  });
   const [modus, setModus] = useState(null); // null | "jetzt"
   const [ziel, setZiel] = useState(ZIEL_LEER);
   const [eingerichtet, setEingerichtet] = useState([]); // [{ key, icon, label }]

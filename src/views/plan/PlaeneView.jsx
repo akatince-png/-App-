@@ -119,6 +119,20 @@ function BausteineUebersicht() {
     });
   };
 
+  // "Seit Woche X" relativ zum Hauptprotokoll-Start — beantwortet direkt die
+  // Nutzerinnen-Vorgabe ("Woche eins nur Schlaf, Woche zwei + Hydration, ...").
+  // Nur eine grobe Orientierung: aktiviert_am wird nur beim Übergang
+  // inaktiv→aktiv aktualisiert (siehe useHauptprotokollData.js), nicht bei
+  // jedem Deaktivieren/Reaktivieren im Detail nachgehalten.
+  const seitWoche = (kategorie) => {
+    const zeile = zeileFuer(kategorie);
+    if (!zeile?.aktiv || !zeile.aktiviert_am) return null;
+    const start = new Date(aktivesHauptprotokoll.startdatum);
+    const aktiviert = new Date(zeile.aktiviert_am);
+    const wochen = Math.floor((aktiviert - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
+    return Math.max(1, wochen);
+  };
+
   return (
     <>
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>Bausteine dieses Protokolls</div>
@@ -128,6 +142,7 @@ function BausteineUebersicht() {
       <div style={{ marginBottom: 20 }}>
         {BAUSTEINE_KATEGORIEN.map((b, i) => {
           const aktiv = b.kern || !!zeileFuer(b.kategorie)?.aktiv;
+          const woche = b.kern ? 1 : seitWoche(b.kategorie);
           return (
             <div
               key={b.kategorie}
@@ -139,7 +154,10 @@ function BausteineUebersicht() {
                 borderBottom: i < BAUSTEINE_KATEGORIEN.length - 1 ? `1px solid ${cardBorder}` : "none",
               }}
             >
-              <span style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</span>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</div>
+                {aktiv && woche && <div style={{ fontSize: 10.5, color: textMuted, marginTop: 1 }}>Seit Woche {woche}</div>}
+              </div>
               {b.kern ? (
                 <span style={{ fontSize: 11, fontWeight: 700, color: accentDark, background: accentSoft, padding: "4px 10px", borderRadius: 10 }}>
                   Immer aktiv
