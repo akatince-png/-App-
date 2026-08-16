@@ -41,7 +41,8 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   const [nachrichtenFuer, setNachrichtenFuer] = useState(null); // proband.id | null
   const [testAnlegenLaeuft, setTestAnlegenLaeuft] = useState(false);
   const [testFehler, setTestFehler] = useState(null);
-  const [testErfolg, setTestErfolg] = useState(null);
+  const [testKonto, setTestKonto] = useState(null); // { vorname, email, passwort } | null
+  const [testKopiert, setTestKopiert] = useState(false);
 
   const ladeProbanden = async () => {
     setLadend(true);
@@ -62,15 +63,17 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   // Testphase ohne echte Coachees (Nutzerinnen-Vorgabe 16.08.: "damit ich
   // in Profile reingehen kann, Protokolle erstellen kann ... ohne dass im
   // Hintergrund eine KI regelmäßig Einträge macht") — legt mit einem Klick
-  // ein Wegwerf-Konto an (zufällige E-Mail/Passwort, die Person loggt sich
-  // nie selbst ein, du bedienst es ausschließlich über "Verwalten"). Nutzt
-  // dieselbe Edge Function wie das normale Formular unten, nur ohne
-  // Tipparbeit. Löschen aktuell nur direkt in Supabase (auth.users) möglich
-  // — bewusst kein Lösch-Knopf hier, das wäre eine unumkehrbare Aktion samt
-  // Kaskaden-Löschung aller Daten dieser Person.
+  // ein Wegwerf-Konto an (zufällige E-Mail/Passwort). Zugangsdaten werden
+  // bewusst angezeigt (anders als im normalen Formular unten, das sie
+  // versteckt) — Nutzerinnen-Vorgabe: sie will sich damit auch SEPARAT
+  // (nicht über "Verwalten", das bleibt technisch im Admin-Modus) als
+  // echte Nicht-Admin-Person einloggen können, z. B. in einem privaten
+  // Browser-Tab. Löschen aktuell nur direkt in Supabase (auth.users)
+  // möglich — bewusst kein Lösch-Knopf hier, das wäre eine unumkehrbare
+  // Aktion samt Kaskaden-Löschung aller Daten dieser Person.
   const testCoacheeErstellen = async () => {
     setTestFehler(null);
-    setTestErfolg(null);
+    setTestKonto(null);
     setTestAnlegenLaeuft(true);
     const bisherigeTests = probanden.filter((p) => (p.vorname || "").startsWith("Test ")).length;
     const vorname = `Test ${bisherigeTests + 1}`;
@@ -85,8 +88,15 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
       setTestFehler(data?.error || error.message);
       return;
     }
-    setTestErfolg(`"${vorname}" angelegt — direkt unten in der Liste, per "Verwalten" bedienbar.`);
+    setTestKonto({ vorname, email, passwort });
     ladeProbanden();
+  };
+
+  const testZugangsdatenKopieren = async () => {
+    if (!testKonto) return;
+    await navigator.clipboard.writeText(`${testKonto.email} / ${testKonto.passwort}`);
+    setTestKopiert(true);
+    setTimeout(() => setTestKopiert(false), 2000);
   };
 
   const gefiltert = probanden.filter((p) => {
@@ -167,7 +177,22 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
         </div>
       </div>
       {testFehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14 }}>{testFehler}</div>}
-      {testErfolg && <div style={{ fontSize: 12.5, color: success, marginBottom: 14 }}>{testErfolg}</div>}
+      {testKonto && (
+        <Card style={{ marginBottom: 14, background: successSoft }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>"{testKonto.vorname}" angelegt</div>
+          <div style={{ fontSize: 12.5, fontFamily: "monospace", marginBottom: 2 }}>{testKonto.email}</div>
+          <div style={{ fontSize: 12.5, fontFamily: "monospace" }}>{testKonto.passwort}</div>
+          <div style={{ fontSize: 11.5, color: textMuted, marginTop: 8, lineHeight: 1.5 }}>
+            Damit kannst du dich in einem privaten/anderen Browser-Tab separat einloggen und die App als echte
+            Nicht-Admin-Person nutzen — anders als bei "Verwalten", das bleibt technisch im Admin-Modus.
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <PrimaryButton variant="ghost" onClick={testZugangsdatenKopieren}>
+              {testKopiert ? "Kopiert ✓" : "E-Mail + Passwort kopieren"}
+            </PrimaryButton>
+          </div>
+        </Card>
+      )}
 
       {formOffen && (
         <NeuerZugangForm
