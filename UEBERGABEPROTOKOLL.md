@@ -1,5 +1,59 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔴 Update 16.08.2026, Fortsetzung (Teil 17) — Neues Feature "Akutmodus" auf der Startseite
+
+Direkt im Anschluss an Teil 16. Nutzerinnen-Vorgabe: ein Knopf im
+Home-Bereich für Momente akuter ADHS-Symptomatik ("innere Unruhe",
+"kirre werden") — Symptom antippen oder frei beschreiben, direkt eine
+konkrete Lösung angeboten bekommen (Commit `775a9df`).
+
+**Wichtige Architektur-Entscheidung dabei eingehalten**: Beim Bauen
+festgestellt, dass es eine bewusste frühere Entscheidung gibt — der
+offene KI-Chat (KiChat.jsx/"Aka") ist für echte Coachees NICHT
+verfügbar, die kommunizieren stattdessen mit dem echten Coach
+(`useCoacheeNachrichten.js`, Kommentar dort: "ersetzt für Coachees den
+KI-Assistenten als Kontaktmöglichkeit"). Ein Akutmodus mit offenem
+KiChat hätte diese Entscheidung stillschweigend unterlaufen. Stattdessen
+denselben leichtgewichtigen Einzelanfrage-Mechanismus wie das
+bestehende Lexikon verwendet (bestätigt coachee-zugänglich, da über
+"Mehr"-Tab ohne Admin-Gate erreichbar) — technisch dieselbe `lexikon`
+Edge Function, nur mit neuer, wärmerer "Akutmodus"-Rolle statt
+Glossar-Ton.
+
+- `utils/wissensBasis.js`: neue `wissensBasisFuerPfade()` — liefert
+  Text aus mehreren gezielt gewählten Wissensdateien (nicht nur einem
+  ganzen Ordner wie bei der Lexikon-Variante aus Teil 15).
+- `data/useAkutModus.js` (neu): 7 Symptom-Kacheln (Reizüberflutung, zu
+  viele Aufgaben, komme nicht in Gang, innere Unruhe/kirre,
+  Konzentration weg, Gedankenrasen, sehr gereizt) + freier Text, jede
+  Kachel mit eigenem kuratiertem Kontext aus den passenden
+  Wissens-Dateien.
+- `ui/AkutModusKarte.jsx` (neu): Knopf → Symptom-Kacheln/Freitext → KI-
+  Antwort (max. 4 kurze Sätze, sofort umsetzbar) → optional direkt an
+  den echten Coach weiterleiten. Der "An {Coach} schicken"-Knopf
+  erscheint nur für echte Coachees, nicht im Verwalten-als-Modus.
+- `views/HomeView.jsx`: direkt unter dem bestehenden Notfallmodus-Knopf
+  eingebunden — ergänzt ihn sinnvoll (Notfallmodus vereinfacht nur die
+  Ansicht auf das Nötigste, Akutmodus schlägt zusätzlich aktiv eine
+  Lösung vor).
+- `supabase/functions/lexikon/index.ts`: neues optionales
+  `modus: "akut"`-Feld — exakt abwärtskompatibel, das bestehende
+  Lexikon (LexikonView.jsx) verhält sich unverändert, wenn das Feld
+  fehlt.
+
+`npm run build` erfolgreich geprüft. **Konnte NICHT im Browser
+getestet werden** (Sandbox ohne Netzwerkzugriff auf Supabase, kein
+Login möglich) — nur per Code-Review geprüft, keine echte
+End-to-End-Bestätigung.
+
+**🔴 Deploy nötig**: `functions/lexikon/index.ts` hat sich erneut
+geändert (nach dem Redeploy in Teil 15/16) — muss noch einmal manuell
+in Supabase neu deployt werden, sonst bleibt der Akutmodus-Knopf ohne
+Wirkung (Fehlermeldung "Antwort konnte gerade nicht geladen werden"
+o. Ä., kein Absturz der App).
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 16) — Morgenroutine + Abendroutine als letzte fehlende Wissens-Themen ergänzt
 
 Direkt im Anschluss an Teil 15. Nutzerin bemerkte, dass Morgen- und
@@ -1568,6 +1622,8 @@ sonst nie auffallen lassen.
 | 26 | Einladungs-Ablauf einmal komplett end-to-end testen (echte Test-E-Mail) | Aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase), sollte die Nutzerin einmal selbst durchklicken, bevor sie es für echte Coachees nutzt |
 | 27 | Edge Function `lexikon` neu deployen | ✅ Erledigt (16.08., Text direkt aus dem Chat eingefügt) — der kuratierte Kontext aus der Wissensbasis (Peptide/Supplemente/Schlafgesundheit) ist damit live |
 | 28 | Wissensbasis-Größe (`src/wissen/`) — gezielte Auswahl statt "alles an jede Anfrage anhängen" | 🟡 Nach Teil 15 kein theoretisches Later-Thema mehr, sondern realer Kosten-/Latenz-Faktor bei jedem KiChat-Aufruf (9 umfangreiche Themen-Dateien plus Ernährung). Für das Lexikon bereits gezielte Auswahl pro Kategorie umgesetzt (Teil 15) — Vorbild für eine ähnliche Lösung bei KiChat |
+| 29 | Edge Function `lexikon` erneut neu deployen | 🔴 Teil 17: `modus: "akut"`-Feld für den neuen Akutmodus-Knopf hinzugefügt — ohne erneutes manuelles Redeploy bleibt der Knopf ohne Wirkung (kein Absturz, nur keine Antwort) |
+| 30 | Akutmodus-Feature im Browser end-to-end testen | 🟡 Teil 17: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login), nur per Code-Review geprüft — die Nutzerin sollte einmal selbst durchklicken (Symptom antippen, Freitext, "An Coach schicken"), bevor sie sich darauf verlässt |
 
 ---
 
