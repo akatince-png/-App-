@@ -103,6 +103,16 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
   const [aktuelleAktion, setAktuelleAktion] = useState(null);
   const [gefuehlProtokolliert, setGefuehlProtokolliert] = useState(false);
   const [atemModusAktiv, setAtemModusAktiv] = useState(false);
+  // "Eigene Maßnahme" (16.08., Nutzerinnen-Vorgabe): manche machen im
+  // Akutmodus etwas ganz anderes als die angebotenen Optionen (Beispiel
+  // der Nutzerin: "geht an die frische Luft und konzentriert sich fünf
+  // Minuten auf eine schöne Aussicht") — das soll sich trotzdem eintragen
+  // und dokumentieren lassen, unabhängig von der KI-Vorschlagslogik, rein
+  // als eigener Log-Eintrag mit Freitext + demselben Gefühls-Check-in.
+  const [massnahmeOffen, setMassnahmeOffen] = useState(false);
+  const [massnahmeText, setMassnahmeText] = useState("");
+  const [massnahmeEingetragen, setMassnahmeEingetragen] = useState(false);
+  const [massnahmeGefuehlProtokolliert, setMassnahmeGefuehlProtokolliert] = useState(false);
   const { antwort, laden, fehler, hilfeAnfordern, uebungAnfordern, zuruecksetzen } = useAkutModus();
 
   const zuruecksetzenKomplett = () => {
@@ -110,7 +120,21 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
     setGefuehlProtokolliert(false);
     setAtemModusAktiv(false);
     setAktuelleAktion(null);
+    setMassnahmeOffen(false);
+    setMassnahmeText("");
+    setMassnahmeEingetragen(false);
+    setMassnahmeGefuehlProtokolliert(false);
     zuruecksetzen();
+  };
+
+  const massnahmeEintragen = () => {
+    if (!massnahmeText.trim()) return;
+    setMassnahmeEingetragen(true);
+  };
+
+  const massnahmeGefuehlWaehlen = (gefuehl) => {
+    setMassnahmeGefuehlProtokolliert(true);
+    if (userId) akutmodusEreignisLoggen(userId, "Eigene Maßnahme", massnahmeText.trim(), gefuehl);
   };
 
   const symptomWaehlen = (symptom) => {
@@ -182,7 +206,42 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
         </div>
       )}
 
-      {!atemModusAktiv && !antwort && !laden && (
+      {(massnahmeOffen || massnahmeEingetragen) && (
+        <div>
+          {!massnahmeEingetragen ? (
+            <>
+              <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 8 }}>Was hast du gemacht?</div>
+              <TextArea value={massnahmeText} onChange={setMassnahmeText} placeholder="z. B. mich 5 Min. auf eine schöne Aussicht konzentriert ..." />
+              <div style={{ marginTop: 10 }}>
+                <PrimaryButton onClick={massnahmeEintragen} disabled={!massnahmeText.trim()}>
+                  Eintragen
+                </PrimaryButton>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: accentDark }}>
+                Notiert: „{massnahmeText.trim()}"
+              </div>
+              {!massnahmeGefuehlProtokolliert ? (
+                <GefuehlAbfrage onWaehlen={massnahmeGefuehlWaehlen} />
+              ) : (
+                <div style={{ fontSize: 12, color: "#B45309", marginTop: 8 }}>Danke, festgehalten ✓</div>
+              )}
+            </>
+          )}
+          <button
+            type="button"
+            onClick={zuruecksetzenKomplett}
+            className="mp-tap"
+            style={{ border: "none", background: "transparent", color: "#B45309", fontSize: 12.5, fontWeight: 700, cursor: "pointer", marginTop: 10, padding: "6px 4px" }}
+          >
+            🔁 Zurück zur Übersicht
+          </button>
+        </div>
+      )}
+
+      {!atemModusAktiv && !massnahmeOffen && !massnahmeEingetragen && !antwort && !laden && (
         <>
           <button
             type="button"
@@ -253,6 +312,13 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
               Idee holen
             </PrimaryButton>
           </div>
+          <button
+            type="button"
+            onClick={() => setMassnahmeOffen(true)}
+            style={{ border: "none", background: "transparent", color: "#B45309", fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 12, padding: 0 }}
+          >
+            ✍️ Ich hab schon selbst was gemacht — eintragen
+          </button>
           {(!akutUebungen || akutUebungen.length === 0) && (
             <div style={{ fontSize: 11, color: textMuted, marginTop: 10, fontStyle: "italic" }}>
               Tipp: Leg dir bei einer Gewohnheit "⭐ Als Akut-Übung merken" fest — dann taucht sie hier als Schnellstart auf.
