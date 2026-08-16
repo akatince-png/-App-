@@ -4,14 +4,17 @@ import ViewHeader from "../../ui/ViewHeader";
 import { cardBorder, danger, success, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { adminQuestArchivieren, adminQuestErstellen, adminQuestListe } from "../../data/useQuestData";
+import RanglisteKarte from "../../ui/RanglisteKarte";
 
 // Verwaltung der freiwilligen Sonderaufgaben ("Quests") — Nutzerinnen-
 // Vorgabe 16.08.: "diese Woche machen wir drei Sätze isometrisches
 // Training ... das soll sone freiwillige Aufgabe sein, die die Coachees
 // noch zusätzlich übernehmen dürfen, falls sie Interesse dran haben".
 // V1: Anlegen (an alle Coachees oder eine einzelne), Fortschritt/Abschluss-
-// Meldungen der Coachees einsehen, Archivieren. Rangliste/Vergleich
-// zwischen Coachees ist bewusst vertagt (siehe 0070_quests.sql).
+// Meldungen der Coachees einsehen, Archivieren, Rangliste der Abschlüsse
+// (RanglisteKarte, auch für Coachees selbst auf der Startseite sichtbar,
+// siehe HomeView.jsx). Vergleich beim normalen Protokoll (nicht nur
+// Quests) ist noch offen (siehe UEBERGABEPROTOKOLL.md).
 export default function AdminQuestsView({ onHome }) {
   const [probanden, setProbanden] = useState([]);
   const [quests, setQuests] = useState([]);
@@ -104,6 +107,8 @@ export default function AdminQuestsView({ onHome }) {
       </div>
 
       {fehler && <div style={{ fontSize: 13, color: danger, marginBottom: 14 }}>{fehler}</div>}
+
+      <RanglisteKarte />
 
       <div style={{ marginBottom: 14 }}>
         <PrimaryButton onClick={() => setFormOffen((v) => !v)}>{formOffen ? "Abbrechen" : "+ Neue Quest anlegen"}</PrimaryButton>

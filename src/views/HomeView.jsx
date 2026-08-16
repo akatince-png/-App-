@@ -14,6 +14,7 @@ import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { QuestsKarte } from "../ui/QuestsKarte";
+import RanglisteKarte from "../ui/RanglisteKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { getCoachName } from "../utils/coachStorage";
@@ -479,6 +480,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       {!istAdminModus ? (
         <>
           <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
+          <RanglisteKarte />
           <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
         </>
       ) : (

@@ -165,3 +165,25 @@ export async function adminQuestListe() {
   if (fortschrittError) console.error(fortschrittError);
   return { ok: true, quests: questRows || [], fortschritt: fortschrittRows || [] };
 }
+
+// Rangliste über ALLE Coachees hinweg (nicht an eine userId gebunden,
+// bewusst für jede Coachee aufrufbar — siehe quest_rangliste() in
+// 0072_quest_rangliste.sql, gibt absichtlich nur Name + Anzahl zurück,
+// keine Detail-Inhalte). Nutzerinnen-Vorgabe 16.08.: "die Leute sollen
+// halt meine Coachees gegeneinander antreten können ... bei den Quest[s]".
+export async function questRanglisteLaden() {
+  const { data, error } = await supabase.rpc("quest_rangliste");
+  if (error) {
+    console.error(error);
+    return { ok: false, error: error.message };
+  }
+  return {
+    ok: true,
+    rangliste: (data || []).map((r) => ({
+      userId: r.user_id,
+      vorname: r.vorname,
+      questsErledigt: Number(r.quests_erledigt) || 0,
+      questsAngenommen: Number(r.quests_angenommen) || 0,
+    })),
+  };
+}
