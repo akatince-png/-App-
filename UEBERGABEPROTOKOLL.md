@@ -1,5 +1,54 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔴 Update 16.08.2026, Fortsetzung (Teil 18) — Akutmodus überarbeitet: Layout + vorab festlegbare Akut-Übung
+
+Direkt im Anschluss an Teil 17, Feedback zum gerade gebauten Akutmodus
+(Commit `8adbdde`):
+
+1. **Layout**: Notfallmodus-Knopf etwas schmaler, daneben (nicht
+   darunter) ein gleich hoher, aber schmalerer Knopf für den
+   Akutmodus. Umgesetzt als Flex-Reihe (Verhältnis 1,6:1, gleiche Höhe
+   automatisch über Flex-Stretch statt fester Pixelwerte). Dafür
+   `ADHSModeToggle.jsx` um eine `compact`-Variante erweitert (kein
+   Pfeil-Indikator, kleinere Schrift) und `AkutModusKarte.jsx` in zwei
+   Teile aufgeteilt: `AkutModusTrigger` (der schmale Knopf für die
+   Reihe) und `AkutModusPanel` (das eigentliche Feature in voller
+   Breite, öffnet sich unterhalb der Knopf-Reihe). Layout lokal per
+   Playwright-Screenshot einer statischen HTML-Kopie der Styles
+   geprüft (Sandbox kann nicht einloggen, siehe #30).
+2. **Vorab festlegbare "Akut-Übung"**: Nutzerin wollte, dass sich eine
+   konkrete Übung (isometrisches Training, progressive Entspannung,
+   Atemübung o. Ä.) vorher hinterlegen lässt, die die App im Akutmodus
+   dann aktiv mit warmer, geführter Anleitung vorschlägt — "die App
+   ist dann so ein bisschen der Kumpel, der nicht da ist". Umgesetzt
+   über die BESTEHENDEN Gewohnheiten statt eines neuen, separaten
+   Übungs-Systems (Nutzerin selbst unsicher, wo genau — "Gewohnheiten
+   und Workflow, keine Ahnung" — Gewohnheiten gewählt, da einfachster,
+   naheliegendster Ort für "Isometrisches Training"/"Atemübung" als
+   trackbarer Eintrag; Workflow-Presets als möglicher zweiter Ort
+   bewusst nicht mit umgesetzt, um den Umfang nicht zu verdoppeln):
+   - Migration `0075_gewohnheit_akut_favorit.sql`: neue Spalte
+     `routines.akut_favorit`.
+   - `GewohnheitenView.jsx`: neuer Umschalter "🧘 Als Akut-Übung
+     merken" pro Gewohnheit, neben "Ziel bearbeiten".
+   - `AkutModusPanel`: als Akut-Übung markierte Gewohnheiten erscheinen
+     prominent VOR den allgemeinen Symptom-Kacheln; Antippen ruft
+     `uebungAnfordern()` auf, die denselben "akut"-Prompt der
+     `lexikon`-Funktion nutzt (der ohnehin schon "kurz anerkennen + 1-2
+     konkrete Schritte" verlangt) — dadurch **keine weitere Änderung an
+     der Edge Function nötig**, nur ein anders formulierter Anfragetext
+     ("Ich möchte jetzt meine Akut-Übung machen: '{Name}' — führ mich
+     kurz und warmherzig da durch").
+
+`npm run build` erfolgreich geprüft. Weiterhin **nicht im Browser
+getestet** (Sandbox ohne Supabase-Login) — nur Layout separat per
+Screenshot verifiziert.
+
+**🔴 Deploy nötig**: nur die neue Migration `0075` — die
+`lexikon`-Edge-Function musste diesmal NICHT erneut geändert werden.
+
+---
+
 ## 🔴 Update 16.08.2026, Fortsetzung (Teil 17) — Neues Feature "Akutmodus" auf der Startseite
 
 Direkt im Anschluss an Teil 16. Nutzerinnen-Vorgabe: ein Knopf im
@@ -1623,7 +1672,8 @@ sonst nie auffallen lassen.
 | 27 | Edge Function `lexikon` neu deployen | ✅ Erledigt (16.08., Text direkt aus dem Chat eingefügt) — der kuratierte Kontext aus der Wissensbasis (Peptide/Supplemente/Schlafgesundheit) ist damit live |
 | 28 | Wissensbasis-Größe (`src/wissen/`) — gezielte Auswahl statt "alles an jede Anfrage anhängen" | 🟡 Nach Teil 15 kein theoretisches Later-Thema mehr, sondern realer Kosten-/Latenz-Faktor bei jedem KiChat-Aufruf (9 umfangreiche Themen-Dateien plus Ernährung). Für das Lexikon bereits gezielte Auswahl pro Kategorie umgesetzt (Teil 15) — Vorbild für eine ähnliche Lösung bei KiChat |
 | 29 | Edge Function `lexikon` erneut neu deployen | 🔴 Teil 17: `modus: "akut"`-Feld für den neuen Akutmodus-Knopf hinzugefügt — ohne erneutes manuelles Redeploy bleibt der Knopf ohne Wirkung (kein Absturz, nur keine Antwort) |
-| 30 | Akutmodus-Feature im Browser end-to-end testen | 🟡 Teil 17: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login), nur per Code-Review geprüft — die Nutzerin sollte einmal selbst durchklicken (Symptom antippen, Freitext, "An Coach schicken"), bevor sie sich darauf verlässt |
+| 30 | Akutmodus-Feature im Browser end-to-end testen | 🟡 Teil 17/18: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login), nur per Code-Review geprüft — die Nutzerin sollte einmal selbst durchklicken (Layout, Symptom antippen, Freitext, Akut-Übung markieren + starten, "An Coach schicken"), bevor sie sich darauf verlässt |
+| 31 | Migration `0075_gewohnheit_akut_favorit.sql` ausführen | 🔴 Teil 18: ohne diese Spalte wirft "🧘 Als Akut-Übung merken" in den Gewohnheiten einen Datenbankfehler |
 
 ---
 
