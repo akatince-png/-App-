@@ -3,9 +3,25 @@ import { supabase } from "../lib/supabaseClient";
 
 const AuthContext = createContext(null);
 
+// Erkennt einen Einladungs- oder Passwort-Vergessen-Link (Supabase hängt
+// "type=invite"/"type=recovery" an den URL-Hash) — einmalig beim Laden
+// gelesen, BEVOR der Supabase-Client den Hash beim Session-Aufbau
+// aufräumt. Steuert in App.jsx, ob statt der normalen App erst
+// InviteAcceptView (Passwort festlegen) gezeigt wird. Wirkt sich NICHT auf
+// den normalen Login/Logout aus — ohne diese URL-Parameter bleibt es bei
+// false, wie bisher.
+function leseEinladungsTypAusUrl() {
+  if (typeof window === "undefined") return false;
+  const hash = window.location.hash || "";
+  const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+  const type = params.get("type");
+  return type === "invite" || type === "recovery";
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [invitePending, setInvitePending] = useState(leseEinladungsTypAusUrl);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -24,8 +40,6 @@ export function AuthProvider({ children }) {
 
   const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
 
-  const signUp = (email, password) => supabase.auth.signUp({ email, password });
-
   const signOut = () => supabase.auth.signOut();
 
   const value = {
@@ -33,8 +47,9 @@ export function AuthProvider({ children }) {
     user: session?.user ?? null,
     loading,
     signIn,
-    signUp,
     signOut,
+    invitePending,
+    clearInvitePending: () => setInvitePending(false),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

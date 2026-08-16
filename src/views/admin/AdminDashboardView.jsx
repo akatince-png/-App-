@@ -37,6 +37,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   const [fehler, setFehler] = useState(null);
   const [suche, setSuche] = useState("");
   const [formOffen, setFormOffen] = useState(false);
+  const [einladenOffen, setEinladenOffen] = useState(false);
   const [notizFuer, setNotizFuer] = useState(null); // proband.id | null
   const [nachrichtenFuer, setNachrichtenFuer] = useState(null); // proband.id | null
   const [testAnlegenLaeuft, setTestAnlegenLaeuft] = useState(false);
@@ -97,6 +98,18 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
     await navigator.clipboard.writeText(`${testKonto.email} / ${testKonto.passwort}`);
     setTestKopiert(true);
     setTimeout(() => setTestKopiert(false), 2000);
+  };
+
+  // Onboarding-Umfang nachträglich pro Coachee umstellen (Nutzerinnen-
+  // Vorgabe 16.08.: "verschiedene Coaching-Modelle anbieten") — wirkt sich
+  // nur aus, solange die Person ihr eigenes Onboarding noch nicht
+  // abgeschlossen hat (siehe OnboardingFlow.jsx), deshalb nur dort
+  // anzeigen/umschaltbar.
+  const onboardingModusUmschalten = async (userId, aktuellerModus) => {
+    const naechsterModus = aktuellerModus === "lang" ? "kurz" : "lang";
+    setProbanden((prev) => prev.map((p) => (p.id === userId ? { ...p, onboarding_modus: naechsterModus } : p)));
+    const { error } = await supabase.from("profiles").update({ onboarding_modus: naechsterModus }).eq("id", userId);
+    if (error) setFehler(error.message);
   };
 
   const gefiltert = probanden.filter((p) => {
@@ -176,6 +189,19 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
           </PrimaryButton>
         </div>
       </div>
+      <div style={{ marginBottom: 14 }}>
+        <PrimaryButton variant="ghost" onClick={() => setEinladenOffen((v) => !v)}>
+          {einladenOffen ? "Abbrechen" : "✉️ Coachee einladen"}
+        </PrimaryButton>
+      </div>
+      {einladenOffen && (
+        <EinladenForm
+          onCreated={() => {
+            setEinladenOffen(false);
+            ladeProbanden();
+          }}
+        />
+      )}
       {testFehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14 }}>{testFehler}</div>}
       {testKonto && (
         <Card style={{ marginBottom: 14, background: successSoft }}>
@@ -237,6 +263,25 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
                 >
                   {p.onboarding_complete ? "Eingerichtet" : "Onboarding offen"}
                 </span>
+                {!p.is_admin && !p.onboarding_complete && (
+                  <button
+                    onClick={() => onboardingModusUmschalten(p.id, p.onboarding_modus)}
+                    title="Steuert, ob diese Person beim eigenen Einloggen nur den kurzen Steckbrief oder die volle Kategorie-Einrichtung durchläuft"
+                    style={{
+                      marginLeft: 6,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: "3px 9px",
+                      borderRadius: 10,
+                      border: `1px solid ${cardBorder}`,
+                      background: "#fff",
+                      color: textMuted,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Onboarding: {p.onboarding_modus === "lang" ? "Lang" : "Kurz"}
+                  </button>
+                )}
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
@@ -514,10 +559,32 @@ export function CoacheeNachrichtenPanel({ proband }) {
   );
 }
 
+// Onboarding-Umfang-Auswahl, gemeinsam genutzt von NeuerZugangForm und
+// EinladenForm — Nutzerinnen-Vorgabe 16.08.: "verschiedene Coaching-
+// Modelle anbieten ... manche werden mehr selbst geführt, manche komplett
+// von mir geleitet". "Kurz" (Standard) = nur Profil/Ziel/Steckbrief, "Lang"
+// = die volle Kategorie-Einrichtung, die sonst nur die Admin im
+// "Verwalten"-Modus sieht. Wirkt sich nur aus, wenn die Person das eigene
+// Onboarding tatsächlich selbst durchläuft (siehe OnboardingFlow.jsx) —
+// richtet die Admin per "Verwalten" alles vorher selbst ein, greift das
+// hier gewählte Onboarding nie.
+function OnboardingModusWahl({ modus, onChange }) {
+  return (
+    <div style={{ marginTop: 4 }}>
+      <Label>Onboarding für diese Person</Label>
+      <div style={{ display: "flex", gap: 8 }}>
+        <Pill label="Kurz (nur Steckbrief)" selected={modus === "kurz"} onClick={() => onChange("kurz")} />
+        <Pill label="Lang (volle Einrichtung)" selected={modus === "lang"} onClick={() => onChange("lang")} />
+      </div>
+    </div>
+  );
+}
+
 function NeuerZugangForm({ onCreated }) {
   const [email, setEmail] = useState("");
   const [vorname, setVorname] = useState("");
   const [passwort, setPasswort] = useState("");
+  const [onboardingModus, setOnboardingModus] = useState("kurz");
   const [speichernLaeuft, setSpeichernLaeuft] = useState(false);
   const [fehler, setFehler] = useState(null);
   const [erfolg, setErfolg] = useState(null);
@@ -533,15 +600,20 @@ function NeuerZugangForm({ onCreated }) {
     const { data, error } = await supabase.functions.invoke("admin-create-proband", {
       body: { email: email.trim(), password: passwort, vorname: vorname.trim() || undefined },
     });
-    setSpeichernLaeuft(false);
     if (error || data?.error) {
+      setSpeichernLaeuft(false);
       setFehler(data?.error || error.message);
       return;
     }
+    if (onboardingModus === "lang") {
+      await supabase.from("profiles").update({ onboarding_modus: "lang" }).eq("id", data.id);
+    }
+    setSpeichernLaeuft(false);
     setErfolg(`Konto für ${email.trim()} angelegt. Notiere dir das Passwort — es wird hier nicht noch einmal angezeigt.`);
     setEmail("");
     setVorname("");
     setPasswort("");
+    setOnboardingModus("kurz");
     onCreated?.();
   };
 
@@ -553,6 +625,7 @@ function NeuerZugangForm({ onCreated }) {
       <TextInput value={email} onChange={setEmail} placeholder="name@beispiel.de" type="email" />
       <Label>Passwort</Label>
       <TextInput value={passwort} onChange={setPasswort} placeholder="Mindestens 6 Zeichen" type="password" />
+      <OnboardingModusWahl modus={onboardingModus} onChange={setOnboardingModus} />
       <div style={{ marginTop: 14 }}>
         <PrimaryButton onClick={anlegen} disabled={speichernLaeuft}>
           {speichernLaeuft ? "Lege an…" : "Zugang anlegen"}
@@ -564,6 +637,64 @@ function NeuerZugangForm({ onCreated }) {
         Diese Person kann sich damit direkt auf ihrem eigenen Handy anmelden.
         Du kannst aber auch einfach "Verwalten" nutzen, ohne ihr das Passwort
         überhaupt mitzuteilen, und alles für sie einrichten.
+      </div>
+    </Card>
+  );
+}
+
+// Einladung per E-Mail statt direkt gesetztem Passwort (Nutzerinnen-Vorgabe
+// 16.08.: "dass ich jemandem einen Link schicke ... er nur darüber
+// reinkommt oder eingeladen werden muss") — die Person setzt sich beim
+// Anklicken des Links selbst ein Passwort (siehe InviteAcceptView.jsx),
+// nie über dich.
+function EinladenForm({ onCreated }) {
+  const [email, setEmail] = useState("");
+  const [vorname, setVorname] = useState("");
+  const [onboardingModus, setOnboardingModus] = useState("kurz");
+  const [speichernLaeuft, setSpeichernLaeuft] = useState(false);
+  const [fehler, setFehler] = useState(null);
+  const [erfolg, setErfolg] = useState(null);
+
+  const einladen = async () => {
+    setFehler(null);
+    setErfolg(null);
+    if (!email.trim()) {
+      setFehler("E-Mail ist ein Pflichtfeld.");
+      return;
+    }
+    setSpeichernLaeuft(true);
+    const { data, error } = await supabase.functions.invoke("admin-invite-proband", {
+      body: { email: email.trim(), vorname: vorname.trim() || undefined, onboardingModus },
+    });
+    setSpeichernLaeuft(false);
+    if (error || data?.error) {
+      setFehler(data?.error || error.message);
+      return;
+    }
+    setErfolg(`Einladung an ${email.trim()} verschickt.`);
+    setEmail("");
+    setVorname("");
+    setOnboardingModus("kurz");
+    onCreated?.();
+  };
+
+  return (
+    <Card style={{ marginBottom: 18 }}>
+      <Label>Name (nur für dich sichtbar)</Label>
+      <TextInput value={vorname} onChange={setVorname} placeholder="Anzeigename" />
+      <Label>E-Mail der Person</Label>
+      <TextInput value={email} onChange={setEmail} placeholder="name@beispiel.de" type="email" />
+      <OnboardingModusWahl modus={onboardingModus} onChange={setOnboardingModus} />
+      <div style={{ marginTop: 14 }}>
+        <PrimaryButton onClick={einladen} disabled={speichernLaeuft}>
+          {speichernLaeuft ? "Sende Einladung…" : "Einladung senden"}
+        </PrimaryButton>
+      </div>
+      {fehler && <div style={{ fontSize: 12.5, color: danger, marginTop: 10 }}>{fehler}</div>}
+      {erfolg && <div style={{ fontSize: 12.5, color: success, marginTop: 10 }}>{erfolg}</div>}
+      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 10, lineHeight: 1.5 }}>
+        Die Person bekommt eine E-Mail mit einem Link, legt sich beim ersten Klick selbst ein Passwort fest und
+        landet danach je nach Auswahl oben im kurzen oder langen Onboarding.
       </div>
     </Card>
   );

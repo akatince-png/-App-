@@ -7,6 +7,7 @@ import { useT } from "./i18n/translate";
 import { Shell } from "./ui/primitives";
 import { textMuted } from "./ui/theme";
 import LoginView from "./views/LoginView";
+import InviteAcceptView from "./views/InviteAcceptView";
 import AuthenticatedApp from "./AuthenticatedApp";
 
 function LoadingScreen() {
@@ -19,10 +20,14 @@ function LoadingScreen() {
 }
 
 function Root() {
-  const { user, loading } = useAuth();
+  const { user, loading, invitePending } = useAuth();
   const { proband } = useAdmin();
   if (loading) return <LoadingScreen />;
   if (!user) return <LoginView />;
+  // Einladungs-/Passwort-Vergessen-Link angeklickt (siehe AuthContext.jsx)
+  // — erst ein eigenes Passwort setzen lassen, bevor die eigentliche App
+  // (inkl. Onboarding) startet.
+  if (invitePending) return <InviteAcceptView />;
   return (
     // key erzwingt beim Betreten/Verlassen des "Verwalten als"-Modus einen
     // kompletten Remount von AppDataProvider + AuthenticatedApp — sonst

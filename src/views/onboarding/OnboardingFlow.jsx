@@ -42,14 +42,27 @@ import { useAdmin } from "../../context/AdminContext";
 // NICHT selbst Admin ist und auch nicht gerade von der Admin verwaltet
 // wird ("Verwalten als"), ist ein Coachee — die Admin richtet für sie
 // Laborwerte/Routinen/Kategorien stellvertretend ein. Der Coachee
-// durchläuft deshalb nach "profil" nur noch einen kurzen "steckbrief"
-// statt der vollen Kategorie-Einrichtung. `istAdminModus` ist dieselbe
-// Logik wie überall sonst (KiChat.jsx, AuthenticatedApp.jsx): entweder man
-// ist selbst Admin, oder man verwaltet gerade jemanden stellvertretend.
+// durchläuft deshalb nach "profil" standardmäßig nur noch einen kurzen
+// "steckbrief" statt der vollen Kategorie-Einrichtung. `istAdminModus` ist
+// dieselbe Logik wie überall sonst (KiChat.jsx, AuthenticatedApp.jsx):
+// entweder man ist selbst Admin, oder man verwaltet gerade jemanden
+// stellvertretend.
+//
+// Erweiterung 16.08. (Nutzerinnen-Vorgabe: "verschiedene Coaching-Modelle
+// anbieten ... manche werden mehr selbst geführt, manche komplett von mir
+// geleitet"): die Admin kann pro Coachee (bei Einladung oder nachträglich
+// im Admin-Dashboard) `onboarding_modus` auf "lang" statt "kurz" stellen —
+// dann durchläuft auch die Coachee selbst die volle Kategorie-Einrichtung
+// statt nur den Steckbrief. Betrifft NUR den Steckbrief/Kategorien-Zweig
+// unten (`vollstaendigesOnboarding`) — `nurManuell` bei OnboardingIntroView
+// bleibt an `istAdminModus` hängen, weil die Coach-geführte Variante dort
+// wirklich die Admin persönlich im Chat braucht, nicht nur einen längeren
+// Fragebogen.
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
   const { proband } = useAdmin();
-  const { isAdmin } = useAppData();
+  const { isAdmin, onboardingModus } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
+  const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
   const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
@@ -97,7 +110,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   if (phase === "profil") {
     return (
       <OnboardingProfilView
-        onDone={() => setPhase(istAdminModus ? "laborwerte" : "steckbrief")}
+        onDone={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
         onBack={() => setPhase("ziele")}
         onCancel={onCancel}
       />
@@ -133,7 +146,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     <OnboardingCompletionView
       eingerichteteBereiche={eingerichteteBereiche}
       onDone={onDone}
-      onBack={() => setPhase(istAdminModus ? "categories" : "steckbrief")}
+      onBack={() => setPhase(vollstaendigesOnboarding ? "categories" : "steckbrief")}
     />
   );
 }
