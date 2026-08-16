@@ -258,13 +258,18 @@ export const AIService = {
         "Du bist ein Trainingsplan-Assistent für eine bestehende App.",
         "Fasse das vorangegangene Gespräch jetzt als finalen Plan zusammen.",
         "Jede Übung bekommt ihre EIGENEN Sätze/Wiederholungen/Gewicht, nicht nur ein einziger Wert für die ganze Einheit.",
+        "Bei 'Isometrisches Training' oder Intervall-Cardio/Bodyweight (Halten/Arbeiten + Pause im Wechsel, z. B. \"5 Sekunden halten, 4 Sekunden Pause, 5 Runden\") IMMER intervallArbeitSek/intervallPauseSek/runden mit erfassen, nicht nur uebungenListe — das sind die eigentlich entscheidenden Werte bei dieser Trainingsart.",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "einheiten": [ { "wochentag": "Mo"|"Di"|"Mi"|"Do"|"Fr"|"Sa"|"So", ' +
+          '"uhrzeit": string ("HH:MM" falls eine feste Uhrzeit besprochen wurde, sonst leer), ' +
           '"name": string (optional, Name der GESAMTEN Einheit, z. B. "Brusttag", "Montagsworkout" — nicht zu verwechseln mit den einzelnen Übungsnamen unten; nur wenn im Gespräch ein Name genannt wurde oder sich einer eindeutig anbietet, sonst leerer String), ' +
           '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Isometrisches Training","Sonstiges"), ' +
           '"uebungenListe": [ { "name": string, "saetze": string, "wiederholungen": string, ' +
-          '"gewicht": string (z. B. "20 kg", leer wenn nicht genannt) } ] (leeres Array wenn keine einzelnen Übungen genannt wurden) } ] }',
+          '"gewicht": string (z. B. "20 kg", leer wenn nicht genannt) } ] (leeres Array wenn keine einzelnen Übungen genannt wurden), ' +
+          '"intervallArbeitSek": number|null (Halte-/Arbeitsdauer in Sekunden je Runde, nur bei Isometrisches Training/Intervall-Cardio/-Bodyweight, sonst null), ' +
+          '"intervallPauseSek": number|null (Pausendauer in Sekunden je Runde, gleiche Einschränkung wie oben), ' +
+          '"runden": number|null (Anzahl Runden, gleiche Einschränkung wie oben) } ] }',
       ].join(" ")
     );
     const messages = [
