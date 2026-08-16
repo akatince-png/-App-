@@ -17,6 +17,11 @@ create table public.teams (
   erstellt_am timestamptz not null default now()
 );
 
+-- Muss VOR den teams-Policies unten stehen — die "eigenes Team lesen"-
+-- Policy referenziert profiles.team_id in ihrer USING-Klausel, das scheitert
+-- beim Anlegen der Policy, wenn die Spalte noch nicht existiert.
+alter table public.profiles add column if not exists team_id uuid references public.teams (id) on delete set null;
+
 alter table public.teams enable row level security;
 
 -- Jede Coachee darf den Namen des eigenen Teams lesen (z. B. für die
@@ -27,8 +32,6 @@ create policy "teams: eigenes Team lesen" on public.teams
 
 create policy "teams: admin voller Zugriff" on public.teams
   for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
-
-alter table public.profiles add column if not exists team_id uuid references public.teams (id) on delete set null;
 
 -- admin_liste_probanden() (0035) erweitert um team_id, damit AdminTeamsView.jsx
 -- ohne Zusatzabfrage weiß, wer schon in welchem Team ist. "create or replace"
