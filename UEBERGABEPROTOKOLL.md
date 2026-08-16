@@ -1,5 +1,49 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 22) — Wissens-Leitfaden "Laborwerte, Mikronährstoffe & Hormone" + PDF-Skript um Tabellen erweitert
+
+Nutzerin lieferte einen ausführlichen fachlichen Entwurf zu ADHS-
+relevanter Labordiagnostik und bat darum, ihn in die Wissensbasis
+einzuarbeiten, zu vertiefen und wie immer als Handbuch zu liefern
+(Commit `280c0cf`).
+
+- `src/wissen/blutwerte/laborwerte-mikronaehrstoffe-hormone-bei-adhs.md`
+  (neu) ersetzt den bisherigen Platzhalter unter `blutwerte/` — der war
+  laut eigenem Text explizit für genau diese Art Inhalt vorgesehen
+  ("Hinweise ablegen, wie der Coach Laborwerte einordnen soll").
+  Behandelt: warum Dopamin/Noradrenalin nicht direkt im Blut gemessen
+  werden (Blut-Hirn-Schranke, Urin-Neurotransmitter-Profile als
+  umstritten eingeordnet), den methodischen Grundsatz Serum vs.
+  Vollblut/Erythrozyten, Dopaminsynthese-Kofaktoren (Ferritin+hs-CRP,
+  Magnesium, Zink/Kupfer, Vitamin D, B12/Holo-TC, B6/P5P, Homocystein),
+  Omega-3-Index und Aminosäuren, Hormonstatus (Schilddrüse, Cortisol-
+  Tagesprofil, geschlechtsspezifisch inkl. Messzeitpunkt/Lutealphase),
+  den rechtlichen/praktischen Coaching-Hinweis der Nutzerin, sowie drei
+  Übersichtstabellen.
+- Per WebSearch gegengeprüft und mit aktueller (2024–2026) Evidenz
+  eingeordnet — u. a. Ferritin/ADHS-Studienlage als uneinheitlich statt
+  pauschal bestätigt korrigiert, RBC-Magnesium als überwiegend aus der
+  funktionellen Medizin (nicht schulmedizinisch einheitlich etabliert)
+  eingeordnet, der verbreitete Vitamin-D-Zielwert 40–60 ng/ml als
+  umstritten markiert (Endocrine Society 2024 rät bei Gesunden sogar
+  von Routine-Screening ab), Holo-TC-Überlegenheit gegenüber
+  Gesamt-B12 als uneinheitlich belegt statt als klar besser
+  dargestellt, und der Lutealphase-Dopamin-Mechanismus präzisiert
+  (vorrangig Östrogenabfall, nicht nur Progesteron).
+- **PDF-Skript (`build_pdf_multi.py`, lokal im Scratchpad) um
+  Markdown-Tabellen-Unterstützung erweitert** — die drei
+  Übersichtstabellen dieses Leitfadens wären sonst als unleserlicher
+  Rohtext ins PDF gerutscht. Neue `build_table()`-Funktion rendert
+  `| ... |`-Tabellen als echte reportlab-Tabelle (farbige Kopfzeile,
+  abwechselnde Zeilenfarben, Textumbruch in Zellen) — nützlich auch für
+  künftige Handbücher mit Tabellen.
+
+`npm run build` erfolgreich geprüft, PDF-Handbuch erstellt und
+verschickt (8 Seiten, Tabellen per Screenshot visuell verifiziert).
+Keine Migration, keine Edge Function nötig — reine Wissensbasis-Datei.
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 21) — Bug-Check aller neuen Akutmodus-/Atemübungen-Teile
 
 Nutzerin bat um eine gezielte Fehlersuche in allen seit Teil 17 neu
