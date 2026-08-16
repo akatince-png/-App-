@@ -1,5 +1,37 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 21) — Bug-Check aller neuen Akutmodus-/Atemübungen-Teile
+
+Nutzerin bat um eine gezielte Fehlersuche in allen seit Teil 17 neu
+gebauten Teilen (Commit `2cc1b12`). Erster Versuch mit dem
+`code-review`-Skill lief in einer isolierten Fork-Ausführung fehl —
+landete in einem völlig fremden Repository (ein "Arcanova"-
+Kinder-App-Projekt) statt in diesem hier, vermutlich ein Kontext-/
+Worktree-Problem der Fork-Ausführung. Die Ergebnisse waren daher
+irrelevant und wurden verworfen; stattdessen den kompletten Diff seit
+Teil 17 (`775a9df^..HEAD`, ~1200 Zeilen über 19 Dateien) manuell
+Datei für Datei durchgesehen.
+
+**Ein echter Bug gefunden und behoben**: In `AtemTimer.jsx` lief der
+Fortschrittsring bei jeder Atemphase (Einatmen/Halten/Ausatmen)
+rückwärts — startete voll und leerte sich, statt sich zu füllen.
+Ursache: `ringDone` wurde versehentlich mit der Restzeit-Formel
+berechnet (`total - verstrichen`, fallend) statt mit der
+Verstrichen-Formel (`verstrichen`, steigend) — `ProgressRing.jsx`
+erwartet aber `done` steigend (`pct = done/total`). Rein visuell, keine
+Auswirkung auf Ton/Ablauf/Dokumentation — aber ein spürbarer Makel bei
+einer Übung, die gerade beruhigend wirken soll.
+
+Restliche geprüfte Bereiche ohne Befund: Phasenübergangs-Logik im
+Timer (Rundung, Abbruch während Vorbereitung, sauberer Abschluss nach
+vollständigem Ausatmen), die Callback-Verträge zwischen AtemTimer/
+AkutModusPanel/AtemuebungenView (kein doppeltes/verlorenes Logging),
+Optional-Chaining bei Zahlenwerten (0 vs. leer bei Halten-Sekunden),
+RLS-Policies der drei neuen Tabellen, sowie alle Routing-/Integrations-
+Änderungen (MehrTab, PlaeneView, AuthenticatedApp, dayItems, Icon).
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 20) — Akutmodus: eigene, frei eingetragene Maßnahme dokumentieren
 
 Direkt im Anschluss an Teil 19 (Commit `ce1a39c`). Nutzerinnen-Beispiel:
