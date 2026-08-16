@@ -1,5 +1,112 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 15) — Alle 8 verbliebenen Platzhalter-Themen auf Ernährungs-Niveau ausgebaut + Lexikon an Wissensbasis angebunden
+
+Direkt im Anschluss an Teil 14. Nutzerin: Wenn der Ernährungs-Leitfaden
+jetzt der umfangreichste Text der Wissensbasis ist, sollen alle anderen
+Themen ebenso umfassend aufgearbeitet werden — UND die
+Coaching-Unterlagen (Coachinghandbuch/Lexikon/Curriculum) sollen zur
+App-Wissensbasis konsistent bleiben, damit sie nie mehr "weiß" als sie
+selbst nachlesen kann. Vor dem Start per Rückfrage geklärt (Nutzerin
+antwortete "alle 8 direkt nacheinander" + "beides" zu
+appintern/appextern) — Details dazu unten (Commit `e52c5dd`).
+
+**1. Acht bisherige Platzhalter-Dateien ersetzt** (jeweils mit
+WebSearch-gestützter aktueller 2024-2026-Studienlage, Evidenzgrad pro
+Aussage, eigenem PDF-Handbuch):
+- `gewohnheiten/gewohnheiten-bei-adhs.md` — Neurowissenschaft der
+  Gewohnheitsbildung, Implementation Intentions (heben ADHS-Leistung
+  bei exekutiven Aufgaben auf annähernd neurotypisches Niveau), Habit
+  Stacking, Environmental Design, Body Doubling, "Restart statt
+  Aufholen".
+- `hydration/hydration-bei-adhs.md` — Interozeptionsforschung
+  (Bruton 2025), kognitive Effekte bereits milder Dehydration (~1 %
+  Körpergewicht reicht), Stimulanzien-Effekt auf Durstempfinden.
+- `schlaf/schlaf-bei-adhs.md` — ADHS als circadiane Rhythmusstörung,
+  DLMO-Verschiebung (45 Min. Kinder/90 Min. Erwachsene), Chronotherapie-
+  RCT, Restless-Legs-Syndrom (20-33 % Prävalenz bei ADHS), CBT-I,
+  differenzierter Blick auf Stimulanzien-Effekt auf Schlafqualität.
+- `tageslicht/tageslicht-bei-adhs.md` — Lichttherapie-Studien zu
+  ADHS-Kernsymptomatik (nicht nur Schlaf), "Grün-Zeit"/Attention
+  Restoration Theory bei Naturaufenthalten.
+- `training/training-bei-adhs.md` — akutes Zeitfenster nach Training
+  (30-60 Min. verbesserter Fokus), Vergleich Trainingsarten
+  (fertigkeitsbasiert schlägt reines Ausdauertraining bei exekutiven
+  Funktionen laut 2025er Netzwerk-Meta-Analyse), BDNF-Timing, ergänzt
+  das gesonderte Isometrisches-Training-Wissen in coach_wissen.
+- `medikamente/medikamente-bei-adhs.md` — bewusst Coaching-fokussiert
+  (Einnahmetreue/Adhärenz-Forschung: nur 20-40 % Therapietreue nach 12
+  Monaten, Einflussfaktoren, was nachweislich hilft), explizit KEINE
+  Dosierungs-/Präparate-Empfehlungen, klare Grenzziehung zur
+  ärztlichen Zuständigkeit.
+- `supplemente/supplemente-bei-adhs.md` — bewusst als
+  **Rahmenkonzept/Entscheidungslogik** angelegt (Mangel vs.
+  Optimierung, Sicherheitsrahmen, Produktqualität/Kontamination,
+  gezielte Vermarktung an ADHS-Zielgruppe laut Lancet Psychiatry 2026),
+  NICHT als Wiederholung der ~25 bereits einzeln in coach_wissen
+  gepflegten Supplement-Einträge (Magnesium, Zink, Omega-3, Kreatin
+  usw.) — verweist stattdessen darauf, um Redundanz in der ohnehin
+  riesigen Wissensbasis zu vermeiden.
+- `peptide/peptide-bei-adhs.md` — größte inhaltliche Lücke (vorher
+  0 Einträge in coach_wissen UND nur Platzhalter in src/wissen).
+  Ordnet nach regulatorischer Kategorie (zugelassenes Medikament vs.
+  Off-Label vs. unreguliertes "Research Chemical"), GLP-1-Agonisten
+  und ADHS (2024er PET-Studie zu Dopamintransporter-Bindung unter
+  Semaglutid, 2025er Beobachtungsstudie, aber explizit KEINE RCTs zu
+  ADHS UND ein 2025er Sicherheitssignal zu Depression/Suizidalität bei
+  entsprechender genetischer Veranlagung), BPC-157/TB-500
+  (Tierstudien, Zulassungsstatus, Qualitätsrisiko unreguliert
+  gekaufter Produkte). Strengste Coaching-Grenzen im gesamten
+  Dokument (keine Bezugsquellen, keine Dosierung).
+
+**2. In-App-Lexikon an Wissensbasis angebunden** (`utils/wissensBasis.js`,
+`data/useLexikon.js`, `functions/lexikon/index.ts`): Beim Prüfen
+festgestellt, dass die Lexikon-Funktion der App (📚-Icon, andere
+Funktion als der KI-Chat/Aka) bisher OHNE jeden Bezug zur kuratierten
+Wissensbasis antwortete — reine freie Modellantwort. Neue Funktion
+`wissensBasisFuerLexikonKategorie()` liefert jetzt gezielt den
+Wissenstext des passenden `src/wissen/`-Ordners zur gewählten
+Lexikon-Kategorie; `useLexikon.js` schickt ihn als `kontext`-Feld mit;
+die Edge Function baut ihn (falls vorhanden) in den Prompt ein. Nur 3
+der 7 Lexikon-Kategorien haben einen passenden Wissens-Ordner
+("Peptide", "Supplemente", "Schlafgesundheit" → `peptide/`,
+`supplemente/`, `schlaf/`) — die anderen vier ("Hormone", "Anti-Aging",
+"Muskelaufbau", "Haut & Haare") haben aktuell keinen eigenen
+Wissensordner in dieser App und bleiben bewusst unverändert bei freier
+Modellantwort, um nicht über den heute abgesteckten Rahmen
+hinauszugehen. **🔴 Deploy nötig**: `functions/lexikon/index.ts` muss
+manuell in Supabase neu deployt werden (kompletten Dateiinhalt in der
+Edge-Function-Konsole ersetzen) — ohne Redeploy läuft die alte Version
+weiter (kein Fehler, nur ohne den neuen Kontext-Effekt).
+
+**3. Architektur-Warnung aus Teil 13/14 jetzt akut**: Die
+`src/wissen/`-Sammlung ist durch diese Runde um satte 8 weitere große
+Dateien gewachsen (Bundle +85 KB), alles davon fließt weiterhin
+ungefiltert in JEDEN KiChat-Aufruf ein (`wissensBasisText()`,
+`utils/wissensBasis.js`). Das ist jetzt kein theoretisches
+"später bedenken" mehr, sondern ein realer Kosten-/Latenz-Faktor bei
+jeder KI-Chat-Anfrage in der App. Empfehlung fürs nächste Mal, wenn
+daran gearbeitet wird: gezielte Auswahl/Kurzfassung pro Themenbereich
+statt weiter alles an jede Anfrage anzuhängen (z. B. nur den zum
+gerade aktiven Protokoll-Bereich passenden Ausschnitt mitschicken,
+ähnlich wie jetzt schon fürs Lexikon umgesetzt).
+
+**4. Bewusst NICHT gemacht** (außerhalb des heute abgesteckten
+Rahmens): coach_wissen (DB-Content-Library) wurde für keines der 8
+Themen verändert — bestehende, bereits ausführliche Einträge dort
+(Supplemente, Training/Isometrisches Training, Schlaf, Tageslicht,
+Gewohnheiten, Hydration, Medikamente als "Modul"-Paare) bleiben
+unangetastet und wurden nur beim Schreiben als Kontext berücksichtigt,
+um Redundanz zu vermeiden. Externe, appfremde Coachinghandbuch-/
+Lexikon-/Curriculum-Dokumente der Nutzerin kann ich nicht direkt
+bearbeiten (kenne sie nicht) — die 8 neuen PDF-Handbücher sind die dafür
+gedachte Grundlage zum eigenen Abgleich.
+
+Build erfolgreich geprüft (`npm run build`), alle Änderungen committet
+und gepusht.
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 14) — Ernährungs-Leitfaden um viele Ernährungsweisen + aktuelle Studienlage erweitert
 
 Sitzung wurde entgegen der Ankündigung in Teil 13 doch fortgesetzt:
@@ -1422,6 +1529,8 @@ sonst nie auffallen lassen.
 | 24 | Harte serverseitige Sperre gegen Selbstregistrierung (nicht nur UI-Entfernung) | 🟡 Von der Nutzerin gewünscht (16.08., Begründung: Piraterie-/Neugier-Schutz, sobald sie öffentlich über die App spricht, z. B. YouTube), aber für heute vertagt — kein akutes Risiko, das "Registrieren"-Tab-Entfernen deckt den praktischen Fall schon ab. Beim Versuch, "Enable email signups" zu finden, stellte sich heraus: im Email-Provider-Unterfenster (Sign In / Providers → Email) gibt es nur "Enable email provider" — **den NICHT ausschalten, das kappt die komplette E-Mail-Anmeldung inkl. der eigenen**. Vermutet, aber noch nicht bestätigt: ein separater "Allow new users to sign up"-Schalter unter einem "User Signups"-Abschnitt ganz oben auf der Hauptseite "Sign In / Providers" (vor der Anbieter-Liste, außerhalb des Email-Unterfensters) — das als Erstes prüfen, bevor an eine datenbankseitige Lösung gedacht wird. Falls der Schalter dort tatsächlich existiert: ausschalten, sollte die Selbstregistrierung serverseitig komplett blockieren, ohne Login/Invite/Verwalten-Flows zu berühren. Falls nicht auffindbar: mit der Nutzerin klären, ob eine eigene (aufwendigere, aus dem Sandbox nicht testbare) DB-seitige Absicherung gewünscht ist. |
 | 25 | Supabase → Authentication → URL Configuration → Site URL prüfen | Muss auf die echte App-URL zeigen, sonst landet der Link in der Einladungs-Mail (Teil 12) ins Leere |
 | 26 | Einladungs-Ablauf einmal komplett end-to-end testen (echte Test-E-Mail) | Aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase), sollte die Nutzerin einmal selbst durchklicken, bevor sie es für echte Coachees nutzt |
+| 27 | Edge Function `lexikon` neu deployen | 🔴 Teil 15: Datei wurde geändert (kuratierter Kontext aus der Wissensbasis wird jetzt eingebaut), ohne manuelles Redeploy in Supabase bleibt die alte Version aktiv (kein Fehler, nur ohne den neuen Effekt) |
+| 28 | Wissensbasis-Größe (`src/wissen/`) — gezielte Auswahl statt "alles an jede Anfrage anhängen" | 🟡 Nach Teil 15 kein theoretisches Later-Thema mehr, sondern realer Kosten-/Latenz-Faktor bei jedem KiChat-Aufruf (9 umfangreiche Themen-Dateien plus Ernährung). Für das Lexikon bereits gezielte Auswahl pro Kategorie umgesetzt (Teil 15) — Vorbild für eine ähnliche Lösung bei KiChat |
 
 ---
 
