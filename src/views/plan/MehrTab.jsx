@@ -31,22 +31,28 @@ import { spotifyAutorisierenUrl, spotifyPlaylistUriNormalisieren } from "../../s
 // Onboarding-Assistenten (der dabei archiviert + neu anlegt) durchlaufen zu
 // müssen (Nutzerinnen-Vorgabe, 15.08. — bewusst HIER unter "Mehr" statt in
 // "Archiv": Archiv soll nur fertige/abgeschlossene Protokolle zeigen, hier
-// ist der Ort fürs laufende, bearbeitbare Protokoll). Schlaf & Hydration
-// sind bewusst nicht abschaltbar ("Kernessenz"), Morgen-/Abendroutine
+// ist der Ort fürs laufende, bearbeitbare Protokoll). Morgen-/Abendroutine
 // erscheinen hier gar nicht — die sind keine teilprotokolle (siehe
 // RoutineTabView.jsx), sondern ohnehin immer erreichbar. Jede Änderung
 // landet zusätzlich im Tagesverlauf (Archiv → Protokolle) — funktioniert
 // unverändert, wenn ein Admin das Protokoll einer Coachee im
 // "Verwalten"-Modus bearbeitet.
+//
+// Schlaf & Hydration waren hier bis 16.08. fest auf "Immer aktiv" verdrahtet
+// ("Kernessenz") — Nutzerinnen-Vorgabe, revidiert: "das war ein
+// Missverständnis", sollen genauso an-/abschaltbar sein wie alle anderen
+// Bausteine. Alle acht laufen jetzt einheitlich über dieselbe
+// teilprotokolle-Zeile (wird während des Onboardings für jede Kategorie
+// angelegt, siehe OnboardingCategoriesView.jsx).
 const BAUSTEINE_KATEGORIEN = [
-  { kategorie: "schlaf", label: "Schlaf", kern: true },
-  { kategorie: "hydration", label: "Hydration", kern: true },
-  { kategorie: "tageslicht", label: "Tageslicht", kern: false },
-  { kategorie: "ernaehrung", label: "Ernährung", kern: false },
-  { kategorie: "training", label: "Training", kern: false },
-  { kategorie: "gewohnheiten", label: "Gewohnheiten", kern: false },
-  { kategorie: "supplemente", label: "Supplemente", kern: false },
-  { kategorie: "medikamente", label: "Medikamente", kern: false },
+  { kategorie: "schlaf", label: "Schlaf" },
+  { kategorie: "hydration", label: "Hydration" },
+  { kategorie: "tageslicht", label: "Tageslicht" },
+  { kategorie: "ernaehrung", label: "Ernährung" },
+  { kategorie: "training", label: "Training" },
+  { kategorie: "gewohnheiten", label: "Gewohnheiten" },
+  { kategorie: "supplemente", label: "Supplemente" },
+  { kategorie: "medikamente", label: "Medikamente" },
 ];
 
 // Baut den Schnappschuss der aktuell geltenden Werte je Kategorie — reine
@@ -138,8 +144,8 @@ function AktuellesProtokoll() {
       </div>
       <Card style={{ marginBottom: 20 }}>
         {BAUSTEINE_KATEGORIEN.map((b, i) => {
-          const aktiv = b.kern || !!zeileFuer(b.kategorie)?.aktiv;
-          const woche = b.kern ? 1 : seitWoche(b.kategorie);
+          const aktiv = !!zeileFuer(b.kategorie)?.aktiv;
+          const woche = seitWoche(b.kategorie);
           return (
             <div
               key={b.kategorie}
@@ -173,13 +179,7 @@ function AktuellesProtokoll() {
                 >
                   📌
                 </button>
-                {b.kern ? (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: accentDark, background: accentSoft, padding: "4px 10px", borderRadius: 10 }}>
-                    Immer aktiv
-                  </span>
-                ) : (
-                  <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
-                )}
+                <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
               </div>
             </div>
           );
