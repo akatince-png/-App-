@@ -20,6 +20,7 @@ import KiChat from "../ui/KiChat";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import TrainingVorschau from "../ui/TrainingVorschau";
+import { QuestsKarte } from "../ui/QuestsKarte";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -159,6 +160,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     routineSchrittEntfernen,
     routineSchrittVerschieben,
     routineDurchlaufSpeichern,
+    quests,
+    questFortschrittSpeichern,
   } = useAppData();
 
   const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
@@ -521,6 +524,14 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
             </div>
           </div>
         </Card>
+      )}
+
+      {modus === "tag" && sameDay(selectedDate, new Date()) && (
+        <QuestsKarte
+          quests={(quests || []).filter((q) => q.fortschritt.angenommen === true)}
+          onFortschritt={questFortschrittSpeichern}
+          titel="🎯 Deine angenommenen Quests"
+        />
       )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>

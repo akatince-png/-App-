@@ -16,6 +16,14 @@
 --   - Zielgruppe: eine einzelne Coachee (proband_id gesetzt) ODER alle auf
 --     einmal (proband_id null) — analog zum "Rundruf"-Gedanken, ohne eine
 --     eigene n:m-Zuordnungstabelle für den Alle-Fall zu brauchen.
+--   - Annehmen/Ablehnen (quest_fortschritt.angenommen, tri-state: noch
+--     unbeantwortet/angenommen/abgelehnt) — Nutzerinnen-Vorgabe 16.08.:
+--     "wenn sie die Quest annehmen und antreten, dann soll sie ... im
+--     Tagesplan ... und dann unter Gewohnheiten ... mit aufgeführt werden".
+--     Erst nach Annahme taucht die Quest dort auf, vorher nur als Einladung
+--     auf der Startseite. Die Coachee wird über eine neue Quest zusätzlich
+--     per Nachricht benachrichtigt (bestehende coachee_nachrichten-Tabelle,
+--     siehe adminQuestErstellen() in useQuestData.js).
 --   - Bewusst NICHT in V1: Rangliste/Vergleich zwischen Coachees
 --     ("Konkurrenz" vs. "Gruppendynamik/Team") und eine automatische
 --     Kopplung an echte Protokoll-Werte (z. B. jeden geloggten Trainingssatz
@@ -57,6 +65,7 @@ create table public.quest_fortschritt (
   id uuid primary key default gen_random_uuid(),
   quest_id uuid not null references public.quests (id) on delete cascade,
   user_id uuid not null references auth.users (id) on delete cascade,
+  angenommen boolean,
   wert numeric,
   erledigt boolean not null default false,
   erledigt_am timestamptz,

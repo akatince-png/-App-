@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { coachNachrichtSenden } from "./useCoacheeNachrichten";
 
+// angenommen ist bewusst tri-state (null = noch nicht beantwortet) statt
+// boolean, damit die Startseite zwischen "noch nicht reagiert" und "aktiv
+// abgelehnt" unterscheiden kann (siehe QuestsKarte.jsx).
 function rowZuFortschritt(f) {
-  if (!f) return { wert: null, erledigt: false, erledigtAm: null, notiz: "", dauerMinuten: null };
+  if (!f) return { angenommen: null, wert: null, erledigt: false, erledigtAm: null, notiz: "", dauerMinuten: null };
   return {
+    angenommen: f.angenommen,
     wert: f.wert,
     erledigt: f.erledigt,
     erledigtAm: f.erledigt_am,
@@ -59,11 +64,13 @@ export function useQuestData(userId) {
     load();
   }, [load]);
 
-  // patch kann wert/notiz/dauerMinuten/erledigt enthalten — ein Upsert, weil
-  // bei Rundruf-Quests beim ersten Speichern noch keine Zeile existiert.
+  // patch kann angenommen/wert/notiz/dauerMinuten/erledigt enthalten — ein
+  // Upsert, weil bei Rundruf-Quests beim ersten Speichern noch keine Zeile
+  // existiert.
   const questFortschrittSpeichern = useCallback(
     async (questId, patch) => {
       const row = { quest_id: questId, user_id: userId, aktualisiert_am: new Date().toISOString() };
+      if (patch.angenommen !== undefined) row.angenommen = patch.angenommen;
       if (patch.wert !== undefined) row.wert = patch.wert === "" ? null : Number(patch.wert);
       if (patch.notiz !== undefined) row.notiz = patch.notiz?.trim() || null;
       if (patch.dauerMinuten !== undefined) row.dauer_minuten = patch.dauerMinuten === "" ? null : Number(patch.dauerMinuten);
@@ -94,6 +101,15 @@ export function useQuestData(userId) {
 // Hooks oben (der ist an eine feste userId gebunden). Genutzt in
 // AdminQuestsView.jsx. ---
 
+// Verschickt nach dem Anlegen automatisch eine Nachricht über den
+// bestehenden Kontaktweg (coachee_nachrichten) — Nutzerinnen-Vorgabe
+// 16.08.: "die Möglichkeit, dass sie über die Quest benachrichtigt werden
+// soll, halt über die Nachrichtenfunktion am besten passieren". Bei einer
+// Rundruf-Quest (probandId null) geht die Nachricht an ALLE aktuellen
+// Coachees einzeln (admin_liste_probanden() liefert die Empfängerliste).
+// Schlägt der Versand fehl, wird die Quest trotzdem nicht zurückgerollt —
+// sie existiert dann einfach ohne Benachrichtigung, die Person sieht sie
+// beim nächsten App-Öffnen ohnehin auf der Startseite.
 export async function adminQuestErstellen({ titel, beschreibung, typ, zielAnzahl, einheit, probandId, gueltigBis }) {
   if (!titel?.trim()) return { ok: false, error: "Bitte einen Titel eingeben." };
   const istAnzahl = typ === "anzahl";
@@ -111,6 +127,15 @@ export async function adminQuestErstellen({ titel, beschreibung, typ, zielAnzahl
     console.error(error);
     return { ok: false, error: error.message };
   }
+
+  const nachrichtText = `🎯 Neue Quest: „${row.titel}"${row.beschreibung ? ` — ${row.beschreibung}` : ""}. Schau auf deiner Startseite vorbei, wenn du magst!`;
+  if (probandId) {
+    await coachNachrichtSenden(probandId, nachrichtText);
+  } else {
+    const { data: probanden } = await supabase.rpc("admin_liste_probanden");
+    await Promise.all((probanden || []).filter((p) => !p.is_admin).map((p) => coachNachrichtSenden(p.id, nachrichtText)));
+  }
+
   return { ok: true, quest: data };
 }
 

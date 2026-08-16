@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { Shell, Card, TextArea, TextInput, PrimaryButton } from "../ui/primitives";
+import { Shell, Card, TextArea, PrimaryButton } from "../ui/primitives";
 import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
-import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, success, textMain, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
@@ -13,6 +13,7 @@ import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
+import { QuestsKarte } from "../ui/QuestsKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { getCoachName } from "../utils/coachStorage";
@@ -137,119 +138,6 @@ function NachrichtAnCoachCard({ nachrichten, onSenden }) {
   );
 }
 
-// Freiwillige Sonderaufgaben von der Coach (16.08., Nutzerinnen-Vorgabe:
-// "sone Quest, sone Sonderaufgabe an meine Coachees erteilen zu können") —
-// nur für Coachees sichtbar, Anlegen/Auswerten läuft bei der Admin über
-// AdminQuestsView.jsx. Fortschritt (Zahl + Notiz + Dauer) wird direkt hier
-// gemeldet, siehe useQuestData.js.
-function QuestsKarte({ quests, onFortschritt }) {
-  const offen = quests.filter((q) => !q.fortschritt.erledigt);
-  const erledigt = quests.filter((q) => q.fortschritt.erledigt);
-  if (quests.length === 0) return null;
-
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
-        🎯 Quests von deinem Coach — freiwillig, zusätzlich zu deinem Protokoll.
-      </div>
-      {offen.map((q) => (
-        <QuestZeile key={q.id} quest={q} onFortschritt={onFortschritt} />
-      ))}
-      {erledigt.map((q) => (
-        <QuestZeile key={q.id} quest={q} onFortschritt={onFortschritt} />
-      ))}
-    </div>
-  );
-}
-
-function QuestZeile({ quest, onFortschritt }) {
-  const [offen, setOffen] = useState(false);
-  const [wert, setWert] = useState(quest.fortschritt.wert ?? "");
-  const [notiz, setNotiz] = useState(quest.fortschritt.notiz || "");
-  const [dauer, setDauer] = useState(quest.fortschritt.dauerMinuten ?? "");
-  const [speichern, setSpeichern] = useState(false);
-
-  const fortschrittSpeichern = async () => {
-    setSpeichern(true);
-    await onFortschritt(quest.id, { wert });
-    setSpeichern(false);
-  };
-
-  const abschliessen = async () => {
-    setSpeichern(true);
-    await onFortschritt(quest.id, { wert, notiz, dauerMinuten: dauer, erledigt: true });
-    setSpeichern(false);
-    setOffen(false);
-  };
-
-  const zuruecksetzen = async () => {
-    setSpeichern(true);
-    await onFortschritt(quest.id, { erledigt: false });
-    setSpeichern(false);
-  };
-
-  return (
-    <Card style={{ marginBottom: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: textMain }}>{quest.titel}</div>
-          {quest.beschreibung && <div style={{ fontSize: 12, color: textMuted, marginTop: 3 }}>{quest.beschreibung}</div>}
-          {quest.typ === "anzahl" && quest.zielAnzahl && (
-            <div style={{ fontSize: 11.5, color: textMuted, marginTop: 3 }}>
-              Ziel: {quest.zielAnzahl} {quest.einheit}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {quest.fortschritt.erledigt ? (
-        <div style={{ marginTop: 10, fontSize: 12.5, color: success }}>
-          ✅ Erledigt
-          {quest.fortschritt.erledigtAm ? ` am ${new Date(quest.fortschritt.erledigtAm).toLocaleDateString("de-DE")}` : ""}
-          {quest.fortschritt.dauerMinuten ? ` · ${quest.fortschritt.dauerMinuten} Min.` : ""}
-          {quest.fortschritt.notiz && <div style={{ color: textMuted, marginTop: 2 }}>„{quest.fortschritt.notiz}“</div>}
-          <div style={{ marginTop: 8 }}>
-            <PrimaryButton variant="ghost" onClick={zuruecksetzen} disabled={speichern}>
-              Zurücksetzen
-            </PrimaryButton>
-          </div>
-        </div>
-      ) : !offen ? (
-        <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-          {quest.typ === "anzahl" && (
-            <div style={{ flex: 1, display: "flex", gap: 6 }}>
-              <TextInput type="number" value={wert} onChange={setWert} placeholder="Bisher erreicht" />
-              <PrimaryButton variant="ghost" onClick={fortschrittSpeichern} disabled={speichern}>
-                Speichern
-              </PrimaryButton>
-            </div>
-          )}
-          <PrimaryButton onClick={() => setOffen(true)}>Quest abschließen</PrimaryButton>
-        </div>
-      ) : (
-        <div style={{ marginTop: 10 }}>
-          {quest.typ === "anzahl" && (
-            <div style={{ marginBottom: 8 }}>
-              <TextInput type="number" value={wert} onChange={setWert} placeholder={`Erreicht (${quest.einheit || "Anzahl"})`} />
-            </div>
-          )}
-          <TextArea value={notiz} onChange={setNotiz} placeholder="Was hast du gemacht? (optional)" />
-          <div style={{ marginTop: 8 }}>
-            <TextInput type="number" value={dauer} onChange={setDauer} placeholder="Wie lange gebraucht? (Minuten, optional)" />
-          </div>
-          <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-            <PrimaryButton onClick={abschliessen} disabled={speichern}>
-              {speichern ? "Wird gespeichert …" : "Abschließen"}
-            </PrimaryButton>
-            <PrimaryButton variant="ghost" onClick={() => setOffen(false)} disabled={speichern}>
-              Abbrechen
-            </PrimaryButton>
-          </div>
-        </div>
-      )}
-    </Card>
-  );
-}
 
 export default function HomeView({ onOpenView, onOpenTraining }) {
   const { t, tLabel, lang } = useT();

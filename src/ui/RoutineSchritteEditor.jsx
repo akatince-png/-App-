@@ -41,10 +41,29 @@ const BEISPIELE = {
 export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfernen, onVerschieben, routine }) {
   const [name, setName] = useState("");
   const [dauerMin, setDauerMin] = useState("10");
+  const [fehler, setFehler] = useState(null);
 
-  const hinzufuegen = () => {
+  // onHinzufuegen kam bisher ohne Rückmeldung aus — schlug das Speichern
+  // fehl (z. B. fehlende Tabelle/RLS-Policy), passierte einfach gar nichts
+  // sichtbares (Nutzerinnen-Vorgabe 16.08.: "es lässt sich ja gar nicht
+  // bestätigen"). Jetzt wird der Fehler angezeigt statt nur in der
+  // Browser-Konsole zu verschwinden, siehe useRoutinen.js.
+  const antippen = async (schrittName, schrittDauer) => {
+    setFehler(null);
+    const result = await onHinzufuegen(schrittName, schrittDauer);
+    if (result && result.ok === false) {
+      setFehler(result.error || "Speichern fehlgeschlagen.");
+    }
+  };
+
+  const hinzufuegen = async () => {
     if (!name.trim()) return;
-    onHinzufuegen(name, dauerMin);
+    setFehler(null);
+    const result = await onHinzufuegen(name, dauerMin);
+    if (result && result.ok === false) {
+      setFehler(result.error || "Speichern fehlgeschlagen.");
+      return;
+    }
     setName("");
     setDauerMin("10");
   };
@@ -92,7 +111,7 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
           <div style={{ fontSize: 11, color: textMuted, marginBottom: 4 }}>Ideen zum Antippen:</div>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {beispiele.map(([bname, bdauer]) => (
-              <Pill key={bname} label={bname} onClick={() => onHinzufuegen(bname, bdauer)} />
+              <Pill key={bname} label={bname} onClick={() => antippen(bname, bdauer)} />
             ))}
           </div>
         </div>
@@ -115,6 +134,7 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
           +
         </button>
       </div>
+      {fehler && <div style={{ fontSize: 11.5, color: danger, marginTop: 6 }}>{fehler}</div>}
     </div>
   );
 }

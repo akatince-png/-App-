@@ -213,7 +213,7 @@ function QuestKarte({ quest, probanden, fortschrittRows, nameFuer, onArchivieren
         {quest.aktiv && (
           <div style={{ flexShrink: 0 }}>
             <PrimaryButton variant="ghost" onClick={onArchivieren}>
-              Archivieren
+              Entfernen
             </PrimaryButton>
           </div>
         )}
@@ -234,10 +234,14 @@ function QuestKarte({ quest, probanden, fortschrittRows, nameFuer, onArchivieren
                     {f.wert !== null && f.wert !== undefined ? ` · ${f.wert} ${quest.einheit || ""}` : ""}
                     {f.notiz && <div style={{ color: textMuted, marginTop: 2, fontWeight: 400 }}>„{f.notiz}“</div>}
                   </>
+                ) : f?.angenommen === false ? (
+                  "Abgelehnt"
+                ) : f?.angenommen !== true ? (
+                  "Noch nicht reagiert"
                 ) : f?.wert !== null && f?.wert !== undefined ? (
-                  `In Arbeit: ${f.wert} ${quest.einheit || ""}`
+                  `Angenommen · in Arbeit: ${f.wert} ${quest.einheit || ""}`
                 ) : (
-                  "Noch nicht gestartet"
+                  "Angenommen · noch nicht gestartet"
                 )}
               </div>
             </div>

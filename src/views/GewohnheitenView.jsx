@@ -15,6 +15,7 @@ import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import WorkflowTimer from "../ui/WorkflowTimer";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import { QuestsKarte } from "../ui/QuestsKarte";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -145,6 +146,8 @@ export default function GewohnheitenView({ onHome }) {
     workflowPresetHinzufuegen,
     workflowPresetAendern,
     workflowPlanHinzufuegen,
+    quests,
+    questFortschrittSpeichern,
   } = useAppData();
 
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
@@ -287,6 +290,12 @@ export default function GewohnheitenView({ onHome }) {
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 18 }}>
         Baue neue Gewohnheiten auf — Achtsamkeit, Lesen oder was du dir vornimmst. Erscheint mit Uhrzeit auch im Tagesplan zum Abhaken.
       </div>
+
+      <QuestsKarte
+        quests={(quests || []).filter((q) => q.fortschritt.angenommen === true)}
+        onFortschritt={questFortschrittSpeichern}
+        titel="🎯 Deine angenommenen Quests"
+      />
 
       <Card style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌅🌙 Morgen- & Abendroutine</div>
