@@ -63,14 +63,63 @@ erhöhten ADHS-Risiko beim Kind einhergeht — eine andere Richtung des
 in der Schwangerschaftsvorsorge relevant ist, aber für das Coaching
 Erwachsener keine unmittelbare praktische Konsequenz hat.
 
-**Einordnung: Moderat bis gut belegt** für die reine Assoziation
-(Typ-2-Diabetes-Risiko bei ADHS), **aber differenzierter zu sehen** als
-ein einfacher Kausalzusammenhang — die aktuellste, methodisch stärkste
-Evidenz (Geschwisterstudie) spricht für gemeinsame Begleiterkrankungen/
-familiäre Faktoren als eigentliche Treiber statt für einen direkten
-ADHS-→-Diabetes-Mechanismus. Siehe auch Laborwerte-Wissen dieser App,
+**Ein dritter Puzzle-Stein: Passt der GLP-1-Befund aus dem
+Peptide-Leitfaden hier rein?** Der Peptide-Leitfaden dieser App
+(Abschnitt 3) beschreibt aufkommende Evidenz, dass GLP-1-
+Rezeptoragonisten (Semaglutid, Tirzepatid) — ursprünglich Diabetes-/
+Gewichtsreduktions-Medikamente — in ersten Studien einen möglichen
+positiven Nebeneffekt auf ADHS-Symptome und die Dopamintransporter-
+Bindung im Striatum zeigen. Erklärt das die oben beschriebene
+ADHS-Diabetes-Assoziation? **Nicht direkt** — die stärkste verfügbare
+Evidenz (die Geschwisterstudie) zeigt ja gerade, dass ADHS selbst kaum
+einen direkten Kausalpfad zu Diabetes hat. Der GLP-1-Befund betrifft
+zudem die umgekehrte Richtung: ein Diabetes-Medikament wirkt sich auf
+ADHS aus, nicht ADHS auf das Diabetes-Risiko.
+
+Es gibt aber einen dritten, unabhängigen Strang, der beide
+Beobachtungen plausibel verbinden könnte — Stand aktuell theoretisch/
+aufkommend, nicht bewiesen: **Insulin(-resistenz) als gemeinsamer Hebel
+auf die Dopamin-Signalübertragung im Striatum.**
+
+- Aktuelle Grundlagenforschung zeigt, dass Insulin im Gehirn die
+  Dopaminausschüttung im Striatum direkt verstärkt — u. a. über eine
+  Hochregulierung der Tyrosinhydroxylase (dem geschwindigkeitsbestimmenden
+  Enzym der Dopaminsynthese) sowie über cholinerge Interneurone im
+  Striatum, die Insulinrezeptoren tragen.
+- Bei Erwachsenen mit ADHS wurde in mehreren Studien eine geringere
+  Insulinsensitivität festgestellt, die mit dem Ausmaß der Symptome
+  korreliert — ein Hinweis (noch kein Beweis), dass gestörte zentrale
+  Insulinsignalübertragung an der ADHS-typischen Dopamin-
+  Unterversorgung mitbeteiligt sein könnte.
+- GLP-1-Rezeptoragonisten verbessern nachweislich die periphere UND
+  zentrale Insulinsensitivität — genau der Mechanismus, über den sie
+  ursprünglich bei Diabetes wirken.
+
+Zusammengenommen ergibt sich eine plausible, aber noch nicht bewiesene
+Kettenhypothese: Gestörte Insulinsignalübertragung im Gehirn könnte ein
+Faktor sein, der sowohl zur ADHS-typischen Dopamin-Dysregulation als
+auch zu Stoffwechselproblemen beiträgt — und ein Medikament, das die
+Insulinsensitivität verbessert, könnte deshalb auf beiden Ebenen
+gleichzeitig ansetzen. Das würde erklären, warum ein Diabetes-
+Medikament einen beobachtbaren ADHS-Effekt zeigt, ohne dass ADHS
+umgekehrt ursächlich Diabetes auslöst. **Wichtige Einschränkung**: Die
+drei Bausteine (Insulin→Striatum-Dopamin, geringere Insulinsensitivität
+bei ADHS, GLP-1→Insulinsensitivität) stammen aus getrennten Studien —
+bislang hat keine Untersuchung diesen Pfad direkt als Erklärung für den
+beobachteten GLP-1-ADHS-Effekt nachgewiesen. Einordnung:
+**Theoretisch/Aufkommend**, kein etablierter Mechanismus.
+
+**Einordnung insgesamt: Moderat bis gut belegt** für die reine
+Assoziation (Typ-2-Diabetes-Risiko bei ADHS), **aber differenzierter zu
+sehen** als ein einfacher Kausalzusammenhang — die aktuellste,
+methodisch stärkste Evidenz (Geschwisterstudie) spricht für gemeinsame
+Begleiterkrankungen/familiäre Faktoren als eigentliche Treiber statt
+für einen direkten ADHS-→-Diabetes-Mechanismus, während die Insulin-
+Dopamin-Achse eine plausible, aber noch theoretische Erklärung für den
+GLP-1-Nebenbefund liefert. Siehe auch Laborwerte-Wissen dieser App,
 Abschnitt 8, zu Insulinresistenz/HOMA-IR als möglichem Bindeglied auf
-Stoffwechselebene.
+Stoffwechselebene, und Peptide-Wissen dieser App, Abschnitt 3, zum
+GLP-1-Befund im Detail.
 
 **Praxis:** Bei Coachees mit ADHS UND weiteren Begleiterkrankungen
 (v. a. Depression, Angststörungen, riskanter Substanzkonsum) ist ein

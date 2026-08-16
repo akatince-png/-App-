@@ -92,6 +92,20 @@ Forschungsfeld ("Zeitgeist"-relevant), aber ausdrücklich NICHT als
 Sicherheitssignals bei entsprechender Veranlagung ein Thema, das
 strikt in ärztliche Hände gehört, keinesfalls als Selbstversuch.
 
+**Querverweis — passt das zum bekannten ADHS-Diabetes-Zusammenhang?**
+Menschen mit ADHS haben ein erhöhtes Typ-2-Diabetes-Risiko (siehe
+Blutzucker-/CGM-Wissen dieser App, Abschnitt 2) — liegt es also nahe,
+dass ein Diabetes-Medikament wie ein GLP-1-Agonist "deshalb" auch bei
+ADHS wirkt? Nicht ursächlich in diese Richtung: Die methodisch
+stärkste Evidenz zum ADHS-Diabetes-Zusammenhang (eine Geschwister-
+Vergleichsstudie) zeigt, dass ADHS selbst kaum einen direkten
+Kausalpfad zu Diabetes hat — der GLP-1-Befund betrifft ohnehin die
+umgekehrte Richtung. Es gibt aber eine plausible, noch theoretische
+dritte Verbindung über eine gemeinsame Insulin-Dopamin-Achse im
+Gehirn, die erklären könnte, warum ein Medikament zur Verbesserung der
+Insulinsensitivität einen beobachtbaren ADHS-Nebeneffekt zeigt — Details
+und Studienlage dazu im Blutzucker-/CGM-Wissen dieser App, Abschnitt 2.
+
 ## 4. Heilungs-/Regenerations-Peptide (BPC-157, TB-500 u. a.) — größte Vorsicht geboten
 
 Diese Gruppe wird in Wellness-/Biohacking-Kreisen breit für
