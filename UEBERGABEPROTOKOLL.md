@@ -1,5 +1,49 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 26) — GLP-1/ADHS/Diabetes: dritter Puzzle-Stein verknüpft
+
+Direkt im Anschluss an Teil 25 (Commit `3194fe5`). Nutzerinnen-Nachfrage:
+Sie erinnerte daran, dass der Peptide-Leitfaden (Abschnitt 3) GLP-1-
+Rezeptoragonisten (Semaglutid, Tirzepatid) als aufkommenden, positiven
+ADHS-Nebenbefund beschreibt — und dass GLP-1-Agonisten gleichzeitig
+Diabetes-Medikamente sind. Frage: Hängt das mit dem in Teil 25
+dokumentierten ADHS-Diabetes-Zusammenhang zusammen, und wenn ja, wie?
+
+Per WebSearch recherchiert (aktuelle Grundlagenforschung zu Insulin,
+Striatum-Dopamin und ADHS). Ergebnis in beide betroffenen Dateien
+eingearbeitet:
+
+- **CGM-Leitfaden, Abschnitt 2** (`cgm-blutzuckermessung-bei-adhs.md`):
+  neuer Absatzblock "Ein dritter Puzzle-Stein: Passt der GLP-1-Befund
+  aus dem Peptide-Leitfaden hier rein?" Ehrliche Einordnung: **Nicht
+  direkt** — die Geschwisterstudie aus Teil 25 zeigt ja gerade, dass
+  ADHS selbst kaum einen direkten Kausalpfad zu Diabetes hat, und der
+  GLP-1-Befund betrifft ohnehin die umgekehrte Richtung (Diabetes-
+  Medikament wirkt auf ADHS, nicht ADHS auf Diabetes-Risiko). Es gibt
+  aber einen dritten, unabhängigen und plausiblen (aber noch nicht
+  bewiesenen) Erklärungsstrang: **Insulin(-resistenz) als gemeinsamer
+  Hebel auf die Dopamin-Signalübertragung im Striatum** — Insulin
+  verstärkt im Gehirn nachweislich die Dopaminausschüttung (u. a. über
+  Tyrosinhydroxylase-Hochregulierung und cholinerge Interneurone),
+  Erwachsene mit ADHS zeigen in mehreren Studien eine geringere
+  Insulinsensitivität korrelierend mit dem Symptomausmaß, und
+  GLP-1-Agonisten verbessern genau diese Insulinsensitivität zentral
+  wie peripher. Klar als **Theoretisch/Aufkommend** eingeordnet — die
+  drei Bausteine stammen aus getrennten Studien, niemand hat den Pfad
+  bislang direkt als Erklärung für den GLP-1-ADHS-Effekt nachgewiesen.
+- **Peptide-Leitfaden, Abschnitt 3** (`peptide-bei-adhs.md`): neuer
+  Querverweis-Absatz direkt nach der bestehenden "Einordnung", der in
+  die Gegenrichtung auf den CGM-Leitfaden Abschnitt 2 verweist, damit
+  die Verbindung von beiden Seiten aus auffindbar ist.
+
+Beide PDFs (`CGM-...-Handbuch.pdf`, 7 Seiten unverändert;
+`Peptide-Handbuch.pdf`, 5 Seiten unverändert) neu erstellt und per
+pymupdf-Screenshot auf korrekte Formatierung (Fettung, Aufzählung,
+Absatzumbrüche) geprüft. `npm run build` erfolgreich. Keine Migration,
+keine Edge Function nötig, keine anderen Dateien berührt.
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 25) — CGM-Leitfaden: epidemiologischer ADHS-Diabetes-Zusammenhang ergänzt
 
 Direkt im Anschluss an Teil 24 (Commit `d56169a`). Nutzerinnen-Nachfrage:
