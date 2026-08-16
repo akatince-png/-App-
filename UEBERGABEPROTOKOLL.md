@@ -1,5 +1,38 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 23) — Laborwerte-Leitfaden vertieft + YouTube-Skriptvorlage (appextern)
+
+Direkt im Anschluss an Teil 22. Nutzerin wollte den Laborwerte-Leitfaden
+gleichzeitig als Fachlektüre, Coach-Handbuch, Teil der Wissensbasis UND
+als Vorlage für ein YouTube-Video nutzbar haben — "noch ausführlicher"
+und mit den Lücken/Schwachstellen, die sie selbst wahrscheinlich nicht
+erkennen würde (Commit `f08667e`).
+
+**Wissensbasis vertieft** (siehe Teil 22 für die Details: neue
+Abschnitte zu Selen/Jod als Schilddrüsen-Kofaktoren, Schwermetalle,
+Insulinresistenz/HOMA-IR, MTHFR-Gentest, sowie ein bewusst in den
+Fließtext integrierter Abschnitt "Grenzen dieses diagnostischen
+Ansatzes" — direkte Antwort auf die gewünschte kritische
+Selbstreflexion).
+
+**Neu in dieser Runde**: Eine **YouTube-Skriptvorlage** als viertes
+Format — bewusst **NICHT** in `src/wissen/` oder die App eingepflegt
+(kein KI-Kontext-Zweck, appfremdes Content-Format für die Nutzerin
+persönlich), sondern als eigenständiges PDF erstellt und verschickt.
+Enthält Hook-Ideen, eine Grobstruktur mit Zeitmarken, publikumstaugliche
+"Aha-Momente" aus dem Handbuch in einfacherer Sprache, und einen
+Quellen-Kurzverweis für die Videobeschreibung — kein
+Wort-für-Wort-Skript, sondern Arbeitsvorlage.
+
+**Technische Notiz**: `build_pdf_multi.py` (lokales Scratchpad-Skript)
+um einen optionalen `src_abs`-Parameter erweitert, damit sich auch
+appexterne Markdown-Dateien (nicht nur `src/wissen/*.md`) mit derselben
+Handbuch-Optik in ein PDF umwandeln lassen.
+
+Keine Migration, keine Edge Function nötig.
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 22) — Wissens-Leitfaden "Laborwerte, Mikronährstoffe & Hormone" + PDF-Skript um Tabellen erweitert
 
 Nutzerin lieferte einen ausführlichen fachlichen Entwurf zu ADHS-
