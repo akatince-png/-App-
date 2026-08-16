@@ -11,6 +11,7 @@ import AdminFormulareView from "./views/admin/AdminFormulareView";
 import AdminUebungsBilderView from "./views/admin/AdminUebungsBilderView";
 import AdminCoachUebersichtView from "./views/admin/AdminCoachUebersichtView";
 import AdminQuestsView from "./views/admin/AdminQuestsView";
+import AdminTeamsView from "./views/admin/AdminTeamsView";
 import LexikonView from "./views/LexikonView";
 import TagesplanView from "./views/TagesplanView";
 import PlanView from "./views/plan/PlanView";
@@ -213,6 +214,7 @@ export default function AuthenticatedApp() {
         onOpenUebungsBilder={() => setView("admin-uebungsbilder")}
         onOpenUebersicht={() => setView("admin-uebersicht")}
         onOpenQuests={() => setView("admin-quests")}
+        onOpenTeams={() => setView("admin-teams")}
       />
     );
   } else if (view === "admin-wissen") {
@@ -225,6 +227,8 @@ export default function AuthenticatedApp() {
     screen = <AdminCoachUebersichtView onHome={() => setView("admin")} onVerwalteAls={verwalteAls} />;
   } else if (view === "admin-quests") {
     screen = <AdminQuestsView onHome={() => setView("admin")} />;
+  } else if (view === "admin-teams") {
+    screen = <AdminTeamsView onHome={() => setView("admin")} />;
   } else {
     screen = (
       <HomeView

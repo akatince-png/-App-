@@ -15,6 +15,7 @@ import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
+import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { getCoachName } from "../utils/coachStorage";
@@ -172,6 +173,11 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     coacheeNachrichtSenden,
     quests,
     questFortschrittSpeichern,
+    team,
+    teamKollegen,
+    teamNachrichten,
+    teamNachrichtSenden,
+    teamNachrichtGelesen,
   } = useAppData();
   const { proband } = useAdmin();
   // Coach-verwaltetes Modell (13.08.): Coachees sehen hier statt des
@@ -481,6 +487,13 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         <>
           <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
           <RanglisteKarte />
+          <TeamKarte
+            team={team}
+            teamKollegen={teamKollegen}
+            teamNachrichten={teamNachrichten}
+            onSenden={teamNachrichtSenden}
+            onGelesen={teamNachrichtGelesen}
+          />
           <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
         </>
       ) : (
