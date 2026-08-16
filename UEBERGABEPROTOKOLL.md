@@ -1,5 +1,43 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔴 Update 16.08.2026, Fortsetzung (Teil 8) — Routinen-Bug bestätigt: wieder eine fehlende Migration + Vorab-Hinweis war versteckt
+
+Direkt im Anschluss an Teil 7. Die in Teil 7 sichtbar gemachte Fehlermeldung
+bestätigte die dortige Vermutung: **`Could not find the table
+'public.routine_schritte' in the schema cache`** — Migration 0041
+(`routine_schritte`, `routine_durchlaeufe`) und vermutlich auch 0044
+(`routine_einstellungen`) wurden nie in der echten Datenbank ausgeführt,
+obwohl im Übergabeprotokoll als "deployt" notiert. **Exakt dasselbe Muster
+wie der `profiles.erinnerungen`-Bug aus Teil 5** — einzelne Migrationen
+beim manuellen Durchklicken übersprungen, ohne dass es auffiel, weil auch
+hier nur `console.error()` statt einer sichtbaren Fehlermeldung lief (erst
+durch den Teil-7-Fix überhaupt sichtbar geworden). Behoben mit neuer
+Migration `0071_routine_tabellen_nachholen.sql` (holt alle drei Tabellen +
+RLS-Policies nach, idempotent mit `if not exists`/`drop policy if
+exists` geschrieben) — **muss die Nutzerin noch manuell in der
+Supabase-SQL-Konsole ausführen**.
+
+**Empfehlung für den nächsten Sitzungsstart:** Da jetzt zweimal
+unabhängig voneinander Migrationen "als deployt" galten, aber nie liefen,
+lohnt sich ein einmaliger Rundum-Check aller ~71 Migrationen gegen die
+echte Datenbank (z. B. `select table_name from information_schema.tables
+where table_schema = 'public'` mit der Nutzerin abgleichen, oder alle
+Tabellennamen aus den `create table`-Anweisungen der Migrationsdateien
+extrahieren und gegenprüfen), statt weiter einzeln nachzujagen, sobald
+ein Fehler auffällt.
+
+Zusätzlich, aus derselben Nutzerinnen-Vorgabe: Der Vorab-Hinweis
+(15/30/45/60 Min. vorher erinnert werden, zusätzlich zum Signal beim
+eigentlichen Start — für Gewohnheiten, Training, Mahlzeiten, Supplemente,
+Workflow) existierte technisch schon (`VorlaufFeld.jsx`), war aber in
+`KategorieErinnerung.jsx` und `WochenplanEditor.jsx` (Training) hinter dem
+"Erinnerung: Ja"-Schalter versteckt — die Minuten-Auswahl erschien erst
+nach dem Umschalten, was die Nutzerin wiederholt übersehen hat. Jetzt
+immer sichtbar, eine Vorlauf-Auswahl aktiviert die Erinnerung von sich aus
+mit. Außerdem 45-Minuten-Option ergänzt (bisher nur 15/30/60/120).
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 7) — Quests: Annehmen/Ablehnen + Benachrichtigung + Tagesplan/Gewohnheiten, Routinen-Bug gefunden
 
 Direkt im Anschluss an Teil 6, noch selbe Sitzung, zwei Meldungen der
@@ -1013,7 +1051,8 @@ wichtigsten — für die vollständige Historie: `ls supabase/migrations/`.
 | 0067 | `teilprotokolle_tageslicht.sql` | Tageslicht als Teilprotokoll-Kategorie |
 | 0068 | `teilprotokolle_aktiviert_am.sql` | Aktivierungs-Zeitpunkt je Baustein |
 | 0069 | `baustein_versionen.sql` | Versionierung der Protokoll-Bausteine (📌-Snapshots) |
-| 0070 | `quests.sql` | Neue Tabellen `quests` + `quest_fortschritt` fürs Quests-Feature (Teil 6) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
+| 0070 | `quests.sql` | Neue Tabellen `quests` + `quest_fortschritt` fürs Quests-Feature (Teil 6/7) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
+| 0071 | `routine_tabellen_nachholen.sql` | Holt `routine_schritte`/`routine_durchlaeufe`/`routine_einstellungen` nach, die trotz 0041/0044 nie in der echten DB existierten (Teil 8) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
 
 **Kein separates VAPID-Migrations-Skript nötig** für den Push-Fix heute —
 das war ein reines Supabase-Secret, keine Schema-Änderung.
@@ -1051,7 +1090,8 @@ sonst nie auffallen lassen.
 | 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
 | 15 | Quests: Rangliste/Vergleich zwischen Coachees (sowohl für Quests als auch fürs normale Protokoll) | Von der Nutzerin gewünscht ("Konkurrenz" + "Gruppendynamik/Team" gleichzeitig), aber noch nicht konkretisiert — braucht eine eigene Klärungsrunde vor der Umsetzung, siehe Teil 6 |
 | 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
-| 17 | Routinen-Schritte (Morgen-/Abendroutine) ließen sich nicht anlegen, ohne jede Fehlermeldung | 🔴 Fehler wird jetzt sichtbar angezeigt (Teil 7), tatsächliche Ursache aber noch nicht bestätigt — vermutlich fehlende Migration 0041/0044, aus dem Sandbox nicht gegen die echte DB prüfbar. Bei nächstem Auftreten den jetzt sichtbaren Fehlertext mitteilen |
+| 17 | Migration `0071_routine_tabellen_nachholen.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ursache des Routinen-Bugs aus Teil 7 bestätigt (Teil 8): `routine_schritte` fehlte komplett in der DB. Ohne diese Migration lassen sich weiterhin keine Morgen-/Abendroutine-Schritte anlegen |
+| 18 | Rundum-Check aller Migrationen gegen die echte Datenbank | Empfohlen (Teil 8) — zum zweiten Mal eine "als deployt" notierte Migration, die nie lief (nach `erinnerungen` in Teil 5 jetzt `routine_*`-Tabellen). Einmaliger Abgleich statt weiter einzeln nachzujagen |
 
 ---
 
