@@ -231,12 +231,32 @@ function SupplementeSection() {
   };
 
   // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
-  // Supplement über denselben Weg an wie das manuelle Formular unten.
+  // Supplement über denselben Weg an wie das manuelle Formular unten — plus
+  // Menge/Rhythmus, falls besprochen (dieselbe Dosierungs-Struktur wie bei
+  // Medikamenten/Peptiden, die supplementHinzufuegen() ebenfalls annimmt).
   const handleSupplementUebernehmen = async (verlauf) => {
     const s = await AIService.supplementAusChat({ verlauf, coachName: getCoachName() });
-    const result = await supplementHinzufuegen({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis || "" });
+    const result = await supplementHinzufuegen({
+      name: s.name,
+      tageszeiten: s.tageszeiten,
+      hinweis: s.hinweis || "",
+      menge: s.menge || "",
+      intervallTyp: s.intervallTyp || "fixed",
+      intervallDays: s.intervallDays || 1,
+      customDays: s.customDays || "",
+      onDays: s.onDays || "",
+      offDays: s.offDays || "",
+      weekdays: s.weekdays || [],
+      eigenerStart: s.eigenerStart || "",
+      uhrzeiten: s.uhrzeiten || [],
+    });
     if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "hinzugefügt", detail: s.tageszeiten.join(", ") });
+    aenderungVermerken({
+      kategorie: "supplement",
+      itemName: s.name,
+      aktion: "hinzugefügt",
+      detail: [s.tageszeiten.join(", "), s.menge].filter(Boolean).join(" · "),
+    });
     return s;
   };
 

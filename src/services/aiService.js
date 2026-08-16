@@ -447,7 +447,7 @@ export const AIService = {
    * Eintrag machen").
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{name: string, arbeitMin: number, pauseMin: number, gesamtMin: number, wochentage: string[], uhrzeit: string}>}
+   * @returns {Promise<{name: string, arbeitMin: number, pauseMin: number, gesamtMin: number, wochentage: string[], uhrzeit: string, gueltigVon: string, gueltigBis: string}>}
    */
   async workflowAusChat({ verlauf, coachName }) {
     const system = mitPersona(
@@ -460,7 +460,9 @@ export const AIService = {
         '{ "name": string (z. B. "Fokus-Sessions"), "arbeitMin": number (Arbeitsintervall in Minuten, Standard 25 falls nicht genannt), ' +
           '"pauseMin": number (Pausenintervall in Minuten, Standard 5 falls nicht genannt), "gesamtMin": number (Gesamtdauer der Session in Minuten, Standard 100 falls nicht genannt), ' +
           '"wochentage": string[] (Kürzel aus ["Mo","Di","Mi","Do","Fr","Sa","So"], leeres Array wenn kein fester Wochentag besprochen wurde), ' +
-          '"uhrzeit": string ("HH:MM" falls eine feste Startzeit besprochen wurde, sonst leer) }',
+          '"uhrzeit": string ("HH:MM" falls eine feste Startzeit besprochen wurde, sonst leer), ' +
+          '"gueltigVon": string ("YYYY-MM-DD", nur falls eine zeitlich befristete Gültigkeit besprochen wurde, z. B. "nur diese Woche" oder "ab dem 20.", sonst leer), ' +
+          '"gueltigBis": string ("YYYY-MM-DD", nur falls zusätzlich ein Enddatum genannt wurde, sonst leer) }',
       ].join(" ")
     );
     const messages = [
@@ -476,10 +478,15 @@ export const AIService = {
   /**
    * Extrahiert aus einem geführten Supplement-Gespräch (siehe coachChat())
    * ein neues Supplement — Format entspricht dem, was supplementHinzufuegen()
-   * erwartet (siehe SupplementeView.jsx: { name, tageszeiten, hinweis }).
+   * erwartet (siehe useSupplementData.js: Grundfelder name/tageszeiten/hinweis
+   * PLUS dieselbe Dosierungs-/Intervall-Struktur wie bei Medikamenten/Peptiden,
+   * supplementToRow() — die auch im Onboarding gesetzt wird, siehe
+   * OnboardingCategoriesView.jsx. Ohne sie ließen sich eine feste Menge oder
+   * ein Einnahmerhythmus (z. B. "nur Mo/Mi/Fr", "alle 3 Tage") per Chat nicht
+   * erfassen, obwohl die App das unterstützt.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{name: string, tageszeiten: string[], hinweis: string}>}
+   * @returns {Promise<{name: string, tageszeiten: string[], hinweis: string, menge: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
    */
   async supplementAusChat({ verlauf, coachName }) {
     const system = mitPersona(
@@ -490,7 +497,13 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "name": string, "tageszeiten": string[] (nur aus: "Morgens","Mittags","Abends"), ' +
-          '"hinweis": string (nur aus: "Zur Mahlzeit","Nüchtern","Vor dem Schlafen","Vor dem Training","Nach dem Training" — leer wenn nichts davon passt) }',
+          '"hinweis": string (nur aus: "Zur Mahlzeit","Nüchtern","Vor dem Schlafen","Vor dem Training","Nach dem Training" — leer wenn nichts davon passt), ' +
+          '"menge": string (Dosierung, z. B. "500mg", leer wenn nicht genannt), ' +
+          '"intervallTyp": "fixed"|"custom"|"cycle"|"weekdays" (fixed = alle X Tage, custom = eigene Tagesanzahl, cycle = X Tage an/Y Tage ab, weekdays = feste Wochentage — Standard "fixed", falls kein besonderer Rhythmus besprochen wurde), ' +
+          '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
+          '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
+          '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), ' +
+          '"uhrzeiten": string[] (konkrete Uhrzeit(en) "HH:MM", nur falls im Gespräch genannt — leeres Array, wenn nur die groben Tageszeiten oben genannt wurden) }',
       ].join(" ")
     );
     const messages = [
@@ -520,7 +533,7 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "name": string, "menge": string (z. B. "50mg"), ' +
-          '"kategorie": "Hormone"|"Blutdruck"|"Diabetes"|"Cholesterin"|"Schmerzmittel"|"Sonstige", ' +
+          '"kategorie": "Hormone"|"Peptid"|"Blutdruck"|"Diabetes"|"Cholesterin"|"Schmerzmittel"|"Sonstige", ' +
           '"einnahmeart": "Injektion"|"Tablette (oral)"|"Kapsel"|"Pulver"|"Tropfen"|"Nasenspray", ' +
           '"intervallTyp": "fixed"|"custom"|"cycle"|"weekdays" (fixed = alle X Tage, custom = eigene Tagesanzahl, cycle = X Tage an/Y Tage ab, weekdays = feste Wochentage), ' +
           '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +

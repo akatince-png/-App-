@@ -81,9 +81,27 @@ export function useUniversellerCoach() {
       }
       case "supplement": {
         const s = await AIService.supplementAusChat({ verlauf, coachName });
-        const result = await supplementHinzufuegen({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis || "" });
+        const result = await supplementHinzufuegen({
+          name: s.name,
+          tageszeiten: s.tageszeiten,
+          hinweis: s.hinweis || "",
+          menge: s.menge || "",
+          intervallTyp: s.intervallTyp || "fixed",
+          intervallDays: s.intervallDays || 1,
+          customDays: s.customDays || "",
+          onDays: s.onDays || "",
+          offDays: s.offDays || "",
+          weekdays: s.weekdays || [],
+          eigenerStart: s.eigenerStart || "",
+          uhrzeiten: s.uhrzeiten || [],
+        });
         if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-        aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "hinzugefügt", detail: s.tageszeiten.join(", ") });
+        aenderungVermerken({
+          kategorie: "supplement",
+          itemName: s.name,
+          aktion: "hinzugefügt",
+          detail: [s.tageszeiten.join(", "), s.menge].filter(Boolean).join(" · "),
+        });
         return { bereich: "supplement", daten: s };
       }
       case "medikament": {
@@ -177,7 +195,13 @@ export function useUniversellerCoach() {
         const gesamtMin = w.gesamtMin || 100;
         await workflowPresetAendern(presetResult.preset.id, { arbeitMin: String(arbeitMin), pauseMin: String(pauseMin), gesamtMin: String(gesamtMin) });
         if (w.uhrzeit || w.wochentage?.length) {
-          await workflowPlanHinzufuegen({ presetId: presetResult.preset.id, wochentage: w.wochentage || [], uhrzeit: w.uhrzeit || "" });
+          await workflowPlanHinzufuegen({
+            presetId: presetResult.preset.id,
+            wochentage: w.wochentage || [],
+            uhrzeit: w.uhrzeit || "",
+            gueltigVon: w.gueltigVon || "",
+            gueltigBis: w.gueltigBis || "",
+          });
         }
         aenderungVermerken({
           kategorie: "workflow",

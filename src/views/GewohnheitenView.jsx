@@ -226,7 +226,13 @@ export default function GewohnheitenView({ onHome }) {
     const gesamtMin = w.gesamtMin || 100;
     await workflowPresetAendern(presetResult.preset.id, { arbeitMin: String(arbeitMin), pauseMin: String(pauseMin), gesamtMin: String(gesamtMin) });
     if (w.uhrzeit || w.wochentage?.length) {
-      await workflowPlanHinzufuegen({ presetId: presetResult.preset.id, wochentage: w.wochentage || [], uhrzeit: w.uhrzeit || "" });
+      await workflowPlanHinzufuegen({
+        presetId: presetResult.preset.id,
+        wochentage: w.wochentage || [],
+        uhrzeit: w.uhrzeit || "",
+        gueltigVon: w.gueltigVon || "",
+        gueltigBis: w.gueltigBis || "",
+      });
     }
     aenderungVermerken({
       kategorie: "workflow",
