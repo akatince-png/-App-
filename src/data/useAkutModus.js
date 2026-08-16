@@ -53,10 +53,28 @@ export function useAkutModus() {
     }
   }, []);
 
+  // Für vorher als "Akut-Übung" markierte Gewohnheiten (siehe
+  // gewohnheitAkutFavoritUmschalten in useGewohnheitenData.js,
+  // GewohnheitenView.jsx): statt eines Symptoms wird direkt die von der
+  // Person selbst gewählte Übung (z. B. "Isometrisches Training",
+  // "Atemübung") an den Akutmodus-Prompt übergeben, der ohnehin schon
+  // "kurz anerkennen + konkrete Schritte" verlangt — das ergibt von
+  // selbst die gewünschte "Kumpel führt durch die Übung"-Anleitung, ohne
+  // eine dritte Prompt-Variante in der Edge Function zu brauchen.
+  const uebungAnfordern = useCallback(
+    (uebungsName) => {
+      hilfeAnfordern(
+        `Ich möchte jetzt meine vorher festgelegte Akut-Übung machen: "${uebungsName}". Führ mich kurz und warmherzig da durch.`,
+        ["training/training-bei-adhs", "allgemein/reizueberflutung"]
+      );
+    },
+    [hilfeAnfordern]
+  );
+
   const zuruecksetzen = useCallback(() => {
     setAntwort(null);
     setFehler(null);
   }, []);
 
-  return { antwort, laden, fehler, hilfeAnfordern, zuruecksetzen };
+  return { antwort, laden, fehler, hilfeAnfordern, uebungAnfordern, zuruecksetzen };
 }

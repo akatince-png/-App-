@@ -34,7 +34,7 @@ function Fortschrittsbalken({ tage, ziel }) {
   );
 }
 
-function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielAendern, gesamtTage, aktuelleSerie }) {
+function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielAendern, onAkutFavoritUmschalten, gesamtTage, aktuelleSerie }) {
   const [zielEditOpen, setZielEditOpen] = useState(false);
   const [zielEntwurf, setZielEntwurf] = useState(g.zielTage ? String(g.zielTage) : "");
   const [zielGrund, setZielGrund] = useState("");
@@ -110,12 +110,23 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
       ) : null}
       {zielEditOpen && <GrundEingabe grund={zielGrund} onChange={setZielGrund} />}
       {!zielEditOpen && (
-        <button
-          onClick={() => setZielEditOpen(true)}
-          style={{ marginTop: 8, border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
-        >
-          Ziel bearbeiten
-        </button>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 8 }}>
+          <button
+            onClick={() => setZielEditOpen(true)}
+            style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+          >
+            Ziel bearbeiten
+          </button>
+          {onAkutFavoritUmschalten && (
+            <button
+              onClick={() => onAkutFavoritUmschalten(g.id, g.akutFavorit)}
+              title="Wird im Akutmodus auf der Startseite vorgeschlagen"
+              style={{ border: "none", background: "transparent", color: g.akutFavorit ? "#B45309" : textMuted, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+            >
+              {g.akutFavorit ? "🧘 Akut-Übung ✓" : "🧘 Als Akut-Übung merken"}
+            </button>
+          )}
+        </div>
       )}
 
       <div style={{ marginTop: 14 }}>
@@ -134,6 +145,7 @@ export default function GewohnheitenView({ onHome }) {
     gewohnheitHinzufuegen,
     gewohnheitEntfernen,
     gewohnheitZielAktualisieren,
+    gewohnheitAkutFavoritUmschalten,
     toggleGewohnheitErledigt,
     gesamtTage,
     aktuelleSerie,
@@ -472,6 +484,7 @@ export default function GewohnheitenView({ onHome }) {
               onToggleHeute={() => handleToggleHeute(g)}
               onEntfernen={handleEntfernen}
               onZielAendern={handleZielAendern}
+              onAkutFavoritUmschalten={gewohnheitAkutFavoritUmschalten}
               gesamtTage={gesamtTage}
               aktuelleSerie={aktuelleSerie}
             />

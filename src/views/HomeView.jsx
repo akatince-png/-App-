@@ -11,7 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
-import AkutModusKarte from "../ui/AkutModusKarte";
+import { AkutModusTrigger, AkutModusPanel } from "../ui/AkutModusKarte";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { QuestsKarte } from "../ui/QuestsKarte";
@@ -191,6 +191,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
 
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
+  const [akutOffen, setAkutOffen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
   // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
   // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
@@ -592,17 +593,30 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       </div>
       )}
 
-      {/* ADHS Mode Toggle */}
-      <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
+      {/* ADHS Mode Toggle + Akutmodus-Knopf nebeneinander (16.08.,
+          Nutzerinnen-Vorgabe: Notfallmodus etwas schmaler, gleich hoher,
+          schmalerer Knopf daneben für "mir geht's grad nicht gut" statt
+          untereinander). Akutmodus ergänzt den Notfallmodus (der nur die
+          Ansicht vereinfacht) um eine aktive Lösungs-Vorschlag-Funktion —
+          inkl. vorher festgelegter "Akut-Übung" aus den Gewohnheiten. */}
+      <div style={{ display: "flex", gap: 10, marginBottom: akutOffen ? 12 : 18 }}>
+        <div style={{ flex: 1.6 }}>
+          <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} compact />
+        </div>
+        <div style={{ flex: 1 }}>
+          <AkutModusTrigger onClick={() => setAkutOffen(true)} />
+        </div>
+      </div>
 
-      {/* Akutmodus: Symptom wählen/beschreiben -> sofort eine konkrete
-          Idee. Ergänzt den Notfallmodus oben (der nur die Ansicht
-          vereinfacht) um eine aktive Lösungs-Vorschlag-Funktion. */}
-      <AkutModusKarte
-        onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
-        coachName={getCoachName()}
-        zeigeCoachOption={!istAdminModus}
-      />
+      {akutOffen && (
+        <AkutModusPanel
+          onClose={() => setAkutOffen(false)}
+          onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
+          coachName={getCoachName()}
+          zeigeCoachOption={!istAdminModus}
+          akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
+        />
+      )}
 
       {/* Emergency Mode Info Banner */}
       {isEmergencyMode && (

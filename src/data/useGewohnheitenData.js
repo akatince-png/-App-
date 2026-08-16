@@ -24,6 +24,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
         uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
         zielTage: r.ziel_tage ?? null,
         menge: r.menge || "",
+        akutFavorit: !!r.akut_favorit,
       }))
     );
     const nextErledigt = {};
@@ -68,6 +69,16 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   const gewohnheitZielAktualisieren = useCallback(async (id, zielTage) => {
     setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, zielTage } : g)));
     const { error } = await supabase.from("routines").update({ ziel_tage: zielTage || null }).eq("id", id);
+    if (error) console.error(error);
+  }, []);
+
+  // Als persönliche Akut-Übung markieren (Teil 18) — wird im neuen
+  // Akutmodus (AkutModusKarte.jsx) prominent vorgeschlagen, statt nur die
+  // allgemeine KI-Antwort zu zeigen.
+  const gewohnheitAkutFavoritUmschalten = useCallback(async (id, aktuellerWert) => {
+    const neuerWert = !aktuellerWert;
+    setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, akutFavorit: neuerWert } : g)));
+    const { error } = await supabase.from("routines").update({ akut_favorit: neuerWert }).eq("id", id);
     if (error) console.error(error);
   }, []);
 
@@ -118,6 +129,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
     gewohnheitHinzufuegen,
     gewohnheitEntfernen,
     gewohnheitZielAktualisieren,
+    gewohnheitAkutFavoritUmschalten,
     toggleGewohnheitErledigt,
     gesamtTage,
     aktuelleSerie,
