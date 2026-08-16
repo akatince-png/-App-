@@ -1,5 +1,57 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 7) — Quests: Annehmen/Ablehnen + Benachrichtigung + Tagesplan/Gewohnheiten, Routinen-Bug gefunden
+
+Direkt im Anschluss an Teil 6, noch selbe Sitzung, zwei Meldungen der
+Nutzerin.
+
+**1. Routinen-Bug** (Screenshot: Morgen-/Abendroutine-Schritte-Editor unter
+"Routinen"): Vorschlags-Pills ("Wasser trinken" etc.) und das manuelle
+"Neuer Schritt"-Feld liefen ins Leere — kein Fehler, keine Bestätigung,
+einfach nichts. Die Verdrahtung (`RoutineSchritteEditor.jsx` →
+`routineSchrittHinzufuegen()` in `useRoutinen.js`) ist korrekt, aber die
+Speicherfunktion meldete einen Fehler bisher nur per `console.error()` —
+exakt dasselbe Silent-Failure-Muster wie beim `erinnerungen`-Bug in Teil 5
+(Offener Punkt #13). **Nicht abschließend geklärt, ob die zugrunde
+liegende Ursache ebenfalls eine fehlende Migration ist** (0041/0044
+`routine_*`-Tabellen) — das lässt sich aus diesem Sandbox heraus nicht
+gegen die echte Datenbank prüfen. Behoben: `RoutineSchritteEditor.jsx`
+zeigt jetzt den tatsächlichen Fehlertext an, statt ihn verschluckt zu
+lassen. **Nächster Schritt bei erneutem Auftreten:** den jetzt sichtbaren
+Fehlertext im Chat mitteilen — verrät sofort, ob es eine fehlende Tabelle,
+eine RLS-Policy oder etwas anderes ist (gleiche Diagnosetechnik wie in
+Teil 5).
+
+**2. Quests erweitert** (Nutzerinnen-Vorgabe, wörtlich zusammengefasst):
+Coachees sollen über eine neue Quest per Nachricht benachrichtigt werden,
+sie annehmen oder ablehnen können, und eine angenommene Quest soll
+zusätzlich zur Startseite auch im Tagesplan und unter Gewohnheiten
+auftauchen. Umgesetzt (Commit `b7b2911`):
+- `quest_fortschritt` hat jetzt eine `angenommen`-Spalte (tri-state: noch
+  unbeantwortet/angenommen/abgelehnt) — Migration `0070_quests.sql`
+  entsprechend angepasst (siehe unten, **von der Nutzerin noch nicht
+  ausgeführt**, daher direkt in der bestehenden Datei ergänzt statt eine
+  neue Migration draufzusetzen).
+- `adminQuestErstellen()` verschickt nach dem Anlegen automatisch eine
+  Nachricht über den bestehenden Kontaktweg (`coachee_nachrichten`, siehe
+  0045) — bei einer Rundruf-Quest an alle aktuellen Coachees einzeln.
+- Neue geteilte Komponente `ui/QuestsKarte.jsx` (aus `HomeView.jsx`
+  herausgezogen, dort dupliziert gewesen): zeigt auf der Startseite ALLE
+  sichtbaren Quests inkl. Annehmen/Ablehnen-Einladung; in
+  `GewohnheitenView.jsx` und `TagesplanView.jsx` (nur "heute") nur die
+  bereits angenommenen, noch offenen Quests, ohne Einladungs-UI.
+- `AdminQuestsView.jsx`: Fortschritts-Tabelle unterscheidet jetzt
+  "Noch nicht reagiert" / "Abgelehnt" / "Angenommen · in Arbeit" /
+  "Erledigt". Button "Archivieren" in "Entfernen" umbenannt (Funktion
+  unverändert — Quest verschwindet bei Coachees, bleibt für die Auswertung
+  in der Admin-Ansicht sichtbar).
+
+Weiterhin bewusst NICHT umgesetzt (unverändert seit Teil 6): Rangliste/
+Konkurrenz zwischen Coachees, automatische Kopplung an echte
+Protokoll-Werte (satzgenaue Bestätigung bei Training).
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 6) — KI-Chat kann jetzt wirklich eintragen + neues Feature "Quests"
 
 Direkt im Anschluss an Teil 5, noch selbe Sitzung. Zwei Aufträge der
@@ -999,6 +1051,7 @@ sonst nie auffallen lassen.
 | 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
 | 15 | Quests: Rangliste/Vergleich zwischen Coachees (sowohl für Quests als auch fürs normale Protokoll) | Von der Nutzerin gewünscht ("Konkurrenz" + "Gruppendynamik/Team" gleichzeitig), aber noch nicht konkretisiert — braucht eine eigene Klärungsrunde vor der Umsetzung, siehe Teil 6 |
 | 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
+| 17 | Routinen-Schritte (Morgen-/Abendroutine) ließen sich nicht anlegen, ohne jede Fehlermeldung | 🔴 Fehler wird jetzt sichtbar angezeigt (Teil 7), tatsächliche Ursache aber noch nicht bestätigt — vermutlich fehlende Migration 0041/0044, aus dem Sandbox nicht gegen die echte DB prüfbar. Bei nächstem Auftreten den jetzt sichtbaren Fehlertext mitteilen |
 
 ---
 
