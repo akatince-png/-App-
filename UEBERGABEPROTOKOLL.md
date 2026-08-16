@@ -1,5 +1,69 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔴 Update 16.08.2026, Fortsetzung (Teil 12) — Einladungssystem statt offener Registrierung + wählbarer Onboarding-Umfang
+
+Direkt im Anschluss an Teil 11, ausgelöst durch zwei Beobachtungen der
+Nutzerin beim Testen: (1) ihr Testkonto landete im kurzen Steckbrief-
+Onboarding statt der vollen Einrichtung, (2) dabei kam heraus, dass der
+Login-Screen noch einen offenen "Registrieren"-Tab hatte — jede beliebige
+Person mit der URL hätte sich dort selbst ein Konto anlegen können, ganz
+ohne Einladung. Beides jetzt behoben (Commit `c2044af`).
+
+**1. Selbstregistrierung entfernt.** `LoginView.jsx` hat nur noch
+"Anmelden", `AuthContext.signUp` wurde komplett entfernt. Konten entstehen
+jetzt ausschließlich über die Admin — entweder direkt mit gesetztem
+Passwort ("+ Neuen Zugang anlegen") oder per Einladung (siehe unten).
+**Wichtig, das reicht allein noch nicht:** die Entfernung der UI verhindert
+nicht, dass jemand mit Kenntnissen direkt die Supabase-API anspricht (der
+öffentliche Anon-Key steckt sowieso im Browser-Bundle). Für einen
+wirklich dichten Riegel sollte die Nutzerin zusätzlich einmalig in Supabase
+→ Authentication → Sign In / Providers → Email die Option "Enable email
+signups" deaktivieren (nur Einladungen/von Admin angelegte Konten bleiben
+dann überhaupt möglich).
+
+**2. Wählbarer Onboarding-Umfang je Coachee** (Nutzerinnen-Vorgabe: "ich
+möchte verschiedene Coaching-Modelle anbieten, manche werden mehr selbst
+geführt, manche komplett von mir geleitet"):
+- Neue Spalte `profiles.onboarding_modus` ("kurz"/"lang", Standard
+  "kurz" — bisheriges Verhalten bleibt der Default). Steuert in
+  `OnboardingFlow.jsx`, ob eine Coachee beim EIGENEN Durchlauf nur den
+  kurzen Steckbrief sieht (wie bisher) oder die volle Kategorie-
+  Einrichtung, die sonst nur die Admin im "Verwalten"-Modus sieht.
+  Wirkt sich NICHT aus, wenn die Admin sowieso per "Verwalten" alles
+  vorher selbst einrichtet — dann bleibt es wie gehabt bei "kein
+  Onboarding mehr nötig", unabhängig vom gewählten Modus.
+- Wählbar an drei Stellen: beim Anlegen ("+ Neuen Zugang anlegen"), bei
+  einer Einladung (siehe unten), und nachträglich direkt in der
+  Kontenliste (kleiner "Onboarding: Kurz/Lang"-Knopf, nur sichtbar
+  solange die Person ihr Onboarding noch nicht abgeschlossen hat).
+
+**3. Einladung per E-Mail** (Nutzerinnen-Vorgabe: "dass ich jemandem einen
+Link schicke ... er nur darüber reinkommt"):
+- Neue Edge Function `admin-invite-proband` — nutzt Supabases eingebaute
+  `auth.admin.inviteUserByEmail()`, verschickt die Standard-Einladungs-
+  Mail von Supabase (Vorlage im Supabase-Dashboard unter Authentication →
+  Email Templates anpassbar, aber nicht zwingend nötig). **Muss die
+  Nutzerin noch manuell anlegen und deployen** (komplett neue Funktion,
+  wie schon bei `send-team-push` in Teil 9/10).
+- Neue Admin-UI "✉️ Coachee einladen" (Name, E-Mail, Kurz/Lang-Wahl).
+- Neue `InviteAcceptView.jsx`: fängt den Klick auf den Einladungs-Link ab
+  (URL-Parameter `type=invite`, dieselbe Weiche greift auch für
+  `type=recovery` — es gibt also nebenbei jetzt auch eine funktionierende
+  Landing-Page für "Passwort vergessen"-Links, falls die Nutzerin sowas
+  später mal manuell über Supabase auslöst) und lässt die Person sich
+  selbst ein Passwort setzen, bevor die eigentliche App startet.
+- **Muss die Nutzerin einmalig prüfen**: Supabase → Authentication → URL
+  Configuration → "Site URL" muss auf die echte App-URL zeigen
+  (`akaapp.vercel.app` oder die tatsächliche Domain), sonst führt der
+  Link in der Einladungs-Mail ins Leere.
+
+**Nicht end-to-end testbar aus diesem Sandbox** (kein Netzwerkzugriff auf
+Supabase) — die Nutzerin sollte einmal eine echte Testeinladung an sich
+selbst (oder eine Zweit-E-Mail) verschicken und den kompletten Ablauf
+durchklicken, bevor sie das für echte Coachees nutzt.
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 11) — Test-Coachee-Zugangsdaten sichtbar (separates Login statt nur "Verwalten")
 
 Direkt im Anschluss an Teil 10. Nutzerinnen-Vorgabe: sie will die App auch
@@ -1191,7 +1255,8 @@ wichtigsten — für die vollständige Historie: `ls supabase/migrations/`.
 | 0070 | `quests.sql` | Neue Tabellen `quests` + `quest_fortschritt` fürs Quests-Feature (Teil 6/7) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
 | 0071 | `routine_tabellen_nachholen.sql` | Holt `routine_schritte`/`routine_durchlaeufe`/`routine_einstellungen` nach, die trotz 0041/0044 nie in der echten DB existierten (Teil 8) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
 | 0072 | `quest_rangliste.sql` | Erste Version der Quest-Rangliste-Funktion (Teil 9) — **durch 0073 ersetzt, muss NICHT separat ausgeführt werden** |
-| 0073 | `teams.sql` | Teams (`teams`, `profiles.team_id`), `gleiches_team()`, team-bewusste `quest_rangliste()`, `team_nachrichten` + RLS, `admin_liste_probanden()` um `team_id` erweitert (Teil 9) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** (0072 kann dabei übersprungen werden) |
+| 0073 | `teams.sql` | Teams (`teams`, `profiles.team_id`), `gleiches_team()`, team-bewusste `quest_rangliste()`, `team_nachrichten` + RLS, `admin_liste_probanden()` um `team_id` erweitert (Teil 9) | ✅ Erfolgreich ausgeführt (Teil 10) |
+| 0074 | `coachee_einladung.sql` | `profiles.onboarding_modus` ("kurz"/"lang"), `admin_liste_probanden()` um `onboarding_modus` erweitert (Teil 12) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
 
 **Kein separates VAPID-Migrations-Skript nötig** für den Push-Fix heute —
 das war ein reines Supabase-Secret, keine Schema-Änderung.
@@ -1234,6 +1299,11 @@ sonst nie auffallen lassen.
 | 19 | Migration `0073_teams.sql` ausführen | ✅ Erledigt (Teil 10, nach den drei dort beschriebenen Fixes erfolgreich gelaufen) |
 | 20 | Edge Function `send-team-push` anlegen und deployen | ✅ Erledigt (Teil 10) — noch nicht live end-to-end getestet (Nachricht senden + tatsächliche Push-Zustellung an ein zweites Gerät), sollte bei Gelegenheit einmal verifiziert werden |
 | 21 | Team-vs-Team-Gesamtwertung + Vergleich beim normalen Protokoll (nicht nur Quests) | Von der Nutzerin genannt ("diese gesamte Bewertung ... im Gruppenkontext"), in Teil 9 bewusst noch nicht umgesetzt — Team-Gesamtwertung ist ein kleinerer nächster Schritt (neue Aggregations-Funktion), Protokoll-Vergleich braucht weiterhin eine Klärungsrunde, WAS genau als faire Einzelzahl über alle Kategorien hinweg gelten soll |
+| 22 | Migration `0074_coachee_einladung.sql` ausführen | 🔴 Ohne das wirft der "Onboarding: Kurz/Lang"-Knopf und `admin-invite-proband` einen Datenbankfehler |
+| 23 | Edge Function `admin-invite-proband` anlegen und deployen | 🔴 Ohne das kann "✉️ Coachee einladen" keine E-Mail verschicken |
+| 24 | Supabase → Authentication → "Enable email signups" deaktivieren | Empfohlen (Teil 12) — die UI-Entfernung des "Registrieren"-Tabs allein verhindert nicht, dass jemand die Supabase-API direkt anspricht |
+| 25 | Supabase → Authentication → URL Configuration → Site URL prüfen | Muss auf die echte App-URL zeigen, sonst landet der Link in der Einladungs-Mail (Teil 12) ins Leere |
+| 26 | Einladungs-Ablauf einmal komplett end-to-end testen (echte Test-E-Mail) | Aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase), sollte die Nutzerin einmal selbst durchklicken, bevor sie es für echte Coachees nutzt |
 
 ---
 
