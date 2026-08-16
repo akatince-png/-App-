@@ -52,3 +52,17 @@ export function wissensBasisFuerLexikonKategorie(kategorie) {
   if (treffer.length === 0) return "";
   return treffer.map(([, inhalt]) => inhalt.trim()).join("\n\n");
 }
+
+// Allgemeinere Variante für Stellen, die Wissenstext aus mehreren, gezielt
+// ausgewählten Dateien/Ordnern zusammenstellen wollen, statt einem einzelnen
+// Ordner zu entsprechen (siehe useAkutModus.js) — jeder Eintrag in
+// praefixe ist ein Pfad-Anfang relativ zu src/wissen/, z. B. "training/"
+// (ganzer Ordner) oder "allgemein/reizueberflutung" (einzelne Datei).
+export function wissensBasisFuerPfade(praefixe) {
+  if (!praefixe?.length) return "";
+  const treffer = Object.entries(DATEIEN)
+    .filter(([pfad]) => praefixe.some((p) => relativerPfad(pfad).startsWith(p)))
+    .sort(([a], [b]) => a.localeCompare(b));
+  if (treffer.length === 0) return "";
+  return treffer.map(([, inhalt]) => inhalt.trim()).join("\n\n");
+}

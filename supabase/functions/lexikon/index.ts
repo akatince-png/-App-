@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { frage, kategorie, kontext } = await req.json();
+    const { frage, kategorie, kontext, modus } = await req.json();
     if (!frage || typeof frage !== "string") {
       return new Response(JSON.stringify({ error: "Feld 'frage' fehlt." }), {
         status: 400,
@@ -61,6 +61,19 @@ Deno.serve(async (req) => {
         ? `\n\nStütze deine Antwort auf folgenden kuratierten Hintergrundtext, sofern er zur Frage passt (nicht wörtlich zitieren, sinngemäß wiedergeben):\n\n${kontext.trim()}`
         : "";
 
+    // "akut" (Akutmodus-Feature, HomeView.jsx/AkutModusKarte.jsx): statt
+    // der sachlich-neutralen Lexikon-Rolle eine warme, direktive Rolle für
+    // Momente akuter ADHS-Symptomatik (Reizüberflutung, innere Unruhe
+    // usw.) — Ziel ist ein sofort umsetzbarer nächster Schritt, keine
+    // Definition/Erklärung. Standardverhalten (kein modus-Feld) bleibt
+    // exakt wie zuvor, damit LexikonView.jsx unverändert funktioniert.
+    const promptText =
+      modus === "akut"
+        ? `Du bist der ruhige, warmherzige Begleiter in einer ADHS-Coaching-App, gerade im "Akutmodus" — die Person hat eben ein akutes Symptom gemeldet und braucht JETZT einen konkreten, sofort umsetzbaren nächsten Schritt, keine Erklärung/Definition. Antworte auf Deutsch in maximal 4 kurzen Sätzen: zuerst ein Satz, der den Zustand kurz anerkennt (ohne Mitleid/Dramatik), danach 1-2 ganz konkrete, sofort machbare Handlungsschritte. Keine Dosierungsempfehlungen oder medizinischen Handlungsanweisungen, keine Diagnose. Gemeldetes Symptom/Beschreibung: ${frage}${kontextBlock}`
+        : `Du bist das Lexikon einer Protokoll- und Biohacking-App, aktueller Themenbereich: "${
+            kategorie || "Allgemein"
+          }". Beantworte die folgende Frage kurz, sachlich und leicht verständlich in 3-5 Sätzen auf Deutsch. Keine Dosierungsempfehlungen oder medizinische Handlungsanweisungen geben, nur allgemeine, informative Fakten. Frage: ${frage}${kontextBlock}`;
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -74,9 +87,7 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: `Du bist das Lexikon einer Protokoll- und Biohacking-App, aktueller Themenbereich: "${
-              kategorie || "Allgemein"
-            }". Beantworte die folgende Frage kurz, sachlich und leicht verständlich in 3-5 Sätzen auf Deutsch. Keine Dosierungsempfehlungen oder medizinische Handlungsanweisungen geben, nur allgemeine, informative Fakten. Frage: ${frage}${kontextBlock}`,
+            content: promptText,
           },
         ],
       }),

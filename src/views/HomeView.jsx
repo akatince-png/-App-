@@ -11,6 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
+import AkutModusKarte from "../ui/AkutModusKarte";
 import QuickTaskList from "../ui/QuickTaskList";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { QuestsKarte } from "../ui/QuestsKarte";
@@ -593,6 +594,15 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
 
       {/* ADHS Mode Toggle */}
       <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
+
+      {/* Akutmodus: Symptom wählen/beschreiben -> sofort eine konkrete
+          Idee. Ergänzt den Notfallmodus oben (der nur die Ansicht
+          vereinfacht) um eine aktive Lösungs-Vorschlag-Funktion. */}
+      <AkutModusKarte
+        onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
+        coachName={getCoachName()}
+        zeigeCoachOption={!istAdminModus}
+      />
 
       {/* Emergency Mode Info Banner */}
       {isEmergencyMode && (
