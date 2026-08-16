@@ -1,5 +1,112 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 6) — KI-Chat kann jetzt wirklich eintragen + neues Feature "Quests"
+
+Direkt im Anschluss an Teil 5, noch selbe Sitzung. Zwei Aufträge der
+Nutzerin: (1) "die KI ... sagte mir, dass sie selber die Einträge nicht
+vornehmen kann ... das war nicht die Idee der ganzen Sache" — der
+"Übernehmen"-Mechanismus im Chat (`KiChat.jsx` → `on Uebernehmen`-Callback)
+existierte zwar schon für einige Bereiche, aber Workflow/Schlaf fehlten im
+universellen Coach komplett, und mehrere `*AusChat`-Extraktoren in
+`aiService.js` fragten die KI nach weniger Feldern ab, als die zugehörige
+Speicherfunktion eigentlich braucht — die KI hat dann (korrekterweise)
+gesagt, sie könne nicht speichern, statt unvollständig zu speichern.
+(2) Neues Feature "Quests": freiwillige Sonderaufgaben, die die Coach ihren
+Coachees zusätzlich zum Pflicht-Protokoll stellen kann.
+
+### Teil A: Chat-Übernahme lückenlos gemacht
+
+- `f117d31`: Workflow-Presets/-Pläne sind jetzt per Chat anlegbar
+  (`workflowAusChat`, neue `handleWorkflowUebernehmen` in
+  `GewohnheitenView.jsx`), und der universelle Coach (Home/Tagesplan/
+  Wochenübersicht) kennt jetzt auch `schlaf` und `workflow` als Ziel-Bereich
+  (`useUniversellerCoach.js`, vorher fehlten beide in
+  `bereichErkennen()`/der Switch-Routing-Tabelle, obwohl die dedizierten
+  Ansichten dafür längst funktionierten).
+- `24f552d`: Der konkrete Auslöser der Nutzerin — Trainingsplan-Chat
+  (`trainingsplanAusChat`) fehlten bei Intervall-/isometrischem Training die
+  Felder `uhrzeit`/`intervallArbeitSek`/`intervallPauseSek`/`runden`, obwohl
+  `wochenplanHinzufuegen()` sie längst unterstützt. Genau diese Felder sind
+  bei "5 Sek. halten, 4 Sek. Pause, 5 Runden" aber der eigentliche Inhalt der
+  Übung — ohne sie konnte die KI nichts Sinnvolles speichern.
+- `9708d21`: Danach alle **übrigen** `*AusChat`-Extraktoren im Hintergrund
+  gegen ihre jeweilige Speicherfunktion geprüft (nicht nur gegen die
+  DB-Spalten, sondern gegen das, was die Funktion tatsächlich verwendet).
+  Ergebnis — drei weitere echte Lücken gefunden und behoben:
+  - **`supplementAusChat`**: fehlten `menge` + das komplette
+    Intervall-System (`intervallTyp`, `intervallDays`, `customDays`,
+    `onDays`/`offDays`, `weekdays`, `eigenerStart`, `uhrzeiten`) — dieselben
+    Felder, die Medikamente/Peptide im Chat längst nutzen. Betrifft auch
+    `SupplementeView.jsx` und `useUniversellerCoach.js` (beide haben die
+    KI-Antwort manuell destrukturiert, mussten also ebenfalls erweitert
+    werden, sonst wären die neu erfassten Felder eine Ebene tiefer wieder
+    stillschweigend verlorengegangen).
+  - **`medikamentAusChat`**: `kategorie`-Enum fehlte `"Peptid"`, obwohl das
+    seit der Zusammenführung von Peptiden in `hormones` (Migration 0042)
+    eine vollwertige Kategorie ist.
+  - **`workflowAusChat`**: fehlten `gueltigVon`/`gueltigBis`
+    (Gültigkeitszeitraum), ergänzt inkl. der beiden Aufrufer.
+  - Geprüft und bereits vollständig befunden: `gewohnheitAusChat`,
+    `routineAusChat`, `hydrationAusChat`, `tageslichtAusChat`,
+    `ernaehrungsplanAusChat`, `laborwerteAusChat`, `peptidAusChat`,
+    `schlafAusChat`.
+
+Build + `oxlint` nach jedem Schritt sauber (20 Warnungen, alle
+vorbestehend, keine Fehler).
+
+### Teil B: Neues Feature "Quests" (freiwillige Sonderaufgaben)
+
+Nutzerinnen-Vorgabe (wörtlich, wichtig für die Einordnung des V1-Scopes):
+"diese Woche machen wir drei Sätze isometrisches Training und das soll sone
+freiwillige Aufgabe sein ... falls sie Interesse dran haben" — plus, in
+einer ausführlicheren Antwort auf Rückfrage: Abschluss soll je nach
+Quest-Art unterschiedlich funktionieren (einfach / mit Zielzahl),
+beim Abschließen sollen Dauer + was gemacht wurde + Freitext an die Coach
+gemeldet werden, und langfristig sollen Coachees **sowohl beim normalen
+Protokoll als auch bei Quests gegeneinander antreten können** (ihre eigene
+Formulierung: "ein bösen Konkurrenz-Gedanke, gleichzeitig eine gewisse
+Gruppendynamik/Team für eine Gemeinschafts-Geschichte").
+
+**V1 umgesetzt** (Commit `c3d2c16`):
+- Neue Tabellen `quests` + `quest_fortschritt`
+  (`supabase/migrations/0070_quests.sql`, **muss die Nutzerin noch manuell
+  in der Supabase-SQL-Konsole ausführen**, siehe Abschnitt 10).
+- Admin legt eine Quest an (Titel, Beschreibung, Typ "einfach" oder "mit
+  Zielzahl" + Einheit, Ziel = alle Coachees oder eine einzelne Person,
+  optional Gültig-bis-Datum) über den neuen Menüpunkt "🎯 Quests verwalten"
+  im Admin-Dashboard (`AdminQuestsView.jsx`).
+- Coachee sieht offene Quests auf der Startseite (neue `QuestsKarte` in
+  `HomeView.jsx`), kann bei Zielzahl-Quests laufend einen Stand speichern,
+  und beim Abschließen optional Dauer (Minuten) + Freitext-Notiz angeben.
+  Admin sieht alle Meldungen pro Coachee in `AdminQuestsView.jsx`.
+- Datenmodell/Hook: `src/data/useQuestData.js` — `useQuestData(userId)` für
+  die Coachee-Seite (RLS lässt jede Coachee eigene + Rundruf-Quests sehen),
+  plus eigenständige `adminQuest*`-Funktionen (analog
+  `coachNachrichtSenden`) für die Admin-Seite, da die Admin nicht an eine
+  feste userId gebunden ist.
+
+**Bewusst NICHT in V1** (transparent an die Nutzerin kommuniziert, nicht
+stillschweigend weggelassen — gleiches Vorgehen wie bei der
+Baustein-Versionierung in Teil 3):
+- **Rangliste/Vergleich zwischen Coachees**, weder für Quests noch fürs
+  normale Protokoll. Der Wunsch nach "Konkurrenz" UND "Gruppendynamik/Team"
+  gleichzeitig ist noch nicht aufgelöst — das ist ein eigenes, größeres
+  Feature (braucht eine Definition, was genau verglichen wird, ob anonym
+  oder mit Namen, ob pro Woche oder insgesamt) und sollte in einer eigenen
+  Runde mit der Nutzerin konkretisiert werden, bevor es gebaut wird.
+- **Automatische Kopplung an echte Protokoll-Werte** (z. B. jeden
+  geloggten Trainingssatz automatisch mitzählen statt manueller Meldung,
+  oder "jeder einzelne Satz muss bestätigt werden" bei Trainings-Quests) —
+  V1 nutzt eine manuelle Fortschritts-/Abschlussmeldung durch die Coachee,
+  das deckt die genannten Beispiele (Wasser, Aufstehzeit, Leute treffen)
+  bereits vollständig ab, aber nicht die feingranulare Satz-für-Satz-
+  Bestätigung bei Training.
+- Kein Nachfass-/Erinnerungs-Push für offene Quests (anders als beim
+  Pflicht-Protokoll) — bewusst weggelassen, damit "freiwillig" nicht durch
+  Erinnerungsdruck konterkariert wird; könnte bei Bedarf ergänzt werden.
+
+---
+
 ## 🔴 Update 16.08.2026, nachts (Teil 5) — Erinnerungen liefen NIE wirklich: zwei stille Fehlerquellen gefunden + behoben
 
 Letzte Runde vor Zugangsende der Nutzerin. Direkt im Anschluss an Teil 4
@@ -854,6 +961,7 @@ wichtigsten — für die vollständige Historie: `ls supabase/migrations/`.
 | 0067 | `teilprotokolle_tageslicht.sql` | Tageslicht als Teilprotokoll-Kategorie |
 | 0068 | `teilprotokolle_aktiviert_am.sql` | Aktivierungs-Zeitpunkt je Baustein |
 | 0069 | `baustein_versionen.sql` | Versionierung der Protokoll-Bausteine (📌-Snapshots) |
+| 0070 | `quests.sql` | Neue Tabellen `quests` + `quest_fortschritt` fürs Quests-Feature (Teil 6) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
 
 **Kein separates VAPID-Migrations-Skript nötig** für den Push-Fix heute —
 das war ein reines Supabase-Secret, keine Schema-Änderung.
@@ -888,6 +996,9 @@ sonst nie auffallen lassen.
 | 11 | Kalenderverbindung (Google/Apple Calendar oder .ics-Export) | Nur als vage Idee erwähnt, kein konkreter Auftrag |
 | 12 | Native App (Xcode/App Store) | Gewünschtes Fernziel der Nutzerin — siehe Abschnitt 12 |
 | 13 | `useProfileData.js`-Speicherfehler nur in der Browser-Konsole geloggt, nie sichtbar (Muster: optimistic update + `.then(error => console.error(error))`) | 🟡 Empfohlen, aber nicht umgesetzt — hat den Erinnerungen-Bug (Abschnitt 7) wochenlang unsichtbar gehalten. Mindestens `setErinnerung()` sollte Fehler sichtbar zurückmelden, stichprobenartig auf ähnliche `set*`-Funktionen prüfen |
+| 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
+| 15 | Quests: Rangliste/Vergleich zwischen Coachees (sowohl für Quests als auch fürs normale Protokoll) | Von der Nutzerin gewünscht ("Konkurrenz" + "Gruppendynamik/Team" gleichzeitig), aber noch nicht konkretisiert — braucht eine eigene Klärungsrunde vor der Umsetzung, siehe Teil 6 |
+| 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
 
 ---
 
