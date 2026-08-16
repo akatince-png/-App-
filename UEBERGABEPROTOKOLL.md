@@ -1,5 +1,42 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 16) — Morgenroutine + Abendroutine als letzte fehlende Wissens-Themen ergänzt
+
+Direkt im Anschluss an Teil 15. Nutzerin bemerkte, dass Morgen- und
+Abendroutine (nicht zu verwechseln mit Schlaf, das schon in Teil 15
+behandelt wurde) noch fehlten, und bat darum, sie ebenso umfassend
+abzuhandeln (Commit `88306a6`). Geprüft: `src/wissen/` hatte für beide
+Themen bislang gar keinen eigenen Ordner (nur je ein kürzerer
+"Modul"-Eintrag in coach_wissen, Migration 0050) — echte Lücke, jetzt
+geschlossen.
+
+- `morgenroutine/morgenroutine-bei-adhs.md` (neu): Schlaftrunkenheit
+  (Sleep Inertia, bei ADHS überdurchschnittlich stark ausgeprägt),
+  Cortisol-Aufwachreaktion (38-75 % Anstieg in den ersten 30-45 Min.),
+  Decision Fatigue als doppelter Engpass, warum Snoozen die
+  Schlaftrunkenheit eher verstärkt, Chaining/kleinstmögliche erste
+  Handlung, Medikamenten-Timing-Mismatch am Morgen.
+- `abendroutine/abendroutine-bei-adhs.md` (neu): "Revenge Bedtime
+  Procrastination" (AASM-Umfrage 2024: 52-58 % der US-Erwachsenen,
+  bei ADHS verstärkt durch Zeitblindheit/Fremdbestimmungsgefühl),
+  physiologisches Wind-Down-Fenster, doppelter Aktivierungseffekt von
+  Bildschirmen (Licht- UND Inhalts-Kanal), 2025er Studie zur
+  wechselseitigen Handynutzung-/Aufschub-Beziehung (80 vs. 18 Minuten
+  Bildschirmzeit), Medikamenten-Rebound am frühen Abend.
+- Beide bewusst mit Querverweisen auf Schlaf-, Tageslicht-, Gewohnheits-
+  und Medikamente-Wissen dieser App geschrieben statt Inhalte zu
+  duplizieren — gleiche Vorgehensweise wie bei den 8 Themen aus Teil 15.
+- Zwei neue PDF-Handbücher erstellt und verschickt.
+- `npm run build` erneut erfolgreich geprüft (Bundle weiter gewachsen,
+  siehe Architektur-Warnung #28 — betrifft jetzt 11 umfangreiche
+  Themen-Dateien plus Ernährung).
+
+Damit sind jetzt alle ADHS-Alltagsbereiche, die in dieser App als
+eigene Protokoll-Kategorien existieren, mit einem vollständigen
+Wissens-Leitfaden hinterlegt.
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 15) — Alle 8 verbliebenen Platzhalter-Themen auf Ernährungs-Niveau ausgebaut + Lexikon an Wissensbasis angebunden
 
 Direkt im Anschluss an Teil 14. Nutzerin: Wenn der Ernährungs-Leitfaden
