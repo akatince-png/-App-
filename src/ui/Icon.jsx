@@ -96,6 +96,15 @@ const PATHS = {
       <path d="M10 13h4" />
     </>
   ),
+  // Für Atemübungen (16.08.) — drei geschwungene Linien statt Lunge/Emoji,
+  // passend zum restlichen Linien-Icon-Set.
+  wind: (
+    <>
+      <path d="M9.5 4.5A2 2 0 1 1 11 8H2" />
+      <path d="M12.5 20.5A2 2 0 1 0 14 17H2" />
+      <path d="M17.7 7.7A2.5 2.5 0 1 1 19.5 12H2" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 20, color = "currentColor", strokeWidth = 1.8 }) {

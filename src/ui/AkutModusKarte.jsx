@@ -1,13 +1,22 @@
 import React, { useState } from "react";
 import { Card, Pill, PrimaryButton, TextArea } from "./primitives";
 import { accentDark, accentSoft, textMuted } from "./theme";
-import { useAkutModus, AKUT_SYMPTOME } from "../data/useAkutModus";
+import { useAkutModus, AKUT_SYMPTOME, akutmodusEreignisLoggen } from "../data/useAkutModus";
+import { useAppData } from "../context/AppDataContext";
+import AtemTimer from "./AtemTimer";
 
-// Akutmodus (16.08., erweitert 16.08.: eigener, schmalerer Knopf statt
-// Untertitel-Karte, plus vorab festlegbare "Akut-Übung"). Ein Knopf für
+// Standard-Atemübung, falls unter "Atemübungen" noch keine eigene
+// angelegt wurde — 4-4-6 ist ein gängiges, leicht zu merkendes Muster
+// (Box-Breathing-Variante), niemand soll erst eine Übung anlegen müssen,
+// bevor der Akutmodus nutzbar ist.
+const STANDARD_ATEMUEBUNG = { name: "Ruhig werden", icon: "🌬️", einatmenSek: 4, haltenSek: 4, ausatmenSek: 6, dauerMinuten: 3 };
+
+// Akutmodus (16.08., mehrfach erweitert: eigener, schmalerer Knopf statt
+// Untertitel-Karte, vorab festlegbare "Akut-Übung", jetzt zusätzlich
+// direkter Atemübungs-Start + einfache Dokumentation). Ein Knopf für
 // Momente akuter ADHS-Symptomatik ("innere Unruhe", "kirre werden") —
-// Symptom auswählen/frei beschreiben oder direkt die eigene, vorher
-// festgelegte Übung starten, sofort eine konkrete Lösung bekommen.
+// Symptom auswählen/frei beschreiben, die eigene Übung starten oder eine
+// geführte Atemübung machen, sofort eine konkrete Lösung bekommen.
 //
 // Bewusst KEIN offener KI-Chat (siehe KiChat.jsx-Kommentar "der
 // KI-Assistent ist für Coachees nicht mehr Teil der App") — stattdessen
@@ -52,28 +61,90 @@ export function AkutModusTrigger({ onClick }) {
   );
 }
 
+function GefuehlAbfrage({ onWaehlen }) {
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 6 }}>Geht's dir jetzt besser?</div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        {[
+          { emoji: "😊", wert: "besser" },
+          { emoji: "😐", wert: "gleich" },
+          { emoji: "😞", wert: "schlechter" },
+        ].map((g) => (
+          <button
+            key={g.wert}
+            type="button"
+            onClick={() => onWaehlen(g.wert)}
+            className="mp-tap"
+            style={{ fontSize: 22, border: "none", background: "transparent", cursor: "pointer" }}
+          >
+            {g.emoji}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onWaehlen(null)}
+          style={{ border: "none", background: "transparent", color: textMuted, fontSize: 11, cursor: "pointer", marginLeft: 4 }}
+        >
+          Überspringen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // akutUebungen: Gewohnheiten mit akutFavorit === true (siehe
 // gewohnheitAkutFavoritUmschalten, GewohnheitenView.jsx) — werden hier
 // prominent vor den allgemeinen Symptom-Kacheln angeboten.
 export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoachOption, akutUebungen }) {
+  const { userId, atemuebungen, atemuebungAbschliessen } = useAppData();
   const [freitext, setFreitext] = useState("");
   const [anCoachGesendet, setAnCoachGesendet] = useState(false);
+  const [aktuelleAktion, setAktuelleAktion] = useState(null);
+  const [gefuehlProtokolliert, setGefuehlProtokolliert] = useState(false);
+  const [atemModusAktiv, setAtemModusAktiv] = useState(false);
   const { antwort, laden, fehler, hilfeAnfordern, uebungAnfordern, zuruecksetzen } = useAkutModus();
 
-  const symptomWaehlen = (symptom) => {
+  const zuruecksetzenKomplett = () => {
     setAnCoachGesendet(false);
+    setGefuehlProtokolliert(false);
+    setAtemModusAktiv(false);
+    setAktuelleAktion(null);
+    zuruecksetzen();
+  };
+
+  const symptomWaehlen = (symptom) => {
+    zuruecksetzenKomplett();
+    setAktuelleAktion(`Symptom: ${symptom.label.replace(/^\S+\s/, "")}`);
     hilfeAnfordern(symptom.label.replace(/^\S+\s/, ""), symptom.pfade);
   };
 
   const uebungWaehlen = (uebung) => {
-    setAnCoachGesendet(false);
+    zuruecksetzenKomplett();
+    setAktuelleAktion(`Akut-Übung: ${uebung.name}`);
     uebungAnfordern(uebung.name);
   };
 
   const freitextSenden = () => {
     if (!freitext.trim()) return;
-    setAnCoachGesendet(false);
+    zuruecksetzenKomplett();
+    setAktuelleAktion(`Freitext: ${freitext.trim()}`);
     hilfeAnfordern(freitext, null);
+  };
+
+  const gefuehlWaehlen = (gefuehl) => {
+    setGefuehlProtokolliert(true);
+    if (userId && aktuelleAktion) akutmodusEreignisLoggen(userId, aktuelleAktion, null, gefuehl);
+  };
+
+  const atemUebungFuerAkutmodus = atemuebungen?.[0] || STANDARD_ATEMUEBUNG;
+
+  const atemFertig = (dauerSek, gefuehlDanach) => {
+    if (dauerSek == null) return;
+    if (userId) {
+      atemuebungAbschliessen?.(atemUebungFuerAkutmodus, dauerSek, { ausAkutmodus: true, gefuehlDanach });
+      akutmodusEreignisLoggen(userId, `Atemübung: ${atemUebungFuerAkutmodus.name}`, null, gefuehlDanach);
+    }
   };
 
   const anCoachSenden = async () => {
@@ -98,8 +169,45 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
         </button>
       </div>
 
-      {!antwort && !laden && (
+      {atemModusAktiv && (
+        <div>
+          <AtemTimer uebung={atemUebungFuerAkutmodus} onFertig={atemFertig} kompakt />
+          <button
+            type="button"
+            onClick={() => setAtemModusAktiv(false)}
+            style={{ border: "none", background: "transparent", color: "#B45309", fontSize: 12.5, fontWeight: 700, cursor: "pointer", marginTop: 10 }}
+          >
+            🔁 Zurück zur Übersicht
+          </button>
+        </div>
+      )}
+
+      {!atemModusAktiv && !antwort && !laden && (
         <>
+          <button
+            type="button"
+            onClick={() => setAtemModusAktiv(true)}
+            className="mp-tap"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              padding: "12px 14px",
+              marginBottom: 10,
+              borderRadius: 14,
+              border: "1px solid rgba(217, 119, 6, 0.35)",
+              background: "#fff",
+              color: "#B45309",
+              fontSize: 13.5,
+              fontWeight: 700,
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <span style={{ fontSize: 18 }}>🌬️</span> Atemübung machen ({atemUebungFuerAkutmodus.name})
+          </button>
+
           {akutUebungen?.length > 0 && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 12, color: textMuted, marginBottom: 8 }}>Deine festgelegte Übung:</div>
@@ -147,7 +255,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
           </div>
           {(!akutUebungen || akutUebungen.length === 0) && (
             <div style={{ fontSize: 11, color: textMuted, marginTop: 10, fontStyle: "italic" }}>
-              Tipp: Leg dir bei einer Gewohnheit (z. B. Isometrisches Training, Atemübung) "🧘 Als Akut-Übung merken" fest — dann taucht sie hier als Schnellstart auf.
+              Tipp: Leg dir bei einer Gewohnheit "⭐ Als Akut-Übung merken" fest — dann taucht sie hier als Schnellstart auf.
             </div>
           )}
         </>
@@ -162,10 +270,15 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
           <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: accentDark }}>
             {antwort}
           </div>
+          {!gefuehlProtokolliert ? (
+            <GefuehlAbfrage onWaehlen={gefuehlWaehlen} />
+          ) : (
+            <div style={{ fontSize: 12, color: "#B45309", marginTop: 8 }}>Danke, festgehalten ✓</div>
+          )}
           <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
             <button
               type="button"
-              onClick={zuruecksetzen}
+              onClick={zuruecksetzenKomplett}
               className="mp-tap"
               style={{
                 border: "none",

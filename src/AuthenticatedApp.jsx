@@ -18,6 +18,7 @@ import PlanView from "./views/plan/PlanView";
 import PlaeneView from "./views/plan/PlaeneView";
 import MehrView from "./views/plan/MehrView";
 import GewohnheitenView from "./views/GewohnheitenView";
+import AtemuebungenView from "./views/AtemuebungenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import Fab from "./ui/Fab";
 import AppSidebar from "./ui/AppSidebar";
@@ -185,6 +186,8 @@ export default function AuthenticatedApp() {
     );
   } else if (view === "routinen") {
     screen = <GewohnheitenView onHome={() => setView("home")} />;
+  } else if (view === "atemuebungen") {
+    screen = <AtemuebungenView onHome={() => setView("home")} />;
   } else if (PLAENE_VIEW_IDS.includes(view)) {
     screen = (
       <PlaeneView

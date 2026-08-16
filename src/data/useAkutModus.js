@@ -78,3 +78,16 @@ export function useAkutModus() {
 
   return { antwort, laden, fehler, hilfeAnfordern, uebungAnfordern, zuruecksetzen };
 }
+
+// Schlanke Dokumentation des Akutmodus (Nutzerinnen-Vorgabe 16.08.: "wie
+// oft hatte er so einen Anfall, wie ist er damit umgegangen, ist es
+// besser geworden" — siehe akutmodus_log, Migration 0076). Bewusst nur
+// Aktion + optionales Vorher/Nachher-Gefühl, keine Verzweigung zu
+// Supplementen/Medikamenten (das ist ein größerer, separater
+// Ausbauschritt, siehe Übergabeprotokoll).
+export async function akutmodusEreignisLoggen(userId, aktion, detail, gefuehlDanach) {
+  const { error } = await supabase
+    .from("akutmodus_log")
+    .insert({ user_id: userId, aktion, detail: detail || null, gefuehl_danach: gefuehlDanach || null });
+  if (error) console.error(error);
+}

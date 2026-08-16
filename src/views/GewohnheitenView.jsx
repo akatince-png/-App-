@@ -123,7 +123,7 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
               title="Wird im Akutmodus auf der Startseite vorgeschlagen"
               style={{ border: "none", background: "transparent", color: g.akutFavorit ? "#B45309" : textMuted, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
             >
-              {g.akutFavorit ? "🧘 Akut-Übung ✓" : "🧘 Als Akut-Übung merken"}
+              {g.akutFavorit ? "⭐ Akut-Übung ✓" : "⭐ Als Akut-Übung merken"}
             </button>
           )}
         </div>

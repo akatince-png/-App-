@@ -72,7 +72,10 @@ const EIGENE_TAB_FARBE = {
 // Bewusst als Liste angelegt, nicht als einzelner Knopf: Morgenroutine/
 // Abendroutine (noch nicht gebaut, siehe UEBERGABEPROTOKOLL.md Abschnitt 4d)
 // reihen sich hier später einfach als weitere Einträge ein.
-const ROUTINEN_EINTRAEGE = [{ id: "routinen", icon: "target", label: "Gewohnheiten" }];
+const ROUTINEN_EINTRAEGE = [
+  { id: "routinen", icon: "target", label: "Gewohnheiten" },
+  { id: "atemuebungen", icon: "wind", label: "Atemübungen" },
+];
 
 // Nachvollziehbarkeit (Nutzerinnen-Vorgabe, 31.07.): "Alle Pläne" soll auch
 // der Ort sein, an dem man sieht, was tatsächlich passiert ist — inkl. was

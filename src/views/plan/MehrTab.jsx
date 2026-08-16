@@ -53,6 +53,7 @@ const BAUSTEINE_KATEGORIEN = [
   { kategorie: "gewohnheiten", label: "Gewohnheiten" },
   { kategorie: "supplemente", label: "Supplemente" },
   { kategorie: "medikamente", label: "Medikamente" },
+  { kategorie: "atemuebungen", label: "Atemübungen" },
 ];
 
 // Baut den Schnappschuss der aktuell geltenden Werte je Kategorie — reine
@@ -78,6 +79,8 @@ function snapshotFuer(kategorie, appData) {
       return { supplemente: appData.supplemente };
     case "medikamente":
       return { hormone: appData.hormone };
+    case "atemuebungen":
+      return { atemuebungen: appData.atemuebungen };
     default:
       return null;
   }
