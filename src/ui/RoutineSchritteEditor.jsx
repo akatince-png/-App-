@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Label, Pill, TextInput } from "./primitives";
 import NumberWheelField from "./NumberWheelField";
-import { accentDark, cardBorder, danger, textMuted } from "./theme";
+import { accentDark, cardBorder, danger, success, textMuted } from "./theme";
 
 // Beispiel-Schritte je Routine (14.08., Nutzerin-Vorgabe: "ein paar
 // Beispiele, damit jemand, der nicht so einfallsreich ist, darauf kommt,
@@ -42,28 +42,39 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
   const [name, setName] = useState("");
   const [dauerMin, setDauerMin] = useState("10");
   const [fehler, setFehler] = useState(null);
+  const [erfolg, setErfolg] = useState(null);
 
   // onHinzufuegen kam bisher ohne Rückmeldung aus — schlug das Speichern
   // fehl (z. B. fehlende Tabelle/RLS-Policy), passierte einfach gar nichts
   // sichtbares (Nutzerinnen-Vorgabe 16.08.: "es lässt sich ja gar nicht
-  // bestätigen"). Jetzt wird der Fehler angezeigt statt nur in der
-  // Browser-Konsole zu verschwinden, siehe useRoutinen.js.
+  // bestätigen"). Jetzt wird sowohl der Fehler als auch der Erfolg sichtbar
+  // gemeldet, statt Fehler nur in der Browser-Konsole verschwinden zu
+  // lassen — siehe useRoutinen.js. Der neue Schritt erscheint zwar auch
+  // sofort oben in der Liste, aber eine ausdrückliche Bestätigung nimmt
+  // die Unsicherheit "hat der Tap überhaupt was gemacht?".
   const antippen = async (schrittName, schrittDauer) => {
     setFehler(null);
+    setErfolg(null);
     const result = await onHinzufuegen(schrittName, schrittDauer);
     if (result && result.ok === false) {
       setFehler(result.error || "Speichern fehlgeschlagen.");
+      return;
     }
+    setErfolg(`„${schrittName}" hinzugefügt.`);
+    setTimeout(() => setErfolg(null), 2500);
   };
 
   const hinzufuegen = async () => {
     if (!name.trim()) return;
     setFehler(null);
+    setErfolg(null);
     const result = await onHinzufuegen(name, dauerMin);
     if (result && result.ok === false) {
       setFehler(result.error || "Speichern fehlgeschlagen.");
       return;
     }
+    setErfolg(`„${name}" hinzugefügt.`);
+    setTimeout(() => setErfolg(null), 2500);
     setName("");
     setDauerMin("10");
   };
@@ -129,12 +140,13 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
         <button
           type="button"
           onClick={hinzufuegen}
-          style={{ minHeight: 46, padding: "0 14px", borderRadius: 12, border: "none", background: accentDark, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+          style={{ minHeight: 46, padding: "0 16px", borderRadius: 12, border: "none", background: accentDark, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
         >
-          +
+          + Hinzufügen
         </button>
       </div>
       {fehler && <div style={{ fontSize: 11.5, color: danger, marginTop: 6 }}>{fehler}</div>}
+      {erfolg && <div style={{ fontSize: 11.5, color: success, marginTop: 6, fontWeight: 700 }}>✓ {erfolg}</div>}
     </div>
   );
 }
