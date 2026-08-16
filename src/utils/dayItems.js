@@ -18,17 +18,23 @@ export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 // helle Variante für Badges/Chips. Peptide sind seit der Datenzusammen-
 // legung (13.08., Migration 0042) Teil von "hormon" (Medikamente) und
 // haben keine eigene Kategorie mehr.
+// Kräftiger/gesättigter als zuvor (Nutzerinnen-Vorgabe, 16.08.: "die Farben
+// etwas catchier, etwas stärker" — v. a. Home-Mini-Widgets und die
+// Bereichsfarben in den Plänen wirkten zu blass). Gleiche Farbfamilien wie
+// vorher, nur satter/dunkler statt heller/entsättigter — `dot` am
+// deutlichsten angehoben (Ringe/Icons/Buttons, größte Fläche), `bg`/`text`
+// nur leicht (bleiben als helle Badge-/Fließtext-Variante lesbar).
 export const KATEGORIE_META = {
-  hormon: { bg: "#F1E9F6", text: "#6B3F91", dot: "#8B5CB0", label: "Medikament" },
-  supplement: { bg: "#F6EFE1", text: "#8C651F", dot: "#B8863D", label: "Supplement" },
-  mahlzeit: { bg: "#F5E9E2", text: "#94502F", dot: "#C17A54", label: "Mahlzeit" },
-  training: { bg: "#FBEAE7", text: "#A63B32", dot: "#CC5145", label: "Training" },
-  gewohnheit: { bg: "#E6F3F2", text: "#286661", dot: "#3E8E8A", label: "Gewohnheit" },
-  workflow: { bg: "#F5E9F1", text: "#8C3F72", dot: "#B0568F", label: "Workflow" },
-  hydration: { bg: "#EAF3F8", text: "#2F6E8C", dot: "#4A93B8", label: "Hydration" },
-  tageslicht: { bg: "#FDF3E3", text: "#8C6A1F", dot: "#D9A62E", label: "Tageslicht" },
-  schlaf: { bg: "#ECEDF7", text: "#3F4380", dot: "#5B5FA6", label: "Schlaf" },
-  notfallmodus: { bg: "#FBEAE7", text: "#A63B32", dot: "#C24545", label: "Notfallmodus" },
+  hormon: { bg: "#EDDFF6", text: "#64338E", dot: "#8436C2", label: "Medikament" },
+  supplement: { bg: "#F5EBD8", text: "#865E16", dot: "#C17F1F", label: "Supplement" },
+  mahlzeit: { bg: "#F5E3D8", text: "#904724", dot: "#D76629", label: "Mahlzeit" },
+  training: { bg: "#F7E4E0", text: "#A23026", dot: "#E22C1B", label: "Training" },
+  gewohnheit: { bg: "#DCF3F1", text: "#1F605B", dot: "#24948E", label: "Gewohnheit" },
+  workflow: { bg: "#F5DFEE", text: "#89336C", dot: "#BF328C", label: "Workflow" },
+  hydration: { bg: "#E0EFF7", text: "#246787", dot: "#2990C5", label: "Hydration" },
+  tageslicht: { bg: "#F7EEDF", text: "#866316", dot: "#E8A60B", label: "Tageslicht" },
+  schlaf: { bg: "#E2E4F7", text: "#33377D", dot: "#3940B3", label: "Schlaf" },
+  notfallmodus: { bg: "#F7E4E0", text: "#A23026", dot: "#D12121", label: "Notfallmodus" },
   zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
 };
 

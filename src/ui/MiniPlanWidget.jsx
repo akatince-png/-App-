@@ -1,5 +1,6 @@
 import React from "react";
 import { KATEGORIE_META } from "../utils/dayItems";
+import { hexZuRgba } from "./theme";
 
 /**
  * MiniPlanWidget: Kleine Doppelring-Visualisierung für einen Plan
@@ -35,8 +36,13 @@ export default function MiniPlanWidget({
   // KATEGORIE_META-Einträge haben kein "color"-Feld (nur bg/text/dot/label) —
   // ein vorheriger Zugriff auf meta.color war deshalb immer undefined und
   // ließ die Ring-Striche unsichtbar werden (SVG-Default für stroke: "none").
-  const meta = KATEGORIE_META[kategorie] || { dot: "#999" };
+  const meta = KATEGORIE_META[kategorie] || { dot: "#999", bg: "#fff" };
   const baseColor = aktiv ? meta.dot : "#B5B5B5";
+  // Farbiger Karten-Hintergrund statt durchgehend Weiß (Nutzerinnen-Vorgabe,
+  // 16.08.: "die Farben etwas catchier machen, zumindest im Homemenü") —
+  // vorher trugen nur die dünnen Ringe Farbe, die Kachel selbst wirkte
+  // dadurch blass/uniform grau-weiß.
+  const kartenHintergrund = aktiv ? meta.bg : "#F3F3F3";
 
   // Berechne Prozentsätze
   const dailyPercent = dailyTotal > 0 ? (dailyCount / dailyTotal) * 100 : 0;
@@ -60,8 +66,8 @@ export default function MiniPlanWidget({
       onClick={onClick}
       style={{
         position: "relative",
-        background: "#fff",
-        border: "1px solid #e5e7eb",
+        background: kartenHintergrund,
+        border: `1px solid ${aktiv ? hexZuRgba(baseColor, 0.28) : "#e5e7eb"}`,
         borderRadius: "12px",
         padding: "12px",
         textAlign: "center",

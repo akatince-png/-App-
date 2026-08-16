@@ -12,8 +12,11 @@
 export const bg = "#FFFFFF";
 export const card = "#FFFFFF";
 export const cardBorder = "#EAEAE5";
-export const accent = "#6366F1"; // Indigo — neuer Marken-Akzent (wie Notfallmodus-Knopf, Normalzustand)
-export const accentDark = "#4338CA";
+// Kräftiger/gesättigter als zuvor (Nutzerinnen-Vorgabe, 16.08.: "die Farben
+// etwas catchier, etwas stärker" — Home-Menü und Bereichsfarben wirkten zu
+// blass/zurückhaltend). Gleicher Indigo-Ton, nur satter statt heller.
+export const accent = "#4D51F8"; // Indigo — Marken-Akzent (wie Notfallmodus-Knopf, Normalzustand)
+export const accentDark = "#2F22D6";
 export const accentSoft = "#EEF0FF";
 export const blue = "#4A6FA5"; // "geplant" / sekundäre Infos
 export const blueSoft = "#EAF0F8";
