@@ -1,5 +1,36 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 25) — CGM-Leitfaden: epidemiologischer ADHS-Diabetes-Zusammenhang ergänzt
+
+Direkt im Anschluss an Teil 24 (Commit `d56169a`). Nutzerinnen-Nachfrage:
+"Hast Du auch den Bezug von ADHS und Diabetes gemacht?" — zu Recht,
+der bisherige CGM-Text behandelte nur die Symptom-Überlappung
+(Blutzuckerabfall fühlt sich wie eine ADHS-Krise an), nicht den
+eigentlichen statistischen Zusammenhang zwischen den beiden Diagnosen
+selbst.
+
+Neuer Abschnitt 2 "ADHS und Diabetes: der epidemiologische
+Zusammenhang" (per WebSearch recherchiert), mit einer differenzierten,
+aktuellen Einordnung: Die reine Assoziation ist gut belegt
+(Meta-Analysen, adjustiertes Odds Ratio ~2,3 für Typ-2-Diabetes bei
+ADHS) — aber eine aktuelle (2024) bevölkerungsweite Geschwister-
+Vergleichsstudie (methodisch stark, rechnet familiäre/genetische
+Faktoren heraus) findet für ADHS **allein** nur einen vernachlässigbaren
+direkten Effekt auf das Diabetes-Risiko. Die eigentlichen Treiber
+scheinen psychiatrische Begleiterkrankungen (Substanzkonsum,
+Depression, Angst) und gemeinsame familiäre Faktoren zu sein, nicht ein
+direkter ADHS-→-Diabetes-Mechanismus. Ergänzt um die entwicklungsbezogene
+Gegenrichtung (mütterlicher Diabetes in der Schwangerschaft und
+ADHS-Risiko beim Kind) sowie einen Querverweis auf den
+Insulinresistenz/HOMA-IR-Abschnitt des Laborwerte-Leitfadens aus Teil
+22/23. Restliche Abschnitte umnummeriert, alle internen
+Selbstverweise geprüft und korrigiert.
+
+`npm run build` erfolgreich geprüft, PDF neu erstellt (7 statt 6
+Seiten) und verschickt. Keine Migration, keine Edge Function nötig.
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 24) — Neuer Leitfaden "Kontinuierliche Blutzuckermessung (CGM)"
 
 Direkt im Anschluss an Teil 23 (Commit `cc1af28`). Nutzerin lieferte ein
