@@ -11,6 +11,13 @@
 -- eine überschaubare Coaching-Gruppe) — deshalb team_id direkt als Spalte
 -- auf profiles statt einer eigenen n:m-Tabelle, analog is_admin/steckbrief.
 
+-- Nachgezogen: quest_fortschritt.angenommen (aus 0070_quests.sql) wurde
+-- erst NACH dem ursprünglichen Deploy dieser Tabelle ergänzt (siehe
+-- UEBERGABEPROTOKOLL.md Teil 7) — quest_rangliste() unten braucht die
+-- Spalte, deshalb hier zur Sicherheit nochmal mit "if not exists"
+-- nachgeholt, statt sich auf den Stand von 0070 zu verlassen.
+alter table public.quest_fortschritt add column if not exists angenommen boolean;
+
 create table public.teams (
   id uuid primary key default gen_random_uuid(),
   name text not null,
