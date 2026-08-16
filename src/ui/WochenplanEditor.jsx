@@ -364,7 +364,7 @@ export default function WochenplanEditor({
               />
             </div>
           )}
-          {onErinnerungenTrainingUmschalten && erinnerungenTrainingAktiv && onTrainingsVorlaufAendern && (
+          {onErinnerungenTrainingUmschalten && onTrainingsVorlaufAendern && (
             <VorlaufFeld value={trainingsVorlaufMinuten} onChange={onTrainingsVorlaufAendern} mitTagen />
           )}
           {wochenplanErinnerungenAlleSetzen && (

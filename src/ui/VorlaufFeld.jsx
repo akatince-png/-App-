@@ -8,6 +8,7 @@ const OPTIONEN_BASIS = [
   { minuten: 10, label: "10 Min." },
   { minuten: 15, label: "15 Min." },
   { minuten: 30, label: "30 Min." },
+  { minuten: 45, label: "45 Min." },
   { minuten: 60, label: "1 Std." },
   { minuten: 120, label: "2 Std." },
 ];

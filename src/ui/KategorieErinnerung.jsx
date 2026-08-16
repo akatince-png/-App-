@@ -12,6 +12,12 @@ import { useT } from "../i18n/translate";
 // (CATEGORY_STEPS-Liste), hier wiederverwendbar für Kategorien mit eigener
 // Ansicht, die vorher gar keine oder nur eine Ja/Nein-Erinnerung ohne
 // Vorlauf-Auswahl hatten.
+//
+// Der Vorab-Hinweis war bisher hinter "Erinnerung: Ja" versteckt (erst nach
+// dem Umschalten sichtbar) — Nutzerin fand ihn wiederholt nicht (16.08.:
+// "ich hab immer noch nicht sehen können, dass ich das einstelle"). Jetzt
+// immer sichtbar: eine Vorlauf-Auswahl aktiviert die Erinnerung von sich aus
+// mit (siehe setVorlauf unten), kein zweiter Schritt mehr nötig.
 export default function KategorieErinnerung({ kategorie, label, mitTagen = false }) {
   const { erinnerungen, setErinnerung } = useAppData();
   const { t } = useT();
@@ -29,7 +35,7 @@ export default function KategorieErinnerung({ kategorie, label, mitTagen = false
         <Label>{label}</Label>
         <Pill label={wert ? t("common.erinnerung.ja") : t("common.erinnerung.nein")} selected={!!wert} onClick={() => setErinnerung(kategorie, !wert)} />
       </div>
-      {wert && <VorlaufFeld value={vorlaufMinuten} onChange={setVorlauf} mitTagen={mitTagen} />}
+      <VorlaufFeld value={vorlaufMinuten} onChange={setVorlauf} mitTagen={mitTagen} />
     </div>
   );
 }
