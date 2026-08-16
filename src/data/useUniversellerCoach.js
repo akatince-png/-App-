@@ -1,6 +1,7 @@
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import { useAppData } from "../context/AppDataContext";
+import { toLocalISODate } from "../utils/dates";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -13,6 +14,8 @@ export const BEREICH_LABELS = {
   tageslicht: "Ziel übernehmen",
   training: "Plan übernehmen",
   ernaehrung: "Rezepte übernehmen",
+  schlaf: "Eintragen",
+  workflow: "Workflow anlegen",
 };
 
 // Geteilte Logik des universellen Coaches (anders als die Bereichs-Chats
@@ -34,6 +37,10 @@ export function useUniversellerCoach() {
     erinnerungen,
     setErinnerung,
     aenderungVermerken,
+    schlafHinzufuegen,
+    workflowPresetHinzufuegen,
+    workflowPresetAendern,
+    workflowPlanHinzufuegen,
   } = useAppData();
 
   // Übergabe an <KiChat pruefeBereitschaft>: läuft im Hintergrund nach
@@ -144,6 +151,41 @@ export function useUniversellerCoach() {
         const fehlgeschlagen = ergebnisse.find((r) => !r?.ok);
         if (fehlgeschlagen) throw new Error(fehlgeschlagen.error || "Speichern fehlgeschlagen.");
         return { bereich: "ernaehrung", daten: rezepte };
+      }
+      case "schlaf": {
+        const s = await AIService.schlafAusChat({ verlauf, coachName });
+        const eintrag = {
+          datum: toLocalISODate(new Date()),
+          stunden: String(s.stunden),
+          schlafqualitaet: s.schlafqualitaet || "",
+          einschlafzeit: s.einschlafzeit || "",
+          durchgeschlafen: s.durchgeschlafen ?? null,
+          erholt: s.erholt ?? null,
+          traeume: s.traeume || "",
+          bemerkungen: s.bemerkungen || "",
+        };
+        const result = await schlafHinzufuegen(eintrag);
+        if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
+        return { bereich: "schlaf", daten: eintrag };
+      }
+      case "workflow": {
+        const w = await AIService.workflowAusChat({ verlauf, coachName });
+        const presetResult = await workflowPresetHinzufuegen(w.name);
+        if (!presetResult?.ok) throw new Error(presetResult?.error || "Speichern fehlgeschlagen.");
+        const arbeitMin = w.arbeitMin || 25;
+        const pauseMin = w.pauseMin || 5;
+        const gesamtMin = w.gesamtMin || 100;
+        await workflowPresetAendern(presetResult.preset.id, { arbeitMin: String(arbeitMin), pauseMin: String(pauseMin), gesamtMin: String(gesamtMin) });
+        if (w.uhrzeit || w.wochentage?.length) {
+          await workflowPlanHinzufuegen({ presetId: presetResult.preset.id, wochentage: w.wochentage || [], uhrzeit: w.uhrzeit || "" });
+        }
+        aenderungVermerken({
+          kategorie: "workflow",
+          itemName: w.name,
+          aktion: "hinzugefügt",
+          detail: `${arbeitMin} Min. Arbeit / ${pauseMin} Min. Pause${w.uhrzeit ? ` · ${w.uhrzeit} Uhr` : ""}`,
+        });
+        return { bereich: "workflow", daten: { ...w, arbeitMin, pauseMin, gesamtMin } };
       }
       default:
         return { bereich: null };

@@ -142,6 +142,9 @@ export default function GewohnheitenView({ onHome }) {
     routineSchrittEntfernen,
     routineSchrittVerschieben,
     routineDurchlaufSpeichern,
+    workflowPresetHinzufuegen,
+    workflowPresetAendern,
+    workflowPlanHinzufuegen,
   } = useAppData();
 
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
@@ -207,6 +210,31 @@ export default function GewohnheitenView({ onHome }) {
       detail: g.uhrzeit ? `Uhrzeit: ${g.uhrzeit}` : g.urzeitVon ? `Zeitfenster: ${g.urzeitVon}–${g.urzeitBis}` : "",
     });
     return g;
+  };
+
+  // Übergabe an <KiChat onUebernehmen> fürs Workflow-Preset (16.08.,
+  // Nutzerin-Vorgabe: "wenn ich beschließe, einen Workflow... zu
+  // übernehmen, soll die KI den Eintrag machen") — legt das Preset über
+  // useWorkflowData an (Standardwerte 25/5/100 wie im manuellen Formular)
+  // und ordnet bei Bedarf gleich noch Wochentag(e)/Uhrzeit zu.
+  const handleWorkflowUebernehmen = async (verlauf) => {
+    const w = await AIService.workflowAusChat({ verlauf, coachName: getCoachName() });
+    const presetResult = await workflowPresetHinzufuegen(w.name);
+    if (!presetResult?.ok) throw new Error(presetResult?.error || "Speichern fehlgeschlagen.");
+    const arbeitMin = w.arbeitMin || 25;
+    const pauseMin = w.pauseMin || 5;
+    const gesamtMin = w.gesamtMin || 100;
+    await workflowPresetAendern(presetResult.preset.id, { arbeitMin: String(arbeitMin), pauseMin: String(pauseMin), gesamtMin: String(gesamtMin) });
+    if (w.uhrzeit || w.wochentage?.length) {
+      await workflowPlanHinzufuegen({ presetId: presetResult.preset.id, wochentage: w.wochentage || [], uhrzeit: w.uhrzeit || "" });
+    }
+    aenderungVermerken({
+      kategorie: "workflow",
+      itemName: w.name,
+      aktion: "hinzugefügt",
+      detail: `${arbeitMin} Min. Arbeit / ${pauseMin} Min. Pause${w.uhrzeit ? ` · ${w.uhrzeit} Uhr` : ""}`,
+    });
+    return { ...w, arbeitMin, pauseMin, gesamtMin };
   };
 
   const handleEntfernen = (g) => {
@@ -314,6 +342,23 @@ export default function GewohnheitenView({ onHome }) {
           </div>
           <SpotifyAnlassPicker anlass="gewohnheiten" label="" />
         </Card>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <KiChat
+          bereich="workflow"
+          systemPrompt="Du hilfst dabei, ein neues Workflow-Preset (Arbeits-/Pause-Intervalltimer, Pomodoro-artig) für eine bestehende App einzurichten. Frag nach, was noch fehlt (Name, Arbeitsintervall in Minuten, Pausenintervall in Minuten, Gesamtdauer der Session, optional feste Wochentage/Uhrzeit für einen Zeitplan), bevor ihr fertig seid — ein fester Zeitplan ist optional, ohne ihn erscheint das Preset einfach ohne feste Zuordnung. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+          einleitung={`Hi, ich bin ${getCoachName()}! Welchen Workflow möchtest du dir einrichten?`}
+          onUebernehmen={handleWorkflowUebernehmen}
+          uebernehmenLabel="Workflow anlegen"
+          renderErgebnis={(w) => (
+            <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+              "{w.name}" wurde angelegt · {w.arbeitMin} Min. Arbeit / {w.pauseMin} Min. Pause
+              {w.uhrzeit ? ` · ${w.uhrzeit} Uhr` : ""}
+              {w.wochentage?.length ? ` · ${w.wochentage.join(", ")}` : ""}
+            </div>
+          )}
+        />
       </div>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🔔 Erinnerungen</div>

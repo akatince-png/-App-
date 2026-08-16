@@ -229,10 +229,11 @@ export const AIService = {
         "um es in genau einen der folgenden Themenbereiche zu übernehmen:",
         "gewohnheit (neue Gewohnheit/Routine), supplement (neues Supplement),",
         "medikament (neues Medikament/Hormon), hydration (Trinkziel/-erinnerungen),",
-        "tageslicht (Tageslicht-/Freiluft-Ziel), training (Trainingsplan), ernaehrung (Rezepte/Mahlzeiten).",
+        "tageslicht (Tageslicht-/Freiluft-Ziel), training (Trainingsplan), ernaehrung (Rezepte/Mahlzeiten),",
+        "schlaf (Schlaf-Eintrag für die letzte Nacht), workflow (neues Arbeits-/Pause-Intervall-Preset).",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -427,6 +428,43 @@ export const AIService = {
     const antwort = await sendeAnfrage({ system, messages, json: true });
     const data = parseJsonAntwort(antwort);
     if (typeof data.zielMinuten !== "number") throw new Error("Unerwartetes Format: 'zielMinuten' fehlt oder ist keine Zahl.");
+    return data;
+  },
+
+  /**
+   * Extrahiert aus einem geführten Workflow-Gespräch (siehe coachChat()) ein
+   * neues Intervall-Preset, optional direkt mit einer Zeitplan-Zuordnung
+   * (Wochentage + Uhrzeit) — Format entspricht dem, was
+   * workflowPresetHinzufuegen()/workflowPresetAendern()/
+   * workflowPlanHinzufuegen() erwarten (siehe useWorkflowData.js). Einziger
+   * Bereich ohne bestehende Chat-Übernahme (Nutzerin-Vorgabe, 16.08.: "wenn
+   * ich beschließe, einen Workflow... zu übernehmen, soll die KI den
+   * Eintrag machen").
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{name: string, arbeitMin: number, pauseMin: number, gesamtMin: number, wochentage: string[], uhrzeit: string}>}
+   */
+  async workflowAusChat({ verlauf, coachName }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der ein neues Workflow-Preset (Arbeits-/Pause-Intervalltimer, Pomodoro-artig) für Nutzer anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt als fertiges Preset zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "name": string (z. B. "Fokus-Sessions"), "arbeitMin": number (Arbeitsintervall in Minuten, Standard 25 falls nicht genannt), ' +
+          '"pauseMin": number (Pausenintervall in Minuten, Standard 5 falls nicht genannt), "gesamtMin": number (Gesamtdauer der Session in Minuten, Standard 100 falls nicht genannt), ' +
+          '"wochentage": string[] (Kürzel aus ["Mo","Di","Mi","Do","Fr","Sa","So"], leeres Array wenn kein fester Wochentag besprochen wurde), ' +
+          '"uhrzeit": string ("HH:MM" falls eine feste Startzeit besprochen wurde, sonst leer) }',
+      ].join(" ")
+    );
+    const messages = [
+      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+      { role: "user", content: "Fasse das oben besprochene Workflow-Preset jetzt als JSON zusammen, wie vereinbart." },
+    ];
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    const data = parseJsonAntwort(antwort);
+    if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
 
