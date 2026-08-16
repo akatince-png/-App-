@@ -1,5 +1,54 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 13) — Ernährungs-Wissen ausgebaut + Sitzungsabschluss
+
+Letzte Runde der Sitzung, direkt im Anschluss an Teil 12. Zwei Themen:
+
+**1. Härtere Sperre gegen Selbstregistrierung vertagt.** Die Nutzerin
+wollte das eigentlich (Begründung: Piraterie-/Neugier-Schutz, sobald sie
+öffentlich über die App spricht), hat es dann aber bewusst zurückgestellt
+zugunsten des zweiten Themas unten — als offener Punkt #24 dokumentiert
+(inkl. Zwischenstand: "Enable email provider" NICHT anfassen, vermuteter
+"Allow new users to sign up"-Schalter unter einem "User Signups"-Bereich
+auf der Hauptseite "Sign In / Providers" noch zu bestätigen).
+
+**2. Umfassender Ernährung-bei-ADHS-Leitfaden** (Commit `38e067d`) —
+Nutzerinnen-Vorgabe: nach Medikamente/Supplemente/Schlaf/Tageslicht/
+isometrischem Training war Ernährung der letzte große Bereich ohne
+detailliertes Hintergrundwissen. Zwei Ausgaben, ein Inhalt:
+- `src/wissen/ernaehrung/ernaehrung-bei-adhs.md` ersetzt den bisherigen
+  Platzhalter — wird wie jede Datei unter `src/wissen/` automatisch in
+  den Hintergrundkontext des KI-Assistenten eingebunden (siehe
+  `utils/wissensBasis.js`, "alles wird an jede Anfrage angehängt", keine
+  Vektorsuche). **Zu bedenken für die Zukunft**: die Datei ist mit
+  Abstand die umfangreichste unter `src/wissen/` (die Bundle-Größe stieg
+  dadurch spürbar, ca. 15 KB) — sie fließt in JEDEN KI-Chat der App ein,
+  nicht nur ernährungsbezogene. Bei weiterem Wachstum der Wissens-Basis
+  (z. B. wenn Medikamente/Supplemente/Schlaf irgendwann ähnlich
+  ausführlich wie hier nachgezogen werden) sollte über eine gezieltere
+  Auswahl pro Anfrage nachgedacht werden, statt weiter alles an jede
+  Anfrage anzuhängen.
+- Inhaltlich behandelt: warum Ernährung bei ADHS überhaupt relevant ist
+  (Neurotransmitter-Bausteine, Blutzucker, Darm-Hirn-Achse), die drei
+  Makronährstoffe im Detail, intermittierendes Fasten differenziert
+  (Pro/Contra spezifisch für ADHS, wann es trotzdem infrage kommt), warum
+  regelmäßige Mahlzeiten meist die bessere Standardempfehlung sind,
+  wann sich der Ernährungsbedarf je nach Lebensumständen ändert
+  (Training, Medikamenten-Titration, Stress, Zyklus, Schlafmangel),
+  Getränke, sowie Lebensmittel-/Getränkelisten (empfehlenswert/eher
+  meiden) je Kategorie.
+- Zusätzlich als eigenständiges PDF-Handbuch erstellt und der Nutzerin
+  direkt geschickt ("Ernährung bei ADHS — Handbuch", 7 Seiten,
+  reportlab-generiert) — bewusst NICHT in die bestehende
+  `coach_wissen`-Content-Library (DB-gestützt, siehe Migrationen
+  `coach_wissen_*`) eingepflegt, das hat die Nutzerin explizit auf später
+  vertagt ("kann man später irgendwie reinhängen").
+
+Sitzung von der Nutzerin für den Moment beendet ("das wäre echt noch das,
+was du machen sollst ... bis ich die nächsten Tage wieder zu dir komme").
+
+---
+
 ## 🔴 Update 16.08.2026, Fortsetzung (Teil 12) — Einladungssystem statt offener Registrierung + wählbarer Onboarding-Umfang
 
 Direkt im Anschluss an Teil 11, ausgelöst durch zwei Beobachtungen der
