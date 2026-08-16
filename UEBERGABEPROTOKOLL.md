@@ -1,5 +1,25 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 11) — Test-Coachee-Zugangsdaten sichtbar (separates Login statt nur "Verwalten")
+
+Direkt im Anschluss an Teil 10. Nutzerinnen-Vorgabe: sie will die App auch
+"aus der Coacheeperspektive" nutzen können, mit einem SEPARATEN Zugang statt
+über ihren eigenen Admin-Zugang. Wichtige Klarstellung dabei: "Verwalten
+als" leistet das NICHT — dabei bleibt `istAdminModus` technisch immer
+`true` (`proband !== null || isAdmin`), man sieht dort also absichtlich
+weiterhin die Admin-Ansicht (Assistent statt Coachee-Startseite mit
+Quests/Rangliste/Team-Karte), damit die Admin für die Person einrichten
+kann, ohne deren Sicht simulieren zu müssen.
+
+Behoben (Commit `d479304`): der in Teil 10 gebaute "🧪 Test-Coachee
+erstellen"-Knopf zeigt die generierte E-Mail + das Passwort jetzt direkt
+an (mit Kopieren-Knopf), statt sie wie beim normalen "+ Neuen Zugang
+anlegen"-Formular zu verstecken. Damit kann sich die Nutzerin in einem
+privaten/separaten Browser-Tab wirklich als Nicht-Admin-Person einloggen
+und die echte Coachee-Ansicht sehen.
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 10) — Teams-Deploy: drei Fixes beim Ausführen gefunden + Test-Coachee-Knopf
 
 Direkt im Anschluss an Teil 9, während die Nutzerin die neue Teams-
