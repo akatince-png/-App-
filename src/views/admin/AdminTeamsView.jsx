@@ -100,11 +100,13 @@ export default function AdminTeamsView({ onHome }) {
         const mitglieder = coachees.filter((c) => c.team_id === team.id);
         return (
           <Card key={team.id} style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: textMain }}>{team.name}</div>
-              <PrimaryButton variant="ghost" onClick={() => teamLoeschen(team.id)}>
-                Team löschen
-              </PrimaryButton>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: textMain, minWidth: 0 }}>{team.name}</div>
+              <div style={{ width: 120, flexShrink: 0 }}>
+                <PrimaryButton variant="ghost" onClick={() => teamLoeschen(team.id)}>
+                  Team löschen
+                </PrimaryButton>
+              </div>
             </div>
 
             {mitglieder.length === 0 ? (
