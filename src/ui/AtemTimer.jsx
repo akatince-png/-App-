@@ -134,7 +134,12 @@ export default function AtemTimer({ uebung, onFertig, kompakt = false }) {
 
   const restSekAnzeige = Math.max(0, Math.ceil(phaseZielSek() - phaseElapsedMs() / 1000));
   const ringTotal = status === "idle" || status === "done" ? null : phaseZielSek();
-  const ringDone = ringTotal != null ? Math.max(0, ringTotal - phaseElapsedMs() / 1000) : null;
+  // ProgressRing füllt sich nach done/total (siehe ProgressRing.jsx: pct =
+  // done/total) — done muss also mit der Zeit STEIGEN (verstrichene Zeit),
+  // nicht sinken. War vorher versehentlich mit der Restzeit-Formel
+  // verwechselt (total - verstrichen), wodurch der Ring rückwärts von voll
+  // auf leer lief statt sich zu füllen.
+  const ringDone = ringTotal != null ? Math.min(ringTotal, phaseElapsedMs() / 1000) : null;
 
   return (
     <div style={{ textAlign: "center" }}>
