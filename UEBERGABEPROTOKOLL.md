@@ -1,5 +1,86 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔴 Update 16.08.2026, Fortsetzung (Teil 19) — Neuer Protokollbereich "Atemübungen" + Akutmodus-Dokumentation
+
+Direkt im Anschluss an Teil 18 (Commit `0fe62a9`). Nutzerinnen-Vorgabe:
+ein komplett neuer, eigener Protokollbereich für Atemübungen —
+konfigurierbares Muster (Sek. einatmen/halten/ausatmen), 10 Sek.
+Vorbereitungszeit mit hörbarem Ticken, danach geführter Phasenwechsel
+mit demselben Erinnerungston wie beim Wecker, schriftliche Anleitung
+statt Sprachausgabe (keine KI nötig). Zusätzlich: die Übung soll sich
+auch im Akutmodus starten lassen, und der Akutmodus soll dokumentieren,
+was gemacht wurde und ob es geholfen hat.
+
+**Neuer Protokollbereich:**
+- Migration `0076_atemuebungen.sql`: drei neue Tabellen —
+  `atemuebungen` (Presets: Name, Sek. je Phase, Gesamtdauer),
+  `atemuebung_logs` (abgeschlossene Sitzungen inkl. optionalem
+  Gefühls-Check-in danach), `akutmodus_log` (schlanke Dokumentation
+  für den Akutmodus, siehe unten).
+- `AtemTimer.jsx` (neu): eigenständiger 3-Phasen-Timer. **Bewusst
+  NICHT** der bestehende, überall verwendete `Timer.jsx` erweitert
+  (der kennt technisch nur zwei Phasen "arbeit"/"pause") — ein Umbau
+  hätte alle bisherigen Einsatzstellen (isometrisches Training,
+  Workflow-Intervalle) riskiert. Stattdessen eine neue, unabhängige
+  Komponente, die dieselben bewährten Bausteine wiederverwendet:
+  `playBeep`/`playTick` aus `utils/beep.js` (bereits vorhanden, u. a.
+  vom isometrischen Training — genau der "Ticken pro Sekunde"- und
+  "Erinnerungston"-Effekt, den die Nutzerin wollte, existierte also
+  schon), `ProgressRing`, echte Timestamp-Anker statt Zähl-Ticks (keine
+  Drift). Beendet den Zyklus immer erst nach einem vollständigen
+  Ausatmen, nie mitten im Atemzug.
+- `AtemuebungenView.jsx` (neu): Presets anlegen/löschen, Starten öffnet
+  den Timer, Verlauf der letzten Sitzungen.
+- Neues "wind"-Icon im Linien-Icon-Set (`Icon.jsx`).
+- Als vollwertiger Protokollbereich integriert (analog zu
+  Gewohnheiten, dem einzigen bisherigen Bereich mit demselben Muster):
+  toggle-bar in `BAUSTEINE_KATEGORIEN` (MehrTab.jsx, Aktiv/Inaktiv wie
+  die anderen 8 Bausteine), `KATEGORIE_META`-Eintrag (dayItems.js) für
+  Farbkonsistenz, Direktzugriff über "Alle Pläne" → Routinen-Liste
+  (PlaeneView.jsx, neben "Gewohnheiten") statt über die 9-Reiter-
+  Zeitplanung (die ist für die aufwendiger geplanten Bereiche gedacht,
+  Atemübungen ist bewusst ein einfacheres On-Demand-Werkzeug — bewusst
+  NICHT in `PLAENE_TABS`/Wochenübersicht/Onboarding-Schritte
+  eingebaut, das wäre deutlich mehr Umfang gewesen, als die Nutzerin
+  mit "nicht allzu umfangreich" angefragt hatte).
+
+**Akutmodus erweitert** (`AkutModusKarte.jsx`, `useAkutModus.js`):
+- Neue Option "🌬️ Atemübung machen" ganz oben im Panel — startet
+  direkt die erste angelegte Übung, oder falls noch keine angelegt
+  wurde, eine sinnvolle Standardübung (4-4-6 Sek., 3 Minuten), damit
+  der Akutmodus sofort nutzbar ist, ohne vorher eine Übung anlegen zu
+  müssen.
+- Emoji 🧘 auf Nutzerinnen-Wunsch durch ⭐ ersetzt (bei "Als Akut-Übung
+  merken" in GewohnheitenView.jsx).
+- **Einfache Dokumentation ergänzt** (`akutmodusEreignisLoggen()`,
+  neue Tabelle `akutmodus_log`): Nach jeder Akutmodus-Aktion (Symptom-
+  Kachel, Akut-Übung, Freitext, Atemübung) fragt die App "Geht's dir
+  jetzt besser?" (😊/😐/😞/Überspringen) und speichert Aktion +
+  Rückmeldung. Das ist eine **bewusst schlanke** erste Version der
+  Nutzerinnen-Vorgabe ("wie oft hatte er so einen Anfall, wie ist er
+  damit umgegangen, ist es besser geworden") — reicht für Häufigkeit/
+  Wirksamkeit auf Aktions-Ebene.
+
+**Bewusst NICHT umgesetzt** (expliziter Folgepunkt, siehe Offene
+Punkte #33): die volle von der Nutzerin skizzierte Verzweigung
+"Notfallmodus → Atemübung ODER Supplement ODER Medikament als
+Optionen", jeweils mit eigener Doku. Das würde bedeuten, Supplement-/
+Medikamenten-Einnahmen aus dem Akutmodus heraus auszulösen und als
+"wegen eines Akutmodus-Ereignisses genommen" zu kennzeichnen — ein
+eigener, nicht kleiner Ausbauschritt mit eigenem Datenmodell-Bedarf,
+der den heutigen Umfang gesprengt hätte. Aktuell deckt der Akutmodus
+Atemübung + Symptom-Kacheln + persönliche Akut-Übung + Freitext ab.
+
+`npm run build` erfolgreich geprüft. **Nicht im Browser getestet**
+(Sandbox ohne Supabase-Login) — Timer-Logik sorgfältig per Code-Review
+geprüft (Phasenübergänge, Rundung, Abbruch während Vorbereitung,
+Beenden-Knopf jederzeit verfügbar).
+
+**🔴 Deploy nötig**: nur die neue Migration `0076` — keine
+Edge-Function-Änderung diesmal.
+
+---
+
 ## 🔴 Update 16.08.2026, Fortsetzung (Teil 18) — Akutmodus überarbeitet: Layout + vorab festlegbare Akut-Übung
 
 Direkt im Anschluss an Teil 17, Feedback zum gerade gebauten Akutmodus
@@ -1673,7 +1754,10 @@ sonst nie auffallen lassen.
 | 28 | Wissensbasis-Größe (`src/wissen/`) — gezielte Auswahl statt "alles an jede Anfrage anhängen" | 🟡 Nach Teil 15 kein theoretisches Later-Thema mehr, sondern realer Kosten-/Latenz-Faktor bei jedem KiChat-Aufruf (9 umfangreiche Themen-Dateien plus Ernährung). Für das Lexikon bereits gezielte Auswahl pro Kategorie umgesetzt (Teil 15) — Vorbild für eine ähnliche Lösung bei KiChat |
 | 29 | Edge Function `lexikon` erneut neu deployen | 🔴 Teil 17: `modus: "akut"`-Feld für den neuen Akutmodus-Knopf hinzugefügt — ohne erneutes manuelles Redeploy bleibt der Knopf ohne Wirkung (kein Absturz, nur keine Antwort) |
 | 30 | Akutmodus-Feature im Browser end-to-end testen | 🟡 Teil 17/18: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login), nur per Code-Review geprüft — die Nutzerin sollte einmal selbst durchklicken (Layout, Symptom antippen, Freitext, Akut-Übung markieren + starten, "An Coach schicken"), bevor sie sich darauf verlässt |
-| 31 | Migration `0075_gewohnheit_akut_favorit.sql` ausführen | 🔴 Teil 18: ohne diese Spalte wirft "🧘 Als Akut-Übung merken" in den Gewohnheiten einen Datenbankfehler |
+| 31 | Migration `0075_gewohnheit_akut_favorit.sql` ausführen | 🔴 Teil 18: ohne diese Spalte wirft "⭐ Als Akut-Übung merken" in den Gewohnheiten einen Datenbankfehler |
+| 32 | Migration `0076_atemuebungen.sql` ausführen | 🔴 Teil 19: ohne die drei neuen Tabellen wirft der komplette Atemübungen-Bereich UND die "🌬️ Atemübung machen"-Option im Akutmodus einen Datenbankfehler |
+| 33 | Akutmodus: volle Verzweigung zu Supplementen/Medikamenten als Option | 🟡 Von der Nutzerin skizziert (Teil 19: "auch Supplemente könnten helfen, auch Medikationen"), bewusst noch nicht umgesetzt — würde eigenes Datenmodell brauchen (Einnahme aus Akutmodus heraus auslösen + als "wegen Akutmodus-Ereignis" kennzeichnen), separater Ausbauschritt |
+| 34 | Atemübungen-Feature im Browser end-to-end testen | 🟡 Teil 19: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login) — Timer-Logik nur per Code-Review geprüft. Besonders prüfen: Ton bei Phasenwechseln, Ticken in der Vorbereitung, sauberer Abschluss nach vollständigem Ausatmen, Akutmodus-Einbindung |
 
 ---
 
