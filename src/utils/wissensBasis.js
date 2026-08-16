@@ -28,3 +28,27 @@ const WISSENS_BASIS_TEXT = (() => {
 export function wissensBasisText() {
   return WISSENS_BASIS_TEXT;
 }
+
+// Für die Lexikon-Funktion (LexikonView.jsx, useLexikon.js): liefert nur
+// den Wissens-Basis-Text eines einzelnen Themenordners statt der
+// kompletten, an KiChat angehängten Sammlung — die Lexikon-Kategorien
+// (siehe LEXIKON_KATEGORIEN in constants.js) sind bewusst breiter als die
+// ADHS-Coaching-Wissensordner, deshalb bilden nicht alle auf einen
+// Ordner ab (z. B. "Hormone", "Anti-Aging" haben aktuell keinen eigenen
+// Wissensordner) — in diesem Fall liefert die Funktion "" zurück, die
+// Lexikon-Funktion antwortet dann wie bisher ohne kuratierten Kontext.
+const LEXIKON_KATEGORIE_ZU_ORDNER = {
+  Peptide: "peptide",
+  Supplemente: "supplemente",
+  Schlafgesundheit: "schlaf",
+};
+
+export function wissensBasisFuerLexikonKategorie(kategorie) {
+  const ordner = LEXIKON_KATEGORIE_ZU_ORDNER[kategorie];
+  if (!ordner) return "";
+  const treffer = Object.entries(DATEIEN)
+    .filter(([pfad]) => relativerPfad(pfad).startsWith(`${ordner}/`))
+    .sort(([a], [b]) => a.localeCompare(b));
+  if (treffer.length === 0) return "";
+  return treffer.map(([, inhalt]) => inhalt.trim()).join("\n\n");
+}

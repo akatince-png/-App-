@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { wissensBasisFuerLexikonKategorie } from "../utils/wissensBasis";
 
 export function useLexikon() {
   const [lexikonVerlauf, setLexikonVerlauf] = useState([]);
@@ -14,8 +15,9 @@ export function useLexikon() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      const kontext = wissensBasisFuerLexikonKategorie(kategorie);
       const { data, error } = await supabase.functions.invoke("lexikon", {
-        body: { frage: trimmed, kategorie },
+        body: { frage: trimmed, kategorie, kontext },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error || data?.error) throw new Error(data?.error || error.message);
@@ -47,8 +49,9 @@ export function useLexikon() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
+    const kontext = wissensBasisFuerLexikonKategorie(kategorie);
     const { data, error } = await supabase.functions.invoke("lexikon", {
-      body: { frage: trimmed, kategorie },
+      body: { frage: trimmed, kategorie, kontext },
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (error || data?.error) throw new Error(data?.error || error.message);

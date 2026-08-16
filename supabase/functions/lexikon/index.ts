@@ -39,13 +39,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { frage, kategorie } = await req.json();
+    const { frage, kategorie, kontext } = await req.json();
     if (!frage || typeof frage !== "string") {
       return new Response(JSON.stringify({ error: "Feld 'frage' fehlt." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Wenn der Client zur gewählten Kategorie kuratierten Kontext aus der
+    // App-eigenen Wissensbasis mitschickt (src/wissen/, siehe
+    // wissensBasisFuerLexikonKategorie() in utils/wissensBasis.js), wird
+    // die Antwort darauf gestützt statt rein aus freiem Modellwissen zu
+    // kommen — Ziel: Konsistenz zwischen dem, was die App im Lexikon
+    // antwortet, und den kuratierten Coaching-Unterlagen. Nicht jede
+    // Kategorie hat einen eigenen Wissens-Ordner (z. B. "Hormone",
+    // "Anti-Aging") — dann ist kontext leer und die Antwort kommt wie
+    // bisher aus freiem Modellwissen.
+    const kontextBlock =
+      typeof kontext === "string" && kontext.trim()
+        ? `\n\nStütze deine Antwort auf folgenden kuratierten Hintergrundtext, sofern er zur Frage passt (nicht wörtlich zitieren, sinngemäß wiedergeben):\n\n${kontext.trim()}`
+        : "";
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -62,7 +76,7 @@ Deno.serve(async (req) => {
             role: "user",
             content: `Du bist das Lexikon einer Protokoll- und Biohacking-App, aktueller Themenbereich: "${
               kategorie || "Allgemein"
-            }". Beantworte die folgende Frage kurz, sachlich und leicht verständlich in 3-5 Sätzen auf Deutsch. Keine Dosierungsempfehlungen oder medizinische Handlungsanweisungen geben, nur allgemeine, informative Fakten. Frage: ${frage}`,
+            }". Beantworte die folgende Frage kurz, sachlich und leicht verständlich in 3-5 Sätzen auf Deutsch. Keine Dosierungsempfehlungen oder medizinische Handlungsanweisungen geben, nur allgemeine, informative Fakten. Frage: ${frage}${kontextBlock}`,
           },
         ],
       }),
