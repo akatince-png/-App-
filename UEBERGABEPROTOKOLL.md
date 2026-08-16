@@ -1,5 +1,74 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 14) — Ernährungs-Leitfaden um viele Ernährungsweisen + aktuelle Studienlage erweitert
+
+Sitzung wurde entgegen der Ankündigung in Teil 13 doch fortgesetzt:
+Nutzerin sah den fertigen Leitfaden aus Teil 13, stellte klar,
+intermittierendes Fasten sei "nur ein Beispiel" gewesen, und wollte
+viele wissenschaftlich untersuchte Ernährungsweisen bei ADHS abgedeckt
+haben — inklusive solcher, die noch früh in der Forschung stehen, aber
+Potenzial zeigen, mit der **aktuellsten Studienlage**, "noch
+akademischer", damit sie es gefiltert an ihre Coachees weitergeben
+kann (Commit `581d40f`).
+
+**Vorgehen:** Vor dem Schreiben mehrere Web-Recherchen zur aktuellen
+(2024–2026) Studienlage durchgeführt (allgemeine Ernährungsmuster,
+mediterrane Ernährung, Eliminationsdiäten/Farbstoffe/Feingold,
+ketogene Ernährung, Mikrobiom/Probiotika, Omega-3, intermittierendes
+Fasten, Mikronährstoffe, niedrig-glykämische Ernährung, gluten-/
+kaseinfreie Ernährung, Präzisionsernährung), um nicht nur aus
+Trainingswissen zu argumentieren.
+
+**`src/wissen/ernaehrung/ernaehrung-bei-adhs.md` inhaltlich erweitert:**
+- **Neuer Abschnitt 2.4** erklärt die Evidenzgrad-Logik (RCT vs.
+  Meta-Analyse vs. Beobachtungsstudie vs. mechanistisch/theoretisch
+  begründet) — Vokabular, das die Nutzerin auch im Coaching-Gespräch
+  nutzen kann.
+- **Abschnitt 2.2 (Fette/Omega-3) bewusst abgeschwächt**: eine aktuelle
+  (2024/2025) Meta-Analyse (~22 Studien, ~1.800 Teilnehmende) fand
+  **keinen** signifikanten Effekt von Omega-3-Supplementierung auf
+  ADHS-Kernsymptome — deutlich zurückhaltender als die vorherige
+  Formulierung. Ausführlich neu eingeordnet in **Abschnitt 3.9**.
+- **Neuer, großer Abschnitt 3** ("Ernährungsweisen und Diät-
+  Interventionen bei ADHS — aktuelle Studienlage") mit 11
+  Unterabschnitten, jeweils mit Evidenzgrad-Label (Etabliert/Moderat/
+  Aufkommend/Theoretisch), Mechanismus, Studienlage und
+  Praxis-Einordnung: 3.1 allgemeines Ernährungsmuster (gesund vs.
+  "westlich"), 3.2 mediterrane Ernährung (Ríos-Hernández 2017, Odds
+  Ratio ~7 bei geringer Einhaltung), 3.3 Eliminationsdiäten/künstliche
+  Farbstoffe/Feingold (Southampton-Studien, EU-Warnpflicht;
+  Few-Foods-Diät mit stärkeren, aber aufwendigeren Effekten), 3.4
+  niedrig-glykämische Ernährung, 3.5 ketogene Ernährung (früh, Oxford-
+  RCT in Planung), 3.6 Darmmikrobiom/Probiotika (uneinheitlich), 3.7
+  Mikronährstoffstatus (Eisen/Zink/Magnesium/Vitamin D), 3.8
+  intermittierendes Fasten (bestehender Inhalt aus Teil 13 übernommen,
+  jetzt mit explizitem Hinweis, dass direkte ADHS-Studien dazu
+  praktisch fehlen), 3.9 Omega-3 neu eingeordnet, 3.10 gluten-/
+  kaseinfreie Ernährung (schwache Evidenz für ADHS), 3.11
+  Präzisionsernährung (Zukunftsfeld).
+- Alte Abschnitte 4–8 (Mahlzeitenrhythmus, Lebensumstände, Getränke,
+  Lebensmittel-Listen, Coaching-Praxis) unverändert erhalten, nur
+  neu nummeriert; Abschnitt 7 um einen kurzen Verweis auf konkrete
+  E-Nummern der Farbstoffe aus 3.3 ergänzt.
+- **Neuer Abschnitt 9** listet die verwendeten Studien/Forschungsstränge
+  als Ausgangspunkt für eigene Vertiefung.
+- Datei wuchs von 301 auf 574 Zeilen. **Architektur-Hinweis aus Teil 13
+  bleibt bestehen und verschärft sich**: diese Datei ist jetzt noch
+  deutlicher die umfangreichste unter `src/wissen/` und fließt weiterhin
+  ungefiltert in JEDEN KI-Chat der App ein (`utils/wissensBasis.js`,
+  keine Vektorsuche). Beim nächsten Wachstumsschub der Wissens-Basis
+  sollte über gezieltere Auswahl pro Anfrage nachgedacht werden.
+
+**PDF-Handbuch neu erzeugt** (`build_pdf.py`, unverändert wiederverwendet)
+und der Nutzerin erneut geschickt — jetzt 13 statt 7 Seiten, Aufbau/
+Formatierung (Cover, Kapitel, Bullet-Listen, Fußzeile) unverändert
+funktionsfähig, per pymupdf stichprobenartig visuell geprüft.
+
+`npm run build` nach der Erweiterung erneut erfolgreich geprüft (Bundle
+wuchs weiter, siehe Architektur-Hinweis oben).
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 13) — Ernährungs-Wissen ausgebaut + Sitzungsabschluss
 
 Letzte Runde der Sitzung, direkt im Anschluss an Teil 12. Zwei Themen:
