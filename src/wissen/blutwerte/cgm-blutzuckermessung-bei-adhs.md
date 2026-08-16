@@ -25,7 +25,62 @@ statt allgemein zu wissen "Zucker ist schlecht fürs Gehirn", sieht man
 konkret, welche eigene Mahlzeit den eigenen Blutzucker wie stark
 schwanken lässt.
 
-## 2. Was ein CGM misst — und wie es sich von der klassischen Messung unterscheidet
+## 2. ADHS und Diabetes: der epidemiologische Zusammenhang
+
+Über die reine Symptom-Überlappung aus Abschnitt 1 hinaus gibt es einen
+zweiten, eigenständigen Zusammenhang, der oft übersehen wird: ADHS und
+Diabetes treten statistisch überdurchschnittlich häufig gemeinsam auf
+— und die aktuelle Forschung dazu liefert ein interessantes, differenzierteres
+Bild, als eine einzelne Schlagzeile vermuten lässt.
+
+**Die reine Assoziation ist gut belegt**: Eine Meta-Analyse findet bei
+Menschen mit ADHS ein mehr als verdoppeltes Risiko für Typ-2-Diabetes
+(adjustiertes Odds Ratio von etwa 2,3; ein weiterer Studienpool kommt
+auf ein Odds Ratio von rund 2,05) — über mehrere unabhängige
+Kohortenstudien hinweg konsistent in dieselbe Richtung.
+
+**Aber, wichtig für eine ehrliche Einordnung**: Eine aktuelle (2024)
+kombinierte Meta-Analyse mit einer bevölkerungsweiten
+**Geschwister-Vergleichsstudie** (ein methodisch besonders starkes
+Design, das familiäre/genetische Faktoren herausrechnet) kommt zu dem
+Schluss, dass ADHS **für sich genommen** nur einen vernachlässigbaren
+direkten Effekt auf das Typ-2-Diabetes-Risiko hat. Die eigentlichen
+Treiber der beobachteten Assoziation scheinen andere psychiatrische
+Begleiterkrankungen zu sein — allen voran Substanzkonsumstörungen,
+Depression und Angststörungen — sowie gemeinsame familiäre Faktoren,
+die ADHS und Diabetes-Risiko unabhängig voneinander beeinflussen.
+Kardiovaskuläre Risikofaktoren spielen der Untersuchung zufolge nur
+eine kleinere Rolle. **Praktisch heißt das**: Nicht "ADHS verursacht
+Diabetes", sondern eher "wer ADHS UND weitere Begleiterkrankungen hat,
+trägt ein deutlich höheres Diabetes-Risiko als jemand mit ADHS allein".
+
+**Eine zweite, entwicklungsbezogene Verbindungsrichtung**: Unabhängig
+von obigem Zusammenhang zeigen aktuelle Meta-Analysen, dass mütterlicher
+Diabetes während der Schwangerschaft (sowohl Schwangerschaftsdiabetes
+als auch bereits bestehender Typ-1- oder Typ-2-Diabetes) mit einem
+erhöhten ADHS-Risiko beim Kind einhergeht — eine andere Richtung des
+"bidirektionalen" Zusammenhangs zwischen den beiden Themenfeldern, die
+in der Schwangerschaftsvorsorge relevant ist, aber für das Coaching
+Erwachsener keine unmittelbare praktische Konsequenz hat.
+
+**Einordnung: Moderat bis gut belegt** für die reine Assoziation
+(Typ-2-Diabetes-Risiko bei ADHS), **aber differenzierter zu sehen** als
+ein einfacher Kausalzusammenhang — die aktuellste, methodisch stärkste
+Evidenz (Geschwisterstudie) spricht für gemeinsame Begleiterkrankungen/
+familiäre Faktoren als eigentliche Treiber statt für einen direkten
+ADHS-→-Diabetes-Mechanismus. Siehe auch Laborwerte-Wissen dieser App,
+Abschnitt 8, zu Insulinresistenz/HOMA-IR als möglichem Bindeglied auf
+Stoffwechselebene.
+
+**Praxis:** Bei Coachees mit ADHS UND weiteren Begleiterkrankungen
+(v. a. Depression, Angststörungen, riskanter Substanzkonsum) ist ein
+wacher Blick auf Stoffwechselgesundheit besonders sinnvoll — nicht,
+weil ADHS selbst zwangsläufig zu Diabetes führt, sondern weil sich
+Risikofaktoren hier häufig bündeln. Das rechtfertigt weder Panik noch
+Verharmlosung, sondern eine realistische, auf die Gesamtsituation statt
+nur auf die ADHS-Diagnose bezogene Einordnung.
+
+## 3. Was ein CGM misst — und wie es sich von der klassischen Messung unterscheidet
 
 Ein CGM misst nicht direkt im Blut, sondern die Glukosekonzentration in
 der **interstitiellen Flüssigkeit** (dem Gewebe unter der Haut) über
@@ -46,7 +101,7 @@ Diabetes zugelassen sind — ein Hinweis darauf, dass sich dieses Feld
 gerade von der reinen Diabetes-Versorgung zu einem breiteren
 Wellness-/Biohacking-Werkzeug entwickelt.
 
-## 3. CGM bei Menschen ohne Diabetes — aktuelle Studienlage
+## 4. CGM bei Menschen ohne Diabetes — aktuelle Studienlage
 
 Wichtig für eine ehrliche Einordnung: **Die Evidenzbasis für CGM-
 Nutzung bei stoffwechselgesunden Menschen ist deutlich dünner**, als
@@ -75,11 +130,11 @@ der wachsende Wellness-Trend vermuten lässt.
   nicht groß und kontrolliert belegt.
 
 **Praxis:** Ein CGM als **Lern- und Sichtbarkeitswerkzeug** für ein
-zeitlich begrenztes Selbstexperiment einordnen (siehe Abschnitt 6),
+zeitlich begrenztes Selbstexperiment einordnen (siehe Abschnitt 7),
 nicht als medizinisch notwendiges Dauerwerkzeug oder als Beweis für
 einen bereits nachgewiesenen Gesundheitsnutzen bei gesunden Menschen.
 
-## 4. Worauf beim Auswerten wirklich zu achten ist
+## 5. Worauf beim Auswerten wirklich zu achten ist
 
 Für metabolisch gesunde Menschen ist ein Blutzuckeranstieg nach dem
 Essen (ein "Spike") an sich eine normale physiologische Reaktion — hier
@@ -136,10 +191,10 @@ Ein insgesamt stabilerer Kurvenverlauf ohne starke Zickzack-Bewegungen
 wird mit einer gleichmäßigeren Energieversorgung des Gehirns in
 Verbindung gebracht — dieselbe Grundlogik wie die "stabiler Blutzucker
 = stabilere Aufmerksamkeit"-Aussage im Ernährungs-Wissen dieser App
-(Abschnitt 4), hier nun mit einem Messwerkzeug, das diese Variabilität
+(Abschnitt 5), hier nun mit einem Messwerkzeug, das diese Variabilität
 tatsächlich sichtbar macht, statt sie nur zu vermuten.
 
-## 5. Praktische Hebel im Selbstexperiment
+## 6. Praktische Hebel im Selbstexperiment
 
 ### 5.1 Food Sequencing (Reihenfolge der Mahlzeitenbestandteile) — Moderat bis gut belegt
 
@@ -188,7 +243,7 @@ Nüchternglukose am nächsten Morgen. Siehe auch Schlaf-Wissen dieser App
 zur Cortisol-Aufwachreaktion und Medikamente-Wissen zur allgemeinen
 Stress-/Cortisol-Reaktivität bei ADHS.
 
-## 6. Praktische Hinweise für den Coaching-Alltag
+## 7. Praktische Hinweise für den Coaching-Alltag
 
 - **Die Kurve allein bringt wenig — der Abgleich mit dem Alltag zählt.**
   Ein CGM-Verlauf ohne Notizen zu Mahlzeiten, Uhrzeit, Fokus/Energie
@@ -198,7 +253,7 @@ Stress-/Cortisol-Reaktivität bei ADHS.
   Ernährungs-Wissen dieser App, Abschnitt 8, nur jetzt mit echten
   Kurvendaten statt nur subjektivem Empfinden.
 - **Zeitlich begrenztes Lernwerkzeug, kein Dauerzustand.** Gegeben die
-  in Abschnitt 3 beschriebene, noch dünne Evidenzlage für dauerhaften
+  in Abschnitt 4 beschriebene, noch dünne Evidenzlage für dauerhaften
   Nutzen bei Gesunden, eignet sich ein CGM am ehesten für ein
   begrenztes Experimentierfenster (z. B. 2–4 Wochen: eigene
   Trigger-Mahlzeiten identifizieren, Food-Sequencing und
@@ -217,8 +272,15 @@ Stress-/Cortisol-Reaktivität bei ADHS.
 
 ---
 
-## 7. Quellen und weiterführende Anhaltspunkte
+## 8. Quellen und weiterführende Anhaltspunkte
 
+- Meta-Analyse und aktuelle (2024) bevölkerungsweite Geschwister-
+  Vergleichsstudie zum Zusammenhang zwischen ADHS und Typ-2-Diabetes,
+  inkl. Einordnung der Rolle psychiatrischer Begleiterkrankungen und
+  familiärer Faktoren.
+- Aktuelle Meta-Analysen zum Zusammenhang zwischen mütterlichem
+  Diabetes (Schwangerschaftsdiabetes, bestehender Typ-1-/Typ-2-
+  Diabetes) und ADHS-Risiko beim Kind.
 - Aktuelle (2025/2026) systematische Übersichtsarbeiten zu CGM-Nutzung
   in nicht-diabetischen Bevölkerungsgruppen, u. a. zur Frage der
   kardiovaskulären Prävention.
