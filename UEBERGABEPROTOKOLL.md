@@ -1,5 +1,54 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 10) — Teams-Deploy: drei Fixes beim Ausführen gefunden + Test-Coachee-Knopf
+
+Direkt im Anschluss an Teil 9, während die Nutzerin die neue Teams-
+Migration (0073) tatsächlich ausgeführt hat. Alle vier Punkte sind reine
+Reaktionen auf konkrete Fehler/Wünsche beim Testen, keine neuen Features
+über das in Teil 9 Beschriebene hinaus (außer Punkt 4).
+
+1. **Migration 0073 lief zunächst nicht** (`ERROR: 42703: column "team_id"
+   does not exist`): eigener Bug — die "teams: eigenes Team lesen"-Policy
+   referenziert `profiles.team_id` in ihrer USING-Klausel, stand im Skript
+   aber VOR der Zeile, die diese Spalte erst anlegt. Reihenfolge korrigiert
+   (Commit `906e4af`).
+2. **Danach neuer Fehler** (`ERROR: 42703: column qf.angenommen does not
+   exist`, beim Anlegen von `quest_rangliste()`): die Nutzerin hatte die
+   ursprüngliche Quests-Migration (0070) schon VOR dem späteren Ergänzen
+   der `angenommen`-Spalte (Teil 7) ausgeführt — ihr lief also eine ältere
+   Version. `0073_teams.sql` holt die Spalte jetzt selbst mit `if not
+   exists` nach, statt sich auf einen bestimmten Vor-Deploy-Stand zu
+   verlassen (Commit `ef1245b`).
+3. **UI-Bug in `AdminTeamsView.jsx`**: der "Team löschen"-Knopf (ohne
+   Breitenbegrenzung, `PrimaryButton` ist standardmäßig 100% breit) hat
+   sich über die komplette Kartenbreite gezogen und den Teamnamen verdeckt.
+   Mit `width: 120` in einem Wrapper-Div behoben, analog zum "Anlegen"-
+   Knopf direkt darüber, der von Anfang an korrekt eingefasst war (Commit
+   `3cc9733`).
+4. **Neuer Wunsch beim Testen**: die Nutzerin hat noch keine echten
+   Coachees, wollte aber Profile/Protokolle/Quests/Teams selbst
+   durchklicken können, ohne für jeden Testzugang manuell E-Mail/Passwort
+   einzutippen ODER eine KI regelmäßig Einträge simulieren zu lassen
+   ("das ist jetzt zu groß und zu aufwendig, das ist nicht der Plan").
+   Neuer Knopf "🧪 Test-Coachee erstellen" im Admin-Dashboard, direkt neben
+   "+ Neuen Zugang anlegen" — ein Klick legt mit zufälliger E-Mail/
+   Passwort und fortlaufendem Namen ("Test 1", "Test 2", ...) ein Konto
+   an, das ausschließlich über "Verwalten" bedient wird (niemand muss sich
+   je damit einloggen). Nutzt die bereits deployte `admin-create-proband`-
+   Funktion, keine neue Migration/Edge Function nötig (Commit `c85fa6e`).
+   **Bewusst nicht gebaut**: ein Lösch-Knopf für Testkonten — das wäre eine
+   nicht rückgängig machbare Aktion samt Kaskaden-Löschung aller Daten
+   dieser Person; Aufräumen aktuell nur direkt in Supabase (`auth.users`).
+
+**Arbeitsweise-Hinweis der Nutzerin (16.08., wörtlich sinngemäß):** noch
+vorsichtiger sein, keine Bugs/Fehlermasken einbauen oder unbeteiligte
+Bereiche anfassen, UND das Übergabeprotokoll nach JEDER Änderung sofort
+nachziehen statt am Ende in einer großen Runde — Kontingent-Sorge, falls
+später doch nochmal viel repariert werden muss. Ab sofort entsprechend
+disziplinierter dokumentieren.
+
+---
+
 ## ⚠️ Update 16.08.2026, Fortsetzung (Teil 9) — Quest-Rangliste + Teams: Coachees können sich vergleichen und gegenseitig motivieren
 
 Direkt im Anschluss an Teil 8, zwei Aufträge in Folge: erst eine
@@ -1162,8 +1211,8 @@ sonst nie auffallen lassen.
 | 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
 | 17 | Migration `0071_routine_tabellen_nachholen.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ursache des Routinen-Bugs aus Teil 7 bestätigt (Teil 8): `routine_schritte` fehlte komplett in der DB. Ohne diese Migration lassen sich weiterhin keine Morgen-/Abendroutine-Schritte anlegen |
 | 18 | Rundum-Check aller Migrationen gegen die echte Datenbank | Empfohlen (Teil 8) — zum zweiten Mal eine "als deployt" notierte Migration, die nie lief (nach `erinnerungen` in Teil 5 jetzt `routine_*`-Tabellen). Einmaliger Abgleich statt weiter einzeln nachzujagen |
-| 19 | Migration `0073_teams.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das gibt's weder Teams noch die team-bewusste Rangliste noch Motivationsnachrichten — alles wirft einen Datenbankfehler |
-| 20 | Edge Function `send-team-push` muss die Nutzerin neu ANLEGEN und deployen (nicht nur redeployen — komplett neue Funktion) | 🔴 Ohne das kommen Motivationsnachrichten zwischen Team-Kolleg:innen nur in der App an (bei nächstem Öffnen), nicht per Push |
+| 19 | Migration `0073_teams.sql` ausführen | ✅ Erledigt (Teil 10, nach den drei dort beschriebenen Fixes erfolgreich gelaufen) |
+| 20 | Edge Function `send-team-push` anlegen und deployen | ✅ Erledigt (Teil 10) — noch nicht live end-to-end getestet (Nachricht senden + tatsächliche Push-Zustellung an ein zweites Gerät), sollte bei Gelegenheit einmal verifiziert werden |
 | 21 | Team-vs-Team-Gesamtwertung + Vergleich beim normalen Protokoll (nicht nur Quests) | Von der Nutzerin genannt ("diese gesamte Bewertung ... im Gruppenkontext"), in Teil 9 bewusst noch nicht umgesetzt — Team-Gesamtwertung ist ein kleinerer nächster Schritt (neue Aggregations-Funktion), Protokoll-Vergleich braucht weiterhin eine Klärungsrunde, WAS genau als faire Einzelzahl über alle Kategorien hinweg gelten soll |
 
 ---
