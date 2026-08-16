@@ -1,5 +1,29 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 20) — Akutmodus: eigene, frei eingetragene Maßnahme dokumentieren
+
+Direkt im Anschluss an Teil 19 (Commit `ce1a39c`). Nutzerinnen-Beispiel:
+jemand geht im Akutmodus raus, konzentriert sich spontan 5 Minuten auf
+eine schöne Aussicht statt der eingestellten Atem-/Akut-Übung — auch
+das soll dokumentierbar sein, als Grundlage dafür, dass der Coach
+erkennt, was der Person tatsächlich hilft (z. B. könnte sich daraus
+später eine Vorstellungskraft-/Visualisierungs-Übung ergeben).
+
+Neuer Button "✍️ Ich hab schon selbst was gemacht — eintragen" in
+`AkutModusKarte.jsx` (unterhalb des Freitext-"Idee holen"-Felds) öffnet
+ein einfaches Formular ("Was hast du gemacht?"), gefolgt vom selben
+Gefühls-Check-in wie bei den anderen Akutmodus-Wegen (Symptom-Kachel,
+Akut-Übung, Atemübung). **Keine neue Migration, keine Edge Function
+nötig** — nutzt die in Teil 19 bereits angelegte `akutmodus_log`-
+Tabelle (Spalten `aktion`/`detail`/`gefuehl_danach` reichten schon
+aus). Sofern Migration `0076_atemuebungen.sql` (Offener Punkt #32)
+schon ausgeführt wurde, ist dieser Teil damit bereits ohne weiteres
+Zutun live.
+
+`npm run build` erfolgreich geprüft.
+
+---
+
 ## 🔴 Update 16.08.2026, Fortsetzung (Teil 19) — Neuer Protokollbereich "Atemübungen" + Akutmodus-Dokumentation
 
 Direkt im Anschluss an Teil 18 (Commit `0fe62a9`). Nutzerinnen-Vorgabe:
