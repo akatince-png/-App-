@@ -30,7 +30,7 @@ const BEREICH_OPTIONEN = [
 // selbstständig mit der KI ihren Plan erstellen können. Sobald "Verwalten"
 // gedrückt wird, läuft die komplette App unverändert weiter, nur mit den
 // Daten der ausgewählten Person statt der eigenen (siehe AppDataContext.jsx).
-export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen, onOpenFormulare, onOpenUebungsBilder, onOpenUebersicht }) {
+export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen, onOpenFormulare, onOpenUebungsBilder, onOpenUebersicht, onOpenQuests }) {
   const { user } = useAuth();
   const [probanden, setProbanden] = useState([]);
   const [ladend, setLadend] = useState(true);
@@ -76,6 +76,14 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
       {onOpenUebersicht && (
         <div style={{ marginBottom: 14 }}>
           <PrimaryButton onClick={onOpenUebersicht}>📊 Coach-Übersicht (alle Coachees grafisch)</PrimaryButton>
+        </div>
+      )}
+
+      {onOpenQuests && (
+        <div style={{ marginBottom: 14 }}>
+          <PrimaryButton variant="ghost" onClick={onOpenQuests}>
+            🎯 Quests verwalten
+          </PrimaryButton>
         </div>
       )}
 
