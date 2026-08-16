@@ -1,5 +1,73 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 16.08.2026, Fortsetzung (Teil 9) — Quest-Rangliste + Teams: Coachees können sich vergleichen und gegenseitig motivieren
+
+Direkt im Anschluss an Teil 8, zwei Aufträge in Folge: erst eine
+Quest-Rangliste (Commit `30d5eb7`), dann — noch in derselben Runde —
+Teams, weil die Nutzerin die Rangliste nicht global (alle Coachees sehen
+alle), sondern gruppenweise wollte, plus eine neue, größere Funktion:
+Motivationsnachrichten zwischen Coachees samt Push (Commit `6ef2051`).
+
+**Quest-Rangliste** (`0072_quest_rangliste.sql`, dann durch Teams-Migration
+ersetzt, siehe unten): neue security-definer-Funktion `quest_rangliste()`
+liefert Name + Anzahl abgeschlossener Quests je Coachee — sichtbar auf der
+Startseite (eigene Zeile hervorgehoben) und oben in der
+Quests-Verwaltung. Gibt bewusst nur aggregierte Zahlen zurück, keine
+Notizen/Detail-Inhalte anderer Coachees.
+
+**Teams** (`0073_teams.sql`, Nutzerinnen-Vorgabe wörtlich: "dass sich
+Coachees ... in Teams zusammengesetzt werden und dann nur diese Teams die
+Dinge voneinander sehen können ... dass man sich untereinander auch
+Motivation gibt ... Push Nachrichten senden kann"):
+- Neue Tabelle `teams` + Spalte `profiles.team_id` — **ein Team pro
+  Coachee** (V1-Entscheidung, keine Mehrfach-Mitgliedschaft; für eine
+  überschaubare Coaching-Gruppe ausreichend, einfacher als eine n:m-Tabelle).
+- `quest_rangliste()` ist jetzt team-bewusst: Admin sieht weiterhin alle
+  Coachees, eine Coachee MIT Team sieht nur ihre Team-Kolleg:innen, eine
+  Coachee OHNE Team sieht nur sich selbst (kein Rundum-Vergleich ohne
+  Team-Zuordnung — genau die geforderte Einschränkung).
+- Neue Admin-Ansicht `AdminTeamsView.jsx` ("👥 Teams verwalten" im
+  Admin-Dashboard): Teams anlegen/löschen, Coachees per Antippen einem
+  Team zuordnen oder entfernen.
+- Neue Hilfsfunktion `gleiches_team(a, b)` (security definer) — Grundlage
+  für die RLS-Policies der neuen Peer-Nachrichten.
+- **Motivationsnachrichten zwischen Team-Kolleg:innen**: neue Tabelle
+  `team_nachrichten` (1:1, nicht an die Admin gerichtet — das bleibt
+  `coachee_nachrichten`), RLS erlaubt Senden nur innerhalb desselben Teams.
+  Neue Karte auf der Startseite (`TeamKarte.jsx`, nur sichtbar mit
+  Team-Zuordnung): Team-Kollegin auswählen, Nachricht schreiben, senden.
+- **Push-Zustellung dafür**: neue Edge Function `send-team-push` — muss
+  die Nutzerin noch **manuell in Supabase anlegen und deployen** (siehe
+  Abschnitt 10, ist eine KOMPLETT NEUE Funktion, nicht nur ein Redeploy
+  einer bestehenden). Läuft mit dem Service-Role-Key (braucht Zugriff auf
+  `push_subscriptions` der Zielperson, die der aufrufende Client per RLS
+  nicht lesen dürfte), prüft aber vorher serverseitig per `gleiches_team()`,
+  dass Sender:in und Empfänger:in wirklich im selben Team sind — sonst
+  könnte im Prinzip jede angemeldete Person jeder anderen eine Push
+  schicken, nur weil beide dieselbe App nutzen.
+
+**Bewusst NICHT in dieser Runde umgesetzt:**
+- **Team-vs-Team-Vergleich** (Gesamtwertung eines Teams gegen ein anderes,
+  z. B. Summe/Schnitt der Quest-Abschlüsse) — die Nutzerin nannte das
+  explizit ("diese gesamte Bewertung ... im Gruppenkontext bewertet werden
+  können"), umgesetzt ist bisher nur der Vergleich EINZELNER Coachees
+  INNERHALB ihres Teams. Eine echte Team-Gesamtwertung wäre eine weitere,
+  kleinere Ergänzung (im Kern nur eine neue Aggregations-Funktion +
+  Ansicht) — noch offen.
+- **Vergleich beim normalen Protokoll** (nicht nur Quests) — weiterhin
+  offen, siehe Teil 6/7. Keine verlässliche, faire Einzelzahl über alle
+  Kategorien hinweg vorhanden (Training/Ernährung/Supplemente/... laufen
+  sehr unterschiedlich), bräuchte eine eigene Klärungsrunde, WAS genau
+  verglichen werden soll, bevor es gebaut wird.
+- Broadcast-Nachrichten ans ganze Team (statt nur 1:1) — aktuell nur
+  Person-zu-Person, analog zum bisherigen `coachee_nachrichten`-Muster.
+- Kein Opt-out/Privatsphäre-Einstellung für einzelne Coachees, die evtl.
+  nicht verglichen werden wollen — bisher ist die Team-Zuordnung rein eine
+  Admin-Entscheidung, die Coachee selbst hat keine Möglichkeit, sich aus
+  der Rangliste/den Vergleichen auszublenden.
+
+---
+
 ## 🔴 Update 16.08.2026, Fortsetzung (Teil 8) — Routinen-Bug bestätigt: wieder eine fehlende Migration + Vorab-Hinweis war versteckt
 
 Direkt im Anschluss an Teil 7. Die in Teil 7 sichtbar gemachte Fehlermeldung
@@ -1053,6 +1121,8 @@ wichtigsten — für die vollständige Historie: `ls supabase/migrations/`.
 | 0069 | `baustein_versionen.sql` | Versionierung der Protokoll-Bausteine (📌-Snapshots) |
 | 0070 | `quests.sql` | Neue Tabellen `quests` + `quest_fortschritt` fürs Quests-Feature (Teil 6/7) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
 | 0071 | `routine_tabellen_nachholen.sql` | Holt `routine_schritte`/`routine_durchlaeufe`/`routine_einstellungen` nach, die trotz 0041/0044 nie in der echten DB existierten (Teil 8) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** |
+| 0072 | `quest_rangliste.sql` | Erste Version der Quest-Rangliste-Funktion (Teil 9) — **durch 0073 ersetzt, muss NICHT separat ausgeführt werden** |
+| 0073 | `teams.sql` | Teams (`teams`, `profiles.team_id`), `gleiches_team()`, team-bewusste `quest_rangliste()`, `team_nachrichten` + RLS, `admin_liste_probanden()` um `team_id` erweitert (Teil 9) — **noch nicht deployt, Nutzerin muss sie manuell in der SQL-Konsole ausführen** (0072 kann dabei übersprungen werden) |
 
 **Kein separates VAPID-Migrations-Skript nötig** für den Push-Fix heute —
 das war ein reines Supabase-Secret, keine Schema-Änderung.
@@ -1088,10 +1158,13 @@ sonst nie auffallen lassen.
 | 12 | Native App (Xcode/App Store) | Gewünschtes Fernziel der Nutzerin — siehe Abschnitt 12 |
 | 13 | `useProfileData.js`-Speicherfehler nur in der Browser-Konsole geloggt, nie sichtbar (Muster: optimistic update + `.then(error => console.error(error))`) | 🟡 Empfohlen, aber nicht umgesetzt — hat den Erinnerungen-Bug (Abschnitt 7) wochenlang unsichtbar gehalten. Mindestens `setErinnerung()` sollte Fehler sichtbar zurückmelden, stichprobenartig auf ähnliche `set*`-Funktionen prüfen |
 | 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
-| 15 | Quests: Rangliste/Vergleich zwischen Coachees (sowohl für Quests als auch fürs normale Protokoll) | Von der Nutzerin gewünscht ("Konkurrenz" + "Gruppendynamik/Team" gleichzeitig), aber noch nicht konkretisiert — braucht eine eigene Klärungsrunde vor der Umsetzung, siehe Teil 6 |
+| 15 | Quests-Rangliste zwischen Coachees | ✅ Umgesetzt (Teil 9, team-bewusst) — Vergleich beim normalen Protokoll (nicht nur Quests) weiterhin offen, siehe #21 |
 | 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
 | 17 | Migration `0071_routine_tabellen_nachholen.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ursache des Routinen-Bugs aus Teil 7 bestätigt (Teil 8): `routine_schritte` fehlte komplett in der DB. Ohne diese Migration lassen sich weiterhin keine Morgen-/Abendroutine-Schritte anlegen |
 | 18 | Rundum-Check aller Migrationen gegen die echte Datenbank | Empfohlen (Teil 8) — zum zweiten Mal eine "als deployt" notierte Migration, die nie lief (nach `erinnerungen` in Teil 5 jetzt `routine_*`-Tabellen). Einmaliger Abgleich statt weiter einzeln nachzujagen |
+| 19 | Migration `0073_teams.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das gibt's weder Teams noch die team-bewusste Rangliste noch Motivationsnachrichten — alles wirft einen Datenbankfehler |
+| 20 | Edge Function `send-team-push` muss die Nutzerin neu ANLEGEN und deployen (nicht nur redeployen — komplett neue Funktion) | 🔴 Ohne das kommen Motivationsnachrichten zwischen Team-Kolleg:innen nur in der App an (bei nächstem Öffnen), nicht per Push |
+| 21 | Team-vs-Team-Gesamtwertung + Vergleich beim normalen Protokoll (nicht nur Quests) | Von der Nutzerin genannt ("diese gesamte Bewertung ... im Gruppenkontext"), in Teil 9 bewusst noch nicht umgesetzt — Team-Gesamtwertung ist ein kleinerer nächster Schritt (neue Aggregations-Funktion), Protokoll-Vergleich braucht weiterhin eine Klärungsrunde, WAS genau als faire Einzelzahl über alle Kategorien hinweg gelten soll |
 
 ---
 
