@@ -39,6 +39,9 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   const [formOffen, setFormOffen] = useState(false);
   const [notizFuer, setNotizFuer] = useState(null); // proband.id | null
   const [nachrichtenFuer, setNachrichtenFuer] = useState(null); // proband.id | null
+  const [testAnlegenLaeuft, setTestAnlegenLaeuft] = useState(false);
+  const [testFehler, setTestFehler] = useState(null);
+  const [testErfolg, setTestErfolg] = useState(null);
 
   const ladeProbanden = async () => {
     setLadend(true);
@@ -55,6 +58,36 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   useEffect(() => {
     ladeProbanden();
   }, []);
+
+  // Testphase ohne echte Coachees (Nutzerinnen-Vorgabe 16.08.: "damit ich
+  // in Profile reingehen kann, Protokolle erstellen kann ... ohne dass im
+  // Hintergrund eine KI regelmäßig Einträge macht") — legt mit einem Klick
+  // ein Wegwerf-Konto an (zufällige E-Mail/Passwort, die Person loggt sich
+  // nie selbst ein, du bedienst es ausschließlich über "Verwalten"). Nutzt
+  // dieselbe Edge Function wie das normale Formular unten, nur ohne
+  // Tipparbeit. Löschen aktuell nur direkt in Supabase (auth.users) möglich
+  // — bewusst kein Lösch-Knopf hier, das wäre eine unumkehrbare Aktion samt
+  // Kaskaden-Löschung aller Daten dieser Person.
+  const testCoacheeErstellen = async () => {
+    setTestFehler(null);
+    setTestErfolg(null);
+    setTestAnlegenLaeuft(true);
+    const bisherigeTests = probanden.filter((p) => (p.vorname || "").startsWith("Test ")).length;
+    const vorname = `Test ${bisherigeTests + 1}`;
+    const zufall = Math.random().toString(36).slice(2, 10);
+    const email = `test-${zufall}@aka-test.local`;
+    const passwort = Math.random().toString(36).slice(2, 12);
+    const { data, error } = await supabase.functions.invoke("admin-create-proband", {
+      body: { email, password: passwort, vorname },
+    });
+    setTestAnlegenLaeuft(false);
+    if (error || data?.error) {
+      setTestFehler(data?.error || error.message);
+      return;
+    }
+    setTestErfolg(`"${vorname}" angelegt — direkt unten in der Liste, per "Verwalten" bedienbar.`);
+    ladeProbanden();
+  };
 
   const gefiltert = probanden.filter((p) => {
     const q = suche.trim().toLowerCase();
@@ -121,11 +154,20 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
 
       <TextInput value={suche} onChange={setSuche} placeholder="Suchen nach Name oder E-Mail…" />
 
-      <div style={{ marginTop: 14, marginBottom: 14 }}>
-        <PrimaryButton variant="ghost" onClick={() => setFormOffen((v) => !v)}>
-          {formOffen ? "Abbrechen" : "+ Neuen Zugang anlegen"}
-        </PrimaryButton>
+      <div style={{ marginTop: 14, marginBottom: 8, display: "flex", gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <PrimaryButton variant="ghost" onClick={() => setFormOffen((v) => !v)}>
+            {formOffen ? "Abbrechen" : "+ Neuen Zugang anlegen"}
+          </PrimaryButton>
+        </div>
+        <div style={{ flex: 1 }}>
+          <PrimaryButton variant="ghost" onClick={testCoacheeErstellen} disabled={testAnlegenLaeuft}>
+            {testAnlegenLaeuft ? "Lege an …" : "🧪 Test-Coachee erstellen"}
+          </PrimaryButton>
+        </div>
       </div>
+      {testFehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14 }}>{testFehler}</div>}
+      {testErfolg && <div style={{ fontSize: 12.5, color: success, marginBottom: 14 }}>{testErfolg}</div>}
 
       {formOffen && (
         <NeuerZugangForm
