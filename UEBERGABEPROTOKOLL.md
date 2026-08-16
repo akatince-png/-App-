@@ -1,5 +1,36 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 16.08.2026, Fortsetzung (Teil 24) — Neuer Leitfaden "Kontinuierliche Blutzuckermessung (CGM)"
+
+Direkt im Anschluss an Teil 23 (Commit `cc1af28`). Nutzerin lieferte ein
+Konzeptblatt zu CGM-Nutzung bei Nicht-Diabetikern (Auswertungs-
+kriterien, Selbstexperiment-Hebel, Produktvergleich Abbott/Dexcom) und
+bat um ein Datenblatt daraus — **ausdrücklich ohne die konkrete
+Produktempfehlung**, die deshalb bewusst nicht übernommen wurde
+(Geräte-/Preisvergleiche veralten schnell, sind keine
+Wissensbasis-Frage).
+
+`src/wissen/blutwerte/cgm-blutzuckermessung-bei-adhs.md` (neu, Sibling
+zum Laborwerte-Leitfaden aus Teil 22/23) behandelt: Messprinzip
+(interstitielle Flüssigkeit statt Blut), die vier
+Auswertungskriterien aus dem Konzeptblatt der Nutzerin (Nüchternglukose/
+Dawn-Phänomen, Erholungszeit, reaktive Hypoglykämie, Glukose-
+variabilität) mit Studienlage-Einordnung, die drei
+Selbstexperiment-Hebel (Food Sequencing — Studienlage überwiegend aus
+Prädiabetes-/Diabetes-Populationen, Übertragung auf Gesunde plausibel
+aber nicht im selben Umfang belegt; Spaziergang nach dem Essen —
+etabliert, Timing wichtiger als Dauer; Stress/Schlaf-Einfluss). Neu
+per WebSearch recherchiert und ergänzt: ein eigener Abschnitt zur
+aktuellen (2024–2026) Kontroverse um CGM-Nutzung bei Menschen ohne
+Diabetes — FDA hat 2024 erstmals rezeptfreie Systeme auch für
+Nicht-Diabetiker zugelassen, aber die Evidenz für echten
+Gesundheitsnutzen bei bereits Stoffwechselgesunden ist noch dünn.
+
+`npm run build` erfolgreich geprüft, PDF-Handbuch erstellt (6 Seiten)
+und verschickt. Keine Migration, keine Edge Function nötig.
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 23) — Laborwerte-Leitfaden vertieft + YouTube-Skriptvorlage (appextern)
 
 Direkt im Anschluss an Teil 22. Nutzerin wollte den Laborwerte-Leitfaden
