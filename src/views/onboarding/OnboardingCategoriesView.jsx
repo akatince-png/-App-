@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, TextArea, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
@@ -218,17 +218,48 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     aktivesHauptprotokoll,
     teilprotokolle,
     teilprotokollSpeichern,
-    peptide,
-    togglePeptid,
-    einnahmeart,
-    setEinnahmeart,
-    addCustomPreparat,
-    dosierung,
-    setDose,
-    setPeptidFoto,
-    intervallGueltig,
+    hormone,
+    hormonDosierung,
+    hormonEntfernen,
+    setHormonEinnahmeart,
+    setHormonDose,
+    setHormonFoto,
   } = useAppData();
   const { t, tLabel } = useT();
+
+  // Peptid-Handling: Bug-Fix (11.09.) — lief bisher komplett über die alte,
+  // separate protocol_peptide-Tabelle (useProtocolData.js), die seit der
+  // Zusammenlegung "Peptide → Medikamente" (13.08., Migration 0042) nicht
+  // mehr von buildDayItems() gelesen wird. Im Onboarding eingetragene
+  // Peptide tauchten dadurch NIE im Tagesplan/Home/Wochenübersicht auf,
+  // während über MedikamenteView.jsx (Kategorie "Peptid") angelegte
+  // Peptide dort schon lange korrekt erscheinen. Ab jetzt läuft auch das
+  // Onboarding über dieselben hormones-basierten Funktionen wie
+  // MedikamenteView — die schmalen Wrapper unten übernehmen nur, "Peptid"
+  // als Kategorie fest zu setzen und dieselben Funktionsnamen/Signaturen
+  // wie vorher bereitzustellen, damit der Rest dieser Datei unverändert
+  // bleiben kann.
+  const peptide = useMemo(() => (hormone || []).filter((n) => hormonDosierung[n]?.kategorie === "Peptid"), [hormone, hormonDosierung]);
+  const dosierung = hormonDosierung;
+  const togglePeptid = (p) => {
+    if (peptide.includes(p)) hormonEntfernen(p);
+    else hormonHinzufuegen({ name: p, kategorie: "Peptid", einnahmeart: "Injektion", menge: "", intervallTyp: "fixed", intervallDays: 7, uhrzeiten: ["20:00"] });
+  };
+  const addCustomPreparat = (name, art) =>
+    hormonHinzufuegen({ name: name.trim(), kategorie: "Peptid", einnahmeart: art, menge: "", intervallTyp: "fixed", intervallDays: 7, uhrzeiten: ["20:00"] });
+  const setEinnahmeart = (p, art) => setHormonEinnahmeart(p, art);
+  const setDose = (p, feld, val) => setHormonDose(p, feld, val);
+  const setPeptidFoto = (p, file) => setHormonFoto(p, file);
+  // Dieselbe Prüfung wie zuvor in useProtocolData.js (intervallGueltig),
+  // hier gegen die hormones-basierte Dosierung statt gegen protocol_peptide.
+  const intervallGueltig = (p) => {
+    const d = dosierung[p];
+    if (!d?.menge) return false;
+    if (d.intervallTyp === "custom") return !!d.customDays && Number(d.customDays) > 0;
+    if (d.intervallTyp === "cycle") return !!d.onDays && Number(d.onDays) > 0 && d.offDays !== "";
+    if (d.intervallTyp === "weekdays") return (d.weekdays || []).length > 0;
+    return !!d.intervallDays;
+  };
 
   // "Zwischenspeichern" (Nutzerinnen-Vorgabe, 15.08.): schließt jemand die
   // App mitten im Kategorien-Assistenten, soll es beim nächsten Öffnen genau
@@ -1234,7 +1265,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               {peptide
                 .filter((p) => !PEPTIDE_OPTIONEN.includes(p))
                 .map((p) => (
-                  <CheckRow key={p} label={`${p} (${tLabel(einnahmeart[p] || "Eigenes")})`} checked onToggle={() => togglePeptid(p)} />
+                  <CheckRow key={p} label={`${p} (${tLabel(dosierung[p]?.einnahmeart || "Eigenes")})`} checked onToggle={() => togglePeptid(p)} />
                 ))}
 
               <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
@@ -1282,20 +1313,20 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                     <Label>{tLabel("Einnahmeart")}</Label>
                     <div style={{ display: "flex", flexWrap: "wrap" }}>
                       {EINNAHMEARTEN.map((a) => (
-                        <Pill key={a} label={tLabel(a)} selected={(einnahmeart[p] || "Injektion") === a} onClick={() => setEinnahmeart(p, a)} />
+                        <Pill key={a} label={tLabel(a)} selected={(dosierung[p]?.einnahmeart || "Injektion") === a} onClick={() => setEinnahmeart(p, a)} />
                       ))}
                     </div>
 
                     <DosierungFields value={dosierung[p]} onChange={(feld, val) => setDose(p, feld, val)} />
 
-                    {(einnahmeart[p] || "Injektion") === "Injektion" && (
+                    {(dosierung[p]?.einnahmeart || "Injektion") === "Injektion" && (
                       <>
                         <Label>{t("onboarding.peptide.bacwasser.label")}</Label>
                         <TextInput type="number" value={dosierung[p]?.bacWasser || ""} onChange={(val) => setDose(p, "bacWasser", val)} placeholder="z. B. 2" />
                       </>
                     )}
 
-                    {einnahmeart[p] === "Nasenspray" && (
+                    {dosierung[p]?.einnahmeart === "Nasenspray" && (
                       <>
                         <Label>{t("onboarding.peptide.spruehstoesse.label")}</Label>
                         <NumberWheelField value={dosierung[p]?.spruehstoesse || ""} onChange={(val) => setDose(p, "spruehstoesse", val)} min={1} max={20} placeholder="z. B. 2" />

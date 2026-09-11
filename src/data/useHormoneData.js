@@ -19,6 +19,12 @@ function rowToHormonDosierung(row) {
     eigenerStart: row.eigener_start || "",
     uhrzeiten: row.uhrzeiten?.length ? row.uhrzeiten.map((t) => t.slice(0, 5)) : ["20:00"],
     fotoPath: row.foto_path || null,
+    // Nur für kategorie "Peptid" relevant (Injektion/Nasenspray-Details,
+    // siehe useProtocolData.js — dieselben zwei Felder, jetzt hier
+    // gespiegelt, damit das Onboarding komplett auf hormones umgestellt
+    // werden kann, siehe Migration 0077).
+    bacWasser: row.bac_wasser_ml != null ? String(row.bac_wasser_ml) : "",
+    spruehstoesse: row.spruehstoesse != null ? String(row.spruehstoesse) : "",
   };
 }
 
@@ -30,9 +36,11 @@ const DOSE_FELD_TO_COLUMN = {
   eigenerStart: "eigener_start",
   weekdays: "weekdays",
   uhrzeiten: "uhrzeiten",
+  bacWasser: "bac_wasser_ml",
+  spruehstoesse: "spruehstoesse",
 };
 
-const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays"]);
+const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays", "bacWasser", "spruehstoesse"]);
 
 function toRow(userId, neuesHormon, hauptprotokollId) {
   const isCustom = neuesHormon.intervallTyp === "custom";
@@ -134,6 +142,8 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
           eigenerStart: neuesHormon.eigenerStart,
           uhrzeiten: neuesHormon.uhrzeiten?.length ? neuesHormon.uhrzeiten : ["20:00"],
           fotoPath: null,
+          bacWasser: "",
+          spruehstoesse: "",
         },
       }));
       return { ok: true };
