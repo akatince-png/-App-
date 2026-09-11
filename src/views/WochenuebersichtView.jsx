@@ -39,7 +39,76 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     zeitbloecke,
     zeitblockHinzufuegen,
     zeitblockEntfernen,
+    supplemente,
+    supplementErledigt,
+    mahlzeiten,
+    mahlzeitErledigt,
+    mealWochenplan,
+    trainingEintraege,
+    trainingWochenplan,
+    gewohnheiten,
+    gewohnheitErledigt,
+    workflowPlaene,
+    workflowPresets,
+    hydrationEintraege,
+    hydrationZielMl,
+    tageslichtEintraege,
+    tageslichtZielMinuten,
+    schlafEintraege,
   } = appData;
+
+  // Bug-Fix (Performance/Ruckeln): Diese View reichte bisher überall den
+  // kompletten `appData`-Kontext (alle ~150 Felder aus allen Datenhooks)
+  // an buildDayItems()/useMemo-Abhängigkeiten weiter. Da `appData` als
+  // Objekt bei JEDER Zustandsänderung irgendwo in der App eine neue
+  // Referenz bekommt (auch für völlig unbeteiligte Daten wie Coach-Chat
+  // oder Quest-Fortschritt), liefen die teuren Berechnungen unten
+  // (bereichsCompliance macht bis zu 180 buildDayItems()-Aufrufe!) bei
+  // praktisch jeder Interaktion irgendwo in der App neu, solange diese
+  // View offen war — spürbar als Ruckeln. Diese eine, schmal auf die
+  // tatsächlich von buildDayItems() benötigten Felder gestützte
+  // Zwischenablage sorgt dafür, dass sich ihre Referenz nur ändert, wenn
+  // sich wirklich etwas Relevantes geändert hat (einzelne useState-Werte
+  // aus den Datenhooks sind selbst schon stabil — nur die appData-
+  // Sammelreferenz war das Problem).
+  const dayItemsQuelldaten = useMemo(
+    () => ({
+      hormonPlan,
+      hormonErledigt,
+      hormonDosierung,
+      supplemente,
+      supplementErledigt,
+      mahlzeiten,
+      mahlzeitErledigt,
+      mealWochenplan,
+      trainingEintraege,
+      trainingWochenplan,
+      gewohnheiten,
+      gewohnheitErledigt,
+      workflowPlaene,
+      workflowPresets,
+      projekte,
+      zeitbloecke,
+    }),
+    [
+      hormonPlan,
+      hormonErledigt,
+      hormonDosierung,
+      supplemente,
+      supplementErledigt,
+      mahlzeiten,
+      mahlzeitErledigt,
+      mealWochenplan,
+      trainingEintraege,
+      trainingWochenplan,
+      gewohnheiten,
+      gewohnheitErledigt,
+      workflowPlaene,
+      workflowPresets,
+      projekte,
+      zeitbloecke,
+    ]
+  );
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("day"); // "day" | "week" | "month"
@@ -91,10 +160,36 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
   // wählte man z. B. in der Monatsansicht einen Tag aus einer anderen Woche,
   // passte sich diese Leiste nicht an. Jetzt wie in TagesplanView.jsx an
   // `selectedDate` gekoppelt (das bei jedem Datumswechsel mitgeht).
-  const montag = addDays(selectedDate, -((selectedDate.getDay() + 6) % 7));
-  const wochentage = Array.from({ length: 7 }, (_, i) => addDays(montag, i));
+  // useMemo statt einer bei jedem Render neu erzeugten Liste: `wochentage`
+  // ist unten selbst wieder Dependency eines useMemo (wochenItemsProTag) —
+  // ohne diese Memoisierung hätte jene Liste jedes Mal eine neue Referenz
+  // bekommen und wäre nie wirksam gecacht worden.
+  const montag = useMemo(() => addDays(selectedDate, -((selectedDate.getDay() + 6) % 7)), [selectedDate]);
+  const wochentage = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(montag, i)), [montag]);
 
-  const tagesItems = useMemo(() => buildDayItems(selectedDate, appData), [selectedDate, appData]);
+  const tagesItems = useMemo(() => buildDayItems(selectedDate, dayItemsQuelldaten), [selectedDate, dayItemsQuelldaten]);
+
+  // Vorberechnete Tages-Items für Wochenraster (Ansicht + PDF-Export teilen
+  // sich dieselbe Woche) — siehe dayItemsQuelldaten-Kommentar oben: ohne
+  // diese Memoisierung liefen bis zu 7 buildDayItems()-Aufrufe bei jedem
+  // Render neu, auch wenn sich nichts an der Woche geändert hatte.
+  const wochenItemsProTag = useMemo(() => wochentage.map((d) => buildDayItems(d, dayItemsQuelldaten)), [wochentage, dayItemsQuelldaten]);
+
+  // Dasselbe fürs Monatsraster — Tage des sichtbaren Monats + je Tag die
+  // vorberechneten Items, statt bis zu 31 buildDayItems()-Aufrufen direkt
+  // im Render-Body bei jeder Interaktion.
+  const monatsTageMitItems = useMemo(() => {
+    const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+    const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    const tage = [];
+    for (let i = 0; i < startOffset; i++) tage.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const datum = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
+      tage.push({ datum, items: buildDayItems(datum, dayItemsQuelldaten) });
+    }
+    return tage;
+  }, [monthDate, dayItemsQuelldaten]);
 
   const substanzen = useMemo(() => {
     const p = peptide.map((name) => ({ name, kategorie: "Peptid", d: dosierung[name] }));
@@ -139,7 +234,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     ende.setHours(0, 0, 0, 0);
     let n = 0;
     while (cursor <= ende && n < 180) {
-      const items = buildDayItems(cursor, appData);
+      const items = buildDayItems(cursor, dayItemsQuelldaten);
       for (const item of items) {
         // Zeitblöcke sind Kalenderblöcke, keine erledigbaren Aufgaben —
         // eine "0%"-Quote dafür wäre irreführend, daher ausgenommen.
@@ -162,7 +257,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, startdatum, dauer]);
+  }, [dayItemsQuelldaten, startdatum, dauer]);
 
   // Hydration/Tageslicht/Schlaf haben keinen einzelnen "geplant vs.
   // erledigt"-Termin (kumulative Tageswerte) — hier stattdessen "an wie
@@ -174,23 +269,21 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     const endeStr = toLocalISODate(heuteCap);
     const imZeitraum = (datum) => datum >= startStr && datum <= endeStr;
 
-    const hydrationTage = (appData.hydrationEintraege || []).filter((e) => imZeitraum(e.datum));
-    const hydrationZielErreicht = appData.hydrationZielMl
-      ? hydrationTage.filter((e) => (e.mengeMl || 0) >= appData.hydrationZielMl).length
+    const hydrationTage = (hydrationEintraege || []).filter((e) => imZeitraum(e.datum));
+    const hydrationZielErreicht = hydrationZielMl ? hydrationTage.filter((e) => (e.mengeMl || 0) >= hydrationZielMl).length : 0;
+
+    const tageslichtTage = (tageslichtEintraege || []).filter((e) => imZeitraum(e.datum));
+    const tageslichtZielErreicht = tageslichtZielMinuten
+      ? tageslichtTage.filter((e) => (e.minuten || 0) >= tageslichtZielMinuten).length
       : 0;
 
-    const tageslichtTage = (appData.tageslichtEintraege || []).filter((e) => imZeitraum(e.datum));
-    const tageslichtZielErreicht = appData.tageslichtZielMinuten
-      ? tageslichtTage.filter((e) => (e.minuten || 0) >= appData.tageslichtZielMinuten).length
-      : 0;
-
-    const schlafTage = (appData.schlafEintraege || []).filter((e) => imZeitraum(e.datum));
+    const schlafTage = (schlafEintraege || []).filter((e) => imZeitraum(e.datum));
     const schlafDurchschnitt =
       schlafTage.length > 0 ? (schlafTage.reduce((summe, e) => summe + (Number(e.stunden) || 0), 0) / schlafTage.length).toFixed(1) : null;
 
     return { hydrationTage, hydrationZielErreicht, tageslichtTage, tageslichtZielErreicht, schlafTage, schlafDurchschnitt };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, startdatum, dauer]);
+  }, [hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, schlafEintraege, startdatum, dauer]);
 
   const exportieren = async () => {
     if (!exportRef.current) return;
@@ -472,7 +565,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
         <div style={{ overflowX: "auto", marginBottom: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, minWidth: 800 }}>
             {wochentage.map((d, i) => {
-              const items = buildDayItems(d, appData);
+              const items = wochenItemsProTag[i];
               const k = KATEGORIE_META;
               return (
                 <Card key={i} style={{ padding: 8 }}>
@@ -530,33 +623,19 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-            {(() => {
-              const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-              const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
-              const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-              const days = [];
+            {monatsTageMitItems.map((eintrag, idx) => {
+              if (!eintrag) return <div key={`empty-${idx}`}></div>;
+              const { datum: d, items } = eintrag;
+              // Alle geplanten Kategorien zeigen ihren Punkt, nicht nur
+              // Substanzen — Nutzerinnen-Vorgabe (13.08.): auch Training
+              // (und Schlaf/Hydration/... ) sollen im Monatsraster farblich
+              // erkennbar sein, nicht nur in der Tages-/Wochenansicht.
+              // "notfallmodus" bewusst ausgenommen, kein geplanter Termin.
+              const dotsToShow = items.filter((item) => item.kategorie !== "notfallmodus").slice(0, 6);
 
-              for (let i = 0; i < startOffset; i++) {
-                days.push(null);
-              }
-              for (let d = 1; d <= lastDay.getDate(); d++) {
-                days.push(new Date(monthDate.getFullYear(), monthDate.getMonth(), d));
-              }
-
-              return days.map((d, idx) => {
-                if (!d) return <div key={`empty-${idx}`}></div>;
-
-                const items = buildDayItems(d, appData);
-                // Alle geplanten Kategorien zeigen ihren Punkt, nicht nur
-                // Substanzen — Nutzerinnen-Vorgabe (13.08.): auch Training
-                // (und Schlaf/Hydration/... ) sollen im Monatsraster farblich
-                // erkennbar sein, nicht nur in der Tages-/Wochenansicht.
-                // "notfallmodus" bewusst ausgenommen, kein geplanter Termin.
-                const dotsToShow = items.filter((item) => item.kategorie !== "notfallmodus").slice(0, 6);
-
-                return (
-                  <div
-                    key={d.toISOString()}
+              return (
+                <div
+                  key={d.toISOString()}
                     style={{
                       aspectRatio: "1 / 1",
                       borderRadius: 8,
@@ -590,8 +669,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
                     </div>
                   </div>
                 );
-              });
-            })()}
+            })}
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 14, paddingTop: 12, borderTop: `1px solid ${cardBorder}` }}>
@@ -731,7 +809,7 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginBottom: 20 }}>
             {wochentage.map((d, i) => {
-              const items = buildDayItems(d, appData);
+              const items = wochenItemsProTag[i];
               return (
                 <div key={i} style={{ border: "1px solid #EAEAE5", borderRadius: 10, padding: 8, minHeight: 140 }}>
                   <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 6 }}>
