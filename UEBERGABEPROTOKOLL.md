@@ -1,5 +1,57 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 30) — Ruckeln in der Wochenübersicht behoben (AppDataContext-Befund neu eingeordnet)
+
+Direkt im Anschluss an Teil 29. Dritter der drei angestoßenen großen
+Punkte — mit einer wichtigen Korrektur gegenüber der ursprünglichen
+Einschätzung aus Teil 27.
+
+**Neu eingeordnet:** Teil 27 vermutete, der fehlende `useMemo` um den
+`value` in `AppDataContext.jsx` sei die Hauptursache fürs Ruckeln und
+nur mit einem großen, riskanten Umbau (alle ~30 Datenhooks einzeln
+memoisieren oder den Context aufteilen) zu beheben. Beim genaueren
+Hinsehen zeigt sich: Die einzelnen Datenstücke (`hormonPlan`,
+`supplemente`, `gewohnheiten`, ...) sind über `useState` in ihren Hooks
+selbst schon stabile Referenzen — sie ändern sich nur, wenn wirklich
+etwas an genau diesen Daten geändert wird. Das eigentliche Problem war
+NICHT der Context selbst, sondern dass `WochenuebersichtView.jsx`
+überall den kompletten `appData` (alle ~150 Felder aus allen Hooks
+zusammen) als `useMemo`-Abhängigkeit verwendet hat — und `appData` als
+Sammelobjekt bekommt bei jeder noch so unbeteiligten Änderung irgendwo
+in der App eine neue Referenz. Das ließ `bereichsCompliance` (bis zu
+180 `buildDayItems()`-Aufrufe für die 180-Tage-Statistik!) sowie vier
+weitere `buildDayItems()`-Stellen (Tagesansicht, Wochenraster,
+Monatsraster, PDF-Export) bei praktisch jeder Interaktion irgendwo in
+der App neu durchlaufen, solange diese View offen war.
+
+**Fix** (nur `WochenuebersichtView.jsx`, kein Eingriff in
+`AppDataContext.jsx` oder die Datenhooks nötig): ein einziges,
+schmal auf die tatsächlich von `buildDayItems()` benötigten ~16 Felder
+gestütztes `dayItemsQuelldaten`-`useMemo` ersetzt überall `appData`.
+Zusätzlich `wochentage`/`montag` (hingen bisher an `selectedDate`,
+waren aber selbst nicht memoisiert) sowie zwei neue vorberechnete
+Listen (`wochenItemsProTag`, `monatsTageMitItems`) für Wochenraster/
+Monatsraster/PDF-Export, die vorher inline bei jedem Render bis zu 31
+`buildDayItems()`-Aufrufe gemacht haben, jetzt nur noch bei echter
+Datenänderung. `kumulativeCompliance` (Hydration/Tageslicht/Schlaf)
+ebenso auf die konkret benötigten 5 Felder statt auf `appData` umgestellt.
+
+**Bewusst nicht angefasst:** Die strukturelle Tatsache, dass JEDE
+Context-Änderung weiterhin alle ~150 `useAppData()`-Komponenten neu
+rendern lässt, bleibt bestehen — das ist aber, wie sich jetzt zeigt,
+für sich genommen kaum spürbar (ein reiner Re-Render ohne teure
+Berechnung ist billig); spürbares Ruckeln entsteht erst durch
+un-memoisierte teure Arbeit wie oben. Sollten an anderer Stelle noch
+ähnliche "ganzes appData als Dependency"-Muster auffallen, lohnt sich
+derselbe gezielte Fix — eine app-weite Suche (`grep "appData\]"`) hat
+aktuell keine weiteren Fälle in render-kritischen Views gefunden. Der
+komplette Context-Split bleibt ein mögliches, aber angesichts dieses
+Befunds nicht mehr dringendes Vorhaben für später.
+
+`npm run build` + `npx oxlint` sauber.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 29) — Rollback bei Fehlern: Dosis-Änderungen + Löschfunktionen
 
 Direkt im Anschluss an Teil 28. Zweiter der drei von der Nutzerin
