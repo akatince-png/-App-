@@ -1,5 +1,46 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 32) — Neue Ergebnisse sichtbar machen (Scroll + Hervorhebung)
+
+Nutzerinnen-Feedback (während sie ihr GitHub/Supabase/Vercel-Login-
+Problem selbst behoben hat): "wenn man etwas ausfüllt und dann ein
+Ergebnis entsteht ... wird es visuell nicht klar, dass das grade
+entstanden ist. Erst wenn man scrollt, sieht man, dass da jetzt neuer
+Text ist." Betraf mehrere Stellen mit demselben Muster: ein Formular
+wird ausgefüllt, das Ergebnis erscheint aber in einem Listenbereich, der
+gerade NICHT im sichtbaren Bereich liegt (oft, weil er oberhalb des
+gerade benutzten Formulars steht).
+
+**Gefixt** (überall dasselbe Muster: automatisch ins Bild scrollen +
+kurze Hervorhebung mit der schon vorhandenen `slideInSuccess`/
+`fadeInUp`-Animation, wie beim Abhaken in QuickTaskList.jsx):
+- **Onboarding, "Bereits hinzugefügt"-Liste** (`OnboardingCategoriesView.jsx`):
+  steht oberhalb des Formulars — ein neu hinzugefügter Eintrag (z. B. eine
+  Gewohnheit, ein Supplement) war unsichtbar, solange man unten am
+  Formular blieb.
+- **Trainings-Wochenplan** (`WochenplanEditor.jsx`, geteilt zwischen
+  TrainingView und Onboarding): neu gespeicherte Einheiten scrollen jetzt
+  automatisch ins Bild und sind kurz farblich hervorgehoben.
+- **Akutmodus-Antwort** (`AkutModusKarte.jsx`): scrollt jetzt automatisch
+  ins Bild, sobald sie da ist (relevant bei einem längeren, schon
+  aufgeklappten Panel).
+- **Lexikon** (`LexikonView.jsx`): neue Frage-/Antwort-Karte wird beim
+  Entstehen kurz eingeblendet und ins Bild gescrollt.
+- Dafür `Card` (`primitives.jsx`, in fast der ganzen App verwendet) auf
+  `React.forwardRef` umgestellt — rückwärtskompatibel, ändert nichts an
+  bestehenden Stellen ohne `ref`-Prop.
+
+**Noch offen, unbeantwortet:** Die zweite, eher gestalterische Rückmeldung
+("der Trainingsplan sieht danach nicht wie ein guter Trainingsplan aus")
+ist zu unspezifisch für einen gezielten Fix ohne weitere Rückfrage — dazu
+folgt eine Nachfrage an die Nutzerin (Screenshot oder genauere
+Beschreibung, WAS konkret daran nicht überzeugt: die Tabellenoptik, das
+Fehlen einer Wochenübersicht auf einen Blick, etwas anderes).
+
+`npm run build` + `npx oxlint` sauber, keine neuen Warnungen.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 31) — Sanfte Übergänge + Tagesplan-Datum bleibt beim Navigieren erhalten
 
 Direkt im Anschluss an Teil 30. Letzter Teil des dritten angestoßenen
