@@ -4,13 +4,26 @@ import TimeWheelField from "./TimeWheelField";
 import NumberWheelField from "./NumberWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "./UebungenEditor";
 import VorlaufFeld from "./VorlaufFeld";
-import { accentDark, accentSoft, cardBorder, danger, textMuted } from "./theme";
+import { accent, accentDark, accentSoft, card, cardBorder, danger, textMain, textMuted } from "./theme";
 import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
 import { useT } from "../i18n/translate";
 
 export const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
 
 const LEERE_WARMUP = { aktiv: false, dauerMin: "10", beschreibung: "" };
+
+// Trainingsfarbe/-Icons für die Wochenplan-Übersicht (Nutzerinnen-Vorgabe,
+// 11.09.: die Liste "sieht nicht wie ein guter Trainingsplan aus, sondern
+// wie eine reine Tabelle") — nach Wochentag gruppierte Karten statt einer
+// flachen Zeilen-Tabelle, mit Icon je Trainingsart für mehr Wiedererkennung.
+const TRAININGSART_ICON = {
+  Krafttraining: "🏋️",
+  Cardio: "🏃",
+  Bodyweight: "🤸",
+  "Isometrisches Training": "🧘",
+  Sonstiges: "⚡",
+};
+const trainingIcon = (arten) => TRAININGSART_ICON[arten?.[0]] || "🏋️";
 
 function toggleInArray(arr, val) {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
@@ -174,15 +187,25 @@ export default function WochenplanEditor({
     reset();
   };
 
-  // Flache, nach Wochentag+Uhrzeit sortierte Liste statt Tag-Gruppen mit
-  // eigener Überschrift je Tag — für eine echte, kompakte Tabelle (14.08.,
-  // Nutzerin-Vorgabe: "tabellarisch, schöner fürs Auge" statt Fließtext).
+  // Nach Wochentag+Uhrzeit sortierte Liste, Basis für die Tages-Gruppen
+  // unten.
   const alleEinheitenSortiert = WOCHENTAGE.flatMap((tag) =>
     trainingWochenplan
       .filter((w) => w.wochentag === tag)
       .sort((a, b) => (a.uhrzeit || "").localeCompare(b.uhrzeit || ""))
       .map((e) => ({ ...e, tag }))
   );
+
+  // Gruppiert nach Wochentag statt einer flachen Tabelle (Nutzerinnen-
+  // Vorgabe, 11.09.: "sieht nicht wie ein guter Trainingsplan aus, sondern
+  // wie eine reine Tabelle") — eine Karte pro Tag mit eigenem Tages-Header
+  // wirkt eher wie ein echter Wochenplan zum Überfliegen, eine flache
+  // Tabelle eher wie eine Verwaltungsliste. Nur Tage mit mindestens einer
+  // Einheit werden gezeigt.
+  const tageGruppen = WOCHENTAGE.filter((tag) => alleEinheitenSortiert.some((e) => e.tag === tag)).map((tag) => ({
+    tag,
+    einheiten: alleEinheitenSortiert.filter((e) => e.tag === tag),
+  }));
 
   return (
     <>
@@ -414,86 +437,127 @@ export default function WochenplanEditor({
 
       {zeigeListe && (
         alleEinheitenSortiert.length > 0 ? (
-          <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden" }}>
-            <div style={{ display: "flex", padding: "8px 14px", background: "#FAFBFA", fontSize: 11, fontWeight: 700, color: textMuted }}>
-              <div style={{ width: 40 }}>Tag</div>
-              <div style={{ width: 56 }}>Zeit</div>
-              <div style={{ flex: 1 }}>Art</div>
-              <div style={{ width: wochenplanErinnerungUmschalten ? 84 : 60 }} />
-            </div>
-            {alleEinheitenSortiert.map((e) => {
-              const anzahlUebungen = (e.uebungenListe || []).filter((u) => u.name).length;
-              const istNeu = neueIds.includes(e.id);
-              return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 14 }}>
+            {tageGruppen.map(({ tag, einheiten }) => (
+              <Card key={tag} style={{ padding: 0, overflow: "hidden" }}>
                 <div
-                  key={e.id}
-                  ref={istNeu ? neuesteZeileRef : null}
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    justifyContent: "space-between",
                     padding: "10px 14px",
-                    borderTop: `1px solid ${cardBorder}`,
-                    fontSize: 13,
-                    background: istNeu ? accentSoft : "transparent",
-                    animation: istNeu ? "slideInSuccess 0.6s ease-out" : "none",
+                    background: `linear-gradient(135deg, ${accentDark}, ${accent})`,
                   }}
                 >
-                  <div style={{ width: 40, fontWeight: 700 }}>{tLabel(e.tag)}</div>
-                  <div style={{ width: 56, color: textMuted }}>{e.uhrzeit}</div>
-                  <div
-                    style={{ flex: 1, minWidth: 0, cursor: onZeileAntippen ? "pointer" : "default" }}
-                    onClick={onZeileAntippen ? () => onZeileAntippen(e) : undefined}
-                  >
-                    <div style={{ fontWeight: 700 }}>
-                      {e.name || (e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—")}
-                    </div>
-                    {(e.name || anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv || e.intervallArbeitSek) && (
-                      <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>
-                        {[
-                          e.name && e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "",
-                          e.intervallArbeitSek ? `⏱ ${e.intervallArbeitSek}s/${e.intervallPauseSek || 0}s × ${e.runden || 1}` : "",
-                          anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
-                          e.warmup?.aktiv ? "Warm-up" : "",
-                          e.cooldown?.aktiv ? "Cool-down" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ width: wochenplanErinnerungUmschalten ? 84 : 60, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, flexShrink: 0 }}>
-                    {wochenplanErinnerungUmschalten && (
-                      <button
-                        type="button"
-                        onClick={() => wochenplanErinnerungUmschalten(e.id, e.erinnerungAktiv === false)}
-                        title={e.erinnerungAktiv === false ? "Erinnerung ist aus – antippen zum Einschalten" : "Erinnerung ist an – antippen zum Ausschalten"}
-                        style={{ border: "none", background: "transparent", fontSize: 15, cursor: "pointer", padding: "0 4px", opacity: e.erinnerungAktiv === false ? 0.35 : 1 }}
-                      >
-                        🔔
-                      </button>
-                    )}
-                    {wochenplanBearbeiten && (
-                      <button
-                        type="button"
-                        onClick={() => starteBearbeiten(e)}
-                        title="Bearbeiten"
-                        style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: "0 4px" }}
-                      >
-                        ✏️
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => wochenplanEntfernen(e.id)}
-                      style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
-                    >
-                      ×
-                    </button>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: "#fff" }}>{tLabel(WOCHENTAGE_VOLL[tag])}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>
+                    {einheiten.length} Einheit{einheiten.length === 1 ? "" : "en"}
                   </div>
                 </div>
-              );
-            })}
-          </Card>
+                {einheiten.map((e) => {
+                  const anzahlUebungen = (e.uebungenListe || []).filter((u) => u.name).length;
+                  const istNeu = neueIds.includes(e.id);
+                  return (
+                    <div
+                      key={e.id}
+                      ref={istNeu ? neuesteZeileRef : null}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                        padding: "12px 14px",
+                        borderTop: `1px solid ${cardBorder}`,
+                        fontSize: 13,
+                        background: istNeu ? accentSoft : card,
+                        animation: istNeu ? "slideInSuccess 0.6s ease-out" : "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          flexShrink: 0,
+                          width: 40,
+                          height: 40,
+                          borderRadius: 12,
+                          background: accentSoft,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 18,
+                        }}
+                      >
+                        {trainingIcon(e.arten)}
+                      </div>
+                      <div
+                        style={{ flex: 1, minWidth: 0, cursor: onZeileAntippen ? "pointer" : "default" }}
+                        onClick={onZeileAntippen ? () => onZeileAntippen(e) : undefined}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <div style={{ fontWeight: 800, color: textMain }}>
+                            {e.name || (e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "—")}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 10.5,
+                              fontWeight: 700,
+                              color: accentDark,
+                              background: accentSoft,
+                              borderRadius: 8,
+                              padding: "2px 7px",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {e.uhrzeit} Uhr
+                          </div>
+                        </div>
+                        {(e.name || anzahlUebungen > 0 || e.warmup?.aktiv || e.cooldown?.aktiv || e.intervallArbeitSek) && (
+                          <div style={{ fontSize: 11, color: textMuted, marginTop: 3 }}>
+                            {[
+                              e.name && e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "",
+                              e.intervallArbeitSek ? `⏱ ${e.intervallArbeitSek}s/${e.intervallPauseSek || 0}s × ${e.runden || 1}` : "",
+                              anzahlUebungen ? `${anzahlUebungen} Übung${anzahlUebungen === 1 ? "" : "en"}` : "",
+                              e.warmup?.aktiv ? "🔥 Warm-up" : "",
+                              e.cooldown?.aktiv ? "🧊 Cool-down" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                        {wochenplanErinnerungUmschalten && (
+                          <button
+                            type="button"
+                            onClick={() => wochenplanErinnerungUmschalten(e.id, e.erinnerungAktiv === false)}
+                            title={e.erinnerungAktiv === false ? "Erinnerung ist aus – antippen zum Einschalten" : "Erinnerung ist an – antippen zum Ausschalten"}
+                            style={{ border: "none", background: "transparent", fontSize: 15, cursor: "pointer", padding: "0 4px", opacity: e.erinnerungAktiv === false ? 0.35 : 1 }}
+                          >
+                            🔔
+                          </button>
+                        )}
+                        {wochenplanBearbeiten && (
+                          <button
+                            type="button"
+                            onClick={() => starteBearbeiten(e)}
+                            title="Bearbeiten"
+                            style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: "0 4px" }}
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => wochenplanEntfernen(e.id)}
+                          style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </Card>
+            ))}
+          </div>
         ) : (
           <Card style={{ marginBottom: 14, textAlign: "center" }}>
             <div style={{ fontSize: 12.5, color: textMuted }}>Noch kein Wochenplan angelegt.</div>
