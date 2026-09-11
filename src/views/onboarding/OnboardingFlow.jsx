@@ -73,12 +73,12 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   // Protokoll der ganze Zweck, also bleibt es beim bisherigen Verhalten.
   const [istDirekterNeuStart] = useState(startPhase === "hauptprotokoll");
 
-  if (phase === "welcome") {
-    return <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
-  }
+  let screen;
 
-  if (phase === "hauptprotokoll") {
-    return (
+  if (phase === "welcome") {
+    screen = <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
+  } else if (phase === "hauptprotokoll") {
+    screen = (
       <HauptprotokollErstellenView
         onDone={() => setPhase("intro")}
         onBack={() => setPhase("welcome")}
@@ -86,14 +86,12 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
         zeigeBestehendesAlsOption={!istDirekterNeuStart}
       />
     );
-  }
-
-  if (phase === "intro") {
+  } else if (phase === "intro") {
     // Bei Coach-Begleitung deckt OnboardingIntroView (über OnboardingCoachGuide)
     // Name, Ziele UND Profil direkt mit ab — dann direkt zu "laborwerte"
     // statt die (bereits erledigten) Phasen "ziele"/"profil" nochmal manuell
     // zu durchlaufen.
-    return (
+    screen = (
       <OnboardingIntroView
         onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")}
         onBack={() => setPhase("hauptprotokoll")}
@@ -101,36 +99,24 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
         nurManuell={!istAdminModus}
       />
     );
-  }
-
-  if (phase === "ziele") {
-    return <OnboardingZieleView onDone={() => setPhase("profil")} onBack={() => setPhase("intro")} onCancel={onCancel} />;
-  }
-
-  if (phase === "profil") {
-    return (
+  } else if (phase === "ziele") {
+    screen = <OnboardingZieleView onDone={() => setPhase("profil")} onBack={() => setPhase("intro")} onCancel={onCancel} />;
+  } else if (phase === "profil") {
+    screen = (
       <OnboardingProfilView
         onDone={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
         onBack={() => setPhase("ziele")}
         onCancel={onCancel}
       />
     );
-  }
-
-  if (phase === "steckbrief") {
-    return <OnboardingSteckbriefView onDone={() => setPhase("celebration")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
-  }
-
-  if (phase === "laborwerte") {
-    return <OnboardingLaborwerteView onDone={() => setPhase("routinen")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
-  }
-
-  if (phase === "routinen") {
-    return <OnboardingRoutinenView onDone={() => setPhase("categories")} onBack={() => setPhase("laborwerte")} onCancel={onCancel} />;
-  }
-
-  if (phase === "categories") {
-    return (
+  } else if (phase === "steckbrief") {
+    screen = <OnboardingSteckbriefView onDone={() => setPhase("celebration")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
+  } else if (phase === "laborwerte") {
+    screen = <OnboardingLaborwerteView onDone={() => setPhase("routinen")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
+  } else if (phase === "routinen") {
+    screen = <OnboardingRoutinenView onDone={() => setPhase("categories")} onBack={() => setPhase("laborwerte")} onCancel={onCancel} />;
+  } else if (phase === "categories") {
+    screen = (
       <OnboardingCategoriesView
         onCancel={onCancel}
         onBackToStart={() => setPhase("routinen")}
@@ -140,13 +126,24 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
         }}
       />
     );
+  } else {
+    screen = (
+      <OnboardingCompletionView
+        eingerichteteBereiche={eingerichteteBereiche}
+        onDone={onDone}
+        onBack={() => setPhase(vollstaendigesOnboarding ? "categories" : "steckbrief")}
+      />
+    );
   }
 
+  // Verbesserung ("Übergänge nicht flüssig"): siehe AuthenticatedApp.jsx für
+  // dieselbe Begründung — jeder Phasenwechsel war bisher ein harter,
+  // unanimierter Komponentenaustausch. key={phase} + die vorhandene
+  // fadeInUp-Animation (wie schon in WelcomeView.jsx) sorgt für ein sanftes
+  // Einblenden statt eines harten Schnitts bei jedem "Weiter"/"Zurück".
   return (
-    <OnboardingCompletionView
-      eingerichteteBereiche={eingerichteteBereiche}
-      onDone={onDone}
-      onBack={() => setPhase(vollstaendigesOnboarding ? "categories" : "steckbrief")}
-    />
+    <div key={phase} style={{ animation: "fadeInUp 0.35s ease-out" }}>
+      {screen}
+    </div>
   );
 }

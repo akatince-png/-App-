@@ -122,7 +122,14 @@ function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggl
   );
 }
 
-export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
+// Bug-Fix ("Zustände gehen beim View-Wechsel verloren"): `selectedDate`
+// und `modus` (Tag/Woche) kommen jetzt als kontrollierte Props von
+// AuthenticatedApp.jsx statt aus lokalem State — vorher startete diese
+// View bei jedem Verlassen/Wiederbetreten (kompletter Remount, siehe
+// AuthenticatedApp.jsx) wieder bei "heute"/"Tag", egal welches Datum
+// zuletzt angeschaut wurde. Rest der Datei unverändert, da die Props
+// dieselben Namen wie die vorherigen lokalen State-Variablen tragen.
+export default function TagesplanView({ onHome, onOpenTraining, onEditItem, selectedDate, onSelectedDateChange: setSelectedDate, modus, onModusChange: setModus }) {
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const {
     plan,
@@ -164,8 +171,6 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem }) {
     questFortschrittSpeichern,
   } = useAppData();
 
-  const [modus, setModus] = useState("tag"); // 'tag' | 'woche'
-  const [selectedDate, setSelectedDate] = useState(new Date());
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
   // Ansicht, sonst "morgen"/"abend" — ersetzt dann den kompletten Screen,
   // bis die Routine abgeschlossen oder abgebrochen wird.

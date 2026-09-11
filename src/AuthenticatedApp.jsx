@@ -74,6 +74,14 @@ export default function AuthenticatedApp() {
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
   // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
   const [offenesTrainingId, setOffenesTrainingId] = useState(null);
+  // Bug-Fix ("Zustände gehen beim View-Wechsel verloren"): TagesplanView
+  // wird bei jedem Verlassen/Wiederbetreten komplett neu gemountet (siehe
+  // `screen`-Switch unten) — ausgewähltes Datum und Tag/Woche-Modus liegen
+  // deshalb hier statt in TagesplanView.jsx selbst, damit ein "Home →
+  // woanders hin → zurück zum Tagesplan" nicht wieder bei "heute"/"Tag"
+  // landet, sondern genau da weitermacht, wo man war.
+  const [tagesplanDatum, setTagesplanDatum] = useState(new Date());
+  const [tagesplanModus, setTagesplanModus] = useState("tag");
 
   // Rückkehr von der Spotify-Anmeldung (accounts.spotify.com leitet mit
   // ?code=...&state=... zurück auf die App) — Code gegen Zugangsdaten
@@ -182,6 +190,10 @@ export default function AuthenticatedApp() {
           const ziel = KATEGORIE_TO_VIEW[kategorie];
           if (ziel) setView(ziel);
         }}
+        selectedDate={tagesplanDatum}
+        onSelectedDateChange={setTagesplanDatum}
+        modus={tagesplanModus}
+        onModusChange={setTagesplanModus}
       />
     );
   } else if (view === "routinen") {
@@ -286,7 +298,20 @@ export default function AuthenticatedApp() {
             </button>
           </div>
         )}
-        {screen}
+        {/* Bug-Fix/Verbesserung ("Übergänge nicht flüssig"): Der View-Wechsel
+            hier ist ein harter Komponentenaustausch (anderer Komponententyp
+            je nach `view`, kein gemeinsamer DOM-Knoten) — ganz ohne jede
+            Übergangsanimation sprang jeder Wechsel bisher hart. `key={view}`
+            erzwingt bei jedem Wechsel einen frischen Mount dieses Wrappers,
+            was die vorhandene fadeInUp-Animation auslöst (dieselbe Technik
+            wie bereits in WelcomeView.jsx) — ein sanftes Einblenden statt
+            eines harten Schnitts, ohne den Remount selbst zu ändern. Ist
+            @media (prefers-reduced-motion: reduce) gesetzt, ist die
+            @keyframes-Regel in index.css gar nicht registriert, die
+            Animation bleibt dann automatisch aus. */}
+        <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
+          {screen}
+        </div>
         {zeigeFab && <Fab onClick={neuesProtokoll} />}
       </div>
     </div>
