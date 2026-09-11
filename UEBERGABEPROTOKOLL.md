@@ -1,5 +1,52 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 35) — Restliche kleinere Bug-Check-Funde: erste Runde
+
+Nutzerinnen-Auftrag: "Behebe bitte alle Punkte, die Du in der
+Zwischenzeit beheben kannst" — Abarbeitung der in Teil 27 bewusst offen
+gelassenen kleineren Funde, mit Zwischenbericht.
+
+1. **Onboarding "Schlaf": Zurück-Navigation überschrieb gespeicherte
+   Zeiten** (`OnboardingCategoriesView.jsx`) — beim (Wieder-)Betreten
+   eines Schritts wurden Schlafzeiten und "eigenes Startdatum" bisher
+   immer auf den Standard zurückgesetzt statt aus bereits gespeicherten
+   Daten (`categoryZiele.schlaf.bloecke` bzw. der
+   `teilprotokolle`-Zeile) vorbefüllt. Neuer `useEffect` an `index`
+   geknüpft, holt sich nach jedem Reset die echten Werte zurück, falls
+   vorhanden.
+2. **`teilprotokollSpeichern` ohne await/Fehlerprüfung** (dieselbe
+   Datei) — lief bisher fire-and-forget; schlug der Schreibvorgang
+   fehl, sprang der Flow trotzdem sofort weiter, ohne dass die
+   Nutzerin je davon erfuhr (untergräbt auch das
+   Zwischenspeichern-Feature, das genau diese Zeilen zählt). `weiter()`
+   ist jetzt async, wartet, zeigt bei einem Fehler eine Meldung und
+   navigiert NICHT weiter.
+3. **Spotify-Trennen/Playlist-Löschen ignorierte Fehler**
+   (`useSpotifyVerbindung.js`) — `error` wurde nicht geprüft, lokaler
+   Zustand wurde auch bei einem fehlgeschlagenen Löschen auf
+   "getrennt"/"gelöscht" gesetzt (wirkte wie ein Reconnect-Bug nach dem
+   nächsten Neuladen). Jetzt wird der Fehler geprüft, über das
+   bestehende `spotifyVerbindungFehler`-Feld angezeigt (bereits in
+   MehrTab.jsx verdrahtet) und der lokale Zustand nur bei Erfolg
+   geändert.
+4. **Aufräumen**: totes `softBounce`-CSS (definiert, nie verwendet)
+   entfernt. `handleToggleSoundEnabled`/`soundEnabled` in
+   `HomeView.jsx` existierten bereits (steuern den Erledigt-Ton in
+   `QuickTaskList`), es gab aber nirgends einen Schalter dafür — Ton
+   ließ sich nie ausschalten. Kleiner 🔊/🔇-Knopf neben "Als
+   Nächstes" ergänzt statt den toten Code nur zu entfernen, da die
+   Funktion technisch schon vollständig war, nur die UI dafür fehlte.
+
+**Noch in Arbeit** (siehe nächster Teil): Kurz-Intervalltimer-Musik-
+Neustart bei internem Reset, restliche Rollback-Stellen
+(`useProtocolData.js`/`useProfileData.js`/`useBiomarkerData.js`),
+doppeltes aktives Protokoll (braucht DB-Migration).
+
+`npm run build` + `npx oxlint` sauber nach jedem Punkt (18 statt 19
+vorbestehende Warnungen — die HomeView-Warnung ist jetzt weg).
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 34) — Wochenübersicht: Zustandserhalt (Fortsetzung des Remount-Themas)
 
 Nutzerinnen-Nachfrage: War die "AppDataContext"-Diagnose aus Teil 27
