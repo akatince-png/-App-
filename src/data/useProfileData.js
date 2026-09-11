@@ -72,28 +72,48 @@ export function useProfileData(userId) {
     };
   }, [userId]);
 
+  // Bug-Fix (alle Set-Funktionen in dieser Datei): bei einem Fehlschlag des
+  // Updates zeigte die Oberfläche trotzdem dauerhaft den neuen (nicht
+  // gespeicherten) Wert, bis zum nächsten Neuladen — jetzt Rollback auf den
+  // vorherigen Stand bei einem Fehler.
   const setPersonal = useCallback(
     (feld, val) => {
-      setPersonalData((prev) => ({ ...prev, [feld]: val }));
+      let vorher;
+      setPersonalData((prev) => {
+        vorher = prev[feld];
+        return { ...prev, [feld]: val };
+      });
       const column = { geschlecht: "geschlecht", geburtsdatum: "geburtsdatum", groesse: "groesse", gewichtStart: "gewicht_start" }[feld];
       if (!column || !userId) return;
       supabase
         .from("profiles")
         .update({ [column]: val === "" ? null : val })
         .eq("id", userId)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setPersonalData((prev) => ({ ...prev, [feld]: vorher }));
+          }
+        });
     },
     [userId]
   );
 
   const toggleDatenteilung = useCallback(() => {
+    let vorher;
     setDatenteilungState((prev) => {
+      vorher = prev;
       const next = !prev;
       supabase
         .from("profiles")
         .update({ datenteilung: next })
         .eq("id", userId)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setDatenteilungState(vorher);
+          }
+        });
       return next;
     });
   }, [userId]);
@@ -104,7 +124,12 @@ export function useProfileData(userId) {
       .from("profiles")
       .update({ onboarding_complete: true })
       .eq("id", userId)
-      .then(({ error }) => error && console.error(error));
+      .then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setOnboardingCompleteState(false);
+        }
+      });
   }, [userId]);
 
   // Zum wiederholten Testen des Willkommens-/Einrichtungs-Ablaufs mit
@@ -145,13 +170,20 @@ export function useProfileData(userId) {
   // Spalten (protocols.dauer_wochen bzw. routines.ziel_tage).
   const setCategoryZiel = useCallback(
     (kategorie, patch) => {
+      let vorher;
       setCategoryZieleState((prev) => {
+        vorher = prev;
         const next = { ...prev, [kategorie]: patch };
         supabase
           .from("profiles")
           .update({ category_ziele: next })
           .eq("id", userId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setCategoryZieleState(vorher);
+            }
+          });
         return next;
       });
     },
@@ -163,13 +195,20 @@ export function useProfileData(userId) {
   // berücksichtigt. Gleiches jsonb-Muster wie setCategoryZiel.
   const setErinnerung = useCallback(
     (kategorie, aktiv) => {
+      let vorher;
       setErinnerungenState((prev) => {
+        vorher = prev;
         const next = { ...prev, [kategorie]: aktiv };
         supabase
           .from("profiles")
           .update({ erinnerungen: next })
           .eq("id", userId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setErinnerungenState(vorher);
+            }
+          });
         return next;
       });
     },
@@ -183,13 +222,20 @@ export function useProfileData(userId) {
   // wie setCategoryZiel/setErinnerung.
   const setSteckbrief = useCallback(
     (felder) => {
+      let vorher;
       setSteckbriefState((prev) => {
+        vorher = prev;
         const next = { ...prev, ...felder };
         supabase
           .from("profiles")
           .update({ steckbrief: next })
           .eq("id", userId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setSteckbriefState(vorher);
+            }
+          });
         return next;
       });
     },
@@ -200,13 +246,20 @@ export function useProfileData(userId) {
 
   const toggleMesswert = useCallback(
     (id) => {
+      let vorher;
       setAktiveMesswerte((prev) => {
+        vorher = prev;
         const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
         supabase
           .from("profiles")
           .update({ aktive_messwerte: next })
           .eq("id", userId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setAktiveMesswerte(vorher);
+            }
+          });
         return next;
       });
     },

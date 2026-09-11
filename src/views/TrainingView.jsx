@@ -433,6 +433,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             fadeVorlaufSek={INTERVALL_FADE_SEK}
             onPhaseStart={intervallMusikSync.onPhaseStart}
             onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
+            onReset={intervallMusikSync.reset}
             onFertig={() => beenden()}
           />
         </Card>
@@ -446,6 +447,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             fadeVorlaufSek={INTERVALL_FADE_SEK}
             onPhaseStart={intervallMusikSync.onPhaseStart}
             onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
+            onReset={intervallMusikSync.reset}
             onFertig={() => beenden()}
           />
         </Card>
@@ -462,6 +464,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
             tickJedeSekunde
             onPhaseStart={intervallMusikSync.onPhaseStart}
             onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
+            onReset={intervallMusikSync.reset}
             onFertig={() => beenden()}
           />
         </Card>
@@ -919,6 +922,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                   fadeVorlaufSek={INTERVALL_FADE_SEK}
                   onPhaseStart={intervallMusikSync.onPhaseStart}
                   onPhaseEndeNaht={intervallMusikSync.onPhaseEndeNaht}
+                  onReset={intervallMusikSync.reset}
                   onFertig={() => {}}
                 />
                 <MusikModusToggle

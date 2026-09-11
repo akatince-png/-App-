@@ -153,19 +153,31 @@ export function useProtocolData(userId) {
     };
   }, [userId, loadArchived]);
 
+  // Bug-Fix (alle vier Funktionen unten): bei einem Fehlschlag des Updates
+  // zeigte die Oberfläche trotzdem dauerhaft den neuen (nicht gespeicherten)
+  // Wert, bis zum nächsten Neuladen — jetzt Rollback auf den vorherigen
+  // Stand bei einem Fehler.
   const toggleZiel = useCallback(
     (z) => {
+      let vorher;
+      let next;
       setZieleState((prev) => {
-        const next = prev.includes(z) ? prev.filter((x) => x !== z) : [...prev, z];
-        if (protocolId) {
-          supabase
-            .from("protocols")
-            .update({ ziele: next })
-            .eq("id", protocolId)
-            .then(({ error }) => error && console.error(error));
-        }
+        vorher = prev;
+        next = prev.includes(z) ? prev.filter((x) => x !== z) : [...prev, z];
         return next;
       });
+      if (protocolId) {
+        supabase
+          .from("protocols")
+          .update({ ziele: next })
+          .eq("id", protocolId)
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setZieleState(vorher);
+            }
+          });
+      }
     },
     [protocolId]
   );
@@ -363,44 +375,62 @@ export function useProtocolData(userId) {
 
   const setStartdatum = useCallback(
     (v) => {
+      const vorher = startdatum;
       setStartdatumState(v);
       if (protocolId) {
         supabase
           .from("protocols")
           .update({ startdatum: v })
           .eq("id", protocolId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setStartdatumState(vorher);
+            }
+          });
       }
     },
-    [protocolId]
+    [protocolId, startdatum]
   );
 
   const setDauer = useCallback(
     (v) => {
+      const vorher = dauer;
       setDauerState(v);
       if (protocolId) {
         supabase
           .from("protocols")
           .update({ dauer_wochen: parseInt(v, 10) || 12 })
           .eq("id", protocolId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setDauerState(vorher);
+            }
+          });
       }
     },
-    [protocolId]
+    [protocolId, dauer]
   );
 
   const setNotizen = useCallback(
     (v) => {
+      const vorher = notizen;
       setNotizenState(v);
       if (protocolId) {
         supabase
           .from("protocols")
           .update({ notizen: v })
           .eq("id", protocolId)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setNotizenState(vorher);
+            }
+          });
       }
     },
-    [protocolId]
+    [protocolId, notizen]
   );
 
   const plan = useMemo(() => {

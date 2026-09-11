@@ -29,13 +29,25 @@ export function useBiomarkerData(userId) {
     };
   }, [userId]);
 
+  // Bug-Fix: bei einem Fehlschlag des Upserts zeigte die Oberfläche trotzdem
+  // dauerhaft den neuen (nicht gespeicherten) Wert, bis zum nächsten
+  // Neuladen — jetzt Rollback auf den vorherigen Stand bei einem Fehler.
   const setBiomarkerWert = useCallback(
     (name, val) => {
-      setBiomarkerState((prev) => ({ ...prev, [name]: val }));
+      let vorher;
+      setBiomarkerState((prev) => {
+        vorher = prev[name];
+        return { ...prev, [name]: val };
+      });
       supabase
         .from("biomarkers")
         .upsert({ user_id: userId, name, value: val, updated_at: new Date().toISOString() }, { onConflict: "user_id,name" })
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setBiomarkerState((prev) => ({ ...prev, [name]: vorher }));
+          }
+        });
     },
     [userId]
   );

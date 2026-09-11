@@ -46,6 +46,14 @@ export default function Timer({
   // AKTUELLE Phase endet.
   onPhaseStart,
   onPhaseEndeNaht,
+  // Bug-Fix (11.09.): der Timer-interne "Reset"-Knopf setzt nur den eigenen
+  // Status zurück, nicht den Musik-Sync-Zustand in useIntervallMusikSync.js
+  // — dessen gestartetRef blieb dadurch auf "schon gestartet" stehen, die
+  // Playlist wurde bei einem zweiten Durchlauf (Reset → erneut Start, ohne
+  // zwischendurch zu schließen) nicht neu gestartet. onReset() optional,
+  // wird bei jedem reset() aufgerufen, egal ob intern über den Reset-Knopf
+  // oder von außen.
+  onReset,
   fadeVorlaufSek = null,
   // Nur für mode="interval": ein leiser Klick bei jeder vollen Sekunde,
   // sowohl beim Halten als auch in der Pause — für sehr kurze Intervalle
@@ -127,6 +135,7 @@ export default function Timer({
     vorgewarntRef.current = false;
     phaseEndeNahtRef.current = false;
     letzteTickSekundeRef.current = null;
+    onReset?.();
   };
   const stoppenUndFertig = () => {
     const sek = Math.round(segmentElapsedMs() / 1000);
