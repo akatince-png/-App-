@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 // Anzahl Lautstärke-Stufen während einer Ein-/Ausblendung — genug für einen
 // spürbar weichen statt harten Übergang, ohne bei jeder Sekunde einen
@@ -85,6 +85,14 @@ export function useIntervallMusikSync({ modus, fadeSek, spotifyPausieren, spotif
     fadeStoppen();
     gestartetRef.current = false;
   }, []);
+
+  // Bug-Fix: reset() räumt den Fade-Interval korrekt auf, wurde aber nicht
+  // auf jedem Ausstiegspfad der aufrufenden Komponente garantiert aufgerufen
+  // (z. B. Timer-internes "Reset" statt "Schließen"). Dieser Cleanup greift
+  // unabhängig davon beim Unmount — verhindert, dass ein noch laufender
+  // Fade-Interval (bis zu FADE_SCHRITTE weitere Ticks) im Hintergrund
+  // weiterläuft, nachdem die Komponente längst weg ist.
+  useEffect(() => fadeStoppen, []);
 
   return { onPhaseStart, onPhaseEndeNaht, reset };
 }

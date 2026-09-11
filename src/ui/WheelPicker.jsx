@@ -17,19 +17,32 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 54, 
   const scrollRef = useRef(null);
   const settleTimer = useRef(null);
   const justClickedRef = useRef(false);
+  // Merkt sich den Index, auf den die Scroll-Position zuletzt (durch uns
+  // selbst, per Tap oder Scroll-Snap) ausgerichtet wurde. `null` erzwingt
+  // beim allerersten Rendern den initialen Sprung.
+  const lastKnownIndexRef = useRef(null);
   const padCount = Math.floor(visibleCount / 2);
   const height = itemHeight * visibleCount;
   const index = Math.max(0, values.indexOf(value));
 
-  // Bei externem Wertwechsel (oder erstem Rendern) zur passenden Position
-  // springen — "instant", damit es nicht mit einer laufenden Nutzer-
-  // Scrollbewegung in Konflikt gerät.
+  // Bug-Fix: lief bisher nur einmal beim Mount ([]-Deps trotz Kommentar
+  // "bei externem Wertwechsel ... springen"). Änderte sich `value` von
+  // außen, während dieselbe WheelPicker-Instanz offen blieb (z. B. der Coach
+  // füllt das Feld, oder ein Supabase-Roundtrip bringt einen aktualisierten
+  // Wert zurück), sprang die Scroll-Position nie mit — der fett hervor-
+  // gehobene Wert (der reaktiv aus der Prop berechnet wird) und die
+  // physische Position liefen auseinander. Jetzt reagiert der Effekt auf
+  // `index`, überspringt den Sprung aber, wenn die Position bereits durch
+  // einen eigenen Tap/Scroll-Snap auf denselben Index gebracht wurde (siehe
+  // lastKnownIndexRef-Updates unten) — so kollidiert er nicht mit einer
+  // gerade laufenden Nutzer-Interaktion.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    if (lastKnownIndexRef.current === index) return;
+    lastKnownIndexRef.current = index;
     el.scrollTo({ top: index * itemHeight, behavior: "instant" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [index, itemHeight]);
 
   const handleScroll = () => {
     if (settleTimer.current) clearTimeout(settleTimer.current);
@@ -46,6 +59,7 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 54, 
       if (!el) return;
       const nextIndex = Math.round(el.scrollTop / itemHeight);
       const clamped = Math.min(values.length - 1, Math.max(0, nextIndex));
+      lastKnownIndexRef.current = clamped;
       el.scrollTo({ top: clamped * itemHeight, behavior: "smooth" });
       if (values[clamped] !== value) {
         onChange(values[clamped]);
@@ -88,6 +102,7 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 54, 
               className="mp-wheel-item"
               onClick={() => {
                 justClickedRef.current = true;
+                lastKnownIndexRef.current = i;
                 const el = scrollRef.current;
                 if (el) el.scrollTo({ top: i * itemHeight, behavior: "smooth" });
                 if (v !== value) {

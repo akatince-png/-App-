@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 
@@ -16,6 +16,9 @@ function rowToWochenplan(r) {
 export function useMealData(userId, hauptprotokollId) {
   const [mahlzeiten, setMahlzeiten] = useState([]);
   const [mahlzeitErledigt, setMahlzeitErledigt] = useState({});
+  // Siehe useGewohnheitenData.js: verhindert, dass schnelles Doppeltippen
+  // denselben veralteten State liest und dadurch einen Toggle-Tap verliert.
+  const pendingErledigtRef = useRef({});
   const [mahlzeitErledigtAt, setMahlzeitErledigtAt] = useState({});
   const [mealWochenplan, setMealWochenplan] = useState([]);
 
@@ -168,7 +171,9 @@ export function useMealData(userId, hauptprotokollId) {
   const toggleMahlzeitErledigt = useCallback(
     async (datum, id, zeit) => {
       const k = `${datum}__${id}__${zeit}`;
-      const nextVal = !mahlzeitErledigt[k];
+      const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : mahlzeitErledigt[k];
+      const nextVal = !aktuellerWert;
+      pendingErledigtRef.current[k] = nextVal;
       const nowIso = new Date().toISOString();
       setMahlzeitErledigt((prev) => ({ ...prev, [k]: nextVal }));
       setMahlzeitErledigtAt((prev) => ({ ...prev, [k]: nextVal ? nowIso : null }));

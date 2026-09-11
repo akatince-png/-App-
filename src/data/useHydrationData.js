@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 
@@ -7,6 +7,15 @@ const heute = () => toLocalISODate(new Date());
 export function useHydrationData(userId) {
   const [hydrationEintraege, setHydrationEintraege] = useState([]);
   const [hydrationZielMl, setHydrationZielMl] = useState(2500);
+  // Hält den zuletzt SYNCHRON berechneten Stand fest (Bug-Fix: schnelles
+  // Mehrfach-Tippen auf "+250 ml" verlor Taps, weil zwei fast gleichzeitig
+  // gestartete Aufrufe beide denselben — noch nicht durch den ersten Aufruf
+  // aktualisierten — `hydrationEintraege`-Stand als Basis nahmen, solange der
+  // erste Request noch unterwegs war. Der Ref wird sofort (vor dem `await`)
+  // geschrieben, dient nachfolgenden, schneller ausgelösten Aufrufen als
+  // Basis und wird bei einem Fehler wieder verworfen, damit kein Phantom-
+  // Stand entsteht, der nie tatsächlich gespeichert wurde.
+  const pendingHeuteRef = useRef(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -46,13 +55,20 @@ export function useHydrationData(userId) {
   const hydrationHinzufuegen = useCallback(
     async (deltaMl) => {
       const datum = heute();
-      const bisher = hydrationEintraege.find((e) => e.datum === datum)?.mengeMl ?? 0;
+      const bisher =
+        pendingHeuteRef.current?.datum === datum
+          ? pendingHeuteRef.current.menge
+          : hydrationEintraege.find((e) => e.datum === datum)?.mengeMl ?? 0;
       const neueMenge = Math.max(0, bisher + deltaMl);
+      pendingHeuteRef.current = { datum, menge: neueMenge };
       const { error } = await supabase
         .from("hydration_logs")
         .upsert({ user_id: userId, datum, menge_ml: neueMenge }, { onConflict: "user_id,datum" });
       if (error) {
         console.error(error);
+        if (pendingHeuteRef.current?.datum === datum && pendingHeuteRef.current?.menge === neueMenge) {
+          pendingHeuteRef.current = null;
+        }
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setHydrationEintraege((prev) => {

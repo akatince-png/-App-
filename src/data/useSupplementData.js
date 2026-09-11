@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 
@@ -43,6 +43,9 @@ function supplementToRow(neu) {
 export function useSupplementData(userId, hauptprotokollId) {
   const [supplemente, setSupplemente] = useState([]);
   const [supplementErledigt, setSupplementErledigt] = useState({});
+  // Siehe useGewohnheitenData.js: verhindert, dass schnelles Doppeltippen
+  // denselben veralteten State liest und dadurch einen Toggle-Tap verliert.
+  const pendingErledigtRef = useRef({});
   const [supplementErledigtAt, setSupplementErledigtAt] = useState({});
   const [supplementFeedback, setSupplementFeedback] = useState({});
 
@@ -139,7 +142,9 @@ export function useSupplementData(userId, hauptprotokollId) {
   const toggleSupplementErledigt = useCallback(
     async (datum, id, zeit) => {
       const k = `${datum}__${id}__${zeit}`;
-      const nextVal = !supplementErledigt[k];
+      const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : supplementErledigt[k];
+      const nextVal = !aktuellerWert;
+      pendingErledigtRef.current[k] = nextVal;
       const nowIso = new Date().toISOString();
       setSupplementErledigt((prev) => ({ ...prev, [k]: nextVal }));
       setSupplementErledigtAt((prev) => ({ ...prev, [k]: nextVal ? nowIso : null }));

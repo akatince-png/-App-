@@ -811,7 +811,16 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       <OnboardingNavArrows
         onBack={index > 0 || onBackToStart ? zurueck : undefined}
         backLabel={t("onboarding.zurueck")}
-        onForward={() => weiter(false)}
+        // Bug-Fix: Während effectiveModus === "jetzt" (Formular gerade
+        // ausgefüllt) rief dieser obere Pfeil unconditioned weiter(false)
+        // auf — dasselbe "überspringen", das sonst nur "Später einrichten"
+        // auslöst. Eingaben im Formular unten wurden dadurch stillschweigend
+        // verworfen, sobald jemand naheliegenderweise den oberen "Weiter"-
+        // Pfeil statt des eigentlichen Speichern-Buttons antippte. Jetzt
+        // ausgeblendet (onForward={undefined}, siehe OnboardingNavArrows.jsx),
+        // solange das Formular aktiv ist — Weiter geht dann nur noch über den
+        // echten Speichern-Button im Formular.
+        onForward={effectiveModus === "jetzt" ? undefined : () => weiter(false)}
         forwardLabel={tLabel("Weiter")}
       />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
@@ -1239,7 +1248,22 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   ))}
                 </div>
                 <div style={{ marginTop: 10 }}>
-                  <PrimaryButton onClick={customPeptidHinzufuegen} disabled={!customPeptidName.trim()} variant="ghost">
+                  {/* Bug-Fix: speichernUndWeiter/hinzufuegen/customPeptidHinzufuegen
+                      fangen echte Netzwerkfehler (z. B. Verbindungsabbruch,
+                      nicht nur ein von Supabase zurückgegebenes {error})
+                      nicht ab — ohne diese Absicherung an der Aufrufstelle
+                      blieb "saving" dauerhaft true und der Button für immer
+                      auf "Speichern..." hängen, ohne jede Fehlermeldung. */}
+                  <PrimaryButton
+                    onClick={() =>
+                      customPeptidHinzufuegen().catch((err) => {
+                        console.error(err);
+                        setError(err?.message || t("onboarding.error.speichern"));
+                      })
+                    }
+                    disabled={!customPeptidName.trim()}
+                    variant="ghost"
+                  >
                     {t("onboarding.hinzufuegen")}
                   </PrimaryButton>
                 </div>
@@ -1314,7 +1338,22 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
             {istMultiAdd ? (
               <>
-                <PrimaryButton onClick={hinzufuegen} disabled={saving}>
+                {/* Bug-Fix: ein echter Netzwerkfehler (nicht nur ein von
+                    Supabase zurückgegebenes {error}) lief in hinzufuegen()
+                    bisher ungefangen durch — setSaving(false) wurde dann nie
+                    erreicht, der Button blieb für immer auf "Speichern..."
+                    hängen, ohne jede Fehlermeldung/Möglichkeit, es erneut
+                    zu versuchen. */}
+                <PrimaryButton
+                  onClick={() =>
+                    hinzufuegen().catch((err) => {
+                      console.error(err);
+                      setError(err?.message || t("onboarding.error.speichern"));
+                      setSaving(false);
+                    })
+                  }
+                  disabled={saving}
+                >
                   {saving ? t("onboarding.saving") : t("onboarding.hinzufuegen")}
                 </PrimaryButton>
                 <PrimaryButton variant="ghost" onClick={() => weiter(hinzugefuegt.length > 0)}>
@@ -1323,7 +1362,19 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               </>
             ) : (
               <>
-                <PrimaryButton onClick={speichernUndWeiter} disabled={saving}>
+                {/* Bug-Fix: siehe hinzufuegen() oben — dieselbe Absicherung
+                    gegen einen für immer auf "Speichern..." hängenden Button
+                    bei echtem Netzwerkfehler. */}
+                <PrimaryButton
+                  onClick={() =>
+                    speichernUndWeiter().catch((err) => {
+                      console.error(err);
+                      setError(err?.message || t("onboarding.error.speichern"));
+                      setSaving(false);
+                    })
+                  }
+                  disabled={saving}
+                >
                   {saving ? t("onboarding.saving") : tLabel("Speichern & weiter")}
                 </PrimaryButton>
                 <PrimaryButton variant="ghost" onClick={() => weiter(false)}>

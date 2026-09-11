@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 
@@ -9,6 +9,14 @@ import { toLocalISODate } from "../utils/dates";
 export function useGewohnheitenData(userId, hauptprotokollId) {
   const [gewohnheiten, setGewohnheiten] = useState([]);
   const [gewohnheitErledigt, setGewohnheitErledigt] = useState({});
+  // Bug-Fix: schnelles Doppeltippen auf denselben Abhaken-Button (bei ADHS
+  // keine Seltenheit) las bisher beide Male denselben, noch nicht
+  // aktualisierten State — der zweite Tap (gedacht als "rückgängig machen")
+  // hatte dadurch keine Wirkung, zwei identische Requests statt Toggle→
+  // Untoggle. Dieser Ref hält den zuletzt synchron zugewiesenen Wert je
+  // Schlüssel fest, damit ein zweiter, schnell folgender Tap darauf statt
+  // auf dem alten React-State aufbaut.
+  const pendingErledigtRef = useRef({});
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -85,7 +93,9 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   const toggleGewohnheitErledigt = useCallback(
     async (datum, gewohnheitId) => {
       const k = `${datum}__${gewohnheitId}`;
-      const nextVal = !gewohnheitErledigt[k];
+      const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : gewohnheitErledigt[k];
+      const nextVal = !aktuellerWert;
+      pendingErledigtRef.current[k] = nextVal;
       setGewohnheitErledigt((prev) => ({ ...prev, [k]: nextVal }));
       if (nextVal) {
         const { error } = await supabase

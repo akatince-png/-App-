@@ -236,6 +236,19 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, uebungIndex]);
 
+  // Bug-Fix: Der Home-Knopf (⌂/"Zurück") rief bisher direkt onSchliessen()
+  // auf und umging damit den Spotify-Stopp aus beenden() — verließ man ein
+  // laufendes Live-Workout über Home statt über "Fertig", lief die Musik
+  // unbemerkt weiter (derselbe Bug wie beim Workflow-Timer). beenden()
+  // selbst eignet sich hier NICHT als direkter Ersatz für onHome, da es
+  // zusätzlich das Training als abgeschlossen protokolliert (onFertig) —
+  // das würde ein bewusst abgebrochenes Training fälschlich als erledigt
+  // speichern. Deshalb ein eigener, schmaler Wrapper nur für den Musik-Stopp.
+  const homeVerlassen = () => {
+    spotifyPausieren();
+    onSchliessen?.();
+  };
+
   const beenden = (felder = {}) => {
     const dauerMin = felder.dauerMin ?? Math.max(1, Math.round(gesamtSek / 60));
     // Musik lief seit dem Live-Start automatisch mit (siehe oben) — beim
@@ -276,7 +289,7 @@ function LiveWorkout({ session, onFertig, onSchliessen }) {
 
   return (
     <Shell bereich="training">
-      <ViewHeader title={`🏋️ ${session.art}`} onHome={onSchliessen} homeTitle="Zurück" />
+      <ViewHeader title={`🏋️ ${session.art}`} onHome={homeVerlassen} homeTitle="Zurück" />
 
       {musikFehler && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>

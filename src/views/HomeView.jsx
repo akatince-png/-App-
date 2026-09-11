@@ -264,7 +264,14 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     saveSoundEnabled(newState);
   };
 
-  const today = new Date();
+  // useMemo statt `new Date()` direkt: Der Wert wird unten als Dependency
+  // eines weiteren useMemo (Widget-Liste) verwendet — ein bei jedem Render
+  // neu erzeugtes Date-Objekt hätte jedes Mal eine andere Referenz und
+  // machte dieses Memoisieren wirkungslos (Bug: komplette Widget-Liste
+  // wurde bei JEDEM Render neu berechnet statt nur bei echten
+  // Datenänderungen — spürbar als Ruckeln bei Interaktionen auf der
+  // Startseite).
+  const today = useMemo(() => new Date(), []);
   const stunde = today.getHours();
   const gruss = stunde < 12 ? t("home.greeting.morgen") : stunde < 18 ? t("home.greeting.tag") : t("home.greeting.abend");
 

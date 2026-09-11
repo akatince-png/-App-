@@ -51,20 +51,31 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
     }
     setError(null);
     setSaving(true);
-    const result = await hauptprotokollErstellen({ name, startdatum });
-    setSaving(false);
-    if (!result?.ok) {
-      setError(result?.error || t("hauptprotokoll.error.speichern"));
-      return;
+    // Bug-Fix: ein echter Netzwerkfehler (nicht nur ein von
+    // hauptprotokollErstellen zurückgegebenes {error}) lief hier bisher
+    // ungefangen durch — setSaving(false) wurde dann nie erreicht, der
+    // "Weiter"-Knopf blieb für immer auf "Speichern..." hängen, ohne jede
+    // Fehlermeldung. try/finally garantiert jetzt den Reset in jedem Fall.
+    try {
+      const result = await hauptprotokollErstellen({ name, startdatum });
+      if (!result?.ok) {
+        setError(result?.error || t("hauptprotokoll.error.speichern"));
+        return;
+      }
+      // Peptid-Protokoll (protocols) ist die einzige Kategorie mit eigenem
+      // "ein aktives Protokoll"-Modell statt einer einfachen Katalogtabelle —
+      // wird deshalb hier nachträglich verknüpft statt schon bei seiner
+      // eigenen (oft früheren) Erstellung.
+      if (result.hauptprotokoll?.id) {
+        verknuepfeMitHauptprotokoll(result.hauptprotokoll.id);
+      }
+      onDone();
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || t("hauptprotokoll.error.speichern"));
+    } finally {
+      setSaving(false);
     }
-    // Peptid-Protokoll (protocols) ist die einzige Kategorie mit eigenem
-    // "ein aktives Protokoll"-Modell statt einer einfachen Katalogtabelle —
-    // wird deshalb hier nachträglich verknüpft statt schon bei seiner
-    // eigenen (oft früheren) Erstellung.
-    if (result.hauptprotokoll?.id) {
-      verknuepfeMitHauptprotokoll(result.hauptprotokoll.id);
-    }
-    onDone();
   };
 
   if (modus === "bestehend" && aktivesHauptprotokoll) {

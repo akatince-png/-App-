@@ -155,7 +155,24 @@ export default function WorkflowTimer({ onSchliessen }) {
 
   return (
     <Shell bereich="gewohnheit">
-      <ViewHeader title="⏱️ Workflow" onHome={onSchliessen} />
+      {/* Bug-Fix: Der Home-Knopf rief bisher direkt onSchliessen() auf und
+          umging damit beenden() — genau den Fix, der laut Kommentar oben
+          extra für "Musik läuft nach dem Beenden einfach weiter" eingebaut
+          wurde. Verließ man eine laufende Session über ⌂ statt über
+          "Abbrechen"/"Fertig", spielte Spotify unbemerkt weiter. Jetzt läuft
+          bei laufendem Preset erst beenden() (stoppt Musik), danach erst
+          die eigentliche Navigation. */}
+      <ViewHeader
+        title="⏱️ Workflow"
+        onHome={
+          laufendesPreset
+            ? () => {
+                beenden();
+                onSchliessen?.();
+              }
+            : onSchliessen
+        }
+      />
 
       {!laufendesPreset ? (
         <>

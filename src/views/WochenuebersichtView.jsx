@@ -84,7 +84,14 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
   };
 
   const today = new Date();
-  const montag = addDays(today, -((today.getDay() + 6) % 7));
+  // Bug-Fix: hing bisher an `today` statt an `selectedDate` — die
+  // Wochentag-Leiste (Tag-Modus, Wochen-Raster, PDF-Export "Woche vom …")
+  // zeigte dadurch IMMER nur die aktuelle Kalenderwoche und ließ sich (anders
+  // als die Monatsansicht mit ‹/›) nie auf eine andere Woche verschieben —
+  // wählte man z. B. in der Monatsansicht einen Tag aus einer anderen Woche,
+  // passte sich diese Leiste nicht an. Jetzt wie in TagesplanView.jsx an
+  // `selectedDate` gekoppelt (das bei jedem Datumswechsel mitgeht).
+  const montag = addDays(selectedDate, -((selectedDate.getDay() + 6) % 7));
   const wochentage = Array.from({ length: 7 }, (_, i) => addDays(montag, i));
 
   const tagesItems = useMemo(() => buildDayItems(selectedDate, appData), [selectedDate, appData]);

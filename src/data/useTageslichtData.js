@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 
@@ -10,6 +10,10 @@ const heute = () => toLocalISODate(new Date());
 export function useTageslichtData(userId) {
   const [tageslichtEintraege, setTageslichtEintraege] = useState([]);
   const [tageslichtZielMinuten, setTageslichtZielMinuten] = useState(30);
+  // Siehe useHydrationData.js für die ausführliche Begründung: verhindert,
+  // dass schnelles Mehrfach-Tippen einen Tap verliert, weil zwei parallele
+  // Aufrufe sonst denselben, noch nicht aktualisierten State als Basis nehmen.
+  const pendingHeuteRef = useRef(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -36,13 +40,20 @@ export function useTageslichtData(userId) {
   const tageslichtHinzufuegen = useCallback(
     async (deltaMinuten) => {
       const datum = heute();
-      const bisher = tageslichtEintraege.find((e) => e.datum === datum)?.minuten ?? 0;
+      const bisher =
+        pendingHeuteRef.current?.datum === datum
+          ? pendingHeuteRef.current.minuten
+          : tageslichtEintraege.find((e) => e.datum === datum)?.minuten ?? 0;
       const neueMinuten = Math.max(0, bisher + deltaMinuten);
+      pendingHeuteRef.current = { datum, minuten: neueMinuten };
       const { error } = await supabase
         .from("tageslicht_logs")
         .upsert({ user_id: userId, datum, minuten: neueMinuten }, { onConflict: "user_id,datum" });
       if (error) {
         console.error(error);
+        if (pendingHeuteRef.current?.datum === datum && pendingHeuteRef.current?.minuten === neueMinuten) {
+          pendingHeuteRef.current = null;
+        }
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setTageslichtEintraege((prev) =>

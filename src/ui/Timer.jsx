@@ -86,7 +86,15 @@ export default function Timer({
   // Startet die eigentliche Übung/Runde — direkt bei start() (falls keine
   // Vorbereitungsphase konfiguriert ist) oder nach deren Ablauf.
   const startEcht = () => {
-    const istErstStart = mode === "interval";
+    // Bug-Fix: vorher `mode === "interval"` allein — das ist auch beim
+    // Fortsetzen nach einer Pause wahr (start() ruft bei status==="paused"
+    // ebenfalls startEcht() auf), wodurch onPhaseStart("arbeit", 1) bei
+    // JEDEM Fortsetzen erneut feuerte, egal in welcher Phase/Runde man
+    // tatsächlich pausiert hatte. Das ließ z. B. useIntervallMusikSync.js
+    // beim Fortsetzen mitten in einer stillen Pause fälschlich die Musik
+    // wieder hochfahren. "Echter erster Start" ist nur idle (ohne
+    // Vorbereitung) oder das Ende der Vorbereitungsphase — nicht "paused".
+    const istErstStart = mode === "interval" && (status === "idle" || status === "vorbereitung");
     anchorRef.current = Date.now();
     setStatus("running");
     if (istErstStart) {
