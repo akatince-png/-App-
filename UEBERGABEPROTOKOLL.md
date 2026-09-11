@@ -1,5 +1,64 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 28) — Peptid-Tagesplan-Lücke geschlossen
+
+Direkt im Anschluss an Teil 27. Von den drei dort offen gelassenen großen
+Punkten hat die Nutzerin alle drei angestoßen — hiermit der erste:
+**Peptid-Dosen tauchten nirgends im Tagesplan/Home/Wochenübersicht auf.**
+
+Ursachenklärung: Am 13.08. (Migration 0042) wurde bewusst entschieden,
+Peptide keine eigene Kategorie mehr zu geben, sondern sie als
+`kategorie: "Peptid"` in die bestehende Medikamente/Hormone-Tabelle
+(`hormones`/`hormone_logs`) zu integrieren — Nutzerinnen-Zitat aus dem
+Migrations-Kommentar: "als separaten Reiter aufzustellen, wo wir doch
+schon Medikamente inklusive Hormone und Off-Label-Produkte haben, halte
+ich für absurd". `buildDayItems()` (Tagesplan/Home/Wochenübersicht)
+wurde entsprechend umgestellt und liest seitdem nur noch `hormonPlan`.
+**Aber:** Diese Migration war nur eine einmalige Kopie des damals aktiven
+Peptid-Protokolls — der Onboarding-Schritt "Peptide" selbst wurde nie
+mit umgestellt und schrieb weiterhin in die alte, separate
+`protocol_peptide`-Tabelle. Jedes seit dem 13.08. im Onboarding
+eingetragene Peptid landete dadurch in einem "toten" Datenpfad, den
+niemand mehr ausliest — unsichtbar im Tagesplan, nirgends abhakbar.
+(Nur über MedikamenteView.jsx direkt mit Kategorie "Peptid" angelegte
+Präparate funktionierten schon die ganze Zeit korrekt.)
+
+**Fix, dreiteilig:**
+1. Migration `0077_hormones_bacwasser_spruehstoesse.sql`: `hormones`
+   bekommt die zwei peptid-spezifischen Spalten (`bac_wasser_ml`,
+   `spruehstoesse`), die `protocol_peptide` hatte, `hormones` aber
+   nicht — sonst wären diese Dosierungsdetails beim Umstieg verloren
+   gegangen. **Muss von Ihnen im Supabase-Dashboard eingespielt werden**
+   (dieses Sandbox hat keinen DB-Zugriff).
+2. `useHormoneData.js`: um `bacWasser`/`spruehstoesse` erweitert
+   (Lesen, Schreiben, Feld-Mapping) — spiegelt jetzt exakt, was
+   `useProtocolData.js` für Peptide schon konnte.
+3. `OnboardingCategoriesView.jsx`: Der komplette Peptid-Schritt läuft
+   jetzt über dieselben `hormonHinzufuegen`/`hormonEntfernen`/
+   `setHormonEinnahmeart`/`setHormonDose`/`setHormonFoto`-Funktionen wie
+   der Medikamente-Schritt (mit `kategorie: "Peptid"` fest gesetzt),
+   statt über die alten `protocol_peptide`-Funktionen. Dünne
+   Wrapper-Funktionen mit identischen Namen/Signaturen wie vorher
+   (`togglePeptid`, `setDose`, `setEinnahmeart`, `addCustomPreparat`,
+   `setPeptidFoto`, `intervallGueltig`) halten den Rest der ohnehin
+   schon sehr langen Datei unverändert — nur die vier Stellen, die auf
+   das alte separate `einnahmeart`-Objekt zugriffen, wurden auf
+   `dosierung[p]?.einnahmeart` umgestellt (im neuen Modell steckt die
+   Einnahmeart mit in der Dosierung, nicht mehr in einem eigenen Feld).
+
+**Bewusst nicht angefasst:** `useProtocolData.js`s alte
+Peptid-Funktionen selbst (togglePeptid, setDose, ...) bleiben bestehen
+— WochenuebersichtView.jsx/StatistikTab.jsx lesen für die Statistik
+weiterhin auch von dort, für bereits vor diesem Fix angelegte alte
+Peptid-Einträge. Diese beiden Stellen zeigen neu (über Medikamente/
+Onboarding) hinzugefügte Peptide aktuell noch als "Medikament" statt
+als "Peptid" gelabelt in der Statistik — ein rein kosmetischer
+Folgefund, separat vermerkt, nicht Teil dieses Fixes.
+
+`npm run build` + `npx oxlint` sauber, keine neuen Warnungen.
+
+---
+
 ## ✅ Update 11.09.2026 (Teil 27) — Kompletter Bug-Check der gesamten App
 
 Nutzerinnen-Auftrag: "immer noch viele Bugs ... manche Funktionen
