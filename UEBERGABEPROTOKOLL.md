@@ -1,5 +1,69 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 39) — Neues Feature: Punkte-/Abzeichen-System ("Erfolge")
+
+Nutzerinnen-Vorgabe (Brainstorming, dann konkretisiert): ein
+Belohnungssystem — Punkte, Streaks ("28 Tage", "90 Tage", ...) und
+Abzeichen, die man sich verdient. Geklärt wurden vorab zwei
+Design-Entscheidungen: Streaks/Punkte gelten sowohl **pro Kategorie**
+als auch **global** (nicht nur eins von beidem), und es gibt **1 Punkt
+pro erledigtem Eintrag** (nicht gewichtet nach Aufwand).
+
+**Datenmodell — bewusst schlank:** Punkte und Streaks werden NICHT
+separat gespeichert, sondern bei Bedarf direkt aus den bereits
+geladenen "erledigt"-Daten jeder Kategorie berechnet
+(`src/utils/errungenschaften.js`) — vermeidet doppelte Buchhaltung und
+das Risiko, dass ein eigener Zähler von den echten Daten abweicht. Nur
+WELCHE Abzeichen bereits verdient wurden, muss dauerhaft festgehalten
+werden (sonst verschwindet ein Abzeichen wieder, sobald ein Streak
+später reißt) — dafür die neue Tabelle `errungenschaften` (Migration
+0079, muss wie 0077/0078 manuell im Supabase Dashboard SQL Editor
+ausgeführt werden).
+
+**13 Kategorien** mit eigenem Streak: Morgenroutine, Abendroutine,
+Schlaf, Hydration, Tageslicht, Ernährung, Training, Supplemente,
+Hormone & Medikamente, Peptide, Gewohnheiten, Getränke-Rezepte,
+Atemübungen — plus ein globaler Streak über alle Kategorien
+gemeinsam. Hydration/Tageslicht sind zielwert- statt haken-basiert:
+ein Tag zählt dort nur, wenn das Tagesziel erreicht wurde. Hormone und
+Medikamente teilen sich technisch dieselbe Tabelle (nur ein Textfeld,
+keine echte DB-Verknüpfung) — auf Nutzerinnen-Wunsch bewusst als EINE
+gemeinsame Kategorie geführt statt den Mehraufwand einer sauberen
+Trennung zu betreiben.
+
+**Abzeichen-Meilensteine:** Streak-Abzeichen (pro Kategorie + global)
+bei 7/14/28/60/90/180/365 Tagen am Stück, Punkte-Abzeichen (global) bei
+50/100/250/500/1000/2500 Punkten. Neu verdiente Abzeichen werden beim
+Öffnen der Ansicht automatisch in die DB geschrieben und kurz optisch
+hervorgehoben (gleiches fadeIn-Muster wie bei "neue Ergebnisse
+sichtbar machen", Teil 32).
+
+**Oberfläche:** neuer Reiter "Erfolge" im "Archiv"-Hub (neben
+Statistik) — Gesamtpunkte + globaler Streak oben, darunter eine
+Kategorie-Kachel-Übersicht (nur Kategorien mit mindestens einem
+Eintrag) mit Punkten/Streak/nächstem Meilenstein, darunter die
+verdienten Abzeichen mit Datum. Zwei neue Icons (trophy, flame) im
+zentralen Linien-Icon-Set ergänzt.
+
+Bewusst NICHT in den immer geladenen `AppDataContext` gehängt, sondern
+nur berechnet, wenn die "Erfolge"-Ansicht tatsächlich geöffnet wird —
+kein zusätzlicher Ladeaufwand beim normalen App-Start.
+
+Kernlogik (Punktezählung, Streak-Berechnung mit Lücke, "heute noch
+offen"-Kulanz, gemischte Datumsformate zwischen den Kategorien)
+isoliert mit Beispieldaten gegengeprüft, bevor es in die App integriert
+wurde. `npm run build` + `npx oxlint` sauber (18 vorbestehende
+Warnungen, keine neuen).
+
+**Offen für später** (bewusst nicht Teil dieser ersten Version, siehe
+frühere Brainstorming-Runde): die andere Idee aus demselben Gespräch —
+Bereiche pro Coachee gezielt freischalten/sperren (z. B. "Training erst
+freigeben, wenn Schlaf/Morgenroutine etabliert sind") — wurde
+zurückgestellt, da zuerst geklärt werden sollte, wonach ein Coach
+"erfolgreich genug" tatsächlich bemisst.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 38) — Rollback bei Fehlern: restliche Daten-Hooks
 
 Nach Abschluss der ursprünglichen Teil-27-Liste (Teil 37) auf "mach weiter,
