@@ -1,5 +1,47 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 34) — Wochenübersicht: Zustandserhalt (Fortsetzung des Remount-Themas)
+
+Nutzerinnen-Nachfrage: War die "AppDataContext"-Diagnose aus Teil 27
+eine Falschdiagnose, oder gibt es am Grundgerüst noch etwas zu
+korrigieren? Antwort dazu direkt im Chat gegeben (kurz: die
+AppDataContext-Sorge war keine Falschdiagnose des Symptoms, aber die
+angenommene Fix-Größe war überschätzt — die eigentliche Ursache war
+eng genug, um sicher behoben zu werden, siehe Teil 30. Was strukturell
+WEITERHIN besteht: der komplette Remount bei jedem View-Wechsel, siehe
+Teil 27). Diese Sitzung schließt die zweite Hälfte davon: Teil 31 hat
+das nur für den Tagesplan (Datum/Modus) behoben, die Wochenübersicht
+war noch offen.
+
+**Fix**, exakt dasselbe Muster wie beim Tagesplan: `selectedDate`,
+`viewMode` (Tag/Woche/Monat) und `monthDate` sind jetzt kontrollierte
+Props, die in `AuthenticatedApp.jsx` liegen statt in
+`WochenuebersichtView.jsx` selbst. Die Wochenübersicht wird über
+`PlaeneView.jsx` gerendert (der "Alle Pläne"-Hub mit den 9+1 Reitern:
+Schlaf/Hydration/Training/.../Wochenübersicht) — dort remountet `Aktiv`
+(die jeweils aktive Reiter-Komponente) bei jedem Reiterwechsel genauso
+hart wie `AuthenticatedApp.jsx` seine Hauptansichten, betraf also nicht
+nur "ganz woanders hin und zurück", sondern schon den Wechsel zwischen
+z. B. Schlaf- und Wochenübersicht-Reiter. Die drei Props laufen von
+`AuthenticatedApp.jsx` durch `PlaeneView.jsx` (als reine Durchreiche,
+für alle anderen Reiter dort ungenutzte, harmlose Zusatz-Props) bis zu
+`WochenuebersichtView.jsx`. `WochenuebersichtView` hat nur diesen einen
+Verwendungsort, deshalb ohne Rückfall auf internen State möglich.
+
+**Weiterhin bewusst offen**: Zustandserhalt für die übrigen Reiter in
+PlaeneView (z. B. Trainingsansicht-Zustände) sowie für die eigentliche
+Remount-Architektur selbst (siehe Teil 27/31 — Alternative wäre, Views
+dauerhaft gemountet zu halten statt sie neu aufzubauen, dafür bräuchte
+es aber eine Prüfung jeder einzelnen View auf stille "läuft nur einmal
+beim echten Mount"-Annahmen, zu groß für einen Nebenbei-Fix).
+
+`npm run build` + `npx oxlint` sauber, keine neuen Warnungen. Prop-
+Namen an allen drei Stellen manuell gegengeprüft (kein Live-Test mit
+echtem Login möglich, aber strukturell identisch zum bereits
+verifizierten Tagesplan-Fix aus Teil 31).
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 33) — Trainings-Wochenplan: Tages-Karten statt Tabelle
 
 Direkt im Anschluss an Teil 32. Auf Rückfrage ("was genau überzeugt am
