@@ -1,5 +1,177 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026 (Teil 27) — Kompletter Bug-Check der gesamten App
+
+Nutzerinnen-Auftrag: "immer noch viele Bugs ... manche Funktionen
+funktionieren nicht ... Übergänge nicht flüssig" — ein kompletter Check
+des gesamten Codes, ohne Zeitlimit. Vorgehen: eigene Durchsicht der
+App-Shell/Navigation sowie Akutmodus/Atemübungen, parallel dazu vier
+Hintergrund-Agenten für Datenschicht (src/data/*.js), Timer-/Animations-
+Komponenten, Onboarding-Flow und Plan-/Protokoll-Views — alle explizit
+auf das echte Repo (`/workspace/-app-main`) angesetzt und deren Befunde
+vor Übernahme geprüft. Build (`npm run build`) und `npx oxlint` nach
+jedem Fix-Block gegengeprüft, keine neuen Warnungen.
+
+### Gefixt (11 Bugs, 14 Dateien)
+
+1. **[KRITISCH] Onboarding: oberer „Weiter"-Pfeil verwarf eingegebene
+   Formulardaten.** `OnboardingCategoriesView.jsx` — der Pfeil oben auf
+   jeder Kategorie-Seite rief IMMER `weiter(false)` (= "überspringen")
+   auf, unabhängig davon, ob gerade ein Formular ("Jetzt einrichten")
+   ausgefüllt wurde. Klicksequenz: Supplement-/Trainings-/Medikamenten-
+   Daten eintragen → aus Gewohnheit den oberen statt des richtigen
+   Speichern-Buttons antippen → Eingaben weg, Schritt als übersprungen
+   markiert, kein Hinweis. Das erklärt vermutlich einen großen Teil der
+   "meine Eingaben verschwinden einfach"-Berichte. Fix: Pfeil wird
+   ausgeblendet, solange das Formular aktiv ist (`effectiveModus ===
+   "jetzt"`) — Weiter geht dann nur noch über den echten Speichern-Button.
+
+2. **[HOCH] Hydration/Tageslicht: schnelles Mehrfach-Tippen verlor Taps.**
+   `useHydrationData.js`, `useTageslichtData.js` — `+250 ml`/`+Minuten`
+   berechnete den neuen Stand aus dem zum Aufrufzeitpunkt noch nicht
+   aktualisierten React-State. Zwei schnell aufeinanderfolgende Taps
+   lasen denselben alten Wert, der zweite ging verloren. Fix: ein Ref
+   hält den zuletzt synchron zugewiesenen Wert fest, auf dem ein
+   unmittelbar folgender zweiter Tap aufbaut statt auf dem alten State.
+
+3. **[HOCH] `Timer.jsx`: Fortsetzen nach Pause feuerte fälschlich
+   "Runde 1, Arbeitsphase"-Ereignis.** Betraf JEDEN Intervall-Timer
+   (Workflow, Bodyweight/Cardio/Isometrisch, Kurz-Intervalltimer).
+   `istErstStart` prüfte nur `mode === "interval"` statt zusätzlich den
+   tatsächlichen Status — beim Fortsetzen nach einer Pause (z. B. mitten
+   in einer stillen Musik-Pause) fuhr `useIntervallMusikSync` dadurch
+   unerwartet die Musik wieder hoch, obwohl die App weiterhin "PAUSE"
+   anzeigte. Fix: `istErstStart` prüft jetzt zusätzlich `status ===
+   "idle" || status === "vorbereitung"`.
+
+4. **[HOCH] Home-Knopf ließ Spotify beim Verlassen weiterlaufen.**
+   `WorkflowTimer.jsx`, `TrainingView.jsx` (Live-Workout) — der ⌂-Knopf
+   in der Kopfzeile rief bisher direkt die Navigation auf und umging
+   damit `beenden()`/`spotifyPausieren()`, die extra für genau dieses
+   gemeldete Problem eingebaut wurden. Nur "Abbrechen"/"Fertig" stoppten
+   die Musik, Home nicht. Fix: Home stoppt jetzt bei laufender Session
+   zuerst die Musik (bei TrainingView über einen eigenen schmalen
+   `homeVerlassen()`-Wrapper, damit ein abgebrochenes Training nicht
+   fälschlich als "fertig" protokolliert wird).
+
+5. **[MITTEL] Gewohnheiten/Mahlzeiten/Supplemente: Doppeltippen auf
+   Abhaken verlor den zweiten Tap.** `useGewohnheitenData.js`,
+   `useMealData.js`, `useSupplementData.js` — dieselbe Race Condition
+   wie bei Hydration (Punkt 2), hier als Ja/Nein statt als Delta. Fix:
+   analoger Pending-Ref pro Hook.
+
+6. **[MITTEL] Onboarding: Netzwerkfehler ließ den Speichern-Button für
+   immer auf "Speichern..." hängen.** `OnboardingCategoriesView.jsx`
+   (`hinzufuegen`, `speichernUndWeiter`, `customPeptidHinzufuegen`),
+   `HauptprotokollErstellenView.jsx` (`submit`) — ein echter
+   Verbindungsabbruch (nicht nur ein von Supabase zurückgegebenes
+   `{error}`) lief ungefangen durch, `setSaving(false)` wurde nie
+   erreicht. Fix: Fehlerbehandlung an den Aufrufstellen bzw. per
+   try/catch/finally direkt in `submit()`.
+
+7. **[MITTEL] `WochenuebersichtView.jsx`: Wochentag-Leiste ließ sich nie
+   auf eine andere Woche verschieben.** Hing an `today` statt an
+   `selectedDate` — anders als die Monatsansicht (mit ‹/›) gab es keine
+   Möglichkeit, die Tagesauswahl-Leiste (Tag-Modus, Wochenraster,
+   PDF-Export "Woche vom …") auf eine andere Woche zu bewegen; wählte
+   man in der Monatsansicht einen Tag aus einer anderen Woche, passte
+   sich die Leiste nicht an. Fix: an `selectedDate` gekoppelt (wie in
+   TagesplanView.jsx).
+
+8. **[MITTEL] `WheelPicker.jsx`: Scroll-Position synct nicht bei
+   externer Wertänderung.** Effekt für den initialen Sprung zur
+   passenden Position hatte trotz gegenteiligem Kommentar leere
+   Dependencies, lief also nur beim Mount. Änderte sich der Wert von
+   außen (z. B. Coach füllt ein Feld, oder ein Supabase-Roundtrip bringt
+   einen aktualisierten Wert zurück), blieb die physische Scroll-Position
+   stehen, während der fett hervorgehobene Wert bereits sprang. Fix:
+   reagiert jetzt auf den Index, überspringt den Sprung aber, wenn die
+   Position bereits durch einen eigenen Tap/Scroll-Snap dorthin gebracht
+   wurde (kein Konflikt mit laufender Nutzer-Interaktion).
+
+9. **[NIEDRIG] `useIntervallMusikSync.js`: Fade-Interval ohne
+   Unmount-Cleanup.** Lief bis zu 6 weitere Ticks im Hintergrund weiter,
+   wenn die Komponente während eines laufenden Fades verschwand. Fix:
+   `useEffect(() => fadeStoppen, [])` ergänzt.
+
+10. **[PERFORMANCE] `HomeView.jsx`: Widget-Liste wurde bei JEDEM Render
+    neu berechnet statt gecacht.** `today = new Date()` erzeugte bei
+    jedem Render ein neues Objekt, das als Dependency eines `useMemo`
+    diente — machte die Memoisierung wirkungslos, spürbar als Ruckeln
+    bei Interaktionen auf der Startseite. Fix: `today` per `useMemo(()
+    => new Date(), [])` einmal pro Mount berechnet.
+
+### Geprüft, bewusst NICHT gefixt — größere Befunde für eine Entscheidung
+
+Diese Punkte sind real, aber entweder architektonisch groß (Risiko,
+in einer Sitzung überstürzt viele Dateien anzufassen) oder brauchen
+erst eine inhaltliche Entscheidung. Einzeln aufgeführt, damit nichts
+verloren geht:
+
+- **[GROSS, vermutlich Hauptursache für "ruckelig"] `AppDataContext.jsx`:
+  der an alle ~150 Komponenten verteilte `value` ist kein `useMemo` —
+  JEDE Zustandsänderung irgendwo in der App (ein Tastendruck, ein Tap)
+  lässt den gesamten Datenkontext neu rendern, und jede Komponente, die
+  `useAppData()` nutzt, rendert mit — unabhängig davon, ob sie die
+  geänderten Daten überhaupt braucht. Eine korrekte Behebung braucht
+  entweder sorgfältige Memoisierung in jedem der ~30 einzelnen
+  Daten-Hooks oder eine Aufteilung in mehrere kleinere Contexts — beides
+  ein eigenständiges, mehrstündiges Vorhaben mit echtem Risiko für neue
+  Bugs (falsch/unvollständig memoisiert = veraltete Daten werden
+  angezeigt), wenn überstürzt gemacht.
+- **[GROSS] Kompletter Remount statt Zustandserhalt beim View-Wechsel.**
+  `AuthenticatedApp.jsx` rendert bei jedem `view`-Wechsel einen komplett
+  neuen Komponententyp — kein `key`/keine Transition, kein Zustandserhalt.
+  Wechselt man z. B. Tagesplan → Home → zurück, sind Datum-Auswahl,
+  aufgeklappte Morgen-/Abendroutine, Wochenansicht-Modus etc. wieder auf
+  Standard. Das erklärt sowohl "Zustände gehen verloren" als auch die
+  ruckartigen (statt weichen) Bildschirmwechsel strukturell für die
+  GESAMTE App, nicht nur einzelne Screens. Eigenständiges Vorhaben.
+- **[GROSS, inhaltliche Entscheidung nötig] Peptid-Dosen tauchen
+  nirgends mehr im Tagesplan/Home/Wochenübersicht auf.** `dayItems.js`
+  (`buildDayItems`) nimmt Peptid-Daten gar nicht mehr entgegen, obwohl
+  "Peptide" weiterhin ein Pflicht-Onboarding-Schritt ist und
+  Statistik/Wochenübersicht die alten Peptid-Daten weiterhin als
+  "geplant" führen. Nutzerinnen mit aktiven Peptiden können ihre Dosen
+  nirgends abhaken — sie sammeln sich unsichtbar als "verpasst". Bevor
+  das gefixt wird, muss geklärt werden: Peptide wieder in `buildDayItems`
+  einspeisen, oder ganz auf das neuere Hormon-Modell (`kategorie:
+  "Peptid"` in MedikamenteView.jsx) migrieren und den alten Pfad
+  abschalten?
+- **[MITTEL, systemisch] Optimistische Updates/Löschungen ohne Rollback
+  bei Fehler**, an rund 20 Stellen in `src/data/*.js` (u. a.
+  `useProtocolData.js`, `useHormoneData.js`, `useProfileData.js`,
+  Lösch-Funktionen in fast jedem Hook). Bei einem Server-/Netzwerkfehler
+  zeigt die Oberfläche trotzdem den neuen/gelöschten Zustand — bis zum
+  nächsten Neuladen, dann erscheint der alte Wert/gelöschte Eintrag
+  wieder, wirkt wie zufälliger Datenverlust. Klar identifizierbares
+  Muster, aber zu viele Stellen für einen sicheren Rundumschlag in einer
+  Sitzung — am besten gezielt an den meistgenutzten Stellen zuerst
+  (Peptid-/Hormon-Dosis ändern, Gewohnheit/Supplement löschen).
+- **[MITTEL] Mögliche doppelte aktive Protokolle bei schnellem
+  Tab-/Gerätewechsel.** `useProtocolData.js` legt ohne Sperre ein neues
+  aktives Protokoll an, wenn keins gefunden wird — es gibt keinen
+  Unique-Constraint in der Datenbank, der "nur eins pro Nutzer" erzwingt.
+  Bräuchte eine Migration (DB-Constraint), die Sie manuell im Supabase-
+  Dashboard einspielen müssten.
+- **[MITTEL] Onboarding „Schlaf": Zurück-Navigation kann bereits
+  gespeicherte Zeiten stillschweigend auf Standard (22:30–06:30)
+  zurücksetzen**, ebenso ein aktiviertes "eigenes Startdatum". Anders als
+  bei Hydration/Tageslicht gibt es hier keinen "leer = unverändert
+  lassen"-Schutz beim erneuten Betreten des Schritts.
+- **[NIEDRIG] Weitere kleinere Funde:** fehlende Fehlerprüfung beim
+  Spotify-Trennen (`useSpotifyVerbindung.js`), mögliche doppelte
+  Workflow-Presets bei paralleler Erst-Migration, fehlende
+  Cancel-Guards in ca. 8 Daten-Hooks (nur im Admin-"Verwalten
+  als"-Modus relevant), ein definiertes aber nie verwendetes
+  `softBounce`-Animation (index.css), ein `handleToggleSoundEnabled` in
+  HomeView.jsx ohne zugehörigen Schalter in der Oberfläche.
+
+Kein Bereich sonst berührt. Alle Fixes einzeln nachvollziehbar in den
+Commits, `npm run build` + `npx oxlint` sauber.
+
+---
+
 ## ✅ Update 16.08.2026, Fortsetzung (Teil 26) — GLP-1/ADHS/Diabetes: dritter Puzzle-Stein verknüpft
 
 Direkt im Anschluss an Teil 25 (Commit `3194fe5`). Nutzerinnen-Nachfrage:
