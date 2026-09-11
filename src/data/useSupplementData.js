@@ -111,10 +111,23 @@ export function useSupplementData(userId, hauptprotokollId) {
     [userId, hauptprotokollId]
   );
 
+  // Bug-Fix (alle Funktionen unten): bei einem Fehlschlag des Updates zeigte
+  // die Oberfläche trotzdem dauerhaft den neuen (nicht gespeicherten) Stand,
+  // bis zum nächsten Neuladen — jetzt Rollback auf den vorherigen Stand.
   const supplementAendern = useCallback(async (id, felder) => {
-    setSupplemente((prev) => prev.map((s) => (s.id === id ? { ...s, ...felder } : s)));
+    let vorher;
+    setSupplemente((prev) =>
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        vorher = s;
+        return { ...s, ...felder };
+      })
+    );
     const { error } = await supabase.from("supplements").update(felder).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorher) setSupplemente((prev) => prev.map((s) => (s.id === id ? vorher : s)));
+    }
   }, []);
 
   const supplementEntfernen = useCallback(async (id) => {
@@ -147,9 +160,19 @@ export function useSupplementData(userId, hauptprotokollId) {
     async (id, file) => {
       try {
         const path = await uploadPhoto(userId, file, "praeparate");
-        setSupplemente((prev) => prev.map((s) => (s.id === id ? { ...s, fotoPath: path } : s)));
+        let vorherigerPfad;
+        setSupplemente((prev) =>
+          prev.map((s) => {
+            if (s.id !== id) return s;
+            vorherigerPfad = s.fotoPath;
+            return { ...s, fotoPath: path };
+          })
+        );
         const { error } = await supabase.from("supplements").update({ foto_path: path }).eq("id", id);
-        if (error) console.error(error);
+        if (error) {
+          console.error(error);
+          setSupplemente((prev) => prev.map((s) => (s.id === id ? { ...s, fotoPath: vorherigerPfad } : s)));
+        }
       } catch (err) {
         console.error(err);
       }
@@ -162,6 +185,7 @@ export function useSupplementData(userId, hauptprotokollId) {
       const k = `${datum}__${id}__${zeit}`;
       const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : supplementErledigt[k];
       const nextVal = !aktuellerWert;
+      const vorherigeErledigtAt = supplementErledigtAt[k] ?? null;
       pendingErledigtRef.current[k] = nextVal;
       const nowIso = new Date().toISOString();
       setSupplementErledigt((prev) => ({ ...prev, [k]: nextVal }));
@@ -170,9 +194,14 @@ export function useSupplementData(userId, hauptprotokollId) {
         { user_id: userId, supplement_id: id, log_date: datum, tageszeit: zeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null },
         { onConflict: "supplement_id,log_date,tageszeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        pendingErledigtRef.current[k] = aktuellerWert;
+        setSupplementErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
+        setSupplementErledigtAt((prev) => ({ ...prev, [k]: vorherigeErledigtAt }));
+      }
     },
-    [supplementErledigt, userId]
+    [supplementErledigt, supplementErledigtAt, userId]
   );
 
   const saveSupplementFeedback = useCallback(
@@ -180,6 +209,9 @@ export function useSupplementData(userId, hauptprotokollId) {
       const k = `${dose.datum}__${dose.id}__${dose.zeit}`;
       const nowIso = new Date().toISOString();
       const record = { wirkung: draftFeedback.wirkung, nebenwirkungen: draftFeedback.nebenwirkungen, notizen: draftFeedback.notizen };
+      const vorherErledigt = supplementErledigt[k];
+      const vorherErledigtAt = supplementErledigtAt[k] ?? null;
+      const vorherFeedback = supplementFeedback[k];
       setSupplementErledigt((prev) => ({ ...prev, [k]: true }));
       setSupplementErledigtAt((prev) => ({ ...prev, [k]: nowIso }));
       setSupplementFeedback((prev) => ({ ...prev, [k]: record }));
@@ -187,24 +219,35 @@ export function useSupplementData(userId, hauptprotokollId) {
         { user_id: userId, supplement_id: dose.id, log_date: dose.datum, tageszeit: dose.zeit, erledigt: true, erledigt_at: nowIso, ...record },
         { onConflict: "supplement_id,log_date,tageszeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setSupplementErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+        setSupplementErledigtAt((prev) => ({ ...prev, [k]: vorherErledigtAt }));
+        setSupplementFeedback((prev) => ({ ...prev, [k]: vorherFeedback }));
+      }
     },
-    [userId]
+    [userId, supplementErledigt, supplementErledigtAt, supplementFeedback]
   );
 
   const skipSupplementFeedback = useCallback(
     async (dose) => {
       const k = `${dose.datum}__${dose.id}__${dose.zeit}`;
       const nowIso = new Date().toISOString();
+      const vorherErledigt = supplementErledigt[k];
+      const vorherErledigtAt = supplementErledigtAt[k] ?? null;
       setSupplementErledigt((prev) => ({ ...prev, [k]: true }));
       setSupplementErledigtAt((prev) => ({ ...prev, [k]: nowIso }));
       const { error } = await supabase.from("supplement_logs").upsert(
         { user_id: userId, supplement_id: dose.id, log_date: dose.datum, tageszeit: dose.zeit, erledigt: true, erledigt_at: nowIso },
         { onConflict: "supplement_id,log_date,tageszeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setSupplementErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+        setSupplementErledigtAt((prev) => ({ ...prev, [k]: vorherErledigtAt }));
+      }
     },
-    [userId]
+    [userId, supplementErledigt, supplementErledigtAt]
   );
 
   // Bestätigt alle noch offenen Supplemente einer Tageszeit an einem Tag auf einmal
@@ -228,7 +271,22 @@ export function useSupplementData(userId, hauptprotokollId) {
         offene.map((id) => ({ user_id: userId, supplement_id: id, log_date: datum, tageszeit: zeit, erledigt: true, erledigt_at: nowIso })),
         { onConflict: "supplement_id,log_date,tageszeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        // Waren zuvor unerledigt (offene = noch nicht erledigt), also einfach
+        // auf "nicht erledigt" zurücksetzen statt einen komplexeren
+        // Vorher-Snapshot pro Eintrag zu führen.
+        setSupplementErledigt((prev) => {
+          const next = { ...prev };
+          offene.forEach((id) => (next[`${datum}__${id}__${zeit}`] = false));
+          return next;
+        });
+        setSupplementErledigtAt((prev) => {
+          const next = { ...prev };
+          offene.forEach((id) => (next[`${datum}__${id}__${zeit}`] = null));
+          return next;
+        });
+      }
     },
     [supplementErledigt, userId]
   );

@@ -116,6 +116,8 @@ export function useDrinkRecipes(userId) {
   const toggleRezeptErledigt = useCallback(
     async (datum, recipeId) => {
       const k = `${datum}__${recipeId}`;
+      const vorherErledigt = rezeptErledigt[k];
+      const vorherErledigtAt = rezeptErledigtAt[k] ?? null;
       const nextVal = !rezeptErledigt[k];
       const nowIso = new Date().toISOString();
       setRezeptErledigt((prev) => ({ ...prev, [k]: nextVal }));
@@ -124,9 +126,13 @@ export function useDrinkRecipes(userId) {
         { user_id: userId, recipe_id: recipeId, log_date: datum, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null },
         { onConflict: "recipe_id,log_date" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setRezeptErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+        setRezeptErledigtAt((prev) => ({ ...prev, [k]: vorherErledigtAt }));
+      }
     },
-    [rezeptErledigt, userId]
+    [rezeptErledigt, rezeptErledigtAt, userId]
   );
 
   return {

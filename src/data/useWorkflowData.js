@@ -110,7 +110,14 @@ export function useWorkflowData(userId) {
   );
 
   const workflowPresetAendern = useCallback(async (id, patch) => {
-    setWorkflowPresets((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    let vorher;
+    setWorkflowPresets((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        vorher = p;
+        return { ...p, ...patch };
+      })
+    );
     const row = {};
     if (patch.name !== undefined) row.name = patch.name;
     if (patch.arbeitMin !== undefined) row.arbeit_min = Number(patch.arbeitMin) || 25;
@@ -118,7 +125,10 @@ export function useWorkflowData(userId) {
     if (patch.gesamtMin !== undefined) row.gesamt_min = Number(patch.gesamtMin) || 25;
     if (patch.modus !== undefined) row.modus = patch.modus;
     const { error } = await supabase.from("workflow_presets").update(row).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorher) setWorkflowPresets((prev) => prev.map((p) => (p.id === id ? vorher : p)));
+    }
   }, []);
 
   const workflowPresetLoeschen = useCallback(async (id) => {

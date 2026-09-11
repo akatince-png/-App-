@@ -85,15 +85,17 @@ export function useHydrationData(userId) {
   const hydrationZielSetzen = useCallback(
     async (zielMl) => {
       const wert = Math.max(0, Number(zielMl) || 0);
+      const vorher = hydrationZielMl;
       setHydrationZielMl(wert);
       const { error } = await supabase.from("hydration_settings").upsert({ user_id: userId, ziel_ml: wert }, { onConflict: "user_id" });
       if (error) {
         console.error(error);
+        setHydrationZielMl(vorher);
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       return { ok: true };
     },
-    [userId]
+    [userId, hydrationZielMl]
   );
 
   // Optionaler Tages-Check-in (Elektrolyte/Durstgefühl/Bemerkung) — unabhängig

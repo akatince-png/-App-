@@ -71,15 +71,28 @@ export function usePushNotifications(userId) {
     }
   }, [unterstuetzt, userId]);
 
+  // Bug-Fix: der Löschvorgang in der DB wurde bisher nicht auf einen Fehler
+  // geprüft — schlug er fehl, stand trotzdem "deaktiviert" in der Oberfläche,
+  // während der Server über die verwaiste Zeile weiterhin Push-Nachrichten
+  // an das Gerät schicken konnte.
   const pushDeaktivieren = useCallback(async () => {
-    if (!unterstuetzt) return;
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
-    if (sub) {
-      await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-      await sub.unsubscribe();
+    if (!unterstuetzt) return { ok: true };
+    setFehler(null);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+        if (error) throw error;
+        await sub.unsubscribe();
+      }
+      setAktiv(false);
+      return { ok: true };
+    } catch (err) {
+      console.error(err);
+      setFehler(err.message);
+      return { ok: false, error: `Deaktivieren fehlgeschlagen: ${err.message}` };
     }
-    setAktiv(false);
   }, [unterstuetzt]);
 
   const pushTestSenden = useCallback(async () => {

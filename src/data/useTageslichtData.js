@@ -67,17 +67,19 @@ export function useTageslichtData(userId) {
   const tageslichtZielSetzen = useCallback(
     async (zielMinuten) => {
       const wert = Math.max(0, Number(zielMinuten) || 0);
+      const vorher = tageslichtZielMinuten;
       setTageslichtZielMinuten(wert);
       const { error } = await supabase
         .from("tageslicht_settings")
         .upsert({ user_id: userId, ziel_minuten: wert }, { onConflict: "user_id" });
       if (error) {
         console.error(error);
+        setTageslichtZielMinuten(vorher);
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       return { ok: true };
     },
-    [userId]
+    [userId, tageslichtZielMinuten]
   );
 
   return {

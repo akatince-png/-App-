@@ -97,9 +97,24 @@ export function useRoutinen(userId) {
   );
 
   const schrittEntfernen = useCallback(async (id) => {
-    setSchritte((prev) => prev.filter((sc) => sc.id !== id));
+    let vorherigerSchritt;
+    let vorherigerIndex;
+    setSchritte((prev) => {
+      vorherigerIndex = prev.findIndex((sc) => sc.id === id);
+      vorherigerSchritt = prev[vorherigerIndex];
+      return prev.filter((sc) => sc.id !== id);
+    });
     const { error } = await supabase.from("routine_schritte").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigerSchritt) {
+        setSchritte((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigerSchritt);
+          return next;
+        });
+      }
+    }
   }, []);
 
   // Tauscht die Reihenfolge zweier benachbarter Schritte innerhalb derselben
@@ -121,10 +136,24 @@ export function useRoutinen(userId) {
           return sc;
         })
       );
-      await Promise.all([
+      // Bug-Fix: die beiden Updates liefen bisher ohne jede Fehlerprüfung —
+      // schlug eines fehl, wich die lokale Reihenfolge dauerhaft von der DB
+      // ab, bis zum nächsten Neuladen. Jetzt Rollback auf die alte
+      // Reihenfolge bei einem Fehler.
+      const [ergSchritt, ergZiel] = await Promise.all([
         supabase.from("routine_schritte").update({ reihenfolge: ziel.reihenfolge }).eq("id", schritt.id),
         supabase.from("routine_schritte").update({ reihenfolge: schritt.reihenfolge }).eq("id", ziel.id),
       ]);
+      if (ergSchritt.error || ergZiel.error) {
+        console.error(ergSchritt.error || ergZiel.error);
+        setSchritte((prev) =>
+          prev.map((sc) => {
+            if (sc.id === schritt.id) return { ...sc, reihenfolge: schritt.reihenfolge };
+            if (sc.id === ziel.id) return { ...sc, reihenfolge: ziel.reihenfolge };
+            return sc;
+          })
+        );
+      }
     },
     [schritte]
   );

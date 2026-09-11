@@ -83,7 +83,10 @@ export function useTeamData(userId) {
   const teamNachrichtGelesen = useCallback(async (id) => {
     setTeamNachrichten((prev) => prev.map((n) => (n.id === id ? { ...n, gelesen: true } : n)));
     const { error } = await supabase.from("team_nachrichten").update({ gelesen: true }).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      setTeamNachrichten((prev) => prev.map((n) => (n.id === id ? { ...n, gelesen: false } : n)));
+    }
   }, []);
 
   return { team, teamKollegen, teamNachrichten, teamNachrichtSenden, teamNachrichtGelesen };

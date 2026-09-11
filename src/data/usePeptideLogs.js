@@ -55,6 +55,8 @@ export function usePeptideLogs(userId, protocolId) {
         erledigtAt: nowIso,
         menge: dose.menge || null,
       };
+      const vorherFeedback = feedback[k];
+      const vorherErledigt = erledigt[k];
       setFeedback((prev) => ({ ...prev, [k]: record }));
       setErledigt((prev) => ({ ...prev, [k]: true }));
 
@@ -75,15 +77,21 @@ export function usePeptideLogs(userId, protocolId) {
         },
         { onConflict: "protocol_id,peptid_name,dose_date,uhrzeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setFeedback((prev) => ({ ...prev, [k]: vorherFeedback }));
+        setErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+      }
     },
-    [protocolId, userId]
+    [protocolId, userId, feedback, erledigt]
   );
 
   const skipFeedback = useCallback(
     async (dose) => {
       const k = keyOf(dose.date, dose.peptid, dose.uhrzeit);
       const nowIso = new Date().toISOString();
+      const vorherErledigt = erledigt[k];
+      const vorherFeedback = feedback[k];
       setErledigt((prev) => ({ ...prev, [k]: true }));
       setFeedback((prev) => ({ ...prev, [k]: { ...prev[k], erledigtAt: nowIso, menge: dose.menge || null } }));
       const { error } = await supabase.from("peptide_logs").upsert(
@@ -99,9 +107,13 @@ export function usePeptideLogs(userId, protocolId) {
         },
         { onConflict: "protocol_id,peptid_name,dose_date,uhrzeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+        setFeedback((prev) => ({ ...prev, [k]: vorherFeedback }));
+      }
     },
-    [protocolId, userId]
+    [protocolId, userId, erledigt, feedback]
   );
 
   return { erledigt, feedback, saveFeedback, skipFeedback };

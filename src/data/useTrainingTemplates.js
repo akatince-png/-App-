@@ -192,13 +192,23 @@ export function useTrainingTemplates(userId) {
   // Bearbeiten — für Name/Ziel/Ordner-Zuordnung (15.08., Nutzerin-Vorgabe)
   // reicht ein einfaches Patch-Update, analog zu workflowPresetAendern.
   const templateBearbeiten = useCallback(async (id, patch) => {
-    setTemplates((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    let vorher;
+    setTemplates((prev) =>
+      prev.map((t) => {
+        if (t.id !== id) return t;
+        vorher = t;
+        return { ...t, ...patch };
+      })
+    );
     const row = {};
     if (patch.name !== undefined) row.name = patch.name;
     if (patch.ziel !== undefined) row.ziel = patch.ziel || null;
     if (patch.programmId !== undefined) row.programm_id = patch.programmId || null;
     const { error } = await supabase.from("training_templates").update(row).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorher) setTemplates((prev) => prev.map((t) => (t.id === id ? vorher : t)));
+    }
   }, []);
 
   // Fügt eine weitere Trainingseinheit hinzu, statt die Zuweisung eines
@@ -294,16 +304,26 @@ export function useTrainingTemplates(userId) {
   const wochenplanErinnerungUmschalten = useCallback(async (id, aktiv) => {
     setWochenplan((prev) => prev.map((w) => (w.id === id ? { ...w, erinnerungAktiv: aktiv } : w)));
     const { error } = await supabase.from("training_wochenplan").update({ erinnerung_aktiv: aktiv }).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      setWochenplan((prev) => prev.map((w) => (w.id === id ? { ...w, erinnerungAktiv: !aktiv } : w)));
+    }
   }, []);
 
   // "Für alle gleichzeitig" (14.08., Nutzerin-Vorgabe): ein Tastendruck statt
   // jede Zeile einzeln umzuschalten.
   const wochenplanErinnerungenAlleSetzen = useCallback(
     async (aktiv) => {
-      setWochenplan((prev) => prev.map((w) => ({ ...w, erinnerungAktiv: aktiv })));
+      let vorher;
+      setWochenplan((prev) => {
+        vorher = prev;
+        return prev.map((w) => ({ ...w, erinnerungAktiv: aktiv }));
+      });
       const { error } = await supabase.from("training_wochenplan").update({ erinnerung_aktiv: aktiv }).eq("user_id", userId);
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setWochenplan(vorher);
+      }
     },
     [userId]
   );

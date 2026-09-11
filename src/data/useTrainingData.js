@@ -110,10 +110,24 @@ export function useTrainingData(userId) {
     }
   }, []);
 
+  // Bug-Fix (alle drei Funktionen unten): bei einem Fehlschlag des Updates
+  // zeigte die Oberfläche trotzdem dauerhaft den neuen (nicht gespeicherten)
+  // Stand, bis zum nächsten Neuladen — jetzt Rollback auf den vorherigen
+  // Stand bei einem Fehler.
   const trainingErledigtSetzen = useCallback(async (id, erledigt) => {
-    setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? { ...e, erledigt } : e)));
+    let vorher;
+    setTrainingEintraege((prev) =>
+      prev.map((e) => {
+        if (e.id !== id) return e;
+        vorher = e;
+        return { ...e, erledigt };
+      })
+    );
     const { error } = await supabase.from("training_sessions").update({ erledigt }).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorher) setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? vorher : e)));
+    }
   }, []);
 
   // Schließt ein Live-Workout ab: markiert erledigt und übernimmt optional die
@@ -129,9 +143,19 @@ export function useTrainingData(userId) {
       patch.uebungen = felder.uebungen;
       lokalePatch.uebungen = felder.uebungen;
     }
-    setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? { ...e, ...lokalePatch } : e)));
+    let vorher;
+    setTrainingEintraege((prev) =>
+      prev.map((e) => {
+        if (e.id !== id) return e;
+        vorher = e;
+        return { ...e, ...lokalePatch };
+      })
+    );
     const { error } = await supabase.from("training_sessions").update(patch).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorher) setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? vorher : e)));
+    }
   }, []);
 
   // Nachträgliche, rein optionale Rückmeldung (RPE/Kalorien/Energielevel/
@@ -145,10 +169,18 @@ export function useTrainingData(userId) {
       schmerzen: felder.schmerzen || null,
       bemerkungen: felder.bemerkungen || "",
     };
-    setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? { ...e, ...felder } : e)));
+    let vorher;
+    setTrainingEintraege((prev) =>
+      prev.map((e) => {
+        if (e.id !== id) return e;
+        vorher = e;
+        return { ...e, ...felder };
+      })
+    );
     const { error } = await supabase.from("training_sessions").update(patch).eq("id", id);
     if (error) {
       console.error(error);
+      if (vorher) setTrainingEintraege((prev) => prev.map((e) => (e.id === id ? vorher : e)));
       return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
     }
     return { ok: true };

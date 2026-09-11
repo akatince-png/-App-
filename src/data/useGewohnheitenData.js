@@ -115,7 +115,10 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
     const neuerWert = !aktuellerWert;
     setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, akutFavorit: neuerWert } : g)));
     const { error } = await supabase.from("routines").update({ akut_favorit: neuerWert }).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, akutFavorit: aktuellerWert } : g)));
+    }
   }, []);
 
   const toggleGewohnheitErledigt = useCallback(
@@ -129,10 +132,18 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
         const { error } = await supabase
           .from("routine_logs")
           .upsert({ user_id: userId, routine_id: gewohnheitId, log_date: datum }, { onConflict: "routine_id,log_date" });
-        if (error) console.error(error);
+        if (error) {
+          console.error(error);
+          pendingErledigtRef.current[k] = aktuellerWert;
+          setGewohnheitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
+        }
       } else {
         const { error } = await supabase.from("routine_logs").delete().eq("routine_id", gewohnheitId).eq("log_date", datum);
-        if (error) console.error(error);
+        if (error) {
+          console.error(error);
+          pendingErledigtRef.current[k] = aktuellerWert;
+          setGewohnheitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
+        }
       }
     },
     [gewohnheitErledigt, userId]

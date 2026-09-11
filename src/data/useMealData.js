@@ -117,9 +117,19 @@ export function useMealData(userId, hauptprotokollId) {
   );
 
   const mahlzeitAendern = useCallback(async (id, felder) => {
-    setMahlzeiten((prev) => prev.map((m) => (m.id === id ? { ...m, ...felder } : m)));
+    let vorher;
+    setMahlzeiten((prev) =>
+      prev.map((m) => {
+        if (m.id !== id) return m;
+        vorher = m;
+        return { ...m, ...felder };
+      })
+    );
     const { error } = await supabase.from("meals").update(felder).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorher) setMahlzeiten((prev) => prev.map((m) => (m.id === id ? vorher : m)));
+    }
   }, []);
 
   const mahlzeitEntfernen = useCallback(async (id) => {
@@ -158,8 +168,20 @@ export function useMealData(userId, hauptprotokollId) {
   // nachträglichen Bearbeiten von Gramm/Kcal einzelner Zutaten fehlte
   // bisher ein eigener Update-Pfad.
   const zutatAendern = useCallback(async (mealId, zutatId, felder) => {
+    let vorherigeZutat;
     setMahlzeiten((prev) =>
-      prev.map((m) => (m.id === mealId ? { ...m, zutaten: m.zutaten.map((z) => (z.id === zutatId ? { ...z, ...felder } : z)) } : m))
+      prev.map((m) =>
+        m.id === mealId
+          ? {
+              ...m,
+              zutaten: m.zutaten.map((z) => {
+                if (z.id !== zutatId) return z;
+                vorherigeZutat = z;
+                return { ...z, ...felder };
+              }),
+            }
+          : m
+      )
     );
     const patch = {};
     if ("menge" in felder) patch.menge = felder.menge;
@@ -168,6 +190,11 @@ export function useMealData(userId, hauptprotokollId) {
     const { error } = await supabase.from("meal_ingredients").update(patch).eq("id", zutatId);
     if (error) {
       console.error(error);
+      if (vorherigeZutat) {
+        setMahlzeiten((prev) =>
+          prev.map((m) => (m.id === mealId ? { ...m, zutaten: m.zutaten.map((z) => (z.id === zutatId ? vorherigeZutat : z)) } : m))
+        );
+      }
       return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
     }
     return { ok: true };
@@ -182,10 +209,18 @@ export function useMealData(userId, hauptprotokollId) {
         console.error(err);
         return { ok: false, error: `Foto-Upload fehlgeschlagen: ${err.message}` };
       }
-      setMahlzeiten((prev) => prev.map((m) => (m.id === mealId ? { ...m, fotoPath: path } : m)));
+      let vorherigerPfad;
+      setMahlzeiten((prev) =>
+        prev.map((m) => {
+          if (m.id !== mealId) return m;
+          vorherigerPfad = m.fotoPath;
+          return { ...m, fotoPath: path };
+        })
+      );
       const { error } = await supabase.from("meals").update({ foto_path: path }).eq("id", mealId);
       if (error) {
         console.error(error);
+        setMahlzeiten((prev) => prev.map((m) => (m.id === mealId ? { ...m, fotoPath: vorherigerPfad } : m)));
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       return { ok: true };
@@ -198,6 +233,7 @@ export function useMealData(userId, hauptprotokollId) {
       const k = `${datum}__${id}__${zeit}`;
       const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : mahlzeitErledigt[k];
       const nextVal = !aktuellerWert;
+      const vorherigeErledigtAt = mahlzeitErledigtAt[k] ?? null;
       pendingErledigtRef.current[k] = nextVal;
       const nowIso = new Date().toISOString();
       setMahlzeitErledigt((prev) => ({ ...prev, [k]: nextVal }));
@@ -206,9 +242,14 @@ export function useMealData(userId, hauptprotokollId) {
         { user_id: userId, meal_id: id, log_date: datum, tageszeit: zeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null },
         { onConflict: "meal_id,log_date,tageszeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        pendingErledigtRef.current[k] = aktuellerWert;
+        setMahlzeitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
+        setMahlzeitErledigtAt((prev) => ({ ...prev, [k]: vorherigeErledigtAt }));
+      }
     },
-    [mahlzeitErledigt, userId]
+    [mahlzeitErledigt, mahlzeitErledigtAt, userId]
   );
 
   // Weist eine Mahlzeit einem Wochentag zu — bewusst ein einfacher Insert
