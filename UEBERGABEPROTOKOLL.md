@@ -1,5 +1,51 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 38) — Rollback bei Fehlern: restliche Daten-Hooks
+
+Nach Abschluss der ursprünglichen Teil-27-Liste (Teil 37) auf "mach weiter,
+wo du aufgehört hast" hin ein systematischer Nachzieh-Scan: dasselbe
+Rollback-Muster aus Teil 30/36 (optimistisches `setState` vor einem
+Supabase-Write, aber kein Zurückrollen bei einem Fehler) wurde jetzt auch
+in allen bis dahin ungeprüften `src/data/use*.js`-Hooks nachgezogen.
+
+**Auffälligster Fund:** `usePushNotifications.js` → `pushDeaktivieren`
+prüfte den Löschvorgang der Push-Subscription in der DB überhaupt nicht
+(reines Fire-and-Forget) — schlug er fehl, stand trotzdem "deaktiviert"
+in der Oberfläche, während der Server über die verwaiste Zeile
+theoretisch weiter Push-Nachrichten ans Gerät hätte schicken können.
+
+**Weitere behobene Stellen** (gleiches Muster: fehlender Rollback bzw.
+komplett fehlende Fehlerprüfung):
+- `useSupplementData.js` (6 Funktionen: Bearbeiten, Foto, Erledigt-Toggle,
+  Feedback speichern/überspringen, "alle einer Tageszeit bestätigen")
+- `usePeptideLogs.js` (Feedback speichern/überspringen)
+- `useRoutinen.js` (`schrittEntfernen` — war im Löschfunktionen-Sweep aus
+  Teil 31 offenbar durchgerutscht; `schrittVerschieben` — die zwei
+  parallelen Updates wurden gar nicht auf Fehler geprüft)
+- `useMealData.js` (Bearbeiten, Zutat bearbeiten, Foto, Erledigt-Toggle)
+- `useTrainingData.js` (Erledigt setzen, Abschließen, Feedback speichern)
+- `useGewohnheitenData.js` (Akut-Favorit-Toggle, Erledigt-Toggle)
+- `useDrinkRecipes.js` (Erledigt-Toggle)
+- `useHydrationData.js` / `useTageslichtData.js` (Ziel setzen)
+- `useTrainingTemplates.js` (Vorlage bearbeiten, Erinnerung einzeln/alle
+  umschalten)
+- `useWorkflowData.js` (Preset bearbeiten)
+- `useTeamData.js` (Nachricht als gelesen markieren — geringste
+  Auswirkung, betrifft nur ein Ungelesen-Badge)
+
+Geprüft und bereits sauber (kein Fund): `useAdminNotizen.js`,
+`useAenderungsprotokoll.js`, `useAkutModus.js`, `useAtemuebungenData.js`,
+`useBausteinVersionen.js`, `useCheckinData.js`, `useCoachVerlauf.js`,
+`useCoachWissen.js`, `useCoacheeNachrichten.js`, `useHauptprotokollData.js`,
+`useLexikon.js`, `useQuestData.js`, `useUebungsBilder.js`,
+`useUniversellerCoach.js`, `useWochenprotokollMeilenstein.js`,
+`useZeitbloecke.js`.
+
+`npm run build` + `npx oxlint` sauber (18 vorbestehende Warnungen, keine
+neuen).
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 37) — Doppeltes aktives Protokoll: Race Condition behoben
 
 Letzter offener Punkt aus Teil 27/35/36 ("Behebe bitte alle Punkte, die
