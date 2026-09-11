@@ -1,5 +1,41 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 36) — Restliche kleinere Bug-Check-Funde: zweite Runde
+
+Direkt im Anschluss an Teil 35, weiter mit der "behebe alles, was Du in
+der Zwischenzeit beheben kannst"-Liste.
+
+1. **Kurz-Intervalltimer: Musik startete beim zweiten Durchlauf nicht
+   neu** (`Timer.jsx`, `TrainingView.jsx`) — Timer-interner "Reset"-Knopf
+   setzte nur den Timer-eigenen Status zurück, nicht
+   `useIntervallMusikSync`s `gestartetRef` — Reset → erneut Start (ohne
+   zwischendurch zu schließen) übersprang dadurch den "erster
+   Start"-Pfad, der die Playlist (neu) startet. `Timer.jsx` bekommt ein
+   neues, optionales `onReset`-Prop (wird bei jedem `reset()` aufgerufen,
+   egal ob intern über den Knopf oder von außen), an allen vier
+   Intervall-Timer-Stellen in `TrainingView.jsx` mit
+   `intervallMusikSync.reset` verdrahtet.
+2. **Rollback bei Fehlern, zweite Runde** — dieselbe Absicherung wie in
+   Teil 29 (vorherigen Stand merken, bei einem Fehler zurückrollen statt
+   dauerhaft einen nie gespeicherten Wert anzuzeigen), jetzt zusätzlich
+   für: `useProtocolData.js` (Ziele, Startdatum, Dauer, Notizen),
+   `useProfileData.js` (persönliche Daten, Datenteilung-Schalter,
+   Onboarding-Abschluss, Kategorie-Ziele, Erinnerungs-Präferenzen,
+   Steckbrief, aktive Messwerte — 7 Funktionen), `useBiomarkerData.js`
+   (einzelner Biomarker-Wert). Damit sind jetzt praktisch alle
+   optimistischen Set-Funktionen der App gegen stillen Datenverlust bei
+   Fehlern abgesichert.
+
+**Als Nächstes** (letzter offener Punkt aus Teil 27): das mögliche
+doppelte aktive Protokoll bei schnellem Tab-/Gerätewechsel — braucht
+eine DB-Migration (Unique-Constraint), die die Nutzerin manuell
+einspielen muss.
+
+`npm run build` + `npx oxlint` nach jedem Dateiblock sauber (18
+vorbestehende Warnungen, keine neuen).
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 35) — Restliche kleinere Bug-Check-Funde: erste Runde
 
 Nutzerinnen-Auftrag: "Behebe bitte alle Punkte, die Du in der
