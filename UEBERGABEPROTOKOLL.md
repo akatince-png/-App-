@@ -1,5 +1,66 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 31) — Sanfte Übergänge + Tagesplan-Datum bleibt beim Navigieren erhalten
+
+Direkt im Anschluss an Teil 30. Letzter Teil des dritten angestoßenen
+großen Punkts ("Ruckeln/Übergänge") — die eigentliche Übergangsanimation
+und ein erstes, bewusst begrenztes Stück Zustandserhalt.
+
+**Sanfte Übergänge statt hartem Schnitt** (`AuthenticatedApp.jsx`,
+`OnboardingFlow.jsx`): Beide View-Switches sind reine
+Komponentenaustausche ohne gemeinsamen DOM-Knoten — bisher komplett
+unanimiert. Beide bekommen jetzt einen `key`-erzwungenen Neu-Mount des
+Wrappers plus die bereits im Projekt vorhandene `fadeInUp`-Animation
+(dieselbe Technik, die WelcomeView.jsx schon für die Folienwechsel
+nutzt) — ein sanftes Einblenden statt eines harten Sprungs bei jedem
+"Weiter"/jedem Seitenwechsel. Respektiert automatisch
+`prefers-reduced-motion` (die `@keyframes`-Regel ist in index.css
+innerhalb des entsprechenden `@media`-Blocks definiert und wird bei
+reduzierter Bewegung gar nicht erst registriert).
+
+**Tagesplan-Datum + Tag/Woche-Modus bleiben erhalten**: Da jeder
+View-Wechsel in `AuthenticatedApp.jsx` weiterhin ein kompletter Remount
+ist (siehe Teil 27 — diese Architektur selbst wurde bewusst NICHT
+angefasst, dazu gleich mehr), sprang der Tagesplan bisher bei jedem
+"Home → woanders hin → zurück zum Tagesplan" wieder auf "heute"/"Tag"-
+Ansicht zurück. `selectedDate`/`modus` sind jetzt kontrollierte Props,
+die in `AuthenticatedApp.jsx` liegen statt in `TagesplanView.jsx` selbst
+— der Rest der (sehr langen) Datei musste dafür nicht angefasst werden,
+da die Props dieselben Namen wie die vorherigen lokalen State-Variablen
+tragen.
+
+**Bewusst nicht angefasst — für einen späteren, gezielten Durchgang:**
+- Dieselbe Zustandserhalt-Behandlung fehlt noch für weitere lokale
+  States (`morgenOffen`/`abendOffen` im Tagesplan, `viewMode`/
+  `monthDate`/`selectedDate` in der Wochenübersicht, u. a.) — jeweils
+  ein kleiner, aber eigener Eingriff pro View.
+- Die grundsätzliche Remount-Architektur selbst (jeder `view`-Wechsel =
+  neuer Komponententyp) bleibt bestehen. Die Alternative — alle Views
+  dauerhaft gemountet halten und nur per CSS ein-/ausblenden — würde
+  Zustandserhalt für ALLE Views auf einen Schlag lösen, aber auch
+  potenziell ~20 Views gleichzeitig mit allen ihren Datenladevorgängen/
+  Intervallen im Hintergrund aktiv halten — ohne jede einzelne View auf
+  stille Annahmen ("läuft nur einmal beim echten Mount") zu prüfen, ein
+  zu großes Risiko für eine einzelne Sitzung.
+
+`npm run build` + `npx oxlint` sauber, keine neuen Warnungen.
+
+---
+
+**Zusammenfassung der drei von der Nutzerin angestoßenen großen
+Punkte** (Teile 28–31): Peptid-Tagesplan-Lücke vollständig geschlossen
+(Migration nötig, siehe Teil 28); die häufigsten Datenverlust-Stellen
+(Peptid-/Hormon-Dosis, zehn Löschfunktionen) gegen stillen Datenverlust
+bei Fehlern abgesichert; die tatsächliche Ursache des Ruckelns
+identifiziert und behoben (nicht der Context selbst, sondern
+überbreite `useMemo`-Abhängigkeiten in der Wochenübersicht) plus
+sanfte Übergänge und ein erster Zustandserhalt-Fix. Mehrere kleinere,
+klar benannte Folgepunkte bleiben bewusst offen für einen gezielten
+nächsten Durchgang, statt sie überstürzt in derselben Sitzung
+anzufassen.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 30) — Ruckeln in der Wochenübersicht behoben (AppDataContext-Befund neu eingeordnet)
 
 Direkt im Anschluss an Teil 29. Dritter der drei angestoßenen großen
