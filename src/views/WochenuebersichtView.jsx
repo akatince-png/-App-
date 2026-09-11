@@ -19,7 +19,28 @@ const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 // da ein 7-Spalten-Raster auf einem schmalen Bildschirm nicht nutzbar
 // wäre — das volle Mo-So-Raster im Desktop-Stil wird nur für den PDF-
 // Export unsichtbar off-screen gerendert (siehe unten).
-export default function WochenuebersichtView({ embedded = false, onHome }) {
+// Bug-Fix ("Zustände gehen beim View-Wechsel verloren", Fortsetzung von
+// TagesplanView.jsx): `selectedDate`/`viewMode`/`monthDate` kommen jetzt als
+// kontrollierte Props von AuthenticatedApp.jsx statt aus lokalem State —
+// WochenuebersichtView wird bei jedem Verlassen/Wiederbetreten des
+// "Alle Pläne"-Bereichs komplett neu gemountet (auch beim Wechsel zwischen
+// den anderen Reitern dort, z. B. Schlaf/Training — siehe PlaeneView.jsx,
+// `Aktiv` wechselt den Komponententyp), sonst sprang Tag/Woche/Monat-Ansicht
+// und das gewählte Datum jedes Mal auf den Ausgangszustand zurück.
+// WochenuebersichtView hat aktuell nur einen einzigen Verwendungsort
+// (PlaeneView.jsx), deshalb ohne Rückfall auf internen State möglich — die
+// Props tragen dieselben Namen wie die vorherigen lokalen State-Variablen,
+// der Rest der Datei musste dafür nicht angefasst werden.
+export default function WochenuebersichtView({
+  embedded = false,
+  onHome,
+  selectedDate,
+  onSelectedDateChange: setSelectedDate,
+  viewMode,
+  onViewModeChange: setViewMode,
+  monthDate,
+  onMonthDateChange: setMonthDate,
+}) {
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const appData = useAppData();
   const {
@@ -110,9 +131,6 @@ export default function WochenuebersichtView({ embedded = false, onHome }) {
     ]
   );
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("day"); // "day" | "week" | "month"
-  const [monthDate, setMonthDate] = useState(new Date());
   const [exportLaeuft, setExportLaeuft] = useState(false);
   const [vorschauUrl, setVorschauUrl] = useState(null);
   const exportRef = useRef(null);

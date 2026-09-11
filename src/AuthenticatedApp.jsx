@@ -82,6 +82,13 @@ export default function AuthenticatedApp() {
   // landet, sondern genau da weitermacht, wo man war.
   const [tagesplanDatum, setTagesplanDatum] = useState(new Date());
   const [tagesplanModus, setTagesplanModus] = useState("tag");
+  // Dieselbe Begründung wie bei tagesplanDatum/-Modus, für die Wochenübersicht
+  // innerhalb von "Alle Pläne" (PlaeneView.jsx) — die remountet ihre aktive
+  // Unteransicht bei jedem Reiterwechsel genauso hart wie AuthenticatedApp.jsx
+  // seine Hauptansichten.
+  const [wochenuebersichtDatum, setWochenuebersichtDatum] = useState(new Date());
+  const [wochenuebersichtModus, setWochenuebersichtModus] = useState("day");
+  const [wochenuebersichtMonat, setWochenuebersichtMonat] = useState(new Date());
 
   // Rückkehr von der Spotify-Anmeldung (accounts.spotify.com leitet mit
   // ?code=...&state=... zurück auf die App) — Code gegen Zugangsdaten
@@ -208,6 +215,12 @@ export default function AuthenticatedApp() {
         onHome={() => setView("home")}
         initialSessionId={offenesTrainingId}
         onConsumedInitialSession={() => setOffenesTrainingId(null)}
+        wochenuebersichtDatum={wochenuebersichtDatum}
+        onWochenuebersichtDatumChange={setWochenuebersichtDatum}
+        wochenuebersichtModus={wochenuebersichtModus}
+        onWochenuebersichtModusChange={setWochenuebersichtModus}
+        wochenuebersichtMonat={wochenuebersichtMonat}
+        onWochenuebersichtMonatChange={setWochenuebersichtMonat}
       />
     );
   } else if (ARCHIV_VIEW_IDS.includes(view)) {

@@ -118,7 +118,22 @@ function ListenEintrag({ eintrag, onClick }) {
 // Dashboard-Kacheln. Gleiches Muster wie PlanView.jsx (Statistik/Profil/
 // Community/Archiv). Jede Kategorie-View wird mit `embedded` gerendert,
 // damit sie ihren eigenen Shell/Header nicht dupliziert.
-export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessionId, onConsumedInitialSession }) {
+export default function PlaeneView({
+  planeTab,
+  setPlaneTab,
+  onHome,
+  initialSessionId,
+  onConsumedInitialSession,
+  // Nur für den "wochenuebersicht"-Reiter relevant (Bug-Fix "Zustände gehen
+  // beim View-Wechsel verloren", siehe AuthenticatedApp.jsx) — für alle
+  // anderen Reiter unten einfach ungenutzte, harmlose Zusatz-Props.
+  wochenuebersichtDatum,
+  onWochenuebersichtDatumChange,
+  wochenuebersichtModus,
+  onWochenuebersichtModusChange,
+  wochenuebersichtMonat,
+  onWochenuebersichtMonatChange,
+}) {
   const Aktiv = VIEWS[planeTab] || VIEWS.schlaf;
 
   return (
@@ -165,7 +180,17 @@ export default function PlaeneView({ planeTab, setPlaneTab, onHome, initialSessi
         })}
       </div>
 
-      <Aktiv embedded initialSessionId={initialSessionId} onConsumedInitialSession={onConsumedInitialSession} />
+      <Aktiv
+        embedded
+        initialSessionId={initialSessionId}
+        onConsumedInitialSession={onConsumedInitialSession}
+        selectedDate={wochenuebersichtDatum}
+        onSelectedDateChange={onWochenuebersichtDatumChange}
+        viewMode={wochenuebersichtModus}
+        onViewModeChange={onWochenuebersichtModusChange}
+        monthDate={wochenuebersichtMonat}
+        onMonthDateChange={onWochenuebersichtMonatChange}
+      />
 
       <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Nachvollziehen</div>
       {NACHVOLLZIEHEN_EINTRAEGE.map((r) => (
