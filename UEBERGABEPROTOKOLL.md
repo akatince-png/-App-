@@ -1,5 +1,32 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 33) — Trainings-Wochenplan: Tages-Karten statt Tabelle
+
+Direkt im Anschluss an Teil 32. Auf Rückfrage ("was genau überzeugt am
+Trainingsplan nicht?") antwortete die Nutzerin: "Reine Tabellenoptik" —
+die flache Zeilen-Tabelle (Tag/Zeit/Art als Spalten) wirkt zu nüchtern/
+spreadsheet-artig, nicht wie ein "richtiger" Trainingsplan.
+
+**Fix** (`WochenplanEditor.jsx`, geteilt zwischen TrainingView und dem
+Onboarding-Trainingsschritt — Änderung wirkt an beiden Stellen): Die
+Tabelle ist durch nach Wochentag gruppierte Karten ersetzt. Jeder Tag
+mit mindestens einer Einheit bekommt eine eigene Karte mit farbigem
+Verlaufs-Header (Tagesname + Anzahl Einheiten), darunter jede Einheit
+als eigene Zeile mit einem Icon-Kreis je Trainingsart (🏋️ Kraft, 🏃
+Cardio, 🤸 Bodyweight, 🧘 Isometrisch, ⚡ Sonstiges), Name, Uhrzeit als
+kleines Badge, und der bestehenden Detailzeile (Übungsanzahl, Intervall,
+Warm-up/Cool-down). Die "gerade hinzugefügt"-Hervorhebung aus Teil 32
+funktioniert unverändert innerhalb der neuen Struktur.
+
+Vor dem Commit lokal mit Vite-Devserver + Playwright-Screenshot geprüft
+(Testdaten, kein echter Login nötig, siehe Screenshot-Ablage dieser
+Sitzung) — Vorschau-Dateien danach wieder entfernt, nicht Teil des
+Commits.
+
+`npm run build` + `npx oxlint` sauber.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 32) — Neue Ergebnisse sichtbar machen (Scroll + Hervorhebung)
 
 Nutzerinnen-Feedback (während sie ihr GitHub/Supabase/Vercel-Login-
