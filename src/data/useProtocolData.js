@@ -114,11 +114,35 @@ export function useProtocolData(userId) {
           .select()
           .single();
         if (error) {
-          console.error(error);
-          setLoading(false);
-          return;
+          // Bug-Fix (Teil 40): Wenn zwei Ladevorgänge gleichzeitig "kein
+          // aktives Protokoll" sehen (React-StrictMode-Doppel-Mount, zwei
+          // offene Tabs), schlägt der zweite Insert dank des partiellen
+          // Unique-Index aus Migration 0078 mit 23505 fehl — statt das als
+          // Fehler zu behandeln, einfach das inzwischen vom ersten Aufruf
+          // angelegte aktive Protokoll nachladen.
+          if (error.code === "23505") {
+            const { data: existing, error: reloadError } = await supabase
+              .from("protocols")
+              .select("*")
+              .eq("user_id", userId)
+              .eq("status", "active")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (reloadError || !existing) {
+              console.error(reloadError || error);
+              setLoading(false);
+              return;
+            }
+            active = existing;
+          } else {
+            console.error(error);
+            setLoading(false);
+            return;
+          }
+        } else {
+          active = created;
         }
-        active = created;
       }
 
       const { data: peptideRows } = await supabase
