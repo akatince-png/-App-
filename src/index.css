@@ -260,16 +260,6 @@ input[type="time"]::-webkit-date-and-time-value {
     }
   }
 
-  /* Soft Bounce für CTA-Buttons */
-  @keyframes softBounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-2px);
-    }
-  }
-
   /* Fade In + Slide für GraceDayCard */
   @keyframes fadeInUp {
     from {

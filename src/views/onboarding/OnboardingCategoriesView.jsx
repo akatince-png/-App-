@@ -209,6 +209,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     supplementHinzufuegen,
     hormonHinzufuegen,
     setCategoryZiel,
+    categoryZiele,
     trainingWochenplan,
     wochenplanHinzufuegen,
     wochenplanBearbeiten,
@@ -377,6 +378,35 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const istLetzter = index === CATEGORY_STEPS.length - 1;
   const istMultiAdd = MULTI_ADD_KEYS.includes(step.key);
 
+  // Bug-Fix (Nutzerinnen-Vorgabe, 11.09.): Beim (Wieder-)Betreten eines
+  // Schritts (auch rückwärts) wurden Schlafzeiten und "eigenes Startdatum"
+  // bisher IMMER auf den Standardwert zurückgesetzt (siehe
+  // resetEingabeFelder/resetLokal unten), statt aus bereits gespeicherten
+  // Daten vorbefüllt zu werden. Klicksequenz: individuelle Schlafzeiten
+  // setzen → Weiter → später zurück zu Schlaf → erneut speichern → die
+  // echten Zeiten wurden stillschweigend durch 22:30/06:30 ersetzt —
+  // dasselbe Muster bei einem aktivierten eigenen Startdatum. Läuft NACH
+  // resetLokal() (das synchron beim Verlassen des vorherigen Schritts
+  // feuert), holt sich hier die tatsächlich gespeicherten Werte für den
+  // gerade betretenen Schritt zurück, statt bei den Reset-Defaults zu
+  // bleiben.
+  useEffect(() => {
+    const bestehendesTeilprotokoll = teilprotokolle.find(
+      (t2) => t2.hauptprotokoll_id === aktivesHauptprotokoll?.id && t2.kategorie === step.key
+    );
+    if (bestehendesTeilprotokoll?.eigenes_startdatum) {
+      setEigenesStartdatumAktiv(true);
+      setEigenesStartdatum(bestehendesTeilprotokoll.eigenes_startdatum);
+    }
+    if (step.key === "schlaf") {
+      const gespeicherteBloecke = categoryZiele?.schlaf?.bloecke;
+      if (gespeicherteBloecke?.length) {
+        setSchlafBloecke(gespeicherteBloecke.map((b) => ({ ...neuerSchlafblock(b.wochentage), ...b })));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+
   const resetEingabeFelder = () => {
     setGName("");
     setGMenge("");
@@ -418,7 +448,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     resetEingabeFelder();
   };
 
-  const weiter = (wurdeEingerichtet) => {
+  const weiter = async (wurdeEingerichtet) => {
     // Gewohnheiten/Ernährung speichern ihre Kategorie-Zieldauer nirgendwo
     // sonst (Mehrfach-Hinzufügen statt einer einzelnen setCategoryZiel-
     // Speicherung wie bei Schlaf/Hydration/Training) — deshalb hier die
@@ -432,12 +462,28 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     // Teilprotokoll-Zuordnung (aktiv/inaktiv, eigenes Startdatum, Laufzeit)
     // — eine Zeile je Kategorie unter dem aktuellen Hauptprotokoll, egal ob
     // gerade eingerichtet oder übersprungen wurde.
+    // Bug-Fix: lief bisher fire-and-forget (kein await, kein Fehler-Check)
+    // — schlug der Schreibvorgang fehl, sprang der Flow trotzdem sofort zum
+    // nächsten Schritt weiter, ohne dass die Nutzerin je davon erfuhr. Das
+    // untergräbt auch das Zwischenspeichern-Feature (der Wiedereinstiegs-
+    // Index zählt genau diese Zeilen). Jetzt wird gewartet und bei einem
+    // Fehler NICHT weitergesprungen.
     if (aktivesHauptprotokoll?.id) {
-      teilprotokollSpeichern(aktivesHauptprotokoll.id, step.key, {
-        aktiv: wurdeEingerichtet,
-        eigenerStartdatum: eigenesStartdatumAktiv ? eigenesStartdatum : null,
-        laufzeitWochen: ziel.modus === "wochen" && ziel.wochen ? Number(ziel.wochen) : null,
-      });
+      try {
+        const result = await teilprotokollSpeichern(aktivesHauptprotokoll.id, step.key, {
+          aktiv: wurdeEingerichtet,
+          eigenerStartdatum: eigenesStartdatumAktiv ? eigenesStartdatum : null,
+          laufzeitWochen: ziel.modus === "wochen" && ziel.wochen ? Number(ziel.wochen) : null,
+        });
+        if (!result?.ok) {
+          setError(result?.error || t("onboarding.error.speichern"));
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err?.message || t("onboarding.error.speichern"));
+        return;
+      }
     }
     if (istLetzter) {
       onFinished(naechsteListe);

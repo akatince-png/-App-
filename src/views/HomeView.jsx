@@ -749,7 +749,20 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       {/* Dann die heute offenen Aufgaben — erst danach die Ordner. */}
       {angezeigteItems.length > 0 && (
         <>
-          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 10 }}>{t("home.alsNaechstes")}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{t("home.alsNaechstes")}</div>
+            {/* Bug-Fix: soundEnabled/handleToggleSoundEnabled existierten bereits
+                (steuert den Erledigt-Ton in QuickTaskList), aber es gab nirgends
+                in der App einen Schalter dafür — Ton ließ sich nie ausschalten. */}
+            <button
+              type="button"
+              onClick={() => handleToggleSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? "Ton bei Erledigt-Häkchen ausschalten" : "Ton bei Erledigt-Häkchen einschalten"}
+              style={{ border: "none", background: "transparent", fontSize: 15, cursor: "pointer", padding: "2px 4px", opacity: soundEnabled ? 1 : 0.4 }}
+            >
+              {soundEnabled ? "🔊" : "🔇"}
+            </button>
+          </div>
           <Card style={{ marginBottom: 20, padding: isEmergencyMode ? 8 : 8 }}>
             {isEmergencyMode ? (
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />

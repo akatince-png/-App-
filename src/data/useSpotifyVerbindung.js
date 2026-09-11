@@ -74,20 +74,41 @@ export function useSpotifyVerbindung(userId) {
     [userId]
   );
 
+  // Bug-Fix (beide Funktionen): `error` wurde bisher gar nicht geprüft, der
+  // lokale Zustand also auch bei einem fehlgeschlagenen Löschen auf
+  // "getrennt"/"gelöscht" gesetzt — die Oberfläche zeigte dann fälschlich
+  // "nicht verbunden"/"gelöscht", obwohl die Verbindung/Playlist in der
+  // Datenbank weiter bestand, bis zum nächsten Neuladen (wirkte wie ein
+  // Reconnect-Bug).
   const spotifyPlaylistLoeschen = useCallback(async (id) => {
-    await supabase.from("spotify_playlists").delete().eq("id", id);
+    const { error } = await supabase.from("spotify_playlists").delete().eq("id", id);
+    if (error) {
+      console.error(error);
+      setSpotifyVerbindungFehler(`Playlist konnte nicht gelöscht werden: ${error.message}`);
+      return { ok: false, error: error.message };
+    }
     setSpotifyPlaylists((prev) => prev.filter((p) => p.id !== id));
     // Löscht per on-delete-cascade auch etwaige Anlass-Zuordnungen dieser
     // Playlist serverseitig — Client-Zustand muss deshalb mit nachziehen.
     setSpotifyAnlaesse((prev) => Object.fromEntries(Object.entries(prev).filter(([, v]) => v.playlistId !== id)));
+    return { ok: true };
   }, []);
 
   const spotifyVerbindungTrennen = useCallback(async () => {
-    await supabase.from("spotify_verbindung").delete().eq("user_id", userId);
-    await supabase.from("spotify_playlists").delete().eq("user_id", userId);
+    const { error: fehler1 } = await supabase.from("spotify_verbindung").delete().eq("user_id", userId);
+    if (fehler1) {
+      console.error(fehler1);
+      setSpotifyVerbindungFehler(`Verbindung konnte nicht getrennt werden: ${fehler1.message}`);
+      return { ok: false, error: fehler1.message };
+    }
+    // Verbindung ist bereits weg — verwaiste Playlist-Zeilen sind nur noch
+    // Aufräumarbeit, kein Grund mehr, "getrennt" zu blockieren.
+    const { error: fehler2 } = await supabase.from("spotify_playlists").delete().eq("user_id", userId);
+    if (fehler2) console.error(fehler2);
     setSpotifyVerbunden(false);
     setSpotifyPlaylists([]);
     setSpotifyAutoPlayToken(null);
+    return { ok: true };
   }, [userId]);
 
   // Erzeugt (bzw. ersetzt) den langlebigen Auto-Play-Schlüssel für externe
