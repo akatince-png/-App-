@@ -1,5 +1,45 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 37) — Doppeltes aktives Protokoll: Race Condition behoben
+
+Letzter offener Punkt aus Teil 27/35/36 ("Behebe bitte alle Punkte, die
+Du in der Zwischenzeit beheben kannst").
+
+**Das Problem:** `useProtocolData.js` lädt beim Start das aktive
+Protokoll und legt eins an, falls keins existiert — Prüfung ("gibt es
+schon eins?") und Anlegen liefen dabei ohne DB-seitige Sperre
+nacheinander ab. Bei zwei fast gleichzeitigen Ladevorgängen (React-
+StrictMode-Doppel-Mount, zwei offene Browser-Tabs) konnten beide "kein
+aktives Protokoll" sehen und je eins anlegen — neue Peptid-Einträge
+landeten danach nur noch in einem der beiden, das andere wirkte für
+die Nutzerin "verschwunden".
+
+**Die Lösung:**
+1. **Migration `0078_protocols_ein_aktives_pro_nutzer.sql`** (NEU, muss
+   wie schon Migration 0077 manuell im Supabase Dashboard SQL Editor
+   ausgeführt werden) — partieller Unique-Index auf
+   `protocols(user_id) where status='active'`. Bewusst partiell statt
+   einer generellen Unique-Constraint, da pro Nutzer beliebig viele
+   archivierte Protokolle bestehen bleiben.
+2. **`useProtocolData.js`**: Schlägt der Insert wegen dieses Index mit
+   `23505` (unique_violation) fehl, wird das nicht mehr als Fehler
+   behandelt, sondern das inzwischen vom parallelen Aufruf angelegte
+   aktive Protokoll nachgeladen.
+
+**Falls bei Ihnen bereits zwei aktive Protokolle für denselben Nutzer
+existieren** (durch genau diesen Bug, bevor die Migration lief),
+schlägt das Anlegen des Index fehl — dann bitte vorher im Table Editor
+eins der beiden Duplikate (das ältere, per `created_at`) von Hand auf
+`status='archived'` setzen und die Migration erneut ausführen.
+
+`npm run build` + `npx oxlint` sauber (18 vorbestehende Warnungen,
+keine neuen).
+
+Damit ist die komplette Liste aus Teil 27 ("bewusst offen gelassene"
+kleinere Funde) abgearbeitet.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 36) — Restliche kleinere Bug-Check-Funde: zweite Runde
 
 Direkt im Anschluss an Teil 35, weiter mit der "behebe alles, was Du in
