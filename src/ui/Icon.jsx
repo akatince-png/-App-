@@ -105,6 +105,17 @@ const PATHS = {
       <path d="M17.7 7.7A2.5 2.5 0 1 1 19.5 12H2" />
     </>
   ),
+  // Für Erfolge/Abzeichen (11.09.) — Punkte-/Streak-System.
+  trophy: (
+    <>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0Z" />
+      <path d="M7 5H4a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4M17 5h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4" />
+      <path d="M12 14v3M9 21h6M9.5 21c0-2 1-3 2.5-4 1.5 1 2.5 2 2.5 4" />
+    </>
+  ),
+  flame: (
+    <path d="M12 2.5s5 4.5 5 9.5a5 5 0 0 1-10 0c0-1.3.6-2.3 1.3-3.2.3 1 1.1 1.7 1.9 1.4C9 8.5 8.5 6 12 2.5Z" />
+  ),
 };
 
 export default function Icon({ name, size = 20, color = "currentColor", strokeWidth = 1.8 }) {
