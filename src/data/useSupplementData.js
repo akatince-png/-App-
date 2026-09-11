@@ -118,9 +118,27 @@ export function useSupplementData(userId, hauptprotokollId) {
   }, []);
 
   const supplementEntfernen = useCallback(async (id) => {
-    setSupplemente((prev) => prev.filter((s) => s.id !== id));
+    // Bug-Fix: bei Fehlschlag verschwand das Supplement trotzdem sofort aus
+    // der Liste, bis zum nächsten Neuladen — wirkte wie gelöscht, tauchte
+    // dann aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigesSupplement;
+    let vorherigerIndex;
+    setSupplemente((prev) => {
+      vorherigerIndex = prev.findIndex((s) => s.id === id);
+      vorherigesSupplement = prev[vorherigerIndex];
+      return prev.filter((s) => s.id !== id);
+    });
     const { error } = await supabase.from("supplements").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigesSupplement) {
+        setSupplemente((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigesSupplement);
+          return next;
+        });
+      }
+    }
   }, []);
 
   // Foto vom Präparat (Fläschchen/Packung) — analog zu setHormonFoto/

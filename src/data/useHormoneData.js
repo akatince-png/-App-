@@ -153,14 +153,24 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
 
   const hormonEntfernen = useCallback(
     async (name) => {
-      setHormone((prev) => prev.filter((h) => h !== name));
+      // Bug-Fix: bei Fehlschlag (Netzwerk/RLS) verschwand der Eintrag trotzdem
+      // sofort aus der Ansicht, bis zum nächsten Neuladen — wirkte wie
+      // "gelöscht", tauchte dann aber wieder auf. Vorherigen Stand merken und
+      // bei Fehler wiederherstellen statt nur in die Konsole zu loggen.
+      let vorherigerEintrag;
       setHormonDosierung((prev) => {
+        vorherigerEintrag = prev[name];
         const next = { ...prev };
         delete next[name];
         return next;
       });
+      setHormone((prev) => prev.filter((h) => h !== name));
       const { error } = await supabase.from("hormones").delete().eq("user_id", userId).eq("name", name);
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setHormone((prev) => (prev.includes(name) ? prev : [...prev, name]));
+        setHormonDosierung((prev) => ({ ...prev, [name]: vorherigerEintrag }));
+      }
     },
     [userId]
   );
@@ -181,18 +191,35 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
 
   const setHormonKategorie = useCallback(
     async (name, kategorie) => {
-      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], kategorie } }));
+      // Bug-Fix: bei Fehlschlag zeigte die Oberfläche trotzdem dauerhaft die
+      // neue Kategorie, bis zum nächsten Neuladen — jetzt Rollback auf den
+      // vorherigen Stand bei einem Fehler.
+      let vorherigerWert;
+      setHormonDosierung((prev) => {
+        vorherigerWert = prev[name]?.kategorie;
+        return { ...prev, [name]: { ...prev[name], kategorie } };
+      });
       const { error } = await supabase.from("hormones").update({ kategorie }).eq("user_id", userId).eq("name", name);
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], kategorie: vorherigerWert } }));
+      }
     },
     [userId]
   );
 
   const setHormonEinnahmeart = useCallback(
     async (name, einnahmeart) => {
-      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], einnahmeart } }));
+      let vorherigerWert;
+      setHormonDosierung((prev) => {
+        vorherigerWert = prev[name]?.einnahmeart;
+        return { ...prev, [name]: { ...prev[name], einnahmeart } };
+      });
       const { error } = await supabase.from("hormones").update({ einnahmeart }).eq("user_id", userId).eq("name", name);
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], einnahmeart: vorherigerWert } }));
+      }
     },
     [userId]
   );
@@ -200,20 +227,37 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
   // Ändert ein einzelnes Dosierungsfeld eines bestehenden Medikaments —
   // spiegelt useProtocolData.setDose für Peptide, nur direkt gegen die
   // hormones-Tabelle statt über protocol_id/protocol_peptide.
+  // Bug-Fix (alle drei Zweige): bei einem Fehlschlag des Updates zeigte die
+  // Oberfläche trotzdem dauerhaft den neuen (nicht gespeicherten) Wert, bis
+  // zum nächsten Neuladen — jetzt wird der vorherige Stand vor der
+  // optimistischen Änderung gemerkt und bei einem Fehler wiederhergestellt.
   const setHormonDose = useCallback(
     (name, feld, val) => {
       if (feld === "intervallPreset") {
-        setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], intervallTyp: "fixed", intervallDays: val } }));
+        let vorher;
+        setHormonDosierung((prev) => {
+          vorher = prev[name];
+          return { ...prev, [name]: { ...prev[name], intervallTyp: "fixed", intervallDays: val } };
+        });
         supabase
           .from("hormones")
           .update({ intervall_mode: "fixed", intervall_days: val })
           .eq("user_id", userId)
           .eq("name", name)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setHormonDosierung((prev) => ({ ...prev, [name]: vorher }));
+            }
+          });
         return;
       }
 
-      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], [feld]: val } }));
+      let vorher;
+      setHormonDosierung((prev) => {
+        vorher = prev[name];
+        return { ...prev, [name]: { ...prev[name], [feld]: val } };
+      });
 
       if (feld === "intervallTyp") {
         supabase
@@ -221,7 +265,12 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
           .update({ intervall_mode: val })
           .eq("user_id", userId)
           .eq("name", name)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setHormonDosierung((prev) => ({ ...prev, [name]: vorher }));
+            }
+          });
         return;
       }
 
@@ -236,7 +285,12 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
         .update({ [column]: value })
         .eq("user_id", userId)
         .eq("name", name)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setHormonDosierung((prev) => ({ ...prev, [name]: vorher }));
+          }
+        });
     },
     [userId]
   );
@@ -270,7 +324,13 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
         dbPatch[column] = value;
       });
 
-      setHormonDosierung((prev) => ({ ...prev, [name]: { ...prev[name], ...localPatch } }));
+      // Bug-Fix: siehe setHormonDose() — Rollback auf den vorherigen Stand
+      // bei einem Fehlschlag statt eines dauerhaft falschen Anzeigewerts.
+      let vorher;
+      setHormonDosierung((prev) => {
+        vorher = prev[name];
+        return { ...prev, [name]: { ...prev[name], ...localPatch } };
+      });
       if (Object.keys(dbPatch).length === 0) return;
 
       supabase
@@ -278,7 +338,12 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
         .update(dbPatch)
         .eq("user_id", userId)
         .eq("name", name)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setHormonDosierung((prev) => ({ ...prev, [name]: vorher }));
+          }
+        });
     },
     [userId]
   );
@@ -299,7 +364,13 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
         setHormonFeedback((prev) => ({ ...prev, [k]: { ...prev[k], menge } }));
       }
       const { error } = await supabase.from("hormone_logs").upsert(payload, { onConflict: "user_id,hormone_name,dose_date,uhrzeit" });
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        // Bug-Fix: bei Fehlschlag blieb das Abhaken trotzdem dauerhaft
+        // sichtbar (bis zum nächsten Neuladen) — jetzt Rollback auf den
+        // Stand vor dem Tap.
+        setHormonErledigt((prev) => ({ ...prev, [k]: !nextVal }));
+      }
     },
     [hormonErledigt, userId, hormonDosierung]
   );

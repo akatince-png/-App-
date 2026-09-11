@@ -63,10 +63,35 @@ export function useZeitbloecke(userId) {
   );
 
   const projektEntfernen = useCallback(async (id) => {
-    setProjekte((prev) => prev.filter((p) => p.id !== id));
-    setZeitbloecke((prev) => prev.filter((z) => z.projektId !== id));
+    // Bug-Fix: bei Fehlschlag verschwanden Projekt UND seine Zeitblöcke
+    // trotzdem sofort, bis zum nächsten Neuladen — wirkte wie gelöscht,
+    // tauchten dann aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigesProjekt;
+    let vorherigerIndex;
+    let entfernteZeitbloecke;
+    setProjekte((prev) => {
+      vorherigerIndex = prev.findIndex((p) => p.id === id);
+      vorherigesProjekt = prev[vorherigerIndex];
+      return prev.filter((p) => p.id !== id);
+    });
+    setZeitbloecke((prev) => {
+      entfernteZeitbloecke = prev.filter((z) => z.projektId === id);
+      return prev.filter((z) => z.projektId !== id);
+    });
     const { error } = await supabase.from("projekte").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigesProjekt) {
+        setProjekte((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigesProjekt);
+          return next;
+        });
+      }
+      if (entfernteZeitbloecke?.length) {
+        setZeitbloecke((prev) => [...prev, ...entfernteZeitbloecke]);
+      }
+    }
   }, []);
 
   const zeitblockHinzufuegen = useCallback(
@@ -115,9 +140,24 @@ export function useZeitbloecke(userId) {
   }, []);
 
   const zeitblockEntfernen = useCallback(async (id) => {
-    setZeitbloecke((prev) => prev.filter((z) => z.id !== id));
+    let vorherigerBlock;
+    let vorherigerIndex;
+    setZeitbloecke((prev) => {
+      vorherigerIndex = prev.findIndex((z) => z.id === id);
+      vorherigerBlock = prev[vorherigerIndex];
+      return prev.filter((z) => z.id !== id);
+    });
     const { error } = await supabase.from("zeitbloecke").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigerBlock) {
+        setZeitbloecke((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigerBlock);
+          return next;
+        });
+      }
+    }
   }, []);
 
   return {

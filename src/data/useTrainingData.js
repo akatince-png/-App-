@@ -87,9 +87,27 @@ export function useTrainingData(userId) {
   );
 
   const trainingEntfernen = useCallback(async (id) => {
-    setTrainingEintraege((prev) => prev.filter((e) => e.id !== id));
+    // Bug-Fix: bei Fehlschlag verschwand der Eintrag trotzdem sofort aus der
+    // Liste, bis zum nächsten Neuladen — wirkte wie gelöscht, tauchte dann
+    // aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigerEintrag;
+    let vorherigerIndex;
+    setTrainingEintraege((prev) => {
+      vorherigerIndex = prev.findIndex((e) => e.id === id);
+      vorherigerEintrag = prev[vorherigerIndex];
+      return prev.filter((e) => e.id !== id);
+    });
     const { error } = await supabase.from("training_sessions").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigerEintrag) {
+        setTrainingEintraege((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigerEintrag);
+          return next;
+        });
+      }
+    }
   }, []);
 
   const trainingErledigtSetzen = useCallback(async (id, erledigt) => {

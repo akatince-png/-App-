@@ -46,7 +46,15 @@ export function useUebungsBilder(userId) {
   );
 
   const uebungsBildEntfernen = useCallback(async (name) => {
-    await supabase.from("uebungs_bilder").delete().eq("name", name);
+    // Bug-Fix: löschte den Eintrag bisher lokal auch dann, wenn der
+    // Server-Aufruf fehlschlug (Fehler wurde nicht einmal geprüft) — das
+    // Bild verschwand aus der Ansicht, obwohl es in der Datenbank noch da
+    // war, bis zum nächsten Neuladen.
+    const { error } = await supabase.from("uebungs_bilder").delete().eq("name", name);
+    if (error) {
+      console.error(error);
+      return;
+    }
     setUebungsBilder((prev) => {
       const next = { ...prev };
       delete next[name];

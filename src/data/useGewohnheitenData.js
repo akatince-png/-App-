@@ -69,15 +69,43 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   );
 
   const gewohnheitEntfernen = useCallback(async (id) => {
-    setGewohnheiten((prev) => prev.filter((g) => g.id !== id));
+    // Bug-Fix: bei Fehlschlag (Netzwerk/RLS) verschwand die Gewohnheit
+    // trotzdem sofort aus der Liste, bis zum nächsten Neuladen — wirkte wie
+    // gelöscht, tauchte dann aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigeGewohnheit;
+    let vorherigerIndex;
+    setGewohnheiten((prev) => {
+      vorherigerIndex = prev.findIndex((g) => g.id === id);
+      vorherigeGewohnheit = prev[vorherigerIndex];
+      return prev.filter((g) => g.id !== id);
+    });
     const { error } = await supabase.from("routines").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigeGewohnheit) {
+        setGewohnheiten((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigeGewohnheit);
+          return next;
+        });
+      }
+    }
   }, []);
 
   const gewohnheitZielAktualisieren = useCallback(async (id, zielTage) => {
-    setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, zielTage } : g)));
+    let vorherigerWert;
+    setGewohnheiten((prev) =>
+      prev.map((g) => {
+        if (g.id !== id) return g;
+        vorherigerWert = g.zielTage;
+        return { ...g, zielTage };
+      })
+    );
     const { error } = await supabase.from("routines").update({ ziel_tage: zielTage || null }).eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, zielTage: vorherigerWert } : g)));
+    }
   }, []);
 
   // Als persönliche Akut-Übung markieren (Teil 18) — wird im neuen

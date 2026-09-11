@@ -80,9 +80,27 @@ export function useAtemuebungenData(userId) {
   );
 
   const atemuebungEntfernen = useCallback(async (id) => {
-    setAtemuebungen((prev) => prev.filter((a) => a.id !== id));
+    // Bug-Fix: bei Fehlschlag verschwand die Atemübung trotzdem sofort aus
+    // der Liste, bis zum nächsten Neuladen — wirkte wie gelöscht, tauchte
+    // dann aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigeUebung;
+    let vorherigerIndex;
+    setAtemuebungen((prev) => {
+      vorherigerIndex = prev.findIndex((a) => a.id === id);
+      vorherigeUebung = prev[vorherigerIndex];
+      return prev.filter((a) => a.id !== id);
+    });
     const { error } = await supabase.from("atemuebungen").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigeUebung) {
+        setAtemuebungen((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigeUebung);
+          return next;
+        });
+      }
+    }
   }, []);
 
   // aufAkutmodus: kennzeichnet Sitzungen, die aus dem Akutmodus heraus

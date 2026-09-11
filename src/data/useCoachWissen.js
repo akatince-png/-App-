@@ -49,9 +49,24 @@ export function useCoachWissen(userId) {
   }, []);
 
   const coachWissenEntfernen = useCallback(async (id) => {
-    setCoachWissen((prev) => prev.filter((e) => e.id !== id));
+    let vorherigerEintrag;
+    let vorherigerIndex;
+    setCoachWissen((prev) => {
+      vorherigerIndex = prev.findIndex((e) => e.id === id);
+      vorherigerEintrag = prev[vorherigerIndex];
+      return prev.filter((e) => e.id !== id);
+    });
     const { error } = await supabase.from("coach_wissen").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigerEintrag) {
+        setCoachWissen((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigerEintrag);
+          return next;
+        });
+      }
+    }
   }, []);
 
   return { coachWissen, coachWissenHinzufuegen, coachWissenEntfernen };

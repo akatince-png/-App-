@@ -122,11 +122,36 @@ export function useWorkflowData(userId) {
   }, []);
 
   const workflowPresetLoeschen = useCallback(async (id) => {
-    setWorkflowPresets((prev) => prev.filter((p) => p.id !== id));
+    // Bug-Fix: bei Fehlschlag verschwanden Preset UND abhängige Pläne
+    // trotzdem sofort, bis zum nächsten Neuladen — wirkte wie gelöscht,
+    // tauchten dann aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigesPreset;
+    let vorherigerIndex;
+    let entferntePlaene;
+    setWorkflowPresets((prev) => {
+      vorherigerIndex = prev.findIndex((p) => p.id === id);
+      vorherigesPreset = prev[vorherigerIndex];
+      return prev.filter((p) => p.id !== id);
+    });
     // workflow_plaene hat on-delete-cascade auf preset_id — lokal mit nachziehen.
-    setWorkflowPlaene((prev) => prev.filter((p) => p.presetId !== id));
+    setWorkflowPlaene((prev) => {
+      entferntePlaene = prev.filter((p) => p.presetId === id);
+      return prev.filter((p) => p.presetId !== id);
+    });
     const { error } = await supabase.from("workflow_presets").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigesPreset) {
+        setWorkflowPresets((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigesPreset);
+          return next;
+        });
+      }
+      if (entferntePlaene?.length) {
+        setWorkflowPlaene((prev) => [...prev, ...entferntePlaene]);
+      }
+    }
   }, []);
 
   const workflowPlanHinzufuegen = useCallback(
@@ -152,9 +177,24 @@ export function useWorkflowData(userId) {
   );
 
   const workflowPlanEntfernen = useCallback(async (id) => {
-    setWorkflowPlaene((prev) => prev.filter((p) => p.id !== id));
+    let vorherigerPlan;
+    let vorherigerIndex;
+    setWorkflowPlaene((prev) => {
+      vorherigerIndex = prev.findIndex((p) => p.id === id);
+      vorherigerPlan = prev[vorherigerIndex];
+      return prev.filter((p) => p.id !== id);
+    });
     const { error } = await supabase.from("workflow_plaene").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigerPlan) {
+        setWorkflowPlaene((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigerPlan);
+          return next;
+        });
+      }
+    }
   }, []);
 
   return {

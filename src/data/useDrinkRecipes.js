@@ -90,9 +90,27 @@ export function useDrinkRecipes(userId) {
   );
 
   const rezeptEntfernen = useCallback(async (id) => {
-    setRezepte((prev) => prev.filter((r) => r.id !== id));
+    // Bug-Fix: bei Fehlschlag verschwand das Rezept trotzdem sofort aus der
+    // Liste, bis zum nächsten Neuladen — wirkte wie gelöscht, tauchte dann
+    // aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigesRezept;
+    let vorherigerIndex;
+    setRezepte((prev) => {
+      vorherigerIndex = prev.findIndex((r) => r.id === id);
+      vorherigesRezept = prev[vorherigerIndex];
+      return prev.filter((r) => r.id !== id);
+    });
     const { error } = await supabase.from("drink_recipes").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigesRezept) {
+        setRezepte((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigesRezept);
+          return next;
+        });
+      }
+    }
   }, []);
 
   const toggleRezeptErledigt = useCallback(

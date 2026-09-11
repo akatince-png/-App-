@@ -103,11 +103,36 @@ export function useTrainingTemplates(userId) {
   );
 
   const programmEntfernen = useCallback(async (id) => {
-    setTrainingProgramme((prev) => prev.filter((p) => p.id !== id));
+    // Bug-Fix: bei Fehlschlag verschwand das Programm trotzdem sofort, bis
+    // zum nächsten Neuladen — wirkte wie gelöscht, tauchte dann aber wieder
+    // auf, ohne jede Fehlermeldung.
+    let vorherigesProgramm;
+    let vorherigerIndex;
+    let betroffeneTemplateIds;
+    setTrainingProgramme((prev) => {
+      vorherigerIndex = prev.findIndex((p) => p.id === id);
+      vorherigesProgramm = prev[vorherigerIndex];
+      return prev.filter((p) => p.id !== id);
+    });
     // on-delete-set-null auf training_templates.programm_id — lokal mit nachziehen.
-    setTemplates((prev) => prev.map((t) => (t.programmId === id ? { ...t, programmId: null } : t)));
+    setTemplates((prev) => {
+      betroffeneTemplateIds = prev.filter((t) => t.programmId === id).map((t) => t.id);
+      return prev.map((t) => (t.programmId === id ? { ...t, programmId: null } : t));
+    });
     const { error } = await supabase.from("training_programme").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigesProgramm) {
+        setTrainingProgramme((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigesProgramm);
+          return next;
+        });
+      }
+      if (betroffeneTemplateIds?.length) {
+        setTemplates((prev) => prev.map((t) => (betroffeneTemplateIds.includes(t.id) ? { ...t, programmId: id } : t)));
+      }
+    }
   }, []);
 
   const templateSpeichern = useCallback(
@@ -143,9 +168,24 @@ export function useTrainingTemplates(userId) {
   );
 
   const templateEntfernen = useCallback(async (id) => {
-    setTemplates((prev) => prev.filter((t) => t.id !== id));
+    let vorherigeVorlage;
+    let vorherigerIndex;
+    setTemplates((prev) => {
+      vorherigerIndex = prev.findIndex((t) => t.id === id);
+      vorherigeVorlage = prev[vorherigerIndex];
+      return prev.filter((t) => t.id !== id);
+    });
     const { error } = await supabase.from("training_templates").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigeVorlage) {
+        setTemplates((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigeVorlage);
+          return next;
+        });
+      }
+    }
   }, []);
 
   // Bisher gab es nur Anlegen/Löschen einer Vorlage, kein nachträgliches
@@ -197,9 +237,24 @@ export function useTrainingTemplates(userId) {
   );
 
   const wochenplanEntfernen = useCallback(async (id) => {
-    setWochenplan((prev) => prev.filter((w) => w.id !== id));
+    let vorherigeZuweisung;
+    let vorherigerIndex;
+    setWochenplan((prev) => {
+      vorherigerIndex = prev.findIndex((w) => w.id === id);
+      vorherigeZuweisung = prev[vorherigerIndex];
+      return prev.filter((w) => w.id !== id);
+    });
     const { error } = await supabase.from("training_wochenplan").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigeZuweisung) {
+        setWochenplan((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigeZuweisung);
+          return next;
+        });
+      }
+    }
   }, []);
 
   // Bearbeitet eine bestehende Einheit, statt sie löschen + neu anlegen zu

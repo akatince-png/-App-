@@ -123,10 +123,35 @@ export function useMealData(userId, hauptprotokollId) {
   }, []);
 
   const mahlzeitEntfernen = useCallback(async (id) => {
-    setMahlzeiten((prev) => prev.filter((m) => m.id !== id));
-    setMealWochenplan((prev) => prev.filter((w) => w.mealId !== id));
+    // Bug-Fix: bei Fehlschlag verschwanden Mahlzeit UND ihre Wochenplan-
+    // Zuweisungen trotzdem sofort, bis zum nächsten Neuladen — wirkte wie
+    // gelöscht, tauchten dann aber wieder auf, ohne jede Fehlermeldung.
+    let vorherigeMahlzeit;
+    let vorherigerIndex;
+    let entfernteZuweisungen;
+    setMahlzeiten((prev) => {
+      vorherigerIndex = prev.findIndex((m) => m.id === id);
+      vorherigeMahlzeit = prev[vorherigerIndex];
+      return prev.filter((m) => m.id !== id);
+    });
+    setMealWochenplan((prev) => {
+      entfernteZuweisungen = prev.filter((w) => w.mealId === id);
+      return prev.filter((w) => w.mealId !== id);
+    });
     const { error } = await supabase.from("meals").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigeMahlzeit) {
+        setMahlzeiten((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigeMahlzeit);
+          return next;
+        });
+      }
+      if (entfernteZuweisungen?.length) {
+        setMealWochenplan((prev) => [...prev, ...entfernteZuweisungen]);
+      }
+    }
   }, []);
 
   // Zutaten werden nur beim Anlegen einer Mahlzeit geschrieben — zum
@@ -209,9 +234,24 @@ export function useMealData(userId, hauptprotokollId) {
   );
 
   const wochenplanMahlzeitEntfernen = useCallback(async (id) => {
-    setMealWochenplan((prev) => prev.filter((w) => w.id !== id));
+    let vorherigeZuweisung;
+    let vorherigerIndex;
+    setMealWochenplan((prev) => {
+      vorherigerIndex = prev.findIndex((w) => w.id === id);
+      vorherigeZuweisung = prev[vorherigerIndex];
+      return prev.filter((w) => w.id !== id);
+    });
     const { error } = await supabase.from("meal_wochenplan").delete().eq("id", id);
-    if (error) console.error(error);
+    if (error) {
+      console.error(error);
+      if (vorherigeZuweisung) {
+        setMealWochenplan((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigeZuweisung);
+          return next;
+        });
+      }
+    }
   }, []);
 
   return {
