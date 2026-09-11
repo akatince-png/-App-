@@ -1,5 +1,50 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 11.09.2026, Fortsetzung (Teil 29) — Rollback bei Fehlern: Dosis-Änderungen + Löschfunktionen
+
+Direkt im Anschluss an Teil 28. Zweiter der drei von der Nutzerin
+angestoßenen großen Punkte: das systemische "optimistisches Update ohne
+Rollback"-Muster aus dem Bug-Check (Teil 27), zuerst an den
+meistgenutzten Stellen.
+
+**Peptid-/Hormon-Dosis** (`useHormoneData.js` — nach Teil 28 der einzige
+noch lebendige Pfad für beide): `setHormonKategorie`,
+`setHormonEinnahmeart`, `setHormonDose`, `setHormonDoseBatch`,
+`hormonEntfernen`, `toggleHormonErledigt`. Muster überall gleich: den
+Stand vor der optimistischen Änderung im selben `setState`-Aufruf
+merken, bei einem Fehler exakt darauf zurückrollen, statt dass ein
+nie gespeicherter Wert dauerhaft (bis zum nächsten Neuladen) in der
+Oberfläche stehen bleibt. `useProtocolData.js`s alte, gleichnamige
+Peptid-Funktionen (togglePeptid, setDose, ...) bewusst NICHT angefasst
+— seit Teil 28 ruft sie niemand mehr auf (totes Codestück, kein
+Nutzen von Rollback auf ungenutztem Code).
+
+**Löschfunktionen**, dasselbe Rollback-Muster (Index+Objekt vor dem
+Filtern merken, bei Fehler an derselben Stelle wieder einfügen), in:
+`useGewohnheitenData.js` (Entfernen + Ziel-Aktualisieren),
+`useSupplementData.js`, `useTrainingData.js`, `useMealData.js`
+(Mahlzeit + Wochenplan-Zuweisung, inkl. der kaskadierten
+Wochenplan-Einträge), `useAtemuebungenData.js`, `useDrinkRecipes.js`,
+`useZeitbloecke.js` (Projekt + Zeitblock, inkl. kaskadierter
+Zeitblöcke), `useWorkflowData.js` (Preset + Plan, inkl. kaskadierter
+Pläne), `useTrainingTemplates.js` (Programm + Vorlage + Wochenplan,
+inkl. der auf `programmId: null` gesetzten Vorlagen), `useCoachWissen.js`.
+Zusätzlich `useUebungsBilder.js`: löschte den Eintrag bisher lokal auch
+dann, wenn der Server-Aufruf fehlschlug (Fehler wurde nicht mal
+geprüft) — jetzt wird `error` erst geprüft, bevor lokal gelöscht wird.
+
+**Bewusst noch offen** (nicht Teil dieser beiden Batches, für einen
+späteren Durchgang): die übrigen ~15 optimistischen Set-Funktionen aus
+Teil 27 (v. a. `useProtocolData.js` Ziele/Notizen, `useProfileData.js`,
+`useBiomarkerData.js`) sowie fehlende Cancel-Guards/Race-Conditions bei
+paralleler Erst-Migration (Workflow-Presets) — beides niedrigere
+Priorität laut Bug-Check.
+
+`npm run build` + `npx oxlint` nach jedem Dateiblock geprüft, keine
+neuen Warnungen.
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 28) — Peptid-Tagesplan-Lücke geschlossen
 
 Direkt im Anschluss an Teil 27. Von den drei dort offen gelassenen großen
