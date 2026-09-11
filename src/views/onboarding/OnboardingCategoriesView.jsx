@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, TextArea, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
@@ -279,6 +279,27 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const [hinzugefuegt, setHinzugefuegt] = useState([]); // Namen, die in diesem Bereich schon gespeichert wurden
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // UX-Fix (Nutzerinnen-Vorgabe, 11.09.: "wenn man was ausfüllt und dann ein
+  // Ergebnis entsteht ... wird es visuell nicht klar, dass das grade
+  // entstanden ist"): Die "Bereits hinzugefügt"-Liste steht oberhalb des
+  // Formulars — wer unten das Formular ausfüllt und "Hinzufügen" tippt, sieht
+  // den neuen Eintrag sonst gar nicht, ohne von sich aus nach oben zu
+  // scrollen. neuesterEintragRef markiert den zuletzt hinzugefügten Eintrag,
+  // damit er automatisch ins Bild scrollt und kurz sichtbar hervorgehoben
+  // wird (dieselbe slideInSuccess-Animation wie beim Abhaken in
+  // QuickTaskList.jsx). Der erste Render (z. B. beim Zwischenspeichern-
+  // Wiedereinstieg mit bereits vorhandenen Einträgen) soll NICHT scrollen,
+  // nur ein wirklich neu hinzugekommener Eintrag.
+  const neuesterEintragRef = useRef(null);
+  const hinzugefuegtErstRenderRef = useRef(true);
+  useEffect(() => {
+    if (hinzugefuegtErstRenderRef.current) {
+      hinzugefuegtErstRenderRef.current = false;
+      return;
+    }
+    neuesterEintragRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [hinzugefuegt.length]);
 
   // Eigenes Startdatum je Teilprotokoll (weicht optional vom Hauptprotokoll ab)
   const [eigenesStartdatumAktiv, setEigenesStartdatumAktiv] = useState(false);
@@ -951,11 +972,25 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             <div style={{ marginBottom: 18, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
               <Label>{t("onboarding.hinzugefuegt.label")}</Label>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {hinzugefuegt.map((item, i) => (
-                  <div key={i} style={{ padding: "10px 12px", borderRadius: 12, background: accentSoft, fontSize: 13, fontWeight: 600 }}>
-                    {item}
-                  </div>
-                ))}
+                {hinzugefuegt.map((item, i) => {
+                  const istNeuester = i === hinzugefuegt.length - 1;
+                  return (
+                    <div
+                      key={i}
+                      ref={istNeuester ? neuesterEintragRef : null}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        background: accentSoft,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        animation: istNeuester ? "slideInSuccess 0.6s ease-out" : "none",
+                      }}
+                    >
+                      {item}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

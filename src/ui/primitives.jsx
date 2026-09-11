@@ -52,9 +52,14 @@ export function Stepper({ step, total }) {
   );
 }
 
-export function Card({ children, style }) {
+// React.forwardRef, damit z. B. LexikonView.jsx die neueste Antwort-Karte
+// per ref.scrollIntoView() ins Bild scrollen kann (UX-Fix 11.09.: neue
+// Ergebnisse waren sonst nicht sichtbar, ohne dass die Nutzerin selbst
+// scrollt) — ohne übergebenen ref verhält sich die Komponente unverändert.
+export const Card = React.forwardRef(function Card({ children, style }, ref) {
   return (
     <div
+      ref={ref}
       className="mp-card"
       style={{
         background: card,
@@ -68,7 +73,7 @@ export function Card({ children, style }) {
       {children}
     </div>
   );
-}
+});
 
 // Farbverlauf + farbiger Glow-Schatten + Press-Animation statt einer
 // flachen Einfarb-Fläche (Nutzerinnen-Vorgabe, 28.07.: wirkte "flach,

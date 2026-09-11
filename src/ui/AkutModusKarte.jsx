@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, Pill, PrimaryButton, TextArea } from "./primitives";
 import { accentDark, accentSoft, textMuted } from "./theme";
 import { useAkutModus, AKUT_SYMPTOME, akutmodusEreignisLoggen } from "../data/useAkutModus";
@@ -114,6 +114,15 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
   const [massnahmeEingetragen, setMassnahmeEingetragen] = useState(false);
   const [massnahmeGefuehlProtokolliert, setMassnahmeGefuehlProtokolliert] = useState(false);
   const { antwort, laden, fehler, hilfeAnfordern, uebungAnfordern, zuruecksetzen } = useAkutModus();
+
+  // UX-Fix (Nutzerinnen-Vorgabe, 11.09.): Die Antwort erscheint unten im Panel
+  // — bei einem längeren Panel (z. B. nach dem Auswählen einer festgelegten
+  // Übung, mit sichtbarer Symptom-Liste darüber) war nicht klar erkennbar,
+  // dass gerade eine neue Antwort entstanden ist, ohne selbst runterzuscrollen.
+  const antwortRef = useRef(null);
+  useEffect(() => {
+    if (antwort) antwortRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [antwort]);
 
   const zuruecksetzenKomplett = () => {
     setAnCoachGesendet(false);
@@ -332,7 +341,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
       {fehler && <div style={{ fontSize: 12.5, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
 
       {antwort && (
-        <div style={{ marginTop: 4 }}>
+        <div ref={antwortRef} style={{ marginTop: 4, animation: "fadeInUp 0.4s ease-out" }}>
           <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: accentDark }}>
             {antwort}
           </div>

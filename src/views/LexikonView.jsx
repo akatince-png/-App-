@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, Pill, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { accent, accentDark, textMuted } from "../ui/theme";
@@ -9,6 +9,15 @@ export default function LexikonView({ onHome }) {
   const { lexikonVerlauf, lexikonLoading, lexikonFragen } = useAppData();
   const [lexikonFrage, setLexikonFrage] = useState("");
   const [lexikonKategorie, setLexikonKategorie] = useState("Peptide");
+  // UX-Fix (Nutzerinnen-Vorgabe, 11.09.): neue Frage-/Antwort-Karten sind
+  // schnell erkennbar, wenn nach längerem Verlauf ohnehin unten am
+  // Eingabefeld gearbeitet wird — bei einem sehr langen Verlauf reicht das
+  // aber nicht automatisch, deshalb zusätzlich ins Bild scrollen + kurz
+  // einblenden, sobald eine neue Frage gestellt wird.
+  const neuesteKarteRef = useRef(null);
+  useEffect(() => {
+    if (lexikonVerlauf.length > 0) neuesteKarteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [lexikonVerlauf.length]);
 
   const stellen = (frage) => {
     setLexikonFrage("");
@@ -37,15 +46,18 @@ export default function LexikonView({ onHome }) {
         </div>
       )}
 
-      {lexikonVerlauf.map((item, i) => (
-        <Card key={i} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10, color: accentDark, fontWeight: 700, marginBottom: 4 }}>{item.kategorie}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>{item.frage}</div>
-          <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.5 }}>
-            {item.antwort === null ? "🔎 Antwort wird geladen..." : item.antwort}
-          </div>
-        </Card>
-      ))}
+      {lexikonVerlauf.map((item, i) => {
+        const istNeueste = i === lexikonVerlauf.length - 1;
+        return (
+          <Card key={i} ref={istNeueste ? neuesteKarteRef : null} style={{ marginBottom: 12, animation: istNeueste ? "fadeInUp 0.4s ease-out" : "none" }}>
+            <div style={{ fontSize: 10, color: accentDark, fontWeight: 700, marginBottom: 4 }}>{item.kategorie}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>{item.frage}</div>
+            <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.5 }}>
+              {item.antwort === null ? "🔎 Antwort wird geladen..." : item.antwort}
+            </div>
+          </Card>
+        );
+      })}
 
       <Card>
         <div style={{ display: "flex", gap: 8 }}>

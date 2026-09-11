@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, CheckRow, Label, Pill, PrimaryButton, TextInput } from "./primitives";
 import TimeWheelField from "./TimeWheelField";
 import NumberWheelField from "./NumberWheelField";
 import UebungenEditor, { LEERE_UEBUNG } from "./UebungenEditor";
 import VorlaufFeld from "./VorlaufFeld";
-import { accentDark, cardBorder, danger, textMuted } from "./theme";
+import { accentDark, accentSoft, cardBorder, danger, textMuted } from "./theme";
 import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
 import { useT } from "../i18n/translate";
 
@@ -95,6 +95,23 @@ export default function WochenplanEditor({
   // gehört.
   const [bearbeitenId, setBearbeitenId] = useState(null);
 
+  // UX-Fix (Nutzerinnen-Vorgabe, 11.09.: nach dem Ausfüllen ist nicht sichtbar,
+  // dass gerade ein Ergebnis entstanden ist): Neu gespeicherte Einheiten landen
+  // in der Tabelle unterhalb des Formulars — ohne Hinweis sieht man dort nichts
+  // Neues, solange man nicht selbst hinscrollt. `neueIds` markiert die gerade
+  // hinzugefügten Zeilen kurz (slideInSuccess-Animation, wie beim Abhaken in
+  // QuickTaskList.jsx) und scrollt die erste davon automatisch ins Bild.
+  const [neueIds, setNeueIds] = useState([]);
+  const neuesteZeileRef = useRef(null);
+  const neueIdsTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (neueIds.length) neuesteZeileRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return () => {
+      if (neueIdsTimeoutRef.current) clearTimeout(neueIdsTimeoutRef.current);
+    };
+  }, [neueIds]);
+
   const reset = () => {
     setWochentage([]);
     setUhrzeit("08:00");
@@ -142,8 +159,15 @@ export default function WochenplanEditor({
     } else {
       // Nacheinander statt Promise.all, damit bei einem Fehler mitten in der
       // Reihe nichts unbemerkt durcheinandergerät.
+      const neu = [];
       for (const tag of wochentage) {
-        await wochenplanHinzufuegen({ ...einheitFelder, wochentag: tag });
+        const result = await wochenplanHinzufuegen({ ...einheitFelder, wochentag: tag });
+        if (result?.ok && result.einheit?.id) neu.push(result.einheit.id);
+      }
+      if (neu.length) {
+        if (neueIdsTimeoutRef.current) clearTimeout(neueIdsTimeoutRef.current);
+        setNeueIds(neu);
+        neueIdsTimeoutRef.current = setTimeout(() => setNeueIds([]), 900);
       }
     }
     setSaving(false);
@@ -399,15 +423,19 @@ export default function WochenplanEditor({
             </div>
             {alleEinheitenSortiert.map((e) => {
               const anzahlUebungen = (e.uebungenListe || []).filter((u) => u.name).length;
+              const istNeu = neueIds.includes(e.id);
               return (
                 <div
                   key={e.id}
+                  ref={istNeu ? neuesteZeileRef : null}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     padding: "10px 14px",
                     borderTop: `1px solid ${cardBorder}`,
                     fontSize: 13,
+                    background: istNeu ? accentSoft : "transparent",
+                    animation: istNeu ? "slideInSuccess 0.6s ease-out" : "none",
                   }}
                 >
                   <div style={{ width: 40, fontWeight: 700 }}>{tLabel(e.tag)}</div>
