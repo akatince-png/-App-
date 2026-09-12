@@ -136,6 +136,10 @@ export default function WochenuebersichtView({
   const [exportLaeuft, setExportLaeuft] = useState(false);
   const [vorschauUrl, setVorschauUrl] = useState(null);
   const exportRef = useRef(null);
+  // Nutzerinnen-Vorgabe (12.09.): der PDF-Zeitraum soll wählbar sein, statt
+  // immer starr "von Protokollstart bis heute" — null = gesamter bisheriger
+  // Verlauf, sonst Anzahl Wochen rückwirkend ab heute.
+  const [exportZeitraumWochen, setExportZeitraumWochen] = useState(null);
 
   // Projekte & Zeitblöcke (14.08., Nutzerin-Vorgabe) — bewusst hier in der
   // Wochenübersicht statt einer neuen Plan-Seite, damit farbige Zeitblöcke
@@ -242,14 +246,26 @@ export default function WochenuebersichtView({
   // statt den Durchlauf mehrfach zu wiederholen.
   const heuteCap = today < endDatumObj ? today : endDatumObj;
 
+  // Gewählter Erfassungs-Zeitraum: "gesamter Verlauf" (Protokollstart) oder
+  // die letzten N Wochen ab heuteCap — nie vor dem echten Protokollstart.
+  const erfassungsStartObj = useMemo(() => {
+    if (!exportZeitraumWochen) return startDatumObj;
+    const gewuenscht = addDays(heuteCap, -(exportZeitraumWochen * 7 - 1));
+    return gewuenscht > startDatumObj ? gewuenscht : startDatumObj;
+    // today/heuteCap bewusst nicht als Dependency (siehe bereichsCompliance/
+    // kumulativeCompliance unten) — beide ändern sich pro Render neu, ohne
+    // dass sich innerhalb einer Sitzung etwas Sinnvolles ändert.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exportZeitraumWochen, startdatum, dauer]);
+
   const { bereichsCompliance, compliance, woechentlicheCompliance } = useMemo(() => {
     const zaehlerGesamt = {};
     const wochen = [];
     let zaehlerWoche = {};
-    let wochenStart = new Date(startDatumObj);
+    let wochenStart = new Date(erfassungsStartObj);
     wochenStart.setHours(0, 0, 0, 0);
 
-    let cursor = new Date(startDatumObj);
+    let cursor = new Date(erfassungsStartObj);
     cursor.setHours(0, 0, 0, 0);
     const ende = new Date(heuteCap);
     ende.setHours(0, 0, 0, 0);
@@ -315,7 +331,7 @@ export default function WochenuebersichtView({
 
     return { bereichsCompliance, compliance, woechentlicheCompliance: wochen };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dayItemsQuelldaten, startdatum, dauer]);
+  }, [dayItemsQuelldaten, erfassungsStartObj, exportZeitraumWochen, startdatum, dauer]);
 
   // Hydration/Tageslicht/Schlaf haben keinen einzelnen "geplant vs.
   // erledigt"-Termin (kumulative Tageswerte) — hier stattdessen "an wie
@@ -791,7 +807,7 @@ export default function WochenuebersichtView({
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Compliance je Bereich</div>
       <Card style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 11, color: textMuted, marginBottom: 12 }}>
-          Erfasster Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(heuteCap)} (nicht mitgezählt werden Tage, die noch bevorstehen).
+          Erfasster Zeitraum: {fmtDate(erfassungsStartObj)} – {fmtDate(heuteCap)} (nicht mitgezählt werden Tage, die noch bevorstehen — Zeitraum unten bei "Export & Druck" einstellbar).
         </div>
         {bereichsCompliance.length === 0 && kumulativeCompliance.hydrationTage.length === 0 && kumulativeCompliance.tageslichtTage.length === 0 && kumulativeCompliance.schlafTage.length === 0 ? (
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>Noch keine Daten im Protokollzeitraum.</div>
@@ -869,6 +885,16 @@ export default function WochenuebersichtView({
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>
           Erstellt eine PDF-Datei mit dem vollen Wochenraster — praktisch für den Ausdruck oder das Arztgespräch.
         </div>
+        {/* Nutzerinnen-Vorgabe (12.09.): Zeitraum für Compliance/Wochenverlauf
+            wählbar statt starr "gesamter bisheriger Verlauf" — wirkt sich
+            auf die Compliance-Karten oben UND auf den PDF-Export aus. */}
+        <div style={{ fontSize: 11, color: textMuted, marginBottom: 6 }}>Zeitraum für Fortschritt/Wochenverlauf:</div>
+        <div style={{ marginBottom: 12 }}>
+          <Pill label="Gesamter Verlauf" selected={!exportZeitraumWochen} onClick={() => setExportZeitraumWochen(null)} />
+          <Pill label="Letzte 4 Wochen" selected={exportZeitraumWochen === 4} onClick={() => setExportZeitraumWochen(4)} />
+          <Pill label="Letzte 8 Wochen" selected={exportZeitraumWochen === 8} onClick={() => setExportZeitraumWochen(8)} />
+          <Pill label="Letzte 12 Wochen" selected={exportZeitraumWochen === 12} onClick={() => setExportZeitraumWochen(12)} />
+        </div>
         <PrimaryButton onClick={exportieren} disabled={exportLaeuft}>
           {exportLaeuft ? "Wird erstellt..." : "Als PDF exportieren"}
         </PrimaryButton>
@@ -929,7 +955,8 @@ export default function WochenuebersichtView({
               0%" dadurch wie ein Fehler statt wie "es sind einfach erst
               wenige Tage vergangen". */}
           <div style={{ fontSize: 12, fontWeight: 700 }}>
-            Fortschritt erfasst: {fmtDate(startDatumObj)} – {fmtDate(heuteCap)}
+            Fortschritt erfasst: {fmtDate(erfassungsStartObj)} – {fmtDate(heuteCap)}
+            {exportZeitraumWochen ? ` (letzte ${exportZeitraumWochen} Wochen)` : " (gesamter bisheriger Verlauf)"}
           </div>
           {compliance !== null && <div style={{ fontSize: 12 }}>Compliance in diesem Zeitraum: {compliance}%</div>}
 
