@@ -1,5 +1,70 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 51) — Morgen-/Abendroutine: Schritte direkt auf der Startseite abhaken
+
+Nutzerinnen-Vorgabe (ausführlich, u. a. am Beispiel "Exemestan bestätigen"):
+das Bestätigen eines einzelnen Routine-Schritts war "sehr umständlich" —
+Klick führte zum Tagesplan, dort stand der Punkt unter "Morgenroutine",
+und das Zahnrad öffnete den Schritte-EDITOR statt einer Bestätigung
+("als würde ich die Maske bearbeiten wollen"). Gewünscht: die
+Morgenroutine/Abendroutine soll beim Antippen auf der Startseite direkt
+aufklappen und NUR die echten, konfigurierten Schritte zeigen — Zeit für
+Zeit (z. B. "6:30 ...", "6:40 ..."), mit einem eigenen Bestätigungspunkt
+direkt daneben je Schritt. Zusätzlich: die jeweils oberste "Als
+Nächstes"-Karte (das, was als Nächstes ansteht) soll sich etwas von den
+anderen abheben.
+
+- **Ursache des alten Verhaltens**: `TagesplanView.jsx`s "Morgenroutine"-
+  Block gruppiert nur alles vor 11 Uhr per Uhrzeit-Bucket unter diese
+  Überschrift (Zufallstreffer, keine echte Verknüpfung zu den
+  konfigurierten Routine-Schritten), das Zahnrad öffnet den
+  `RoutineSchritteEditor` (zum Einrichten, nicht zum Abhaken). Außerdem
+  gab es bisher KEINE Möglichkeit, einen einzelnen Routine-Schritt
+  unabhängig vom kompletten geführten Ablauf (`RoutineAblauf.jsx`,
+  Timer-geführt, ein Durchlauf wird erst ganz am Ende als Ganzes
+  gespeichert) direkt zu bestätigen.
+- **Neue Migration `0083_routine_schritt_logs.sql`**: eigene, schlanke
+  Tabelle `routine_schritt_logs` (eine Zeile = an diesem Tag erledigt,
+  gleiches Muster wie `routine_logs` bei Gewohnheiten) — **muss von der
+  Nutzerin selbst im Supabase-Dashboard ausgeführt werden**.
+- **`useRoutinen.js`**:
+  - `routineSchrittZeit(schrittId)`: leitet die Uhrzeit eines Schritts
+    her (Zeitrahmen-Start der Routine + Summe der Dauer aller
+    vorherigen Schritte) — es gibt dafür keine eigene Uhrzeit-Spalte je
+    Schritt, das wird bewusst berechnet statt gespeichert. Ohne
+    gesetzten Zeitrahmen-Start gibt's keine Uhrzeit (kein "zu spät",
+    siehe Belohnungsfenster-Logik).
+  - `routineSchrittErledigtUmschalten(schrittId, datum)`: bestätigt/
+    entfernt EINEN Schritt für einen Tag, unabhängig vom geführten
+    Ablauf — der bleibt für alle, die lieber Schritt für Schritt mit
+    Timer durchgehen wollen, unverändert nutzbar. Sind danach ALLE
+    Schritte der Routine für diesen Tag abgehakt, wird automatisch ein
+    normaler Durchlauf gespeichert (`routine_durchlaeufe`) — dieselbe
+    Quelle, die Streaks/Abzeichen (`utils/errungenschaften.js`) und die
+    Direktzugriff-Widgets/"Als Nächstes"-Filterung in `HomeView.jsx`
+    sowieso schon lesen, damit "heute erledigt" unabhängig vom
+    verwendeten Weg konsistent bleibt. Feuert außerdem — wie die
+    übrigen Kategorien seit Teil 47 — eine Belohnungsfenster-Meldung je
+    bestätigtem Schritt, wenn nicht später als der Admin-Puffer nach
+    der berechneten Uhrzeit.
+- **`ui/RoutineHeuteChecklist.jsx`** (neu): zeigt für eine Routine
+  ausschließlich ihre echten Schritte, je mit berechneter Uhrzeit +
+  Name + "Bestätigen"-Button (bzw. `StatusBadge` "Erledigt", sobald
+  erledigt) — bewusst kein Navigieren, kein Editor.
+- **`HomeView.jsx`**: Tippen auf "Morgenroutine"/"Abendroutine" in "Als
+  Nächstes" klappt jetzt `RoutineHeuteChecklist` direkt darunter auf/zu
+  (Pfeil ▼/▲ statt "›"), statt zu einer anderen Seite zu springen. Der
+  Detailtext zeigt jetzt echten Fortschritt ("3 von 6 Schritten
+  erledigt") statt der bisherigen pauschalen "Routine offen". Die
+  oberste Karte der Liste ist jetzt etwas größer (Schrift, Punkt,
+  Innenabstand) als der Rest — Nutzerinnen-Vorgabe: das, was als
+  Nächstes ansteht, soll sich abheben.
+- **Getestet**: Zeitberechnung isoliert mit Node gegen ihr eigenes
+  Beispiel (Start 6:30 → 6:30/6:32/6:34 bei 2-Minuten-Schritten,
+  Mitternacht-Überlauf geprüft). Checkliste per Preview-Harness
+  (Playwright): Uhrzeiten + Namen korrekt angezeigt, Bestätigen schaltet
+  auf "Erledigt" um. Build + oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 50) — Bug-Fix: Eigenes Startdatum ließ sich nicht zurücksetzen
 
 Nutzerinnen-Vorgabe: "Ich kann das eingegebene Startdatum nicht
