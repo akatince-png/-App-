@@ -1,5 +1,70 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 44) — Home-Bildschirm neu geordnet: Balkendiagramm, Direktzugriff/Weitere Pläne, Morgen-/Abendroutine
+
+Nutzerinnen-Vorgabe: "so viele Diagramme drauf und Ansichten, die aber so
+unfunktional sind" — der Routinen-Ring sollte kleiner/ein Button werden,
+Morgen-/Abendroutine sollten eigene Buttons bekommen UND im Tagesplan
+auftauchen (aktuelle Morgenroutine erschien dort bisher gar nicht), und
+Hydration/Notfallmodus/Tagesplan sollten klarer als Direktzugriff wirken.
+Vorab drei Mockup-Richtungen als Canvas gezeigt (Claude-Design-Vorschau),
+Nutzerin wählte "Option B" und präzisierte danach: Direktzugriff soll nur
+die tatsächlich AKTIVEN Pläne zeigen, "Weitere Pläne" nur die inaktiven;
+Tagesplan/"Als Nächstes" direkt unter den Tagesfortschritt; Tagesfortschritt
+als Balkendiagramm statt Ring.
+
+**Datengrundlage geprüft, bevor gebaut wurde:** Morgen-/Abendroutine
+(`routine_schritte`/`routine_durchlaeufe`, `useRoutinen.js`) speichern einen
+Durchlauf erst EINMAL ganz am Ende (`routineDurchlaufSpeichern` — kein
+Zwischenstand, `RoutineAblauf.jsx` hält den Fortschritt nur lokal im
+Komponentenstatus). Die in den Mockups skizzierte Schritt-Bruchteil-Anzeige
+("3 von 6 Schritten") war also nicht durch echte Daten gedeckt — bewusst
+vereinfacht auf binär "heute erledigt / heute noch offen", statt dafür ein
+neues Zwischenspeicher-Feature zu bauen (keine ungefragte Zusatzfunktion).
+
+- **`HomeView.jsx`** umgebaut:
+  - **Tagesfortschritt** ist jetzt eine Karte mit Balkendiagramm
+    (`TagesfortschrittBalken`, neue kleine Komponente in derselben Datei) —
+    ein Balken je Lebensbereich (Gewohnheiten, Morgen-/Abendroutine,
+    Medikamente, Hydration, Tageslicht, Supplemente, Mahlzeiten, Training),
+    Höhe = heutiger Fortschritt, graue Kurz-Balken = noch nicht eingerichtet.
+    Der bisherige zweite Ring ("Routinen") ist weg.
+  - **"Als Nächstes"** steht jetzt direkt unter dem Tagesfortschritt (vorher
+    weiter unten) und hat einen schlanken "Tagesplan ›"-Link im Titel statt
+    des früheren eigenen großen Buttons.
+  - **Morgen-/Abendroutine erscheinen jetzt in "Als Nächstes"**, solange sie
+    eingerichtet UND heute noch nicht abgeschlossen sind — bleiben stehen,
+    bis ein Durchlauf für heute wirklich gespeichert ist (nicht schon beim
+    ersten Antippen).
+  - **"Direktzugriff"** (aktive Pläne) und **"Weitere Pläne"** (noch nicht
+    eingerichtete, mit "+ einrichten"-Hinweis) ersetzen das bisherige "Alle
+    Pläne im Überblick"-Raster samt "Alle/Nur genutzte zeigen"-Umschalter
+    (Präferenz entfällt — die neue Aufteilung braucht sie nicht mehr,
+    `src/utils/widgetPrefs.js` gelöscht). Gewohnheiten, Morgenroutine und
+    Abendroutine sind jetzt drei ganz normale Einträge in dieser Liste,
+    gleichberechtigt mit Medikamenten/Hydration/etc.
+  - Der "Zwischenfälle"-Button aus dem Nutzerinnen-Feedback meinte den
+    bereits vorhandenen Notfallmodus-Button — keine neue Funktion nötig.
+- **`MiniPlanWidget.jsx`**: neue optionale `farbe`/`hintergrund`-Props —
+  Morgen-/Abendroutine haben bewusst KEINEN `KATEGORIE_META`-Eintrag (sonst
+  tauchen sie als tote Einträge in der Wochenübersicht-Legende auf, siehe
+  Kommentar in `PlaeneView.jsx`), bekommen ihre Farbe jetzt also direkt
+  mitgegeben statt über die Kategorie nachgeschlagen.
+- **`src/i18n/dict/home.js`**: neue Schlüssel für Direktzugriff/Weitere
+  Pläne/"heute noch offen" in de/en/tr ergänzt, `home.gewohnheiten.cta.desc`
+  (frühere separate Routinen-Kachel, jetzt entfernt) blieb ungenutzt stehen.
+
+Mit einer temporären Vorschau-Variante von `HomeView.jsx` (Mock-Kontext,
+danach vollständig zurückgesetzt — `git status` wieder leer) geprüft:
+Balkendiagramm zeigt aktive/inaktive Bereiche korrekt, "Als Nächstes"
+zeigt die Morgenroutine mit korrektem Sprung-Ziel, Direktzugriff/Weitere
+Pläne teilen sich korrekt nach aktiv/inaktiv auf, alle Klick-Ziele
+(morgenroutine/abendroutine/tagesplan/hydration/...) wurden einzeln
+gegengeprüft. `npm run build` + `npx oxlint` sauber (18 vorbestehende
+Warnungen, keine neuen).
+
+---
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 43) — Onboarding-Coach speichert direkt, Sprachfenster-Größe stabilisiert
 
 Ausgangsfrage der Nutzerin: kann Aka schon aus freiem Sprechen komplette
