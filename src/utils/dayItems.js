@@ -109,14 +109,20 @@ export function trainingKompaktDetail(t) {
 // Training/Zeitblöcke haben schon echte, einzelne Zeilen und brauchen das
 // nicht. Gibt `null` zurück, wenn der Tag laut Ausnahme komplett entfällt
 // (Aufrufer soll den Eintrag dann nicht pushen).
+// `originalUhrzeit`/`ausnahmeKategorie`/`ausnahmeRefId` werden IMMER
+// mitgegeben (auch ohne aktive Ausnahme) — die Bearbeiten-Karte in der
+// Wochen-/Monatsübersicht braucht die echte, zugrunde liegende Uhrzeit für
+// den Erledigt-Haken (der Log-Schlüssel richtet sich nach der ECHTEN
+// geplanten Uhrzeit, nicht nach einer evtl. überschriebenen Anzeige-Uhrzeit)
+// sowie Kategorie+refId, um beim Speichern die richtige Ausnahme zu treffen.
 function wendeAusnahmeAn(item, ausnahmenNachSchluessel, kategorie, refId, tagStr) {
-  if (!ausnahmenNachSchluessel || refId == null) return item;
-  const ausnahme = ausnahmenNachSchluessel.get(`${kategorie}__${refId}__${tagStr}`);
-  if (!ausnahme) return item;
+  const ausnahme = refId != null && ausnahmenNachSchluessel ? ausnahmenNachSchluessel.get(`${kategorie}__${refId}__${tagStr}`) : null;
+  const basis = { ...item, originalUhrzeit: item.uhrzeit, ausnahmeKategorie: kategorie, ausnahmeRefId: refId };
+  if (!ausnahme) return basis;
   if (ausnahme.entfaellt) return null;
   const uhrzeit = ausnahme.uhrzeit ?? item.uhrzeit;
   return {
-    ...item,
+    ...basis,
     uhrzeit,
     hour: uhrzeit ? uhrzeit.slice(0, 2) : item.hour,
     name: ausnahme.name ?? item.name,
