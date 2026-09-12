@@ -36,6 +36,7 @@ import { useBausteinVersionen } from "../data/useBausteinVersionen";
 import { useQuestData } from "../data/useQuestData";
 import { useTeamData } from "../data/useTeamData";
 import { useTagesplanAusnahmen } from "../data/useTagesplanAusnahmen";
+import { useKompletterReset } from "../data/useKompletterReset";
 
 const AppDataContext = createContext(null);
 
@@ -85,6 +86,7 @@ export function AppDataProvider({ children }) {
   const questData = useQuestData(userId);
   const teamData = useTeamData(userId);
   const tagesplanAusnahmenData = useTagesplanAusnahmen(userId);
+  const kompletterResetData = useKompletterReset(userId);
 
   const value = {
     userId,
@@ -136,6 +138,7 @@ export function AppDataProvider({ children }) {
     ...questData,
     ...teamData,
     ...tagesplanAusnahmenData,
+    ...kompletterResetData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,

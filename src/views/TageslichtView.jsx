@@ -48,6 +48,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
     tageslichtZielMinuten,
     tageslichtHinzufuegen,
     tageslichtZielSetzen,
+    tageslichtZielZuruecksetzen,
     aenderungVermerken,
   } = useAppData();
   const [zielEntwurf, setZielEntwurf] = useState(String(tageslichtZielMinuten));
@@ -78,6 +79,19 @@ export default function TageslichtView({ onHome, embedded = false }) {
       return;
     }
     setZielGrund("");
+  };
+
+  // Bug-Fix (Nutzerin-Vorgabe, 12.09.): siehe HydrationView.jsx — ohne
+  // diese Möglichkeit blieb die Tageslicht-Kachel dauerhaft "aktiv".
+  const zielZuruecksetzen = async () => {
+    if (!window.confirm("Tagesziel zurücksetzen? Die Tageslicht-Kachel verschwindet dann wieder von der Startseite, bis du erneut etwas einträgst.")) return;
+    setFehler(null);
+    const result = await tageslichtZielZuruecksetzen();
+    if (!result?.ok) {
+      setFehler(result?.error || "Zurücksetzen fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    setZielEntwurf("30");
   };
 
   // Übergabe an <KiChat onUebernehmen>: setzt das im Gespräch besprochene
@@ -193,6 +207,15 @@ export default function TageslichtView({ onHome, embedded = false }) {
           </div>
         </div>
         <GrundEingabe grund={zielGrund} onChange={setZielGrund} />
+        {tageslichtZielMinuten !== 30 && (
+          <button
+            type="button"
+            onClick={zielZuruecksetzen}
+            style={{ marginTop: 10, border: "none", background: "transparent", color: danger, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+          >
+            Ziel zurücksetzen
+          </button>
+        )}
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>

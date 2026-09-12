@@ -43,6 +43,7 @@ export default function HydrationView({ onHome, embedded = false }) {
     hydrationZielMl,
     hydrationHinzufuegen,
     hydrationZielSetzen,
+    hydrationZielZuruecksetzen,
     hydrationCheckinSpeichern,
     aenderungVermerken,
     erinnerungen,
@@ -87,6 +88,21 @@ export default function HydrationView({ onHome, embedded = false }) {
       return;
     }
     setZielGrund("");
+  };
+
+  // Bug-Fix (Nutzerin-Vorgabe, 12.09.): ohne diese Möglichkeit blieb die
+  // Hydration-Kachel auf der Startseite dauerhaft "aktiv", selbst wenn
+  // alle Trinkmengen-Einträge gelöscht wurden — siehe
+  // hydrationZielZuruecksetzen() in useHydrationData.js.
+  const zielZuruecksetzen = async () => {
+    if (!window.confirm("Tagesziel zurücksetzen? Die Hydration-Kachel verschwindet dann wieder von der Startseite, bis du erneut etwas einträgst.")) return;
+    setHydrationError(null);
+    const result = await hydrationZielZuruecksetzen();
+    if (!result?.ok) {
+      setHydrationError(result?.error || "Zurücksetzen fehlgeschlagen. Bitte nochmal versuchen.");
+      return;
+    }
+    setZielEntwurf("2500");
   };
 
   // Übergabe an <KiChat onUebernehmen>: setzt ein evtl. besprochenes neues
@@ -248,6 +264,15 @@ export default function HydrationView({ onHome, embedded = false }) {
           </div>
         </div>
         <GrundEingabe grund={zielGrund} onChange={setZielGrund} />
+        {hydrationZielMl !== 2500 && (
+          <button
+            type="button"
+            onClick={zielZuruecksetzen}
+            style={{ marginTop: 10, border: "none", background: "transparent", color: danger, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+          >
+            Ziel zurücksetzen
+          </button>
+        )}
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>

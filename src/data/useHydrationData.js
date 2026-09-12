@@ -106,6 +106,25 @@ export function useHydrationData(userId) {
     [userId, hydrationZielMl]
   );
 
+  // Bug-Fix (Nutzerin-Vorgabe, 12.09.): ein einmal gesetztes Tagesziel
+  // ließ sich nie wieder auf "gar nicht konfiguriert" zurückstellen — die
+  // Home-Kachel blieb dadurch dauerhaft als "aktiv" hängen (Bedingung
+  // `hydrationZielMl !== 2500`), selbst wenn alle Trinkmengen-Einträge
+  // gelöscht wurden. Löscht die Einstellungs-Zeile komplett statt sie auf
+  // einen Wert zu setzen, damit der Zustand wieder dem eines nie
+  // eingerichteten Ziels entspricht (Standard 2500 ml).
+  const hydrationZielZuruecksetzen = useCallback(async () => {
+    const vorher = hydrationZielMl;
+    setHydrationZielMl(2500);
+    const { error } = await supabase.from("hydration_settings").delete().eq("user_id", userId);
+    if (error) {
+      console.error(error);
+      setHydrationZielMl(vorher);
+      return { ok: false, error: `Zurücksetzen fehlgeschlagen: ${error.message}` };
+    }
+    return { ok: true };
+  }, [userId, hydrationZielMl]);
+
   // Optionaler Tages-Check-in (Elektrolyte/Durstgefühl/Bemerkung) — unabhängig
   // von der Trinkmenge, deshalb ein eigenes partielles Upsert auf dieselbe Zeile.
   const hydrationCheckinSpeichern = useCallback(
@@ -131,6 +150,7 @@ export function useHydrationData(userId) {
     hydrationZielMl,
     hydrationHinzufuegen,
     hydrationZielSetzen,
+    hydrationZielZuruecksetzen,
     hydrationCheckinSpeichern,
   };
 }

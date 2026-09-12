@@ -196,6 +196,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const { signOut, user } = useAuth();
   const {
     resetOnboarding,
+    allesZuruecksetzen,
     pushUnterstuetzt,
     pushAktiv,
     pushLadend,
@@ -222,6 +223,16 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const { lang, setLang } = useLanguage();
   const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
+  // Gefahrenzone/"Alles zurücksetzen" (12.09., Nutzerin-Vorgabe): extrem
+  // destruktive Aktion, löscht ALLE Protokoll-/Tracking-Daten über die
+  // ganze App hinweg unwiderruflich. Ein normales window.confirm() reicht
+  // hier bewusst nicht — die Nutzerin muss zusätzlich ein festes Wort
+  // eintippen, damit ein Wegtippen/versehentliches Antippen ausgeschlossen
+  // ist (gleiche Grundidee wie bei GitHub o. Ä. "type DELETE to confirm").
+  const [resetAllesEntwurf, setResetAllesEntwurf] = useState("");
+  const [resetAllesLaedt, setResetAllesLaedt] = useState(false);
+  const [resetAllesMsg, setResetAllesMsg] = useState(null);
+  const RESET_ALLES_WORT = "ALLES LÖSCHEN";
   // Ohne sofortige sichtbare Reaktion tippt man bei der vollen Weiterleitung
   // zu Spotify (die ein paar Sekunden dauern kann) leicht nochmal — dann
   // startet ein zweiter Anmelde-Durchlauf parallel, dessen Code beim
@@ -261,6 +272,19 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
     // und Medikamente serverseitig zurück — ein voller Reload lädt die App
     // komplett neu und landet dadurch direkt wieder im Willkommens-Flow,
     // statt dass der Nutzer sich extra ab- und wieder anmelden muss.
+    window.location.reload();
+  };
+
+  const handleAllesZuruecksetzen = async () => {
+    if (resetAllesEntwurf.trim().toUpperCase() !== RESET_ALLES_WORT) return;
+    setResetAllesMsg(null);
+    setResetAllesLaedt(true);
+    const result = await allesZuruecksetzen();
+    setResetAllesLaedt(false);
+    if (!result?.ok) {
+      setResetAllesMsg(result?.error || "Zurücksetzen fehlgeschlagen.");
+      return;
+    }
     window.location.reload();
   };
 
@@ -769,6 +793,44 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           {t("mehr.testen.reset")}
         </button>
         {resetMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetMsg}</div>}
+      </Card>
+
+      {/* Gefahrenzone (12.09., Nutzerin-Vorgabe: "Ich muss doch alles auf
+          Null setzen können und neue Protokolle starten können, kann ich
+          nicht") — echter, kompletter Reset über alle Kategorien hinweg,
+          nicht nur die Onboarding-Beispieldaten oben. Bewusst am Ende der
+          Seite und visuell abgesetzt (roter Rahmen), damit es nicht wie
+          eine normale Einstellung aussieht. */}
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, marginTop: 20, color: danger }}>⚠️ Gefahrenzone</div>
+      <Card style={{ border: `1px solid ${danger}` }}>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
+          Löscht ALLE deine Protokoll-Daten unwiderruflich — Medikamente, Supplemente, Training, Routinen, Ernährung,
+          Hydration, Tageslicht, Schlaf, Check-ins, Blutwerte und alle zugehörigen Protokolle/Verläufe. Dein Konto
+          bleibt erhalten, du landest danach wieder im Einrichtungs-Assistenten und kannst komplett neu starten.
+        </div>
+        <Label>Tippe „{RESET_ALLES_WORT}", um zu bestätigen</Label>
+        <TextInput value={resetAllesEntwurf} onChange={setResetAllesEntwurf} placeholder={RESET_ALLES_WORT} />
+        <div style={{ marginTop: 10 }}>
+          <button
+            onClick={handleAllesZuruecksetzen}
+            disabled={resetAllesEntwurf.trim().toUpperCase() !== RESET_ALLES_WORT || resetAllesLaedt}
+            style={{
+              width: "100%",
+              padding: "13px 16px",
+              borderRadius: 12,
+              border: "none",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: resetAllesEntwurf.trim().toUpperCase() === RESET_ALLES_WORT && !resetAllesLaedt ? "pointer" : "not-allowed",
+              background: danger,
+              color: "#fff",
+              opacity: resetAllesEntwurf.trim().toUpperCase() === RESET_ALLES_WORT && !resetAllesLaedt ? 1 : 0.5,
+            }}
+          >
+            {resetAllesLaedt ? "Wird zurückgesetzt…" : "Wirklich alles zurücksetzen"}
+          </button>
+        </div>
+        {resetAllesMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetAllesMsg}</div>}
       </Card>
     </>
   );

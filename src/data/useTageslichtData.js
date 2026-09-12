@@ -82,11 +82,28 @@ export function useTageslichtData(userId) {
     [userId, tageslichtZielMinuten]
   );
 
+  // Bug-Fix (Nutzerin-Vorgabe, 12.09.): siehe hydrationZielZuruecksetzen()
+  // in useHydrationData.js — dasselbe Problem, dieselbe Lösung: ein einmal
+  // gesetztes Ziel ließ sich nie wieder auf "gar nicht konfiguriert"
+  // zurückstellen, die Home-Kachel blieb dadurch dauerhaft "aktiv".
+  const tageslichtZielZuruecksetzen = useCallback(async () => {
+    const vorher = tageslichtZielMinuten;
+    setTageslichtZielMinuten(30);
+    const { error } = await supabase.from("tageslicht_settings").delete().eq("user_id", userId);
+    if (error) {
+      console.error(error);
+      setTageslichtZielMinuten(vorher);
+      return { ok: false, error: `Zurücksetzen fehlgeschlagen: ${error.message}` };
+    }
+    return { ok: true };
+  }, [userId, tageslichtZielMinuten]);
+
   return {
     tageslichtEintraege,
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
     tageslichtHinzufuegen,
     tageslichtZielSetzen,
+    tageslichtZielZuruecksetzen,
   };
 }
