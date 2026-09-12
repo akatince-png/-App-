@@ -4,6 +4,7 @@ import ViewHeader from "../ui/ViewHeader";
 import TimeWheelField from "../ui/TimeWheelField";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, projektFarbe } from "../utils/dayItems";
+import { WochenComplianceChart } from "../ui/charts";
 import { exportElementAsPdf } from "../utils/pdfExport";
 import { describeInterval, activeDoseDays } from "../utils/schedule";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
@@ -48,8 +49,6 @@ export default function WochenuebersichtView({
     dosierung = {},
     hormone = [],
     hormonDosierung = {},
-    plan = [],
-    erledigt = {},
     hormonPlan = [],
     hormonErledigt = {},
     startdatum,
@@ -231,28 +230,49 @@ export default function WochenuebersichtView({
     [substanzen, startdatum, dauerTage]
   );
 
-  const compliance = useMemo(() => {
-    const gesamt = plan.length + hormonPlan.length;
-    if (gesamt === 0) return null;
-    const erledigtCount =
-      plan.filter((d) => erledigt[`${toLocalISODate(d.date)}__${d.peptid}__${d.uhrzeit}`]).length +
-      hormonPlan.filter((d) => hormonErledigt[`${toLocalISODate(d.date)}__${d.name}__${d.uhrzeit}`]).length;
-    return Math.round((erledigtCount / gesamt) * 100);
-  }, [plan, erledigt, hormonPlan, hormonErledigt]);
+  // Bug-Fix (12.09., Nutzerinnen-Rückmeldung): "Compliance (bisher)" bezog
+  // sich bisher auf die GESAMTE Protokolldauer (plan.length + hormonPlan.
+  // length als Nenner) — bei einem gerade erst gestarteten 12-Wochen-
+  // Protokoll zeigte das fast immer 0%, weil die meisten Dosen noch gar
+  // nicht fällig waren. Jetzt wie bereichsCompliance/kumulativeCompliance
+  // nur über den bereits VERSTRICHENEN Zeitraum (Start bis heute, gedeckelt
+  // auf Protokollende) berechnet — ein einziger Tages-Durchlauf liefert
+  // sowohl die kumulierte Gesamt-/Bereichs-Quote als auch (neu) die
+  // Wochen-für-Woche-Aufschlüsselung fürs PDF (woechentlicheCompliance),
+  // statt den Durchlauf mehrfach zu wiederholen.
+  const heuteCap = today < endDatumObj ? today : endDatumObj;
 
-  // Compliance je Bereich für alle 6 Kategorien mit "geplant vs. erledigt"
-  // (statt nur Peptide/Hormone wie oben): Tag für Tag über buildDayItems()
-  // gezählt, von Protokollstart bis heute (nicht bis Protokollende — noch
-  // nicht fällige Tage sollen die Quote nicht künstlich drücken). Auf 180
-  // Tage gedeckelt, damit ein sehr altes Protokoll keine lange Schleife
-  // auslöst.
-  const bereichsCompliance = useMemo(() => {
-    const heuteCap = today < endDatumObj ? today : endDatumObj;
-    const zaehler = {};
+  const { bereichsCompliance, compliance, woechentlicheCompliance } = useMemo(() => {
+    const zaehlerGesamt = {};
+    const wochen = [];
+    let zaehlerWoche = {};
+    let wochenStart = new Date(startDatumObj);
+    wochenStart.setHours(0, 0, 0, 0);
+
     let cursor = new Date(startDatumObj);
     cursor.setHours(0, 0, 0, 0);
     const ende = new Date(heuteCap);
     ende.setHours(0, 0, 0, 0);
+
+    const wocheAbschliessen = (bis) => {
+      const kategorien = Object.entries(zaehlerWoche)
+        .map(([kategorie, z]) => ({
+          kategorie,
+          label: KATEGORIE_META[kategorie]?.label || kategorie,
+          dot: KATEGORIE_META[kategorie]?.dot || textMuted,
+          prozent: z.geplant > 0 ? Math.round((z.erledigt / z.geplant) * 100) : 0,
+          geplant: z.geplant,
+          erledigt: z.erledigt,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+      if (kategorien.length > 0) {
+        wochen.push({ von: new Date(wochenStart), bis: new Date(bis), kategorien });
+      }
+      zaehlerWoche = {};
+    };
+
+    // Auf 180 Tage gedeckelt (≈ 26 Wochen), damit ein sehr altes Protokoll
+    // keine lange Schleife bzw. ein unlesbar langes PDF auslöst.
     let n = 0;
     while (cursor <= ende && n < 180) {
       const items = buildDayItems(cursor, dayItemsQuelldaten);
@@ -260,14 +280,25 @@ export default function WochenuebersichtView({
         // Zeitblöcke sind Kalenderblöcke, keine erledigbaren Aufgaben —
         // eine "0%"-Quote dafür wäre irreführend, daher ausgenommen.
         if (item.kategorie === "zeitblock") continue;
-        if (!zaehler[item.kategorie]) zaehler[item.kategorie] = { geplant: 0, erledigt: 0 };
-        zaehler[item.kategorie].geplant++;
-        if (item.done) zaehler[item.kategorie].erledigt++;
+        if (!zaehlerGesamt[item.kategorie]) zaehlerGesamt[item.kategorie] = { geplant: 0, erledigt: 0 };
+        zaehlerGesamt[item.kategorie].geplant++;
+        if (item.done) zaehlerGesamt[item.kategorie].erledigt++;
+        if (!zaehlerWoche[item.kategorie]) zaehlerWoche[item.kategorie] = { geplant: 0, erledigt: 0 };
+        zaehlerWoche[item.kategorie].geplant++;
+        if (item.done) zaehlerWoche[item.kategorie].erledigt++;
+      }
+      // Woche abgeschlossen (7 Tage voll) oder letzter Tag im Zeitraum —
+      // dann diese (ggf. unvollständige) Woche ans PDF anhängen.
+      const wochenTag = Math.floor((cursor - wochenStart) / 86400000);
+      if (wochenTag === 6 || cursor.getTime() === ende.getTime()) {
+        wocheAbschliessen(cursor);
+        wochenStart = addDays(cursor, 1);
       }
       cursor = addDays(cursor, 1);
       n++;
     }
-    return Object.entries(zaehler)
+
+    const bereichsCompliance = Object.entries(zaehlerGesamt)
       .map(([kategorie, z]) => ({
         kategorie,
         label: KATEGORIE_META[kategorie]?.label || kategorie,
@@ -277,6 +308,12 @@ export default function WochenuebersichtView({
         erledigt: z.erledigt,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
+
+    const gesamtGeplant = bereichsCompliance.reduce((s, b) => s + b.geplant, 0);
+    const gesamtErledigt = bereichsCompliance.reduce((s, b) => s + b.erledigt, 0);
+    const compliance = gesamtGeplant > 0 ? Math.round((gesamtErledigt / gesamtGeplant) * 100) : null;
+
+    return { bereichsCompliance, compliance, woechentlicheCompliance: wochen };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dayItemsQuelldaten, startdatum, dauer]);
 
@@ -745,7 +782,7 @@ export default function WochenuebersichtView({
         </div>
         {compliance !== null && (
           <div>
-            <div style={{ fontSize: 11, color: textMuted }}>Compliance (bisher)</div>
+            <div style={{ fontSize: 11, color: textMuted }}>Compliance (bis {fmtDate(heuteCap)})</div>
             <div style={{ fontSize: 20, fontWeight: 800, color: accentDark }}>{compliance}%</div>
           </div>
         )}
@@ -753,7 +790,9 @@ export default function WochenuebersichtView({
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Compliance je Bereich</div>
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: textMuted, marginBottom: 12 }}>Vom Protokollstart bis heute — nicht mitgezählt werden Tage, die noch bevorstehen.</div>
+        <div style={{ fontSize: 11, color: textMuted, marginBottom: 12 }}>
+          Erfasster Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(heuteCap)} (nicht mitgezählt werden Tage, die noch bevorstehen).
+        </div>
         {bereichsCompliance.length === 0 && kumulativeCompliance.hydrationTage.length === 0 && kumulativeCompliance.tageslichtTage.length === 0 && kumulativeCompliance.schlafTage.length === 0 ? (
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>Noch keine Daten im Protokollzeitraum.</div>
         ) : (
@@ -803,6 +842,27 @@ export default function WochenuebersichtView({
           </>
         )}
       </Card>
+
+      {/* Wochenverlauf (12.09., Nutzerinnen-Vorgabe): ein Diagramm pro Woche
+          seit Protokollstart, damit sich Ausschläge (diese Woche gut,
+          jene Woche schlecht) auf einen Blick erkennen lassen, statt nur
+          eine einzige kumulierte Quote über den ganzen Zeitraum zu sehen.
+          Erscheint hier UND im PDF-Export weiter unten. */}
+      {woechentlicheCompliance.length > 0 && (
+        <>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Wochenverlauf</div>
+          <Card style={{ marginBottom: 16 }}>
+            {woechentlicheCompliance.map((w, i) => (
+              <div key={i} style={{ marginBottom: i < woechentlicheCompliance.length - 1 ? 20 : 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  Woche {i + 1} · {fmtDate(w.von)} – {fmtDate(w.bis)}
+                </div>
+                <WochenComplianceChart data={w.kategorien} />
+              </div>
+            ))}
+          </Card>
+        </>
+      )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Export & Druck</div>
       <Card>
@@ -862,9 +922,16 @@ export default function WochenuebersichtView({
           <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Protokoll-Statistik</div>
           <div style={{ fontSize: 12 }}>Dauer: {dauer || "–"} Wochen</div>
           <div style={{ fontSize: 12 }}>
-            Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)}
+            Protokoll-Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)}
           </div>
-          {compliance !== null && <div style={{ fontSize: 12 }}>Compliance: {compliance}%</div>}
+          {/* Bug-Fix (12.09.): stand bisher ohne erkennbaren Bezugszeitraum
+              da — bei einem frisch gestarteten Protokoll wirkte "Compliance:
+              0%" dadurch wie ein Fehler statt wie "es sind einfach erst
+              wenige Tage vergangen". */}
+          <div style={{ fontSize: 12, fontWeight: 700 }}>
+            Fortschritt erfasst: {fmtDate(startDatumObj)} – {fmtDate(heuteCap)}
+          </div>
+          {compliance !== null && <div style={{ fontSize: 12 }}>Compliance in diesem Zeitraum: {compliance}%</div>}
 
           <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Compliance je Bereich</div>
           {bereichsCompliance.map((b) => (
@@ -886,6 +953,24 @@ export default function WochenuebersichtView({
             <div style={{ fontSize: 12, marginBottom: 2 }}>
               Schlaf: Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)
             </div>
+          )}
+
+          {/* Wochenverlauf (12.09., Nutzerinnen-Vorgabe): ein Diagramm pro
+              Woche seit Protokollstart statt nur einer kumulierten Zahl —
+              damit im ausgedruckten Protokoll (z. B. fürs Arztgespräch)
+              erkennbar ist, in welcher Woche was gut/schlecht lief. */}
+          {woechentlicheCompliance.length > 0 && (
+            <>
+              <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Wochenverlauf</div>
+              {woechentlicheCompliance.map((w, i) => (
+                <div key={i} style={{ marginBottom: 16, breakInside: "avoid" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    Woche {i + 1} · {fmtDate(w.von)} – {fmtDate(w.bis)}
+                  </div>
+                  <WochenComplianceChart data={w.kategorien} height={150} />
+                </div>
+              ))}
+            </>
           )}
         </div>
       </div>
