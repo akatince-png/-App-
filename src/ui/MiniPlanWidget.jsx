@@ -7,7 +7,7 @@ import { hexZuRgba } from "./theme";
  * Zeigt Tagesfortschritt (innerer Ring) und Wochenfortschritt (äußerer Ring)
  *
  * Props:
- * - name: string - Name des Plans (z.B. "Peptide", "Hormone")
+ * - name: string - Name des Plans (z.B. "Medikamente", "Training")
  * - dailyCount: number - Heutige Erfüllung (z.B. 3)
  * - dailyTotal: number - Heutiges Ziel (z.B. 5)
  * - weeklyCount: number - Wochenerfüllung (z.B. 4)

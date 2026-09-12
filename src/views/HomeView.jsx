@@ -348,7 +348,11 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       })
     ).flat();
 
-    // Hormone (umfasst seit der Datenzusammenlegung, 13.08., auch Peptide)
+    // Medikamente (umfasst seit der Datenzusammenlegung, 13.08., auch
+    // Hormone und Peptide — Bug-Fix, 12.09.: diese Kachel hieß bisher fest
+    // "Hormone", obwohl sie schon immer alle drei zusammen zeigt und beim
+    // Klick dieselbe "Medikamente"-Ansicht öffnet — wirkte für die Nutzerin
+    // wie ein zweiter, separater Bereich neben "Medikamente".
     {
       const todayCount = hormonPlan.filter((d) => {
         const key = `${toLocalISODate(d.date)}__${d.name}__${d.uhrzeit}`;
@@ -365,7 +369,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         );
       }).length;
       widgets.push({
-        name: tLabel("Hormone"),
+        name: tLabel("Medikamente"),
         kategorie: "hormon",
         viewId: "medikamente",
         aktiv: hormonPlan.length > 0,
