@@ -83,6 +83,7 @@ export default function WochenuebersichtView({
     tageslichtZielMinuten,
     schlafEintraege,
     ausnahmenNachSchluessel,
+    protokollEintraege,
   } = appData;
 
   // Bug-Fix (Performance/Ruckeln): Diese View reichte bisher überall den
@@ -378,6 +379,24 @@ export default function WochenuebersichtView({
     return { hydrationTage, hydrationZielErreicht, tageslichtTage, tageslichtZielErreicht, schlafTage, schlafDurchschnitt };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, schlafEintraege, startdatum, dauer]);
+
+  // Änderungen im erfassten Zeitraum (12.09., Nutzerinnen-Vorgabe): Punkt 3
+  // ("Ausnahmen/dauerhafte Änderungen müssen im Protokoll auftauchen")
+  // nutzt das bereits bestehende, bereichsübergreifende Änderungsprotokoll
+  // (aenderungVermerken, schon in jeder Kategorie-Ansicht verdrahtet) —
+  // hier nur gefiltert auf den gewählten Erfassungszeitraum und fürs PDF
+  // aufbereitet, statt ein zweites Protokoll zu führen.
+  const aenderungenImZeitraum = useMemo(() => {
+    const startStr = toLocalISODate(erfassungsStartObj);
+    const endeStr = toLocalISODate(heuteCap);
+    return (protokollEintraege || [])
+      .filter((e) => {
+        const tagStr = toLocalISODate(new Date(e.erstelltAm));
+        return tagStr >= startStr && tagStr <= endeStr;
+      })
+      .sort((a, b) => new Date(b.erstelltAm) - new Date(a.erstelltAm));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [protokollEintraege, erfassungsStartObj, heuteCap]);
 
   const exportieren = async () => {
     if (!exportRef.current) return;
@@ -935,6 +954,29 @@ export default function WochenuebersichtView({
         </>
       )}
 
+      {/* Änderungen im Zeitraum (12.09., Nutzerinnen-Vorgabe): Ausnahmen und
+          dauerhafte Änderungen sollen im Protokoll nachvollziehbar sein —
+          nutzt das bereits bestehende Änderungsprotokoll, nur auf den
+          gewählten Zeitraum gefiltert. */}
+      {aenderungenImZeitraum.length > 0 && (
+        <>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Änderungen im Zeitraum</div>
+          <Card style={{ marginBottom: 16 }}>
+            {aenderungenImZeitraum.map((e) => (
+              <div key={e.id} style={{ padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700 }}>
+                  {e.itemName} — {e.aktion}
+                </div>
+                <div style={{ fontSize: 11, color: textMuted }}>
+                  {fmtDate(new Date(e.erstelltAm))}
+                  {e.detail ? ` · ${e.detail}` : ""}
+                </div>
+              </div>
+            ))}
+          </Card>
+        </>
+      )}
+
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Export & Druck</div>
       <Card>
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>
@@ -1050,6 +1092,20 @@ export default function WochenuebersichtView({
                     Woche {i + 1} · {fmtDate(w.von)} – {fmtDate(w.bis)}
                   </div>
                   <WochenComplianceChart data={w.kategorien} height={150} />
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Änderungen im Zeitraum (12.09., Nutzerinnen-Vorgabe) — siehe
+              Kommentar bei der Live-Ansicht oben. */}
+          {aenderungenImZeitraum.length > 0 && (
+            <>
+              <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Änderungen im Zeitraum</div>
+              {aenderungenImZeitraum.map((e) => (
+                <div key={e.id} style={{ fontSize: 12, marginBottom: 6 }}>
+                  <b>{e.itemName}</b> — {e.aktion} ({fmtDate(new Date(e.erstelltAm))}
+                  {e.detail ? `, ${e.detail}` : ""})
                 </div>
               ))}
             </>
