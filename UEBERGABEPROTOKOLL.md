@@ -1,5 +1,67 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 41) — Einzeltag-Ausnahmen aus Wochen-/Monatsübersicht
+
+Dritter Punkt aus derselben Feedback-Runde wie Teil 40 (nach visueller
+Trennung der Pläne-Seite und PDF-Wochen-Diagrammen): "aus der Wochen-/
+Monatsübersicht heraus soll sich ein einzelner Tages-Eintrag
+bearbeiten lassen, ohne die ganze wiederkehrende Regel zu ändern —
+mit Rückfrage 'nur heute oder dauerhaft', und das muss im Protokoll
+nachvollziehbar sein." Nutzerin hat sich bewusst für die vollständige
+Version entschieden (echte Einzeltag-Ausnahmen mit eigenem
+Datenmodell, nicht nur einen "dauerhaft ändern"-Link).
+
+**Wichtige Erkenntnis vorab:** Training und Zeitblöcke brauchen das
+Ausnahmen-Konzept nicht — die haben schon echte, einzelne Tages-Zeilen
+in der DB (kein "eine Regel, täglich neu berechnet"-Muster). Betrifft
+nur die fünf Kategorien Supplemente, Hormone/Medikamente, Ernährung,
+Gewohnheiten, Workflows.
+
+**Migration 0080** (muss wie 0077-0079 manuell im Supabase Dashboard
+SQL Editor ausgeführt werden): neue Tabelle `tagesplan_ausnahmen`,
+eine gemeinsame Tabelle für alle fünf Kategorien statt fünf einzelner.
+`ref_id` verweist je nach Kategorie auf hormones/supplements/
+meal_wochenplan/routines/workflow_plaene — nur gesetzte Felder gelten
+als überschrieben.
+
+**buildDayItems() (dayItems.js)** prüft jetzt für diese fünf
+Kategorien pro generiertem Tages-Eintrag, ob eine Ausnahme existiert —
+überschreibt Uhrzeit/Name/Detail oder lässt den Eintrag ganz entfallen
+("entfällt heute"). Jeder Eintrag trägt jetzt zusätzlich
+`originalUhrzeit`/`ausnahmeKategorie`/`ausnahmeRefId` — wichtig, damit
+der Erledigt-Haken immer den echten, zugrunde liegenden Log-Schlüssel
+trifft, auch wenn die Anzeige gerade eine überschriebene Uhrzeit zeigt.
+
+**Bedienung:** Klick auf einen Eintrag in Woche/Monat (Monatsraster:
+die kleinen Farbpunkte sind jetzt mit vergrößertem Tap-Bereich
+antippbar) öffnet ein neues Bottom-Sheet (`TagesEintragBearbeiten.jsx`,
+gleiches Muster wie die bestehende Trainings-Vorschau):
+- **Erledigt-Haken** — sofort wirksam, eindeutig pro Tag, keine
+  Rückfrage nötig.
+- **"Heute anders"** — Uhrzeit/Name/Detail nur für diesen einen Tag,
+  oder "Entfällt heute komplett". Landet als Ausnahme, wird im
+  Änderungsprotokoll vermerkt, lässt sich mit einem Klick wieder
+  zurücknehmen.
+- **"Dauerhaft ändern"** — navigiert zur vollen, längst vorhandenen
+  Bearbeiten-Oberfläche der jeweiligen Kategorie, statt deren
+  Formulare hier zu duplizieren (bewusste Scope-Entscheidung, um nicht
+  fünf verschiedene Bearbeiten-Formulare doppelt zu pflegen).
+
+**Änderungsprotokoll im PDF:** neuer Abschnitt "Änderungen im
+Zeitraum" (live in der App UND im Wochenübersicht-PDF-Export) — nutzt
+das bereits bestehende, bereichsübergreifende Änderungsprotokoll
+(war schon überall verdrahtet, bisher aber nirgends im PDF sichtbar),
+gefiltert auf den gewählten Erfassungszeitraum.
+
+Jeder der drei Teilschritte (Datenmodell/buildDayItems, Bottom-Sheet-
+Oberfläche, PDF-Integration) einzeln committet und mit isolierten
+Logik-Tests bzw. Playwright-Screenshots gegengeprüft (Override-Logik,
+Wochen-Bucketing, Modal-Interaktionen gegen einen gemockten
+Daten-Kontext). `npm run build` + `npx oxlint` nach jedem Schritt
+sauber (18 vorbestehende Warnungen, keine neuen).
+
+---
+
 ## ✅ Update 12.09.2026 (Teil 40) — Home-Kachel-Verwirrung, Tagesplan-Ruckeln, ADHS-Medikation-Kategorie
 
 Drei Punkte aus derselben Nachricht, bevor mit den ausstehenden
