@@ -27,6 +27,14 @@ function rowToHormonDosierung(row) {
     // werden kann, siehe Migration 0077).
     bacWasser: row.bac_wasser_ml != null ? String(row.bac_wasser_ml) : "",
     spruehstoesse: row.spruehstoesse != null ? String(row.spruehstoesse) : "",
+    // Nur für kategorie "Cannabis" relevant (THC/CBD-Gehalt + Konsumform-
+    // Details je Einnahmeart), siehe CannabisFelder.jsx.
+    thcProzent: row.cannabis_thc_prozent != null ? String(row.cannabis_thc_prozent) : "",
+    cbdProzent: row.cannabis_cbd_prozent != null ? String(row.cannabis_cbd_prozent) : "",
+    tabakMenge: row.cannabis_tabak_menge || "",
+    filterTyp: row.cannabis_filter || "",
+    temperaturGrad: row.cannabis_temperatur_grad != null ? String(row.cannabis_temperatur_grad) : "",
+    tropfenAnzahl: row.cannabis_tropfen != null ? String(row.cannabis_tropfen) : "",
   };
 }
 
@@ -40,9 +48,25 @@ const DOSE_FELD_TO_COLUMN = {
   uhrzeiten: "uhrzeiten",
   bacWasser: "bac_wasser_ml",
   spruehstoesse: "spruehstoesse",
+  thcProzent: "cannabis_thc_prozent",
+  cbdProzent: "cannabis_cbd_prozent",
+  tabakMenge: "cannabis_tabak_menge",
+  filterTyp: "cannabis_filter",
+  temperaturGrad: "cannabis_temperatur_grad",
+  tropfenAnzahl: "cannabis_tropfen",
 };
 
-const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays", "bacWasser", "spruehstoesse"]);
+const NUMERIC_FELDER = new Set([
+  "customDays",
+  "onDays",
+  "offDays",
+  "bacWasser",
+  "spruehstoesse",
+  "thcProzent",
+  "cbdProzent",
+  "temperaturGrad",
+  "tropfenAnzahl",
+]);
 
 function toRow(userId, neuesHormon, hauptprotokollId) {
   const isCustom = neuesHormon.intervallTyp === "custom";
@@ -62,6 +86,16 @@ function toRow(userId, neuesHormon, hauptprotokollId) {
     weekdays: isWeekdays ? neuesHormon.weekdays || [] : [],
     eigener_start: neuesHormon.eigenerStart || null,
     uhrzeiten: neuesHormon.uhrzeiten?.length ? neuesHormon.uhrzeiten : ["20:00"],
+    // Cannabis-Detailfelder gleich beim Anlegen mit erfassen (anders als
+    // bacWasser/spruehstoesse, die bisher nur nachträglich über die
+    // Dosis-Bearbeitung gesetzt werden) — die Nutzerin will THC/CBD-Gehalt
+    // direkt beim Einrichten angeben können, nicht erst danach.
+    cannabis_thc_prozent: neuesHormon.thcProzent ? Number(neuesHormon.thcProzent) : null,
+    cannabis_cbd_prozent: neuesHormon.cbdProzent ? Number(neuesHormon.cbdProzent) : null,
+    cannabis_tabak_menge: neuesHormon.tabakMenge || null,
+    cannabis_filter: neuesHormon.filterTyp || null,
+    cannabis_temperatur_grad: neuesHormon.temperaturGrad ? Number(neuesHormon.temperaturGrad) : null,
+    cannabis_tropfen: neuesHormon.tropfenAnzahl ? Number(neuesHormon.tropfenAnzahl) : null,
   };
 }
 
@@ -146,6 +180,12 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
           fotoPath: null,
           bacWasser: "",
           spruehstoesse: "",
+          thcProzent: neuesHormon.thcProzent || "",
+          cbdProzent: neuesHormon.cbdProzent || "",
+          tabakMenge: neuesHormon.tabakMenge || "",
+          filterTyp: neuesHormon.filterTyp || "",
+          temperaturGrad: neuesHormon.temperaturGrad || "",
+          tropfenAnzahl: neuesHormon.tropfenAnzahl || "",
         },
       }));
       return { ok: true };

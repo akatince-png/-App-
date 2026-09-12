@@ -3,6 +3,7 @@ import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInp
 import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
+import CannabisFelder from "../ui/CannabisFelder";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import AutocompleteInput from "../ui/AutocompleteInput";
 import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
@@ -20,7 +21,21 @@ import KategorieErinnerung from "../ui/KategorieErinnerung";
 // sind Lila, passend zu den bunten Home-Mini-Widgets.
 const { dot: accent, text: accentDark } = KATEGORIE_META.hormon;
 
-const DOSIS_FELDER = ["menge", "customDays", "onDays", "offDays", "eigenerStart", "weekdays", "uhrzeiten"];
+const DOSIS_FELDER = [
+  "menge",
+  "customDays",
+  "onDays",
+  "offDays",
+  "eigenerStart",
+  "weekdays",
+  "uhrzeiten",
+  "thcProzent",
+  "cbdProzent",
+  "tabakMenge",
+  "filterTyp",
+  "temperaturGrad",
+  "tropfenAnzahl",
+];
 
 const NEUES_MEDIKAMENT_LEER = {
   name: "",
@@ -35,7 +50,29 @@ const NEUES_MEDIKAMENT_LEER = {
   weekdays: [],
   eigenerStart: "",
   uhrzeiten: ["20:00"],
+  thcProzent: "",
+  cbdProzent: "",
+  tabakMenge: "",
+  filterTyp: "",
+  temperaturGrad: "",
+  tropfenAnzahl: "",
 };
+
+// Kompakte Zusammenfassung der Cannabis-Detailfelder für die Protokoll-Liste
+// — nur die Teile, die für die jeweils gewählte Einnahmeart tatsächlich
+// gesetzt sind.
+function cannabisDetailZeile(d) {
+  const teile = [];
+  if (d?.thcProzent) teile.push(`THC ${d.thcProzent}%`);
+  if (d?.cbdProzent) teile.push(`CBD ${d.cbdProzent}%`);
+  if (d?.einnahmeart === "Blüte (Rauchen)") {
+    teile.push(d.tabakMenge ? `Tabak ${d.tabakMenge}` : "ohne Tabak");
+    if (d.filterTyp) teile.push(d.filterTyp);
+  }
+  if (d?.einnahmeart === "Blüte (Verdampfen)" && d.temperaturGrad) teile.push(`${d.temperaturGrad}°C`);
+  if (d?.einnahmeart === "Tropfen" && d.tropfenAnzahl) teile.push(`${d.tropfenAnzahl} Tropfen`);
+  return teile.join(" · ");
+}
 
 function intervallGueltig(d) {
   if (d.intervallTyp === "custom") return !!d.customDays && Number(d.customDays) > 0;
@@ -104,6 +141,12 @@ export default function MedikamenteView({ onHome, embedded = false }) {
   const handleChange = (feld, val) => {
     setNeuesMedikament((prev) => {
       if (feld === "intervallPreset") return { ...prev, intervallTyp: "fixed", intervallDays: val };
+      // Beim Wechsel zu "Cannabis" die Einnahmeart-Voreinstellung
+      // ("Injektion") auf eine tatsächlich passende Cannabis-Form umstellen
+      // statt einer Kombination, die keinen Sinn ergibt.
+      if (feld === "kategorie" && val === "Cannabis" && prev.einnahmeart === "Injektion") {
+        return { ...prev, kategorie: val, einnahmeart: "Blüte (Rauchen)" };
+      }
       return { ...prev, [feld]: val };
     });
   };
@@ -212,7 +255,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       </div>
       <KiChat
         bereich="medikamente"
-        systemPrompt="Du hilfst dabei, ein neues Medikament oder Hormon für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        systemPrompt="Du hilfst dabei, ein neues Medikament oder Hormon für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray, oder bei Cannabis: Blüte zum Rauchen, Blüte zum Verdampfen, Esswaren), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Bei Cannabis reicht Kategorie/Einnahmeart/Menge/Rhythmus über den Chat — THC-/CBD-Gehalt und Konsum-Details (Tabak, Filter, Temperatur, Tropfenzahl) trägt die Nutzerin danach manuell im Formular nach. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
         einleitung={`Hi, ich bin ${getCoachName()}! Welches Medikament oder Hormon möchtest du hinzufügen?`}
         onUebernehmen={handleMedikamentUebernehmen}
         uebernehmenLabel="Medikament anlegen"
@@ -247,7 +290,13 @@ export default function MedikamenteView({ onHome, embedded = false }) {
           ))}
         </div>
 
-        <DosierungFields value={neuesMedikament} onChange={handleChange} mengePlaceholder="z. B. 100 mg" />
+        {neuesMedikament.kategorie === "Cannabis" && <CannabisFelder value={neuesMedikament} onChange={handleChange} />}
+
+        <DosierungFields
+          value={neuesMedikament}
+          onChange={handleChange}
+          mengePlaceholder={neuesMedikament.kategorie === "Cannabis" ? "z. B. 0,3 g" : "z. B. 100 mg"}
+        />
 
         {medikamentError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{medikamentError}</div>}
         <div style={{ marginTop: 10 }}>
@@ -380,6 +429,9 @@ export default function MedikamenteView({ onHome, embedded = false }) {
                           {hormonDosierung[h]?.menge} · {hormonDosierung[h]?.einnahmeart || "Injektion"} · {describeInterval(hormonDosierung[h])} ·{" "}
                           {(hormonDosierung[h]?.uhrzeiten || []).join(" & ")}
                         </div>
+                        {hormonDosierung[h]?.kategorie === "Cannabis" && cannabisDetailZeile(hormonDosierung[h]) && (
+                          <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>{cannabisDetailZeile(hormonDosierung[h])}</div>
+                        )}
                         <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
                           <select
                             value={hormonDosierung[h]?.kategorie || "Hormone"}

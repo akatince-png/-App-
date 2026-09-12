@@ -168,8 +168,24 @@ export const PEPTIDE_OPTIONEN = [
 // Einnahmearten für Peptide & Medikamente — Injektion ist der Standard, die
 // meisten Peptide werden subkutan gespritzt; viele Präparate (Peptide wie
 // Medikamente) gibt es aber auch als Tablette, Kapsel, Pulver, Tropfen oder
-// Nasenspray.
-export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Kapsel", "Pulver", "Tropfen", "Nasenspray"];
+// Nasenspray. Die drei Cannabis-Formen (12.09., Nutzerinnen-Vorgabe: "alle
+// möglichen und in Deutschland legalen Varianten") kamen dazu — "Kapsel"
+// und "Tropfen" oben decken Cannabis-Kapseln/-Öl schon mit ab, Blüte zum
+// Rauchen/Verdampfen und Esswaren brauchten je einen eigenen Eintrag. Die
+// Cannabis-spezifischen Detailfelder (THC/CBD %, Tabak/Filter, Temperatur,
+// Tropfenzahl) hängen an der Kategorie "Cannabis" + der jeweiligen
+// Einnahmeart, siehe CannabisFelder.jsx.
+export const EINNAHMEARTEN = [
+  "Injektion",
+  "Tablette (oral)",
+  "Kapsel",
+  "Pulver",
+  "Tropfen",
+  "Nasenspray",
+  "Blüte (Rauchen)",
+  "Blüte (Verdampfen)",
+  "Esswaren (Edibles)",
+];
 
 // Kategorien innerhalb von "Medikamente" — fasst Hormone/Off-Label mit
 // anderen verschreibungspflichtigen/rezeptfreien Medikamenten zusammen.
@@ -179,8 +195,15 @@ export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Kapsel", "Pulver"
 // hormones/hormone_logs kopiert. "ADHS-Medikation" seit 12.09. als eigene,
 // erste Kategorie ergänzt (Nutzerinnen-Vorgabe): Ritalin/Elvanse/
 // Antidepressiva u. Ä. sind der eigentliche Kernzweck von "Medikamente" bei
-// einer ADHS-App — landeten vorher unspezifisch unter "Sonstige".
-export const MEDIKAMENTE_KATEGORIEN = ["ADHS-Medikation", "Hormone", "Peptid", "Blutdruck", "Diabetes", "Cholesterin", "Schmerzmittel", "Sonstige"];
+// einer ADHS-App — landeten vorher unspezifisch unter "Sonstige". "Cannabis"
+// seit 12.09. dazu (eigene Kategorie statt unter "Sonstige", weil THC/CBD-
+// Prozentangabe und Konsumform-Details eigene, kategoriespezifische Felder
+// brauchen, siehe CannabisFelder.jsx).
+export const MEDIKAMENTE_KATEGORIEN = ["ADHS-Medikation", "Hormone", "Peptid", "Cannabis", "Blutdruck", "Diabetes", "Cholesterin", "Schmerzmittel", "Sonstige"];
+
+// Filter-Typen beim Rauchen einer Cannabis-Blüte (Joint) — die beiden in
+// Deutschland gängigen Varianten.
+export const CANNABIS_FILTER_OPTIONEN = ["Aktivkohlefilter", "Papierfilter", "Kein Filter"];
 
 // Feste Intervall-Presets: mode ist immer "fixed", days die Anzahl Tage zwischen zwei Dosen.
 export const INTERVALL_OPTIONEN = [

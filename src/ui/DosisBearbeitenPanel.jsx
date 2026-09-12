@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { PrimaryButton } from "./primitives";
 import DosierungFields from "./DosierungFields";
+import CannabisFelder from "./CannabisFelder";
 import GrundEingabe from "./GrundEingabe";
 import { cardBorder } from "./theme";
 
@@ -17,7 +18,12 @@ export default function DosisBearbeitenPanel({ dosierung, onSpeichern }) {
 
   return (
     <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
-      <DosierungFields value={entwurf} onChange={handleChange} mengePlaceholder="z. B. 0,25 mg" />
+      {entwurf.kategorie === "Cannabis" && <CannabisFelder value={entwurf} onChange={handleChange} />}
+      <DosierungFields
+        value={entwurf}
+        onChange={handleChange}
+        mengePlaceholder={entwurf.kategorie === "Cannabis" ? "z. B. 0,3 g" : "z. B. 0,25 mg"}
+      />
       <GrundEingabe grund={grund} onChange={setGrund} />
       <div style={{ marginTop: 10 }}>
         <PrimaryButton
