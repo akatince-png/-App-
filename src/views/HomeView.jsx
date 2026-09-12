@@ -648,6 +648,49 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         </div>
       </div>
 
+      {/* Direkter Hydration-Knopf (12.09., Nutzerin-Vorgabe): "immer, wenn
+          ich was trinke, direkt auf den Knopf drücken ... und zur
+          Hydration gelangen". Bewusst ganz oben, unabhängig vom
+          Notfallmodus und ohne erst durch Direktzugriff/Als Nächstes
+          suchen zu müssen — ein Tap führt direkt zur Hydration-Ansicht. */}
+      <button
+        type="button"
+        className="mp-tap"
+        onClick={() => onOpenView("hydration")}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          padding: "14px 16px",
+          marginBottom: 20,
+          borderRadius: 18,
+          border: "none",
+          background: KATEGORIE_META.hydration.bg,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <div
+          style={{
+            width: 46,
+            height: 46,
+            borderRadius: 23,
+            background: KATEGORIE_META.hydration.dot,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="droplet" size={26} color="#fff" />
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Hydration eintragen</div>
+          <div style={{ fontSize: 12, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
+        </div>
+      </button>
+
       {!istAdminModus ? (
         <>
           <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
