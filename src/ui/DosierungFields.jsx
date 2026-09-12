@@ -122,7 +122,35 @@ export default function DosierungFields({ value, onChange, showMenge = true, men
       </button>
 
       <Label>Eigenes Startdatum (optional)</Label>
-      <TextInput type="date" value={v.eigenerStart || ""} onChange={(val) => onChange("eigenerStart", val)} />
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ flex: 1 }}>
+          <TextInput type="date" value={v.eigenerStart || ""} onChange={(val) => onChange("eigenerStart", val)} />
+        </div>
+        {/* Bug-Fix (Nutzerin-Vorgabe, 12.09.: "kann ich jetzt nicht mehr auf
+            null setzen"): native Datumsfelder haben auf dem iPad/Safari kein
+            sichtbares "X" zum Leeren, anders als am Desktop — ein einmal
+            gesetztes Datum ließ sich dort gar nicht mehr entfernen. Eigener
+            Button setzt es explizit zurück, unabhängig vom Browser. */}
+        {v.eigenerStart && (
+          <button
+            type="button"
+            onClick={() => onChange("eigenerStart", "")}
+            style={{
+              flexShrink: 0,
+              border: "none",
+              background: "transparent",
+              color: danger,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              padding: "0 4px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Zurücksetzen
+          </button>
+        )}
+      </div>
       <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>Leer lassen = startet mit dem allgemeinen Startdatum des Protokolls.</div>
     </>
   );
