@@ -58,7 +58,7 @@ export function AppDataProvider({ children }) {
   const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId, profileData.belohnungPufferMin);
   const supplementData = useSupplementData(userId, hauptprotokollId, profileData.belohnungPufferMin);
   const drinkData = useDrinkRecipes(userId);
-  const mealData = useMealData(userId, hauptprotokollId);
+  const mealData = useMealData(userId, hauptprotokollId, profileData.belohnungPufferMin);
   const gewohnheitenData = useGewohnheitenData(userId, hauptprotokollId);
   const atemuebungenData = useAtemuebungenData(userId);
   const hydrationData = useHydrationData(userId);

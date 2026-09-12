@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
+import { istRechtzeitig } from "../utils/belohnungZeit";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 function rowToWochenplan(r) {
   return {
@@ -13,7 +15,7 @@ function rowToWochenplan(r) {
   };
 }
 
-export function useMealData(userId, hauptprotokollId) {
+export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
   const [mahlzeiten, setMahlzeiten] = useState([]);
   const [mahlzeitErledigt, setMahlzeitErledigt] = useState({});
   // Siehe useGewohnheitenData.js: verhindert, dass schnelles Doppeltippen
@@ -247,9 +249,20 @@ export function useMealData(userId, hauptprotokollId) {
         pendingErledigtRef.current[k] = aktuellerWert;
         setMahlzeitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
         setMahlzeitErledigtAt((prev) => ({ ...prev, [k]: vorherigeErledigtAt }));
+        return;
+      }
+      // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): nur beim Abhaken, nicht
+      // beim Rückgängigmachen, und nur innerhalb des Admin-Puffers nach der
+      // geplanten Uhrzeit. `zeit` ist hier oft nur eine Tageszeit-Bezeichnung
+      // ("Frühstück") statt einer echten Uhrzeit — istRechtzeitig() erkennt
+      // das (kein "HH:MM"-Muster) und lässt es dann unbegrenzt durch, statt
+      // fälschlich abzulehnen.
+      if (nextVal && istRechtzeitig(zeit, belohnungPufferMin)) {
+        const mahlzeitName = mahlzeiten.find((m) => m.id === id)?.name || "Mahlzeit";
+        feuereBelohnung({ text: `„${mahlzeitName}" erledigt`, icon: "utensils", punkte: 1 });
       }
     },
-    [mahlzeitErledigt, mahlzeitErledigtAt, userId]
+    [mahlzeitErledigt, mahlzeitErledigtAt, userId, belohnungPufferMin, mahlzeiten]
   );
 
   // Weist eine Mahlzeit einem Wochentag zu — bewusst ein einfacher Insert

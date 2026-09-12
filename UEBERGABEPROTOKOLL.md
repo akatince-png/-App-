@@ -1,5 +1,24 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 48) — Belohnungsfenster: auch Mahlzeiten
+
+Nutzerinnen-Vorgabe: "Ja, Du kannst gerne Mahlzeiten noch verknüpfen." —
+Ernährung war in Teil 47 bewusst außen vor gelassen worden, weil nicht
+ausdrücklich genannt.
+
+- **`useMealData.toggleMahlzeitErledigt`**: gleiche Verdrahtung wie
+  Medikamente/Supplemente — Belohnung nur beim Abhaken (nicht beim
+  Rückgängigmachen) und nur innerhalb des Admin-Puffers nach der
+  geplanten Uhrzeit (neuer Parameter `belohnungPufferMin`, aus
+  `AppDataContext.jsx` durchgereicht wie bei den anderen Kategorien).
+  Sonderfall geprüft: der `zeit`-Parameter ist bei Mahlzeiten oft nur
+  eine Tageszeit-Bezeichnung ("Frühstück") statt einer echten Uhrzeit
+  (`NutritionView.jsx`: `e.uhrzeit || e.tageszeit || "Mahlzeit"`) —
+  `istRechtzeitig()` erkennt das (kein "HH:MM"-Muster) und lässt es
+  dann unbegrenzt durch, statt fälschlich abzulehnen; nur bei einer
+  echten Uhrzeit greift der Puffer. Mit Node isoliert gegengeprüft.
+- Build + oxlint (weiterhin 18 Warnungen, unverändert zur Baseline).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 47) — Belohnungsfenster
 
 Nutzerinnen-Vorgabe: bei jeder rechtzeitig erledigten Tagesaufgabe (egal
