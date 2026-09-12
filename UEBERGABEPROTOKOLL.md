@@ -1,5 +1,47 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 56) — Mehrfachauswahl auch in "Akas fertige Protokolle"
+
+Nutzerinnen-Vorgabe (mit Screenshot): "Obwohl ich das Archiv komplett
+gelöscht habe, sind in anderen Bereichen immer noch Protokolle zu
+finden ... Wenn ich dir solche Aufgaben gebe, übertrag das bitte auf
+alle möglichen anderen Systeme in der App auch." Der gezeigte Screen
+("Akas fertige Protokolle" → 📝 Tagesverlauf/🗂️ Baustein-Versionen/
+🏋️ Training) ist ein von "Archiv" (Teil 53) komplett unabhängiger
+Datenbereich (Änderungsprotokoll-Log, Baustein-Versionen-Snapshots,
+abgeschlossene Trainings) — daher blieb der dort weiterhin sichtbar.
+
+- **`ui/useMehrfachauswahl.js`** (neu): die Auswahl-Logik aus
+  `ArchivAbschnitt.jsx` herausgelöst (Set von IDs, alle
+  markieren/aufheben, Callback-Reset) — wiederverwendbar auch für
+  Listen mit abweichendem, z. B. nach Datum gruppiertem Layout, die
+  nicht in das feste Zeilenschema von `ArchivAbschnitt` passen.
+- **`ui/MehrfachauswahlLeiste.jsx`** (neu): die "Alle auswählen"/
+  "Auswahl aufheben"- + "X löschen"-Kopfzeile, ebenfalls herausgelöst.
+- **`ArchivAbschnitt.jsx`**: auf die beiden neuen Bausteine umgestellt
+  (identisches Verhalten wie in Teil 53, nur entkoppelt).
+- **`views/ProtokollLogView.jsx`** ("Akas fertige Protokolle"): alle
+  drei Bereiche bekommen jetzt Checkbox je Zeile + Sammel-Löschen,
+  jeweils mit eigener Auswahl (kann Einträge über mehrere Tage hinweg
+  umfassen, unabhängig von der Datums-Gruppierung):
+  - 📝 Tagesverlauf (Änderungsprotokoll) — `aenderungEntfernen`.
+  - 🗂️ Baustein-Versionen — `versionLoeschen`.
+  - 🏋️ Training — hatte bisher noch gar keine Löschfunktion (nur
+    "Training starten"/"eintragen", nie "entfernen"), jetzt über die
+    schon vorhandene `trainingEntfernen` nachgerüstet (gleiches Muster
+    wie der Blutwerte-Verlauf in Teil 53).
+- **Bewusst NICHT angefasst diese Runde**: die Verwaltungslisten für
+  Workflow-Presets (`WorkflowTimer.jsx`) und Trainings-Vorlagen
+  (`TrainingsplaeneVerwaltung.jsx`) — das sind wenige, bewusst benannte
+  Einträge, keine mit der Zeit anwachsende Log-Unordnung wie bei den
+  Protokollen/dem Archiv. Der wiederverwendbare Baustein steht jetzt
+  aber bereit, falls das auch dort gewünscht ist.
+- **Getestet**: Preview-Harness (Playwright) — "Alle auswählen" +
+  Sammel-Löschen in allen drei Bereichen geprüft (Tagesverlauf 3→0,
+  Versionen 2→0, Training 1 einzeln markiert und gelöscht, verbleibender
+  Eintrag zeigt Checkbox + 🗑 korrekt). Build + oxlint (weiterhin 18
+  Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 55) — Seitenleiste: "Training" als eigener Menüpunkt entfernt
 
 Nutzerinnen-Vorgabe: "Training ist ja eins von vielen Punkten, wenn
