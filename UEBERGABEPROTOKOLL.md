@@ -1,5 +1,57 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 46) — Morgen-/Abendroutine: bestehende Einträge per Reiter übernehmen
+
+Nutzerinnen-Vorgabe: beim Einrichten einer Morgen-/Abendroutine nicht
+alles von Hand eintippen müssen — stattdessen auf "Training", "Ernährung",
+"Supplemente", "Medikamente", "Gewohnheiten" klicken können und von dort
+direkt einen schon vorhandenen Eintrag (z. B. einen Snack, eine
+Trainingseinheit) als Routine-Schritt übernehmen. Ausdrücklich KEIN neuer
+großer Bereich — die bereits bestehenden Daten sollen nur mit wenigen
+Klicks aus der Routine heraus erreichbar sein. Freies Handschreiben soll
+bestehen bleiben (für Dinge wie "Wasser trinken", "Duschen", die keinem
+Tracker angehören).
+
+- **`RoutineSchritteEditor.jsx`**: neue Reiter-Reihe "Aus anderen
+  Bereichen übernehmen" unter den bestehenden hardcodierten Beispielen
+  — sechs Reiter (Training, Ernährung, Supplemente, Medikamente,
+  Gewohnheiten, Hydration), ein Tap auf einen Reiter zeigt die
+  jeweiligen echten, schon konfigurierten Einträge als Pills:
+  - Training → `trainingWochenplan` (Wochentag + Name/Trainingsart)
+  - Ernährung → `mahlzeiten` (Name)
+  - Supplemente → `supplemente` (Name)
+  - Medikamente → `hormone` (umfasst wie überall in der App auch
+    Hormone/Peptide, siehe frühere Vereinheitlichung)
+  - Gewohnheiten → `gewohnheiten` (Name)
+  - Hydration → hat keine Einzeleinträge (laufende Trinkmenge statt
+    Liste), deshalb ein einzelner Schnell-Eintrag "Wasser trinken"
+  Ein weiterer Tap auf einen Pill übernimmt ihn direkt als Schritt
+  (derselbe `antippen()`-Pfad wie bei den bestehenden Beispielen, inkl.
+  Erfolgs-/Fehlermeldung). Bereits übernommene Einträge verschwinden aus
+  ihrem Reiter (gleiches Filtermuster wie bei den Beispielen) — eine
+  eigene Meldung unterscheidet "dort ist noch nichts eingerichtet" von
+  "schon alles aus diesem Bereich übernommen".
+  Bewusst als reiner Zusatz zum bereits vorhandenen "Passt in deinen
+  Zeitrahmen"-Vorschlag (`RoutineTabView.jsx`, unverändert) — dieser
+  zeigt nur heute ohnehin geplante Punkte innerhalb des Zeitfensters,
+  die neuen Reiter zeigen dagegen ALLE konfigurierten Einträge der
+  Kategorie, unabhängig von Datum/Uhrzeit, und schließen als einzige
+  Stelle auch Gewohnheiten mit ein.
+- **`RoutineTabView.jsx`** (Reiter unter "Alle Pläne") und
+  **`GewohnheitenView.jsx`** (kompakte Variante unter Home →
+  Gewohnheiten) reichen die fünf Datenlisten jetzt an
+  `RoutineSchritteEditor` durch — beide Stellen, an denen
+  Morgen-/Abendroutine-Schritte eingerichtet werden, haben die neue
+  Reiter-Reihe jetzt gleichermaßen (für Morgen- UND Abendroutine).
+
+Mit einer temporären Vorschau-Variante (danach vollständig zurückgesetzt)
+geprüft: alle sechs Reiter zeigen die richtigen Einträge, ein Tap übernimmt
+korrekt als Schritt, bereits übernommene Einträge verschwinden aus dem
+Reiter, funktioniert identisch für Morgen- und Abendroutine. `npm run
+build` + `npx oxlint` sauber (18 vorbestehende Warnungen, keine neuen).
+
+---
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 45) — Home-Redesign gegengelesen, 3 Bugs gefunden und behoben
 
 Nutzerinnen-Vorgabe: vor dem eigenen Test nochmal zeigen + Bereich (den
