@@ -1,10 +1,10 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card } from "../../ui/primitives";
 import Icon from "../../ui/Icon";
 import { accent, accentSoft, cardBorder, textMain, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 import { useErrungenschaften } from "../../data/useErrungenschaften";
-import { STREAK_SCHWELLEN, PUNKTE_SCHWELLEN, badgeLabel } from "../../utils/errungenschaften";
+import { STREAK_SCHWELLEN, PUNKTE_SCHWELLEN, badgeLabel, badgeBeschreibung, alleBadges } from "../../utils/errungenschaften";
 
 function naechsteSchwelle(wert, schwellen) {
   return schwellen.find((s) => s > wert) ?? null;
@@ -84,6 +84,24 @@ export default function ErfolgeTab() {
 
   const naechstesGlobalesStreakZiel = naechsteSchwelle(globalerStreak, STREAK_SCHWELLEN);
   const naechstesPunkteZiel = naechsteSchwelle(gesamtPunkte, PUNKTE_SCHWELLEN);
+
+  // "Alle Abzeichen"-Übersicht (Nutzerin-Vorgabe, 12.09.): auch die noch
+  // nicht verdienten Abzeichen sollen sichtbar sein, gruppiert nach
+  // Kategorie + "Gesamt", mit Klick-Beschreibung, was dafür nötig ist.
+  const [ausgewaehlterBadge, setAusgewaehlterBadge] = useState(null);
+  const badgeGruppen = useMemo(() => {
+    const gruppen = new Map();
+    alleBadges().forEach((b) => {
+      if (!gruppen.has(b.gruppe)) gruppen.set(b.gruppe, { gruppenLabel: b.gruppenLabel, icon: b.icon, grad: b.grad, badges: [] });
+      gruppen.get(b.gruppe).badges.push(b);
+    });
+    return Array.from(gruppen.values());
+  }, []);
+  const aktuellerWertFuer = (badge) => {
+    if (badge.typ === "punkte") return gesamtPunkte;
+    if (badge.gruppe === "global") return globalerStreak;
+    return kategorien.find((k) => k.key === badge.gruppe)?.streak ?? 0;
+  };
 
   if (ladend) {
     return <div style={{ fontSize: 13, color: textMuted, textAlign: "center", marginTop: 40 }}>Erfolge werden geladen...</div>;
@@ -171,8 +189,8 @@ export default function ErfolgeTab() {
         </Card>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Abzeichen</div>
-      <Card>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verdiente Abzeichen</div>
+      <Card style={{ marginBottom: 14 }}>
         {erreichteAbzeichen.length === 0 ? (
           <div style={{ fontSize: 13, color: textMuted }}>Noch keine Abzeichen verdient — der erste Meilenstein ist 7 Tage am Stück.</div>
         ) : (
@@ -198,6 +216,69 @@ export default function ErfolgeTab() {
               </div>
             </div>
           ))
+        )}
+      </Card>
+
+      {/* Alle Abzeichen — auch die noch nicht freigeschalteten, damit man
+          sieht, was als Nächstes ansteht (Nutzerin-Vorgabe, 12.09.). Klick
+          auf ein Abzeichen zeigt darunter, was konkret dafür nötig ist. */}
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Alle Abzeichen</div>
+      <Card style={{ marginBottom: 14 }}>
+        {badgeGruppen.map((gruppe) => (
+          <div key={gruppe.gruppenLabel} style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>{gruppe.gruppenLabel}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {gruppe.badges.map((badge) => {
+                const freigeschaltet = !!verdiente[badge.key];
+                const ausgewaehlt = ausgewaehlterBadge === badge.key;
+                return (
+                  <button
+                    key={badge.key}
+                    type="button"
+                    onClick={() => setAusgewaehlterBadge(ausgewaehlt ? null : badge.key)}
+                    title={badgeLabel(badge.key)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      border: ausgewaehlt ? `2px solid ${accent}` : `1px solid ${cardBorder}`,
+                      background: freigeschaltet ? (gruppe.grad ? `linear-gradient(135deg, ${gruppe.grad[0]}, ${gruppe.grad[1]})` : accent) : "#F2F2F0",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      opacity: freigeschaltet ? 1 : 0.55,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon name={badge.icon} size={15} color={freigeschaltet ? "#fff" : textMuted} />
+                    <span style={{ fontSize: 9, fontWeight: 800, color: freigeschaltet ? "#fff" : textMuted, marginTop: 1 }}>{badge.schwelle}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {ausgewaehlterBadge && (
+          <div style={{ marginTop: 4, padding: 12, background: accentSoft, borderRadius: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{badgeLabel(ausgewaehlterBadge)}</div>
+            <div style={{ fontSize: 12, color: textMain, marginBottom: 6 }}>{badgeBeschreibung(ausgewaehlterBadge)}</div>
+            {verdiente[ausgewaehlterBadge] ? (
+              <div style={{ fontSize: 11, color: textMuted }}>✅ Erreicht am {formatDatum(verdiente[ausgewaehlterBadge])}</div>
+            ) : (
+              (() => {
+                const badge = alleBadges().find((b) => b.key === ausgewaehlterBadge);
+                const aktuell = badge ? aktuellerWertFuer(badge) : 0;
+                return (
+                  <div style={{ fontSize: 11, color: textMuted }}>
+                    Noch nicht erreicht — aktuell {aktuell} von {badge?.schwelle ?? "?"}.
+                  </div>
+                );
+              })()
+            )}
+          </div>
         )}
       </Card>
     </>

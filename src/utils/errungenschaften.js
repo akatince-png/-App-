@@ -210,3 +210,50 @@ export function badgeLabel(badgeKey) {
   }
   return badgeKey;
 }
+
+// Erklärt in einem Satz, was für ein Abzeichen konkret erfüllt werden muss
+// — für die "Alle Abzeichen"-Übersicht (Nutzerin-Vorgabe, 12.09.: "wenn man
+// draufklickt, soll eine Beschreibung kommen, was man erfüllen muss").
+export function badgeBeschreibung(badgeKey) {
+  if (badgeKey.startsWith("global_streak_")) {
+    const tage = badgeKey.replace("global_streak_", "");
+    return `${tage} Tage in Folge, an denen in irgendeiner Kategorie mindestens ein Eintrag erledigt wurde.`;
+  }
+  if (badgeKey.startsWith("global_punkte_")) {
+    const punkte = badgeKey.replace("global_punkte_", "");
+    return `Insgesamt ${punkte} Punkte sammeln (1 Punkt pro erledigtem Eintrag, über alle Kategorien zusammen).`;
+  }
+  const kat = KATEGORIEN.find((k) => badgeKey.startsWith(`${k.key}_streak_`));
+  if (kat) {
+    const tage = badgeKey.replace(`${kat.key}_streak_`, "");
+    return `${tage} Tage in Folge in der Kategorie "${kat.label}" erledigt.`;
+  }
+  return "";
+}
+
+// Vollständiger Katalog ALLER möglichen Abzeichen (verdient oder nicht) —
+// für die "Alle Abzeichen"-Übersicht, die zeigt, was noch fehlt, nicht nur
+// was schon geschafft wurde.
+export function alleBadges() {
+  const badges = [];
+  KATEGORIEN.forEach((kat) => {
+    STREAK_SCHWELLEN.forEach((schwelle) => {
+      badges.push({
+        key: `${kat.key}_streak_${schwelle}`,
+        gruppe: kat.key,
+        gruppenLabel: kat.label,
+        icon: kat.icon,
+        grad: kat.grad,
+        schwelle,
+        typ: "streak",
+      });
+    });
+  });
+  STREAK_SCHWELLEN.forEach((schwelle) => {
+    badges.push({ key: `global_streak_${schwelle}`, gruppe: "global", gruppenLabel: "Gesamt", icon: "flame", grad: null, schwelle, typ: "streak" });
+  });
+  PUNKTE_SCHWELLEN.forEach((schwelle) => {
+    badges.push({ key: `global_punkte_${schwelle}`, gruppe: "global", gruppenLabel: "Gesamt", icon: "trophy", grad: null, schwelle, typ: "punkte" });
+  });
+  return badges;
+}

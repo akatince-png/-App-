@@ -226,7 +226,14 @@ export default function AuthenticatedApp() {
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
     screen = <PlanView planTab={view} setPlanTab={setView} onHome={() => setView("home")} />;
   } else if (view === "mehr") {
-    screen = <MehrView onHome={() => setView("home")} onOpenLexikon={() => setView("lexikon")} onOpenAdmin={isAdmin ? () => setView("admin") : undefined} />;
+    screen = (
+      <MehrView
+        onHome={() => setView("home")}
+        onOpenLexikon={() => setView("lexikon")}
+        onOpenAdmin={isAdmin ? () => setView("admin") : undefined}
+        onOpenErfolge={() => setView("erfolge")}
+      />
+    );
   } else if (view === "admin") {
     // Nur erreichbar aus dem eigenen Konto heraus (nicht während man schon
     // "als" jemand anderes verwaltet, proband ist dann null) — der

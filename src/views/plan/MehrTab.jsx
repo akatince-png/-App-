@@ -192,7 +192,7 @@ function AktuellesProtokoll() {
   );
 }
 
-export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
+export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const { signOut, user } = useAuth();
   const {
     resetOnboarding,
@@ -324,6 +324,31 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin }) {
 
   return (
     <>
+      {/* Nutzerinnen-Vorgabe (12.09.): eigener Einstiegspunkt für die
+          Punkte-/Abzeichen-Übersicht unter "Mehr", nicht nur versteckt im
+          Archiv-Hub-Reiter "Erfolge". */}
+      {onOpenErfolge && (
+        <button
+          onClick={onOpenErfolge}
+          className="mp-tap"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px",
+            borderRadius: 14,
+            border: `1px solid ${cardBorder}`,
+            background: "#fff",
+            marginBottom: 20,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 700 }}>🏆 Erfolge & Abzeichen</span>
+          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
+        </button>
+      )}
+
       {onOpenLexikon && (
         <button
           onClick={onOpenLexikon}
