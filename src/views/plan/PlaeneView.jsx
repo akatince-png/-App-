@@ -1,5 +1,5 @@
 import React from "react";
-import { Shell } from "../../ui/primitives";
+import { Shell, Card } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
 import { cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
@@ -140,62 +140,78 @@ export default function PlaeneView({
     <Shell bereich={TAB_ZU_KATEGORIE[planeTab]}>
       <ViewHeader title="Deine aktiven Systeme" onHome={onHome} />
 
+      {/* Bug-Fix (12.09., Nutzerinnen-Vorgabe): die drei Bereiche unten
+          (Routinen/Pläne/Nachvollziehen) hatten bisher nur eine Textzeile
+          als Überschrift, sonst identische Abstände wie der Rest der
+          Seite — wirkte "tabellarisch", nicht wie unabhängige Bereiche.
+          Jeder Bereich bekommt jetzt eine eigene Karte mit Rahmen/Schatten
+          und mehr Luft dazwischen, damit die Trennung auch ohne die
+          Überschrift zu lesen sofort sichtbar ist. */}
+
       {/* Routinen bewusst VOR den 9 Reitern (Nutzerinnen-Vorgabe, 29.07.:
           Priorität) — nicht nachträglich angehängt. */}
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Routinen</div>
-      {ROUTINEN_EINTRAEGE.map((r) => (
-        <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
-      ))}
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Routinen</div>
+        {ROUTINEN_EINTRAEGE.map((r) => (
+          <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
+        ))}
+      </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Pläne</div>
-      <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
-        {PLAENE_TABS.map((t) => {
-          const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || EIGENE_TAB_FARBE[t.id] || "#64748B";
-          const aktiv = planeTab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setPlaneTab(t.id)}
-              style={{
-                flex: "1 1 30%",
-                padding: "9px 4px",
-                borderRadius: 10,
-                border: `1px solid ${aktiv ? dot : cardBorder}`,
-                background: aktiv ? dot : "#fff",
-                color: aktiv ? "#fff" : textMuted,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 5,
-              }}
-            >
-              <Icon name={t.icon} size={14} />
-              {t.label}
-            </button>
-          );
-        })}
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Pläne</div>
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          {PLAENE_TABS.map((t) => {
+            const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || EIGENE_TAB_FARBE[t.id] || "#64748B";
+            const aktiv = planeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setPlaneTab(t.id)}
+                style={{
+                  flex: "1 1 30%",
+                  padding: "9px 4px",
+                  borderRadius: 10,
+                  border: `1px solid ${aktiv ? dot : cardBorder}`,
+                  background: aktiv ? dot : "#fff",
+                  color: aktiv ? "#fff" : textMuted,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 5,
+                }}
+              >
+                <Icon name={t.icon} size={14} />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      <div style={{ marginBottom: 20 }}>
+        <Aktiv
+          embedded
+          initialSessionId={initialSessionId}
+          onConsumedInitialSession={onConsumedInitialSession}
+          selectedDate={wochenuebersichtDatum}
+          onSelectedDateChange={onWochenuebersichtDatumChange}
+          viewMode={wochenuebersichtModus}
+          onViewModeChange={onWochenuebersichtModusChange}
+          monthDate={wochenuebersichtMonat}
+          onMonthDateChange={onWochenuebersichtMonatChange}
+        />
       </div>
 
-      <Aktiv
-        embedded
-        initialSessionId={initialSessionId}
-        onConsumedInitialSession={onConsumedInitialSession}
-        selectedDate={wochenuebersichtDatum}
-        onSelectedDateChange={onWochenuebersichtDatumChange}
-        viewMode={wochenuebersichtModus}
-        onViewModeChange={onWochenuebersichtModusChange}
-        monthDate={wochenuebersichtMonat}
-        onMonthDateChange={onWochenuebersichtMonatChange}
-      />
-
-      <div style={{ fontSize: 14, fontWeight: 800, margin: "20px 0 8px" }}>Nachvollziehen</div>
-      {NACHVOLLZIEHEN_EINTRAEGE.map((r) => (
-        <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
-      ))}
+      <Card>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Nachvollziehen</div>
+        {NACHVOLLZIEHEN_EINTRAEGE.map((r) => (
+          <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
+        ))}
+      </Card>
     </Shell>
   );
 }
