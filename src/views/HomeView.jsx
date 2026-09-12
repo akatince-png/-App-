@@ -163,6 +163,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     workflowPresets,
     projekte,
     zeitbloecke,
+    ausnahmenNachSchluessel,
     confirmAlleTageszeit,
     hydrationHeuteMl,
     hydrationZielMl,
@@ -303,6 +304,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         workflowPresets,
         projekte,
         zeitbloecke,
+        ausnahmenNachSchluessel,
       }),
     [
       today,
@@ -321,6 +323,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       gewohnheitErledigt,
       workflowPlaene,
       workflowPresets,
+      ausnahmenNachSchluessel,
       projekte,
       zeitbloecke,
     ]
@@ -373,7 +376,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       buildDayItems(addDays(today, i), {
         hormonPlan, hormonErledigt, supplemente, supplementErledigt,
         mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingNachDatum, trainingWochenplan,
-        trainingTemplates, gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets,
+        trainingTemplates, gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets, ausnahmenNachSchluessel,
       })
     ).flat();
 
@@ -508,7 +511,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   }, [isEmergencyMode, alleWidgetsAnzeigen, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
       mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingNachDatum, trainingWochenplan, trainingTemplates,
       gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen,
-      tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel]);
+      tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel, ausnahmenNachSchluessel]);
 
   return (
     <Shell>

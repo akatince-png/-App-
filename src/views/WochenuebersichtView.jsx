@@ -76,6 +76,7 @@ export default function WochenuebersichtView({
     tageslichtEintraege,
     tageslichtZielMinuten,
     schlafEintraege,
+    ausnahmenNachSchluessel,
   } = appData;
 
   // Bug-Fix (Performance/Ruckeln): Diese View reichte bisher überall den
@@ -111,6 +112,7 @@ export default function WochenuebersichtView({
       workflowPresets,
       projekte,
       zeitbloecke,
+      ausnahmenNachSchluessel,
     }),
     [
       hormonPlan,
@@ -130,6 +132,7 @@ export default function WochenuebersichtView({
       workflowPresets,
       projekte,
       zeitbloecke,
+      ausnahmenNachSchluessel,
     ]
   );
 

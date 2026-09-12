@@ -103,6 +103,28 @@ export function trainingKompaktDetail(t) {
 // Baut die reine Datenliste eines Tages aus allen Trackern zusammen — ohne
 // Bestätigen-Callbacks, damit Tagesplan und Startseite dieselbe Grundlage
 // nutzen können, aber jeweils ihr eigenes Bestätigen-Verhalten anhängen.
+// Einzeltag-Ausnahmen ("nur heute anders", Migration 0080) — betrifft nur
+// die fünf Kategorien unten, die keine eigene Tages-Zeile in der DB haben
+// (Supplemente, Hormone/Medikamente, Ernährung, Gewohnheiten, Workflows).
+// Training/Zeitblöcke haben schon echte, einzelne Zeilen und brauchen das
+// nicht. Gibt `null` zurück, wenn der Tag laut Ausnahme komplett entfällt
+// (Aufrufer soll den Eintrag dann nicht pushen).
+function wendeAusnahmeAn(item, ausnahmenNachSchluessel, kategorie, refId, tagStr) {
+  if (!ausnahmenNachSchluessel || refId == null) return item;
+  const ausnahme = ausnahmenNachSchluessel.get(`${kategorie}__${refId}__${tagStr}`);
+  if (!ausnahme) return item;
+  if (ausnahme.entfaellt) return null;
+  const uhrzeit = ausnahme.uhrzeit ?? item.uhrzeit;
+  return {
+    ...item,
+    uhrzeit,
+    hour: uhrzeit ? uhrzeit.slice(0, 2) : item.hour,
+    name: ausnahme.name ?? item.name,
+    detail: ausnahme.detail ?? item.detail,
+    ausnahmeId: ausnahme.id,
+  };
+}
+
 export function buildDayItems(
   date,
   {
@@ -123,6 +145,7 @@ export function buildDayItems(
     workflowPresets = [],
     projekte = [],
     zeitbloecke = [],
+    ausnahmenNachSchluessel = null,
   }
 ) {
   const tagStr = toLocalISODate(date);
@@ -132,17 +155,25 @@ export function buildDayItems(
     .filter((d) => sameDay(d.date, date))
     .forEach((d) => {
       const k = `${tagStr}__${d.name}__${d.uhrzeit}`;
-      items.push({
-        kategorie: "hormon",
-        key: `h-${k}`,
-        refId: hormonDosierung?.[d.name]?.id ?? null,
-        hour: d.uhrzeit.slice(0, 2),
-        uhrzeit: d.uhrzeit,
-        name: d.name,
-        detail: d.menge,
-        done: !!hormonErledigt[k],
-        raw: d,
-      });
+      const refId = hormonDosierung?.[d.name]?.id ?? null;
+      const item = wendeAusnahmeAn(
+        {
+          kategorie: "hormon",
+          key: `h-${k}`,
+          refId,
+          hour: d.uhrzeit.slice(0, 2),
+          uhrzeit: d.uhrzeit,
+          name: d.name,
+          detail: d.menge,
+          done: !!hormonErledigt[k],
+          raw: d,
+        },
+        ausnahmenNachSchluessel,
+        "hormon",
+        refId,
+        tagStr
+      );
+      if (item) items.push(item);
     });
 
   // Supplemente kennen seit Migration 0029 dasselbe Intervall-/Uhrzeit-
@@ -156,33 +187,47 @@ export function buildDayItems(
       if (!faelltAnTag(s, date, s.eigenerStart)) return;
       uhrzeiten.forEach((zeit) => {
         const k = `${tagStr}__${s.id}__${zeit}`;
-        items.push({
-          kategorie: "supplement",
-          key: `s-${k}`,
-          refId: s.id,
-          hour: zeit.slice(0, 2),
-          uhrzeit: zeit,
-          name: s.name,
-          detail: s.menge || s.hinweis,
-          done: !!supplementErledigt[k],
-          raw: s,
-        });
+        const item = wendeAusnahmeAn(
+          {
+            kategorie: "supplement",
+            key: `s-${k}`,
+            refId: s.id,
+            hour: zeit.slice(0, 2),
+            uhrzeit: zeit,
+            name: s.name,
+            detail: s.menge || s.hinweis,
+            done: !!supplementErledigt[k],
+            raw: s,
+          },
+          ausnahmenNachSchluessel,
+          "supplement",
+          s.id,
+          tagStr
+        );
+        if (item) items.push(item);
       });
       return;
     }
     (s.tageszeiten || []).forEach((zeit) => {
       const k = `${tagStr}__${s.id}__${zeit}`;
-      items.push({
-        kategorie: "supplement",
-        key: `s-${k}`,
-        refId: s.id,
-        hour: TAGESZEIT_STUNDE[zeit] || null,
-        uhrzeit: zeit,
-        name: s.name,
-        detail: s.hinweis,
-        done: !!supplementErledigt[k],
-        raw: s,
-      });
+      const item = wendeAusnahmeAn(
+        {
+          kategorie: "supplement",
+          key: `s-${k}`,
+          refId: s.id,
+          hour: TAGESZEIT_STUNDE[zeit] || null,
+          uhrzeit: zeit,
+          name: s.name,
+          detail: s.hinweis,
+          done: !!supplementErledigt[k],
+          raw: s,
+        },
+        ausnahmenNachSchluessel,
+        "supplement",
+        s.id,
+        tagStr
+      );
+      if (item) items.push(item);
     });
   });
 
@@ -199,18 +244,29 @@ export function buildDayItems(
         if (!m) return;
         const zeit = w.tageszeit || "Mahlzeit";
         const k = `${tagStr}__${m.id}__${zeit}`;
-        items.push({
-          kategorie: "mahlzeit",
-          key: `m-${w.id}`,
-          refId: m.id,
-          hour: w.uhrzeit ? w.uhrzeit.slice(0, 2) : TAGESZEIT_STUNDE[zeit] || null,
-          uhrzeit: w.uhrzeit || zeit,
-          logZeit: zeit,
-          name: m.name,
-          detail: m.hinweis,
-          done: !!mahlzeitErledigt[k],
-          raw: m,
-        });
+        // Ausnahme-refId ist die Wochenplan-Zuweisung (w.id), nicht die
+        // Mahlzeit selbst (m.id) — dieselbe Mahlzeit kann an mehreren Tagen
+        // zu unterschiedlichen Zeiten geplant sein, item.refId bleibt m.id
+        // (wird u. a. von toggleMahlzeitErledigt gebraucht).
+        const item = wendeAusnahmeAn(
+          {
+            kategorie: "mahlzeit",
+            key: `m-${w.id}`,
+            refId: m.id,
+            hour: w.uhrzeit ? w.uhrzeit.slice(0, 2) : TAGESZEIT_STUNDE[zeit] || null,
+            uhrzeit: w.uhrzeit || zeit,
+            logZeit: zeit,
+            name: m.name,
+            detail: m.hinweis,
+            done: !!mahlzeitErledigt[k],
+            raw: m,
+          },
+          ausnahmenNachSchluessel,
+          "mahlzeit",
+          w.id,
+          tagStr
+        );
+        if (item) items.push(item);
       });
   }
 
@@ -279,17 +335,24 @@ export function buildDayItems(
 
   gewohnheiten.forEach((g) => {
     const k = `${tagStr}__${g.id}`;
-    items.push({
-      kategorie: "gewohnheit",
-      key: `g-${k}`,
-      refId: g.id,
-      hour: g.uhrzeit ? g.uhrzeit.slice(0, 2) : null,
-      uhrzeit: g.uhrzeit || "",
-      name: g.name,
-      detail: "",
-      done: !!gewohnheitErledigt[k],
-      raw: g,
-    });
+    const item = wendeAusnahmeAn(
+      {
+        kategorie: "gewohnheit",
+        key: `g-${k}`,
+        refId: g.id,
+        hour: g.uhrzeit ? g.uhrzeit.slice(0, 2) : null,
+        uhrzeit: g.uhrzeit || "",
+        name: g.name,
+        detail: "",
+        done: !!gewohnheitErledigt[k],
+        raw: g,
+      },
+      ausnahmenNachSchluessel,
+      "gewohnheit",
+      g.id,
+      tagStr
+    );
+    if (item) items.push(item);
   });
 
   // Workflows (15.08., Nutzerin-Vorgabe: "auch in meinen Tagesplan mit
@@ -310,17 +373,24 @@ export function buildDayItems(
       .forEach((p) => {
         const preset = workflowPresets.find((ps) => ps.id === p.presetId);
         if (!preset) return;
-        items.push({
-          kategorie: "workflow",
-          key: `w-${tagStr}-${p.id}`,
-          refId: p.id,
-          hour: p.uhrzeit ? p.uhrzeit.slice(0, 2) : null,
-          uhrzeit: p.uhrzeit || "",
-          name: preset.name,
-          detail: `${preset.arbeitMin} Min. Arbeit · ${preset.pauseMin} Min. Pause`,
-          done: false,
-          raw: { ...p, preset },
-        });
+        const item = wendeAusnahmeAn(
+          {
+            kategorie: "workflow",
+            key: `w-${tagStr}-${p.id}`,
+            refId: p.id,
+            hour: p.uhrzeit ? p.uhrzeit.slice(0, 2) : null,
+            uhrzeit: p.uhrzeit || "",
+            name: preset.name,
+            detail: `${preset.arbeitMin} Min. Arbeit · ${preset.pauseMin} Min. Pause`,
+            done: false,
+            raw: { ...p, preset },
+          },
+          ausnahmenNachSchluessel,
+          "workflow",
+          p.id,
+          tagStr
+        );
+        if (item) items.push(item);
       });
   }
 

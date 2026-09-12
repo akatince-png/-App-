@@ -66,6 +66,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     gewohnheitErledigt,
     workflowPlaene,
     workflowPresets,
+    ausnahmenNachSchluessel,
   } = useAppData();
 
   const [ablaufAktiv, setAblaufAktiv] = useState(false);
@@ -98,6 +99,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
       gewohnheitErledigt,
       workflowPlaene,
       workflowPresets,
+      ausnahmenNachSchluessel,
     });
     const schonUebernommen = new Set(schritteFuerRoutine.map((s) => s.name.toLowerCase()));
     return heute.filter((item) => {
@@ -125,6 +127,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     gewohnheitErledigt,
     workflowPlaene,
     workflowPresets,
+    ausnahmenNachSchluessel,
     schritteFuerRoutine,
   ]);
 

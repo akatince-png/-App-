@@ -35,6 +35,7 @@ import { useWorkflowData } from "../data/useWorkflowData";
 import { useBausteinVersionen } from "../data/useBausteinVersionen";
 import { useQuestData } from "../data/useQuestData";
 import { useTeamData } from "../data/useTeamData";
+import { useTagesplanAusnahmen } from "../data/useTagesplanAusnahmen";
 
 const AppDataContext = createContext(null);
 
@@ -83,6 +84,7 @@ export function AppDataProvider({ children }) {
   const bausteinVersionenData = useBausteinVersionen(userId);
   const questData = useQuestData(userId);
   const teamData = useTeamData(userId);
+  const tagesplanAusnahmenData = useTagesplanAusnahmen(userId);
 
   const value = {
     userId,
@@ -133,6 +135,7 @@ export function AppDataProvider({ children }) {
     ...bausteinVersionenData,
     ...questData,
     ...teamData,
+    ...tagesplanAusnahmenData,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen.
     loading: profileData.loading || protocolData.loading,

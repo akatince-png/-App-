@@ -170,6 +170,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     routineDurchlaufSpeichern,
     quests,
     questFortschrittSpeichern,
+    ausnahmenNachSchluessel,
   } = useAppData();
 
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
@@ -305,6 +306,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         workflowPresets,
         projekte,
         zeitbloecke,
+        ausnahmenNachSchluessel,
       });
       return items.map((item) => {
         if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
@@ -343,6 +345,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       workflowPresets,
       projekte,
       zeitbloecke,
+      ausnahmenNachSchluessel,
       starteTraining,
     ]
   );
