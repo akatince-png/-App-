@@ -203,6 +203,7 @@ export default function PlaeneView({
           onViewModeChange={onWochenuebersichtModusChange}
           monthDate={wochenuebersichtMonat}
           onMonthDateChange={onWochenuebersichtMonatChange}
+          onNavigateKategorie={setPlaneTab}
         />
       </div>
 

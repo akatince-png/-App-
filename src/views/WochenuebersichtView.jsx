@@ -12,6 +12,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import TagesEintragBearbeiten from "../ui/TagesEintragBearbeiten";
 
 const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -41,6 +42,11 @@ export default function WochenuebersichtView({
   onViewModeChange: setViewMode,
   monthDate,
   onMonthDateChange: setMonthDate,
+  // Nur für den "dauerhaft ändern"-Knopf in TagesEintragBearbeiten (siehe
+  // dort) — navigiert zum vollen Bearbeiten-Formular der jeweiligen
+  // Kategorie, statt es hier zu duplizieren. Von PlaeneView.jsx als
+  // setPlaneTab durchgereicht.
+  onNavigateKategorie,
 }) {
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const appData = useAppData();
@@ -143,6 +149,17 @@ export default function WochenuebersichtView({
   // immer starr "von Protokollstart bis heute" — null = gesamter bisheriger
   // Verlauf, sonst Anzahl Wochen rückwirkend ab heute.
   const [exportZeitraumWochen, setExportZeitraumWochen] = useState(null);
+  // Bottom-Sheet zum Bearbeiten eines einzelnen Tages-Eintrags direkt aus
+  // Woche/Monat heraus (Nutzerin-Vorgabe, 12.09.) — bearbeitenItem === null
+  // heißt geschlossen.
+  const [bearbeitenItem, setBearbeitenItem] = useState(null);
+  const [bearbeitenDatum, setBearbeitenDatum] = useState(null);
+  const AUSNAHME_KLICKBAR = useMemo(() => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow"]), []);
+  const oeffneBearbeiten = (item, datumObj) => {
+    if (!AUSNAHME_KLICKBAR.has(item.kategorie)) return;
+    setBearbeitenItem(item);
+    setBearbeitenDatum(toLocalISODate(datumObj));
+  };
 
   // Projekte & Zeitblöcke (14.08., Nutzerin-Vorgabe) — bewusst hier in der
   // Wochenübersicht statt einer neuen Plan-Seite, damit farbige Zeitblöcke
@@ -655,9 +672,24 @@ export default function WochenuebersichtView({
                   ) : (
                     items.map((item) => {
                       const meta = k[item.kategorie];
+                      const klickbar = AUSNAHME_KLICKBAR.has(item.kategorie);
                       return (
-                        <div key={item.key} style={{ fontSize: 10, marginBottom: 6, paddingLeft: 6, borderLeft: `2px solid ${item.farbe || meta.dot}` }}>
-                          <div style={{ fontWeight: 700 }}>{item.uhrzeit}</div>
+                        <div
+                          key={item.key}
+                          onClick={klickbar ? () => oeffneBearbeiten(item, d) : undefined}
+                          style={{
+                            fontSize: 10,
+                            marginBottom: 6,
+                            paddingLeft: 6,
+                            borderLeft: `2px solid ${item.farbe || meta.dot}`,
+                            cursor: klickbar ? "pointer" : "default",
+                            opacity: item.ausnahmeId ? 0.75 : 1,
+                          }}
+                        >
+                          <div style={{ fontWeight: 700 }}>
+                            {item.uhrzeit}
+                            {item.ausnahmeId && " *"}
+                          </div>
                           <div style={{ fontSize: 9, color: textMuted }}>{item.name}</div>
                           {item.detail && <div style={{ fontSize: 8.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                         </div>
@@ -730,14 +762,34 @@ export default function WochenuebersichtView({
                     <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                       {dotsToShow.map((item) => {
                         const meta = KATEGORIE_META[item.kategorie];
+                        const klickbar = AUSNAHME_KLICKBAR.has(item.kategorie);
                         return (
                           <div
                             key={item.key}
+                            onClick={
+                              klickbar
+                                ? (e) => {
+                                    e.stopPropagation();
+                                    oeffneBearbeiten(item, d);
+                                  }
+                                : undefined
+                            }
                             style={{
                               width: 6,
                               height: 6,
                               borderRadius: 3,
                               background: item.farbe || meta.dot,
+                              cursor: klickbar ? "pointer" : "default",
+                              // Größerer Tap-Bereich als die sichtbaren 6px,
+                              // ohne das enge Monatsraster optisch zu sprengen
+                              // — boxSizing explizit content-box, da die App
+                              // global auf border-box zurücksetzt (sonst
+                              // würde padding die sichtbare Fläche auf 0
+                              // schrumpfen statt den Klickbereich zu vergrößern).
+                              boxSizing: "content-box",
+                              padding: klickbar ? 3 : 0,
+                              margin: klickbar ? -3 : 0,
+                              backgroundClip: "content-box",
                             }}
                             title={item.name}
                           />
@@ -1004,6 +1056,18 @@ export default function WochenuebersichtView({
           )}
         </div>
       </div>
+
+      {bearbeitenItem && (
+        <TagesEintragBearbeiten
+          item={bearbeitenItem}
+          datum={bearbeitenDatum}
+          onNavigateKategorie={onNavigateKategorie}
+          onClose={() => {
+            setBearbeitenItem(null);
+            setBearbeitenDatum(null);
+          }}
+        />
+      )}
     </>
   );
   return embedded ? content : <Shell>{content}</Shell>;
