@@ -1,5 +1,50 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 45) — Home-Redesign gegengelesen, 3 Bugs gefunden und behoben
+
+Nutzerinnen-Vorgabe: vor dem eigenen Test nochmal zeigen + Bereich (den
+gerade gebauten Home-Umbau, Teil 44) auf Bugs prüfen. Beim systematischen
+Gegenlesen von `HomeView.jsx`/`MiniPlanWidget.jsx` drei echte Bugs
+gefunden (einer davon deutlich sichtbar, zwei subtiler):
+
+1. **Balkendiagramm fast komplett unsichtbar.** `TagesfortschrittBalken`
+   griff für die Balkenfarbe direkt auf `w.farbe` zu — das Feld ist aber
+   nur bei Morgen-/Abendroutine befüllt (siehe `ROUTINE_FARBE`), alle
+   anderen Kategorien (Gewohnheiten, Medikamente, Supplemente, Mahlzeiten,
+   Training, Hydration, Tageslicht) holen ihre Farbe normalerweise aus
+   `KATEGORIE_META[kategorie].dot`. Ohne diesen Fallback hatten 7 von 9
+   Balken kein `background` — im Screenshot sah das aus wie ein fast
+   leeres Diagramm mit nur 2 sichtbaren Farbflecken. Gefunden beim
+   Kontrollieren des HTML-Outputs (Playwright), nicht auf den ersten
+   Blick im Screenshot erkennbar.
+2. **Tagesfortschritt-Kopfzeile lief zusammen.** `statusText()` liefert
+   teils ganze Sätze ("Nur noch zwei Aufgaben bis zum Tagesziel."), nicht
+   nur kurze Zahlen — in der einzeiligen `space-between`-Zeile mit dem
+   Label gab es dafür keinen Platz, Label und Satz standen ohne
+   Zwischenraum nebeneinander. Jetzt eigene Zeile für jedes.
+3. **Notfallmodus zeigte einen irreführenden Bruch.** `erledigtCount` kam
+   schon aus den notfallmodus-gefilterten `displayItems` (nur
+   Medikamente/Hydration), der Gesamtwert aber ungefiltert aus
+   `heuteItems.length` — ergab z. B. "2 von 9" statt "2 von 3", obwohl
+   der Rest im Notfallmodus bewusst Bonus ist. Beide Werte kommen jetzt
+   aus derselben Liste.
+
+Zusätzlich beim Gegenlesen entdeckt (nicht neu durch Teil 44, aber jetzt
+deutlich sichtbarer, weil Hydration jetzt garantiert im "Direktzugriff"
+auftaucht): der "+200ml"-Aktions-Button in `MiniPlanWidget` lief bei
+längeren Kategorienamen über den Namenstext. `MiniPlanWidget` reserviert
+jetzt Platz dafür, und hat eine neue optionale `statusText`-Prop für
+Kategorien ohne sinnvollen Bruchteil (Morgen-/Abendroutine zeigen jetzt
+"heute erledigt"/"heute noch offen" statt "0/1 heute").
+
+Erneut mit der temporären Vorschau-Variante (danach vollständig
+zurückgesetzt) geprüft, inkl. direkter HTML-Kontrolle der gerenderten
+Balken (nicht nur Screenshot-Blick) — das hat Bug 1 überhaupt erst
+zuverlässig aufgedeckt. `npm run build` + `npx oxlint` sauber (18
+vorbestehende Warnungen, keine neuen).
+
+---
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 44) — Home-Bildschirm neu geordnet: Balkendiagramm, Direktzugriff/Weitere Pläne, Morgen-/Abendroutine
 
 Nutzerinnen-Vorgabe: "so viele Diagramme drauf und Ansichten, die aber so
