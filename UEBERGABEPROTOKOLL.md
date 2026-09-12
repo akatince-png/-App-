@@ -1,5 +1,57 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026 (Teil 40) — Home-Kachel-Verwirrung, Tagesplan-Ruckeln, ADHS-Medikation-Kategorie
+
+Drei Punkte aus derselben Nachricht, bevor mit den ausstehenden
+Migrationen 0077-0079 weitergemacht wurde (Nutzerin hatte ihren
+GitHub-Zugang wiederbekommen).
+
+1. **Home-Kachel "Hormone" wirkte wie ein zweiter, separater Bereich
+   neben "Medikamente"** — war aber schon technisch derselbe: Hormone
+   und Peptide sind seit Migration 0042 (13.08.) Teil von "hormon"
+   (Medikamente), die Kachel öffnete beim Klick bereits dieselbe
+   Medikamente-Ansicht. Nur die Beschriftung war fest "Hormone" statt
+   "Medikamente" (`HomeView.jsx`, `miniWidgetData`). Umbenannt.
+
+2. **"Tagesplan ruckelt beim Öffnen"** — zwei tatsächliche Ursachen:
+   - `buildDayItems()` filterte bei jedem Aufruf die komplette,
+     unbegrenzt wachsende Trainingshistorie nach dem gesuchten Tag
+     (O(n) Scan statt O(1) Lookup) — wird mit mehr geloggten
+     Trainingseinheiten über die Zeit spürbar langsamer.
+     `useTrainingData.js` gruppiert jetzt einmal pro Datenänderung
+     nach Datum (`trainingNachDatum`, eine Map), `buildDayItems()`
+     nutzt sie, wenn mitgegeben (Fallback bleibt bestehen).
+   - `TagesplanView.jsx`: `montag`/`wochentage` waren nicht
+     memoisiert, und die Wochenansicht rief `itemsForDate(d)` für
+     alle 7 Tage direkt im Render-Body statt gecacht auf — beides
+     zusammen ließ `buildDayItems()` bei praktisch jeder Interaktion
+     irgendwo in der App neu für die ganze Woche laufen. Exakt
+     dasselbe Muster wurde in `WochenuebersichtView.jsx` bereits in
+     Teil 30 behoben (dort ausführlich dokumentiert) — nur eben nicht
+     auch auf `TagesplanView.jsx`/`HomeView.jsx` übertragen. Jetzt
+     nachgezogen (inkl. `heuteItems` in `HomeView.jsx`).
+   - **Nicht behoben, bewusst zurückgestellt:** die tiefere
+     Ursache dahinter — der `AppDataContext`-Wert selbst ist kein
+     memoisiertes Objekt (~30 Datenhooks, laufen beim App-Start
+     unabhängig voneinander durch, jeder mit eigenem Ladezustand),
+     wodurch jede Komponente, die `useAppData()` nutzt, bei jeder noch
+     so unbeteiligten Zustandsänderung neu rendert. Die obigen Fixes
+     dämpfen die sichtbaren Auswirkungen davon deutlich, beheben aber
+     nicht die Ursache selbst — eine vollständige Memoisierung des
+     ~150-Felder-Objekts wäre ein eigenes, größeres Vorhaben (jedes
+     einzelne Feld müsste korrekt als Dependency geführt werden).
+3. **Neue Medikamente-Kategorie "ADHS-Medikation"** — Ritalin/
+   Elvanse/Antidepressiva hatten bisher keine eigene Kategorie
+   (nur Hormone/Peptid/Blutdruck/Diabetes/Cholesterin/Schmerzmittel/
+   Sonstige) und wären unter "Sonstige" gelandet, obwohl das der
+   eigentliche Kernzweck von "Medikamente" bei einer ADHS-App ist.
+   Als erste Option in `MEDIKAMENTE_KATEGORIEN` ergänzt.
+
+`npm run build` + `npx oxlint` nach jedem Punkt sauber (18
+vorbestehende Warnungen, keine neuen).
+
+---
+
 ## ✅ Update 11.09.2026, Fortsetzung (Teil 39) — Neues Feature: Punkte-/Abzeichen-System ("Erfolge")
 
 Nutzerinnen-Vorgabe (Brainstorming, dann konkretisiert): ein
