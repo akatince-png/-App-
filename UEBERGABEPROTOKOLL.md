@@ -1,5 +1,32 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 53) — Archiv: Mehrfachauswahl zum Löschen
+
+Nutzerinnen-Vorgabe: "ganze Bereiche der Protokolle auf einmal löschen ...
+alle markieren und dann alle auf einmal löschen ... oder markierte" — die
+einzelnen 🗑-Buttons pro Zeile im Archiv waren mühsam, wenn viele Einträge
+weg sollen.
+
+- **`ui/ArchivAbschnitt.jsx`** (neu): wiederverwendbare Liste mit
+  Checkbox je Zeile, "Alle auswählen"/"Auswahl aufheben" und einem
+  "X löschen"-Sammel-Button (erscheint erst ab 1 Auswahl), jeweils mit
+  Sicherheitsabfrage. Der einzelne 🗑-Button pro Zeile bleibt zusätzlich
+  erhalten — für "nur diesen einen schnell weg" ohne erst Auswahlmodus.
+- **`plan/ArchivTab.jsx`**: alle vier Archiv-Bereiche (Abgeschlossene
+  Protokolle, Abgeschlossene Hauptprotokolle, Blutwerte-Verlauf,
+  Check-in-Verlauf) nutzen jetzt `ArchivAbschnitt` statt der bisherigen
+  fest verdrahteten Einzel-Lösch-Listen.
+- **`useBiomarkerData.js`**: Blutwerte-Verlauf hatte bisher gar KEINE
+  Löschmöglichkeit — neue Funktion `blutwertEntfernen(id)` nachgerüstet
+  (gleiches Rollback-bei-Fehler-Muster wie überall sonst), `id` wird jetzt
+  mitgeladen/nach dem Anlegen zurückgegeben, damit einzelne Einträge
+  überhaupt adressierbar sind.
+- **Getestet**: Preview-Harness (Playwright) — einzelne Checkboxen
+  markieren, Sammel-Löschen entfernt genau die ausgewählten, "Alle
+  auswählen" markiert alle sichtbaren und der Text wechselt zu "Auswahl
+  aufheben", letzter Eintrag gelöscht zeigt wieder den Leer-Text. Build +
+  oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 52) — Routine-Reiter ("Pläne → Morgenroutine"/"Routinen"): Einstellungen weggeräumt
 
 Nutzerinnen-Vorgabe (mit Screenshot): derselbe "Maske bearbeiten"-Eindruck
