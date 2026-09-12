@@ -19,6 +19,7 @@ import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
+import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 
 // Basis-Rollenbeschreibung des Home-Coaches. Die "Background Brain"-Inhalte
@@ -205,6 +206,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     ausnahmenNachSchluessel,
     routineSchritte,
     routineDurchlaeufe,
+    routineSchrittErledigt,
     confirmAlleTageszeit,
     hydrationHeuteMl,
     hydrationZielMl,
@@ -237,6 +239,11 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [akutOffen, setAkutOffen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
   const [trainingFehler, setTrainingFehler] = useState(null);
+  // Direkte Checkliste statt Wegnavigieren (12.09., Nutzerin-Vorgabe): ein
+  // Tap auf "Morgenroutine"/"Abendroutine" in "Als Nächstes" klappt die
+  // echten Schritte HIER auf der Startseite auf, statt zum Schritte-Editor
+  // oder Tagesplan zu springen. null = zugeklappt, sonst "morgen"/"abend".
+  const [expandedRoutine, setExpandedRoutine] = useState(null);
 
   // Tap auf die Trainingszeile in "Als Nächstes" soll direkt in den
   // Live-Start-Screen führen (Nutzerin-Korrektur 14.08.: eine reine
@@ -385,15 +392,22 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     ? []
     : ["morgen", "abend"]
         .filter((routine) => routineSchritte.some((s) => s.routine === routine) && !routineDurchlaeufe.some((d) => d.routine === routine && d.datum === tagStr))
-        .map((routine) => ({
-          key: `routine-${routine}`,
-          name: tLabel(routine === "morgen" ? "Morgenroutine" : "Abendroutine"),
-          kategorie: routine === "morgen" ? "morgenroutine" : "abendroutine",
-          viewId: routine === "morgen" ? "morgenroutine" : "abendroutine",
-          detail: t("home.list.routineOffen"),
-          uhrzeit: "",
-          done: false,
-        }));
+        .map((routine) => {
+          const schritteDieserRoutine = routineSchritte.filter((s) => s.routine === routine);
+          const erledigtCount = schritteDieserRoutine.filter((s) => routineSchrittErledigt[`${tagStr}__${s.id}`]).length;
+          return {
+            key: `routine-${routine}`,
+            name: tLabel(routine === "morgen" ? "Morgenroutine" : "Abendroutine"),
+            kategorie: routine === "morgen" ? "morgenroutine" : "abendroutine",
+            viewId: routine === "morgen" ? "morgenroutine" : "abendroutine",
+            // Statt der bisherigen pauschalen "Routine offen" (Nutzerin-
+            // Vorgabe 12.09.: "ich finde nicht gut, was sie anzeigt") echter
+            // Fortschritt — Tippen klappt darunter die Schritte im Detail auf.
+            detail: erledigtCount > 0 ? `${erledigtCount} von ${schritteDieserRoutine.length} Schritten erledigt` : t("home.list.routineOffen"),
+            uhrzeit: "",
+            done: false,
+          };
+        });
   const angezeigteItems = [...routineAlsNaechstesItems, ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel)];
 
   // Konvertiere Items ins QuickTaskList-Format
@@ -845,77 +859,96 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             ) : (
               angezeigteItems.slice(0, 4).map((item, i, arr) => {
                 const k = KATEGORIE_META[item.kategorie] || { dot: ROUTINE_FARBE[item.kategorie] || "#999" };
+                // Morgen-/Abendroutine öffnen HIER eine Checkliste mit den
+                // echten Schritten statt wegzunavigieren (12.09., Nutzerin-
+                // Vorgabe) — "routine" ist der Schlüssel, den useRoutinen.js
+                // erwartet ("morgen"/"abend"), nicht der kategorie-Wert.
+                const routineKey = item.kategorie === "morgenroutine" ? "morgen" : item.kategorie === "abendroutine" ? "abend" : null;
+                // Nutzerin-Vorgabe: die oberste Karte (nächster/überfälliger
+                // Punkt) soll sich etwas abheben statt gleich groß wie der
+                // Rest der Liste zu wirken.
+                const istErste = i === 0;
                 return (
-                  <div
-                    key={item.key}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 10,
-                      padding: "12px 12px",
-                      borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
-                    }}
-                  >
-                    <button
-                      className="mp-tap"
-                      onClick={() => {
-                        if (item.kategorie === "training") return starteTrainingVonItem(item);
-                        return onOpenView(item.viewId || "tagesplan");
-                      }}
+                  <React.Fragment key={item.key}>
+                    <div
                       style={{
-                        flex: 1,
+                        width: "100%",
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: "space-between",
                         gap: 10,
-                        background: "transparent",
-                        border: "none",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        padding: 0,
-                        minWidth: 0,
+                        padding: istErste ? "15px 12px" : "12px 12px",
+                        borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
                       }}
                     >
-                      <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700 }}>
-                          {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {tLabel(item.uhrzeit)}</span>}
-                        </div>
-                        {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
-                      </div>
-                    </button>
-                    {item.bundleIds ? (
                       <button
                         className="mp-tap"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+                        onClick={() => {
+                          if (item.kategorie === "training") return starteTrainingVonItem(item);
+                          if (routineKey) return setExpandedRoutine((prev) => (prev === routineKey ? null : routineKey));
+                          return onOpenView(item.viewId || "tagesplan");
                         }}
                         style={{
-                          flexShrink: 0,
-                          padding: "7px 12px",
-                          borderRadius: 10,
+                          flex: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          background: "transparent",
                           border: "none",
-                          background: accentSoft,
-                          color: accentDark,
-                          fontSize: 11.5,
-                          fontWeight: 700,
+                          textAlign: "left",
                           cursor: "pointer",
+                          padding: 0,
+                          minWidth: 0,
                         }}
                       >
-                        {t("home.list.confirmAll")}
+                        <div style={{ width: istErste ? 10 : 8, height: istErste ? 10 : 8, borderRadius: 5, background: k.dot, flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: istErste ? 16 : 14, fontWeight: 700 }}>
+                            {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: istErste ? 13 : 12 }}>· {tLabel(item.uhrzeit)}</span>}
+                          </div>
+                          {item.detail && <div style={{ fontSize: istErste ? 12.5 : 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
+                        </div>
                       </button>
-                    ) : (
-                      <button
-                        className="mp-tap"
-                        onClick={() => onOpenView(item.viewId || "tagesplan")}
-                        style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
-                      >
-                        ›
-                      </button>
+                      {item.bundleIds ? (
+                        <button
+                          className="mp-tap"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+                          }}
+                          style={{
+                            flexShrink: 0,
+                            padding: "7px 12px",
+                            borderRadius: 10,
+                            border: "none",
+                            background: accentSoft,
+                            color: accentDark,
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {t("home.list.confirmAll")}
+                        </button>
+                      ) : (
+                        <button
+                          className="mp-tap"
+                          onClick={() => {
+                            if (routineKey) return setExpandedRoutine((prev) => (prev === routineKey ? null : routineKey));
+                            return onOpenView(item.viewId || "tagesplan");
+                          }}
+                          style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
+                        >
+                          {routineKey ? (expandedRoutine === routineKey ? "▲" : "▼") : "›"}
+                        </button>
+                      )}
+                    </div>
+                    {routineKey && expandedRoutine === routineKey && (
+                      <div style={{ padding: "0 12px 10px" }}>
+                        <RoutineHeuteChecklist routine={routineKey} />
+                      </div>
                     )}
-                  </div>
+                  </React.Fragment>
                 );
               })
             )}

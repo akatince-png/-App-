@@ -76,7 +76,7 @@ export function AppDataProvider({ children }) {
   const adminNotizenData = useAdminNotizen(userId);
   const spotifyData = useSpotifyVerbindung(userId);
   const uebungsBilderData = useUebungsBilder(userId);
-  const routinenData = useRoutinen(userId);
+  const routinenData = useRoutinen(userId, profileData.belohnungPufferMin);
   const zeitbloeckeData = useZeitbloecke(userId);
   const coacheeNachrichtenData = useCoacheeNachrichten(userId);
   const coachWissenData = useCoachWissen(userId);

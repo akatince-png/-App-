@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
+import { istRechtzeitig } from "../utils/belohnungZeit";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 function rowToSchritt(r) {
   return { id: r.id, routine: r.routine, reihenfolge: r.reihenfolge, name: r.name, dauerMin: r.dauer_min };
@@ -29,19 +31,27 @@ function rowToEinstellung(r) {
 // (routine_schritte: was gehört dazu, Reihenfolge, geplante Dauer) getrennt
 // von den tatsächlichen Durchläufen (routine_durchlaeufe: was wurde wann
 // wirklich gemacht, wie lange hat's gedauert) — siehe RoutineAblauf.jsx.
-export function useRoutinen(userId) {
+export function useRoutinen(userId, belohnungPufferMin) {
   const [schritte, setSchritte] = useState([]);
   const [durchlaeufe, setDurchlaeufe] = useState([]);
   const [einstellungen, setEinstellungen] = useState({});
+  // Direkte Tages-Bestätigung einzelner Schritte (12.09., Nutzerin-Vorgabe:
+  // "muss auf der ersten Seite von mir bestätigt werden können") — eigene,
+  // schlanke Zusatz-Ebene NEBEN den vollständigen Durchläufen, nicht
+  // deren Ersatz: der geführte Ablauf (RoutineAblauf) bleibt unverändert
+  // nutzbar, die Checkliste ist ein zweiter, schnellerer Weg für einzelne
+  // Punkte. Schlüssel wie überall in der App: "datum__schrittId".
+  const [schrittErledigt, setSchrittErledigt] = useState({});
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: s }, { data: d }, { data: e }] = await Promise.all([
+      const [{ data: s }, { data: d }, { data: e }, { data: sl }] = await Promise.all([
         supabase.from("routine_schritte").select("*").eq("user_id", userId).order("routine").order("reihenfolge"),
         supabase.from("routine_durchlaeufe").select("*").eq("user_id", userId).order("gestartet_um", { ascending: false }),
         supabase.from("routine_einstellungen").select("*").eq("user_id", userId),
+        supabase.from("routine_schritt_logs").select("*").eq("user_id", userId),
       ]);
       if (cancelled) return;
       if (s) setSchritte(s.map(rowToSchritt));
@@ -51,11 +61,40 @@ export function useRoutinen(userId) {
         e.map(rowToEinstellung).forEach((einst) => (next[einst.routine] = einst));
         setEinstellungen(next);
       }
+      if (sl) {
+        const next = {};
+        sl.forEach((row) => (next[`${row.datum}__${row.schritt_id}`] = true));
+        setSchrittErledigt(next);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [userId]);
+
+  // Uhrzeit eines Schritts — nicht in der DB gespeichert (nur die geplante
+  // Dauer je Schritt), sondern aus dem Zeitrahmen-Start der Routine plus
+  // der Summe der Dauer aller davor liegenden Schritte hergeleitet. Fehlt
+  // der Zeitrahmen-Start, gibt's keine Uhrzeit — dann gilt der Schritt beim
+  // Belohnungsfenster automatisch als "kein geplanter Zeitpunkt" (siehe
+  // istRechtzeitig()), nicht als "zu spät".
+  const schrittZeit = useCallback(
+    (schrittId) => {
+      const schritt = schritte.find((sc) => sc.id === schrittId);
+      if (!schritt) return "";
+      const startZeit = einstellungen[schritt.routine]?.startZeit;
+      if (!startZeit) return "";
+      const vorherige = schritte
+        .filter((sc) => sc.routine === schritt.routine && sc.reihenfolge < schritt.reihenfolge)
+        .reduce((summe, sc) => summe + (Number(sc.dauerMin) || 0), 0);
+      const [h, m] = startZeit.split(":").map(Number);
+      const gesamt = h * 60 + m + vorherige;
+      const stunde = Math.floor(gesamt / 60) % 24;
+      const minute = gesamt % 60;
+      return `${String(stunde).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    },
+    [schritte, einstellungen]
+  );
 
   // Zeitrahmen der Routine (z. B. Morgenroutine 6:00-9:00 Uhr) — Grundlage
   // für die Überlappungs-Erkennung mit anderen geplanten Punkten.
@@ -184,10 +223,63 @@ export function useRoutinen(userId) {
     [userId]
   );
 
+  // Bestätigt/entfernt EINEN Schritt für einen Tag, unabhängig vom
+  // geführten Ablauf (12.09., Nutzerin-Vorgabe: direkt auf der Startseite
+  // abhaken können, ohne "Morgenroutine starten" zu müssen, nur um einen
+  // einzelnen Punkt wie eine Medikamentengabe zu bestätigen). Sind danach
+  // ALLE Schritte dieser Routine für diesen Tag abgehakt, wird automatisch
+  // ein normaler Durchlauf gespeichert (routine_durchlaeufe) — dieselbe
+  // Quelle, die Streaks/Abzeichen (utils/errungenschaften.js) und die
+  // Direktzugriff-Widgets/"Als Nächstes"-Filterung in HomeView.jsx sowieso
+  // schon lesen. So bleibt "heute erledigt" unabhängig davon konsistent,
+  // ob die Routine per Checkliste oder per geführtem Ablauf durchlaufen
+  // wurde — beide Wege bleiben nebeneinander nutzbar.
+  const toggleSchrittErledigt = useCallback(
+    async (schrittId, datum) => {
+      const k = `${datum}__${schrittId}`;
+      const nextVal = !schrittErledigt[k];
+      setSchrittErledigt((prev) => ({ ...prev, [k]: nextVal }));
+      const { error } = nextVal
+        ? await supabase
+            .from("routine_schritt_logs")
+            .upsert({ user_id: userId, schritt_id: schrittId, datum }, { onConflict: "user_id,schritt_id,datum" })
+        : await supabase.from("routine_schritt_logs").delete().eq("user_id", userId).eq("schritt_id", schrittId).eq("datum", datum);
+      if (error) {
+        console.error(error);
+        setSchrittErledigt((prev) => ({ ...prev, [k]: !nextVal }));
+        return;
+      }
+      if (!nextVal) return;
+
+      const schritt = schritte.find((sc) => sc.id === schrittId);
+      if (schritt && istRechtzeitig(schrittZeit(schrittId), belohnungPufferMin)) {
+        feuereBelohnung({ text: `„${schritt.name}" erledigt`, icon: "sun", punkte: 1 });
+      }
+
+      if (!schritt) return;
+      const geschwister = schritte.filter((sc) => sc.routine === schritt.routine);
+      const alleErledigt = geschwister.every((sc) => sc.id === schrittId || schrittErledigt[`${datum}__${sc.id}`]);
+      const schonDurchlauf = durchlaeufe.some((d) => d.routine === schritt.routine && d.datum === datum);
+      if (alleErledigt && !schonDurchlauf) {
+        durchlaufSpeichern({
+          routine: schritt.routine,
+          schritte: geschwister
+            .sort((a, b) => a.reihenfolge - b.reihenfolge)
+            .map((sc) => ({ name: sc.name, geplantMin: sc.dauerMin, tatsaechlichSek: null })),
+          gestartetUm: new Date().toISOString(),
+        });
+      }
+    },
+    [schrittErledigt, schritte, durchlaeufe, userId, belohnungPufferMin, schrittZeit, durchlaufSpeichern]
+  );
+
   return {
     routineSchritte: schritte,
     routineDurchlaeufe: durchlaeufe,
     routineEinstellungen: einstellungen,
+    routineSchrittErledigt: schrittErledigt,
+    routineSchrittZeit: schrittZeit,
+    routineSchrittErledigtUmschalten: toggleSchrittErledigt,
     routineSchrittHinzufuegen: schrittHinzufuegen,
     routineSchrittEntfernen: schrittEntfernen,
     routineSchrittVerschieben: schrittVerschieben,
