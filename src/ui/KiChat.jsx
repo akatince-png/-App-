@@ -176,6 +176,7 @@ export default function KiChat({
   const stopErkennungRef = useRef(null);
   const verlaufGeladenRef = useRef(false);
   const eingeleitetRef = useRef(false);
+  const antwortBoxRef = useRef(null);
   // Wie viele Nachrichten beim Öffnen schon aus früheren Sitzungen geladen
   // waren — alles bis zu diesem Index gilt als "alter" Verlauf. Die große,
   // prominente Anzeige + automatisches Vorlesen zeigen/sprechen erst wieder
@@ -386,6 +387,15 @@ export default function KiChat({
   const letzteNutzerNachricht = [...neueSitzungVerlauf].reverse().find((n) => n.rolle === "nutzer");
   const letzteCoachNachricht = [...neueSitzungVerlauf].reverse().find((n) => n.rolle === "coach");
   const grosseAntwort = laden ? streamText || `${getCoachName()} überlegt…` : letzteCoachNachricht?.text || effektiveEinleitung || "";
+  // Bug-Fix (Nutzerinnen-Vorgabe, 12.09.: "es wird immer so kleiner,
+  // größer, wenn der Text sich verlängert"): grosseAntwort wuchs bisher
+  // ungebremst mit der Antwortlänge, wodurch das ganze (am unteren
+  // Bildschirmrand verankerte) Bottom-Sheet bei jeder Antwort sichtbar
+  // sprang. antwortBoxRef hält die Anzeige unten während des Streamens
+  // sichtbar, siehe useEffect direkt darunter.
+  useEffect(() => {
+    if (antwortBoxRef.current) antwortBoxRef.current.scrollTop = antwortBoxRef.current.scrollHeight;
+  }, [grosseAntwort]);
   const zeigeUebernehmenKnopf = onUebernehmen && neueSitzungVerlauf.some((n) => n.rolle === "coach") && (!pruefeBereitschaft || erkannterBereich);
   const aktuellesUebernehmenLabel = (pruefeBereitschaft && uebernehmenLabels?.[erkannterBereich]) || uebernehmenLabel || `An ${getCoachName()} übermitteln`;
 
@@ -487,7 +497,21 @@ export default function KiChat({
           {letzteNutzerNachricht && !laden && (
             <div style={{ fontSize: 12.5, color: textMuted, fontStyle: "italic", maxWidth: "90%" }}>„{letzteNutzerNachricht.text}"</div>
           )}
-          <div style={{ fontSize: 16, lineHeight: 1.6, color: textMain, whiteSpace: "pre-wrap", maxWidth: "95%" }}>{grosseAntwort}</div>
+          <div
+            ref={antwortBoxRef}
+            style={{
+              fontSize: 16,
+              lineHeight: 1.6,
+              color: textMain,
+              whiteSpace: "pre-wrap",
+              maxWidth: "95%",
+              minHeight: 90,
+              maxHeight: 200,
+              overflowY: "auto",
+            }}
+          >
+            {grosseAntwort}
+          </div>
           {spotifyHinweis && <div style={{ fontSize: 12, color: danger, maxWidth: "90%" }}>{spotifyHinweis}</div>}
           {!laden && letzteCoachNachricht && sprachausgabeVerfuegbar() && (
             <button
