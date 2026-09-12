@@ -1,5 +1,28 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 55) — Seitenleiste: "Training" als eigener Menüpunkt entfernt
+
+Nutzerinnen-Vorgabe: "Training ist ja eins von vielen Punkten, wenn
+überhaupt" — die Tablet/Desktop-Seitenleiste zeigte Training als eigenen
+Menüpunkt neben "Pläne", obwohl es dort genau wie Hydration, Ernährung,
+Supplemente, Medikamente usw. nur einer von vielen Reitern ist.
+
+- **`ui/AppSidebar.jsx`**: den eigenen "Training"-Menüpunkt entfernt;
+  "training" bleibt ein ganz normaler `PLAENE_TABS`-Eintrag, erreichbar
+  wie jeder andere über "Pläne" → Reiter-Grid. Die bisherige
+  Sonderbehandlung (`PLAENE_VIEW_IDS_OHNE_TRAINING`, die Training beim
+  Hervorheben von "Pläne" ausklammerte, damit stattdessen der eigene
+  Training-Punkt aufleuchtete) ist damit auch nicht mehr nötig — "Pläne"
+  leuchtet jetzt korrekt auf, solange irgendein Reiter dort aktiv ist,
+  Training eingeschlossen.
+- Betrifft nur die Seitenleiste (>=1024px) — am Handy/iPad-Hochformat gab
+  es diese Dopplung ohnehin nicht (dort läuft die Navigation weiterhin
+  über die Home-Ordner-Kacheln).
+- **Getestet**: Preview-Harness (Playwright) — "Training" taucht in der
+  Seitenleiste nicht mehr auf, "Pläne" wird korrekt hervorgehoben, wenn
+  `view === "training"`. Screenshot bei Desktop-Breite geprüft. Build +
+  oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 54) — Startseite: direkter Hydration-Knopf
 
 Nutzerinnen-Vorgabe: "einen Button hinzufügen mit einem großen Tropfen,
