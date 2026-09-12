@@ -992,6 +992,15 @@ export default function WochenuebersichtView({
           <Pill label="Letzte 8 Wochen" selected={exportZeitraumWochen === 8} onClick={() => setExportZeitraumWochen(8)} />
           <Pill label="Letzte 12 Wochen" selected={exportZeitraumWochen === 12} onClick={() => setExportZeitraumWochen(12)} />
         </div>
+        {/* Transparenz-Hinweis (Nutzerin-Vorgabe, 12.09.): ohne diesen
+            Hinweis sehen "Letzte X Wochen" und "Gesamter Verlauf" bei einem
+            noch jungen Protokoll identisch aus, ohne dass erkennbar ist,
+            warum — wirkt dann wie ein Bug statt wie erwartetes Verhalten. */}
+        {exportZeitraumWochen && erfassungsStartObj.getTime() <= startDatumObj.getTime() && (
+          <div style={{ fontSize: 11, color: textMuted, marginBottom: 12, marginTop: -6 }}>
+            Das Protokoll läuft noch keine {exportZeitraumWochen} Wochen — zeigt daher den gesamten bisherigen Verlauf.
+          </div>
+        )}
         <PrimaryButton onClick={exportieren} disabled={exportLaeuft}>
           {exportLaeuft ? "Wird erstellt..." : "Als PDF exportieren"}
         </PrimaryButton>
