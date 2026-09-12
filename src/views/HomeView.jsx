@@ -153,6 +153,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     mahlzeitErledigt,
     mealWochenplan,
     trainingEintraege,
+    trainingNachDatum,
     trainingWochenplan,
     trainingTemplates,
     trainingHinzufuegen,
@@ -278,24 +279,52 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   // Lade Benutzernamen aus localStorage
   const userName = typeof window !== "undefined" ? localStorage.getItem("user_name") : null;
 
-  const heuteItems = buildDayItems(today, {
-    hormonPlan,
-    hormonErledigt,
-    supplemente,
-    supplementErledigt,
-    mahlzeiten,
-    mahlzeitErledigt,
-    mealWochenplan,
-    trainingEintraege,
-    trainingWochenplan,
-    trainingTemplates,
-    gewohnheiten,
-    gewohnheitErledigt,
-    workflowPlaene,
-    workflowPresets,
-    projekte,
-    zeitbloecke,
-  });
+  // Performance-Fix (12.09., Bug-Report "Tagesplan ruckelt" — betrifft auch
+  // den Home-Bildschirm, der bei jedem Öffnen zuerst angezeigt wird): lief
+  // bisher direkt im Render-Body neu, bei jeder noch so unbeteiligten
+  // Zustandsänderung irgendwo in der App.
+  const heuteItems = useMemo(
+    () =>
+      buildDayItems(today, {
+        hormonPlan,
+        hormonErledigt,
+        supplemente,
+        supplementErledigt,
+        mahlzeiten,
+        mahlzeitErledigt,
+        mealWochenplan,
+        trainingEintraege,
+        trainingNachDatum,
+        trainingWochenplan,
+        trainingTemplates,
+        gewohnheiten,
+        gewohnheitErledigt,
+        workflowPlaene,
+        workflowPresets,
+        projekte,
+        zeitbloecke,
+      }),
+    [
+      today,
+      hormonPlan,
+      hormonErledigt,
+      supplemente,
+      supplementErledigt,
+      mahlzeiten,
+      mahlzeitErledigt,
+      mealWochenplan,
+      trainingEintraege,
+      trainingNachDatum,
+      trainingWochenplan,
+      trainingTemplates,
+      gewohnheiten,
+      gewohnheitErledigt,
+      workflowPlaene,
+      workflowPresets,
+      projekte,
+      zeitbloecke,
+    ]
+  );
 
   // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
   // Kategorie heißt intern "hormon" (siehe KATEGORIE_META, label "Medikament"),
@@ -343,7 +372,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     const wocheItems = Array.from({ length: 7 }, (_, i) =>
       buildDayItems(addDays(today, i), {
         hormonPlan, hormonErledigt, supplemente, supplementErledigt,
-        mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan,
+        mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingNachDatum, trainingWochenplan,
         trainingTemplates, gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets,
       })
     ).flat();
@@ -477,7 +506,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     if (isEmergencyMode) return widgets.filter((w) => w.isEssential && w.aktiv);
     return alleWidgetsAnzeigen ? widgets : widgets.filter((w) => w.aktiv);
   }, [isEmergencyMode, alleWidgetsAnzeigen, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
-      mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingWochenplan, trainingTemplates,
+      mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingNachDatum, trainingWochenplan, trainingTemplates,
       gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen,
       tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel]);
 

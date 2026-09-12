@@ -115,6 +115,7 @@ export function buildDayItems(
     mahlzeitErledigt,
     mealWochenplan = [],
     trainingEintraege = [],
+    trainingNachDatum = null,
     trainingWochenplan = [],
     gewohnheiten = [],
     gewohnheitErledigt = {},
@@ -213,7 +214,11 @@ export function buildDayItems(
       });
   }
 
-  const heutigeTrainings = trainingEintraege.filter((t) => t.datum === tagStr);
+  // Performance-Fix (12.09.): trainingNachDatum (Map, siehe useTrainingData.js)
+  // spart den vollen Scan der unbegrenzt wachsenden Trainingshistorie bei
+  // jedem Aufruf — trainingEintraege bleibt als Fallback für Aufrufer, die
+  // die Map (noch) nicht mitgeben (z. B. wochenprotokollSnapshot.js).
+  const heutigeTrainings = trainingNachDatum ? trainingNachDatum.get(tagStr) || [] : trainingEintraege.filter((t) => t.datum === tagStr);
   heutigeTrainings.forEach((t) => {
     items.push({
       kategorie: "training",

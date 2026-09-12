@@ -152,6 +152,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     toggleMahlzeitErledigt,
     mealWochenplan,
     trainingEintraege,
+    trainingNachDatum,
     trainingWochenplan,
     trainingTemplates,
     trainingHinzufuegen,
@@ -225,8 +226,13 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   };
 
   const today = new Date();
-  const montag = addDays(selectedDate, -((selectedDate.getDay() + 6) % 7));
-  const wochentage = Array.from({ length: 7 }, (_, i) => addDays(montag, i));
+  // Performance-Fix (12.09., Bug-Report "Tagesplan ruckelt"): ohne
+  // Memoisierung bekamen montag/wochentage bei JEDEM Render eine neue
+  // Referenz, wodurch die Wochenansicht unten (siehe wochenItemsProTag)
+  // buildDayItems() für alle 7 Tage bei jeder Interaktion neu aufrief —
+  // gleiches Muster wie schon in WochenuebersichtView.jsx behoben.
+  const montag = useMemo(() => addDays(selectedDate, -((selectedDate.getDay() + 6) % 7)), [selectedDate]);
+  const wochentage = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(montag, i)), [montag]);
 
   // Ein Trainings-Tagesplan-Punkt ist entweder schon eine echte Zeile (aus
   // trainingEintraege) oder nur virtuell aus dem Wochenplan abgeleitet. Beim
@@ -290,6 +296,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         mahlzeitErledigt,
         mealWochenplan,
         trainingEintraege,
+        trainingNachDatum,
         trainingWochenplan,
         trainingTemplates,
         gewohnheiten,
@@ -326,6 +333,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       toggleMahlzeitErledigt,
       mealWochenplan,
       trainingEintraege,
+      trainingNachDatum,
       trainingWochenplan,
       trainingTemplates,
       gewohnheiten,
@@ -340,6 +348,12 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
+
+  // Performance-Fix (12.09.): itemsForDate(d) lief in der Wochenansicht
+  // bisher direkt im Render-Body für alle 7 Tage — bei jedem Render neu,
+  // auch wenn sich an der Woche nichts geändert hatte (gleiches Muster wie
+  // wochenItemsProTag in WochenuebersichtView.jsx).
+  const wochenItemsProTag = useMemo(() => wochentage.map((d) => itemsForDate(d)), [wochentage, itemsForDate]);
 
   const bucketsFor = useCallback((items) => {
     const map = new Map();
@@ -692,8 +706,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
 
       {modus === "woche" && (
         <div className="mp-tagesplan-woche-grid">
-          {wochentage.map((d) => {
-            const items = itemsForDate(d);
+          {wochentage.map((d, i) => {
+            const items = wochenItemsProTag[i];
             // Zeitblöcke sind Kalendereinträge, keine erledigbaren
             // Aufgaben — würden die "X/Y erledigt"-Quote sonst künstlich
             // verschlechtern, da sie nie als erledigt zählen können.

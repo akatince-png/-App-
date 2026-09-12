@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 function rowToEintrag(r) {
@@ -186,8 +186,25 @@ export function useTrainingData(userId) {
     return { ok: true };
   }, []);
 
+  // Performance-Fix (12.09., Bug-Report "Tagesplan ruckelt"): buildDayItems()
+  // filterte bisher bei JEDEM Aufruf (Tagesansicht 1×, Wochenansicht 7×,
+  // Home-Mini-Widgets nochmal 7×) die KOMPLETTE, unbegrenzt wachsende
+  // Trainingshistorie nach dem gesuchten Tag — wurde mit der Zeit spürbar
+  // langsamer. Einmal pro Datenänderung nach Datum gruppieren, buildDayItems
+  // schlägt dann pro Tag nur noch in der Map nach (O(1) statt O(n)).
+  const trainingNachDatum = useMemo(() => {
+    const map = new Map();
+    trainingEintraege.forEach((t) => {
+      const liste = map.get(t.datum);
+      if (liste) liste.push(t);
+      else map.set(t.datum, [t]);
+    });
+    return map;
+  }, [trainingEintraege]);
+
   return {
     trainingEintraege,
+    trainingNachDatum,
     trainingHinzufuegen,
     trainingEntfernen,
     trainingErledigtSetzen,
