@@ -16,13 +16,13 @@ export function useBiomarkerData(userId) {
     (async () => {
       const [{ data: markers }, { data: archiv }] = await Promise.all([
         supabase.from("biomarkers").select("name, value").eq("user_id", userId),
-        supabase.from("blutwerte_archiv").select("datum, werte").eq("user_id", userId).order("datum", { ascending: false }),
+        supabase.from("blutwerte_archiv").select("id, datum, werte").eq("user_id", userId).order("datum", { ascending: false }),
       ]);
       if (cancelled) return;
       const next = {};
       (markers || []).forEach((m) => (next[m.name] = m.value));
       setBiomarkerState(next);
-      setBlutwerteArchiv((archiv || []).map((a) => ({ datum: a.datum, werte: a.werte })));
+      setBlutwerteArchiv((archiv || []).map((a) => ({ id: a.id, datum: a.datum, werte: a.werte })));
     })();
     return () => {
       cancelled = true;
@@ -81,8 +81,12 @@ export function useBiomarkerData(userId) {
         }
 
         const datum = toLocalISODate(new Date());
-        await supabase.from("blutwerte_archiv").insert({ user_id: userId, datum, werte: data.werte, foto_path: fotoPath });
-        setBlutwerteArchiv((prev) => [{ datum, werte: data.werte }, ...prev]);
+        const { data: inserted } = await supabase
+          .from("blutwerte_archiv")
+          .insert({ user_id: userId, datum, werte: data.werte, foto_path: fotoPath })
+          .select()
+          .single();
+        setBlutwerteArchiv((prev) => [{ id: inserted?.id, datum, werte: data.werte }, ...prev]);
         setOcrSuccessCount(entries.length);
       } catch (err) {
         console.error(err);
@@ -94,5 +98,34 @@ export function useBiomarkerData(userId) {
     [userId]
   );
 
-  return { biomarker, setBiomarkerWert, blutwerteArchiv, handleBlutwertFoto, ocrLoading, ocrError, ocrSuccessCount };
+  // Bisher gab's im Blutwerte-Verlauf gar keine Löschmöglichkeit
+  // (Nutzerin-Vorgabe, 12.09.: Mehrfachauswahl für alle Archiv-Bereiche,
+  // nicht nur die, die schon eine Einzel-Löschfunktion hatten) — Rollback
+  // auf den vorherigen Stand bei einem Fehler, gleiches Muster wie überall
+  // sonst in dieser Datei.
+  const blutwertEntfernen = useCallback(
+    async (id) => {
+      let vorherigerEintrag;
+      let vorherigerIndex;
+      setBlutwerteArchiv((prev) => {
+        vorherigerIndex = prev.findIndex((a) => a.id === id);
+        vorherigerEintrag = prev[vorherigerIndex];
+        return prev.filter((a) => a.id !== id);
+      });
+      const { error } = await supabase.from("blutwerte_archiv").delete().eq("id", id).eq("user_id", userId);
+      if (error) {
+        console.error(error);
+        if (vorherigerEintrag) {
+          setBlutwerteArchiv((prev) => {
+            const next = [...prev];
+            next.splice(Math.min(vorherigerIndex, next.length), 0, vorherigerEintrag);
+            return next;
+          });
+        }
+      }
+    },
+    [userId]
+  );
+
+  return { biomarker, setBiomarkerWert, blutwerteArchiv, blutwertEntfernen, handleBlutwertFoto, ocrLoading, ocrError, ocrSuccessCount };
 }
