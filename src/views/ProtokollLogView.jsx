@@ -6,6 +6,8 @@ import { KATEGORIE_META } from "../utils/dayItems";
 import { uebungGewichtText, uebungWiederholungenText } from "../ui/UebungenEditor";
 import { useAppData } from "../context/AppDataContext";
 import ProtokollSeitenView from "./plan/ProtokollSeitenView";
+import { useMehrfachauswahl } from "../ui/useMehrfachauswahl";
+import MehrfachauswahlLeiste from "../ui/MehrfachauswahlLeiste";
 
 function datumLabel(datumStr) {
   const [y, m, d] = datumStr.split("-");
@@ -23,17 +25,33 @@ function Zeile({ label, wert }) {
   );
 }
 
-function TrainingProtokollKarte({ e }) {
+function TrainingProtokollKarte({ e, ausgewaehlt, onUmschalten, onLoeschen }) {
   return (
     <Card style={{ marginBottom: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: textMain }}>
-            {e.art}
-            {e.name && <span style={{ fontWeight: 600 }}> · {e.name}</span>}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0 }}>
+          <input
+            type="checkbox"
+            checked={ausgewaehlt}
+            onChange={onUmschalten}
+            style={{ marginTop: 4, width: 16, height: 16, flexShrink: 0, cursor: "pointer" }}
+          />
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: textMain }}>
+              {e.art}
+              {e.name && <span style={{ fontWeight: 600 }}> · {e.name}</span>}
+            </div>
+            {e.uhrzeit && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{e.uhrzeit}</div>}
           </div>
-          {e.uhrzeit && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{e.uhrzeit}</div>}
         </div>
+        <button
+          type="button"
+          onClick={onLoeschen}
+          title="Endgültig löschen"
+          style={{ flexShrink: 0, border: "none", background: "transparent", color: danger, fontSize: 14, cursor: "pointer", padding: "2px 4px" }}
+        >
+          🗑
+        </button>
       </div>
 
       {e.art === "Krafttraining" && (e.uebungen || []).length > 0 && (
@@ -74,18 +92,26 @@ function TrainingProtokollKarte({ e }) {
   );
 }
 
-function AenderungKarte({ e, onLoeschen }) {
+function AenderungKarte({ e, ausgewaehlt, onUmschalten, onLoeschen }) {
   const k = KATEGORIE_META[e.kategorie] || { dot: cardBorder, text: textMuted };
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, padding: "10px 0", borderBottom: `1px solid ${cardBorder}` }}>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
-          <div style={{ fontSize: 13, fontWeight: 700 }}>{e.itemName}</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: k.text }}>{e.aktion}</div>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0, flex: 1 }}>
+        <input
+          type="checkbox"
+          checked={ausgewaehlt}
+          onChange={onUmschalten}
+          style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: "pointer" }}
+        />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
+            <div style={{ fontSize: 13, fontWeight: 700 }}>{e.itemName}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: k.text }}>{e.aktion}</div>
+          </div>
+          {e.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16 }}>{e.detail}</div>}
+          {e.grund && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16, fontStyle: "italic" }}>„{e.grund}“</div>}
         </div>
-        {e.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16 }}>{e.detail}</div>}
-        {e.grund && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16, fontStyle: "italic" }}>„{e.grund}“</div>}
       </div>
       <button
         onClick={() => onLoeschen(e.id)}
@@ -139,11 +165,17 @@ function VersionSnapshot({ snapshot }) {
   );
 }
 
-function VersionKarte({ v, onLoeschen }) {
+function VersionKarte({ v, ausgewaehlt, onUmschalten, onLoeschen }) {
   const [offen, setOffen] = useState(false);
   return (
     <div style={{ padding: "10px 0", borderBottom: `1px solid ${cardBorder}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={ausgewaehlt}
+          onChange={onUmschalten}
+          style={{ marginTop: 4, width: 16, height: 16, flexShrink: 0, cursor: "pointer" }}
+        />
         <button onClick={() => setOffen((o) => !o)} className="mp-tap" style={{ flex: 1, textAlign: "left", background: "transparent", border: "none", cursor: "pointer", padding: 0, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700 }}>{KATEGORIE_LABEL[v.kategorie] || v.kategorie}</div>
           <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>
@@ -165,7 +197,8 @@ function VersionKarte({ v, onLoeschen }) {
 }
 
 export default function ProtokollLogView({ onHome, embedded = false }) {
-  const { trainingEintraege, protokollEintraege, wochenprotokollSnapshots, aenderungEntfernen, versionen, versionLoeschen } = useAppData();
+  const { trainingEintraege, trainingEntfernen, protokollEintraege, wochenprotokollSnapshots, aenderungEntfernen, versionen, versionLoeschen } =
+    useAppData();
 
   const handleVersionLoeschen = (id) => {
     if (!window.confirm("Diese Version endgültig löschen?")) return;
@@ -176,18 +209,25 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
     if (!window.confirm("Diesen Eintrag endgültig löschen?")) return;
     aenderungEntfernen(id);
   };
+
+  const handleTrainingLoeschen = (id) => {
+    if (!window.confirm("Diesen Trainings-Eintrag endgültig löschen?")) return;
+    trainingEntfernen(id);
+  };
+
   const [seitenOffen, setSeitenOffen] = useState(false);
   const ersteWoche = wochenprotokollSnapshots.find((s) => s.wochenNummer === 1);
 
+  const erledigteTrainings = useMemo(() => trainingEintraege.filter((e) => e.erledigt), [trainingEintraege]);
+
   const gruppen = useMemo(() => {
-    const erledigte = trainingEintraege.filter((e) => e.erledigt);
     const map = new Map();
-    erledigte.forEach((e) => {
+    erledigteTrainings.forEach((e) => {
       if (!map.has(e.datum)) map.set(e.datum, []);
       map.get(e.datum).push(e);
     });
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
-  }, [trainingEintraege]);
+  }, [erledigteTrainings]);
 
   const aenderungGruppen = useMemo(() => {
     const map = new Map();
@@ -198,6 +238,39 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
     });
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [protokollEintraege]);
+
+  // Mehrfachauswahl (12.09., Nutzerin-Vorgabe: "in diesen Bereichen [den
+  // Protokollen] möchte ich auch die Möglichkeit haben, mehrere Sachen
+  // gleichzeitig zu löschen") — eine Auswahl je Bereich, unabhängig von der
+  // Datums-Gruppierung darüber (Auswahl kann Einträge aus mehreren Tagen
+  // gleichzeitig umfassen).
+  const aenderungAuswahl = useMehrfachauswahl(protokollEintraege, (e) => e.id);
+  const versionAuswahl = useMehrfachauswahl(versionen, (v) => v.id);
+  const trainingAuswahl = useMehrfachauswahl(erledigteTrainings, (e) => e.id);
+
+  const aenderungMehrfachLoeschen = () => {
+    const ids = [...aenderungAuswahl.ausgewaehlt];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Bist du sicher, dass du ${ids.length} Eintrag/Einträge endgültig entfernen möchtest? Das kann nicht rückgängig gemacht werden.`)) return;
+    ids.forEach((id) => aenderungEntfernen(id));
+    aenderungAuswahl.zuruecksetzen();
+  };
+
+  const versionMehrfachLoeschen = () => {
+    const ids = [...versionAuswahl.ausgewaehlt];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Bist du sicher, dass du ${ids.length} Version(en) endgültig entfernen möchtest? Das kann nicht rückgängig gemacht werden.`)) return;
+    ids.forEach((id) => versionLoeschen(id));
+    versionAuswahl.zuruecksetzen();
+  };
+
+  const trainingMehrfachLoeschen = () => {
+    const ids = [...trainingAuswahl.ausgewaehlt];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Bist du sicher, dass du ${ids.length} Trainings-Eintrag/Einträge endgültig entfernen möchtest? Das kann nicht rückgängig gemacht werden.`)) return;
+    ids.forEach((id) => trainingEntfernen(id));
+    trainingAuswahl.zuruecksetzen();
+  };
 
   if (seitenOffen && ersteWoche) {
     return <ProtokollSeitenView snapshot={ersteWoche} onHome={() => setSeitenOffen(false)} />;
@@ -241,7 +314,17 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
         Was du wirklich gemacht hast — nicht der Plan, sondern das tatsächliche Ergebnis.
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>📝 Tagesverlauf</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 14, fontWeight: 800 }}>📝 Tagesverlauf</div>
+        {protokollEintraege.length > 0 && (
+          <MehrfachauswahlLeiste
+            anzahlAusgewaehlt={aenderungAuswahl.ausgewaehlt.size}
+            alleAusgewaehlt={aenderungAuswahl.alleAusgewaehlt}
+            onAlleUmschalten={aenderungAuswahl.alleUmschalten}
+            onMehrfachLoeschen={aenderungMehrfachLoeschen}
+          />
+        )}
+      </div>
       {aenderungGruppen.length === 0 ? (
         <Card style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
@@ -254,14 +337,30 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
             <div style={{ fontSize: 12.5, fontWeight: 800, color: textMain, marginBottom: 8 }}>{datumLabel(datum)}</div>
             <Card>
               {eintraege.map((e) => (
-                <AenderungKarte key={e.id} e={e} onLoeschen={handleAenderungLoeschen} />
+                <AenderungKarte
+                  key={e.id}
+                  e={e}
+                  ausgewaehlt={aenderungAuswahl.ausgewaehlt.has(e.id)}
+                  onUmschalten={() => aenderungAuswahl.umschalten(e.id)}
+                  onLoeschen={handleAenderungLoeschen}
+                />
               ))}
             </Card>
           </div>
         ))
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🗂️ Baustein-Versionen</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 14, fontWeight: 800 }}>🗂️ Baustein-Versionen</div>
+        {versionen.length > 0 && (
+          <MehrfachauswahlLeiste
+            anzahlAusgewaehlt={versionAuswahl.ausgewaehlt.size}
+            alleAusgewaehlt={versionAuswahl.alleAusgewaehlt}
+            onAlleUmschalten={versionAuswahl.alleUmschalten}
+            onMehrfachLoeschen={versionMehrfachLoeschen}
+          />
+        )}
+      </div>
       {versionen.length === 0 ? (
         <Card style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
@@ -272,12 +371,28 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
       ) : (
         <Card style={{ marginBottom: 18 }}>
           {versionen.map((v) => (
-            <VersionKarte key={v.id} v={v} onLoeschen={handleVersionLoeschen} />
+            <VersionKarte
+              key={v.id}
+              v={v}
+              ausgewaehlt={versionAuswahl.ausgewaehlt.has(v.id)}
+              onUmschalten={() => versionAuswahl.umschalten(v.id)}
+              onLoeschen={handleVersionLoeschen}
+            />
           ))}
         </Card>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🏋️ Training</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 14, fontWeight: 800 }}>🏋️ Training</div>
+        {erledigteTrainings.length > 0 && (
+          <MehrfachauswahlLeiste
+            anzahlAusgewaehlt={trainingAuswahl.ausgewaehlt.size}
+            alleAusgewaehlt={trainingAuswahl.alleAusgewaehlt}
+            onAlleUmschalten={trainingAuswahl.alleUmschalten}
+            onMehrfachLoeschen={trainingMehrfachLoeschen}
+          />
+        )}
+      </div>
       {gruppen.length === 0 ? (
         <Card>
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
@@ -289,7 +404,13 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
           <div key={datum} style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 12.5, fontWeight: 800, color: textMain, marginBottom: 8 }}>{datumLabel(datum)}</div>
             {eintraege.map((e) => (
-              <TrainingProtokollKarte key={e.id} e={e} />
+              <TrainingProtokollKarte
+                key={e.id}
+                e={e}
+                ausgewaehlt={trainingAuswahl.ausgewaehlt.has(e.id)}
+                onUmschalten={() => trainingAuswahl.umschalten(e.id)}
+                onLoeschen={() => handleTrainingLoeschen(e.id)}
+              />
             ))}
           </div>
         ))
