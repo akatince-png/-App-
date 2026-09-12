@@ -3,14 +3,21 @@ import Icon from "./Icon";
 import { accentDark, accentSoft, cardBorder, textMain, textMuted } from "./theme";
 import { PLAENE_TABS } from "../constants";
 
-const PLAENE_VIEW_IDS_OHNE_TRAINING = PLAENE_TABS.map((t) => t.id).filter((id) => id !== "training");
+const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "profil", "blutzucker", "community"];
 
+// Training war früher ein eigener Menüpunkt, obwohl es genauso wie
+// Hydration/Ernährung/Supplemente/... nur einer der PLAENE_TABS ist
+// (Nutzerin-Vorgabe, 12.09.: "Training ist eins von vielen Punkten, wenn
+// überhaupt" — die Seitenleiste soll nur die tatsächlich eigenständigen
+// Bereiche auflisten). "training" bleibt ein ganz normaler PLAENE_TABS-
+// Eintrag, erreichbar wie jeder andere über "Pläne" → Reiter-Grid; der
+// "Pläne"-Menüpunkt leuchtet jetzt korrekt mit, solange irgendein
+// PLAENE_TABS-Reiter (Training eingeschlossen) aktiv ist.
 const NAV_ITEMS = [
   { id: "home", label: "Home", icon: "home", istAktiv: (view) => view === "home" },
   { id: "tagesplan", label: "Tagesplan", icon: "calendarCheck", istAktiv: (view) => view === "tagesplan" },
-  { id: "schlaf", label: "Pläne", icon: "folder", istAktiv: (view) => PLAENE_VIEW_IDS_OHNE_TRAINING.includes(view) },
-  { id: "training", label: "Training", icon: "dumbbell", istAktiv: (view) => view === "training" },
+  { id: "schlaf", label: "Pläne", icon: "folder", istAktiv: (view) => PLAENE_VIEW_IDS.includes(view) },
   { id: "routinen", label: "Routinen", icon: "target", istAktiv: (view) => view === "routinen" },
   { id: "archiv", label: "Archiv", icon: "archive", istAktiv: (view) => ARCHIV_VIEW_IDS.includes(view) },
   { id: "mehr", label: "Mehr", icon: "sliders", istAktiv: (view) => view === "mehr" || view === "lexikon" },
