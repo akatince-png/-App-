@@ -1,5 +1,43 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 52) — Routine-Reiter ("Pläne → Morgenroutine"/"Routinen"): Einstellungen weggeräumt
+
+Nutzerinnen-Vorgabe (mit Screenshot): derselbe "Maske bearbeiten"-Eindruck
+wie in Teil 51 bestand nicht nur auf der Startseite, sondern auch auf dem
+eigenständigen "Morgenroutine"/"Abendroutine"-Reiter unter "Pläne" sowie
+auf der "Routinen"-Seite in der Seitenleiste — dort standen Start-Button,
+Schritte-Editor, Playlist-Auswahl (volle Pill-Liste), Erinnerungs-
+Einstellungen und Zeitrahmen-Felder alle gleichrangig nebeneinander.
+Gewünscht: nur noch, was in der Routine steht + Bestätigungspunkt je
+Schritt, plus ein reiner Hinweis, welche Playlist zugeordnet ist (kein
+Auswahl-Widget) — "nicht diese ganzen Wahlpunkte".
+
+- **`RoutineTabView.jsx`** (Reiter "Pläne → Morgenroutine"/"Abendroutine",
+  identisch mit dem von der Nutzerin gezeigten Screenshot): oben jetzt nur
+  noch Titel, ein reiner Text-Hinweis "🎵 Playlist: <Name>" (falls
+  zugeordnet, sonst nichts) und der Start-Button. Direkt darunter die aus
+  Teil 51 bekannte `RoutineHeuteChecklist`. "Schritte einrichten"
+  (Editor), die volle Playlist-Auswahl (`SpotifyAnlassPicker`),
+  Erinnerungs-Einstellung, Zeitrahmen-Felder und die "Passt in deinen
+  Zeitrahmen"-Übernahme-Vorschläge sitzen jetzt gemeinsam hinter einem
+  einzigen "⚙️ Einstellungen"-Klapp-Button, standardmäßig zugeklappt.
+- **`GewohnheitenView.jsx`** (Seitenleiste → "Routinen", identisches
+  Problem): die bisher kombinierte "🌅🌙 Morgen- & Abendroutine"-Karte in
+  zwei einzelne Karten (Morgen/Abend) mit je Playlist-Hinweis, Start-
+  Button und `RoutineHeuteChecklist` aufgeteilt; Schritte-Editor +
+  Playlist-Auswahl (beide Routinen) hinter einem gemeinsamen "⚙️
+  Einstellungen"-Klapp-Button zusammengefasst, ebenfalls zugeklappt per
+  Standard.
+- Der geführte "▶️ ... starten"-Ablauf (Timer-geführt) bleibt an beiden
+  Stellen unverändert erreichbar — nur als zusätzliche Option neben der
+  Checkliste, nicht als einziger Weg.
+- **Getestet**: Preview-Harness (Playwright, `RoutineTabView` mit
+  vollständigem `AppDataContext`-Mock) — im zugeklappten Ausgangszustand
+  sind Playlist-Hinweis, Start-Button und Checkliste (inkl. berechneter
+  Uhrzeiten) sichtbar, Zeitrahmen/Playlist-Pills/Erinnerung NICHT; nach
+  Klick auf "⚙️ Einstellungen" erscheinen sie. Screenshots beider
+  Zustände visuell geprüft. Build + oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 51) — Morgen-/Abendroutine: Schritte direkt auf der Startseite abhaken
 
 Nutzerinnen-Vorgabe (ausführlich, u. a. am Beispiel "Exemestan bestätigen"):
