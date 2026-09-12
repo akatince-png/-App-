@@ -22,6 +22,7 @@ import AtemuebungenView from "./views/AtemuebungenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import Fab from "./ui/Fab";
 import AppSidebar from "./ui/AppSidebar";
+import Belohnungsfenster from "./ui/Belohnungsfenster";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
@@ -289,6 +290,7 @@ export default function AuthenticatedApp() {
 
   return (
     <div className="mp-app-shell">
+      <Belohnungsfenster />
       {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
       <div className="mp-app-main">
         {proband && (

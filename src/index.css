@@ -271,6 +271,18 @@ input[type="time"]::-webkit-date-and-time-value {
       transform: translateY(0);
     }
   }
+
+  /* Belohnungsfenster: sanftes Einblenden von oben statt hartem Erscheinen. */
+  @keyframes belohnungEinblenden {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -10px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
 }
 
 /* ADHS-Coach-Orb: animierte Kreis-Grafik statt statischem Icon als Trigger für

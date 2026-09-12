@@ -21,6 +21,7 @@ export function useProfileData(userId) {
   const [categoryZiele, setCategoryZieleState] = useState({});
   const [erinnerungen, setErinnerungenState] = useState({});
   const [steckbrief, setSteckbriefState] = useState({});
+  const [belohnungPufferMin, setBelohnungPufferMinState] = useState(10);
 
   useEffect(() => {
     if (!userId) return;
@@ -47,6 +48,7 @@ export function useProfileData(userId) {
         setCategoryZieleState(profile.category_ziele || {});
         setErinnerungenState(profile.erinnerungen || {});
         setSteckbriefState(profile.steckbrief || {});
+        setBelohnungPufferMinState(profile.belohnung_puffer_min ?? 10);
 
         // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und
         // muss wissen, in welcher Zeitzone eine eingetragene Uhrzeit
@@ -242,6 +244,30 @@ export function useProfileData(userId) {
     [userId]
   );
 
+  // Admin-konfigurierbarer Puffer fürs Belohnungsfenster (Nutzerin-Vorgabe,
+  // 12.09.) — gleiches Update-mit-Rollback-Muster wie setPersonal.
+  const setBelohnungPufferMin = useCallback(
+    (minuten) => {
+      const wert = Math.max(0, Number(minuten) || 0);
+      let vorher;
+      setBelohnungPufferMinState((prev) => {
+        vorher = prev;
+        return wert;
+      });
+      supabase
+        .from("profiles")
+        .update({ belohnung_puffer_min: wert })
+        .eq("id", userId)
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setBelohnungPufferMinState(vorher);
+          }
+        });
+    },
+    [userId]
+  );
+
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
   const toggleMesswert = useCallback(
@@ -347,5 +373,7 @@ export function useProfileData(userId) {
     setErinnerung,
     steckbrief,
     setSteckbrief,
+    belohnungPufferMin,
+    setBelohnungPufferMin,
   };
 }

@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { activeDoseDays } from "../utils/schedule";
 import { toLocalISODate } from "../utils/dates";
+import { istRechtzeitig } from "../utils/belohnungZeit";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 function rowToHormonDosierung(row) {
   return {
@@ -63,7 +65,7 @@ function toRow(userId, neuesHormon, hauptprotokollId) {
   };
 }
 
-export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
+export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belohnungPufferMin) {
   const [hormone, setHormone] = useState([]);
   const [hormonDosierung, setHormonDosierung] = useState({});
   const [hormonErledigt, setHormonErledigt] = useState({});
@@ -370,9 +372,16 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId) {
         // sichtbar (bis zum nächsten Neuladen) — jetzt Rollback auf den
         // Stand vor dem Tap.
         setHormonErledigt((prev) => ({ ...prev, [k]: !nextVal }));
+        return;
+      }
+      // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): nur beim Abhaken (nicht
+      // beim Rückgängigmachen) und nur, wenn nicht später als der
+      // Admin-Puffer nach der geplanten Uhrzeit erledigt.
+      if (nextVal && istRechtzeitig(uhrzeit, belohnungPufferMin)) {
+        feuereBelohnung({ text: `„${name}" genommen`, icon: "cross", punkte: 1 });
       }
     },
-    [hormonErledigt, userId, hormonDosierung]
+    [hormonErledigt, userId, hormonDosierung, belohnungPufferMin]
   );
 
   const saveHormonFeedback = useCallback(

@@ -205,6 +205,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
     pushTestSenden,
     erinnerungen,
     setErinnerung,
+    belohnungPufferMin,
+    setBelohnungPufferMin,
     spotifyVerbunden,
     spotifyPlaylists,
     spotifyPlaylistHinzufuegen,
@@ -402,6 +404,18 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           <Pill label={t("common.language.en")} selected={lang === "en"} onClick={() => setLang("en")} />
           <Pill label={t("common.language.tr")} selected={lang === "tr"} onClick={() => setLang("tr")} />
         </div>
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.belohnung")}</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 12 }}>{t("mehr.belohnung.intro")}</div>
+        <Label>{t("mehr.belohnung.puffer")}</Label>
+        <TextInput
+          type="number"
+          value={String(belohnungPufferMin ?? 10)}
+          onChange={(v) => setBelohnungPufferMin(v)}
+          placeholder="10"
+        />
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erinnerungen")}</div>

@@ -3,6 +3,8 @@ import { Shell, Card, PrimaryButton } from "./primitives";
 import Timer from "./Timer";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
+import { istRechtzeitig } from "../utils/belohnungZeit";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -27,13 +29,21 @@ function fmtDauer(sekunden) {
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin } = useAppData();
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
   const [musikFehler, setMusikFehler] = useState(null);
   const protokollRef = useRef([]);
   const startZeitRef = useRef(Date.now());
   const gestartetUmRef = useRef(new Date().toISOString());
+  // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): bei Routinen mit echtem
+  // Start/Ende-Verlauf zählt für "rechtzeitig" der START, nicht das Ende —
+  // einmal innerhalb des Puffers nach der geplanten Startzeit (Zeitrahmen
+  // der Routine) begonnen, darf die Erledigung selbst beliebig lange
+  // dauern. Einmalig beim Mounten geprüft, nicht bei jedem Schritt neu.
+  const rechtzeitigGestartetRef = useRef(
+    istRechtzeitig(routineEinstellungen?.[routine]?.startZeit, belohnungPufferMin, new Date(gestartetUmRef.current))
+  );
   // Gesamtzeit der Routine (Nutzerin-Vorgabe 14.08., analog zum
   // Trainings-Gesamtzeit-Timer): läuft unabhängig von den einzelnen
   // Schritt-Countdowns durch, beginnt beim Start der Routine und endet erst
@@ -74,6 +84,9 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       // weiter (gleicher Bug wie beim Workflow-/Trainings-Timer).
       spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
+      if (rechtzeitigGestartetRef.current) {
+        feuereBelohnung({ text: `${ROUTINE_LABEL[routine]} abgeschlossen`, icon: routine === "morgen" ? "sun" : "moon", punkte: 1 });
+      }
       setFertig(true);
     }
   };

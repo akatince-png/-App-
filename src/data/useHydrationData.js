@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 const heute = () => toLocalISODate(new Date());
 
@@ -77,9 +78,16 @@ export function useHydrationData(userId) {
           a.datum.localeCompare(b.datum)
         );
       });
+      // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): Hydration hat keine
+      // geplante Uhrzeit, gegen die "rechtzeitig" geprüft werden könnte —
+      // die Belohnung feiert stattdessen das erstmalige Erreichen des
+      // Tagesziels (nicht jeden einzelnen Schluck-Tap).
+      if (hydrationZielMl > 0 && bisher < hydrationZielMl && neueMenge >= hydrationZielMl) {
+        feuereBelohnung({ text: "Trinkziel für heute erreicht", icon: "droplet", punkte: 1 });
+      }
       return { ok: true };
     },
-    [userId, hydrationEintraege]
+    [userId, hydrationEintraege, hydrationZielMl]
   );
 
   const hydrationZielSetzen = useCallback(

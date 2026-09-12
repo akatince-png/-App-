@@ -55,8 +55,8 @@ export function AppDataProvider({ children }) {
   const hauptprotokollData = useHauptprotokollData(userId);
   const hauptprotokollId = hauptprotokollData.aktivesHauptprotokoll?.id || null;
   const peptideLogs = usePeptideLogs(userId, protocolData.protocolId);
-  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId);
-  const supplementData = useSupplementData(userId, hauptprotokollId);
+  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId, profileData.belohnungPufferMin);
+  const supplementData = useSupplementData(userId, hauptprotokollId, profileData.belohnungPufferMin);
   const drinkData = useDrinkRecipes(userId);
   const mealData = useMealData(userId, hauptprotokollId);
   const gewohnheitenData = useGewohnheitenData(userId, hauptprotokollId);

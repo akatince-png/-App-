@@ -31,6 +31,9 @@ export const mehr = {
     "mehr.testen.intro": "Setzt diesen Account zurück in den Erstanmelde-Zustand — nützlich, um die Willkommens-Seiten und den Einrichtungs-Assistenten wiederholt mit demselben Konto durchzugehen.",
     "mehr.testen.reset": "Onboarding erneut durchlaufen",
     "mehr.testen.reset.error": "Zurücksetzen fehlgeschlagen.",
+    "mehr.belohnung": "Belohnungsfenster",
+    "mehr.belohnung.intro": "Bei rechtzeitigem Start/Erledigen einer Aufgabe erscheint ein kurzes Belohnungsfenster. Dieser Wert legt fest, wie viele Minuten nach der geplanten Uhrzeit noch als „rechtzeitig\" zählen (Admin-Einstellung, gilt für das gerade verwaltete Profil).",
+    "mehr.belohnung.puffer": "Puffer in Minuten",
   },
   en: {
     "mehr.lexikon": "📚 Glossary",
@@ -64,6 +67,9 @@ export const mehr = {
     "mehr.testen.intro": "Resets this account to its first-signup state — useful for going through the welcome pages and setup assistant again with the same account.",
     "mehr.testen.reset": "Redo onboarding",
     "mehr.testen.reset.error": "Reset failed.",
+    "mehr.belohnung": "Reward popup",
+    "mehr.belohnung.intro": "A brief reward popup appears when a task is started/completed on time. This value sets how many minutes after the planned time still count as \"on time\" (admin setting, applies to the profile currently being managed).",
+    "mehr.belohnung.puffer": "Buffer in minutes",
   },
   tr: {
     "mehr.lexikon": "📚 Sözlük",
@@ -97,5 +103,8 @@ export const mehr = {
     "mehr.testen.intro": "Bu hesabı ilk kaydolma durumuna sıfırlar — aynı hesapla hoş geldiniz sayfalarını ve kurulum yardımcısını tekrar yapmanız için faydalıdır.",
     "mehr.testen.reset": "Onboarding'i yeniden yap",
     "mehr.testen.reset.error": "Sıfırla başarısız oldu.",
+    "mehr.belohnung": "Ödül penceresi",
+    "mehr.belohnung.intro": "Bir görev zamanında başlatıldığında/tamamlandığında kısa bir ödül penceresi görünür. Bu değer, planlanan saatten sonra kaç dakikanın hâlâ \"zamanında\" sayılacağını belirler (yönetici ayarı, o an yönetilen profil için geçerlidir).",
+    "mehr.belohnung.puffer": "Dakika cinsinden tampon süre",
   },
 };

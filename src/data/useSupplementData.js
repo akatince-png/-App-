@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
+import { istRechtzeitig } from "../utils/belohnungZeit";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 // Supplemente folgen seit Migration 0029 demselben Dosierungs-/Intervall-
 // modell wie Medikamente und Peptide (Wochentage, konkrete Uhrzeiten,
@@ -40,7 +42,7 @@ function supplementToRow(neu) {
   };
 }
 
-export function useSupplementData(userId, hauptprotokollId) {
+export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) {
   const [supplemente, setSupplemente] = useState([]);
   const [supplementErledigt, setSupplementErledigt] = useState({});
   // Siehe useGewohnheitenData.js: verhindert, dass schnelles Doppeltippen
@@ -199,9 +201,17 @@ export function useSupplementData(userId, hauptprotokollId) {
         pendingErledigtRef.current[k] = aktuellerWert;
         setSupplementErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
         setSupplementErledigtAt((prev) => ({ ...prev, [k]: vorherigeErledigtAt }));
+        return;
+      }
+      // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): nur beim Abhaken, nicht
+      // beim Rückgängigmachen, und nur innerhalb des Admin-Puffers nach der
+      // geplanten Uhrzeit.
+      if (nextVal && istRechtzeitig(zeit, belohnungPufferMin)) {
+        const supplementName = supplemente.find((s) => s.id === id)?.name || "Supplement";
+        feuereBelohnung({ text: `„${supplementName}" genommen`, icon: "capsule", punkte: 1 });
       }
     },
-    [supplementErledigt, supplementErledigtAt, userId]
+    [supplementErledigt, supplementErledigtAt, userId, belohnungPufferMin, supplemente]
   );
 
   const saveSupplementFeedback = useCallback(

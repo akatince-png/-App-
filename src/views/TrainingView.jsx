@@ -29,6 +29,8 @@ import {
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+import { istRechtzeitig } from "../utils/belohnungZeit";
+import { feuereBelohnung } from "../utils/belohnungBus";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe (siehe
 // KATEGORIE_META in dayItems.js) — Training ist Rot, passend zu den bunten
@@ -518,8 +520,17 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     spotifyPausieren,
     spotifyFortsetzen,
     spotifyLautstaerke,
+    belohnungPufferMin,
   } = useAppData();
   const [eintrag, setEintrag] = useState(leererEintrag());
+  // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): bei Training zählt für
+  // "rechtzeitig" der Moment des Live-Starts gegen die geplante Uhrzeit,
+  // nicht das Ende — einmal rechtzeitig gestartet, ist die tatsächliche
+  // Trainingsdauer irrelevant. Nur "Jetzt live starten" ist ein echter
+  // Start-Moment, "Nur eintragen" protokolliert nur nachträglich, ohne
+  // Belohnung. Als Map (session-id -> boolean) statt einzelnem Ref, weil
+  // theoretisch mehrere Sessions nacheinander gestartet werden können.
+  const rechtzeitigGestartetRef = useRef({});
   // Ansehen (reine Tabelle) und Erstellen (Formular + KI-Chat) getrennt
   // statt eines gemeinsamen "Wochenplan bearbeiten"-Umschalters (14.08.,
   // Nutzerin-Vorgabe): vorher verdeckte das Erstell-Formular immer zuerst
@@ -578,7 +589,13 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     return (
       <LiveWorkout
         session={liveSession}
-        onFertig={(id, felder) => trainingAbschliessen(id, felder)}
+        onFertig={(id, felder) => {
+          trainingAbschliessen(id, felder);
+          if (rechtzeitigGestartetRef.current[id]) {
+            feuereBelohnung({ text: "Training abgeschlossen", icon: "dumbbell", punkte: 1 });
+          }
+          delete rechtzeitigGestartetRef.current[id];
+        }}
         onSchliessen={() => setLiveSessionId(null)}
       />
     );
@@ -633,8 +650,10 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       detail: payload.uhrzeit ? `Uhrzeit: ${payload.uhrzeit}` : "",
     });
     setEintrag(leererEintrag());
-    if (!erledigt && result.eintrag) setLiveSessionId(result.eintrag.id);
-    else if (erledigt && result.eintrag) setFeedbackFuerId(result.eintrag.id);
+    if (!erledigt && result.eintrag) {
+      rechtzeitigGestartetRef.current[result.eintrag.id] = istRechtzeitig(payload.uhrzeit, belohnungPufferMin);
+      setLiveSessionId(result.eintrag.id);
+    } else if (erledigt && result.eintrag) setFeedbackFuerId(result.eintrag.id);
   };
 
   const handleWochenplanHinzufuegen = async (einheit) => {
@@ -732,6 +751,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       return;
     }
     setTrainingsplaeneVerwaltungOffen(false);
+    rechtzeitigGestartetRef.current[result.eintrag.id] = istRechtzeitig(tpl.uhrzeit, belohnungPufferMin);
     setLiveSessionId(result.eintrag.id);
   };
 
