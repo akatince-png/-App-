@@ -1,5 +1,52 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 58) — "Aktiv"-Bug: verbleibende Ursachen bei Training/Tageslicht
+
+Nutzerinnen-Vorgabe (mit 3 Screenshots, direkter Folge-Bericht auf Teil 57):
+"beim Training alles rausgelöscht ... ist sowohl Training als auch
+Tageslicht noch vorhanden ... hab auch Tageslicht auf null gesetzt, hab
+aber keine Möglichkeit, das da irgendwie komplett zurückzusetzen ... hab
+[über die Mehrfachauswahl] alle gelöscht in allen Bereichen und kann
+trotzdem Training und Tageslicht nicht dort entfernen." Teil 57 hatte den
+Bug nur teilweise behoben — zwei konkrete Lücken blieben:
+
+1. **Training**: `aktiv: trainingEintraege.length > 0 || trainingWochenplan.length > 0`
+   zählte JEDEN Eintrag, nicht nur abgeschlossene. Die Mehrfachauswahl in
+   `ProtokollLogView.jsx` (Teil 56) filterte aber auf
+   `trainingEintraege.filter(e => e.erledigt)` — ein über "Jetzt live
+   starten" oder einen Vorlagen-Direktstart angelegter, aber nie
+   abgeschlossener Eintrag (`erledigt: false`) blieb dadurch komplett
+   unsichtbar und unlöschbar (z. B. nach Abbruch über "Schließen" in der
+   Live-Trainings-Ansicht, die den Datenbank-Eintrag NICHT löscht,
+   sondern nur die lokale Ansicht schließt). Ein einziger solcher
+   Karteileichen-Eintrag reichte, um die Kachel für immer "aktiv" zu
+   halten.
+   - **Fix**: `ProtokollLogView.jsx` zeigt im Abschnitt "🏋️ Training"
+     jetzt ALLE Einträge, nicht mehr nur erledigte — unfertige Einträge
+     tragen zur Unterscheidung ein kleines "nicht abgeschlossen"-Label.
+     Sobald sie (einzeln oder per Mehrfachauswahl) gelöscht werden, geht
+     `trainingEintraege.length` auf 0 und die Kachel wird inaktiv — ohne
+     dass die `aktiv`-Bedingung selbst angefasst werden musste.
+2. **Hydration/Tageslicht**: Die in Teil 57 gebaute
+   "Ziel zurücksetzen"-Funktion löscht die Einstellungs-Zeile komplett
+   (Zustand "nie eingerichtet"). Die Nutzerin hat aber stattdessen das
+   normale Ziel-Feld auf **0** gesetzt und gespeichert (naheliegender
+   erster Versuch) — das läuft über den bestehenden
+   `hydrationZielSetzen()`/`tageslichtZielSetzen()`-Pfad, der weiterhin
+   eine Zeile mit `ziel_ml: 0` bzw. `ziel_minuten: 0` anlegt. Die
+   `aktiv`-Bedingung (`zielMl !== 2500` / `zielMinuten !== 30`) erkannte
+   0 damit fälschlich weiterhin als "aktiv" (0 ist ja ungleich 2500).
+   - **Fix**: `HomeView.jsx` — beide Bedingungen behandeln jetzt zusätzlich
+     0 als "nicht konfiguriert": `zielMl > 0 && zielMl !== 2500` bzw.
+     `zielMinuten > 0 && zielMinuten !== 30`. Deckt damit sowohl den
+     "Ziel zurücksetzen"-Weg als auch den "0 eintippen"-Weg ab.
+- **Getestet**: Preview-Harness (Playwright) mit `ProtokollLogView.jsx` und
+  zwei gemockten Trainings-Einträgen (einer erledigt, einer nicht) —
+  bestätigt, dass beide angezeigt werden, der unfertige das
+  "nicht abgeschlossen"-Label trägt, beide per Mehrfachauswahl markierbar
+  sind und nach dem Löschen die Liste tatsächlich leer ist. Build + oxlint
+  (weiterhin 18 Warnungen, unverändert).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 57) — "Aktiv"-Bug behoben + kompletter Reset-Knopf
 
 Nutzerinnen-Vorgabe: "obwohl ich alle Bereiche leer mache ... stehen im
