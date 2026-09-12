@@ -1,5 +1,69 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 49) — Cannabis als Medikamente-Kategorie
+
+Nutzerinnen-Vorgabe: Cannabis als eigene Kategorie unter Medikamente, mit
+THC-/CBD-Prozentangabe, Menge/Rhythmus/Uhrzeiten "wie bei jeder anderen
+Medigabe auch", aber mit den passenden Konsumform-Details — Blüte zum
+Rauchen (inkl. Tabak-Beimischung, Filter-Typ), Blüte zum Verdampfen (inkl.
+Temperatur), Öl in Tropfenform (Anzahl Tropfen) — und "alle möglichen und
+in Deutschland legalen Varianten".
+
+- **Neue Migration `0082_cannabis_felder.sql`**: 6 neue, optionale Spalten
+  auf `hormones` (`cannabis_thc_prozent`, `cannabis_cbd_prozent`,
+  `cannabis_tabak_menge`, `cannabis_filter`, `cannabis_temperatur_grad`,
+  `cannabis_tropfen`) — **muss von der Nutzerin selbst im Supabase-
+  Dashboard ausgeführt werden**. Gleiches Muster wie die bereits
+  bestehenden Peptid-spezifischen Felder `bac_wasser_ml`/`spruehstoesse`
+  auf derselben Tabelle (Migration 0077): eine gemeinsame Tabelle für
+  Hormone/Medikamente/Peptide/Cannabis statt einer eigenen Tabelle pro
+  Kategorie, mit optionalen kategoriespezifischen Spalten.
+- **`constants.js`**: `MEDIKAMENTE_KATEGORIEN` um "Cannabis" erweitert;
+  `EINNAHMEARTEN` um "Blüte (Rauchen)", "Blüte (Verdampfen)", "Esswaren
+  (Edibles)" erweitert — "Kapsel" und "Tropfen" gab's als Einnahmeart
+  schon (deckt Cannabis-Kapseln/-Öl mit ab). Neu:
+  `CANNABIS_FILTER_OPTIONEN` (Aktivkohlefilter/Papierfilter/Kein Filter).
+- **Menge, Intervall und Uhrzeit(en) laufen bewusst über die schon
+  vorhandenen generischen Dosierungs-Felder** — keine neue Spalte dafür,
+  genau wie bei jedem anderen Medikament (die Nutzerin verglich das
+  explizit: "wie bei jeder anderen Medigabe auch"). Menge-Placeholder
+  wechselt bei Kategorie "Cannabis" von "z. B. 100 mg" auf "z. B. 0,3 g".
+- **`ui/CannabisFelder.jsx`** (neu): THC-%/CBD-% immer sichtbar (sobald
+  Kategorie "Cannabis"), plus konditionale Detailfelder je gewählter
+  Einnahmeart:
+  - "Blüte (Rauchen)" → Tabak-Beimischung (Pills "Ohne Tabak"/"Mit
+    Tabak", bei "Mit Tabak" zusätzliches Mengenfeld) + Filter-Typ-Pills.
+  - "Blüte (Verdampfen)" → Temperatur (°C).
+  - "Tropfen" → Anzahl Tropfen pro Einnahme.
+  - "Kapsel"/"Esswaren (Edibles)" → kein Zusatzfeld, Hinweistext auf das
+    generische Menge-Feld (z. B. mg).
+  Werte bleiben beim Wechseln der Einnahmeart erhalten (nur ausgeblendet,
+  nicht gelöscht) — zurückwechseln verliert nichts.
+- **`useHormoneData.js`**: die 6 neuen Felder in `rowToHormonDosierung`,
+  `DOSE_FELD_TO_COLUMN`, `NUMERIC_FELDER`, `toRow()` und im lokalen
+  State-Aufbau nach dem Anlegen ergänzt — anders als bei
+  bacWasser/spruehstoesse (die bisher nur nachträglich über die Dosis-
+  Bearbeitung gesetzt werden) sind die Cannabis-Felder von Anfang an auch
+  im Anlege-Formular ausfüllbar.
+- **`MedikamenteView.jsx`**: `CannabisFelder` sowohl im "Neues Medikament
+  hinzufügen"-Formular als auch in der Protokoll-Liste (kompakte
+  Zusammenfassungszeile: `THC 22% · CBD 0,8% · Tabak 0,3 g ·
+  Aktivkohlefilter` o. ä.) eingebunden; `DOSIS_FELDER` um die neuen Felder
+  erweitert, damit Änderungen über "Dosis bearbeiten" tatsächlich
+  gespeichert werden; beim Wechsel der Kategorie auf "Cannabis" wird die
+  Einnahmeart-Voreinstellung automatisch von "Injektion" auf "Blüte
+  (Rauchen)" umgestellt statt einer unsinnigen Kombination; KiChat-
+  Systemprompt kennt die neuen Cannabis-Einnahmearten (THC/CBD/Konsum-
+  Details trägt die Nutzerin danach manuell nach, nicht über den Chat).
+- **`ui/DosisBearbeitenPanel.jsx`**: `CannabisFelder` auch im
+  Bearbeiten-Panel bestehender Einträge eingebunden (gleicher
+  Menge-Placeholder-Wechsel).
+- **Getestet**: Preview-Harness (Playwright) — Umschalten zwischen allen
+  vier Konsumformen, Tabak-Toggle mit Mengenfeld, Filter-Auswahl,
+  Temperatur- und Tropfenzahl-Eingabe, THC-/CBD-Werte bleiben beim
+  Formwechsel erhalten. Build + oxlint (weiterhin 18 Warnungen,
+  unverändert zur Baseline).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 48) — Belohnungsfenster: auch Mahlzeiten
 
 Nutzerinnen-Vorgabe: "Ja, Du kannst gerne Mahlzeiten noch verknüpfen." —
