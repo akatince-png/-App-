@@ -11,6 +11,7 @@ import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate, verspaetungText } from "../utils/dates";
 import RoutineAblauf from "../ui/RoutineAblauf";
+import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import WorkflowTimer from "../ui/WorkflowTimer";
@@ -164,6 +165,8 @@ export default function GewohnheitenView({ onHome }) {
     workflowPlanHinzufuegen,
     quests,
     questFortschrittSpeichern,
+    spotifyAnlaesse,
+    spotifyPlaylists,
   } = useAppData();
 
   const [neu, setNeu] = useState(LEERE_GEWOHNHEIT);
@@ -314,58 +317,76 @@ export default function GewohnheitenView({ onHome }) {
       />
 
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌅🌙 Morgen- & Abendroutine</div>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-          Lass dich Schritt für Schritt durch deinen Morgen/Abend begleiten.
-        </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-          <div style={{ flex: 1 }}>
-            <PrimaryButton onClick={() => setAblaufRoutine("morgen")}>▶️ Morgenroutine</PrimaryButton>
-          </div>
-          <div style={{ flex: 1 }}>
-            <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine</PrimaryButton>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSchritteBearbeiten((p) => ({ ...p, morgen: !p.morgen || !p.abend, abend: !p.morgen || !p.abend }))}
-            style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "#fff", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
-          >
-            ⚙️
-          </button>
-        </div>
-        {(schritteBearbeiten.morgen || schritteBearbeiten.abend) && (
-          <>
-            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 10 }}>🌅 Morgenroutine-Schritte</div>
-            <RoutineSchritteEditor
-              routine="morgen"
-              schritte={routineSchritte.filter((s) => s.routine === "morgen")}
-              onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
-              onEntfernen={routineSchrittEntfernen}
-              onVerschieben={routineSchrittVerschieben}
-              mahlzeiten={mahlzeiten}
-              supplemente={supplemente}
-              hormone={hormone}
-              trainingWochenplan={trainingWochenplan}
-              gewohnheiten={gewohnheiten}
-            />
-            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
-            <RoutineSchritteEditor
-              routine="abend"
-              schritte={routineSchritte.filter((s) => s.routine === "abend")}
-              onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
-              onEntfernen={routineSchrittEntfernen}
-              onVerschieben={routineSchrittVerschieben}
-              mahlzeiten={mahlzeiten}
-              supplemente={supplemente}
-              hormone={hormone}
-              trainingWochenplan={trainingWochenplan}
-              gewohnheiten={gewohnheiten}
-            />
-          </>
-        )}
-        <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
-        <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌅 Morgenroutine</div>
+        {(() => {
+          const name = spotifyPlaylists.find((p) => p.id === spotifyAnlaesse.morgenroutine?.playlistId)?.name;
+          return name && <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>🎵 Playlist: {name}</div>;
+        })()}
+        <PrimaryButton onClick={() => setAblaufRoutine("morgen")}>▶️ Morgenroutine starten</PrimaryButton>
+        {/* Nutzerin-Vorgabe (12.09.): direkt zeigen, was heute ansteht, mit
+            Bestätigungspunkt je Schritt — kein Umweg über eine Bearbeiten-
+            Maske. Dieselbe Checkliste wie auf der Startseite. */}
+        <RoutineHeuteChecklist routine="morgen" />
       </Card>
+
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌙 Abendroutine</div>
+        {(() => {
+          const name = spotifyPlaylists.find((p) => p.id === spotifyAnlaesse.abendroutine?.playlistId)?.name;
+          return name && <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>🎵 Playlist: {name}</div>;
+        })()}
+        <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine starten</PrimaryButton>
+        <RoutineHeuteChecklist routine="abend" />
+      </Card>
+
+      <button
+        type="button"
+        onClick={() => setSchritteBearbeiten((p) => ({ ...p, morgen: !p.morgen || !p.abend, abend: !p.morgen || !p.abend }))}
+        style={{
+          marginBottom: 16,
+          border: "none",
+          background: "transparent",
+          color: accentDark,
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        {schritteBearbeiten.morgen || schritteBearbeiten.abend ? "Einstellungen ausblenden" : "⚙️ Einstellungen (Schritte, Playlist)"}
+      </button>
+      {(schritteBearbeiten.morgen || schritteBearbeiten.abend) && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700 }}>🌅 Morgenroutine-Schritte</div>
+          <RoutineSchritteEditor
+            routine="morgen"
+            schritte={routineSchritte.filter((s) => s.routine === "morgen")}
+            onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
+            onEntfernen={routineSchrittEntfernen}
+            onVerschieben={routineSchrittVerschieben}
+            mahlzeiten={mahlzeiten}
+            supplemente={supplemente}
+            hormone={hormone}
+            trainingWochenplan={trainingWochenplan}
+            gewohnheiten={gewohnheiten}
+          />
+          <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
+          <RoutineSchritteEditor
+            routine="abend"
+            schritte={routineSchritte.filter((s) => s.routine === "abend")}
+            onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
+            onEntfernen={routineSchrittEntfernen}
+            onVerschieben={routineSchrittVerschieben}
+            mahlzeiten={mahlzeiten}
+            supplemente={supplemente}
+            hormone={hormone}
+            trainingWochenplan={trainingWochenplan}
+            gewohnheiten={gewohnheiten}
+          />
+          <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
+          <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
+        </Card>
+      )}
 
       <div className="mp-routinen-oben-grid">
         <Card style={{ marginBottom: 16 }}>
