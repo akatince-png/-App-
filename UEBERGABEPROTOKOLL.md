@@ -1,5 +1,21 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 54) — Startseite: direkter Hydration-Knopf
+
+Nutzerinnen-Vorgabe: "einen Button hinzufügen mit einem großen Tropfen,
+der immer direkt zur Hydration führt ... damit ich immer, wenn ich was
+trinke, direkt auf den Knopf drücken kann."
+
+- **`HomeView.jsx`**: neuer, immer sichtbarer Button ganz oben (direkt
+  unter der Begrüßung, vor allem anderen Inhalt, unabhängig vom
+  Notfallmodus) — großes rundes Tropfen-Icon (`Icon name="droplet"`,
+  hydration-Farbe aus `KATEGORIE_META`) + "Hydration eintragen" + kurzer
+  Hinweistext. Ein Tap führt direkt zu `onOpenView("hydration")`, ohne
+  erst über Direktzugriff oder Tagesplan suchen zu müssen.
+- **Getestet**: Preview-Harness (Playwright) — Klick löst zuverlässig
+  `onOpenView("hydration")` aus, Icon/Farben/Layout per Screenshot
+  geprüft. Build + oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 53) — Archiv: Mehrfachauswahl zum Löschen
 
 Nutzerinnen-Vorgabe: "ganze Bereiche der Protokolle auf einmal löschen ...
