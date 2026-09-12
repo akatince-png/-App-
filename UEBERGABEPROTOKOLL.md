@@ -1,5 +1,34 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 42) — Abzeichen-Übersicht mit Beschreibungen, Einstieg unter "Mehr"
+
+Nachtrag zum Erfolge-Feature aus Teil 39/41: "diese ganzen Orden
+müssen auch irgendwo einsehbar sein, unter Mehr, und beim Draufklicken
+soll eine Beschreibung kommen, was man dafür erfüllen muss."
+
+- **Neue Sektion "Alle Abzeichen"** in `ErfolgeTab.jsx`, unter den
+  bereits verdienten — zeigt den kompletten Katalog aller ~104
+  möglichen Abzeichen (13 Kategorien × 7 Streak-Stufen + globale
+  Streak-/Punkte-Stufen als eigene "Gesamt"-Gruppe), nicht nur die
+  schon erreichten. Freigeschaltete Abzeichen farbig (Kategorie-Farbe
+  bzw. Marken-Akzent für "Gesamt"), gesperrte grau/abgeblendet.
+- **Klick auf ein Abzeichen** zeigt darunter Name, eine Beschreibung
+  in einem Satz ("7 Tage in Folge in der Kategorie Training erledigt")
+  sowie je nachdem das Erreichungsdatum oder den aktuellen Fortschritt
+  zur Schwelle ("aktuell 4 von 7").
+- **Neuer Einstiegspunkt "🏆 Erfolge & Abzeichen"** direkt unter
+  "Mehr" (`MehrTab.jsx`) — bisher nur über den Archiv-Hub-Reiter
+  "Erfolge" erreichbar, jetzt zusätzlich prominent verlinkt. Nutzt
+  denselben View-als-Reiter-Trick wie an anderer Stelle in der App
+  ("erfolge" steht schon seit Teil 39 in `ARCHIV_VIEW_IDS`).
+
+Badge-Galerie per Playwright gegen Mockdaten getestet (Darstellung
+gesperrt/freigeschaltet, Klick-Interaktion, Beschreibungs-Panel).
+`npm run build` + `npx oxlint` sauber (18 vorbestehende Warnungen,
+keine neuen).
+
+---
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 41) — Einzeltag-Ausnahmen aus Wochen-/Monatsübersicht
 
 Dritter Punkt aus derselben Feedback-Runde wie Teil 40 (nach visueller
