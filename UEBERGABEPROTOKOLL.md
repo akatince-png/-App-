@@ -1,5 +1,58 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 57) — "Aktiv"-Bug behoben + kompletter Reset-Knopf
+
+Nutzerinnen-Vorgabe: "obwohl ich alle Bereiche leer mache ... stehen im
+aktiven Bereich immer noch drei Sachen ... Morgenroutine kriege ich nicht
+leer ... Ich muss doch alles auf Null setzen können und neue Protokolle
+starten können." Auf Rückfrage gewünscht: **beides** — den Bug beheben
+UND einen echten "Alles zurücksetzen"-Knopf bauen.
+
+**Ursache des Bugs**: Die "aktiv"-Markierung der Direktzugriff-Kacheln auf
+der Startseite basiert je Kategorie auf unterschiedlichen Bedingungen
+(`utils/dayItems.js`/`HomeView.jsx`). Bei Hydration/Tageslicht lautete sie
+u. a. `zielMl !== 2500` bzw. `zielMinuten !== 30` — einmal geändert, gab
+es aber nirgends einen Weg, das Ziel wieder auf "gar nicht konfiguriert"
+zurückzustellen (nur neue Werte setzen, nie die Einstellungs-Zeile
+löschen) — die Kachel blieb dadurch für immer "aktiv", egal wie viele
+Trinkmengen-/Tageslicht-Einträge gelöscht wurden. Morgenroutine dagegen
+war technisch schon zurücksetzbar (Schritte einzeln entfernen), saß aber
+seit Teil 52 hinter dem neuen "⚙️ Einstellungen"-Klapp-Button und war
+dadurch schwerer zu finden.
+
+- **`useHydrationData.js`** / **`useTageslichtData.js`**: neue Funktionen
+  `hydrationZielZuruecksetzen()` / `tageslichtZielZuruecksetzen()` —
+  löschen die Einstellungs-Zeile komplett statt sie auf einen Wert zu
+  setzen, Zustand entspricht danach wieder "nie eingerichtet" (Standard
+  2500 ml / 30 Min.).
+- **`HydrationView.jsx`** / **`TageslichtView.jsx`**: "Ziel zurücksetzen"-
+  Link unter dem Tagesziel-Feld, nur sichtbar, wenn vom Standard
+  abweichend, mit Sicherheitsabfrage.
+- **`data/useKompletterReset.js`** (neu): `allesZuruecksetzen()` — leert
+  nacheinander (Kind- vor Eltern-Tabellen, gegen Fremdschlüssel-Races)
+  über 40 Tabellen: alle Medikamente/Hormone/Peptide/Protokolle,
+  Supplemente, Ernährung, Training, Routinen (inkl. der aus Teil 51/52),
+  Hydration, Tageslicht, Schlaf, Check-ins, Blutwerte, Workflow,
+  Zeitblöcke, Getränke-Rezepte, Änderungsprotokoll, Baustein-Versionen,
+  Errungenschaften usw. — plus `onboarding_complete: false`, damit
+  "neue Protokolle starten" tatsächlich wieder beim Einrichtungs-
+  Assistenten landet. Bewusst NICHT gelöscht: das Konto/Profil selbst,
+  Team-Daten (gehören nicht nur ihr), Spotify-Verbindung/Playlists,
+  Push-Geräte-Registrierung, Coach-Wissen (globale Wissensbasis),
+  Übungsbilder-/Quest-Katalog, Nachrichten an den Coach.
+- **`plan/MehrTab.jsx`**: neue Karte "⚠️ Gefahrenzone" ganz unten, rot
+  umrandet. Bewusst KEIN einfaches `window.confirm()` — die Nutzerin muss
+  zusätzlich exakt "ALLES LÖSCHEN" eintippen (Groß-/Kleinschreibung und
+  Leerzeichen drumrum egal), sonst bleibt der Knopf deaktiviert. Nach
+  Erfolg automatischer Reload wie beim bestehenden "Zum Testen"-Reset.
+- **Getestet**: Preview-Harness (Playwright) — Bestätigungs-Feld: Button
+  bei leerem/falschem Text deaktiviert, bei korrektem Text (auch
+  kleingeschrieben, mit Leerzeichen) aktiviert, nach Löschen des Textes
+  wieder deaktiviert. Tabellen-Reihenfolge/-Liste manuell gegen die
+  tatsächliche Tabellennutzung im gesamten `src/data/`-Ordner
+  gegengeprüft (jede Tabelle hat bestätigt eine `user_id`-Spalte). Build +
+  oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 56) — Mehrfachauswahl auch in "Akas fertige Protokolle"
 
 Nutzerinnen-Vorgabe (mit Screenshot): "Obwohl ich das Archiv komplett
