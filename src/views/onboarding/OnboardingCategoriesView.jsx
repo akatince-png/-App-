@@ -774,30 +774,51 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     switch (step.key) {
       case "gewohnheiten": {
         const g = await AIService.gewohnheitAusChat({ verlauf, coachName });
-        setGName(g.name || "");
-        setGMenge(g.menge || "");
-        if (g.uhrzeit) {
-          setGUrzeitModus("fest");
-          setGUhrzeit(g.uhrzeit);
-        } else if (g.urzeitVon || g.urzeitBis) {
-          setGUrzeitModus("fenster");
-          setGUrzeitVon(g.urzeitVon || "");
-          setGUrzeitBis(g.urzeitBis || "");
-        }
-        setGZielTage(g.zielTage ? String(g.zielTage) : "");
+        if (!g.name?.trim()) throw new Error(t("onboarding.error.name"));
+        const result = await gewohnheitHinzufuegen({
+          name: g.name,
+          icon: "🌱",
+          menge: g.menge || "",
+          uhrzeit: g.uhrzeit || "",
+          urzeitVon: !g.uhrzeit ? g.urzeitVon || "" : "",
+          urzeitBis: !g.uhrzeit ? g.urzeitBis || "" : "",
+          zielTage: g.zielTage ? Number(g.zielTage) : null,
+        });
+        if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        setHinzugefuegt((prev) => [...prev, g.name.trim()]);
         return g;
       }
       case "schlaf": {
+        // Schlaf hat (anders als die Listen-Kategorien oben) keinen eigenen
+        // Hinzufügen-Knopf, sondern wird nur über "Speichern & weiter"
+        // persistiert (siehe speichernUndWeiter) — deshalb hier zusätzlich
+        // zum lokalen Vorbefüllen (für die Anzeige/ein evtl. späteres
+        // "Weiter") direkt per setCategoryZiel gespeichert, statt auf den
+        // Klick zu warten.
         const s = await AIService.schlafzielAusChat({ verlauf, coachName });
         setSchlafIntervallTyp("fixed");
         if (s.bettzeit) setBlockFeld(0, "bettzeit", s.bettzeit);
         if (s.aufwachzeit) setBlockFeld(0, "aufwachzeit", s.aufwachzeit);
         if (s.istZustand) setIstZustandFeld("aktuell", s.istZustand);
+        if (s.bettzeit || s.aufwachzeit) {
+          const neueBloecke = schlafBloecke.map((b, i) =>
+            i === 0 ? { ...b, bettzeit: s.bettzeit || b.bettzeit, aufwachzeit: s.aufwachzeit || b.aufwachzeit } : b
+          );
+          setCategoryZiel("schlaf", {
+            bloecke: neueBloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
+            modus: ziel.modus,
+            wochen: ziel.wochen,
+            istZustand: s.istZustand ? { ...istZustand, aktuell: s.istZustand } : istZustand,
+          });
+        }
         return s;
       }
       case "hydration": {
         const h = await AIService.hydrationAusChat({ verlauf, coachName });
-        if (h.zielMl) setHydrationMl(String(h.zielMl));
+        if (h.zielMl) {
+          setHydrationMl(String(h.zielMl));
+          await hydrationZielSetzen(Math.max(0, Number(h.zielMl) || 0));
+        }
         if (h.istZustandMenge) setIstZustandFeld("menge", h.istZustandMenge);
         if (h.istZustandGetraenke) setIstZustandFeld("getraenke", h.istZustandGetraenke);
         return h;
@@ -805,21 +826,23 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       case "tageslicht": {
         const tl = await AIService.tageslichtAusChat({ verlauf, coachName });
         setTageslichtMinuten(String(tl.zielMinuten));
+        if (tl.zielMinuten) await tageslichtZielSetzen(Math.max(0, Number(tl.zielMinuten) || 0));
         return tl;
       }
       case "ernaehrung": {
         const m = await AIService.mahlzeitplanAusChat({ verlauf, coachName });
-        setMahlName(m.name || "");
-        setMahlZutaten(m.zutaten?.length ? m.zutaten : [neueZutat()]);
-        setMahlUhrzeit(m.uhrzeit || "08:00");
+        if (!m.name?.trim()) throw new Error(t("onboarding.error.name"));
+        const zutaten = m.zutaten?.length ? m.zutaten : [neueZutat()];
+        const uhrzeit = m.uhrzeit || "08:00";
         const tage = m.wochentage?.length ? m.wochentage : [...WOCHENTAGE];
-        if (tage.length < WOCHENTAGE.length) {
-          setMahlIntervallTyp("weekdays");
-          setMahlTage(tage);
-        } else {
-          setMahlIntervallTyp("fixed");
-          setMahlTage([...WOCHENTAGE]);
-        }
+        const result = await mahlzeitHinzufuegen({ name: m.name, tageszeiten: [], hinweis: "", zutaten });
+        if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        const zuweisungen = await Promise.all(
+          tage.map((tag) => wochenplanMahlzeitSetzen(tag, { mealId: result.meal.id, tageszeit: null, uhrzeit }))
+        );
+        const fehlgeschlagen = zuweisungen.find((z) => !z?.ok);
+        if (fehlgeschlagen) throw new Error(fehlgeschlagen.error || t("onboarding.error.speichern"));
+        setMahlzeitenListe((prev) => [...prev, { name: m.name.trim(), tage, uhrzeit, zutaten: zutaten.filter((z) => z.name.trim()) }]);
         if (m.istZustand) setIstZustandFeld("aktuell", m.istZustand);
         return m;
       }
@@ -900,6 +923,16 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       text = `${anzahl} Einheit${anzahl === 1 ? "" : "en"} in den Wochenplan übernommen.`;
     } else if (step.key === "peptide") {
       text = `${ergebnis?.name || ""} ${ergebnis?.menge ? `(${ergebnis.menge})` : ""} eingerichtet.`;
+    } else if (step.key === "gewohnheiten") {
+      text = `"${ergebnis?.name || ""}" wurde direkt gespeichert.`;
+    } else if (step.key === "ernaehrung") {
+      text = `"${ergebnis?.name || ""}" wurde direkt in den Wochenplan übernommen.`;
+    } else if (step.key === "schlaf") {
+      text = "Schlafzeiten wurden direkt gespeichert.";
+    } else if (step.key === "hydration") {
+      text = "Trinkziel wurde direkt gespeichert.";
+    } else if (step.key === "tageslicht") {
+      text = "Tageslicht-Ziel wurde direkt gespeichert.";
     }
     return <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>{text}</div>;
   };
