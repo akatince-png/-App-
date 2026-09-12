@@ -176,8 +176,11 @@ export const EINNAHMEARTEN = ["Injektion", "Tablette (oral)", "Kapsel", "Pulver"
 // "Peptid" seit 13.08. mit dabei (Nutzerinnen-Vorgabe: Peptide als eigener
 // Reiter neben Medikamente sei nicht sinnvoll, gehört als Kategorie dort
 // rein) — siehe Migration 0042, die bestehende Peptid-Einträge nach
-// hormones/hormone_logs kopiert.
-export const MEDIKAMENTE_KATEGORIEN = ["Hormone", "Peptid", "Blutdruck", "Diabetes", "Cholesterin", "Schmerzmittel", "Sonstige"];
+// hormones/hormone_logs kopiert. "ADHS-Medikation" seit 12.09. als eigene,
+// erste Kategorie ergänzt (Nutzerinnen-Vorgabe): Ritalin/Elvanse/
+// Antidepressiva u. Ä. sind der eigentliche Kernzweck von "Medikamente" bei
+// einer ADHS-App — landeten vorher unspezifisch unter "Sonstige".
+export const MEDIKAMENTE_KATEGORIEN = ["ADHS-Medikation", "Hormone", "Peptid", "Blutdruck", "Diabetes", "Cholesterin", "Schmerzmittel", "Sonstige"];
 
 // Feste Intervall-Presets: mode ist immer "fixed", days die Anzahl Tage zwischen zwei Dosen.
 export const INTERVALL_OPTIONEN = [
