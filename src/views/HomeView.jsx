@@ -100,7 +100,12 @@ function TagesfortschrittBalken({ widgets }) {
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: MAX_HOEHE }}>
         {widgets.map((w) => {
           const hoehe = w.aktiv ? Math.max(4, Math.round(Math.min(1, w.dailyCount / (w.dailyTotal || 1)) * MAX_HOEHE)) : 6;
-          const farbe = w.aktiv ? w.farbe : "#E2E2DC";
+          // Bug-Fix: w.farbe ist NUR bei Morgen-/Abendroutine gesetzt (siehe
+          // ROUTINE_FARBE weiter unten) — alle anderen Kategorien holen ihre
+          // Farbe aus KATEGORIE_META, wie schon bei "Als Nächstes"/"Weitere
+          // Pläne". Ohne diesen Fallback waren hier bisher ALLE Balken außer
+          // Morgen-/Abendroutine unsichtbar (kein background gesetzt).
+          const farbe = w.aktiv ? w.farbe || KATEGORIE_META[w.kategorie]?.dot : "#E2E2DC";
           return (
             <div key={w.kategorie} title={w.name} style={{ width: 26, flexShrink: 0, height: hoehe, borderRadius: "6px 6px 2px 2px", background: farbe }} />
           );
@@ -109,7 +114,7 @@ function TagesfortschrittBalken({ widgets }) {
       <div style={{ display: "flex", gap: 8, marginTop: 7 }}>
         {widgets.map((w) => (
           <div key={w.kategorie} style={{ width: 26, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-            <span style={{ width: 7, height: 7, borderRadius: 4, background: w.aktiv ? w.farbe : "#B5B5AE" }} />
+            <span style={{ width: 7, height: 7, borderRadius: 4, background: w.aktiv ? w.farbe || KATEGORIE_META[w.kategorie]?.dot : "#B5B5AE" }} />
           </div>
         ))}
       </div>
@@ -471,6 +476,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         isEssential: false,
         farbe: ROUTINE_FARBE[kategorie],
         hintergrund: ROUTINE_HINTERGRUND[kategorie],
+        statusText: heuteErledigt ? "heute erledigt" : "heute noch offen",
       });
     });
 
@@ -787,10 +793,18 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           ist weg — Gewohnheiten/Morgen-/Abendroutine stecken jetzt gleich-
           berechtigt mit allen anderen Bereichen im Direktzugriff unten. */}
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>{t("home.tagesfortschritt")}</div>
-          <div style={{ fontSize: 13, fontWeight: 700 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
-        </div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 4 }}>{t("home.tagesfortschritt")}</div>
+        {/* Bug-Fix: statusText() gibt teils ganze Sätze zurück (z. B. "Nur
+            noch zwei Aufgaben bis zum Tagesziel."), keine kurze Zahl — in
+            einer Zeile nebeneinander mit dem Label lief das ineinander.
+            Jetzt eigene Zeile darunter.
+            Zweiter Bug-Fix: erledigtCount zählt schon im Notfallmodus nur
+            die essenziellen Kategorien (aus displayItems), total kam bisher
+            trotzdem aus dem ungefilterten heuteItems.length — zeigte im
+            Notfallmodus einen irreführend niedrigen Bruch (z. B. "2 von 9"
+            statt "2 von 3"), obwohl der Rest laut Notfallmodus bewusst
+            Bonus ist. Jetzt beide aus derselben (ggf. gefilterten) Liste. */}
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 18 }}>{statusText(erledigtCount, displayItems.length, lang)}</div>
         <TagesfortschrittBalken widgets={miniWidgetData} />
       </Card>
 
@@ -825,7 +839,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           </div>
         </div>
         {angezeigteItems.length > 0 && (
-          <Card style={{ padding: isEmergencyMode ? 8 : 8 }}>
+          <Card style={{ padding: 8 }}>
             {isEmergencyMode ? (
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
@@ -932,6 +946,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                 aktiv={widget.aktiv}
                 farbe={widget.farbe}
                 hintergrund={widget.hintergrund}
+                statusText={widget.statusText}
                 onClick={() => onOpenView(widget.viewId)}
                 actionLabel={widget.actionLabel}
                 onAction={widget.onAction}

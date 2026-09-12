@@ -19,6 +19,9 @@ import { hexZuRgba } from "./theme";
  * - actionLabel/onAction: optionaler Schnellzugriff (z. B. "+200ml"), oben
  *   rechts als kleiner Button — für Aktionen, die keinen vollen
  *   Seitenwechsel brauchen (siehe Hydration-Widget in HomeView)
+ * - statusText: optionaler Text statt der Standard-"x/y heute"-Anzeige —
+ *   für Kategorien ohne sinnvollen Bruchteil (z. B. Morgen-/Abendroutine:
+ *   "heute erledigt"/"heute noch offen" statt "0/1 heute")
  */
 export default function MiniPlanWidget({
   name,
@@ -34,6 +37,7 @@ export default function MiniPlanWidget({
   onAction,
   farbe,
   hintergrund,
+  statusText,
 }) {
   // KATEGORIE_META-Einträge haben kein "color"-Feld (nur bg/text/dot/label) —
   // ein vorheriger Zugriff auf meta.color war deshalb immer undefined und
@@ -142,7 +146,12 @@ export default function MiniPlanWidget({
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
-          maxWidth: "100%",
+          // Bug-Fix: der Aktions-Button (actionLabel/onAction, z. B. "+200ml")
+          // sitzt absolut oben rechts über dieser Zeile — bei einem etwas
+          // längeren Namen (z. B. "Hydration") lief der Text bisher unter
+          // den Button und wurde dort unleserlich überlappt. Reserviert
+          // jetzt Platz dafür, statt darunter durchzulaufen.
+          maxWidth: actionLabel && onAction ? "calc(100% - 46px)" : "100%",
         }}
       >
         {name}
@@ -217,7 +226,7 @@ export default function MiniPlanWidget({
           marginTop: "4px",
         }}
       >
-        {aktiv ? `${dailyCount}${unit}/${dailyTotal}${unit} heute` : "Noch nicht eingerichtet"}
+        {aktiv ? statusText || `${dailyCount}${unit}/${dailyTotal}${unit} heute` : "Noch nicht eingerichtet"}
       </div>
     </div>
   );
