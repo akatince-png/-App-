@@ -1,5 +1,55 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 43) — Onboarding-Coach speichert direkt, Sprachfenster-Größe stabilisiert
+
+Ausgangsfrage der Nutzerin: kann Aka schon aus freiem Sprechen komplette
+Pläne bauen, oder muss danach noch manuell gespeichert werden? Antwort:
+für Training/Peptide/den Home-Coach schon (echte KI-Extraktion + direktes
+Speichern), aber die 5 übrigen Kategorien-Schritte im Onboarding-Assistenten
+(Gewohnheiten, Schlaf, Hydration, Tageslicht, Ernährung) füllten bisher nur
+die Formularfelder — ein zusätzlicher "Weiter"/Speichern-Klick war noch
+nötig. Daraufhin zwei Aufträge:
+
+**1. Onboarding-Kategorien direkt speichern** (`OnboardingCategoriesView.jsx`,
+`onUebernehmenKategorie`):
+- **Gewohnheiten, Ernährung** (Listen-Kategorien wie Training): rufen jetzt
+  direkt `gewohnheitHinzufuegen` bzw. `mahlzeitHinzufuegen` +
+  `wochenplanMahlzeitSetzen` auf und landen sofort in der
+  "bereits hinzugefügt"-Liste — kein Formular-Umweg mehr.
+- **Hydration, Tageslicht**: rufen direkt `hydrationZielSetzen` /
+  `tageslichtZielSetzen` auf; das lokale Eingabefeld bleibt zusätzlich
+  vorbefüllt (für die Anzeige), ein späteres "Speichern & weiter" schreibt
+  denselben Wert nur nochmal — unschädlich.
+- **Schlaf**: einzige "unsichere" Kategorie, weil `speichernUndWeiter` hier
+  ausschließlich aus lokalem Komponentenstatus (`schlafBloecke`) speichert.
+  Deshalb beides: lokale Vorbefüllung bleibt (`setBlockFeld`), UND es wird
+  zusätzlich sofort per `setCategoryZiel("schlaf", …)` mit den frischen
+  KI-Werten gespeichert — ein späteres "Weiter" überschreibt damit nicht
+  mehr mit veralteten Werten.
+- Erfolgstext unter dem "Übernehmen"-Knopf je Kategorie angepasst, damit er
+  nicht mehr fälschlich "bitte unten noch speichern" für Kategorien
+  behauptet, die längst gespeichert sind.
+- Supplemente/Medikamente bewusst NICHT umgestellt (nicht Teil der
+  angefragten 5 Kategorien) — bleiben wie bisher reine Formular-Vorbefüllung.
+
+**2. Sprachfenster-Größe stabilisiert** (`KiChat.jsx`): die große
+Antwort-Anzeige (`grosseAntwort`) hatte keine Höhenbegrenzung — bei jeder
+Antwort sprang dadurch das ganze (am unteren Bildschirmrand verankerte)
+Bottom-Sheet sichtbar größer/kleiner, besonders auffällig während des
+Streamens. Fix: der Antwort-Textblock hat jetzt `minHeight: 90` /
+`maxHeight: 200` mit eigenem `overflowY: auto` — lange Antworten scrollen
+innerhalb dieser Box, statt das ganze Sheet wachsen zu lassen. Ein
+zusätzlicher Effekt hält die Anzeige beim Streamen automatisch am unteren
+Rand der Box (sonst bliebe während des Tippens nur der Anfang sichtbar).
+Mit einer statischen HTML/CSS-Nachbildung geprüft: Sheet-Höhe variiert nur
+noch um die Differenz aus min-/maxHeight (110px), statt unbegrenzt mit der
+Textlänge zu wachsen; Text scrollt intern korrekt.
+
+`npm run build` + `npx oxlint` sauber (18 vorbestehende Warnungen, keine
+neuen).
+
+---
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 42) — Abzeichen-Übersicht mit Beschreibungen, Einstieg unter "Mehr"
 
 Nachtrag zum Erfolge-Feature aus Teil 39/41: "diese ganzen Orden
