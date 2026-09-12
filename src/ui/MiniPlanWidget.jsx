@@ -32,17 +32,23 @@ export default function MiniPlanWidget({
   onClick,
   actionLabel,
   onAction,
+  farbe,
+  hintergrund,
 }) {
   // KATEGORIE_META-Einträge haben kein "color"-Feld (nur bg/text/dot/label) —
   // ein vorheriger Zugriff auf meta.color war deshalb immer undefined und
   // ließ die Ring-Striche unsichtbar werden (SVG-Default für stroke: "none").
+  // farbe/hintergrund: expliziter Override für Kategorien ohne eigenen
+  // KATEGORIE_META-Eintrag (Morgen-/Abendroutine — bewusst NICHT in
+  // KATEGORIE_META aufgenommen, siehe PlaeneView.jsx: dort würden sie sonst
+  // als tote Einträge in der Wochenübersicht-Legende auftauchen).
   const meta = KATEGORIE_META[kategorie] || { dot: "#999", bg: "#fff" };
-  const baseColor = aktiv ? meta.dot : "#B5B5B5";
+  const baseColor = aktiv ? farbe || meta.dot : "#B5B5B5";
   // Farbiger Karten-Hintergrund statt durchgehend Weiß (Nutzerinnen-Vorgabe,
   // 16.08.: "die Farben etwas catchier machen, zumindest im Homemenü") —
   // vorher trugen nur die dünnen Ringe Farbe, die Kachel selbst wirkte
   // dadurch blass/uniform grau-weiß.
-  const kartenHintergrund = aktiv ? meta.bg : "#F3F3F3";
+  const kartenHintergrund = aktiv ? hintergrund || meta.bg : "#F3F3F3";
 
   // Berechne Prozentsätze
   const dailyPercent = dailyTotal > 0 ? (dailyCount / dailyTotal) * 100 : 0;

@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { Shell, Card, TextArea, PrimaryButton } from "../ui/primitives";
-import ProgressRing from "../ui/ProgressRing";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
-import { accentDark, accentSoft, blue, blueSoft, cardBorder, shadow, textMuted } from "../ui/theme";
+import MiniPlanWidget from "../ui/MiniPlanWidget";
+import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
@@ -13,12 +13,10 @@ import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import { AkutModusTrigger, AkutModusPanel } from "../ui/AkutModusKarte";
 import QuickTaskList from "../ui/QuickTaskList";
-import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
-import { getMiniWidgetsAlleAnzeigen, saveMiniWidgetsAlleAnzeigen } from "../utils/widgetPrefs";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
@@ -82,6 +80,42 @@ const ORDNER = [
   { id: "archiv", labelKey: "home.ordner.archiv.label", descKey: "home.ordner.archiv.desc", icon: "archive" },
   { id: "mehr", labelKey: "home.ordner.mehr.label", descKey: "home.ordner.mehr.desc", icon: "sliders" },
 ];
+
+// Morgen-/Abendroutine haben bewusst KEINEN KATEGORIE_META-Eintrag (siehe
+// PlaeneView.jsx/RoutineTabView.jsx: sonst tauchen sie als tote Einträge in
+// der Wochenübersicht-Legende auf) — dieselben Farben hier lokal dupliziert,
+// gleiches Muster wie in den beiden anderen Dateien.
+const ROUTINE_FARBE = { morgenroutine: "#E08A3E", abendroutine: "#4E6690" };
+const ROUTINE_HINTERGRUND = { morgenroutine: "#FBEADA", abendroutine: "#E7EBF3" };
+
+// Tagesfortschritt als Balkendiagramm (12.09., Nutzerinnen-Vorgabe: "so ein
+// Diagramm mit so Stäbchen" statt eines einzelnen Rings) — ein Balken je
+// Lebensbereich statt einer einzelnen Gesamtzahl, damit auf einen Blick
+// sichtbar ist, WO es heute hakt. Graue Kurz-Balken markieren Bereiche, die
+// noch gar nicht eingerichtet sind (aktiv: false).
+function TagesfortschrittBalken({ widgets }) {
+  const MAX_HOEHE = 100;
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: MAX_HOEHE }}>
+        {widgets.map((w) => {
+          const hoehe = w.aktiv ? Math.max(4, Math.round(Math.min(1, w.dailyCount / (w.dailyTotal || 1)) * MAX_HOEHE)) : 6;
+          const farbe = w.aktiv ? w.farbe : "#E2E2DC";
+          return (
+            <div key={w.kategorie} title={w.name} style={{ width: 26, flexShrink: 0, height: hoehe, borderRadius: "6px 6px 2px 2px", background: farbe }} />
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 7 }}>
+        {widgets.map((w) => (
+          <div key={w.kategorie} style={{ width: 26, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+            <span style={{ width: 7, height: 7, borderRadius: 4, background: w.aktiv ? w.farbe : "#B5B5AE" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Ersetzt für Coachees (istAdminModus === false) den KI-Assistenten als
 // Kontaktweg (13.08., Coach-verwaltetes Modell) — eine einfache Nachricht
@@ -164,6 +198,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     projekte,
     zeitbloecke,
     ausnahmenNachSchluessel,
+    routineSchritte,
+    routineDurchlaeufe,
     confirmAlleTageszeit,
     hydrationHeuteMl,
     hydrationZielMl,
@@ -195,9 +231,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
   const [akutOffen, setAkutOffen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
-  // Mini-Widgets: alle Kategorien zeigen (unbenutzte grau) vs. nur genutzte —
-  // unabhängig vom ADHS-Notfallmodus, siehe miniWidgetData weiter unten.
-  const [alleWidgetsAnzeigen, setAlleWidgetsAnzeigen] = useState(() => getMiniWidgetsAlleAnzeigen());
   const [trainingFehler, setTrainingFehler] = useState(null);
 
   // Tap auf die Trainingszeile in "Als Nächstes" soll direkt in den
@@ -250,14 +283,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       itemName: "Notfallmodus",
       aktion: newState ? "aktiviert" : "beendet",
       detail: newState ? "Nur Basics heute — kein vollständiger Plan genutzt" : "",
-    });
-  };
-
-  const handleToggleAlleWidgets = () => {
-    setAlleWidgetsAnzeigen((prev) => {
-      const next = !prev;
-      saveMiniWidgetsAlleAnzeigen(next);
-      return next;
     });
   };
 
@@ -337,11 +362,34 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const displayItems = isEmergencyMode ? heuteItems.filter((item) => ESSENTIAL_KATEGORIEN.includes(item.kategorie)) : heuteItems;
 
   const erledigtCount = displayItems.filter((i) => i.done).length;
-  const gewohnheitHeuteItems = displayItems.filter((i) => i.kategorie === "gewohnheit");
-  const gewohnheitErledigtHeute = gewohnheitHeuteItems.filter((i) => i.done).length;
   const offeneItems = displayItems.filter((i) => !i.done);
-  const angezeigteItems = gruppiereFuerAlsNaechstes(offeneItems, t, tLabel);
   const tagStr = toLocalISODate(today);
+
+  // Morgen-/Abendroutine tauchen jetzt auch unter "Als Nächstes" auf (12.09.,
+  // Nutzerinnen-Vorgabe: "ich hab grad eine aktuell hinterlegte Morgenroutine,
+  // aber die erscheint im Tagesplan nicht") — buildDayItems() erzeugt dafür
+  // bewusst keine Einträge (eine Routine ist eine Schritt-Kette, kein
+  // einzelnes Toggle-Item, siehe PlaeneView.jsx/RoutineTabView.jsx), deshalb
+  // hier als eigene Pseudo-Items ergänzt. Ein Durchlauf wird erst EINMAL ganz
+  // am Ende gespeichert (routineDurchlaufSpeichern, siehe useRoutinen.js) —
+  // es gibt keinen Zwischenstand, deshalb bewusst nur "erledigt/offen", kein
+  // Bruchteil wie bei anderen Kategorien. Bleibt stehen, bis der Durchlauf für
+  // heute wirklich gespeichert ist, verschwindet also nicht schon beim ersten
+  // Antippen. Nicht im Notfallmodus (dort zählen nur die Basics).
+  const routineAlsNaechstesItems = isEmergencyMode
+    ? []
+    : ["morgen", "abend"]
+        .filter((routine) => routineSchritte.some((s) => s.routine === routine) && !routineDurchlaeufe.some((d) => d.routine === routine && d.datum === tagStr))
+        .map((routine) => ({
+          key: `routine-${routine}`,
+          name: tLabel(routine === "morgen" ? "Morgenroutine" : "Abendroutine"),
+          kategorie: routine === "morgen" ? "morgenroutine" : "abendroutine",
+          viewId: routine === "morgen" ? "morgenroutine" : "abendroutine",
+          detail: t("home.list.routineOffen"),
+          uhrzeit: "",
+          done: false,
+        }));
+  const angezeigteItems = [...routineAlsNaechstesItems, ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel)];
 
   // Konvertiere Items ins QuickTaskList-Format
   const quickTasksFormatted = angezeigteItems.map((item) => ({
@@ -359,12 +407,11 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     },
   }));
 
-  // Mini-Widget-Daten für alle Kategorien — erscheinen jetzt IMMER (auch ohne
-  // eigene Daten, dann grau/"aktiv: false"), damit jede Kategorie als
-  // Einstiegspunkt sichtbar bleibt. Das "alleWidgetsAnzeigen"-Präferenz
-  // blendet unbenutzte Kategorien optional aus (siehe Toggle unten) — der
-  // Notfallmodus-Filter bleibt davon unberührt und funktioniert exakt wie
-  // zuvor (nur essenzielle UND tatsächlich genutzte Kategorien).
+  // Mini-Widget-Daten für alle Kategorien — die volle Liste (auch inaktive)
+  // wird unten in "Direktzugriff" (aktiv) und "Weitere Pläne" (inaktiv)
+  // aufgeteilt (12.09., Nutzerinnen-Vorgabe), plus als Grundlage für das
+  // Balkendiagramm im Tagesfortschritt. Der Notfallmodus-Filter läuft erst
+  // beim Aufteilen (siehe direktzugriffWidgets/weiterePlaeneWidgets unten).
   const miniWidgetData = useMemo(() => {
     const widgets = [];
 
@@ -379,6 +426,53 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         trainingTemplates, gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets, ausnahmenNachSchluessel,
       })
     ).flat();
+
+    // Gewohnheiten — war bisher eine eigene große Ring-Kachel oben auf der
+    // Startseite (12.09., Nutzerinnen-Vorgabe: "der Kreis mit Routinen soll
+    // kleiner werden, daraus soll ein Button werden") — jetzt genauso groß
+    // wie jede andere Kategorie hier im Raster.
+    {
+      const gewohnheitItems = heuteItems.filter((i) => i.kategorie === "gewohnheit");
+      const todayCount = gewohnheitItems.filter((i) => i.done).length;
+      const weekItems = wocheItems.filter((it) => it.kategorie === "gewohnheit" && it.done);
+      widgets.push({
+        name: tLabel("Gewohnheiten"),
+        kategorie: "gewohnheit",
+        viewId: "routinen",
+        aktiv: gewohnheiten.length > 0,
+        dailyCount: todayCount,
+        dailyTotal: Math.max(gewohnheitItems.length, 1),
+        weeklyCount: weekItems.length,
+        weeklyTotal: Math.max(gewohnheiten.length * 7, 1),
+        isEssential: false,
+      });
+    }
+
+    // Morgen-/Abendroutine — bisher nirgends auf der Startseite vertreten
+    // (buildDayItems() erzeugt dafür bewusst keine Tagesplan-Einträge, siehe
+    // ROUTINE_FARBE-Kommentar oben). "Aktiv" heißt hier: mindestens ein
+    // Schritt ist konfiguriert. Ein Durchlauf wird erst EINMAL ganz am Ende
+    // gespeichert — deshalb nur binär "heute erledigt oder nicht", kein
+    // Bruchteil wie bei den anderen Kategorien.
+    ["morgen", "abend"].forEach((routine) => {
+      const kategorie = routine === "morgen" ? "morgenroutine" : "abendroutine";
+      const heuteErledigt = routineDurchlaeufe.some((d) => d.routine === routine && d.datum === tagStr);
+      const wochenStart = toLocalISODate(addDays(today, -6));
+      const wochenCount = routineDurchlaeufe.filter((d) => d.routine === routine && d.datum >= wochenStart && d.datum <= tagStr).length;
+      widgets.push({
+        name: tLabel(routine === "morgen" ? "Morgenroutine" : "Abendroutine"),
+        kategorie,
+        viewId: kategorie,
+        aktiv: routineSchritte.some((s) => s.routine === routine),
+        dailyCount: heuteErledigt ? 1 : 0,
+        dailyTotal: 1,
+        weeklyCount: wochenCount,
+        weeklyTotal: 7,
+        isEssential: false,
+        farbe: ROUTINE_FARBE[kategorie],
+        hintergrund: ROUTINE_HINTERGRUND[kategorie],
+      });
+    });
 
     // Medikamente (umfasst seit der Datenzusammenlegung, 13.08., auch
     // Hormone und Peptide — Bug-Fix, 12.09.: diese Kachel hieß bisher fest
@@ -503,15 +597,21 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       unit: "min",
     });
 
-    // Im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
-    // Kategorien. Sonst: je nach Präferenz entweder alle (unbenutzte grau)
-    // oder nur die tatsächlich genutzten.
-    if (isEmergencyMode) return widgets.filter((w) => w.isEssential && w.aktiv);
-    return alleWidgetsAnzeigen ? widgets : widgets.filter((w) => w.aktiv);
-  }, [isEmergencyMode, alleWidgetsAnzeigen, hormonPlan, hormonErledigt, supplemente, supplementErledigt,
+    // Immer die volle Liste zurückgeben (auch inaktive) — "Direktzugriff"/
+    // "Weitere Pläne" (siehe unten im Render) filtern selbst nach aktiv/
+    // inaktiv, und das Balkendiagramm oben braucht ohnehin alle Kategorien.
+    return widgets;
+  }, [hormonPlan, hormonErledigt, supplemente, supplementErledigt,
       mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingNachDatum, trainingWochenplan, trainingTemplates,
       gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen,
-      tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel, ausnahmenNachSchluessel]);
+      tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel, ausnahmenNachSchluessel,
+      routineSchritte, routineDurchlaeufe, tagStr]);
+
+  // Direktzugriff (aktive Pläne) vs. Weitere Pläne (noch nicht eingerichtet)
+  // — im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
+  // Kategorien, "Weitere Pläne" bleibt dort ganz leer (nur Basics zählen).
+  const direktzugriffWidgets = isEmergencyMode ? miniWidgetData.filter((w) => w.isEssential && w.aktiv) : miniWidgetData.filter((w) => w.aktiv);
+  const weiterePlaeneWidgets = isEmergencyMode ? [] : miniWidgetData.filter((w) => !w.aktiv);
 
   return (
     <Shell>
@@ -680,113 +780,29 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         </div>
       )}
 
-      {/* Fortschritt zuerst — die Startseite ist ein Tagesassistent, kein Menü.
-          Vertikal gestapelt (Label über Ring über Text) statt nebeneinander:
-          bei nebeneinander lag der Ring je nach Textlänge/Zeilenumbruch der
-          Statuszeile in den beiden Karten auf unterschiedlicher Höhe, wirkte
-          "verschoben" — im Stapel bleibt der Ring immer direkt unter dem
-          (kurzen, garantiert einzeiligen) Label, unabhängig davon, wie viele
-          Zeilen der Text darunter braucht. */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-        <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 16 }}>{t("home.tagesfortschritt")}</div>
-          <ProgressRing done={erledigtCount} total={heuteItems.length} size={110} stroke={9} color={accentDark} />
-          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 16 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
-        </Card>
-        <Card
-          className="mp-tap"
-          style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer", background: blueSoft, border: "none" }}
-          onClick={() => onOpenView("routinen")}
-        >
-          <div style={{ fontSize: 13, fontWeight: 700, color: blue, marginBottom: 16 }}>{tLabel("Routinen")}</div>
-          <ProgressRing done={gewohnheitErledigtHeute} total={gewohnheitHeuteItems.length} size={110} stroke={9} color={blue} />
-          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, marginTop: 16, color: blue }}>
-            {gewohnheitHeuteItems.length === 0
-              ? t("home.gewohnheiten.leer")
-              : statusText(gewohnheitErledigtHeute, gewohnheitHeuteItems.length, lang)}
-          </div>
-        </Card>
-      </div>
-
-      {/* Mini-Widgets für alle Pläne */}
-      {miniWidgetData.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>📊 Alle Pläne im Überblick</div>
-            {!isEmergencyMode && (
-              <button
-                type="button"
-                onClick={handleToggleAlleWidgets}
-                className="mp-tap"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  color: accentDark,
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  padding: "4px 6px",
-                }}
-                title="Unabhängig vom ADHS-Notfallmodus"
-              >
-                {alleWidgetsAnzeigen ? "Nur genutzte zeigen" : "Alle zeigen"}
-              </button>
-            )}
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
-              gap: 10,
-            }}
-          >
-            {miniWidgetData.map((widget) => (
-              <MiniPlanWidget
-                key={widget.kategorie}
-                name={widget.name}
-                dailyCount={widget.dailyCount}
-                dailyTotal={widget.dailyTotal}
-                weeklyCount={widget.weeklyCount}
-                weeklyTotal={widget.weeklyTotal}
-                kategorie={widget.kategorie}
-                unit={widget.unit}
-                aktiv={widget.aktiv}
-                onClick={() => onOpenView(widget.viewId)}
-                actionLabel={widget.actionLabel}
-                onAction={widget.onAction}
-              />
-            ))}
-          </div>
+      {/* Tagesfortschritt zuerst — die Startseite ist ein Tagesassistent, kein
+          Menü. Balkendiagramm statt Ring (12.09., Nutzerinnen-Vorgabe): ein
+          Balken je Lebensbereich statt einer einzelnen Ring-Zahl, zeigt auf
+          einen Blick, wo es heute hakt. Der frühere zweite Ring ("Routinen")
+          ist weg — Gewohnheiten/Morgen-/Abendroutine stecken jetzt gleich-
+          berechtigt mit allen anderen Bereichen im Direktzugriff unten. */}
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>{t("home.tagesfortschritt")}</div>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>{statusText(erledigtCount, heuteItems.length, lang)}</div>
         </div>
-      )}
+        <TagesfortschrittBalken widgets={miniWidgetData} />
+      </Card>
 
-      {/* Schnellzugriff auf den Tagesplan — ersetzt den früheren "+"-FAB in
-          der unteren Navigation, direkt über den heute offenen Aufgaben. */}
-      <button
-        className="mp-tap"
-        onClick={() => onOpenView("tagesplan")}
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          padding: "0 0 10px 0",
-          textAlign: "left",
-        }}
-      >
-        <Icon name="calendarCheck" size={18} color={accentDark} />
-        <span style={{ fontSize: 13, fontWeight: 800, color: accentDark }}>{t("home.tagesplan")}</span>
-        <span style={{ marginLeft: "auto", color: textMuted, fontSize: 14 }}>›</span>
-      </button>
-
-      {/* Dann die heute offenen Aufgaben — erst danach die Ordner. */}
-      {angezeigteItems.length > 0 && (
-        <>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{t("home.alsNaechstes")}</div>
+      {/* Als Nächstes/Tagesplan direkt unter dem Tagesfortschritt (12.09.,
+          Nutzerinnen-Vorgabe), statt weiter unten — "Tagesplan" ist hier nur
+          noch der Link zur vollen Ansicht, kein eigener großer Button mehr.
+          Morgen-/Abendroutine tauchen hier jetzt mit auf, siehe
+          routineAlsNaechstesItems oben. */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{t("home.alsNaechstes")}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {/* Bug-Fix: soundEnabled/handleToggleSoundEnabled existierten bereits
                 (steuert den Erledigt-Ton in QuickTaskList), aber es gab nirgends
                 in der App einen Schalter dafür — Ton ließ sich nie ausschalten. */}
@@ -798,13 +814,23 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             >
               {soundEnabled ? "🔊" : "🔇"}
             </button>
+            <button
+              className="mp-tap"
+              onClick={() => onOpenView("tagesplan")}
+              style={{ display: "flex", alignItems: "center", gap: 3, border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "2px 0" }}
+            >
+              {t("home.tagesplan")}
+              <span style={{ fontSize: 14 }}>›</span>
+            </button>
           </div>
-          <Card style={{ marginBottom: 20, padding: isEmergencyMode ? 8 : 8 }}>
+        </div>
+        {angezeigteItems.length > 0 && (
+          <Card style={{ padding: isEmergencyMode ? 8 : 8 }}>
             {isEmergencyMode ? (
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
               angezeigteItems.slice(0, 4).map((item, i, arr) => {
-                const k = KATEGORIE_META[item.kategorie];
+                const k = KATEGORIE_META[item.kategorie] || { dot: ROUTINE_FARBE[item.kategorie] || "#999" };
                 return (
                   <div
                     key={item.key}
@@ -820,7 +846,10 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                   >
                     <button
                       className="mp-tap"
-                      onClick={() => (item.kategorie === "training" ? starteTrainingVonItem(item) : onOpenView("tagesplan"))}
+                      onClick={() => {
+                        if (item.kategorie === "training") return starteTrainingVonItem(item);
+                        return onOpenView(item.viewId || "tagesplan");
+                      }}
                       style={{
                         flex: 1,
                         display: "flex",
@@ -837,7 +866,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                       <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700 }}>
-                          {item.name} <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {tLabel(item.uhrzeit)}</span>
+                          {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {tLabel(item.uhrzeit)}</span>}
                         </div>
                         {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                       </div>
@@ -866,7 +895,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                     ) : (
                       <button
                         className="mp-tap"
-                        onClick={() => onOpenView("tagesplan")}
+                        onClick={() => onOpenView(item.viewId || "tagesplan")}
                         style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
                       >
                         ›
@@ -877,36 +906,66 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
               })
             )}
           </Card>
-        </>
-      )}
+        )}
+      </div>
 
-      <button
-        className="mp-tap"
-        onClick={() => onOpenView("routinen")}
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          padding: "16px 18px",
-          borderRadius: 18,
-          border: "none",
-          background: accentSoft,
-          cursor: "pointer",
-          marginBottom: 20,
-          textAlign: "left",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Icon name="target" size={22} color={accentDark} />
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: accentDark }}>{tLabel("Routinen")}</div>
-            <div style={{ fontSize: 12, color: accentDark, opacity: 0.8 }}>{t("home.gewohnheiten.cta.desc")}</div>
+      {/* Direktzugriff: nur die aktiven Pläne (schon eingerichtet, echte
+          Daten) — Gewohnheiten/Morgen-/Abendroutine stecken jetzt mit drin,
+          genau wie jede andere Kategorie. */}
+      {direktzugriffWidgets.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{t("home.direktzugriff")}</span>{" "}
+            <span style={{ fontSize: 11, fontWeight: 600, color: textMuted }}>— {t("home.direktzugriff.desc")}</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
+            {direktzugriffWidgets.map((widget) => (
+              <MiniPlanWidget
+                key={widget.kategorie}
+                name={widget.name}
+                dailyCount={widget.dailyCount}
+                dailyTotal={widget.dailyTotal}
+                weeklyCount={widget.weeklyCount}
+                weeklyTotal={widget.weeklyTotal}
+                kategorie={widget.kategorie}
+                unit={widget.unit}
+                aktiv={widget.aktiv}
+                farbe={widget.farbe}
+                hintergrund={widget.hintergrund}
+                onClick={() => onOpenView(widget.viewId)}
+                actionLabel={widget.actionLabel}
+                onAction={widget.onAction}
+              />
+            ))}
           </div>
         </div>
-        <span style={{ color: accentDark, fontSize: 18 }}>›</span>
-      </button>
+      )}
+
+      {/* Weitere Pläne: die inaktiven, noch nicht eingerichteten — klein und
+          gedeckt, laden aber weiter zum Einrichten ein. */}
+      {weiterePlaeneWidgets.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>{t("home.weiterePlaene")}</span>{" "}
+            <span style={{ fontSize: 11, color: textMuted }}>— {t("home.weiterePlaene.desc")}</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {weiterePlaeneWidgets.map((widget) => (
+              <button
+                key={widget.kategorie}
+                type="button"
+                className="mp-tap"
+                onClick={() => onOpenView(widget.viewId)}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "#F7F7F5", border: "1px dashed #D8D8D2", borderRadius: 100, padding: "6px 12px", cursor: "pointer" }}
+              >
+                <span style={{ width: 7, height: 7, borderRadius: 4, background: widget.farbe || KATEGORIE_META[widget.kategorie]?.dot || "#999" }} />
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: textMuted }}>{widget.name}</span>
+                <span style={{ fontSize: 10, color: accentDark, fontWeight: 700 }}>{t("home.weiterePlaene.einrichten")}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mp-ordner-grid">
         {ORDNER.map((o) => (
