@@ -1,5 +1,28 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 50) — Bug-Fix: Eigenes Startdatum ließ sich nicht zurücksetzen
+
+Nutzerinnen-Vorgabe: "Ich kann das eingegebene Startdatum nicht
+zurücksetzen ... habe ich jetzt was aus Versehen angewählt und das kann
+ich jetzt nicht mehr auf null setzen."
+
+- **Ursache**: `DosierungFields.jsx` nutzt für "Eigenes Startdatum" ein
+  natives `<input type="date">` — am Desktop (Chrome) gibt's dort ein
+  kleines "×" zum Leeren, auf dem iPad/Safari fehlt diese Möglichkeit
+  komplett. Einmal gesetzt, ließ sich das Feld über die native UI gar
+  nicht mehr leeren.
+- **Fix**: eigener "Zurücksetzen"-Button neben dem Datumsfeld, erscheint
+  nur wenn ein Wert gesetzt ist, setzt ihn browserunabhängig auf leer
+  (die Datenschicht wandelt einen leeren String beim Speichern schon
+  korrekt in `null` um, siehe `useHormoneData.js`/`useProtocolData.js` —
+  das war rein ein UI-Problem, kein Speicherproblem). Da `DosierungFields`
+  eine gemeinsame Komponente ist, gilt der Fix automatisch überall dort,
+  wo "Eigenes Startdatum" vorkommt: Medikamente/Hormone/Peptide (Anlegen
+  + Dosis bearbeiten) und im Onboarding.
+- Getestet per Preview-Harness (Playwright): Button erscheint nur bei
+  gesetztem Datum, ein Klick leert das Feld zuverlässig, Button
+  verschwindet danach wieder. Build + oxlint (weiterhin 18 Warnungen).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 49) — Cannabis als Medikamente-Kategorie
 
 Nutzerinnen-Vorgabe: Cannabis als eigene Kategorie unter Medikamente, mit
