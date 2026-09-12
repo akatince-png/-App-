@@ -40,6 +40,11 @@ function TrainingProtokollKarte({ e, ausgewaehlt, onUmschalten, onLoeschen }) {
             <div style={{ fontSize: 14, fontWeight: 800, color: textMain }}>
               {e.art}
               {e.name && <span style={{ fontWeight: 600 }}> · {e.name}</span>}
+              {!e.erledigt && (
+                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: textMuted, background: cardBorder, borderRadius: 6, padding: "2px 6px" }}>
+                  nicht abgeschlossen
+                </span>
+              )}
             </div>
             {e.uhrzeit && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{e.uhrzeit}</div>}
           </div>
@@ -218,16 +223,23 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
   const [seitenOffen, setSeitenOffen] = useState(false);
   const ersteWoche = wochenprotokollSnapshots.find((s) => s.wochenNummer === 1);
 
-  const erledigteTrainings = useMemo(() => trainingEintraege.filter((e) => e.erledigt), [trainingEintraege]);
+  // Bug-Fix (12.09., Nutzerin-Bericht "kann Training nicht entfernen, obwohl
+  // alles gelöscht"): zeigte bisher nur erledigte Trainings — ein über "Jetzt
+  // live starten"/Vorlage-Direktstart angelegter, aber nie beendeter Eintrag
+  // (erledigt: false, z. B. über "Schließen" in der Live-Ansicht abgebrochen,
+  // die den Eintrag NICHT löscht) blieb dadurch für sie unsichtbar und
+  // unlöschbar, hielt aber trainingEintraege.length > 0 und damit den
+  // Home-Widget dauerhaft "aktiv". Jetzt: alle Einträge, nicht nur erledigte.
+  const alleTrainings = trainingEintraege;
 
   const gruppen = useMemo(() => {
     const map = new Map();
-    erledigteTrainings.forEach((e) => {
+    alleTrainings.forEach((e) => {
       if (!map.has(e.datum)) map.set(e.datum, []);
       map.get(e.datum).push(e);
     });
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
-  }, [erledigteTrainings]);
+  }, [alleTrainings]);
 
   const aenderungGruppen = useMemo(() => {
     const map = new Map();
@@ -246,7 +258,7 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
   // gleichzeitig umfassen).
   const aenderungAuswahl = useMehrfachauswahl(protokollEintraege, (e) => e.id);
   const versionAuswahl = useMehrfachauswahl(versionen, (v) => v.id);
-  const trainingAuswahl = useMehrfachauswahl(erledigteTrainings, (e) => e.id);
+  const trainingAuswahl = useMehrfachauswahl(alleTrainings, (e) => e.id);
 
   const aenderungMehrfachLoeschen = () => {
     const ids = [...aenderungAuswahl.ausgewaehlt];
@@ -384,7 +396,7 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
         <div style={{ fontSize: 14, fontWeight: 800 }}>🏋️ Training</div>
-        {erledigteTrainings.length > 0 && (
+        {alleTrainings.length > 0 && (
           <MehrfachauswahlLeiste
             anzahlAusgewaehlt={trainingAuswahl.ausgewaehlt.size}
             alleAusgewaehlt={trainingAuswahl.alleAusgewaehlt}
@@ -396,7 +408,7 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
       {gruppen.length === 0 ? (
         <Card>
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
-            Noch keine abgeschlossenen Trainings — sobald du eins live durchführst oder einträgst, erscheint es hier mit allen Details.
+            Noch keine Trainings — sobald du eins live durchführst oder einträgst, erscheint es hier mit allen Details.
           </div>
         </Card>
       ) : (

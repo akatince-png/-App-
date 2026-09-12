@@ -586,12 +586,16 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     // hydrationHeuteMl/-ZielMl berechnet statt aus heuteItems gefiltert, wo
     // nie ein "hydration"-Eintrag existiert. Gilt als "aktiv", sobald
     // überhaupt schon etwas getrunken wurde oder ein Ziel abweichend vom
-    // Standard gesetzt wurde.
+    // Standard gesetzt wurde. Bug-Fix (12.09., Nutzerin-Bericht): "!== 2500"
+    // allein reichte nicht — ein Ziel von 0 (z. B. durch Eintippen von "0" ins
+    // normale Ziel-Feld + Speichern, statt über "Ziel zurücksetzen") galt
+    // damit fälschlich weiterhin als aktiv. 0 zählt jetzt ebenfalls als
+    // "nicht konfiguriert", genau wie der Standardwert.
     widgets.push({
       name: tLabel("Hydration"),
       kategorie: "hydration",
       viewId: "hydration",
-      aktiv: hydrationHeuteMl > 0 || hydrationZielMl !== 2500,
+      aktiv: hydrationHeuteMl > 0 || (hydrationZielMl > 0 && hydrationZielMl !== 2500),
       dailyCount: Math.min(hydrationHeuteMl, hydrationZielMl),
       dailyTotal: hydrationZielMl || 1,
       weeklyCount: 0,
@@ -608,7 +612,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       name: tLabel("Tageslicht"),
       kategorie: "tageslicht",
       viewId: "tageslicht",
-      aktiv: tageslichtHeuteMinuten > 0 || tageslichtZielMinuten !== 30,
+      aktiv: tageslichtHeuteMinuten > 0 || (tageslichtZielMinuten > 0 && tageslichtZielMinuten !== 30),
       dailyCount: Math.min(tageslichtHeuteMinuten, tageslichtZielMinuten),
       dailyTotal: tageslichtZielMinuten || 1,
       weeklyCount: 0,
