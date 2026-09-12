@@ -1,5 +1,78 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 12.09.2026, Fortsetzung (Teil 47) — Belohnungsfenster
+
+Nutzerinnen-Vorgabe: bei jeder rechtzeitig erledigten Tagesaufgabe (egal
+ob Morgen-/Abendroutine, Training, Medikamente, Supplemente, Hydration)
+soll ein sichtbares Belohnungsfenster erscheinen — ein direktes visuelles
+Feedback der App ("möchte ich zum Beispiel sehen, wie viele Punkte ich
+gesammelt habe"). Für Aktivitäten mit echtem Start/Ende-Verlauf
+(Training, Morgen-/Abendroutine) zählt für "rechtzeitig" der **Start**,
+nicht das Ende — einmal innerhalb eines Zeitpuffers nach der geplanten
+Uhrzeit begonnen, darf die Erledigung selbst beliebig lange dauern
+("Zeiten-Flexibilität"). Für einfache Ja/Nein-Erledigungen (Medikamente,
+Supplemente) ist die Erledigung selbst die einzige zu prüfende Aktion.
+Der Zeitpuffer (Standard 10 Minuten) ist admin-konfigurierbar.
+
+- **Neue Migration `0081_belohnung_puffer_min.sql`**: `profiles.belohnung_puffer_min`
+  (integer, Default 10) — **muss von der Nutzerin selbst im Supabase-Dashboard
+  ausgeführt werden**, diese Umgebung hat keinen Supabase-Zugriff.
+- **`utils/belohnungZeit.js`** (neu): `istRechtzeitig(geplanteUhrzeit, pufferMin, jetzt)`
+  — true, wenn keine geplante Uhrzeit vorhanden ist (nichts, wogegen "zu
+  spät" gemessen werden könnte) oder `jetzt` nicht später als geplante
+  Uhrzeit + Puffer liegt. Früher als geplant zählt immer als rechtzeitig.
+- **`utils/belohnungBus.js`** (neu): einfacher Publish/Subscribe-Kanal
+  (`feuereBelohnung`/`aufBelohnungHoeren`) — die auslösenden Stellen
+  (Daten-Hooks, RoutineAblauf, TrainingView) haben keinen sinnvollen
+  gemeinsamen React-Vorfahren mit der Popup-Komponente, deshalb ein
+  globaler Kanal statt Context/Props-Durchreichen durch jeden Hook.
+- **`ui/Belohnungsfenster.jsx`** (neu): Toast-Popup oben mittig, hört auf
+  den Bus, zeigt Icon + Text + "+1 Punkt", blendet nach 2,6s automatisch
+  wieder aus. Einmalig in `AuthenticatedApp.jsx` gemountet (bleibt beim
+  View-Wechsel erhalten, da außerhalb des `key={view}`-Wrappers). Zeigt
+  bewusst NICHT die Gesamtpunktzahl aus dem bestehenden
+  Errungenschaften-System (`useErrungenschaften`) an — das würde eine
+  Neuberechnung an jeder einzelnen Erledigen-Stelle erfordern, für eine
+  reine "+1 Punkt"-Anzeige unverhältnismäßig viel Verdrahtung. "1 Punkt
+  pro erledigtem Eintrag" gilt dort unverändert weiter.
+- **Verdrahtung** (jeweils nur beim Abhaken/Start, nicht beim
+  Rückgängigmachen, und nur wenn `istRechtzeitig(...)` true liefert):
+  - `useHormoneData.toggleHormonErledigt` (Medikamente/Hormone)
+  - `useSupplementData.toggleSupplementErledigt` (Supplemente)
+  - `useHydrationData.hydrationHinzufuegen` — Sonderfall: keine geplante
+    Uhrzeit vorhanden, deshalb kein Zeitpuffer-Check — Belohnung stattdessen
+    beim erstmaligen Erreichen des Tagesziels (nicht bei jedem Schluck-Tap).
+  - `RoutineAblauf.jsx` — Rechtzeitigkeit wird einmalig beim Mounten gegen
+    `routineEinstellungen[routine].startZeit` geprüft (Ref, nicht bei
+    jedem Schritt neu), Belohnung erst beim wirklichen Abschluss.
+  - `TrainingView.jsx` — nur "Jetzt live starten" (echter Start-Moment,
+    inkl. Direktstart aus der Vorlagen-Verwaltung), NICHT "Nur eintragen"
+    (reine nachträgliche Protokollierung, kein Live-Vorgang). Rechtzeitigkeit
+    wird beim Start in einer Ref (Session-ID → boolean) gemerkt, weil die
+    tatsächliche Prüfung erst beim späteren `trainingAbschliessen` zählt.
+  - `useProfileData.js`: neues Feld `belohnungPufferMin` + Setter
+    `setBelohnungPufferMin`, gleiches Rollback-bei-Fehler-Muster wie die
+    übrigen Set-Funktionen dieser Datei.
+- **`MehrTab.jsx`**: neue Einstellungskarte "Belohnungsfenster" mit
+  Puffer-Eingabefeld (Minuten) — bewusst KEIN separater Admin-Dashboard-
+  Screen: dank des bestehenden "Verwalten als"-Mechanismus (AdminContext)
+  bearbeitet dieselbe Stelle beim Verwalten eines Probanden automatisch
+  dessen Profil, kein zusätzlicher Verdrahtungsaufwand nötig. Neue
+  i18n-Strings (`mehr.belohnung*`) in de/en/tr.
+- **Getestet**: `istRechtzeitig()` isoliert mit Node gegen die von der
+  Nutzerin genannten Beispielwerte (Training 15:00 geplant, Start 15:12
+  mit 10-Minuten-Puffer → korrekt abgelehnt; Start 15:08 → korrekt
+  angenommen; frühzeitiger Start → immer angenommen; Randfall exakt an
+  der Pufferschwelle). Das Popup selbst per Preview-Harness (Playwright)
+  interaktiv geprüft: erscheint korrekt mit Text/Icon/Punkten, blendet
+  nach 2,6s automatisch wieder aus, mehrere Belohnungen nacheinander
+  funktionieren.
+- **Bewusst nicht verdrahtet**: Mahlzeiten und Gewohnheiten (von der
+  Nutzerin nicht genannt) — falls gewünscht, ist die Verdrahtung nach
+  demselben Muster wie Medikamente/Supplemente in wenigen Zeilen
+  nachrüstbar (`useMealData.toggleMahlzeitErledigt`,
+  `useGewohnheitenData.toggleGewohnheitErledigt`).
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 46) — Morgen-/Abendroutine: bestehende Einträge per Reiter übernehmen
 
 Nutzerinnen-Vorgabe: beim Einrichten einer Morgen-/Abendroutine nicht
