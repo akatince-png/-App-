@@ -155,6 +155,10 @@ export default function GewohnheitenView({ onHome }) {
     routineSchrittEntfernen,
     routineSchrittVerschieben,
     routineDurchlaufSpeichern,
+    mahlzeiten,
+    supplemente,
+    hormone,
+    trainingWochenplan,
     workflowPresetHinzufuegen,
     workflowPresetAendern,
     workflowPlanHinzufuegen,
@@ -338,6 +342,11 @@ export default function GewohnheitenView({ onHome }) {
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
               onEntfernen={routineSchrittEntfernen}
               onVerschieben={routineSchrittVerschieben}
+              mahlzeiten={mahlzeiten}
+              supplemente={supplemente}
+              hormone={hormone}
+              trainingWochenplan={trainingWochenplan}
+              gewohnheiten={gewohnheiten}
             />
             <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
             <RoutineSchritteEditor
@@ -346,6 +355,11 @@ export default function GewohnheitenView({ onHome }) {
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
               onEntfernen={routineSchrittEntfernen}
               onVerschieben={routineSchrittVerschieben}
+              mahlzeiten={mahlzeiten}
+              supplemente={supplemente}
+              hormone={hormone}
+              trainingWochenplan={trainingWochenplan}
+              gewohnheiten={gewohnheiten}
             />
           </>
         )}

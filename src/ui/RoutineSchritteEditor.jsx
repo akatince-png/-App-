@@ -33,16 +33,60 @@ const BEISPIELE = {
   ],
 };
 
+// Kategorien, aus denen sich fertige Einträge als Schritt übernehmen lassen
+// (12.09., Nutzerinnen-Vorgabe: "ich möchte nicht alles von Hand
+// reinschreiben müssen ... ich möchte auf Ernährung klicken und den Snack
+// einbauen, auf Training klicken und Seilspringen einbauen"). Bewusst als
+// Reiter über bereits vorhandene Daten statt eines neuen, separaten
+// Bereichs — ein Tap fügt den Namen direkt als Schritt hinzu, genau wie bei
+// den Beispielen oben (derselbe antippen()-Pfad, keine eigene Logik nötig).
+const KATEGORIE_TABS = [
+  { id: "training", label: "Training" },
+  { id: "ernaehrung", label: "Ernährung" },
+  { id: "supplemente", label: "Supplemente" },
+  { id: "medikamente", label: "Medikamente" },
+  { id: "gewohnheiten", label: "Gewohnheiten" },
+  { id: "hydration", label: "Hydration" },
+];
+
+// Vorgeschlagene Dauer je Kategorie — die Trainings-/Gewohnheiten-/etc.-
+// Einträge selbst tragen keine für einen Routine-Schritt sinnvolle Dauer,
+// deshalb hier ein pragmatischer Standardwert je Kategorie (wie bei den
+// Beispielen oben frei änderbar über die Schritt-Liste, sobald übernommen).
+function kategorieItems(tab, { mahlzeiten, supplemente, hormone, trainingWochenplan, gewohnheiten }) {
+  if (tab === "training") {
+    return trainingWochenplan.map((w) => [`${w.wochentag} · ${w.name || (w.arten?.length ? w.arten.join(" + ") : "Training")}`, 15]);
+  }
+  if (tab === "ernaehrung") return mahlzeiten.map((m) => [m.name, 10]);
+  if (tab === "supplemente") return supplemente.map((s) => [s.name, 2]);
+  if (tab === "medikamente") return hormone.map((name) => [name, 2]);
+  if (tab === "gewohnheiten") return gewohnheiten.map((g) => [g.name, 5]);
+  if (tab === "hydration") return [["Wasser trinken", 2]];
+  return [];
+}
+
 // Konfiguration der Morgen-/Abendroutine-Schritte (Phase 1, 13.08.) — frei
 // benennbare Schritte mit geplanter Dauer, nicht an bestehende Kategorien
 // gebunden (z. B. "Duschen", "Kosmetik" sind kein eigener Tracker in der
 // App, aber ein Schritt in der Routine). Reihenfolge per Pfeil-Tasten statt
 // Drag&Drop, reicht für die üblichen wenigen Schritte einer Routine.
-export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfernen, onVerschieben, routine }) {
+export default function RoutineSchritteEditor({
+  schritte,
+  onHinzufuegen,
+  onEntfernen,
+  onVerschieben,
+  routine,
+  mahlzeiten = [],
+  supplemente = [],
+  hormone = [],
+  trainingWochenplan = [],
+  gewohnheiten = [],
+}) {
   const [name, setName] = useState("");
   const [dauerMin, setDauerMin] = useState("10");
   const [fehler, setFehler] = useState(null);
   const [erfolg, setErfolg] = useState(null);
+  const [aktiverTab, setAktiverTab] = useState(null);
 
   // onHinzufuegen kam bisher ohne Rückmeldung aus — schlug das Speichern
   // fehl (z. B. fehlende Tabelle/RLS-Policy), passierte einfach gar nichts
@@ -127,6 +171,36 @@ export default function RoutineSchritteEditor({ schritte, onHinzufuegen, onEntfe
           </div>
         </div>
       )}
+
+      <div style={{ marginTop: 10 }}>
+        <div style={{ fontSize: 11, color: textMuted, marginBottom: 4 }}>Aus anderen Bereichen übernehmen:</div>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {KATEGORIE_TABS.map((tab) => (
+            <Pill key={tab.id} label={tab.label} selected={aktiverTab === tab.id} onClick={() => setAktiverTab((prev) => (prev === tab.id ? null : tab.id))} />
+          ))}
+        </div>
+        {aktiverTab && (
+          <div style={{ marginTop: 4 }}>
+            {(() => {
+              const alleItems = kategorieItems(aktiverTab, { mahlzeiten, supplemente, hormone, trainingWochenplan, gewohnheiten });
+              const items = alleItems.filter(([iname]) => !vorhandeneNamen.has(iname.toLowerCase()));
+              if (alleItems.length === 0) {
+                return <div style={{ fontSize: 11.5, color: textMuted, fontStyle: "italic" }}>Dort ist noch nichts eingerichtet.</div>;
+              }
+              if (items.length === 0) {
+                return <div style={{ fontSize: 11.5, color: textMuted, fontStyle: "italic" }}>Schon alles aus diesem Bereich übernommen.</div>;
+              }
+              return (
+                <div style={{ display: "flex", flexWrap: "wrap" }}>
+                  {items.map(([iname, idauer]) => (
+                    <Pill key={iname} label={iname} onClick={() => antippen(iname, idauer)} />
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "flex-end" }}>
         <div style={{ flex: 1 }}>

@@ -54,6 +54,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     hormonPlan,
     hormonErledigt,
     hormonDosierung,
+    hormone,
     supplemente,
     supplementErledigt,
     mahlzeiten,
@@ -197,6 +198,11 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen(routine, name, dauerMin)}
               onEntfernen={routineSchrittEntfernen}
               onVerschieben={routineSchrittVerschieben}
+              mahlzeiten={mahlzeiten}
+              supplemente={supplemente}
+              hormone={hormone}
+              trainingWochenplan={trainingWochenplan}
+              gewohnheiten={gewohnheiten}
             />
           </div>
         )}
