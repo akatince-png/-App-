@@ -1,5 +1,17 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026 (Teil 84) — Migrationen 0001-0084 vollständig bestätigt deployt
+
+Nutzerin hat bestätigt: auch die zuletzt noch unbestätigten Migrationen
+0077, 0078, 0083 und **0084 (der Sicherheitsfix aus Teil 81)** sind
+erfolgreich im echten Supabase-Projekt gelaufen. Zusammen mit der
+Bestätigung aus Teil 83 (0079-0082 liefen bereits vorher) sind damit
+**alle Migrationen bis einschließlich 0084 in Produktion aktiv** — auch
+die kritische Sicherheitslücke (`profiles.is_admin`-Selbsterhöhung, Teil
+81) ist damit tatsächlich geschlossen, nicht nur im Repo behoben.
+
+Kein weiterer offener Deploy-Punkt zum aktuellen Zeitpunkt.
+
 ## ✅ Update 13.09.2026 (Teil 83) — Migrationen 0079-0082 waren entgegen der Dokumentation bereits deployt; alle 8 offenen Migrationen idempotent nachgerüstet
 
 Auf Nachfrage der Nutzerin: Sie hatte versucht, die als "offen" gelisteten
