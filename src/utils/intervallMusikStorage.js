@@ -4,6 +4,14 @@
 // Bequemlichkeit (nicht bei jedem Öffnen neu eintippen müssen).
 const PRAEFIX = "intervallMusik_";
 
+// Sekunden vor Ende eines Arbeitsintervalls, in denen die Musik ausgeblendet
+// wird (siehe useIntervallMusikSync) — gemeinsamer Wert für Training/
+// Workflow-Timer, damit sich das Fade-Verhalten nicht auseinanderentwickelt
+// (13.09., Teil 60: aus TrainingView.jsx hierher verschoben, da sowohl
+// TrainingView.jsx als auch das daraus extrahierte ui/LiveWorkout.jsx ihn
+// brauchen).
+export const INTERVALL_FADE_SEK = 5;
+
 const STANDARD = {
   workflow: { arbeitMin: "25", pauseMin: "5", gesamtMin: "100", modus: "durchgehend" },
   // Training hat seine eigenen Arbeit-/Pause-Sekunden-Felder (siehe
