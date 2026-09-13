@@ -1,5 +1,39 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 76) — Orden auch auf den Direktzugriff-Kacheln (sichtbar auf jedem Gerät)
+
+Direkte Nachbesserung zu Teil 75: "Die Orden dieser Punkte sollen für
+die Nutzer sichtlicher sein. Vielleicht machen wir's auch so, dass das
+in der Tabletfunktion... für mich so ersichtlich ist und für die Nutzer
+unten in ihren kleinen Feldern." Nach Rückfrage (Kachel-Lösung für alle
+vs. Trennung nach Rolle vs. beides) hat sich die Nutzerin für die
+Kachel-Lösung für alle entschieden — kein Rollen-Unterschied.
+
+Grund für die Rückfrage: die Orden-Leiste aus Teil 75 sitzt nur ab
+Tablet-Breite (≥1024px) rechts neben dem Balkendiagramm — auf dem Handy
+war sie dadurch komplett unsichtbar, obwohl die eigentlichen
+Nutzer:innen (Probanden) die App überwiegend auf dem Handy verwenden.
+
+Umsetzung: `MiniPlanWidget.jsx` (die kleinen Kategorie-Kacheln im
+"Direktzugriff"-Bereich, sichtbar auf jedem Gerät) bekommt einen neuen
+optionalen `orden`-Prop — ein kleiner Kreis auf der Kartenecke (leicht
+negativer Versatz, weißer Rand, damit er nicht über den Kategorienamen
+läuft — im ersten Entwurf wurde "Gewohnheiten" so zu "ewohnheiten",
+beim Playwright-Screenshot aufgefallen und vor dem Commit korrigiert).
+Grau/transparent, solange kein Streak-Meilenstein erreicht ist, farbig
+im Kategorie-Verlauf sobald einer geschafft ist — exakt dieselbe
+Freischalt-Logik wie die Tablet-Leiste, jetzt aus `utils/
+errungenschaften.js` (`WIDGET_ZU_ORDEN_KATEGORIE`/
+`ordenFuerWidgetKategorie`) ausgelagert, damit beide Stellen dieselbe
+Logik nutzen statt sie zu duplizieren. Die Tablet-Leiste selbst bleibt
+unverändert bestehen (weiterhin für alle, nicht admin-exklusiv).
+
+Verifiziert über einen isolierten Playwright-Preview-Aufbau (nur
+`MiniPlanWidget` mit Beispiel-Kacheln/Orden-Zuständen) bei 400px
+(Handy-Breite) — Badges korrekt grau vs. farbig, keine Text-Überlappung
+mehr nach der Korrektur, keine Konsolenfehler. `npm run build` +
+`npx oxlint` weiterhin grün (16 Warnungen, unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 75) — Tablet: Orden-Vorschau rechts neben Tagesfortschritt-Balkendiagramm
 
 Nutzerinnen-Vorgabe anhand eines Tablet-Screenshots: "die Balken, die den
