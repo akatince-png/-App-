@@ -1,5 +1,151 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 60) — App-weite Fehler-/Code-Durchsuchung
+
+Nutzerinnen-Vorgabe: "überprüft die gesamte App nach Bugs und nach
+komplizierten und unnötig viel Code, die Du nachkorrigieren könntest."
+Vier parallele Recherche-Durchgänge über die komplette Codebase
+(Datenschicht `src/data/`, Views `src/views/`, UI-Komponenten `src/ui/`,
+Utils/Context/Services), danach ein gezielter Fix-Pass über die
+eindeutigsten, am besten abgesicherten Funde. Vier Commits, thematisch
+gruppiert:
+
+**1. Datenschicht — fehlende Rollbacks, Fehlerprüfungen, Doppeltipp-Schutz**
+In mehreren neueren Dateien war ein Bug-Fix-Muster bereits sauber
+nachgerüstet, in älteren, strukturell fast identischen Schwesterdateien
+aber nie nachgezogen:
+- `useProtocolData.js` (Peptide): `setEinnahmeart`/`setDose`/
+  `setDoseBatch`/`setPeptidFoto`/`removePeptidRow` zeigten bei einem
+  Speicherfehler dauerhaft den neuen, nie gespeicherten Wert — jetzt
+  Rollback wie im (laut eigenem Kommentar) gespiegelten
+  `useHormoneData.js`.
+- `useHormoneData.js`: `saveHormonFeedback`/`skipHormonFeedback` ohne
+  Rollback bei fehlgeschlagenem Upsert — nachgezogen wie in
+  `usePeptideLogs.js`.
+- `useHormoneData.js`/`useRoutinen.js`/`useDrinkRecipes.js`: die
+  Abhaken-Funktionen (Medikament/Routine-Schritt/Getränk) lasen bei
+  schnellem Doppeltippen noch den veralteten React-State — ein zweiter,
+  als "Rückgängig" gemeinter Tap wirkte dadurch nicht. Gleicher
+  `pendingErledigtRef`-Schutz wie in `useGewohnheitenData.js` ergänzt.
+- `useBiomarkerData.js`: Fehler beim Übernehmen der per Foto erkannten
+  Laborwerte wurden gar nicht geprüft — Oberfläche meldete "erkannt",
+  obwohl nichts gespeichert wurde; ein fehlgeschlagener Archiv-Insert
+  legte zusätzlich einen nie löschbaren Eintrag mit `id: undefined` an.
+- `useSpotifyVerbindung.js`: `spotifyAnlassEntfernen` prüfte den
+  Lösch-Fehler nicht (Schwesterfunktionen in derselben Datei schon).
+
+**2. Views — Datenverlust-Risiko, doppelte Einträge, Monatssprung**
+- `HydrationView.jsx`/`TageslichtView.jsx`: Ziel-Eingabefeld zeigte beim
+  Laden kurz den Standardwert (2500 ml/30 Min.) statt des echten Ziels
+  — ein versehentlicher Tap auf "Speichern" in diesem Moment setzte das
+  echte Ziel unbemerkt zurück. Jetzt mit Sync-Effekt, der das Feld nicht
+  mehr überschreibt, sobald die Nutzerin es selbst angefasst hat.
+- `TrainingView.jsx`/`SupplementeView.jsx`: Speichern-Buttons ohne
+  Sperre während des Requests — ein schneller Doppel-Tap erzeugte zwei
+  parallele Einträge (bei Training exakt die "Geister-Einträge", die den
+  gerade erst in Teil 58 behobenen Home-Kachel-Bug wieder auslösen
+  konnten). Jetzt gesperrt, solange der Request läuft.
+- `WochenuebersichtView.jsx`: Monatsnavigation rechnete "±30 Tage" statt
+  kalendarisch — bei Monaten mit mehr als 30 Tagen wurde ein ganzer Monat
+  komplett übersprungen (z. B. 31. Januar → 2. März).
+- `ProtokollLogView.jsx`: Einzel-Löschen (🗑) synchronisierte die
+  Mehrfachauswahl nicht mit — eine bereits gelöschte, aber noch markierte
+  ID blieb im Auswahl-Set, "X ausgewählt" zeigte danach eine falsche
+  Zahl. Jetzt mit `entfernenAusAuswahl()` synchronisiert, wie es
+  `ArchivAbschnitt.jsx` (Vorlage für dieses Muster) bereits richtig macht.
+
+**3. Datumsberechnung, UI-Leaks, toter Code**
+- Neue `parseLocalISODate()` in `utils/dates.js`: `new Date("YYYY-MM-DD")`
+  parst laut Sprachstandard als UTC-Mitternacht statt lokaler
+  Mitternacht — in jeder Zeitzone westlich von UTC verschiebt das den
+  effektiven Tag. Betraf die komplette Dosierungs-/Intervallberechnung
+  (`schedule.js`), die "Wochenprotokoll fällig"-Erkennung
+  (`wochenprotokollSnapshot.js`) und die Zeitraum-Berechnung in
+  `WochenuebersichtView.jsx` — alle vier umgestellt.
+- `QuickTaskList.jsx`/`RoutineSchritteEditor.jsx`: ungeräumte
+  `setTimeout`-Timer ließen bei schnell hintereinander ausgelösten Taps
+  Erfolgs-Animationen/-Meldungen vorzeitig verschwinden.
+- `WoechentlicheCheckinsCard.jsx`: Blob-URLs für Check-in-Fotos wurden
+  nie freigegeben (`URL.revokeObjectURL()` fehlte komplett) — Speicherleck
+  bei häufiger Foto-Nutzung.
+- `MiniPlanWidget.jsx`: Ring-Hintergrundfarbe per String-Anhängen von
+  Alpha-Hex statt der dafür vorgesehenen `hexZuRgba()`-Funktion.
+- Toter Code entfernt: `src/ADHS_HOMEVIEW_EXAMPLE.jsx` (286 Zeilen,
+  nirgends importiert) und `wochenplanUebungenText()` in `dayItems.js`
+  (nirgends aufgerufen).
+
+**4. Akutmodus/Lexikon/Blutwerte-Scan (separater, dringender Fix, siehe
+Teil 59)** — Ursache war ein ungültiger Anthropic-Modellname in zwei
+Supabase Edge Functions plus ein app-weiter Bug beim Auslesen von
+Fehlermeldungen aus fehlgeschlagenen Edge-Function-Aufrufen.
+
+**Getestet**: Build + oxlint nach jedem der vier Commits (Warnungen sanken
+von 18 auf 16 durch den entfernten toten Code, sonst unverändert, keine
+neuen). `parseLocalISODate()` zusätzlich mit einem kleinen Node-Skript
+gegen Rundreise-Konsistenz geprüft.
+
+### Nicht behoben — bewusst zurückgestellt (Punch-Liste für später)
+
+Aus den vier Recherchen blieben weitere, weniger eindeutige oder deutlich
+aufwändigere Funde übrig, die nicht in diesem Durchgang angefasst wurden:
+
+- **`AuthContext.jsx`**: potenzielle Race Condition zwischen
+  `getSession()` und `onAuthStateChange()` beim Start — eng, aber real
+  (z. B. beim Öffnen eines Einladungs-/Recovery-Links).
+- **`AppDataContext.jsx`**: das zusammengeführte `value`-Objekt hat kein
+  `useMemo` — jede State-Änderung in irgendeinem der ~30 Hooks
+  re-rendert alle `useAppData()`-Konsumenten. Bei ~30 Dependencies ist
+  ein einfaches `useMemo` unhandlich; eher ein Hinweis, den Context in
+  mehrere kleinere aufzuteilen — größerer Umbau, nicht in diesem Pass.
+- **`useProfileData.js`**: mehrere Funktionen (`toggleDatenteilung`,
+  `setCategoryZiel` u. a.) platzieren den Supabase-Aufruf innerhalb der
+  `setState`-Updater-Funktion — unter React StrictMode (aktiv in
+  `main.jsx`) löst das im Dev-Modus doppelte Schreibzugriffe aus.
+- Fehlende `cancelled`-Guards in ca. 10 Lade-`useEffect`s
+  (`useAtemuebungenData.js`, `useTeamData.js`, `useQuestData.js` u. a.) —
+  aktuell durch den Remount bei Nutzerwechsel abgeschwächt, aber
+  inkonsistent zum Rest der App.
+- Zweistufiges "Archivieren + Neu anlegen" ohne Rollback
+  (`useHauptprotokollData.js`, `useProtocolData.protokollArchivieren`) —
+  schlägt der zweite Schritt fehl, zeigt die Oberfläche weiterhin das
+  (jetzt archivierte) alte Protokoll als aktiv.
+- Duplizierte Berechnungen: Alter (`kalorien.js` vs.
+  `trackingZusammenfassung.js`, leicht inkonsistente Null-Behandlung) und
+  Streak-Zählung (`errungenschaften.js` vs. `useGewohnheitenData.js`).
+- Stark duplizierte Dosis-/Intervall-Logik zwischen `useProtocolData.js`
+  (Peptide) und `useHormoneData.js` (Medikamente) — die eigentliche
+  Wurzelursache, warum Fixes in einer Kopie nicht automatisch in der
+  anderen landen (siehe Fund 1 oben). Kandidat für eine gemeinsame
+  Hook-Factory.
+- `aiService.js`: ~15 nahezu identische `…AusChat`-Funktionen
+  (~500 Zeilen Boilerplate), ließen sich auf einen parametrisierten
+  Helper reduzieren.
+- Mehrfach duplizierte "frisch"-Schattenstate-Logik
+  (`PersoenlicheDatenCard.jsx`, `WoechentlicheCheckinsCard.jsx`,
+  `LaborwerteFelder.jsx`) — nie in einen gemeinsamen Hook ausgelagert,
+  obwohl die Kommentare explizit aufeinander verweisen.
+- Uneinheitliche Lösch-Bestätigung: `ArchivAbschnitt.jsx` fragt immer per
+  `window.confirm()` nach, viele andere 🗑-Buttons (WochenplanEditor,
+  WorkflowTimer, RoutineSchritteEditor, UebungenEditor,
+  ZeitErinnerungenCard) löschen sofort ohne Rückfrage.
+- Sehr lange Dateien (>500 Zeilen), Kandidaten zum Aufteilen:
+  `TrainingView.jsx`, `HomeView.jsx`, `WochenuebersichtView.jsx`,
+  `KiChat.jsx`, `WochenplanEditor.jsx`.
+- `HydrationView.jsx`/`TageslichtView.jsx` teilen sich praktisch
+  denselben Aufbau (Motivationstext, Schnellauswahl,
+  Verschätzt-Korrektur) bis auf Variablennamen — Kandidat für einen
+  gemeinsamen `useZielMitKorrektur`-Hook.
+- `charts.jsx`: `data.map()` ohne Default-Array-Fallback — aktuell nicht
+  ausgelöst, aber fragil gegenüber künftiger Wiederverwendung.
+- `templateDirektStarten` in `TrainingView.jsx` (Vorlagen-Direktstart)
+  hat noch keine Doppeltipp-Sperre wie der Haupt-Submit-Weg (Teil 60,
+  Punkt 2) — selteneren Pfad, gleiche Fehlerklasse.
+
+Diese Liste ist bewusst als Backlog stehen gelassen statt in einem einzigen
+Mega-Durchgang durchgezogen — die oben tatsächlich gefixten Punkte waren
+die mit dem klarsten Nutzerinnen-Impact und dem geringsten Risiko einer
+neuen Regression.
+
 ## ✅ Update 13.09.2026 (Teil 59) — Akutmodus "Edge Function"-Fehler behoben + App-weite Fehlermeldungen korrigiert
 
 Nutzerinnen-Vorgabe (mit Screenshot): Im Akutmodus ("Was hilft mir jetzt?"
