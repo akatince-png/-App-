@@ -1,6 +1,6 @@
 import { buildDayItems, KATEGORIE_META } from "./dayItems";
 import { describeInterval, activeDoseDays } from "./schedule";
-import { addDays, fmtDate, toLocalISODate } from "./dates";
+import { addDays, fmtDate, parseLocalISODate, toLocalISODate } from "./dates";
 
 const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -9,7 +9,9 @@ const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 // serverseitige Cron-Infrastruktur in dieser App.
 export function wochenprotokollFaellig({ startdatum, wochenprotokollSnapshots }) {
   if (!startdatum) return false;
-  const tageSeitStart = Math.floor((new Date() - new Date(startdatum)) / (1000 * 60 * 60 * 24));
+  // Bug-Fix (13.09.): new Date("YYYY-MM-DD") parst als UTC-Mitternacht statt
+  // lokaler Mitternacht — siehe parseLocalISODate() in utils/dates.js.
+  const tageSeitStart = Math.floor((new Date() - parseLocalISODate(startdatum)) / (1000 * 60 * 60 * 24));
   if (tageSeitStart < 7) return false;
   return !wochenprotokollSnapshots.some((s) => s.wochenNummer === 1);
 }
@@ -49,7 +51,7 @@ export function baueWochenprotokollDaten(appData) {
   ].filter((s) => s.d);
 
   const dauerTage = Math.max(1, Math.round((Number(dauer) || 12) * 7));
-  const startDatumObj = startdatum ? new Date(startdatum) : new Date();
+  const startDatumObj = startdatum ? parseLocalISODate(startdatum) : new Date();
   const endDatumObj = addDays(startDatumObj, dauerTage - 1);
 
   const substanzenStatistik = substanzen.map((s) => ({

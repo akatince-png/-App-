@@ -7,7 +7,7 @@ import { buildDayItems, KATEGORIE_META, projektFarbe } from "../utils/dayItems";
 import { WochenComplianceChart } from "../ui/charts";
 import { exportElementAsPdf } from "../utils/pdfExport";
 import { describeInterval, activeDoseDays } from "../utils/schedule";
-import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { addDays, fmtDate, parseLocalISODate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 import { getCoachName } from "../utils/coachStorage";
@@ -243,7 +243,9 @@ export default function WochenuebersichtView({
   }, [peptide, dosierung, hormone, hormonDosierung]);
 
   const dauerTage = Math.max(1, Math.round((Number(dauer) || 12) * 7));
-  const startDatumObj = startdatum ? new Date(startdatum) : today;
+  // Bug-Fix (13.09.): new Date("YYYY-MM-DD") parst als UTC-Mitternacht statt
+  // lokaler Mitternacht — siehe parseLocalISODate() in utils/dates.js.
+  const startDatumObj = startdatum ? parseLocalISODate(startdatum) : today;
   const endDatumObj = addDays(startDatumObj, dauerTage - 1);
 
   const statistikProSubstanz = useMemo(

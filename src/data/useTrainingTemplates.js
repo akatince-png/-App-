@@ -38,7 +38,7 @@ function rowToWochenplan(r) {
     uebungenListe: Array.isArray(r.uebungen_liste) ? r.uebungen_liste : [],
     // Alt: ein Freitext + ein einzelnes Sätze/Wiederholungen-Paar für die
     // ganze Einheit — nur noch für bereits vor der Umstellung gespeicherte
-    // Einheiten relevant (siehe wochenplanUebungenText in dayItems.js).
+    // Einheiten relevant.
     saetze: r.saetze || "",
     wiederholungen: r.wiederholungen || "",
     uebungen: r.uebungen || "",

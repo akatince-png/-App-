@@ -19,6 +19,19 @@ export function toLocalISODate(d) {
   return `${y}-${m}-${day}`;
 }
 
+// Gegenstück zu toLocalISODate(): baut aus einem reinen "YYYY-MM-DD"-String
+// (wie er überall in der App für startdatum/eigenerStart gespeichert wird)
+// ein Date-Objekt auf lokale Mitternacht. Bug-Fix (13.09., in schedule.js
+// gefunden): `new Date("YYYY-MM-DD")` (ohne Uhrzeit) parst laut
+// ECMA-262 als UTC-Mitternacht, nicht lokale Mitternacht — in jeder
+// Zeitzone westlich von UTC verschiebt das den effektiven Tag um einen Tag
+// nach vorne (z. B. wird "2026-01-15" in UTC-5 zu "2026-01-14"), was die
+// komplette Dosierungs-/Intervallberechnung verschieben kann.
+export function parseLocalISODate(str) {
+  const [y, m, d] = str.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 // Vergleicht "jetzt" mit der geplanten Uhrzeit (z. B. "20:00") am selben Tag
 // und liefert einen lesbaren Verspätungs-Text — oder null, wenn's pünktlich
 // war (Toleranz: 5 Minuten). Grundlage fürs lückenlose Tagesprotokoll

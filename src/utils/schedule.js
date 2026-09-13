@@ -1,4 +1,4 @@
-import { addDays } from "./dates";
+import { addDays, parseLocalISODate } from "./dates";
 import { INTERVALL_OPTIONEN } from "../constants";
 
 export const WEEKDAY_INDEX = { So: 0, Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6 };
@@ -39,7 +39,9 @@ export function describeInterval(d, lang = "de") {
  */
 export function activeDoseDays(d, startdatum, totalDays) {
   const mode = d?.intervallTyp || "fixed";
-  const start = new Date(d?.eigenerStart || startdatum);
+  // Bug-Fix (13.09.): new Date("YYYY-MM-DD") parst als UTC-Mitternacht statt
+  // lokaler Mitternacht — siehe parseLocalISODate() in utils/dates.js.
+  const start = parseLocalISODate(d?.eigenerStart || startdatum);
   const dates = [];
 
   if (mode === "weekdays") {
@@ -88,8 +90,10 @@ export function faelltAnTag(d, date, startdatum) {
 
   const startRaw = d?.eigenerStart || startdatum;
   if (!startRaw) return true;
-  const start = new Date(startRaw);
-  start.setHours(0, 0, 0, 0);
+  // Bug-Fix (13.09.): siehe activeDoseDays() oben / parseLocalISODate() in
+  // utils/dates.js — startRaw ist ein "YYYY-MM-DD"-String, new Date(string)
+  // parst den als UTC-Mitternacht statt lokaler Mitternacht.
+  const start = parseLocalISODate(startRaw);
   if (tag < start) return false;
 
   const n = Math.round((tag - start) / 86400000);

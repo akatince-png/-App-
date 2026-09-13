@@ -67,8 +67,14 @@ export default function MiniPlanWidget({
   const innerStrokeDash = (dailyPercent / 100) * innerCircumference;
   const outerStrokeDash = (weeklyPercent / 100) * outerCircumference;
 
-  // Hellere Farbe für Hintergrund
-  const lighterColor = baseColor + "40"; // 25% opacity
+  // Hellere Farbe für Hintergrund. Bug-Fix (13.09.): einfaches String-
+  // Anhängen von Alpha-Hex ("40") setzt voraus, dass baseColor immer ein
+  // 6-stelliger Hex-String ist — bei einem 3-stelligen Hex oder einem
+  // rgb(...)-String (z. B. aus einer künftigen Farbwahl) entstünde ein
+  // ungültiger CSS-Wert, der Ring-Hintergrund verschwindet lautlos.
+  // hexZuRgba() (theme.js) ist für genau diesen Zweck gedacht und wird
+  // bereits eine Zeile darunter für border verwendet.
+  const lighterColor = hexZuRgba(baseColor, 0.25);
 
   return (
     <div

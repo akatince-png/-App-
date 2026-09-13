@@ -1,6 +1,5 @@
 import { sameDay, toLocalISODate } from "./dates";
 import { faelltAnTag } from "./schedule";
-import { uebungGewichtText, uebungWiederholungenText } from "../ui/UebungenEditor";
 
 // getDay()-indexiert (0 = Sonntag), passend zu JS' Date#getDay().
 const GETDAY_TO_LABEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -59,27 +58,6 @@ export const PROJEKT_FARBEN = [
 export function projektFarbe(projekt) {
   if (!projekt) return KATEGORIE_META.zeitblock.dot;
   return PROJEKT_FARBEN[(projekt.farbeIndex || 0) % PROJEKT_FARBEN.length];
-}
-
-// Kurzbeschreibung der Übungen einer Wochenplan-Einheit (WochenplanEditor.jsx)
-// — neue Einheiten haben je Übung eigene Sätze/Wiederholungen/Gewicht
-// (uebungenListe, seit 13.08.), ältere, davor gespeicherte Einheiten nur
-// einen Freitext + ein einzelnes Sätze/Wiederholungen-Paar für die ganze
-// Einheit (uebungen/saetze/wiederholungen) — beide Formate bleiben lesbar.
-export function wochenplanUebungenText(zuweisung) {
-  if (zuweisung.uebungenListe?.length) {
-    return zuweisung.uebungenListe
-      .filter((u) => u.name)
-      .map((u) => {
-        const gewichtText = uebungGewichtText(u);
-        return `${u.name} ${u.saetze || "?"}×${uebungWiederholungenText(u) || "?"}${gewichtText ? ` ${gewichtText}` : ""}`;
-      })
-      .join(", ");
-  }
-  if (zuweisung.uebungen) {
-    return zuweisung.saetze && zuweisung.wiederholungen ? `${zuweisung.uebungen} (${zuweisung.saetze}×${zuweisung.wiederholungen})` : zuweisung.uebungen;
-  }
-  return "";
 }
 
 // Kompakte Zusammenfassung einer Trainingseinheit für Tagesplan-/Home-Zeilen

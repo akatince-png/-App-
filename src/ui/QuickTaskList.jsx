@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { cardBorder } from "./theme";
 
 /**
@@ -19,11 +19,19 @@ import { cardBorder } from "./theme";
 export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled = true }) {
   const displayItems = items.slice(0, maxItems);
   const [completingKey, setCompletingKey] = useState(null);
+  // Bug-Fix (13.09.): der setTimeout wurde weder in einer Ref gehalten noch
+  // bei einem erneuten Tap abgeräumt — tippte man Item A und kurz danach
+  // (innerhalb von 600ms) Item B an, feuerte der ERSTE Timer und setzte
+  // completingKey auf null, während gerade B's Erfolgs-Animation laufen
+  // sollte, die dadurch vorzeitig abbrach.
+  const timeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   const handleToggle = (item) => {
     // Trigger animation
+    clearTimeout(timeoutRef.current);
     setCompletingKey(item.key);
-    setTimeout(() => setCompletingKey(null), 600);
+    timeoutRef.current = setTimeout(() => setCompletingKey(null), 600);
 
     // Play sound if enabled
     if (soundEnabled && !item.done) {

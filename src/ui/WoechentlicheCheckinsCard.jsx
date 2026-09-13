@@ -46,16 +46,26 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
     setNeueVariable("");
   };
 
+  // Bug-Fix (13.09.): URL.createObjectURL(file) wurde nie wieder mit
+  // URL.revokeObjectURL() freigegeben — weder beim Ersetzen eines Fotos
+  // derselben Kategorie noch nach dem Absenden des Eintrags. Bei häufiger
+  // Foto-Nutzung sammelten sich Blob-URLs im Speicher der Seite an, bis sie
+  // neu geladen wurde.
   const handleEintragFoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPendingFotos((prev) => [...prev.filter((f) => f.kategorie !== fotoKategorie), { kategorie: fotoKategorie, file, previewUrl: URL.createObjectURL(file) }]);
+    setPendingFotos((prev) => {
+      const ersetzt = prev.find((f) => f.kategorie === fotoKategorie);
+      if (ersetzt) URL.revokeObjectURL(ersetzt.previewUrl);
+      return [...prev.filter((f) => f.kategorie !== fotoKategorie), { kategorie: fotoKategorie, file, previewUrl: URL.createObjectURL(file) }];
+    });
     e.target.value = "";
   };
 
   const submitEintrag = async () => {
     await gewichtHinzufuegen(neuerEintrag, angezeigteAktiv, combinedMesswertDefs, pendingFotos);
     setNeuerEintrag(leererEintrag(angezeigteAktiv));
+    pendingFotos.forEach((f) => URL.revokeObjectURL(f.previewUrl));
     setPendingFotos([]);
   };
 

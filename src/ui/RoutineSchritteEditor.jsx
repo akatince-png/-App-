@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Label, Pill, TextInput } from "./primitives";
 import NumberWheelField from "./NumberWheelField";
 import { accentDark, cardBorder, danger, success, textMuted } from "./theme";
@@ -87,6 +87,12 @@ export default function RoutineSchritteEditor({
   const [fehler, setFehler] = useState(null);
   const [erfolg, setErfolg] = useState(null);
   const [aktiverTab, setAktiverTab] = useState(null);
+  // Bug-Fix (13.09.): siehe QuickTaskList.jsx für denselben Bug — ein
+  // zweiter, schnell hintereinander hinzugefügter Schritt konnte durch den
+  // ungeräumten Timer des ersten Aufrufs seine eigene Erfolgsmeldung
+  // vorzeitig verlieren.
+  const erfolgTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(erfolgTimeoutRef.current), []);
 
   // onHinzufuegen kam bisher ohne Rückmeldung aus — schlug das Speichern
   // fehl (z. B. fehlende Tabelle/RLS-Policy), passierte einfach gar nichts
@@ -105,7 +111,8 @@ export default function RoutineSchritteEditor({
       return;
     }
     setErfolg(`„${schrittName}" hinzugefügt.`);
-    setTimeout(() => setErfolg(null), 2500);
+    clearTimeout(erfolgTimeoutRef.current);
+    erfolgTimeoutRef.current = setTimeout(() => setErfolg(null), 2500);
   };
 
   const hinzufuegen = async () => {
@@ -118,7 +125,8 @@ export default function RoutineSchritteEditor({
       return;
     }
     setErfolg(`„${name}" hinzugefügt.`);
-    setTimeout(() => setErfolg(null), 2500);
+    clearTimeout(erfolgTimeoutRef.current);
+    erfolgTimeoutRef.current = setTimeout(() => setErfolg(null), 2500);
     setName("");
     setDauerMin("10");
   };
