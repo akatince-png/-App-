@@ -1,5 +1,50 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 62) — setErinnerung() sichtbar fehlerbewusst gemacht
+
+Nutzerinnen-Vorgabe: "Mach setErinnerung() sichtbar fehlerbewusst, auch
+wenn es 6 Dateien betrifft" — der in Teil 61 bewusst zurückgestellte
+Rest von Übergabeprotokoll-Punkt #13.
+
+`useProfileData.setErinnerung()` speicherte einen Fehler bisher nur in
+die Browser-Konsole (`console.error` + stiller Rollback) — genau dieses
+Muster hatte laut Protokoll den Erinnerungen-Bug einer früheren Sitzung
+wochenlang unsichtbar gehalten. Gibt jetzt wie `resetOnboarding()` `{ok,
+error}` zurück. Alle 6 Aufrufer-Dateien zeigen einen fehlgeschlagenen
+Speicherversuch jetzt sichtbar an:
+
+- **`ZeitErinnerungenCard.jsx`**: eigener Fehler-Banner. Zusätzlich
+  behoben: bei einem Fehlschlag rollt `setErinnerung` den echten
+  `erinnerungen`-Stand zurück, das lokale `zeiten`-Array blieb bisher
+  aber auf dem nie gespeicherten optimistischen Stand stehen (das
+  `zeitenBearbeitetRef`-Sync-Gate ließ den Rollback nicht durch) — Ref
+  wird jetzt bei einem Fehler zurückgesetzt.
+- **`KategorieErinnerung.jsx`**: eigener Fehler-Banner.
+- **`MehrTab.jsx`**: ein Fehler-Zustand `{key, message}` für die ganze
+  Erinnerungen-Kategorien-Liste, direkt bei der betroffenen Zeile
+  angezeigt.
+- **`HydrationView.jsx`**: `handleHydrationUebernehmen()` (KiChat-
+  Übernehmen-Knopf) wirft bei einem Fehlschlag jetzt wie schon beim
+  Tagesziel direkt daneben — `KiChat.jsx` fängt das bereits ab.
+- **`TrainingView.jsx`**: nutzt den schon vorhandenen `fehler`-Zustand,
+  jetzt auch neben dem Wochenplan-Editor angezeigt.
+- **`OnboardingCategoriesView.jsx`**: nutzt den schon vorhandenen
+  `error`-Zustand der Schrittseite.
+
+**Getestet**: Playwright gegen eine Preview-Harness mit gemocktem
+AppDataContext (echte async Lücke zwischen optimistischem Update und
+Rollback nachgebildet — ohne die batcht React beides zu einem No-Op,
+Test hat das zunächst auch selbst getroffen und wurde entsprechend
+korrigiert). Erfolgsfall fehlerfrei; Fehlerfall zeigt die Meldung UND der
+Zustand rollt korrekt zurück (ZeitErinnerungenCard: lokale Zeiten-Liste
+synct sich wieder auf den echten Stand; KategorieErinnerung: Umschalter
+bleibt auf dem vorherigen Wert). Die restlichen vier Aufrufer nutzen
+mechanisch dasselbe, hier verifizierte `await` + `{ok, error}`-Muster,
+per Code-Review geprüft. Build + oxlint weiterhin sauber (16 Warnungen,
+Baseline unverändert).
+
+Damit ist Übergabeprotokoll-Punkt #13 vollständig erledigt.
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 61) — Punch-Liste (Teil 60) komplett abgearbeitet
 
 Nutzerinnen-Vorgabe: "Beginne jetzt bitte mit allen von dir Repo
@@ -3874,7 +3919,7 @@ sonst nie auffallen lassen.
 | 10 | Nachfass-Hinweis für Morgenroutine/Abendroutine/Workout-Flow | Fehlt bewusst — keine passende "erledigt"-Log-Tabelle, siehe Abschnitt 7 |
 | 11 | Kalenderverbindung (Google/Apple Calendar oder .ics-Export) | Nur als vage Idee erwähnt, kein konkreter Auftrag |
 | 12 | Native App (Xcode/App Store) | Gewünschtes Fernziel der Nutzerin — siehe Abschnitt 12 |
-| 13 | `useProfileData.js`-Speicherfehler nur in der Browser-Konsole geloggt, nie sichtbar (Muster: optimistic update + `.then(error => console.error(error))`) | 🟡 Empfohlen, aber nicht umgesetzt — hat den Erinnerungen-Bug (Abschnitt 7) wochenlang unsichtbar gehalten. Mindestens `setErinnerung()` sollte Fehler sichtbar zurückmelden, stichprobenartig auf ähnliche `set*`-Funktionen prüfen |
+| 13 | `useProfileData.js`-Speicherfehler nur in der Browser-Konsole geloggt, nie sichtbar (Muster: optimistic update + `.then(error => console.error(error))`) | ✅ `setErinnerung()` erledigt (Teil 62) — gibt jetzt `{ok, error}` zurück, alle 6 Aufrufer zeigen einen Fehlschlag sichtbar an. Die übrigen `set*`-Funktionen in `useProfileData.js` (setPersonal, toggleDatenteilung, setCategoryZiel, setSteckbrief, setBelohnungPufferMin, toggleMesswert) folgen weiterhin nur dem stillen Konsolen-Muster — bewusst nicht mit angefasst, da nicht explizit angefragt |
 | 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
 | 15 | Quests-Rangliste zwischen Coachees | ✅ Umgesetzt (Teil 9, team-bewusst) — Vergleich beim normalen Protokoll (nicht nur Quests) weiterhin offen, siehe #21 |
 | 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
