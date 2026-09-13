@@ -1,5 +1,34 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 63) — Migrationen 0070/0076 repariert (idempotent nachgerüstet)
+
+Nutzerin führte die in Teil 61/62 als Copy-Paste-Artifact bereitgestellten
+4 Migrationen aus — 0071 und 0075 liefen durch, 0070 und 0076 brachen mit
+`relation "..." already exists` ab (Screenshot: 0076 bei
+`create table public.atemuebungen`).
+
+Ursache: beide Dateien nutzten bisher plain `CREATE TABLE`/`CREATE POLICY`
+ohne Guards — anders als 0071, das dieses Muster schon hatte (siehe dort).
+Da CREATE TABLE eine bereits existierende Relation nicht stillschweigend
+überspringt, bricht die gesamte Transaktion sofort an der ersten schon
+vorhandenen Tabelle ab — alles, was in derselben Datei danach kommt
+(0070: `quest_fortschritt`; 0076: `atemuebung_logs`/`akutmodus_log`),
+wird dadurch ebenfalls nicht angelegt, selbst wenn es noch fehlt.
+Vermutlich Rest eines früheren, nie dokumentierten Teilversuchs.
+
+Beide Dateien jetzt wie 0071 geschrieben: `CREATE TABLE IF NOT EXISTS`,
+`CREATE INDEX IF NOT EXISTS`, `DROP POLICY IF EXISTS` vor jedem
+`CREATE POLICY` — beliebig oft gefahrlos erneut ausführbar, unabhängig
+vom tatsächlichen Vorzustand der Datenbank. Das schon veröffentlichte
+Copy-Paste-Artifact wurde mit den reparierten Texten aktualisiert
+(gleiche URL) und zeigt jetzt zusätzlich pro Skript einen Status
+("✓ Schon gelaufen" für 0071/0075, "↻ Bitte erneut ausführen" für die
+zwei reparierten) — die embedded SQL wurde dabei erneut maschinell
+byte-für-byte gegen die Repo-Dateien geprüft.
+
+Noch offen: Nutzerin muss 0070 und 0076 (reparierte Fassung) noch einmal
+ausführen.
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 62) — setErinnerung() sichtbar fehlerbewusst gemacht
 
 Nutzerinnen-Vorgabe: "Mach setErinnerung() sichtbar fehlerbewusst, auch
@@ -3920,7 +3949,7 @@ sonst nie auffallen lassen.
 | 11 | Kalenderverbindung (Google/Apple Calendar oder .ics-Export) | Nur als vage Idee erwähnt, kein konkreter Auftrag |
 | 12 | Native App (Xcode/App Store) | Gewünschtes Fernziel der Nutzerin — siehe Abschnitt 12 |
 | 13 | `useProfileData.js`-Speicherfehler nur in der Browser-Konsole geloggt, nie sichtbar (Muster: optimistic update + `.then(error => console.error(error))`) | ✅ `setErinnerung()` erledigt (Teil 62) — gibt jetzt `{ok, error}` zurück, alle 6 Aufrufer zeigen einen Fehlschlag sichtbar an. Die übrigen `set*`-Funktionen in `useProfileData.js` (setPersonal, toggleDatenteilung, setCategoryZiel, setSteckbrief, setBelohnungPufferMin, toggleMesswert) folgen weiterhin nur dem stillen Konsolen-Muster — bewusst nicht mit angefasst, da nicht explizit angefragt |
-| 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
+| 14 | Migration `0070_quests.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Nutzerin meldete (13.09.) "relation already exists" beim ersten Versuch — Datei jetzt mit CREATE TABLE IF NOT EXISTS/DROP POLICY IF EXISTS repariert (Teil 63, gleiches Muster wie 0071), beliebig oft gefahrlos erneut ausführbar. Muss noch (erneut) ausgeführt werden — ohne das laufen die neuen Menüpunkte "🎯 Quests" (Admin) bzw. die Quest-Karte auf der Startseite (Coachee) auf einen Datenbankfehler |
 | 15 | Quests-Rangliste zwischen Coachees | ✅ Umgesetzt (Teil 9, team-bewusst) — Vergleich beim normalen Protokoll (nicht nur Quests) weiterhin offen, siehe #21 |
 | 16 | Quests: satzgenaue Bestätigung bei Trainings-Quests (statt manueller Gesamt-Meldung) | Aus der Nutzerinnen-Vorgabe genannt, in V1 bewusst vereinfacht auf eine manuelle Fortschritts-/Abschlussmeldung, siehe Teil 6 |
 | 17 | Migration `0071_routine_tabellen_nachholen.sql` muss die Nutzerin noch manuell in der Supabase-SQL-Konsole ausführen | 🔴 Ursache des Routinen-Bugs aus Teil 7 bestätigt (Teil 8): `routine_schritte` fehlte komplett in der DB. Ohne diese Migration lassen sich weiterhin keine Morgen-/Abendroutine-Schritte anlegen |
@@ -3938,7 +3967,7 @@ sonst nie auffallen lassen.
 | 29 | Edge Function `lexikon` erneut neu deployen | 🔴 Teil 17: `modus: "akut"`-Feld für den neuen Akutmodus-Knopf hinzugefügt — ohne erneutes manuelles Redeploy bleibt der Knopf ohne Wirkung (kein Absturz, nur keine Antwort) |
 | 30 | Akutmodus-Feature im Browser end-to-end testen | 🟡 Teil 17/18: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login), nur per Code-Review geprüft — die Nutzerin sollte einmal selbst durchklicken (Layout, Symptom antippen, Freitext, Akut-Übung markieren + starten, "An Coach schicken"), bevor sie sich darauf verlässt |
 | 31 | Migration `0075_gewohnheit_akut_favorit.sql` ausführen | 🔴 Teil 18: ohne diese Spalte wirft "⭐ Als Akut-Übung merken" in den Gewohnheiten einen Datenbankfehler |
-| 32 | Migration `0076_atemuebungen.sql` ausführen | 🔴 Teil 19: ohne die drei neuen Tabellen wirft der komplette Atemübungen-Bereich UND die "🌬️ Atemübung machen"-Option im Akutmodus einen Datenbankfehler |
+| 32 | Migration `0076_atemuebungen.sql` ausführen | 🔴 Nutzerin meldete (13.09.) "relation atemuebungen already exists" beim ersten Versuch — Datei jetzt mit CREATE TABLE IF NOT EXISTS/DROP POLICY IF EXISTS repariert (Teil 63, gleiches Muster wie 0071), beliebig oft gefahrlos erneut ausführbar. Muss noch (erneut) ausgeführt werden — Teil 19: ohne die drei neuen Tabellen wirft der komplette Atemübungen-Bereich UND die "🌬️ Atemübung machen"-Option im Akutmodus einen Datenbankfehler |
 | 33 | Akutmodus: volle Verzweigung zu Supplementen/Medikamenten als Option | 🟡 Von der Nutzerin skizziert (Teil 19: "auch Supplemente könnten helfen, auch Medikationen"), bewusst noch nicht umgesetzt — würde eigenes Datenmodell brauchen (Einnahme aus Akutmodus heraus auslösen + als "wegen Akutmodus-Ereignis" kennzeichnen), separater Ausbauschritt |
 | 34 | Atemübungen-Feature im Browser end-to-end testen | 🟡 Teil 19: aus dem Sandbox nicht möglich (kein Netzwerkzugriff auf Supabase/kein Login) — Timer-Logik nur per Code-Review geprüft. Besonders prüfen: Ton bei Phasenwechseln, Ticken in der Vorbereitung, sauberer Abschluss nach vollständigem Ausatmen, Akutmodus-Einbindung |
 
