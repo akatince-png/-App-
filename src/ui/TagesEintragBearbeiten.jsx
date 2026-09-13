@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PrimaryButton, Label, TextInput } from "./primitives";
-import { cardBorder, textMain, textMuted, danger, accentDark } from "./theme";
+import { cardBorder, textMain, textMuted, danger, accentDark, accentSoft } from "./theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 import { fmtDate } from "../utils/dates";
@@ -149,7 +149,7 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
         {item.detail && <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>{item.detail}</div>}
 
         {item.ausnahmeId && (
-          <div style={{ fontSize: 11.5, color: accentDark, background: "#EEF0FF", borderRadius: 10, padding: "6px 10px", marginBottom: 10 }}>
+          <div style={{ fontSize: 11.5, color: accentDark, background: accentSoft, borderRadius: 10, padding: "6px 10px", marginBottom: 10 }}>
             Für diesen Tag ist eine Ausnahme gespeichert (weicht vom sonst geplanten Ablauf ab).
           </div>
         )}

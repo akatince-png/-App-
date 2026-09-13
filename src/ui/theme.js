@@ -1,23 +1,30 @@
 // Heller, frischer Grund (großzügig Weiß statt des früheren warmgrauen
-// Tons) + ein kräftiger Indigo/Blau-Marken-Akzent als generischer
-// Rückfall (Nutzerinnen-Vorgabe, 28.07.: das alte Grün wirkte "flach,
-// undynamisch, unmodern" — als Referenz diente die Farbe des
-// Notfallmodus-Knopfs auf Home, siehe ADHSModeToggle.jsx). "Erledigt"
-// bekommt jetzt ein eigenes, vom generischen Akzent entkoppeltes Grün
-// (`success`), statt beide Bedeutungen in einer Farbe zu vermischen. Die
-// eigentliche Bereichsfarbigkeit kommt weiterhin aus KATEGORIE_META
-// (siehe utils/dayItems.js) — jeder Lebensbereich (Training, Hydration,
-// Schlaf, ...) bekommt seine eigene Akzentfarbe in Header/Buttons,
-// angelehnt an die bunten Home-Mini-Widgets.
+// Tons) + ein kräftiger Marken-Akzent als generischer Rückfall für alle
+// Bereiche ohne eigene KATEGORIE_META-Farbe (Admin, Sidebar, Onboarding,
+// generische Buttons). "Erledigt" bekommt weiterhin ein eigenes, vom
+// generischen Akzent entkoppeltes Grün (`success`), statt beide
+// Bedeutungen in einer Farbe zu vermischen. Die eigentliche
+// Bereichsfarbigkeit kommt weiterhin aus KATEGORIE_META (siehe
+// utils/dayItems.js) — jeder Lebensbereich (Training, Hydration, Schlaf,
+// ...) bekommt seine eigene Akzentfarbe in Header/Buttons, angelehnt an
+// die bunten Home-Mini-Widgets.
+//
+// Bug-Fix (13.09., Nutzerinnen-Vorgabe): war zwischenzeitlich (28.07.)
+// auf Indigo/Blau umgestellt worden (als Referenz diente die Farbe des
+// Notfallmodus-Knopfs auf Home, siehe ADHSModeToggle.jsx) — dadurch
+// wichen Bereiche ohne eigene KATEGORIE_META-Farbe (z. B. Admin-
+// Dashboard) sichtbar vom Türkis der älteren, noch nicht umgestellten
+// Bereiche (z. B. Gewohnheiten/Routinen, bereich="gewohnheit") ab: "die
+// Bereiche in verschiedenen Modulen haben verschiedene Farben, irritiert
+// ein bisschen". Jetzt wieder dasselbe Türkis wie KATEGORIE_META.gewohnheit
+// (dot/text/bg) — dieselben drei Werte, damit generische und
+// Gewohnheiten-Bereiche exakt zusammenpassen, statt nur ähnlich zu wirken.
 export const bg = "#FFFFFF";
 export const card = "#FFFFFF";
 export const cardBorder = "#EAEAE5";
-// Kräftiger/gesättigter als zuvor (Nutzerinnen-Vorgabe, 16.08.: "die Farben
-// etwas catchier, etwas stärker" — Home-Menü und Bereichsfarben wirkten zu
-// blass/zurückhaltend). Gleicher Indigo-Ton, nur satter statt heller.
-export const accent = "#4D51F8"; // Indigo — Marken-Akzent (wie Notfallmodus-Knopf, Normalzustand)
-export const accentDark = "#2F22D6";
-export const accentSoft = "#EEF0FF";
+export const accent = "#24948E"; // Türkis — Marken-Akzent (= KATEGORIE_META.gewohnheit.dot)
+export const accentDark = "#1F605B"; // = KATEGORIE_META.gewohnheit.text
+export const accentSoft = "#DCF3F1"; // = KATEGORIE_META.gewohnheit.bg
 export const blue = "#4A6FA5"; // "geplant" / sekundäre Infos
 export const blueSoft = "#EAF0F8";
 export const success = "#0E7C66"; // Eigenständiges Grün, nur noch für "erledigt"/Erfolg

@@ -1,4 +1,5 @@
 import React from "react";
+import { accent, accentDark, hexZuRgba } from "./theme";
 
 /**
  * ADHSModeToggle: Großer, prominenter Notfallmodus für Tage mit exekutiver Dysfunktion
@@ -30,14 +31,14 @@ export default function ADHSModeToggle({ isEmergencyMode = false, onToggle, comp
         marginBottom: compact ? 0 : "18px",
         background: isEmergencyMode
           ? "linear-gradient(135deg, #DC2626, #EF4444)"
-          : "linear-gradient(135deg, #6366F1, #818CF8)",
+          : `linear-gradient(135deg, ${accentDark}, ${accent})`,
         border: "none",
         borderRadius: "16px",
         cursor: "pointer",
         transition: "all 250ms cubic-bezier(0.4, 0, 0.2, 1)",
         boxShadow: isEmergencyMode
           ? "0 10px 25px rgba(220, 38, 38, 0.25)"
-          : "0 8px 16px rgba(99, 102, 249, 0.15)",
+          : `0 8px 16px ${hexZuRgba(accent, 0.25)}`,
         transform: "scale(1)",
       }}
       onMouseDown={(e) => {

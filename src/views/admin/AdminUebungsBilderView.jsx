@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, TextInput } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { cardBorder, danger, textMuted } from "../../ui/theme";
+import { accentDark, cardBorder, danger, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 import { ALLE_UEBUNGEN } from "../../constants";
 
@@ -84,7 +84,7 @@ export default function AdminUebungsBilderView({ onHome }) {
                     fontSize: 12,
                     fontWeight: 700,
                     color: "#fff",
-                    background: "#6366F1",
+                    background: accentDark,
                     padding: "8px 12px",
                     borderRadius: 10,
                     whiteSpace: "nowrap",
