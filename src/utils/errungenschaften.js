@@ -238,6 +238,44 @@ export function badgeBeschreibung(badgeKey) {
   return "";
 }
 
+// Verbindet die Kategorie-Schlüssel aus dem Home-Widget-System
+// (HomeView.jsx miniWidgetData, z. B. "hormon") mit den leicht anders
+// benannten Schlüsseln hier im Erfolge-System (z. B. "medikamente") —
+// gemeinsam genutzt von TagesfortschrittOrden.jsx (Tablet-Leiste) und dem
+// Orden-Hinweis auf den Direktzugriff-Kacheln in HomeView.jsx (13.09.,
+// Nutzerinnen-Vorgabe: "die Orden sollen für die Nutzer sichtlicher sein...
+// für die Nutzer unten in ihren kleinen Feldern" — die Tablet-Leiste allein
+// war auf dem Handy gar nicht sichtbar). Schlaf/Atemübungen haben auf Home
+// kein eigenes Widget und tauchen deshalb hier nie auf.
+export const WIDGET_ZU_ORDEN_KATEGORIE = {
+  gewohnheit: "gewohnheiten",
+  morgenroutine: "morgenroutine",
+  abendroutine: "abendroutine",
+  hormon: "medikamente",
+  supplement: "supplemente",
+  mahlzeit: "ernaehrung",
+  training: "training",
+  hydration: "hydration",
+  tageslicht: "tageslicht",
+};
+
+// Liefert den anzuzeigenden Orden-Zustand für EINE Home-Widget-Kategorie
+// (oder null, wenn die Kategorie gar nicht am Orden-System teilnimmt) —
+// grau/transparent (freigeschaltet: false) mit dem ersten Meilenstein als
+// "nächstes Ziel", sobald mindestens ein Streak-Meilenstein erreicht ist
+// stattdessen der höchste erreichte, farbig. `kategorien`/`verdiente`
+// kommen aus useErrungenschaften()/berechneErrungenschaften().
+export function ordenFuerWidgetKategorie(widgetKategorie, kategorien, verdiente) {
+  const key = WIDGET_ZU_ORDEN_KATEGORIE[widgetKategorie];
+  if (!key) return null;
+  const k = kategorien.find((kat) => kat.key === key);
+  if (!k) return null;
+  const erreichteSchwellen = STREAK_SCHWELLEN.filter((s) => verdiente[`${key}_streak_${s}`]);
+  const freigeschaltet = erreichteSchwellen.length > 0;
+  const schwelle = freigeschaltet ? erreichteSchwellen[erreichteSchwellen.length - 1] : STREAK_SCHWELLEN[0];
+  return { key, label: k.label, icon: k.icon, grad: k.grad, streak: k.streak, freigeschaltet, schwelle };
+}
+
 // Vollständiger Katalog ALLER möglichen Abzeichen (verdient oder nicht) —
 // für die "Alle Abzeichen"-Übersicht, die zeigt, was noch fehlt, nicht nur
 // was schon geschafft wurde.

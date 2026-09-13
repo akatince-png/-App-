@@ -1,6 +1,7 @@
 import React from "react";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { hexZuRgba } from "./theme";
+import Icon from "./Icon";
 
 /**
  * MiniPlanWidget: Kleine Doppelring-Visualisierung für einen Plan
@@ -22,6 +23,14 @@ import { hexZuRgba } from "./theme";
  * - statusText: optionaler Text statt der Standard-"x/y heute"-Anzeige —
  *   für Kategorien ohne sinnvollen Bruchteil (z. B. Morgen-/Abendroutine:
  *   "heute erledigt"/"heute noch offen" statt "0/1 heute")
+ * - orden: optional, Ergebnis von ordenFuerWidgetKategorie() (siehe
+ *   utils/errungenschaften.js) — kleiner Orden-Hinweis oben links (13.09.,
+ *   Nutzerinnen-Vorgabe: "die Orden sollen für die Nutzer sichtlicher
+ *   sein... unten in ihren kleinen Feldern", da die Tablet-Leiste in
+ *   TagesfortschrittOrden.jsx auf dem Handy gar nicht sichtbar war). Grau/
+ *   transparent, solange orden.freigeschaltet false ist, sonst farbig im
+ *   Kategorie-Verlauf — die genaue Tage-Zahl steckt im title-Tooltip, damit
+ *   die kleine Kachel nicht überladen wirkt.
  */
 export default function MiniPlanWidget({
   name,
@@ -38,6 +47,7 @@ export default function MiniPlanWidget({
   farbe,
   hintergrund,
   statusText,
+  orden,
 }) {
   // KATEGORIE_META-Einträge haben kein "color"-Feld (nur bg/text/dot/label) —
   // ein vorheriger Zugriff auf meta.color war deshalb immer undefined und
@@ -115,6 +125,34 @@ export default function MiniPlanWidget({
           }}
         >
           ›
+        </div>
+      )}
+
+      {/* Sitzt bewusst AUF der Kartenecke (leicht negativer Versatz) statt
+          innerhalb der Karte wie der "›"-Pfeil/Aktions-Knopf oben rechts —
+          ein Platz dort innerhalb hätte den Kategorie-Namen überlagert
+          (Bug beim ersten Entwurf: "Gewohnheiten" wurde zu "ewohnheiten"). */}
+      {orden && (
+        <div
+          title={`${orden.freigeschaltet ? `${orden.schwelle}-Tage-Orden erreicht` : `Nächster Orden: ${orden.schwelle} Tage am Stück`}`}
+          style={{
+            position: "absolute",
+            top: -7,
+            left: -7,
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: orden.freigeschaltet ? `linear-gradient(135deg, ${orden.grad[0]}, ${orden.grad[1]})` : "#E4E4DF",
+            border: "2px solid #fff",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: orden.freigeschaltet ? 1 : 0.7,
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="flame" size={10} color={orden.freigeschaltet ? "#fff" : "#8A8A85"} />
         </div>
       )}
 

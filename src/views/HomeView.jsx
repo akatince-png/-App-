@@ -6,6 +6,7 @@ import MiniPlanWidget from "../ui/MiniPlanWidget";
 import TagesfortschrittBalken from "../ui/TagesfortschrittBalken";
 import TagesfortschrittOrden from "../ui/TagesfortschrittOrden";
 import { useErrungenschaften } from "../data/useErrungenschaften";
+import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
@@ -987,6 +988,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                 onClick={() => onOpenView(widget.viewId)}
                 actionLabel={widget.actionLabel}
                 onAction={widget.onAction}
+                orden={ordenFuerWidgetKategorie(widget.kategorie, ordenKategorien, ordenVerdiente)}
               />
             ))}
           </div>
