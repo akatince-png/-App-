@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Shell, Card, Label, TextInput, PrimaryButton } from "../../ui/primitives";
 import { accentDark, cardBorder, textMuted } from "../../ui/theme";
 import Logo from "../../ui/Logo";
-import Icon from "../../ui/Icon";
 import CoachOrb from "../../ui/CoachOrb";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import OnboardingCoachGuide from "./OnboardingCoachGuide";
@@ -26,7 +25,7 @@ import { useT } from "../../i18n/translate";
  * keinen Sinn — die Namens-Eingabe erscheint dann direkt ohne Zwischenfrage.
  */
 export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManuell = false }) {
-  const { t, tLabel } = useT();
+  const { tLabel } = useT();
   const [modus, setModus] = useState(() => (nurManuell ? "manuell" : null)); // null (Frage noch offen) | "manuell" | "begleitet-schritt" | "begleitet-frei"
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
