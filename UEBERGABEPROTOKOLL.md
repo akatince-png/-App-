@@ -1,5 +1,26 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 65) — "Weitere Pläne": Grid statt chaotischer Liste
+
+Nutzerinnen-Feedback nach Teil 64: "Und in der App Ansicht auf dem Handy
+werden die Pläne unten sehr, sehr chaotisch untereinander aufgelistet."
+Ursache: die "Weitere Pläne"-Pillen aus Teil 64 tragen jetzt Name +
+"+ einrichten"-Text nebeneinander in variabler Breite — auf Handybreite
+(375–420px) passte dadurch kaum mehr als eine Pille pro Zeile in die
+Flex-Wrap-Zeile, sodass sie einzeln untereinander standen.
+
+Fix: `display: grid, gridTemplateColumns: repeat(auto-fill, minmax(108px, 1fr))`
+statt `flex; flex-wrap: wrap` — dieselbe Technik wie beim bereits
+bestehenden "Direktzugriff"-Grid direkt darüber. Name und
+"+ einrichten" stehen jetzt untereinander in der Kachel statt
+nebeneinander, wodurch alle Kacheln gleich breit sind und sich sauber
+in Reihen anordnen (3 Spalten auf 375px Breite) statt eine Liste zu
+bilden.
+
+Verifiziert über den Playwright-Preview-Harness bei 375px Breite
+(iPhone-Standardbreite). Build + `npx oxlint` weiterhin bei 16
+Warnungen (Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 64) — Home-Screen: Kategoriefarben, Gabel-Button-Position, Plus-Button-Sichtbarkeit
 
 Nutzerin-Vorgabe per annotiertem Screenshot (handschriftlich "1"/"2" +
