@@ -537,7 +537,12 @@ export const AIService = {
    * Extrahiert aus einem geführten Peptid-Gespräch (siehe coachChat()) ein
    * neues Peptid — gleiches Intervall-/Uhrzeiten-Format wie
    * medikamentAusChat(), aber ohne "kategorie" (die gibt es bei Peptiden
-   * nicht, siehe PeptidView.jsx: addCustomPreparat() + setDoseBatch()).
+   * nicht). Peptide sind seit Migration 0042 Teil von "Medikamente" (siehe
+   * MedikamenteView.jsx: Kategorie "Peptid"). Wird aktuell (vermutlich
+   * versehentlich, 13.09. bei Aufräumarbeiten entdeckt, nicht behoben —
+   * eigener Fix nötig) auch vom "supplemente"-Onboarding-Schritt in
+   * OnboardingCategoriesView.jsx verwendet statt eines eigenen
+   * Supplement-Prompts.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
    * @returns {Promise<{name: string, menge: string, einnahmeart: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}

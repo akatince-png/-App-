@@ -257,17 +257,16 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       )}
 
       <Card style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 16 }}>
-        <KategorieErinnerung kategorie="medikamente" label="🔔 Erinnerungen Medikamente/Hormone" />
-        <KategorieErinnerung kategorie="peptide" label="🔔 Erinnerungen Peptide" />
+        <KategorieErinnerung kategorie="medikamente" label="🔔 Erinnerungen Medikamente" />
       </Card>
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, welches Medikament/Hormon du hinzufügen willst — der Assistent fragt Dosierung, Einnahmeart und Rhythmus ab.
+        Sag, welches Medikament du hinzufügen willst — der Assistent fragt Dosierung, Einnahmeart und Rhythmus ab.
       </div>
       <KiChat
         bereich="medikamente"
-        systemPrompt="Du hilfst dabei, ein neues Medikament oder Hormon für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray, oder bei Cannabis: Blüte zum Rauchen, Blüte zum Verdampfen, Esswaren), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Bei Cannabis reicht Kategorie/Einnahmeart/Menge/Rhythmus über den Chat — THC-/CBD-Gehalt und Konsum-Details (Tabak, Filter, Temperatur, Tropfenzahl) trägt die Nutzerin danach manuell im Formular nach. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Welches Medikament oder Hormon möchtest du hinzufügen?`}
+        systemPrompt="Du hilfst dabei, ein neues Medikament für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray, oder bei Cannabis: Blüte zum Rauchen, Blüte zum Verdampfen, Esswaren), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Bei Cannabis reicht Kategorie/Einnahmeart/Menge/Rhythmus über den Chat — THC-/CBD-Gehalt und Konsum-Details (Tabak, Filter, Temperatur, Tropfenzahl) trägt die Nutzerin danach manuell im Formular nach. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Welches Medikament möchtest du hinzufügen?`}
         onUebernehmen={handleMedikamentUebernehmen}
         uebernehmenLabel="Medikament anlegen"
         renderErgebnis={(m) => (

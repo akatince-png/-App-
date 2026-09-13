@@ -195,7 +195,7 @@ export const FORMULARE = [
         ],
       },
       {
-        titel: "Protokoll 8: Medikamente / Hormone",
+        titel: "Protokoll 8: Medikamente",
         felder: [
           { key: "medikamente", typ: "raster", spalten: ["Medikament", "Einnahme?", "Timing", "Nebenwirkungen?"], zeilen: 3 },
           { key: "medikamenteHinweis", typ: "static", text: "Wichtig: Der Coach verschreibt oder empfiehlt keine Medikamente. Alle medikamentösen Fragen an den Facharzt verweisen." },

@@ -5,7 +5,6 @@ import { useAuth } from "./AuthContext";
 import { useAdmin } from "./AdminContext";
 import { useProfileData } from "../data/useProfileData";
 import { useProtocolData } from "../data/useProtocolData";
-import { usePeptideLogs } from "../data/usePeptideLogs";
 import { useHormoneData } from "../data/useHormoneData";
 import { useSupplementData } from "../data/useSupplementData";
 import { useDrinkRecipes } from "../data/useDrinkRecipes";
@@ -56,7 +55,6 @@ export function AppDataProvider({ children }) {
   const protocolData = useProtocolData(userId);
   const hauptprotokollData = useHauptprotokollData(userId);
   const hauptprotokollId = hauptprotokollData.aktivesHauptprotokoll?.id || null;
-  const peptideLogs = usePeptideLogs(userId, protocolData.protocolId);
   const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId, profileData.belohnungPufferMin);
   const supplementData = useSupplementData(userId, hauptprotokollId, profileData.belohnungPufferMin);
   const drinkData = useDrinkRecipes(userId);
@@ -93,7 +91,6 @@ export function AppDataProvider({ children }) {
     userId,
     ...profileData,
     ...protocolData,
-    ...peptideLogs,
     hormone: hormoneData.hormone,
     hormonDosierung: hormoneData.hormonDosierung,
     hormonHinzufuegen: hormoneData.hormonHinzufuegen,

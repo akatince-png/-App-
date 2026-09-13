@@ -14,7 +14,7 @@ export const welcome = {
       "Hi, ich bin Aka. 👋\nIch helfe dir dabei, deine Routinen zu organisieren und an die wichtigen Dinge zu denken – damit du nicht alles selbst im Kopf behalten musst.",
     "welcome.slide2.titel": "Alles an einem Ort.",
     "welcome.slide2.text":
-      "Medikamente, Supplemente, Peptide, Hormone, Schlaf, Ernährung und Gewohnheiten – übersichtlich an einem Ort, genau dann verfügbar, wenn du sie brauchst.\nKeine Zettel. Keine fünf verschiedenen Apps. Kein unnötiges Suchen.",
+      "Medikamente, Supplemente, Schlaf, Ernährung und Gewohnheiten – übersichtlich an einem Ort, genau dann verfügbar, wenn du sie brauchst.\nKeine Zettel. Keine fünf verschiedenen Apps. Kein unnötiges Suchen.",
     "welcome.slide3.titel": "Kleine Schritte. Große Entlastung.",
     "welcome.slide3.text":
       "Ein paar Minuten Einrichtung. Danach begleite ich dich jeden Tag und übernehme die Organisation im Hintergrund.\nDu kannst dich auf das konzentrieren, was wirklich wichtig ist.",
@@ -28,7 +28,7 @@ export const welcome = {
       "Hi, I'm Aka. 👋\nI help you organize your routines and remember the things that matter — so you don't have to keep it all in your head.",
     "welcome.slide2.titel": "Everything in one place.",
     "welcome.slide2.text":
-      "Medications, supplements, peptides, hormones, sleep, nutrition, and habits — all organized in one place, ready exactly when you need them.\nNo sticky notes. No five different apps. No searching around.",
+      "Medications, supplements, sleep, nutrition, and habits — all organized in one place, ready exactly when you need them.\nNo sticky notes. No five different apps. No searching around.",
     "welcome.slide3.titel": "Small steps. Real relief.",
     "welcome.slide3.text":
       "A few minutes to set things up. After that, I'll walk with you every day and handle the organizing in the background.\nYou can focus on what actually matters.",
@@ -42,7 +42,7 @@ export const welcome = {
       "Merhaba, ben Aka. 👋\nRutinlerini düzenlemene ve önemli şeyleri hatırlamana yardımcı oluyorum — böylece her şeyi kafanda tutmak zorunda kalmazsın.",
     "welcome.slide2.titel": "Her şey tek bir yerde.",
     "welcome.slide2.text":
-      "İlaçlar, takviyeler, peptidler, hormonlar, uyku, beslenme ve alışkanlıklar — hepsi tek bir yerde, tam ihtiyacın olduğunda hazır.\nNot kağıdı yok. Beş farklı uygulama yok. Gereksiz arama yok.",
+      "İlaçlar, takviyeler, uyku, beslenme ve alışkanlıklar — hepsi tek bir yerde, tam ihtiyacın olduğunda hazır.\nNot kağıdı yok. Beş farklı uygulama yok. Gereksiz arama yok.",
     "welcome.slide3.titel": "Küçük adımlar. Büyük rahatlama.",
     "welcome.slide3.text":
       "Kurulum için birkaç dakika. Sonrasında sana her gün eşlik ediyor ve organizasyonu arka planda üstleniyorum.\nGerçekten önemli olana odaklanabilirsin.",

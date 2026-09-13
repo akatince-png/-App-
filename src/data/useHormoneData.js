@@ -407,8 +407,7 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
 
   // Bug-Fix (13.09.): bei einem Fehlschlag des Upserts zeigte die
   // Oberfläche trotzdem dauerhaft "erledigt + Feedback gespeichert" an, bis
-  // zum nächsten Neuladen — spiegelt jetzt exakt das Rollback-Muster von
-  // saveFeedback()/skipFeedback() in usePeptideLogs.js.
+  // zum nächsten Neuladen.
   const saveHormonFeedback = useCallback(
     async (dose, draftFeedback) => {
       const datumStr = toLocalISODate(dose.date);

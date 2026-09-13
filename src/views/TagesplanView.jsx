@@ -5,7 +5,6 @@ import ProgressRing from "../ui/ProgressRing";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import {
   NEBENWIRKUNGEN_OPTIONEN,
-  STAERKE_OPTIONEN,
   VERTRAEGLICHKEIT_OPTIONEN,
   WIRKUNG_OPTIONEN,
   WOCHENTAGE,
@@ -26,13 +25,18 @@ function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
 }
 
+// Bug-Fix (13.09., Nutzerin-Vorgabe "Medikamente nicht mehr von Peptiden/
+// Hormonen unterscheiden"): eine eigene "peptid"-Feedback-Kategorie
+// (inkl. Stärke-Auswahl + Einstichstellen-Foto) existierte hier zwar
+// noch im Code, war aber technisch tot — buildDayItems() vergibt seit
+// Migration 0042 nur noch die Kategorie "hormon" (siehe deren
+// Kommentar), nie "peptid". Komplett entfernt statt weiter mitgeschleppt.
 const FEEDBACK_HEADER = {
-  peptid: "Wie war es seit der letzten Injektion?",
   hormon: "Wie war die Einnahme?",
   supplement: "Wie war's?",
 };
 
-function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggleDraftNebenwirkung, onSkip, onSave }) {
+function FeedbackPanel({ kategorie, draftFeedback, setDraftFeedback, toggleDraftNebenwirkung, onSkip, onSave }) {
   return (
     <div style={{ marginTop: 14, padding: 16, borderRadius: 16, background: accentSoft, border: `1px solid ${cardBorder}` }}>
       <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{FEEDBACK_HEADER[kategorie]}</div>
@@ -66,45 +70,8 @@ function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggl
         ))}
       </div>
 
-      {kategorie === "peptid" && (
-        <>
-          <Label>Wie stark?</Label>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {STAERKE_OPTIONEN.map((s) => (
-              <Pill key={s} label={s} selected={draftFeedback.staerke === s} onClick={() => setDraftFeedback((p) => ({ ...p, staerke: s }))} />
-            ))}
-          </div>
-        </>
-      )}
-
       <Label>Notizen (optional)</Label>
       <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Hier kannst du alles aufschreiben..." />
-
-      {kategorie === "peptid" && (
-        <>
-          <Label>Foto (optional) — z. B. Rötung oder Knubbel an der Einstichstelle</Label>
-          <input
-            type="file"
-            accept="image/*"
-            id={`tagesplan-nebenwirkung-foto-${item.key}`}
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setDraftFeedback((p) => ({ ...p, fotoFile: file, fotoPreview: URL.createObjectURL(file) }));
-            }}
-          />
-          <label
-            htmlFor={`tagesplan-nebenwirkung-foto-${item.key}`}
-            style={{ display: "block", textAlign: "center", padding: "9px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: "#fff", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 4 }}
-          >
-            📷 Foto aufnehmen
-          </label>
-          {draftFeedback.fotoPreview && (
-            <img src={draftFeedback.fotoPreview} alt="Nebenwirkung" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, marginTop: 6 }} />
-          )}
-        </>
-      )}
 
       <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
         <div style={{ flex: 1 }}>
@@ -132,11 +99,6 @@ function FeedbackPanel({ item, kategorie, draftFeedback, setDraftFeedback, toggl
 export default function TagesplanView({ onHome, onOpenTraining, onEditItem, selectedDate, onSelectedDateChange: setSelectedDate, modus, onModusChange: setModus }) {
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const {
-    plan,
-    erledigt,
-    dosierung,
-    saveFeedback,
-    skipFeedback,
     hormonPlan,
     hormonErledigt,
     hormonDosierung,
@@ -212,15 +174,13 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
     }));
   const handleSaveFeedback = (dose) => {
-    if (feedbackKategorie === "peptid") saveFeedback(dose, draftFeedback);
-    else if (feedbackKategorie === "hormon") saveHormonFeedback(dose, draftFeedback);
+    if (feedbackKategorie === "hormon") saveHormonFeedback(dose, draftFeedback);
     else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, draftFeedback);
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
   };
   const handleSkipFeedback = (dose) => {
-    if (feedbackKategorie === "peptid") skipFeedback(dose);
-    else if (feedbackKategorie === "hormon") skipHormonFeedback(dose);
+    if (feedbackKategorie === "hormon") skipHormonFeedback(dose);
     else if (feedbackKategorie === "supplement") skipSupplementFeedback(dose);
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
@@ -285,9 +245,6 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     (date) => {
       const tagStr = toLocalISODate(date);
       const items = buildDayItems(date, {
-        plan,
-        erledigt,
-        dosierung,
         hormonPlan,
         hormonErledigt,
         hormonDosierung,
@@ -309,7 +266,6 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         ausnahmenNachSchluessel,
       });
       return items.map((item) => {
-        if (item.kategorie === "peptid") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "peptid") };
         if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "hormon") };
         if (item.kategorie === "supplement") {
           const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
@@ -322,9 +278,6 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       });
     },
     [
-      plan,
-      erledigt,
-      dosierung,
       hormonPlan,
       hormonErledigt,
       hormonDosierung,
@@ -477,9 +430,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                     </div>
                   </div>
 
-                  {["peptid", "hormon", "supplement"].includes(item.kategorie) && isOpen && (
+                  {["hormon", "supplement"].includes(item.kategorie) && isOpen && (
                     <FeedbackPanel
-                      item={item}
                       kategorie={item.kategorie}
                       draftFeedback={draftFeedback}
                       setDraftFeedback={setDraftFeedback}
@@ -716,7 +668,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             // verschlechtern, da sie nie als erledigt zählen können.
             const erledigbareItems = items.filter((i) => i.kategorie !== "zeitblock");
             const done = erledigbareItems.filter((i) => i.done).length;
-            const perKategorie = ["peptid", "hormon", "supplement", "mahlzeit", "training", "gewohnheit"].map((kat) => ({
+            const perKategorie = ["hormon", "supplement", "mahlzeit", "training", "gewohnheit"].map((kat) => ({
               kat,
               count: items.filter((i) => i.kategorie === kat).length,
             }));

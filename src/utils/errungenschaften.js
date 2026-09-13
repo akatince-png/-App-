@@ -116,12 +116,16 @@ export const KATEGORIEN = [
     // dieselbe Tabelle/Map, siehe Kommentar oben. Bug-Fix (13.09.,
     // Nutzerin-Vorgabe): stand hier bisher zusätzlich als eigene "Peptide"-
     // Kategorie mit eigenem Abzeichen-Satz, obwohl inhaltlich längst
-    // dasselbe wie Medikamente — noch dazu über ein Feld ("erledigt", per
-    // Alias auf "peptidErledigt" umbenannt in ErfolgeTab.jsx), das im
-    // AppDataContext gar nicht existiert und daher immer leer war. Die
+    // dasselbe wie Medikamente — las über usePeptideLogs.js/das separate
+    // peptide_logs-Feedback (siehe dessen Löschung, 13.09.) ein Feld, das
+    // TagesplanView.jsx praktisch nie befüllte, da buildDayItems() seit
+    // Migration 0042 nur noch die Kategorie "hormon" vergibt. Die
     // "Peptide"-Abzeichen waren dadurch technisch unerreichbar.
+    // Nutzerinnen-Vorgabe (13.09.): "möchte nicht mehr, dass Medikamente
+    // unterschieden werden von Peptiden, Hormonen oder sonstigen Dingen" —
+    // Label entsprechend vereinheitlicht.
     key: "medikamente",
-    label: "Hormone & Medikamente",
+    label: "Medikamente",
     icon: "cross",
     grad: gradAus(KATEGORIE_META.hormon.dot),
     holeTage: (q) => tageAusErledigtMap(q.hormonErledigt),

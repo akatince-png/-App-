@@ -1,16 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextInput, TextArea, Stepper } from "../../ui/primitives";
 import ZieldauerField from "../../ui/ZieldauerField";
 import ErinnerungField from "../../ui/ErinnerungField";
 import ZeitErinnerungenCard from "../../ui/ZeitErinnerungenCard";
 import WochenplanEditor from "../../ui/WochenplanEditor";
 import TimeWheelField from "../../ui/TimeWheelField";
-import NumberWheelField from "../../ui/NumberWheelField";
 import DosierungFields from "../../ui/DosierungFields";
-import { SignedPhoto } from "../../ui/SignedPhoto";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
-import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
-import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, PEPTIDE_OPTIONEN, WOCHENTAGE } from "../../constants";
+import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
+import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS } from "./categorySteps";
 import { useT } from "../../i18n/translate";
@@ -22,8 +20,8 @@ import { getCoachName } from "../../utils/coachStorage";
 // CATEGORY_STEPS-Schlüssel → KATEGORIE_META-Schlüssel (weichen an einigen
 // Stellen vom Schritt-Namen ab: "ernaehrung"→"mahlzeit",
 // "gewohnheiten"→"gewohnheit", "supplemente"→"supplement",
-// "medikamente"→"hormon", "peptide"→"peptid") — steuert die Farbe von
-// <Shell bereich=…> für den jeweils aktuellen Kategorie-Schritt.
+// "medikamente"→"hormon") — steuert die Farbe von <Shell bereich=…> für
+// den jeweils aktuellen Kategorie-Schritt.
 const SCHRITT_ZU_KATEGORIE = {
   schlaf: "schlaf",
   hydration: "hydration",
@@ -33,7 +31,6 @@ const SCHRITT_ZU_KATEGORIE = {
   gewohnheiten: "gewohnheit",
   supplemente: "supplement",
   medikamente: "hormon",
-  peptide: "peptid",
 };
 
 // Systemprompt je Kategorie für den Coach-Begleitungs-Chat (siehe
@@ -56,9 +53,7 @@ const KATEGORIE_COACH_PROMPTS = {
   supplemente:
     "Du hilfst dabei, ein neues Supplement einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
   medikamente:
-    "Du hilfst dabei, ein neues Medikament oder Hormon einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, Kategorie, und der Rhythmus sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
-  peptide:
-    "Du hilfst dabei, ein neues Peptid einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, und der Rhythmus sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+    "Du hilfst dabei, ein neues Medikament einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart, Kategorie, und der Rhythmus sowie die Uhrzeit(en). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
 };
 
 // Erste (vorgelesene) Nachricht je Kategorie — bewusst schon die konkrete,
@@ -74,8 +69,7 @@ const KATEGORIE_EINLEITUNG = {
   ernaehrung: (coachName) => `Hi, ich bin ${coachName}! Erzähl mir von einer Mahlzeit, die du regelmäßig isst — was ist drin, an welchen Tagen, und um wie viel Uhr?`,
   training: (coachName) => `Hi, ich bin ${coachName}! Wie sieht dein Training aktuell aus, und was schwebt dir für den Plan vor?`,
   supplemente: (coachName) => `Hi, ich bin ${coachName}! Welches Supplement möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
-  medikamente: (coachName) => `Hi, ich bin ${coachName}! Welches Medikament oder Hormon möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
-  peptide: (coachName) => `Hi, ich bin ${coachName}! Welches Peptid möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
+  medikamente: (coachName) => `Hi, ich bin ${coachName}! Welches Medikament möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
 };
 
 const ZIEL_LEER = { modus: "offen", wochen: "" };
@@ -219,48 +213,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     aktivesHauptprotokoll,
     teilprotokolle,
     teilprotokollSpeichern,
-    hormone,
-    hormonDosierung,
-    hormonEntfernen,
-    setHormonEinnahmeart,
-    setHormonDose,
-    setHormonFoto,
   } = useAppData();
   const { t, tLabel } = useT();
-
-  // Peptid-Handling: Bug-Fix (11.09.) — lief bisher komplett über die alte,
-  // separate protocol_peptide-Tabelle (useProtocolData.js), die seit der
-  // Zusammenlegung "Peptide → Medikamente" (13.08., Migration 0042) nicht
-  // mehr von buildDayItems() gelesen wird. Im Onboarding eingetragene
-  // Peptide tauchten dadurch NIE im Tagesplan/Home/Wochenübersicht auf,
-  // während über MedikamenteView.jsx (Kategorie "Peptid") angelegte
-  // Peptide dort schon lange korrekt erscheinen. Ab jetzt läuft auch das
-  // Onboarding über dieselben hormones-basierten Funktionen wie
-  // MedikamenteView — die schmalen Wrapper unten übernehmen nur, "Peptid"
-  // als Kategorie fest zu setzen und dieselben Funktionsnamen/Signaturen
-  // wie vorher bereitzustellen, damit der Rest dieser Datei unverändert
-  // bleiben kann.
-  const peptide = useMemo(() => (hormone || []).filter((n) => hormonDosierung[n]?.kategorie === "Peptid"), [hormone, hormonDosierung]);
-  const dosierung = hormonDosierung;
-  const togglePeptid = (p) => {
-    if (peptide.includes(p)) hormonEntfernen(p);
-    else hormonHinzufuegen({ name: p, kategorie: "Peptid", einnahmeart: "Injektion", menge: "", intervallTyp: "fixed", intervallDays: 7, uhrzeiten: ["20:00"] });
-  };
-  const addCustomPreparat = (name, art) =>
-    hormonHinzufuegen({ name: name.trim(), kategorie: "Peptid", einnahmeart: art, menge: "", intervallTyp: "fixed", intervallDays: 7, uhrzeiten: ["20:00"] });
-  const setEinnahmeart = (p, art) => setHormonEinnahmeart(p, art);
-  const setDose = (p, feld, val) => setHormonDose(p, feld, val);
-  const setPeptidFoto = (p, file) => setHormonFoto(p, file);
-  // Dieselbe Prüfung wie zuvor in useProtocolData.js (intervallGueltig),
-  // hier gegen die hormones-basierte Dosierung statt gegen protocol_peptide.
-  const intervallGueltig = (p) => {
-    const d = dosierung[p];
-    if (!d?.menge) return false;
-    if (d.intervallTyp === "custom") return !!d.customDays && Number(d.customDays) > 0;
-    if (d.intervallTyp === "cycle") return !!d.onDays && Number(d.onDays) > 0 && d.offDays !== "";
-    if (d.intervallTyp === "weekdays") return (d.weekdays || []).length > 0;
-    return !!d.intervallDays;
-  };
 
   // "Zwischenspeichern" (Nutzerinnen-Vorgabe, 15.08.): schließt jemand die
   // App mitten im Kategorien-Assistenten, soll es beim nächsten Öffnen genau
@@ -368,12 +322,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const setSuppDosierungFeld = (feld, val) => setSuppDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
   const setMedDosierungFeld = (feld, val) => setMedDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
 
-  // Peptid-Plan — Auswahl und Dosierung stehen jetzt gemeinsam auf dieser
-  // Seite (früher: eigener fünfstufiger Assistent), deshalb hier nur noch
-  // der Entwurf für "eigenes Peptid hinzufügen".
-  const [customPeptidName, setCustomPeptidName] = useState("");
-  const [customPeptidArt, setCustomPeptidArt] = useState("Injektion");
-
   const step = CATEGORY_STEPS[index];
   const istLetzter = index === CATEGORY_STEPS.length - 1;
   const istMultiAdd = MULTI_ADD_KEYS.includes(step.key);
@@ -431,8 +379,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setMedKategorie("Hormone");
     setMedEinnahmeart("Injektion");
     setMedDosierung(LEERE_DOSIERUNG);
-    setCustomPeptidName("");
-    setCustomPeptidArt("Injektion");
     setEigenesStartdatumAktiv(false);
     setEigenesStartdatum(toLocalISODate(new Date()));
     setIstZustand({});
@@ -590,22 +536,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       // gespeichert (wochenplanHinzufuegen/-Entfernen, wie in TrainingView) —
       // hier wird nur noch die Zieldauer festgehalten.
       setCategoryZiel("training", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
-    } else if (step.key === "peptide") {
-      // Peptid-Auswahl und Dosierung wurden bereits beim Antippen
-      // gespeichert — hier nur noch prüfen, dass überhaupt etwas gewählt
-      // wurde und die Intervalle vollständig sind.
-      if (peptide.length === 0) {
-        setError(t("onboarding.error.peptid"));
-        setSaving(false);
-        return;
-      }
-      const unvollstaendig = peptide.find((p) => !intervallGueltig(p));
-      if (unvollstaendig) {
-        setError(t("onboarding.error.intervall", { peptid: unvollstaendig }));
-        setSaving(false);
-        return;
-      }
-      setCategoryZiel("peptide", { modus: ziel.modus, wochen: ziel.wochen });
     }
 
     setSaving(false);
@@ -733,30 +663,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       return;
     }
     setHinzugefuegt((prev) => [...prev, label]);
-  };
-
-  // ---------------------------------------------------------------------
-  // Peptid-Plan: Auswahl + Dosierung stehen jetzt gemeinsam auf dieser
-  // Seite. Die Peptid-Zeilen selbst werden beim Antippen direkt gespeichert
-  // (togglePeptid/setDose schreiben sofort nach protocol_peptide, wie in
-  // der "echten" Peptid-Verwaltung) — "Speichern & weiter" hält deshalb nur
-  // noch Zieldauer und Teilprotokoll-Zuordnung fest.
-  // ---------------------------------------------------------------------
-  const customPeptidHinzufuegen = async () => {
-    setError(null);
-    const result = await addCustomPreparat(customPeptidName, customPeptidArt);
-    if (!result?.ok) {
-      setError(result?.error || t("onboarding.error.speichern"));
-      return;
-    }
-    setCustomPeptidName("");
-  };
-
-  const handlePeptidFoto = (p, e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPeptidFoto(p, file);
-    e.target.value = "";
   };
 
   // Hydration bekommt keine eigene "Jetzt einrichten?"-Gate-Seite mehr —
@@ -892,29 +798,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         });
         return m;
       }
-      case "peptide": {
-        const p = await AIService.peptidAusChat({ verlauf, coachName });
-        const name = p.name.trim();
-        const art = p.einnahmeart || "Injektion";
-        if (!peptide.includes(name)) {
-          const result = await addCustomPreparat(name, art);
-          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
-        } else {
-          setEinnahmeart(name, art);
-        }
-        if ((p.intervallTyp || "fixed") === "fixed") {
-          setDose(name, "intervallPreset", p.intervallDays || 7);
-        } else {
-          setDose(name, "intervallTyp", p.intervallTyp);
-          setDose(name, "customDays", p.customDays || "");
-          setDose(name, "onDays", p.onDays || "");
-          setDose(name, "offDays", p.offDays || "");
-          setDose(name, "weekdays", p.weekdays || []);
-        }
-        setDose(name, "menge", p.menge || "");
-        setDose(name, "uhrzeiten", p.uhrzeiten?.length ? p.uhrzeiten : ["20:00"]);
-        return { name, menge: p.menge || "" };
-      }
       default:
         throw new Error("Für diesen Bereich gibt es noch keine Assistenten-Begleitung.");
     }
@@ -925,8 +808,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     if (step.key === "training") {
       const anzahl = Array.isArray(ergebnis) ? ergebnis.length : 0;
       text = `${anzahl} Einheit${anzahl === 1 ? "" : "en"} in den Wochenplan übernommen.`;
-    } else if (step.key === "peptide") {
-      text = `${ergebnis?.name || ""} ${ergebnis?.menge ? `(${ergebnis.menge})` : ""} eingerichtet.`;
     } else if (step.key === "gewohnheiten") {
       text = `"${ergebnis?.name || ""}" wurde direkt gespeichert.`;
     } else if (step.key === "ernaehrung") {
@@ -1371,108 +1252,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                 onChange={(feld, val) => setMedDosierungFeld(feld, val)}
                 mengePlaceholder={t("onboarding.medikamente.dosis.placeholder")}
               />
-            </>
-          )}
-
-          {step.key === "peptide" && (
-            <>
-              <Label>{t("onboarding.peptide.auswahl.label")}</Label>
-              {PEPTIDE_OPTIONEN.map((p) => (
-                <CheckRow key={p} label={p} checked={peptide.includes(p)} onToggle={() => togglePeptid(p)} />
-              ))}
-              {peptide
-                .filter((p) => !PEPTIDE_OPTIONEN.includes(p))
-                .map((p) => (
-                  <CheckRow key={p} label={`${p} (${tLabel(dosierung[p]?.einnahmeart || "Eigenes")})`} checked onToggle={() => togglePeptid(p)} />
-                ))}
-
-              <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}` }}>
-                <Label>{t("onboarding.peptide.eigenes.label")}</Label>
-                <div style={{ fontSize: 11, color: textMuted, marginTop: -4, marginBottom: 8 }}>{t("onboarding.peptide.eigenes.hinweis")}</div>
-                <TextInput value={customPeptidName} onChange={setCustomPeptidName} placeholder={t("onboarding.peptide.eigenes.placeholder")} />
-                <Label>{tLabel("Einnahmeart")}</Label>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
-                  {EINNAHMEARTEN.map((a) => (
-                    <Pill key={a} label={tLabel(a)} selected={customPeptidArt === a} onClick={() => setCustomPeptidArt(a)} />
-                  ))}
-                </div>
-                <div style={{ marginTop: 10 }}>
-                  {/* Bug-Fix: speichernUndWeiter/hinzufuegen/customPeptidHinzufuegen
-                      fangen echte Netzwerkfehler (z. B. Verbindungsabbruch,
-                      nicht nur ein von Supabase zurückgegebenes {error})
-                      nicht ab — ohne diese Absicherung an der Aufrufstelle
-                      blieb "saving" dauerhaft true und der Button für immer
-                      auf "Speichern..." hängen, ohne jede Fehlermeldung. */}
-                  <PrimaryButton
-                    onClick={() =>
-                      customPeptidHinzufuegen().catch((err) => {
-                        console.error(err);
-                        setError(err?.message || t("onboarding.error.speichern"));
-                      })
-                    }
-                    disabled={!customPeptidName.trim()}
-                    variant="ghost"
-                  >
-                    {t("onboarding.hinzufuegen")}
-                  </PrimaryButton>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${cardBorder}` }}>
-                <Label>{t("onboarding.peptide.dosierung.label")}</Label>
-                {peptide.length === 0 && <div style={{ fontSize: 13, color: textMuted, marginTop: 8 }}>{t("onboarding.peptide.keineAuswahl")}</div>}
-                {peptide.map((p) => (
-                  <div key={p} style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${cardBorder}` }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>{p}</div>
-                      {dosierung[p]?.fotoPath && <SignedPhoto path={dosierung[p].fotoPath} alt={p} size={36} />}
-                    </div>
-
-                    <Label>{tLabel("Einnahmeart")}</Label>
-                    <div style={{ display: "flex", flexWrap: "wrap" }}>
-                      {EINNAHMEARTEN.map((a) => (
-                        <Pill key={a} label={tLabel(a)} selected={(dosierung[p]?.einnahmeart || "Injektion") === a} onClick={() => setEinnahmeart(p, a)} />
-                      ))}
-                    </div>
-
-                    <DosierungFields value={dosierung[p]} onChange={(feld, val) => setDose(p, feld, val)} />
-
-                    {(dosierung[p]?.einnahmeart || "Injektion") === "Injektion" && (
-                      <>
-                        <Label>{t("onboarding.peptide.bacwasser.label")}</Label>
-                        <TextInput type="number" value={dosierung[p]?.bacWasser || ""} onChange={(val) => setDose(p, "bacWasser", val)} placeholder="z. B. 2" />
-                      </>
-                    )}
-
-                    {dosierung[p]?.einnahmeart === "Nasenspray" && (
-                      <>
-                        <Label>{t("onboarding.peptide.spruehstoesse.label")}</Label>
-                        <NumberWheelField value={dosierung[p]?.spruehstoesse || ""} onChange={(val) => setDose(p, "spruehstoesse", val)} min={1} max={20} placeholder="z. B. 2" />
-                      </>
-                    )}
-
-                    <Label>{t("onboarding.peptide.foto.label")}</Label>
-                    <input type="file" accept="image/*" id={`onboarding-praeparat-foto-${p}`} style={{ display: "none" }} onChange={(e) => handlePeptidFoto(p, e)} />
-                    <label
-                      htmlFor={`onboarding-praeparat-foto-${p}`}
-                      style={{
-                        display: "block",
-                        textAlign: "center",
-                        padding: "9px",
-                        borderRadius: 10,
-                        border: `1.5px dashed ${accent}`,
-                        background: "#fff",
-                        color: accentDark,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      📷 {dosierung[p]?.fotoPath ? tLabel("Foto ersetzen") : tLabel("Foto aufnehmen")}
-                    </label>
-                  </div>
-                ))}
-              </div>
             </>
           )}
 
