@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const BUCKET = "uebungsbilder";
@@ -11,15 +11,23 @@ const BUCKET = "uebungsbilder";
 // Bibliothek — jede Person sieht dieselben Bilder im Live-Trainings-Screen.
 export function useUebungsBilder(userId) {
   const [uebungsBilder, setUebungsBilder] = useState({}); // { [name]: bild_url }
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — laden() hatte
+  // keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const laden = useCallback(async () => {
     const { data } = await supabase.from("uebungs_bilder").select("name, bild_url");
+    if (geladenAbgebrochenRef.current) return;
     setUebungsBilder(Object.fromEntries((data || []).map((r) => [r.name, r.bild_url])));
   }, []);
 
   useEffect(() => {
     if (!userId) return;
+    geladenAbgebrochenRef.current = false;
     laden();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [userId, laden]);
 
   const uebungsBildHochladen = useCallback(

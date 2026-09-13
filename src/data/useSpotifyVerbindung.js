@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
@@ -23,6 +23,12 @@ export function useSpotifyVerbindung(userId) {
   // { playlistId, name, uri }, abendroutine: {...}, training: {...},
   // gewohnheiten: {...} } — siehe 0048_spotify_anlass_playlists.sql.
   const [spotifyAnlaesse, setSpotifyAnlaesse] = useState({});
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — hatte keinen
+  // cancelled-Guard. Bleibt false, solange die Komponente gemountet ist —
+  // ein späterer manueller Aufruf (z. B. aus spotifyAnlassSetzen()) bleibt
+  // dadurch unbeeinflusst, nur eine tatsächlich veraltete Antwort nach dem
+  // Unmount wird verworfen.
+  const geladenAbgebrochenRef = useRef(false);
 
   const spotifyVerbindungNeuLaden = useCallback(async () => {
     if (!userId) return;
@@ -35,6 +41,7 @@ export function useSpotifyVerbindung(userId) {
       supabase.from("spotify_playlists").select("id, name, uri").eq("user_id", userId).order("erstellt_am"),
       supabase.from("spotify_anlass_playlists").select("anlass, playlist_id, spotify_playlists(name, uri)").eq("user_id", userId),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     // Ein DB-Fehler hier (z. B. fehlende Spalte nach einer nicht deployten
     // Migration) blieb bisher unsichtbar — die Verbindung sah dann trotz
     // erfolgreichem OAuth-Austausch dauerhaft "nicht verbunden" aus, ohne
@@ -55,7 +62,11 @@ export function useSpotifyVerbindung(userId) {
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     spotifyVerbindungNeuLaden();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [spotifyVerbindungNeuLaden]);
 
   const spotifyPlaylistHinzufuegen = useCallback(

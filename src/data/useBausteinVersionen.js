@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 // Versionshistorie der Protokoll-Bausteine — manuell ausgelöste Snapshots
@@ -7,6 +7,9 @@ import { supabase } from "../lib/supabaseClient";
 // überschrieben zu werden. Sichtbar im Archiv (ProtokollLogView.jsx).
 export function useBausteinVersionen(userId) {
   const [versionen, setVersionen] = useState([]);
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — laden() hatte
+  // keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const laden = useCallback(async () => {
     if (!userId) return;
@@ -19,11 +22,16 @@ export function useBausteinVersionen(userId) {
       console.error(error);
       return;
     }
+    if (geladenAbgebrochenRef.current) return;
     setVersionen(data || []);
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     laden();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [laden]);
 
   const versionFesthalten = useCallback(

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 function rowZuNachricht(r) {
@@ -15,10 +15,14 @@ export function useTeamData(userId) {
   const [team, setTeam] = useState(null); // { id, name } | null
   const [teamKollegen, setTeamKollegen] = useState([]); // [{id, vorname}]
   const [teamNachrichten, setTeamNachrichten] = useState([]);
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — load() hatte
+  // keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
     const { data: profil } = await supabase.from("profiles").select("team_id").eq("id", userId).maybeSingle();
+    if (geladenAbgebrochenRef.current) return;
     const teamId = profil?.team_id || null;
     if (!teamId) {
       setTeam(null);
@@ -35,13 +39,18 @@ export function useTeamData(userId) {
         .or(`absender_id.eq.${userId},empfaenger_id.eq.${userId}`)
         .order("erstellt_am", { ascending: false }),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     setTeam(teamRow || null);
     setTeamKollegen(kollegenRows || []);
     setTeamNachrichten((nachrichtenRows || []).map(rowZuNachricht));
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     load();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [load]);
 
   // Speichert die Nachricht UND löst darüber die Push-Zustellung an die

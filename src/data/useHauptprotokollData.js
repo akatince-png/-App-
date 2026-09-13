@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 
@@ -11,6 +11,9 @@ import { toLocalISODate } from "../utils/dates";
 export function useHauptprotokollData(userId) {
   const [hauptprotokolle, setHauptprotokolle] = useState([]);
   const [teilprotokolle, setTeilprotokolle] = useState([]);
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — load() hatte
+  // keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -18,12 +21,17 @@ export function useHauptprotokollData(userId) {
       supabase.from("hauptprotokolle").select("*").eq("user_id", userId).order("erstellt_am", { ascending: false }),
       supabase.from("teilprotokolle").select("*").eq("user_id", userId),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     setHauptprotokolle(hp || []);
     setTeilprotokolle(tp || []);
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     load();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [load]);
 
   const aktivesHauptprotokoll = useMemo(() => hauptprotokolle.find((h) => h.status === "active") || null, [hauptprotokolle]);

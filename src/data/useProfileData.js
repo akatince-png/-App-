@@ -101,23 +101,30 @@ export function useProfileData(userId) {
     [userId]
   );
 
+  // Bug-Fix (13.09., Teil 60): der Supabase-Aufruf lag bisher INNERHALB der
+  // funktionalen setState-Updater — React StrictMode (aktiv in main.jsx)
+  // ruft Updater-Funktionen zur Unreinheits-Erkennung im Dev-Modus bewusst
+  // zweimal auf, was hier zwei parallele PATCH-Requests auslöste. setPersonal
+  // oben macht es bereits richtig (Seiteneffekt NACH dem setState-Aufruf,
+  // außerhalb des Updaters) — alle Set-Funktionen unten jetzt genauso.
   const toggleDatenteilung = useCallback(() => {
     let vorher;
+    let next;
     setDatenteilungState((prev) => {
       vorher = prev;
-      const next = !prev;
-      supabase
-        .from("profiles")
-        .update({ datenteilung: next })
-        .eq("id", userId)
-        .then(({ error }) => {
-          if (error) {
-            console.error(error);
-            setDatenteilungState(vorher);
-          }
-        });
+      next = !prev;
       return next;
     });
+    supabase
+      .from("profiles")
+      .update({ datenteilung: next })
+      .eq("id", userId)
+      .then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setDatenteilungState(vorher);
+        }
+      });
   }, [userId]);
 
   const completeOnboarding = useCallback(() => {
@@ -173,21 +180,22 @@ export function useProfileData(userId) {
   const setCategoryZiel = useCallback(
     (kategorie, patch) => {
       let vorher;
+      let next;
       setCategoryZieleState((prev) => {
         vorher = prev;
-        const next = { ...prev, [kategorie]: patch };
-        supabase
-          .from("profiles")
-          .update({ category_ziele: next })
-          .eq("id", userId)
-          .then(({ error }) => {
-            if (error) {
-              console.error(error);
-              setCategoryZieleState(vorher);
-            }
-          });
+        next = { ...prev, [kategorie]: patch };
         return next;
       });
+      supabase
+        .from("profiles")
+        .update({ category_ziele: next })
+        .eq("id", userId)
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setCategoryZieleState(vorher);
+          }
+        });
     },
     [userId]
   );
@@ -198,21 +206,22 @@ export function useProfileData(userId) {
   const setErinnerung = useCallback(
     (kategorie, aktiv) => {
       let vorher;
+      let next;
       setErinnerungenState((prev) => {
         vorher = prev;
-        const next = { ...prev, [kategorie]: aktiv };
-        supabase
-          .from("profiles")
-          .update({ erinnerungen: next })
-          .eq("id", userId)
-          .then(({ error }) => {
-            if (error) {
-              console.error(error);
-              setErinnerungenState(vorher);
-            }
-          });
+        next = { ...prev, [kategorie]: aktiv };
         return next;
       });
+      supabase
+        .from("profiles")
+        .update({ erinnerungen: next })
+        .eq("id", userId)
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setErinnerungenState(vorher);
+          }
+        });
     },
     [userId]
   );
@@ -225,21 +234,22 @@ export function useProfileData(userId) {
   const setSteckbrief = useCallback(
     (felder) => {
       let vorher;
+      let next;
       setSteckbriefState((prev) => {
         vorher = prev;
-        const next = { ...prev, ...felder };
-        supabase
-          .from("profiles")
-          .update({ steckbrief: next })
-          .eq("id", userId)
-          .then(({ error }) => {
-            if (error) {
-              console.error(error);
-              setSteckbriefState(vorher);
-            }
-          });
+        next = { ...prev, ...felder };
         return next;
       });
+      supabase
+        .from("profiles")
+        .update({ steckbrief: next })
+        .eq("id", userId)
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setSteckbriefState(vorher);
+          }
+        });
     },
     [userId]
   );
@@ -273,21 +283,22 @@ export function useProfileData(userId) {
   const toggleMesswert = useCallback(
     (id) => {
       let vorher;
+      let next;
       setAktiveMesswerte((prev) => {
         vorher = prev;
-        const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-        supabase
-          .from("profiles")
-          .update({ aktive_messwerte: next })
-          .eq("id", userId)
-          .then(({ error }) => {
-            if (error) {
-              console.error(error);
-              setAktiveMesswerte(vorher);
-            }
-          });
+        next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
         return next;
       });
+      supabase
+        .from("profiles")
+        .update({ aktive_messwerte: next })
+        .eq("id", userId)
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setAktiveMesswerte(vorher);
+          }
+        });
     },
     [userId]
   );
@@ -313,15 +324,16 @@ export function useProfileData(userId) {
         return;
       }
       setCustomMesswerte((prev) => [...prev, { id, label: trimmed, unit: "", numeric: true }]);
+      let next;
       setAktiveMesswerte((prev) => {
-        const next = [...prev, id];
-        supabase
-          .from("profiles")
-          .update({ aktive_messwerte: next })
-          .eq("id", userId)
-          .then(({ error: e }) => e && console.error(e));
+        next = [...prev, id];
         return next;
       });
+      supabase
+        .from("profiles")
+        .update({ aktive_messwerte: next })
+        .eq("id", userId)
+        .then(({ error: e }) => e && console.error(e));
     },
     [userId, combinedMesswertDefs]
   );
@@ -337,15 +349,16 @@ export function useProfileData(userId) {
         return;
       }
       setCustomMesswerte((prev) => prev.filter((d) => d.id !== id));
+      let next;
       setAktiveMesswerte((prev) => {
-        const next = prev.filter((x) => x !== id);
-        supabase
-          .from("profiles")
-          .update({ aktive_messwerte: next })
-          .eq("id", userId)
-          .then(({ error: e }) => e && console.error(e));
+        next = prev.filter((x) => x !== id);
         return next;
       });
+      supabase
+        .from("profiles")
+        .update({ aktive_messwerte: next })
+        .eq("id", userId)
+        .then(({ error: e }) => e && console.error(e));
     },
     [userId]
   );

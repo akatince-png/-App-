@@ -23,16 +23,31 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [invitePending, setInvitePending] = useState(leseEinladungsTypAusUrl);
 
+  // Bug-Fix (13.09., Teil 60 der App-weiten Durchsuchung): getSession() und
+  // onAuthStateChange() liefen bisher unabhängig voneinander — löste
+  // onAuthStateChange (z. B. beim Öffnen eines Einladungs-/Recovery-Links,
+  // wo laut Kommentar oben ohnehin schon mit dem URL-Hash jongliert wird)
+  // zuerst mit der korrekten, neuen Session aus, konnte die danach noch
+  // auflösende getSession()-Antwort sie mit einem veralteten Stand
+  // überschreiben. `bereitsAusgeloest` verhindert das: sobald
+  // onAuthStateChange einmal gefeuert hat, überschreibt die
+  // getSession()-Antwort die Session nicht mehr, setzt aber weiterhin
+  // sicherheitshalber `loading` auf false, falls onAuthStateChange aus
+  // irgendeinem Grund vorher nie feuert.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
+    let bereitsAusgeloest = false;
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      bereitsAusgeloest = true;
       setSession(newSession);
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!bereitsAusgeloest) setSession(data.session);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

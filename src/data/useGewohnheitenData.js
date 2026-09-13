@@ -17,6 +17,9 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   // Schlüssel fest, damit ein zweiter, schnell folgender Tap darauf statt
   // auf dem alten React-State aufbaut.
   const pendingErledigtRef = useRef({});
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js für dieselbe
+  // Lücke — load() hatte keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -24,6 +27,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
       supabase.from("routines").select("*").eq("user_id", userId).order("sort_order").order("created_at"),
       supabase.from("routine_logs").select("*").eq("user_id", userId),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     setGewohnheiten(
       (rows || []).map((r) => ({
         id: r.id,
@@ -43,7 +47,11 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     load();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [load]);
 
   const gewohnheitHinzufuegen = useCallback(

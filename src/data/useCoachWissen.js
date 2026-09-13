@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 function rowToEintrag(r) {
@@ -15,6 +15,9 @@ function rowToEintrag(r) {
 // aber ohnehin nur für Admins erreichbar (AdminWissenView.jsx).
 export function useCoachWissen(userId) {
   const [coachWissen, setCoachWissen] = useState([]);
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — laden() hatte
+  // keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const laden = useCallback(async () => {
     const { data, error } = await supabase.from("coach_wissen").select("*").order("erstellt_am", { ascending: false });
@@ -22,12 +25,17 @@ export function useCoachWissen(userId) {
       console.error(error);
       return;
     }
+    if (geladenAbgebrochenRef.current) return;
     setCoachWissen((data || []).map(rowToEintrag));
   }, []);
 
   useEffect(() => {
     if (!userId) return;
+    geladenAbgebrochenRef.current = false;
     laden();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [userId, laden]);
 
   const coachWissenHinzufuegen = useCallback(async (eintrag) => {

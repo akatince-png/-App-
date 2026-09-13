@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { coachNachrichtSenden } from "./useCoacheeNachrichten";
 
@@ -43,6 +43,9 @@ function rowZuQuest(q, fortschrittByQuestId) {
 // userId).
 export function useQuestData(userId) {
   const [quests, setQuests] = useState([]);
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — load() hatte
+  // keinen cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -55,13 +58,18 @@ export function useQuestData(userId) {
         .order("erstellt_am", { ascending: false }),
       supabase.from("quest_fortschritt").select("*").eq("user_id", userId),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     const fortschrittByQuestId = {};
     for (const f of fortschrittRows || []) fortschrittByQuestId[f.quest_id] = f;
     setQuests((questRows || []).map((q) => rowZuQuest(q, fortschrittByQuestId)));
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     load();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [load]);
 
   // patch kann angenommen/wert/notiz/dauerMinuten/erledigt enthalten — ein

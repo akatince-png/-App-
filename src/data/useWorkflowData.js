@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { getWorkflowPresets as getLokalePresets } from "../utils/intervallMusikStorage";
 
@@ -35,6 +35,10 @@ function rowToPlan(r) {
 export function useWorkflowData(userId) {
   const [workflowPresets, setWorkflowPresets] = useState([]);
   const [workflowPlaene, setWorkflowPlaene] = useState([]);
+  // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — weder load()
+  // noch die einmalige Lokal-zu-DB-Migration unten hatten einen
+  // cancelled-Guard.
+  const geladenAbgebrochenRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -42,6 +46,7 @@ export function useWorkflowData(userId) {
       supabase.from("workflow_presets").select("*").eq("user_id", userId).order("created_at"),
       supabase.from("workflow_plaene").select("*").eq("user_id", userId).order("created_at"),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     setWorkflowPresets((presetRows || []).map(rowToPreset));
     setWorkflowPlaene((planRows || []).map(rowToPlan));
     return presetRows || [];
@@ -55,8 +60,10 @@ export function useWorkflowData(userId) {
   // greift oder Duplikate erzeugt.
   useEffect(() => {
     if (!userId) return;
+    geladenAbgebrochenRef.current = false;
     (async () => {
       const presetRows = await load();
+      if (geladenAbgebrochenRef.current) return;
       if (presetRows === undefined || presetRows.length > 0) return;
       const lokale = getLokalePresets();
       if (!lokale.length) return;
@@ -84,8 +91,12 @@ export function useWorkflowData(userId) {
           return;
         }
       }
+      if (geladenAbgebrochenRef.current) return;
       await load();
     })();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 

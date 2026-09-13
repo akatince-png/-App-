@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 // Eigenständiger, kleiner Protokollbereich "Atemübungen" (16.08.) — bewusst
@@ -7,6 +7,12 @@ import { supabase } from "../lib/supabaseClient";
 export function useAtemuebungenData(userId) {
   const [atemuebungen, setAtemuebungen] = useState([]);
   const [atemuebungLogs, setAtemuebungLogs] = useState([]);
+  // Bug-Fix (13.09., Teil 60): anders als die meisten Lade-Hooks in
+  // src/data/ hatte load() bisher keinen cancelled-Guard — eine spät
+  // auflösende Antwort (z. B. React-StrictMode-Doppel-Mount im Dev-Modus
+  // oder ein schneller Nutzerwechsel im "Verwalten als"-Modus) konnte noch
+  // State setzen, obwohl die Komponente/der Nutzerwechsel längst vorbei war.
+  const geladenAbgebrochenRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -14,6 +20,7 @@ export function useAtemuebungenData(userId) {
       supabase.from("atemuebungen").select("*").eq("user_id", userId).order("created_at"),
       supabase.from("atemuebung_logs").select("*").eq("user_id", userId).order("erstellt_am", { ascending: false }).limit(50),
     ]);
+    if (geladenAbgebrochenRef.current) return;
     setAtemuebungen(
       (rows || []).map((r) => ({
         id: r.id,
@@ -38,7 +45,11 @@ export function useAtemuebungenData(userId) {
   }, [userId]);
 
   useEffect(() => {
+    geladenAbgebrochenRef.current = false;
     load();
+    return () => {
+      geladenAbgebrochenRef.current = true;
+    };
   }, [load]);
 
   const atemuebungHinzufuegen = useCallback(
