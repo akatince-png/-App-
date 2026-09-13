@@ -20,7 +20,6 @@ import MehrView from "./views/plan/MehrView";
 import GewohnheitenView from "./views/GewohnheitenView";
 import AtemuebungenView from "./views/AtemuebungenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
-import Fab from "./ui/Fab";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
 import { PLAENE_TABS } from "./constants";
@@ -273,15 +272,11 @@ export default function AuthenticatedApp() {
           setOffenesTrainingId(id);
           setView("training");
         }}
+        onNeuesProtokoll={neuesProtokoll}
       />
     );
   }
 
-  // Coach-verwaltetes Modell (13.08.): "Neues Protokoll" bleibt Admins und
-  // dem "Verwalten als"-Modus vorbehalten — ein Coachee soll nicht selbst
-  // ein komplett neues Protokoll starten können, das läuft über den Coach.
-  const istAdminModus = proband !== null || isAdmin;
-  const zeigeFab = view !== "form" && istAdminModus;
   // Seitenleiste (Tablet/Desktop, siehe .mp-app-sidebar in index.css) nur
   // außerhalb des geführten Onboarding-Fragebogens — mittendrin woanders
   // hinzuspringen würde den linearen Ablauf durchbrechen, ohne dass dafür
@@ -334,7 +329,6 @@ export default function AuthenticatedApp() {
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
           {screen}
         </div>
-        {zeigeFab && <Fab onClick={neuesProtokoll} />}
       </div>
     </div>
   );

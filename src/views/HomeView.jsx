@@ -90,9 +90,14 @@ const ORDNER = [
 // gleiches Muster wie in den beiden anderen Dateien.
 const ROUTINE_FARBE = { morgenroutine: "#E08A3E", abendroutine: "#4E6690" };
 const ROUTINE_HINTERGRUND = { morgenroutine: "#FBEADA", abendroutine: "#E7EBF3" };
+// Dunklere, besser lesbare Text-Variante von ROUTINE_FARBE (13.09.) — gleiche
+// Rolle wie KATEGORIE_META[...].text gegenüber .dot, für die "Weitere
+// Pläne"-Kacheln unten, die jetzt vollflächig eingefärbt sind statt nur
+// einen kleinen Punkt zu zeigen.
+const ROUTINE_TEXT = { morgenroutine: "#8A4A1E", abendroutine: "#2C3E5C" };
 
 
-export default function HomeView({ onOpenView, onOpenTraining }) {
+export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll }) {
   const { t, tLabel, lang } = useT();
   const {
     hormonPlan,
@@ -562,48 +567,63 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         </div>
       </div>
 
-      {/* Direkter Hydration-Knopf (12.09., Nutzerin-Vorgabe): "immer, wenn
-          ich was trinke, direkt auf den Knopf drücken ... und zur
-          Hydration gelangen". Bewusst ganz oben, unabhängig vom
-          Notfallmodus und ohne erst durch Direktzugriff/Als Nächstes
-          suchen zu müssen — ein Tap führt direkt zur Hydration-Ansicht. */}
-      <button
-        type="button"
-        className="mp-tap"
-        onClick={() => onOpenView("hydration")}
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-          padding: "14px 16px",
-          marginBottom: 20,
-          borderRadius: 18,
-          border: "none",
-          background: KATEGORIE_META.hydration.bg,
-          cursor: "pointer",
-          textAlign: "left",
-        }}
-      >
-        <div
+      {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
+          Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,
+          wenn ich was trinke, direkt auf den Knopf drücken" bzw. im akuten
+          Moment sofort Hilfe holen. Bewusst ganz oben, unabhängig vom
+          Notfallmodus (der jetzt weiter unten seine eigene Zeile hat) und
+          ohne erst durch Direktzugriff/Als Nächstes suchen zu müssen. */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => onOpenView("hydration")}
           style={{
-            width: 46,
-            height: 46,
-            borderRadius: 23,
-            background: KATEGORIE_META.hydration.dot,
+            flex: 1,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
+            gap: 12,
+            padding: "14px 14px",
+            borderRadius: 18,
+            border: "none",
+            background: KATEGORIE_META.hydration.bg,
+            cursor: "pointer",
+            textAlign: "left",
           }}
         >
-          <Icon name="droplet" size={26} color="#fff" />
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              background: KATEGORIE_META.hydration.dot,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="droplet" size={22} color="#fff" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Hydration eintragen</div>
+            <div style={{ fontSize: 11, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
+          </div>
+        </button>
+        <div style={{ flex: 1 }}>
+          <AkutModusTrigger onClick={() => setAkutOffen(true)} />
         </div>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Hydration eintragen</div>
-          <div style={{ fontSize: 12, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
-        </div>
-      </button>
+      </div>
+
+      {akutOffen && (
+        <AkutModusPanel
+          onClose={() => setAkutOffen(false)}
+          onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
+          coachName={getCoachName()}
+          zeigeCoachOption={!istAdminModus}
+          akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
+        />
+      )}
 
       {!istAdminModus ? (
         <>
@@ -713,30 +733,16 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       </div>
       )}
 
-      {/* ADHS Mode Toggle + Akutmodus-Knopf nebeneinander (16.08.,
-          Nutzerinnen-Vorgabe: Notfallmodus etwas schmaler, gleich hoher,
-          schmalerer Knopf daneben für "mir geht's grad nicht gut" statt
-          untereinander). Akutmodus ergänzt den Notfallmodus (der nur die
-          Ansicht vereinfacht) um eine aktive Lösungs-Vorschlag-Funktion —
-          inkl. vorher festgelegter "Akut-Übung" aus den Gewohnheiten. */}
-      <div style={{ display: "flex", gap: 10, marginBottom: akutOffen ? 12 : 18 }}>
-        <div style={{ flex: 1.6 }}>
-          <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} compact />
-        </div>
-        <div style={{ flex: 1 }}>
-          <AkutModusTrigger onClick={() => setAkutOffen(true)} />
-        </div>
+      {/* Notfallmodus-Umschalter: eigene volle Zeile (13.09., Nutzerin-
+          Vorgabe) — vorher schmal neben dem Akutmodus-Knopf, der jetzt
+          stattdessen oben neben Hydration sitzt (beides häufigere
+          Schnellaktionen). Der Umschalter selbst wird seltener gebraucht,
+          bekommt deshalb wieder seine volle, ausführlichere Darstellung
+          statt der schmalen `compact`-Variante — Design wird bei
+          Gelegenheit noch weiter überarbeitet. */}
+      <div style={{ marginBottom: 18 }}>
+        <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
       </div>
-
-      {akutOffen && (
-        <AkutModusPanel
-          onClose={() => setAkutOffen(false)}
-          onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
-          coachName={getCoachName()}
-          zeigeCoachOption={!istAdminModus}
-          akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
-        />
-      )}
 
       {/* Emergency Mode Info Banner */}
       {isEmergencyMode && (
@@ -955,19 +961,28 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             <span style={{ fontSize: 11, color: textMuted }}>— {t("home.weiterePlaene.desc")}</span>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {weiterePlaeneWidgets.map((widget) => (
-              <button
-                key={widget.kategorie}
-                type="button"
-                className="mp-tap"
-                onClick={() => onOpenView(widget.viewId)}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "#F7F7F5", border: "1px dashed #D8D8D2", borderRadius: 100, padding: "6px 12px", cursor: "pointer" }}
-              >
-                <span style={{ width: 7, height: 7, borderRadius: 4, background: widget.farbe || KATEGORIE_META[widget.kategorie]?.dot || "#999" }} />
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: textMuted }}>{widget.name}</span>
-                <span style={{ fontSize: 10, color: accentDark, fontWeight: 700 }}>{t("home.weiterePlaene.einrichten")}</span>
-              </button>
-            ))}
+            {weiterePlaeneWidgets.map((widget) => {
+              // Bug-Fix/Verbesserung (13.09., Nutzerin-Vorgabe): vorher nur
+              // ein winziger 7px-Punkt in der Kategorie-Farbe — kaum zu
+              // erkennen, und half nicht dabei, die Farben mit dem
+              // Tagesfortschritt-Balkendiagramm oben zu verknüpfen. Jetzt
+              // trägt die ganze Kachel Hintergrund- und Textfarbe der
+              // Kategorie.
+              const bg = widget.hintergrund || KATEGORIE_META[widget.kategorie]?.bg || "#F7F7F5";
+              const textFarbe = ROUTINE_TEXT[widget.kategorie] || KATEGORIE_META[widget.kategorie]?.text || textMuted;
+              return (
+                <button
+                  key={widget.kategorie}
+                  type="button"
+                  className="mp-tap"
+                  onClick={() => onOpenView(widget.viewId)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: bg, border: "none", borderRadius: 100, padding: "7px 13px", cursor: "pointer" }}
+                >
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: textFarbe }}>{widget.name}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: textFarbe, opacity: 0.75 }}>{t("home.weiterePlaene.einrichten")}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -995,6 +1010,36 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             <div style={{ fontSize: 10.5, color: textMuted }}>{t(o.descKey)}</div>
           </button>
         ))}
+        {/* "Neues Protokoll" (13.09., Nutzerin-Vorgabe): ersetzt den
+            früheren schwebenden runden "+"-Knopf oben rechts (Fab.jsx) —
+            fiel dort kaum auf und führte wiederholt dazu, dass die
+            Nutzerin ihn nicht fand und die App für weniger vollständig
+            hielt, als sie ist. Jetzt als vierte Kachel direkt neben den
+            Ordnern, gleiche Größe/Form (nicht mehr rund, damit es nicht
+            wie ein deplatziertes Icon zwischen den eckigen Kacheln wirkt),
+            bewusst in Blau statt Weiß, damit sofort erkennbar bleibt, dass
+            sie etwas anderes tut als die drei Ordner. */}
+        {istAdminModus && (
+          <button
+            type="button"
+            className="mp-tap"
+            onClick={onNeuesProtokoll}
+            style={{
+              textAlign: "left",
+              borderRadius: 18,
+              padding: "14px 10px",
+              cursor: "pointer",
+              background: accentDark,
+              boxShadow: shadow,
+              border: "none",
+              color: "#fff",
+            }}
+          >
+            <div style={{ marginBottom: 8, fontSize: 22, fontWeight: 800, lineHeight: "22px" }}>+</div>
+            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Neues Protokoll</div>
+            <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>Von vorn beginnen</div>
+          </button>
+        )}
       </div>
 
       {trainingFehler && (
