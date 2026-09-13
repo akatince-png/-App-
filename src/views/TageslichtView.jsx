@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Shell, Card, Label, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
@@ -11,7 +11,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
-import { useZielEntwurf } from "../ui/useZielEntwurf";
+import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -52,48 +52,31 @@ export default function TageslichtView({ onHome, embedded = false }) {
     tageslichtZielZuruecksetzen,
     aenderungVermerken,
   } = useAppData();
-  const [zielEntwurf, setZielEntwurf] = useZielEntwurf(tageslichtZielMinuten);
-  const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
-  const [zielGrund, setZielGrund] = useState("");
-  const [fehler, setFehler] = useState(null);
-
-  const schnellHinzufuegen = async (minuten) => {
-    setFehler(null);
-    const result = await tageslichtHinzufuegen(minuten);
-    if (!result?.ok) setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-  };
-
-  const zielSpeichern = async () => {
-    setFehler(null);
-    if (Number(zielEntwurf) !== tageslichtZielMinuten) {
-      aenderungVermerken({
-        kategorie: "tageslicht",
-        itemName: "Tageslichtziel",
-        aktion: "geändert",
-        detail: `Ziel: ${tageslichtZielMinuten} Min. → ${zielEntwurf} Min.`,
-        grund: zielGrund,
-      });
-    }
-    const result = await tageslichtZielSetzen(zielEntwurf);
-    if (!result?.ok) {
-      setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setZielGrund("");
-  };
-
-  // Bug-Fix (Nutzerin-Vorgabe, 12.09.): siehe HydrationView.jsx — ohne
-  // diese Möglichkeit blieb die Tageslicht-Kachel dauerhaft "aktiv".
-  const zielZuruecksetzen = async () => {
-    if (!window.confirm("Tagesziel zurücksetzen? Die Tageslicht-Kachel verschwindet dann wieder von der Startseite, bis du erneut etwas einträgst.")) return;
-    setFehler(null);
-    const result = await tageslichtZielZuruecksetzen();
-    if (!result?.ok) {
-      setFehler(result?.error || "Zurücksetzen fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setZielEntwurf("30");
-  };
+  const {
+    zielEntwurf,
+    setZielEntwurf,
+    korrekturEntwurf,
+    setKorrekturEntwurf,
+    zielGrund,
+    setZielGrund,
+    fehler,
+    schnellHinzufuegen,
+    zielSpeichern,
+    zielZuruecksetzen,
+    korrekturSetzen,
+  } = useZielMitKorrektur({
+    zielWert: tageslichtZielMinuten,
+    heuteWert: tageslichtHeuteMinuten,
+    hinzufuegen: tageslichtHinzufuegen,
+    zielSetzen: tageslichtZielSetzen,
+    zielZuruecksetzen: tageslichtZielZuruecksetzen,
+    aenderungVermerken,
+    kategorie: "tageslicht",
+    itemName: "Tageslichtziel",
+    einheit: "Min.",
+    kachelName: "Tageslicht",
+    defaultZiel: 30,
+  });
 
   // Übergabe an <KiChat onUebernehmen>: setzt das im Gespräch besprochene
   // neue Tagesziel über denselben Weg wie das manuelle Formular unten.
@@ -102,17 +85,6 @@ export default function TageslichtView({ onHome, embedded = false }) {
     const result = await tageslichtZielSetzen(zielMinuten);
     if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
     return { zielMinuten };
-  };
-
-  const korrekturSetzen = async () => {
-    if (korrekturEntwurf === "") return;
-    setFehler(null);
-    const result = await tageslichtHinzufuegen(Number(korrekturEntwurf) - tageslichtHeuteMinuten);
-    if (!result?.ok) {
-      setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setKorrekturEntwurf("");
   };
 
   const content = (

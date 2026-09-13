@@ -13,7 +13,7 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
-import { useZielEntwurf } from "../ui/useZielEntwurf";
+import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
 // ist Blau, passend zu den bunten Home-Mini-Widgets.
@@ -50,60 +50,42 @@ export default function HydrationView({ onHome, embedded = false }) {
     erinnerungen,
     setErinnerung,
   } = useAppData();
-  const [zielEntwurf, setZielEntwurf] = useZielEntwurf(hydrationZielMl);
-  const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
-  const [zielGrund, setZielGrund] = useState("");
-  const [hydrationError, setHydrationError] = useState(null);
+  const {
+    zielEntwurf,
+    setZielEntwurf,
+    korrekturEntwurf,
+    setKorrekturEntwurf,
+    zielGrund,
+    setZielGrund,
+    fehler: hydrationError,
+    setFehler: setHydrationError,
+    schnellHinzufuegen,
+    zielSpeichern,
+    zielZuruecksetzen,
+    korrekturSetzen,
+  } = useZielMitKorrektur({
+    zielWert: hydrationZielMl,
+    heuteWert: hydrationHeuteMl,
+    hinzufuegen: hydrationHinzufuegen,
+    zielSetzen: hydrationZielSetzen,
+    zielZuruecksetzen: hydrationZielZuruecksetzen,
+    aenderungVermerken,
+    kategorie: "hydration",
+    itemName: "Trinkziel",
+    einheit: "ml",
+    kachelName: "Hydration",
+    defaultZiel: 2500,
+  });
 
   const heutigerEintrag = hydrationEintraege.find((e) => e.datum === heute());
   const [elektrolyte, setElektrolyte] = useState(heutigerEintrag?.elektrolyte || false);
   const [durstgefuehl, setDurstgefuehl] = useState(heutigerEintrag?.durstgefuehl || "");
   const [bemerkung, setBemerkung] = useState(heutigerEintrag?.bemerkung || "");
 
-  const schnellHinzufuegen = async (ml) => {
-    setHydrationError(null);
-    const result = await hydrationHinzufuegen(ml);
-    if (!result?.ok) setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-  };
-
   const checkinSpeichern = async (felder) => {
     setHydrationError(null);
     const result = await hydrationCheckinSpeichern(felder);
     if (!result?.ok) setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-  };
-
-  const zielSpeichern = async () => {
-    setHydrationError(null);
-    if (Number(zielEntwurf) !== hydrationZielMl) {
-      aenderungVermerken({
-        kategorie: "hydration",
-        itemName: "Trinkziel",
-        aktion: "geändert",
-        detail: `Ziel: ${hydrationZielMl} ml → ${zielEntwurf} ml`,
-        grund: zielGrund,
-      });
-    }
-    const result = await hydrationZielSetzen(zielEntwurf);
-    if (!result?.ok) {
-      setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setZielGrund("");
-  };
-
-  // Bug-Fix (Nutzerin-Vorgabe, 12.09.): ohne diese Möglichkeit blieb die
-  // Hydration-Kachel auf der Startseite dauerhaft "aktiv", selbst wenn
-  // alle Trinkmengen-Einträge gelöscht wurden — siehe
-  // hydrationZielZuruecksetzen() in useHydrationData.js.
-  const zielZuruecksetzen = async () => {
-    if (!window.confirm("Tagesziel zurücksetzen? Die Hydration-Kachel verschwindet dann wieder von der Startseite, bis du erneut etwas einträgst.")) return;
-    setHydrationError(null);
-    const result = await hydrationZielZuruecksetzen();
-    if (!result?.ok) {
-      setHydrationError(result?.error || "Zurücksetzen fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setZielEntwurf("2500");
   };
 
   // Übergabe an <KiChat onUebernehmen>: setzt ein evtl. besprochenes neues
@@ -122,17 +104,6 @@ export default function HydrationView({ onHome, embedded = false }) {
       setErinnerung("hydration", { aktiv: true, zeiten: kombiniert });
     }
     return { zielMl, zeiten };
-  };
-
-  const korrekturSetzen = async () => {
-    if (korrekturEntwurf === "") return;
-    setHydrationError(null);
-    const result = await hydrationHinzufuegen(Number(korrekturEntwurf) - hydrationHeuteMl);
-    if (!result?.ok) {
-      setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setKorrekturEntwurf("");
   };
 
   const content = (
