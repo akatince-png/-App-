@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Shell } from "./ui/primitives";
 import { textMuted } from "./ui/theme";
+import { useT } from "./i18n/translate";
 import { useAppData } from "./context/AppDataContext";
 import { useAuth } from "./context/AuthContext";
 import { useAdmin } from "./context/AdminContext";
@@ -42,10 +43,14 @@ const KATEGORIE_TO_VIEW = {
   mahlzeit: "ernaehrung",
 };
 
+// Gleicher Ladebildschirm wie in App.jsx (dort für den Login-/Auth-Ladezustand,
+// hier für den Datenlade-Zustand danach) — beide über dieselbe i18n-Zeichenkette
+// statt eines zweiten, fest auf Deutsch verdrahteten Textes.
 function LoadingScreen() {
+  const { t } = useT();
   return (
     <Shell>
-      <div style={{ textAlign: "center", marginTop: 120, color: textMuted, fontSize: 14 }}>Daten werden geladen...</div>
+      <div style={{ textAlign: "center", marginTop: 120, color: textMuted, fontSize: 14 }}>{t("common.loading")}</div>
     </Shell>
   );
 }

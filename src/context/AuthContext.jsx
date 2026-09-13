@@ -36,21 +36,31 @@ export function AuthProvider({ children }) {
   // irgendeinem Grund vorher nie feuert.
   useEffect(() => {
     let bereitsAusgeloest = false;
+    // Gleiches Muster wie in den übrigen Lade-Hooks (z. B.
+    // useProtocolData.js): verhindert, dass eine spät auflösende Antwort
+    // (React-StrictMode-Doppel-Mount im Dev-Modus) nach dem Cleanup dieses
+    // Effekts noch State setzt.
+    let cancelled = false;
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       bereitsAusgeloest = true;
+      if (cancelled) return;
       setSession(newSession);
       setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
       if (!bereitsAusgeloest) setSession(data.session);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
