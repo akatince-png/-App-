@@ -205,19 +205,27 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
   const { trainingEintraege, trainingEntfernen, protokollEintraege, wochenprotokollSnapshots, aenderungEntfernen, versionen, versionLoeschen } =
     useAppData();
 
+  // Bug-Fix (13.09.): Einzel-Löschen (🗑-Icon) synchronisierte die
+  // Mehrfachauswahl bisher nicht — löschte man einen markierten Eintrag
+  // einzeln, blieb seine ID im Auswahl-Set stehen. "X ausgewählt" zeigte
+  // danach eine zu hohe Zahl, und "Alle löschen" fragte nach einer falschen
+  // Anzahl an Einträgen, die es teils gar nicht mehr gibt.
   const handleVersionLoeschen = (id) => {
     if (!window.confirm("Diese Version endgültig löschen?")) return;
     versionLoeschen(id);
+    versionAuswahl.entfernenAusAuswahl(id);
   };
 
   const handleAenderungLoeschen = (id) => {
     if (!window.confirm("Diesen Eintrag endgültig löschen?")) return;
     aenderungEntfernen(id);
+    aenderungAuswahl.entfernenAusAuswahl(id);
   };
 
   const handleTrainingLoeschen = (id) => {
     if (!window.confirm("Diesen Trainings-Eintrag endgültig löschen?")) return;
     trainingEntfernen(id);
+    trainingAuswahl.entfernenAusAuswahl(id);
   };
 
   const [seitenOffen, setSeitenOffen] = useState(false);

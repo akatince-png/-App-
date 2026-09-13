@@ -726,7 +726,7 @@ export default function WochenuebersichtView({
         <Card style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <button
-              onClick={() => setMonthDate(addDays(monthDate, -30))}
+              onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}
               style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
             >
               ‹
@@ -735,7 +735,7 @@ export default function WochenuebersichtView({
               {monthDate.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}
             </div>
             <button
-              onClick={() => setMonthDate(addDays(monthDate, 30))}
+              onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
               style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
             >
               ›

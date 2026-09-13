@@ -164,6 +164,11 @@ function SupplementeSection() {
   const [eigeneZeit, setEigeneZeit] = useState("");
   const [customHinweis, setCustomHinweis] = useState("");
   const [supplementError, setSupplementError] = useState(null);
+  // Bug-Fix (13.09.): ohne Sperre erzeugte ein schneller Doppel-Tap auf
+  // "Hinzufügen" zwei parallele supplementHinzufuegen()-Aufrufe, bevor das
+  // Formular zurückgesetzt war — führte zu doppelt angelegten Supplementen
+  // inkl. doppelter Erinnerungen/Tagesplan-Einträge, ohne Fehlermeldung.
+  const [speichertGerade, setSpeichertGerade] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({ wirkung: "", nebenwirkungen: [], notizen: "" });
 
@@ -213,21 +218,27 @@ function SupplementeSection() {
   };
 
   const submit = async () => {
+    if (speichertGerade) return;
+    setSpeichertGerade(true);
     setSupplementError(null);
-    const hinweis = neuesSupplement.hinweis === "Sonstiges" ? customHinweis.trim() : neuesSupplement.hinweis;
-    const result = await supplementHinzufuegen({ ...neuesSupplement, hinweis });
-    if (!result?.ok) {
-      setSupplementError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
+    try {
+      const hinweis = neuesSupplement.hinweis === "Sonstiges" ? customHinweis.trim() : neuesSupplement.hinweis;
+      const result = await supplementHinzufuegen({ ...neuesSupplement, hinweis });
+      if (!result?.ok) {
+        setSupplementError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+        return;
+      }
+      aenderungVermerken({
+        kategorie: "supplement",
+        itemName: neuesSupplement.name,
+        aktion: "hinzugefügt",
+        detail: neuesSupplement.tageszeiten.join(", "),
+      });
+      setNeuesSupplement(LEERES_SUPPLEMENT);
+      setCustomHinweis("");
+    } finally {
+      setSpeichertGerade(false);
     }
-    aenderungVermerken({
-      kategorie: "supplement",
-      itemName: neuesSupplement.name,
-      aktion: "hinzugefügt",
-      detail: neuesSupplement.tageszeiten.join(", "),
-    });
-    setNeuesSupplement(LEERES_SUPPLEMENT);
-    setCustomHinweis("");
   };
 
   // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
@@ -362,7 +373,7 @@ function SupplementeSection() {
         )}
         {supplementError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{supplementError}</div>}
         <div style={{ marginTop: 10 }}>
-          <PrimaryButton onClick={submit} disabled={!neuesSupplement.name.trim() || neuesSupplement.tageszeiten.length === 0}>
+          <PrimaryButton onClick={submit} disabled={speichertGerade || !neuesSupplement.name.trim() || neuesSupplement.tageszeiten.length === 0}>
             + Zum Plan hinzufügen
           </PrimaryButton>
         </div>

@@ -552,6 +552,13 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   const [vorlageFehler, setVorlageFehler] = useState(null);
   const [trainingsplaeneVerwaltungOffen, setTrainingsplaeneVerwaltungOffen] = useState(false);
   const [fehler, setFehler] = useState(null);
+  // Bug-Fix (13.09.): ohne Sperre erzeugte ein schneller Doppel-Tap auf
+  // "Jetzt live starten"/"Nur eintragen" zwei parallele
+  // trainingHinzufuegen()-Aufrufe, bevor das Formular zurückgesetzt war —
+  // der erste, nie geöffnete Eintrag blieb als unsichtbarer "Geister-
+  // Eintrag" zurück und hielt (siehe HomeView.jsx) die Trainings-Kachel
+  // dauerhaft aktiv.
+  const [speichertGerade, setSpeichertGerade] = useState(false);
   const [liveSessionId, setLiveSessionId] = useState(null);
   const [kurzTimer, setKurzTimer] = useState(null); // 'stoppuhr' | 'pause' | 'intervall' | null
   const [feedbackFuerId, setFeedbackFuerId] = useState(null);
@@ -636,24 +643,30 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   };
 
   const submit = async (erledigt) => {
+    if (speichertGerade) return;
+    setSpeichertGerade(true);
     setFehler(null);
-    const payload = bauePayload(erledigt);
-    const result = await trainingHinzufuegen(payload);
-    if (!result?.ok) {
-      setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
+    try {
+      const payload = bauePayload(erledigt);
+      const result = await trainingHinzufuegen(payload);
+      if (!result?.ok) {
+        setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+        return;
+      }
+      aenderungVermerken({
+        kategorie: "training",
+        itemName: payload.name ? `${payload.art} · ${payload.name}` : payload.art,
+        aktion: "hinzugefügt",
+        detail: payload.uhrzeit ? `Uhrzeit: ${payload.uhrzeit}` : "",
+      });
+      setEintrag(leererEintrag());
+      if (!erledigt && result.eintrag) {
+        rechtzeitigGestartetRef.current[result.eintrag.id] = istRechtzeitig(payload.uhrzeit, belohnungPufferMin);
+        setLiveSessionId(result.eintrag.id);
+      } else if (erledigt && result.eintrag) setFeedbackFuerId(result.eintrag.id);
+    } finally {
+      setSpeichertGerade(false);
     }
-    aenderungVermerken({
-      kategorie: "training",
-      itemName: payload.name ? `${payload.art} · ${payload.name}` : payload.art,
-      aktion: "hinzugefügt",
-      detail: payload.uhrzeit ? `Uhrzeit: ${payload.uhrzeit}` : "",
-    });
-    setEintrag(leererEintrag());
-    if (!erledigt && result.eintrag) {
-      rechtzeitigGestartetRef.current[result.eintrag.id] = istRechtzeitig(payload.uhrzeit, belohnungPufferMin);
-      setLiveSessionId(result.eintrag.id);
-    } else if (erledigt && result.eintrag) setFeedbackFuerId(result.eintrag.id);
   };
 
   const handleWochenplanHinzufuegen = async (einheit) => {
@@ -1187,10 +1200,12 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
             {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <div style={{ flex: 1 }}>
-                <PrimaryButton onClick={() => submit(false)}>Jetzt live starten</PrimaryButton>
+                <PrimaryButton onClick={() => submit(false)} disabled={speichertGerade}>
+                  Jetzt live starten
+                </PrimaryButton>
               </div>
               <div style={{ flex: 1 }}>
-                <PrimaryButton onClick={() => submit(true)} variant="ghost">
+                <PrimaryButton onClick={() => submit(true)} variant="ghost" disabled={speichertGerade}>
                   Nur eintragen
                 </PrimaryButton>
               </div>

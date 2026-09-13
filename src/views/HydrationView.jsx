@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextArea, CheckRow } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
@@ -49,7 +49,24 @@ export default function HydrationView({ onHome, embedded = false }) {
     erinnerungen,
     setErinnerung,
   } = useAppData();
-  const [zielEntwurf, setZielEntwurf] = useState(String(hydrationZielMl));
+  const [zielEntwurf, setZielEntwurfState] = useState(String(hydrationZielMl));
+  // Bug-Fix (13.09.): hydrationZielMl startet in useHydrationData.js hart
+  // auf 2500 und wird erst nach einem asynchronen Fetch auf den echten Wert
+  // gesetzt — der obige useState-Initialwert oben wurde dadurch nur beim
+  // allerersten Render ausgewertet und zeigte bei langsamer Verbindung kurz
+  // "2500" statt des echten Ziels an. Tippte man in diesem Moment
+  // versehentlich auf "Speichern", ohne das Feld anzufassen, wurde das
+  // echte Ziel stillschweigend auf 2500 zurückgesetzt. zielBearbeitetRef
+  // verhindert, dass der Sync ein bereits von der Nutzerin angefasstes Feld
+  // überschreibt.
+  const zielBearbeitetRef = useRef(false);
+  useEffect(() => {
+    if (!zielBearbeitetRef.current) setZielEntwurfState(String(hydrationZielMl));
+  }, [hydrationZielMl]);
+  const setZielEntwurf = (v) => {
+    zielBearbeitetRef.current = true;
+    setZielEntwurfState(v);
+  };
   const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
   const [zielGrund, setZielGrund] = useState("");
   const [hydrationError, setHydrationError] = useState(null);
