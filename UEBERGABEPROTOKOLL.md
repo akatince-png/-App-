@@ -1,5 +1,48 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 75) — Tablet: Orden-Vorschau rechts neben Tagesfortschritt-Balkendiagramm
+
+Nutzerinnen-Vorgabe anhand eines Tablet-Screenshots: "die Balken, die den
+Tageserfolg anzeigen, sind relativ links zentriert und rechts in diesem
+Feld ist recht viel Platz... wenn dann Pläne gestellt wurden, die
+nächsten und potenziellen Orden dort angezeigt werden, noch in so einem
+durchsichtigen Modus, weil sie noch nicht erreicht wurden, sollen erst
+dann Farbe bekommen und ihre Punktzahl angezeigt bekommen, wenn Ziel
+erreicht wurde... eher links die Tabelle, rechts die Ordner."
+
+Neue Komponente `TagesfortschrittOrden.jsx`: pro Lebensbereich, für den
+bereits ein Plan eingerichtet ist (dasselbe `widget.aktiv` wie im
+Balkendiagramm selbst — kein Orden-Platz für noch gar nicht eingerichtete
+Bereiche), ein kleiner Orden-Platz rechts neben dem Balkendiagramm:
+grau/transparent (0.55 Deckkraft), solange noch kein Streak-Meilenstein
+(7/14/28/... Tage, siehe `utils/errungenschaften.js`) erreicht ist —
+sobald einer erreicht ist, voll eingefärbt im Kategorie-Farbverlauf
+(gleiche Optik wie die "Alle Abzeichen"-Ansicht in `ErfolgeTab.jsx`) mit
+der erreichten Tage-Zahl statt der Platzhalter-Zahl.
+
+`HomeView.jsx` zieht dafür jetzt dieselben Erfolge-Quelldaten wie
+`ErfolgeTab.jsx` heran und nutzt denselben `useErrungenschaften()`-Hook —
+ein Orden wird hier also exakt dann farbig, wenn es das auch im
+Archiv-Reiter "Erfolge" ist. Nebeneffekt (gewollt): Orden werden dadurch
+jetzt schon beim Öffnen von Home vergeben/gespeichert, nicht erst nach
+einem Besuch im Erfolge-Reiter.
+
+Responsive Lösung fürs Handy (zweiter Teil der Vorgabe: "wie man diese
+Ansicht auf der App-Funktion generiert, weil dort ja die Tabelle gleich
+direkt den gesamten Balken einnimmt"): neue CSS-Klasse
+`.mp-tagesfortschritt-grid` nach demselben Breakpoint-Muster wie
+`.mp-ordner-grid`/`.mp-app-shell` (`index.css`) — ab 1024px zweispaltig
+mit den Orden rechtsbündig, darunter unverändert nur das Balkendiagramm
+wie bisher, das die Breite auf dem Handy ohnehin schon ausfüllt.
+
+Verifiziert über einen isolierten Playwright-Preview-Aufbau (nur
+`TagesfortschrittBalken`/`TagesfortschrittOrden` mit Beispiel-Widgets/
+-Kategorien, ohne den kompletten `AppDataContext`, da beide Komponenten
+rein aus Props rendern) bei 375px (Handy, nur Balken), 1024px und 1200px
+(Tablet, Balken links + Orden rechtsbündig, grau vs. farbig korrekt
+gemischt) — keine Konsolenfehler. `npm run build` + `npx oxlint`
+weiterhin grün (16 Warnungen, unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 74) — Tagebuch: Datumszeile + unbegrenzte Zeichenzahl
 
 Direkte Nachbesserung zu Teil 73: "soll natürlich oben dann das aktuelle
