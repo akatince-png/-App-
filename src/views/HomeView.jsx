@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from "react";
-import { Shell, Card, TextArea, PrimaryButton } from "../ui/primitives";
+import { Shell, Card } from "../ui/primitives";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
+import TagesfortschrittBalken from "../ui/TagesfortschrittBalken";
+import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { statusText } from "../utils/motivation";
@@ -88,98 +90,6 @@ const ORDNER = [
 // gleiches Muster wie in den beiden anderen Dateien.
 const ROUTINE_FARBE = { morgenroutine: "#E08A3E", abendroutine: "#4E6690" };
 const ROUTINE_HINTERGRUND = { morgenroutine: "#FBEADA", abendroutine: "#E7EBF3" };
-
-// Tagesfortschritt als Balkendiagramm (12.09., Nutzerinnen-Vorgabe: "so ein
-// Diagramm mit so Stäbchen" statt eines einzelnen Rings) — ein Balken je
-// Lebensbereich statt einer einzelnen Gesamtzahl, damit auf einen Blick
-// sichtbar ist, WO es heute hakt. Graue Kurz-Balken markieren Bereiche, die
-// noch gar nicht eingerichtet sind (aktiv: false).
-function TagesfortschrittBalken({ widgets }) {
-  const MAX_HOEHE = 100;
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: MAX_HOEHE }}>
-        {widgets.map((w) => {
-          const hoehe = w.aktiv ? Math.max(4, Math.round(Math.min(1, w.dailyCount / (w.dailyTotal || 1)) * MAX_HOEHE)) : 6;
-          // Bug-Fix: w.farbe ist NUR bei Morgen-/Abendroutine gesetzt (siehe
-          // ROUTINE_FARBE weiter unten) — alle anderen Kategorien holen ihre
-          // Farbe aus KATEGORIE_META, wie schon bei "Als Nächstes"/"Weitere
-          // Pläne". Ohne diesen Fallback waren hier bisher ALLE Balken außer
-          // Morgen-/Abendroutine unsichtbar (kein background gesetzt).
-          const farbe = w.aktiv ? w.farbe || KATEGORIE_META[w.kategorie]?.dot : "#E2E2DC";
-          return (
-            <div key={w.kategorie} title={w.name} style={{ width: 26, flexShrink: 0, height: hoehe, borderRadius: "6px 6px 2px 2px", background: farbe }} />
-          );
-        })}
-      </div>
-      <div style={{ display: "flex", gap: 8, marginTop: 7 }}>
-        {widgets.map((w) => (
-          <div key={w.kategorie} style={{ width: 26, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-            <span style={{ width: 7, height: 7, borderRadius: 4, background: w.aktiv ? w.farbe || KATEGORIE_META[w.kategorie]?.dot : "#B5B5AE" }} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Ersetzt für Coachees (istAdminModus === false) den KI-Assistenten als
-// Kontaktweg (13.08., Coach-verwaltetes Modell) — eine einfache Nachricht
-// an den echten Coach statt an Aka, siehe useCoacheeNachrichten.js.
-function NachrichtAnCoachCard({ nachrichten, onSenden }) {
-  const [text, setText] = useState("");
-  const [senden, setSenden] = useState(false);
-  const [fehler, setFehler] = useState(null);
-  const [erfolg, setErfolg] = useState(false);
-
-  const absenden = async () => {
-    setFehler(null);
-    setErfolg(false);
-    setSenden(true);
-    const result = await onSenden(text);
-    setSenden(false);
-    if (!result?.ok) {
-      setFehler(result?.error || "Senden fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
-    }
-    setText("");
-    setErfolg(true);
-  };
-
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
-        Frag deinen Coach etwas oder gib eine Rückmeldung — er meldet sich bei dir.
-      </div>
-      <Card>
-        <TextArea value={text} onChange={setText} placeholder="Deine Nachricht an deinen Coach ..." />
-        <div style={{ marginTop: 10 }}>
-          <PrimaryButton onClick={absenden} disabled={senden || !text.trim()}>
-            {senden ? "Wird gesendet …" : "Nachricht senden"}
-          </PrimaryButton>
-        </div>
-        {fehler && <div style={{ fontSize: 12, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
-        {erfolg && <div style={{ fontSize: 12, color: accentDark, marginTop: 8 }}>Nachricht gesendet.</div>}
-      </Card>
-      {nachrichten?.length > 0 && (
-        <div style={{ marginTop: 10 }}>
-          {nachrichten.slice(0, 5).map((n) =>
-            n.absender === "coach" ? (
-              <div key={n.id} style={{ fontSize: 12.5, padding: "8px 10px", marginBottom: 6, borderRadius: 10, background: accentSoft, color: accentDark }}>
-                <div style={{ fontSize: 10.5, fontWeight: 700, marginBottom: 2 }}>Dein Coach</div>
-                {n.text}
-              </div>
-            ) : (
-              <div key={n.id} style={{ fontSize: 12, color: textMuted, padding: "6px 2px" }}>
-                {n.gelesen ? "✓ Gelesen" : "Noch nicht gelesen"} · {n.text}
-              </div>
-            )
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 
 export default function HomeView({ onOpenView, onOpenTraining }) {
