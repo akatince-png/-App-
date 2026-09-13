@@ -1,5 +1,55 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 69) — Sunrise-Icon nachgebessert + Peptide/Getränke-Rezepte als Erfolge-Kategorien entfernt
+
+Nutzerinnen-Feedback zu Teil 68:
+
+**1) Sunrise-Icon schwer erkennbar.** "die man erkennt nicht so wirklich,
+dass das eine Sonne ist... zwei, drei Sonnenstrahlstriche mehr...
+Meinetwegen vier Striche mit Lücke drumrum". Von 2 auf 4 Strahlen
+erweitert, alle mit durchgängiger Lücke zum Halbkreis (vorher war die
+Lücke inkonsistent — der senkrechte Strahl saß direkt am Bogen, die zwei
+diagonalen hatten Abstand). Symmetrisch um die Mittelachse verteilt.
+
+**2) "Peptide"/"Hormone" als eigene Erfolge-Kategorie auflösen.**
+"insbesondere den Bereich Peptinen und Hormone kannst Du eigentlich
+auflösen, weil der nicht relevant ist. Der hat ja... gehört ja auch zum
+Medikamententeil... Falls es ein grundlegendes Problem im Code gibt...
+möchte ich, dass Du das auch in Ordnung bringst."
+
+Recherche bestätigte einen echten, vorbestehenden Bug: Die separate
+"Peptide"-Abzeichen-Kategorie in `utils/errungenschaften.js` las ein
+Feld `erledigt` aus `useAppData()` (in `ErfolgeTab.jsx` lokal als
+`peptidErledigt` aliasiert) — dieses Feld existiert im `AppDataContext`
+gar nicht. Die Kategorie war dadurch technisch immer leer, die
+zugehörigen Abzeichen faktisch unerreichbar — kein bewusstes Feature,
+sondern Code-Leiche. Peptide sind seit Migration 0042 (13.08.) ohnehin
+Teil von "hormon"/Medikamente (eigener Kommentar dort bestätigt das).
+Komplett entfernt: der `KATEGORIEN`-Eintrag selbst sowie die tote
+`peptidErledigt`-Verdrahtung durch `ErfolgeTab.jsx` und
+`useErrungenschaften.js`.
+
+**3) Getränke-Rezepte als Erfolge-Kategorie raus.** "Getränkemischung...
+kannste auch rausnehmen... die muss auch keiner mit Belohnungen
+versehen. Die Getränkemischungen... können Teil einer Supplementegabe,
+eines Trainings oder einer Morgenroutine/Abendroutine sein." Die
+"drinks"-Kategorie aus `KATEGORIEN` entfernt — die zugrundeliegende
+Tracking-Funktion (`rezeptErledigt`/`toggleRezeptErledigt` in
+`SupplementeView.jsx`) bleibt unverändert und funktioniert weiter, nur
+ohne eigenen Abzeichen-/Streak-Satz im Erfolge-Tab.
+
+11 statt 13 Kategorien im Erfolge-Tab übrig (Morgenroutine, Abendroutine,
+Schlaf, Hydration, Tageslicht, Ernährung, Training, Supplemente,
+Hormone & Medikamente, Gewohnheiten, Atemübungen). Die Punktevergabe je
+Kategorie (aktuell überall 1 Punkt/Eintrag) bleibt bewusst unverändert —
+laut Nutzerin ein separates, späteres Thema ("da können wir gerne noch
+mal später dran arbeiten, welches Punktesystem...").
+
+Verifiziert über eine Debug-Preview-Seite (Playwright-Screenshot):
+Icon-Vergleich vorher/nachher sowie die vollständige `KATEGORIEN`-Liste
+mit Kategorienzahl. Build + `npx oxlint` weiterhin bei 16 Warnungen
+(Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 68) — Eigenes "sunrise"-Icon für die Morgenroutine
 
 Nutzerinnen-Vorgabe: "das Symbol für die Morgenroutine von einer Sonne zu
