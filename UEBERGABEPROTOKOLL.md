@@ -1,5 +1,61 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🔧 Laufende Initiative: systematisches Code-Audit der gesamten App (Teil 79, Stand 13.09., wird fortlaufend aktualisiert)
+
+Nutzerinnen-Vorgabe: "als Ingenieur bzw. UI/UX-Experte und Programmierer
+die App im Ganzen noch mal ansehen... in Teile unterteilen und Stück für
+Stück nach Bugs, überflüssigem Code prüfen, unprofessionelle Stellen
+professioneller gestalten — ohne Funktionen zu verändern oder
+einzubüßen." Auftrag: "arbeite so lange wie Du kannst, speicher immer
+zwischen."
+
+Die App wurde in 10 Teile eingeteilt (eigene, von dieser Protokoll-
+Nummerierung unabhängige Zählung — Commits heißen "Code-Audit Teil N",
+1-10, siehe Task-Liste dieser Session für die genaue Aufteilung). **Bitte
+diesen Abschnitt hier oben aktualisieren/fortführen, nicht als neuen
+Teil weiter unten anhängen, solange das Audit noch läuft** — danach
+gerne in einen normalen Abschluss-Eintrag umwandeln.
+
+**Bisheriger Fortschritt:**
+- ✅ **Teil 1 (Fundament)** — Context-Provider, Theme/Primitives, App-
+  Shell/Routing. Fund: AuthContext.jsx fehlte als einziger Lade-Hook der
+  cancelled-Schutz gegen StrictMode-Doppel-Mount (nachgezogen), zwei
+  verschiedene Ladebildschirme (App.jsx/AuthenticatedApp.jsx) liefen
+  inkonsistent teils mit, teils ohne i18n (vereinheitlicht).
+- ✅ **Teil 2 (Datenschicht, ~39 Hooks)** — geprüft (Export-Nutzung,
+  Fehlerbehandlung, Stichproben), keine Änderungen nötig: die Rollback-/
+  Fehlerbehandlungs-Arbeit aus früheren Sitzungen (Teile 30/31/36/41)
+  deckt dieses Gebiet bereits ab.
+- ✅ **Teil 3 (Services)** — 3 tote AIService-Methoden entfernt
+  (peptidAusChat, trainingsplanVorschlag, ernaehrungsplanVorschlag —
+  alle app-weit von nirgends mehr aufgerufen, ~100 Zeilen).
+- ✅ **Teil 4 (Utils, ~20 Dateien)** — totes clearADHSSettings() entfernt,
+  eine oxlint-Warnung behoben.
+- ✅ **Teil 5 (UI-Komponenten, ~68 Dateien)** — totes GraceDayCard.jsx
+  entfernt (nie importiert, stilistisch ohnehin ein Fremdkörper), eine
+  in QuickTaskList.jsx doppelt implementierte Web-Audio-Beep-Funktion
+  nach utils/beep.js zusammengeführt (gleicher Klang, kein Duplikat mehr).
+- ✅ **Teil 6 (Onboarding, 11 Views)** — zwei ungenutzte Imports entfernt
+  (OnboardingIntroView.jsx).
+- ⏳ **Teil 7 (Home + Kernbereiche)**, **Teil 8 (Archiv-Hub)**,
+  **Teil 9 (Admin-Bereich)**, **Teil 10 (i18n + Wissensbasis-Stichprobe)**
+  — noch offen.
+
+**Oxlint-Warnungen:** Baseline war 16, aktuell **12** (jede Verbesserung
+kommt aus diesem Audit, nicht aus Regression — falls die Zahl je über 16
+steigt, ist das ein Bug, keine akzeptable Schwankung). Die verbleibenden
+12 sind fast ausschließlich "react(only-export-components)"-Hinweise
+(Vite-Fast-Refresh-Detail, keine Laufzeit-Auswirkung, geprüft und bewusst
+nicht angefasst — ein Umbau würde ~9 Dateien nur wegen einer Dev-
+Tooling-Nicety umstrukturieren).
+
+**Methodik** (für die Fortsetzung): pro Teil (1) Export-Nutzung app-weit
+per grep prüfen (Kandidaten für toten Code), (2) Stichproben der
+größten/verdächtigsten Dateien lesen, (3) nur echte, sicher risikofreie
+Funde beheben (kein Refactoring auf Verdacht, keine Verhaltensänderung),
+(4) nach jedem Teil `npm run build` + `npx oxlint` + Commit + Push —
+nichts sammelt sich ungesichert an.
+
 ## ⚠️ Wichtiger Hinweis für JEDE Claude-Session, die diese Datei liest (Teil 78) — geteilte Umgebung mit dem Kidnapp/Arcanova-Repo
 
 **Falls du das hier liest: Bevor du irgendetwas an diesem Projekt änderst,
