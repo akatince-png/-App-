@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { cardBorder } from "./theme";
+import { playSuccess } from "../utils/beep";
 
 /**
  * QuickTaskList: One-Tap Task Check-ins mit Micro-Interactions
@@ -13,7 +14,7 @@ import { cardBorder } from "./theme";
  * - Große Tap-Ziele (min. 44x44px) für ADHS-Zugänglichkeit
  * - Scale-Animation beim Drücken
  * - Sparkles-Animation bei Completion
- * - Optional Sound-Feedback (750Hz beep, 80ms)
+ * - Optional Sound-Feedback (siehe utils/beep.js: playSuccess())
  * - Dopamine-Hit durch visuelle Bestätigung
  */
 export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled = true }) {
@@ -35,33 +36,11 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
 
     // Play sound if enabled
     if (soundEnabled && !item.done) {
-      playSuccessSound();
+      playSuccess();
     }
 
     // Call the item's toggle handler
     item.onToggle();
-  };
-
-  const playSuccessSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.value = 750;
-      oscillator.type = "sine";
-
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.08);
-    } catch (e) {
-      // Audio context not available, silently fail
-    }
   };
 
   if (displayItems.length === 0) {

@@ -25,6 +25,31 @@ export function playBeep(count = 1) {
   }
 }
 
+// Kurzer, freundlicher Erfolgston für abgehakte Aufgaben (QuickTaskList.jsx)
+// — bewusst leiser/kürzer als playBeep() (kein Alarm, sondern ein positives
+// Häkchen-Feedback beim Antippen).
+export function playSuccess() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 750;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.08);
+    setTimeout(() => ctx.close(), 300);
+  } catch {
+    // Web Audio API nicht verfügbar (z. B. älterer Browser) — Ton bleibt
+    // einfach aus, kein Grund, die Aktion selbst fehlschlagen zu lassen.
+  }
+}
+
 // Leiser, kurzer Klick — bewusst anders als playBeep() (höhere Frequenz,
 // deutlich kürzer, leiser), damit er sich als Sekunden-Ticken anfühlt statt
 // als weiterer Alarm. Für isometrisches Training (15.08., Nutzerin-Vorgabe:
