@@ -5,7 +5,13 @@
 --
 -- atemuebungen: gespeicherte Atem-Muster (z. B. "4-4-6, 3 Minuten"),
 -- vergleichbar mit routines (Gewohnheiten) oder training_vorlagen.
-create table public.atemuebungen (
+-- Bug-Fix (13.09.): if-not-exists/drop-if-exists nachgerüstet — Nutzerin
+-- meldete "relation atemuebungen already exists" beim Ausführen (vermutlich
+-- Rest eines früheren abgebrochenen Versuchs). Ohne Guards bricht CREATE
+-- TABLE die Transaktion sofort ab, wodurch atemuebung_logs/akutmodus_log
+-- weiter unten dann gar nicht mehr angelegt werden — gleiches Muster wie in
+-- 0071 bereits gelöst.
+create table if not exists public.atemuebungen (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   name text not null,
@@ -18,6 +24,7 @@ create table public.atemuebungen (
 );
 
 alter table public.atemuebungen enable row level security;
+drop policy if exists "atemuebungen: eigene Zeilen" on public.atemuebungen;
 create policy "atemuebungen: eigene Zeilen" on public.atemuebungen for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
@@ -26,7 +33,7 @@ create policy "atemuebungen: eigene Zeilen" on public.atemuebungen for all
 -- bleibt — gleiche Logik wie bei anderen Protokoll-Logs dieser App).
 -- gefuehl_danach: optionaler kurzer Check-in nach dem Beenden ("geht's
 -- besser?"), auch vom Akutmodus genutzt (siehe AkutModusPanel.jsx).
-create table public.atemuebung_logs (
+create table if not exists public.atemuebung_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   atemuebung_id uuid references public.atemuebungen (id) on delete set null,
@@ -38,6 +45,7 @@ create table public.atemuebung_logs (
 );
 
 alter table public.atemuebung_logs enable row level security;
+drop policy if exists "atemuebung_logs: eigene Zeilen" on public.atemuebung_logs;
 create policy "atemuebung_logs: eigene Zeilen" on public.atemuebung_logs for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
@@ -47,7 +55,7 @@ create policy "atemuebung_logs: eigene Zeilen" on public.atemuebung_logs for all
 -- Verzweigung zu Supplementen/Medikamenten als Akutmodus-Option ist ein
 -- separater, größerer Ausbauschritt (siehe Übergabeprotokoll), hier erst
 -- mal Aktion + Vorher/Nachher-Einschätzung.
-create table public.akutmodus_log (
+create table if not exists public.akutmodus_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   aktion text not null,
@@ -57,5 +65,6 @@ create table public.akutmodus_log (
 );
 
 alter table public.akutmodus_log enable row level security;
+drop policy if exists "akutmodus_log: eigene Zeilen" on public.akutmodus_log;
 create policy "akutmodus_log: eigene Zeilen" on public.akutmodus_log for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);

@@ -31,7 +31,7 @@
 --     aber ein eigenes, größeres Feature. Hier erstmal die manuelle Version:
 --     die Coachee meldet ihren Stand/Abschluss selbst.
 
-create table public.quests (
+create table if not exists public.quests (
   id uuid primary key default gen_random_uuid(),
   proband_id uuid references auth.users (id) on delete cascade,
   titel text not null,
@@ -44,7 +44,7 @@ create table public.quests (
   erstellt_am timestamptz not null default now()
 );
 
-create index quests_proband_idx on public.quests (proband_id);
+create index if not exists quests_proband_idx on public.quests (proband_id);
 
 alter table public.quests enable row level security;
 
@@ -52,16 +52,24 @@ alter table public.quests enable row level security;
 -- (proband_id null) — Anlegen/Ändern/Archivieren bleibt der Admin
 -- vorbehalten (kein "eigene Zeilen anlegen" für Coachees, anders als bei
 -- coachee_nachrichten).
+-- Bug-Fix (13.09.): drop-if-exists/if-not-exists nachgerüstet — Nutzerin
+-- meldete "relation already exists" beim Ausführen dieser Migration
+-- (teilweise angewandter Vorzustand, vermutlich aus einem früheren
+-- abgebrochenen Versuch). Ohne Guards bricht CREATE TABLE die gesamte
+-- Transaktion sofort ab, wodurch quest_fortschritt weiter unten dann gar
+-- nicht mehr angelegt wird — gleiches Muster wie in 0071 bereits gelöst.
+drop policy if exists "quests: sichtbare Zeilen lesen" on public.quests;
 create policy "quests: sichtbare Zeilen lesen" on public.quests
   for select using (auth.uid() = proband_id or proband_id is null);
 
+drop policy if exists "quests: admin voller Zugriff" on public.quests;
 create policy "quests: admin voller Zugriff" on public.quests
   for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- quest_fortschritt: pro Quest + Coachee genau eine Zeile (auch bei
 -- Rundruf-Quests — jede Person meldet ihren eigenen Stand separat).
 -- Upsert auf (quest_id, user_id), siehe useQuestData.js.
-create table public.quest_fortschritt (
+create table if not exists public.quest_fortschritt (
   id uuid primary key default gen_random_uuid(),
   quest_id uuid not null references public.quests (id) on delete cascade,
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -75,19 +83,23 @@ create table public.quest_fortschritt (
   unique (quest_id, user_id)
 );
 
-create index quest_fortschritt_user_idx on public.quest_fortschritt (user_id);
-create index quest_fortschritt_quest_idx on public.quest_fortschritt (quest_id);
+create index if not exists quest_fortschritt_user_idx on public.quest_fortschritt (user_id);
+create index if not exists quest_fortschritt_quest_idx on public.quest_fortschritt (quest_id);
 
 alter table public.quest_fortschritt enable row level security;
 
+drop policy if exists "quest_fortschritt: eigene Zeilen anlegen" on public.quest_fortschritt;
 create policy "quest_fortschritt: eigene Zeilen anlegen" on public.quest_fortschritt
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "quest_fortschritt: eigene Zeilen lesen" on public.quest_fortschritt;
 create policy "quest_fortschritt: eigene Zeilen lesen" on public.quest_fortschritt
   for select using (auth.uid() = user_id);
 
+drop policy if exists "quest_fortschritt: eigene Zeilen aktualisieren" on public.quest_fortschritt;
 create policy "quest_fortschritt: eigene Zeilen aktualisieren" on public.quest_fortschritt
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "quest_fortschritt: admin voller Zugriff" on public.quest_fortschritt;
 create policy "quest_fortschritt: admin voller Zugriff" on public.quest_fortschritt
   for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
