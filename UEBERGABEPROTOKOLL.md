@@ -1,5 +1,50 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 67) — Eine Farbskala app-weit: Erfolge/Belohnungsbereich an Home/Pläne angeglichen
+
+Nutzerinnen-Vorgabe nach Teil 66: "Gerne die gleichen Symbole, wie Du
+verwendet hast im Belohnungsbereich... Du solltest die gleichen Farben
+benutzen, die ohnehin schon hinterlegt sind... die Pläne müssen überall
+die gleichen Farben haben in der gesamten App."
+
+Recherche ergab: Icons stimmten bereits überein (cross/capsule/utensils/
+dumbbell/target/droplet/sun/moon/wind — dieselben Namen in
+`KATEGORIE_META` wie in den Erfolge-Abzeichen `utils/errungenschaften.js`).
+Die FARBEN aber nicht — die App hatte tatsächlich zwei parallele
+Farbskalen:
+- `KATEGORIE_META[...].dot` (`src/utils/dayItems.js`) — 12 eigene Farben,
+  eine je Kategorie. Wird für den Home-Tagesfortschritt-Balken UND für
+  die "Alle Pläne"-Reiter (`PlaeneView.jsx`, Zeile `KATEGORIE_META[...]
+  .dot`) verwendet — diese beiden waren also schon vorher konsistent.
+- `F_WARM`/`F_SLATE`/`F_PLUM`/`F_EMERALD` (`src/constants.js`) — nur 4
+  Gradient-Familien, JE FAMILIE über mehrere Kategorien hinweg geteilt.
+  Wurde bisher für die Erfolge-/Abzeichen-Kacheln in `ErfolgeTab.jsx`
+  verwendet (via `utils/errungenschaften.js`, `KATEGORIEN[...].grad`) —
+  "Training" erschien dort dadurch bräunlich-orange statt rot wie überall
+  sonst, "Hydration" grün statt blau usw.
+
+Fix: `utils/errungenschaften.js` bezieht die Farbe jeder Kategorie jetzt
+aus `KATEGORIE_META[...].dot` statt aus den 4 Gradient-Familien (neuer
+`gradAus()`-Helper baut daraus weiterhin einen sanften Verlauf zur
+aufgehellten Variante, via dem schon bestehenden `aufhellen()`-Helper aus
+`ui/theme.js` — gleiches Muster wie in `primitives.jsx`). Morgen-/
+Abendroutine ohne eigenen `KATEGORIE_META`-Eintrag bekommen die schon an
+anderer Stelle etablierte Farbe (`ROUTINE_FARBE`/`EIGENE_TAB_FARBE`).
+Peptide/Getränke-Rezepte (ebenfalls ohne eigenen Eintrag) übernehmen die
+Farbe der inhaltlich nächsten Kategorie (Medikamente bzw. Hydration).
+
+`constants.js` (`F_WARM` usw., `PLAENE_TABS.grad`) bewusst unangetastet
+gelassen — dieses `grad`-Feld wird nirgends gerendert (toter Code, siehe
+`PlaeneView.jsx`, das für die Reiterfarbe längst `KATEGORIE_META[...]
+.dot` nutzt statt `PLAENE_TABS.grad`), also kein sichtbarer Unterschied
+und kein Grund, das in diesem Zug mit anzufassen.
+
+Verifiziert über eine Debug-Preview-Seite (Playwright-Screenshot), die
+beide Farblisten (`KATEGORIEN` aus errungenschaften.js und
+`KATEGORIE_META`) nebeneinander als Farbkreise rendert — bestätigt Hex-
+für-Hex identische Farben je Kategorie. Build + `npx oxlint` weiterhin
+bei 16 Warnungen (Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 66) — Tagesfortschritt-Balken: Kategorie-Icons als zusätzlicher Anker
 
 Nutzerinnen-Vorgabe: "kleine Symbole unter die Balken setzen, damit man
