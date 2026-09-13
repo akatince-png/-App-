@@ -85,3 +85,7 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth muss innerhalb von AuthProvider verwendet werden.");
   return ctx;
 }
+
+// Für die E2E-Testsuite (e2e/harness/TestApp.jsx), gleiches Muster wie
+// AppDataContext.jsx.
+export { AuthContext };

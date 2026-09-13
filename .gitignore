@@ -20,6 +20,11 @@ dist-ssr
 # Supabase CLI
 .supabase/
 
+# Playwright-Testartefakte (e2e/, siehe playwright.config.js)
+test-results/
+playwright-report/
+blob-report/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

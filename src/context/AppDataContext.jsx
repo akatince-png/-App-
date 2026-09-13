@@ -171,3 +171,9 @@ export function useAppData() {
   if (!ctx) throw new Error("useAppData muss innerhalb von AppDataProvider verwendet werden.");
   return ctx;
 }
+
+// Für die E2E-Testsuite (e2e/harness/TestApp.jsx): erlaubt, die App dort
+// mit einem gemockten Wert zu rendern (<AppDataContext.Provider
+// value={...}>), ohne echtes Supabase/echte Auth — normaler App-Code
+// nutzt weiterhin ausschließlich useAppData().
+export { AppDataContext };

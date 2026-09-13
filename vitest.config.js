@@ -11,5 +11,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/setupTests.js"],
+    // e2e/ nutzt @playwright/test (eigener Testrunner, eigene test()/
+    // expect()-API) — von vitest ausschließen, sonst Namenskollision.
+    exclude: ["node_modules/**", "e2e/**"],
   },
 });
