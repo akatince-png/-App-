@@ -83,6 +83,24 @@ function mitVollerPersona(coachName, rollenbeschreibung) {
   return `${coachPersonaBlock(name)}\n\n${rollenbeschreibung}`;
 }
 
+// Gemeinsamer Kern aller …AusChat-Funktionen unten (13.09., Teil 60 der
+// App-weiten Durchsuchung): jede fasst ein geführtes Coach-Gespräch als
+// strukturiertes JSON zusammen — bis auf die jeweils eigene
+// Rollenbeschreibung/Formatvorgabe (promptZeilen) und den Abschlusssatz
+// war das bei allen 15 Funktionen identischer Code (System-Prompt bauen,
+// Verlauf + Abschlusssatz zu messages zusammensetzen, Anfrage senden,
+// Antwort parsen). Validierung/Rückgabeform bleibt bewusst in der
+// jeweiligen Funktion, da jede Funktion ein anderes Format erwartet.
+async function ausChatZusammenfassen(coachName, promptZeilen, verlauf, abschlusssatz) {
+  const system = mitPersona(coachName, promptZeilen.join(" "));
+  const messages = [
+    ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
+    { role: "user", content: abschlusssatz },
+  ];
+  const antwort = await sendeAnfrage({ system, messages, json: true });
+  return parseJsonAntwort(antwort);
+}
+
 export const AIService = {
   /**
    * KI-Wecker / Morgen-Companion — kurzer motivierender Impuls als
@@ -252,7 +270,7 @@ export const AIService = {
    * @returns {Promise<Array<{wochentag: string, arten: string[], uebungenListe: Array<{name: string, saetze: string, wiederholungen: string, gewicht: string}>}>>}
    */
   async trainingsplanAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Trainingsplan-Assistent für eine bestehende App.",
@@ -270,14 +288,10 @@ export const AIService = {
           '"intervallArbeitSek": number|null (Halte-/Arbeitsdauer in Sekunden je Runde, nur bei Isometrisches Training/Intervall-Cardio/-Bodyweight, sonst null), ' +
           '"intervallPauseSek": number|null (Pausendauer in Sekunden je Runde, gleiche Einschränkung wie oben), ' +
           '"runden": number|null (Anzahl Runden, gleiche Einschränkung wie oben) } ] }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse den oben besprochenen Trainingsplan jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse den oben besprochenen Trainingsplan jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!Array.isArray(data.einheiten)) throw new Error("Unerwartetes Format: 'einheiten' fehlt oder ist kein Array.");
     return data.einheiten;
   },
@@ -292,7 +306,7 @@ export const AIService = {
    * @returns {Promise<{name: string, icon: string, menge: string, uhrzeit: string, urzeitVon: string, urzeitBis: string, zielTage: number|null}>}
    */
   async gewohnheitAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der neue Gewohnheiten/Routinen für Nutzer anlegt.",
@@ -302,14 +316,10 @@ export const AIService = {
         '{ "name": string, "icon": string (ein einzelnes passendes Emoji), "menge": string (z. B. "10 Seiten", leer wenn nicht genannt), ' +
           '"uhrzeit": string ("HH:MM" bei fester Uhrzeit, sonst leer), "urzeitVon": string, "urzeitBis": string (bei Zeitfenster statt fester Uhrzeit, sonst beide leer), ' +
           '"zielTage": number|null (Zieltage bis die Gewohnheit etabliert ist, z. B. 21 oder 66 — null wenn nicht genannt/offen) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse die oben besprochene Gewohnheit jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse die oben besprochene Gewohnheit jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
@@ -324,7 +334,7 @@ export const AIService = {
    * @returns {Promise<Array<{name: string, dauerMin: number}>>}
    */
   async routineAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der eine Morgen- oder Abendroutine als feste Kette von Schritten anlegt.",
@@ -332,14 +342,10 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "schritte": [ { "name": string, "dauerMin": number (Minuten, Schätzung falls nicht genannt, z. B. 2 oder 5) } ] }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse die oben besprochene Schritt-Kette jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse die oben besprochene Schritt-Kette jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!Array.isArray(data.schritte) || !data.schritte.length) throw new Error("Unerwartetes Format: 'schritte' fehlt oder ist leer.");
     return data.schritte;
   },
@@ -354,7 +360,7 @@ export const AIService = {
    * @returns {Promise<Array<{name: string, zutaten: Array<{name: string, menge: string}>, naehrwerte: {kalorien: number, protein: number, kohlenhydrate: number, fett: number}}>>}
    */
   async ernaehrungsplanAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Ernährungs-Assistent für Makro-Tracking in einer bestehenden App.",
@@ -363,14 +369,10 @@ export const AIService = {
         "Format exakt:",
         '{ "rezepte": [ { "name": string, "zutaten": [ { "name": string, "menge": string } ], ' +
           '"naehrwerte": { "kalorien": number, "protein": number, "kohlenhydrate": number, "fett": number } } ] }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse die oben besprochenen Rezepte jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse die oben besprochenen Rezepte jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!Array.isArray(data.rezepte)) throw new Error("Unerwartetes Format: 'rezepte' fehlt oder ist kein Array.");
     return data.rezepte;
   },
@@ -385,7 +387,7 @@ export const AIService = {
    * @returns {Promise<{zielMl: number|null, zeiten: Array<{zeit: string, menge: string}>, istZustandMenge: string, istZustandGetraenke: string}>}
    */
   async hydrationAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der beim Einrichten des Trink-/Hydrationsziels und passender Erinnerungszeiten hilft.",
@@ -396,14 +398,10 @@ export const AIService = {
           '"zeiten": [ { "zeit": "HH:MM", "menge": string (z. B. "300") } ] (leeres Array wenn keine Erinnerungszeiten besprochen wurden), ' +
           '"istZustandMenge": string (wie viel die Person laut Gespräch aktuell täglich trinkt, z. B. "ca. 1 Liter" — leer wenn nicht genannt), ' +
           '"istZustandGetraenke": string (was sie außer Wasser trinkt, z. B. "viel Kaffee, ab und zu Saft" — leer wenn nicht genannt) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!Array.isArray(data.zeiten)) throw new Error("Unerwartetes Format: 'zeiten' fehlt oder ist kein Array.");
     return data;
   },
@@ -416,7 +414,7 @@ export const AIService = {
    * @returns {Promise<{zielMinuten: number}>}
    */
   async tageslichtAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines täglichen Tageslicht-/Freiluft-Ziels hilft.",
@@ -424,14 +422,10 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "zielMinuten": number (Tagesziel in Minuten, aus dem Gespräch abgeleitet) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben besprochene Tagesziel jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben besprochene Tagesziel jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (typeof data.zielMinuten !== "number") throw new Error("Unerwartetes Format: 'zielMinuten' fehlt oder ist keine Zahl.");
     return data;
   },
@@ -450,7 +444,7 @@ export const AIService = {
    * @returns {Promise<{name: string, arbeitMin: number, pauseMin: number, gesamtMin: number, wochentage: string[], uhrzeit: string, gueltigVon: string, gueltigBis: string}>}
    */
   async workflowAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der ein neues Workflow-Preset (Arbeits-/Pause-Intervalltimer, Pomodoro-artig) für Nutzer anlegt.",
@@ -463,14 +457,10 @@ export const AIService = {
           '"uhrzeit": string ("HH:MM" falls eine feste Startzeit besprochen wurde, sonst leer), ' +
           '"gueltigVon": string ("YYYY-MM-DD", nur falls eine zeitlich befristete Gültigkeit besprochen wurde, z. B. "nur diese Woche" oder "ab dem 20.", sonst leer), ' +
           '"gueltigBis": string ("YYYY-MM-DD", nur falls zusätzlich ein Enddatum genannt wurde, sonst leer) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben besprochene Workflow-Preset jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben besprochene Workflow-Preset jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
@@ -489,7 +479,7 @@ export const AIService = {
    * @returns {Promise<{name: string, tageszeiten: string[], hinweis: string, menge: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
    */
   async supplementAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der neue Supplemente für Nutzer anlegt.",
@@ -504,14 +494,10 @@ export const AIService = {
           '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
           '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), ' +
           '"uhrzeiten": string[] (konkrete Uhrzeit(en) "HH:MM", nur falls im Gespräch genannt — leeres Array, wenn nur die groben Tageszeiten oben genannt wurden) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben besprochene Supplement jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben besprochene Supplement jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.name || !Array.isArray(data.tageszeiten)) throw new Error("Unerwartetes Format: 'name'/'tageszeiten' fehlen.");
     return data;
   },
@@ -525,7 +511,7 @@ export const AIService = {
    * @returns {Promise<{name: string, menge: string, kategorie: string, einnahmeart: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
    */
   async medikamentAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der neue Medikamente/Hormone für Nutzer anlegt.",
@@ -539,14 +525,10 @@ export const AIService = {
           '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
           '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
           '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), "uhrzeiten": string[] (eine oder mehrere "HH:MM") }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben besprochene Medikament jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben besprochene Medikament jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
@@ -561,7 +543,7 @@ export const AIService = {
    * @returns {Promise<{name: string, menge: string, einnahmeart: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
    */
   async peptidAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der neue Peptide für Nutzer anlegt.",
@@ -574,14 +556,10 @@ export const AIService = {
           '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
           '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
           '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), "uhrzeiten": string[] (eine oder mehrere "HH:MM") }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben besprochene Peptid jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben besprochene Peptid jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
@@ -595,7 +573,7 @@ export const AIService = {
    * @returns {Promise<{stunden: number, schlafqualitaet: string, einschlafzeit: string, durchgeschlafen: boolean|null, erholt: boolean|null, traeume: string, bemerkungen: string}>}
    */
   async schlafAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der einen Schlaf-Eintrag für die letzte Nacht erfasst.",
@@ -607,14 +585,10 @@ export const AIService = {
           '"einschlafzeit": string ("HH:MM" falls genannt, sonst leer), ' +
           '"durchgeschlafen": boolean|null (null wenn nicht besprochen), "erholt": boolean|null (null wenn nicht besprochen), ' +
           '"traeume": string (kurz, leer wenn nichts erzählt), "bemerkungen": string (sonstiges, leer wenn nichts) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse den oben besprochenen Schlaf-Eintrag jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse den oben besprochenen Schlaf-Eintrag jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (typeof data.stunden !== "number") throw new Error("Unerwartetes Format: 'stunden' fehlt oder ist keine Zahl.");
     return data;
   },
@@ -630,7 +604,7 @@ export const AIService = {
    * @returns {Promise<{name: string, ziele: string[], geschlecht: string, geburtsdatum: string, groesse: string, gewichtStart: string}>}
    */
   async onboardingAusChat({ verlauf, coachName, zieleOptionen }) {
-    const system = mitPersona(
+    return ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der aus einem frei geführten Einrichtungsgespräch die genannten Angaben herausliest.",
@@ -643,14 +617,10 @@ export const AIService = {
           '"geburtsdatum": string ("YYYY-MM-DD" falls genannt, sonst leer), ' +
           '"groesse": string (Größe in cm, nur die Zahl, leer wenn nicht genannt), ' +
           '"gewichtStart": string (Gewicht in kg, nur die Zahl, leer wenn nicht genannt) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    return parseJsonAntwort(antwort);
   },
 
   /**
@@ -663,7 +633,7 @@ export const AIService = {
    * @returns {Promise<{bettzeit: string, aufwachzeit: string, istZustand: string}>}
    */
   async schlafzielAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    return ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines gewünschten Schlafrhythmus hilft (übliche Bett- und Aufwachzeit, nicht ein einzelner Eintrag für eine Nacht).",
@@ -671,14 +641,10 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         'Format exakt: { "bettzeit": string ("HH:MM"), "aufwachzeit": string ("HH:MM"), ' +
           '"istZustand": string (Zusammenfassung, wie der aktuelle/bisherige Schlaf der Person laut Gespräch ist — z. B. "unruhig, wacht oft auf, schläft meist erst nach 23 Uhr ein" — leer wenn nichts dazu gesagt wurde) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse den oben besprochenen Schlafrhythmus jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse den oben besprochenen Schlafrhythmus jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    return parseJsonAntwort(antwort);
   },
 
   /**
@@ -692,7 +658,7 @@ export const AIService = {
    * @returns {Promise<{name: string, zutaten: Array<{name: string, menge: string}>, wochentage: string[], uhrzeit: string, istZustand: string}>}
    */
   async mahlzeitplanAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der eine Mahlzeit für den Wochenplan einrichtet.",
@@ -703,14 +669,10 @@ export const AIService = {
           '"wochentage": string[] (aus "Mo","Di","Mi","Do","Fr","Sa","So" — alle 7, wenn "täglich" gesagt wurde), ' +
           '"uhrzeit": string ("HH:MM", Standard "08:00" wenn nicht genannt), ' +
           '"istZustand": string (Zusammenfassung, wie sich die Person laut Gespräch aktuell ernährt — leer wenn nichts dazu gesagt wurde) }',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse die oben besprochene Mahlzeit jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse die oben besprochene Mahlzeit jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
   },
@@ -725,7 +687,7 @@ export const AIService = {
    * @returns {Promise<{werte: Record<string, string>}>}
    */
   async laborwerteAusChat({ verlauf, coachName }) {
-    const system = mitPersona(
+    const data = await ausChatZusammenfassen(
       coachName,
       [
         "Du bist ein Assistent für eine bestehende App, der genannte Laborwerte erfasst.",
@@ -733,14 +695,10 @@ export const AIService = {
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "werte": { [laborwertName: string]: string } } (Schlüssel ist der übliche Name des Laborwerts, z. B. "Vitamin D", "Testosteron gesamt", "TSH" — Wert ist die genannte Zahl inkl. Einheit falls genannt, z. B. "45 ng/ml")',
-      ].join(" ")
+      ],
+      verlauf,
+      "Fasse die oben genannten Laborwerte jetzt als JSON zusammen, wie vereinbart."
     );
-    const messages = [
-      ...verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text })),
-      { role: "user", content: "Fasse die oben genannten Laborwerte jetzt als JSON zusammen, wie vereinbart." },
-    ];
-    const antwort = await sendeAnfrage({ system, messages, json: true });
-    const data = parseJsonAntwort(antwort);
     if (!data.werte || typeof data.werte !== "object") throw new Error("Unerwartetes Format: 'werte' fehlt.");
     return data;
   },
