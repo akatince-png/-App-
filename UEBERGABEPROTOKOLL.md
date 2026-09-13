@@ -1,6 +1,6 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-## 🔧 Laufende Initiative: systematisches Code-Audit der gesamten App (Teil 79, Stand 13.09., wird fortlaufend aktualisiert)
+## ✅ Update 13.09.2026, Fortsetzung (Teil 80) — Systematisches Code-Audit der gesamten App abgeschlossen (Teile 1-10)
 
 Nutzerinnen-Vorgabe: "als Ingenieur bzw. UI/UX-Experte und Programmierer
 die App im Ganzen noch mal ansehen... in Teile unterteilen und Stück für
@@ -9,52 +9,61 @@ professioneller gestalten — ohne Funktionen zu verändern oder
 einzubüßen." Auftrag: "arbeite so lange wie Du kannst, speicher immer
 zwischen."
 
-Die App wurde in 10 Teile eingeteilt (eigene, von dieser Protokoll-
-Nummerierung unabhängige Zählung — Commits heißen "Code-Audit Teil N",
-1-10, siehe Task-Liste dieser Session für die genaue Aufteilung). **Bitte
-diesen Abschnitt hier oben aktualisieren/fortführen, nicht als neuen
-Teil weiter unten anhängen, solange das Audit noch läuft** — danach
-gerne in einen normalen Abschluss-Eintrag umwandeln.
+Die App wurde in 10 Teile eingeteilt (eigene Zählung, unabhängig von
+dieser Protokoll-Nummerierung — Commits heißen "Code-Audit Teil N",
+1-10). Methodik pro Teil: (1) Export-/Import-Nutzung app-weit per grep
+prüfen (Kandidaten für toten Code), (2) Stichproben der größten/
+verdächtigsten Dateien lesen, (3) nur echte, sicher risikofreie Funde
+beheben (kein Refactoring auf Verdacht, keine Verhaltensänderung), (4)
+nach jedem Teil `npm run build` + `npx oxlint` + Commit + Push.
 
-**Bisheriger Fortschritt:**
-- ✅ **Teil 1 (Fundament)** — Context-Provider, Theme/Primitives, App-
-  Shell/Routing. Fund: AuthContext.jsx fehlte als einziger Lade-Hook der
-  cancelled-Schutz gegen StrictMode-Doppel-Mount (nachgezogen), zwei
-  verschiedene Ladebildschirme (App.jsx/AuthenticatedApp.jsx) liefen
-  inkonsistent teils mit, teils ohne i18n (vereinheitlicht).
-- ✅ **Teil 2 (Datenschicht, ~39 Hooks)** — geprüft (Export-Nutzung,
-  Fehlerbehandlung, Stichproben), keine Änderungen nötig: die Rollback-/
-  Fehlerbehandlungs-Arbeit aus früheren Sitzungen (Teile 30/31/36/41)
-  deckt dieses Gebiet bereits ab.
-- ✅ **Teil 3 (Services)** — 3 tote AIService-Methoden entfernt
+**Ergebnis — alle 10 Teile durchgesehen:**
+- **Teil 1 (Fundament)** — AuthContext.jsx fehlte als einziger Lade-Hook
+  der cancelled-Schutz gegen StrictMode-Doppel-Mount (nachgezogen); zwei
+  Ladebildschirme (App.jsx/AuthenticatedApp.jsx) liefen inkonsistent
+  teils mit, teils ohne i18n (vereinheitlicht).
+- **Teil 2 (Datenschicht, ~39 Hooks)** — geprüft, keine Änderungen nötig:
+  die Rollback-/Fehlerbehandlungs-Arbeit aus früheren Sitzungen (Teile
+  30/31/36/41) deckt dieses Gebiet bereits ab.
+- **Teil 3 (Services)** — 3 tote AIService-Methoden entfernt
   (peptidAusChat, trainingsplanVorschlag, ernaehrungsplanVorschlag —
-  alle app-weit von nirgends mehr aufgerufen, ~100 Zeilen).
-- ✅ **Teil 4 (Utils, ~20 Dateien)** — totes clearADHSSettings() entfernt,
-  eine oxlint-Warnung behoben.
-- ✅ **Teil 5 (UI-Komponenten, ~68 Dateien)** — totes GraceDayCard.jsx
-  entfernt (nie importiert, stilistisch ohnehin ein Fremdkörper), eine
-  in QuickTaskList.jsx doppelt implementierte Web-Audio-Beep-Funktion
-  nach utils/beep.js zusammengeführt (gleicher Klang, kein Duplikat mehr).
-- ✅ **Teil 6 (Onboarding, 11 Views)** — zwei ungenutzte Imports entfernt
+  app-weit von nirgends mehr aufgerufen, ~100 Zeilen).
+- **Teil 4 (Utils, ~20 Dateien)** — totes clearADHSSettings() entfernt.
+- **Teil 5 (UI-Komponenten, ~68 Dateien)** — totes GraceDayCard.jsx
+  entfernt (nie importiert, stilistisch ohnehin ein Fremdkörper: harte
+  Hex-Farben statt Theme-Token, kein i18n); doppelte Web-Audio-Beep-
+  Implementierung in QuickTaskList.jsx nach utils/beep.js zusammengeführt
+  (gleicher Klang, ein Ort statt zwei).
+- **Teil 6 (Onboarding, 11 Views)** — zwei ungenutzte Imports entfernt
   (OnboardingIntroView.jsx).
-- ⏳ **Teil 7 (Home + Kernbereiche)**, **Teil 8 (Archiv-Hub)**,
-  **Teil 9 (Admin-Bereich)**, **Teil 10 (i18n + Wissensbasis-Stichprobe)**
-  — noch offen.
+- **Teil 7 (Home + Kernbereiche, ~8350 Zeilen)** — 5 Stellen gefunden, an
+  denen ein Theme-Token-Farbwert als Hex-String statt als Token
+  verwendet wurde (danger/blueSoft), auf die Tokens umgestellt. Bewusst
+  NICHT angefasst: hartcodierte Farben im unsichtbaren PDF-Export-Raster
+  von WochenuebersichtView.jsx — dort absichtlich unabhängig vom
+  Theme, damit ein Export nicht rückwirkend anders aussieht.
+- **Teil 8 (Archiv-Hub, 11 Dateien)** — geprüft, keine Funde.
+- **Teil 9 (Admin-Bereich, 7 Views)** — geprüft, keine Funde (der
+  hartcodierte Indigo-Ton in AdminUebungsBilderView.jsx war bereits in
+  Teil 72 dieses Protokolls behoben worden).
+- **Teil 10 (i18n + Wissensbasis)** — vollständige Schlüssel-Abdeckung in
+  allen 3 Sprachen (de/en/tr) app-weit verifiziert, keine Lücken. Die
+  Wissensbasis-Ladefunktion (utils/wissensBasis.js) ist sauber und
+  einfach gehalten, keine Änderung nötig.
 
-**Oxlint-Warnungen:** Baseline war 16, aktuell **12** (jede Verbesserung
-kommt aus diesem Audit, nicht aus Regression — falls die Zahl je über 16
-steigt, ist das ein Bug, keine akzeptable Schwankung). Die verbleibenden
-12 sind fast ausschließlich "react(only-export-components)"-Hinweise
-(Vite-Fast-Refresh-Detail, keine Laufzeit-Auswirkung, geprüft und bewusst
-nicht angefasst — ein Umbau würde ~9 Dateien nur wegen einer Dev-
-Tooling-Nicety umstrukturieren).
+**Oxlint-Warnungen: Baseline 16 → jetzt 12** (jede Verbesserung kommt aus
+diesem Audit, keine Regression — falls die Zahl je über 16 steigt, ist
+das ein Bug). Die verbleibenden 12 sind ausschließlich
+"react(only-export-components)"-Hinweise (Vite-Fast-Refresh-Detail, ohne
+Laufzeit-Auswirkung) — geprüft und bewusst nicht angefasst, da ein Umbau
+~9 Dateien nur wegen einer Dev-Tooling-Nicety umstrukturieren würde.
 
-**Methodik** (für die Fortsetzung): pro Teil (1) Export-Nutzung app-weit
-per grep prüfen (Kandidaten für toten Code), (2) Stichproben der
-größten/verdächtigsten Dateien lesen, (3) nur echte, sicher risikofreie
-Funde beheben (kein Refactoring auf Verdacht, keine Verhaltensänderung),
-(4) nach jedem Teil `npm run build` + `npx oxlint` + Commit + Push —
-nichts sammelt sich ungesichert an.
+**Gesamtbild:** Die App war schon vor diesem Audit überwiegend sauber
+und gut dokumentiert (Ergebnis der vielen vorherigen, gezielten
+Bugfix-Sitzungen) — die Funde waren entsprechend klein und punktuell
+(vor allem Reste aus abgeschlossenen Umbauten wie der Peptid/Medikamente-
+Vereinheitlichung), keine grundlegenden strukturellen Probleme. Jeder
+Commit wurde einzeln gebaut/gelintet/gepusht, nichts blieb ungesichert.
 
 ## ⚠️ Wichtiger Hinweis für JEDE Claude-Session, die diese Datei liest (Teil 78) — geteilte Umgebung mit dem Kidnapp/Arcanova-Repo
 
