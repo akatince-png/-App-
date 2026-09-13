@@ -1,5 +1,85 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 70) — Medikamente/Hormone/Peptide app-weit vereinheitlicht
+
+Nutzerinnen-Vorgabe: "Bitte den Bereich Medikamente, Hormone nur in
+Medikamente umbenennen und das in allen Bereichen in der App. Ich
+möchte nicht mehr, dass Medikamente unterschieden werden von Peptiden,
+Hormonen oder sonstigen Dingen... Falls es ein grundlegendes Problem im
+Code gibt, wo Medikamente und Peptide weiterhin getrennt... geführt
+werden, möchte ich, dass Du das auch in Ordnung bringst."
+
+Die Recherche ergab: es war keine reine Umbenennungsfrage — es gab
+tatsächlich ein separates, verwaistes Peptid-System, das parallel zum
+längst vereinheitlichten Medikamente/Hormone-System existierte, ohne
+dass es der Nutzerin je sichtbar funktioniert hätte (buildDayItems()
+vergibt seit Migration 0042, 13.08., nur noch die Kategorie "hormon",
+nie "peptid" — TagesplanView.jsx enthielt trotzdem noch einen eigenen,
+technisch unerreichbaren "peptid"-Feedback-Zweig mit Stärke-Auswahl und
+Einstichstellen-Foto):
+
+- **`src/data/usePeptideLogs.js` gelöscht** — eigener `peptide_logs`-
+  Feedback-Hook, dessen einziger Aufrufpfad (TagesplanView.jsx,
+  `item.kategorie === "peptid"`) nie erreicht werden konnte. Verdrahtung
+  in `AppDataContext.jsx` entfernt.
+- **`TagesplanView.jsx`**: toten "peptid"-Feedback-Zweig entfernt
+  (FEEDBACK_HEADER, Kategorie-Listen, Stärke-/Foto-Felder im
+  Feedback-Formular).
+- **`OnboardingCategoriesView.jsx`**: kompletten toten "peptide"-
+  Onboarding-Schritt entfernt (Auswahl/Dosierung/Foto-UI, KiChat-
+  Anbindung, Coach-Prompts, Submit-Guard) — `CATEGORY_STEPS`
+  (`categorySteps.js`) enthält seit der Datenzusammenlegung gar keinen
+  solchen Schritt mehr ("kein eigener Schritt mehr" steht da schon
+  länger als Kommentar), der zugehörige Code war aber nie aufgeräumt
+  worden. Örtlich definierte Wrapper (`peptide`/`togglePeptid`/
+  `addCustomPreparat`/...) leiteten zwar schon korrekt auf die
+  vereinheitlichten `hormonHinzufuegen`/`hormonDosierung`-Funktionen um
+  (Bug-Fix aus einer früheren Session, 11.09.) — waren aber wegen des
+  fehlenden Schritts trotzdem nie erreichbar.
+- **`MedikamenteView.jsx`**: separate "🔔 Erinnerungen Peptide"-Kachel
+  entfernt — nur noch eine "🔔 Erinnerungen Medikamente"-Erinnerung für
+  alle Medikamente-Einträge (Peptide eingeschlossen, da technisch
+  ohnehin schon derselbe Tabelleneintrag mit Kategorie "Peptid").
+- **`utils/errungenschaften.js`**: Erfolge-Label "Hormone & Medikamente"
+  → "Medikamente" (Icons/Farben blieben unverändert, siehe Teil 66/67).
+- **Nutzer:innen-sichtbare Texte vereinheitlicht**: KiChat-Einleitungen/
+  Systemprompts in `MedikamenteView.jsx` und `OnboardingCategoriesView.jsx`
+  ("Medikament oder Hormon" → "Medikament"), Formularvorlage
+  "Protokoll 8: Medikamente / Hormone" → "Protokoll 8: Medikamente"
+  (`data/formulareVorlagen.js`), Willkommens-Screen (DE/EN/TR,
+  `i18n/dict/welcome.js`) listet "Peptide, Hormone" nicht mehr separat
+  neben "Medikamente" auf.
+
+**Bewusst NICHT angefasst**, da außerhalb der eigentlichen Anfrage bzw.
+mit echten Live-Daten/-Funktionen verbunden:
+- die "Kategorie"-Unterscheidung INNERHALB eines Medikamenten-Eintrags
+  (Hormone/Peptid/Blutdruck/Diabetes/... als Dropdown-Wert beim
+  Anlegen) — bleibt als sinnvoller Sub-Typ bestehen, genau wie
+  Cannabis/Schmerzmittel/Sonstige.
+- der Lexikon-Wissensbestand zu Peptiden (`i18n/dict/peptid.js`) —
+  Sachinhalt (was bewirkt ein bestimmtes Peptid), keine
+  Struktur-/Trennungsfrage.
+- `useProtocolData.js`/`ziele`/`protokollArchivieren`/`ArchivTab.jsx`
+  ("Aktuelles Protokoll archivieren") — beim genaueren Hinsehen eine
+  aktive, von Peptiden unabhängige "Ziele"-Funktion des laufenden
+  Hauptprotokolls (siehe `OnboardingZieleView.jsx`,
+  `OnboardingCoachGuide.jsx`) — wird beim "+ Neues Protokoll"-Klick
+  echt verwendet, keine Peptid-Altlast.
+
+**Nebenbei entdeckt, aber bewusst NICHT gefixt** (eigene Baustelle):
+der "supplemente"-Onboarding-Schritt ruft `AIService.peptidAusChat()`
+statt eines eigenen Supplement-Prompts auf — vermutlich ein
+Kopierfehler aus früherer Zeit. Dokumentiert direkt im Code
+(`aiService.js`), nicht angefasst, um den Umfang dieser Änderung nicht
+zusätzlich zu vergrößern.
+
+Verifiziert über Debug-Preview-Seiten (Playwright): `KATEGORIEN`-Liste
+zeigt jetzt `"medikamente": "Medikamente"` statt `"Hormone &
+Medikamente"`. Build + `npx oxlint` weiterhin bei 16 Warnungen
+(Baseline unverändert) — trotz 10 geänderter Dateien und einer
+gelöschten (426 Zeilen entfernt, 41 hinzugefügt, netto deutlich
+schlanker).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 69) — Sunrise-Icon nachgebessert + Peptide/Getränke-Rezepte als Erfolge-Kategorien entfernt
 
 Nutzerinnen-Feedback zu Teil 68:
