@@ -1134,7 +1134,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         </div>
       )}
 
-      {tagebuchOffen && <TagebuchModal onClose={() => setTagebuchOffen(false)} />}
+      {tagebuchOffen && <TagebuchModal onClose={() => setTagebuchOffen(false)} onOpenArchiv={() => onOpenView("tagebuch")} />}
     </Shell>
   );
 }

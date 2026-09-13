@@ -27,7 +27,7 @@ import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochen
 import { spotifyCodeAustauschen } from "./services/spotify";
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
-const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "profil", "blutzucker", "community"];
+const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch", "profil", "blutzucker", "community"];
 
 // Übersetzt die Kategorie eines Tagesplan-Eintrags in die zuständige View —
 // für den ✏️-Bearbeiten-Kurzweg direkt aus dem Tagesplan. Die Pläne-

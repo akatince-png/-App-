@@ -7,6 +7,7 @@ import ProfilTab from "./ProfilTab";
 import CommunityTab from "./CommunityTab";
 import ArchivTab from "./ArchivTab";
 import ErfolgeTab from "./ErfolgeTab";
+import TagebuchTab from "./TagebuchTab";
 import ProtokollLogView from "../ProtokollLogView";
 import BlutzuckerView from "../BlutzuckerView";
 
@@ -15,6 +16,7 @@ const TABS = [
   { id: "archiv", label: "Archiv" },
   { id: "statistik", label: "Statistik" },
   { id: "erfolge", label: "Erfolge" },
+  { id: "tagebuch", label: "Tagebuch" },
   { id: "profil", label: "Profil" },
   { id: "blutzucker", label: "Blutzucker" },
   { id: "community", label: "Community" },
@@ -57,6 +59,7 @@ export default function PlanView({ planTab, setPlanTab, onHome }) {
       {planTab === "profil" && <ProfilTab />}
       {planTab === "community" && <CommunityTab />}
       {planTab === "archiv" && <ArchivTab />}
+      {planTab === "tagebuch" && <TagebuchTab />}
       {planTab === "blutzucker" && <BlutzuckerView embedded />}
     </Shell>
   );
