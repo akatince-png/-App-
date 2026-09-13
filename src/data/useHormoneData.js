@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { activeDoseDays } from "../utils/schedule";
@@ -104,6 +104,12 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
   const [hormonDosierung, setHormonDosierung] = useState({});
   const [hormonErledigt, setHormonErledigt] = useState({});
   const [hormonFeedback, setHormonFeedback] = useState({});
+  // Doppeltipp-Schutz (13.09.): siehe pendingErledigtRef in
+  // useGewohnheitenData.js — ohne das läse ein zweiter, schnell
+  // hinterhergetippter Tap noch den alten (veralteten) React-State, bevor
+  // der erste Toggle im UI ankommt, und würde denselben nextVal erneut
+  // senden statt das Abhaken rückgängig zu machen.
+  const pendingErledigtRef = useRef({});
 
   useEffect(() => {
     if (!userId) return;
@@ -393,7 +399,9 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
   const toggleHormonErledigt = useCallback(
     async (datumStr, name, uhrzeit) => {
       const k = `${datumStr}__${name}__${uhrzeit}`;
-      const nextVal = !hormonErledigt[k];
+      const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : hormonErledigt[k];
+      const nextVal = !aktuellerWert;
+      pendingErledigtRef.current[k] = nextVal;
       const nowIso = new Date().toISOString();
       const payload = { user_id: userId, hormone_name: name, dose_date: datumStr, uhrzeit, erledigt: nextVal, erledigt_at: nextVal ? nowIso : null };
       setHormonErledigt((prev) => ({ ...prev, [k]: nextVal }));
@@ -411,7 +419,8 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
         // Bug-Fix: bei Fehlschlag blieb das Abhaken trotzdem dauerhaft
         // sichtbar (bis zum nächsten Neuladen) — jetzt Rollback auf den
         // Stand vor dem Tap.
-        setHormonErledigt((prev) => ({ ...prev, [k]: !nextVal }));
+        pendingErledigtRef.current[k] = aktuellerWert;
+        setHormonErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
         return;
       }
       // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): nur beim Abhaken (nicht
@@ -424,6 +433,10 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
     [hormonErledigt, userId, hormonDosierung, belohnungPufferMin]
   );
 
+  // Bug-Fix (13.09.): bei einem Fehlschlag des Upserts zeigte die
+  // Oberfläche trotzdem dauerhaft "erledigt + Feedback gespeichert" an, bis
+  // zum nächsten Neuladen — spiegelt jetzt exakt das Rollback-Muster von
+  // saveFeedback()/skipFeedback() in usePeptideLogs.js.
   const saveHormonFeedback = useCallback(
     async (dose, draftFeedback) => {
       const datumStr = toLocalISODate(dose.date);
@@ -436,6 +449,8 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
         notizen: draftFeedback.notizen,
         menge: dose.menge || null,
       };
+      const vorherErledigt = hormonErledigt[k];
+      const vorherFeedback = hormonFeedback[k];
       setHormonErledigt((prev) => ({ ...prev, [k]: true }));
       setHormonFeedback((prev) => ({ ...prev, [k]: record }));
       const { error } = await supabase.from("hormone_logs").upsert(
@@ -450,9 +465,13 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
         },
         { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setHormonErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+        setHormonFeedback((prev) => ({ ...prev, [k]: vorherFeedback }));
+      }
     },
-    [userId]
+    [userId, hormonErledigt, hormonFeedback]
   );
 
   const skipHormonFeedback = useCallback(
@@ -460,15 +479,21 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
       const datumStr = toLocalISODate(dose.date);
       const k = `${datumStr}__${dose.name}__${dose.uhrzeit}`;
       const nowIso = new Date().toISOString();
+      const vorherErledigt = hormonErledigt[k];
+      const vorherFeedback = hormonFeedback[k];
       setHormonErledigt((prev) => ({ ...prev, [k]: true }));
       setHormonFeedback((prev) => ({ ...prev, [k]: { ...prev[k], menge: dose.menge || null } }));
       const { error } = await supabase.from("hormone_logs").upsert(
         { user_id: userId, hormone_name: dose.name, dose_date: datumStr, uhrzeit: dose.uhrzeit, erledigt: true, erledigt_at: nowIso, menge: dose.menge || null },
         { onConflict: "user_id,hormone_name,dose_date,uhrzeit" }
       );
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setHormonErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
+        setHormonFeedback((prev) => ({ ...prev, [k]: vorherFeedback }));
+      }
     },
-    [userId]
+    [userId, hormonErledigt, hormonFeedback]
   );
 
   const hormonPlan = useMemo(() => {

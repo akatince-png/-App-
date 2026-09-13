@@ -75,19 +75,26 @@ export function useBiomarkerData(userId) {
           entries.forEach(([k, v]) => (next[k] = String(v)));
           return next;
         });
+        // Bug-Fix (13.09.): Supabase wirft bei einem Query-Fehler nicht,
+        // sondern liefert { data, error } zurück — der Fehler wurde hier
+        // bisher gar nicht geprüft (der try/catch lief einfach durch), die
+        // Oberfläche meldete "erfolgreich erkannt", obwohl z. B. eine
+        // RLS-Regel den Insert/Upsert abgelehnt hatte.
         for (const [k, v] of entries) {
-          await supabase
+          const { error: upsertError } = await supabase
             .from("biomarkers")
             .upsert({ user_id: userId, name: k, value: String(v), updated_at: new Date().toISOString() }, { onConflict: "user_id,name" });
+          if (upsertError) throw new Error(upsertError.message);
         }
 
         const datum = toLocalISODate(new Date());
-        const { data: inserted } = await supabase
+        const { data: inserted, error: insertError } = await supabase
           .from("blutwerte_archiv")
           .insert({ user_id: userId, datum, werte: data.werte, foto_path: fotoPath })
           .select()
           .single();
-        setBlutwerteArchiv((prev) => [{ id: inserted?.id, datum, werte: data.werte }, ...prev]);
+        if (insertError) throw new Error(insertError.message);
+        setBlutwerteArchiv((prev) => [{ id: inserted.id, datum, werte: data.werte }, ...prev]);
         setOcrSuccessCount(entries.length);
       } catch (err) {
         console.error(err);

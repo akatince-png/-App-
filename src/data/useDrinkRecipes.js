@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 export function useDrinkRecipes(userId) {
   const [rezepte, setRezepte] = useState([]);
   const [rezeptErledigt, setRezeptErledigt] = useState({});
   const [rezeptErledigtAt, setRezeptErledigtAt] = useState({});
+  // Doppeltipp-Schutz (13.09.): siehe pendingErledigtRef in
+  // useGewohnheitenData.js.
+  const pendingErledigtRef = useRef({});
 
   useEffect(() => {
     if (!userId) return;
@@ -116,9 +119,11 @@ export function useDrinkRecipes(userId) {
   const toggleRezeptErledigt = useCallback(
     async (datum, recipeId) => {
       const k = `${datum}__${recipeId}`;
+      const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : rezeptErledigt[k];
       const vorherErledigt = rezeptErledigt[k];
       const vorherErledigtAt = rezeptErledigtAt[k] ?? null;
-      const nextVal = !rezeptErledigt[k];
+      const nextVal = !aktuellerWert;
+      pendingErledigtRef.current[k] = nextVal;
       const nowIso = new Date().toISOString();
       setRezeptErledigt((prev) => ({ ...prev, [k]: nextVal }));
       setRezeptErledigtAt((prev) => ({ ...prev, [k]: nextVal ? nowIso : null }));
@@ -128,6 +133,7 @@ export function useDrinkRecipes(userId) {
       );
       if (error) {
         console.error(error);
+        pendingErledigtRef.current[k] = aktuellerWert;
         setRezeptErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
         setRezeptErledigtAt((prev) => ({ ...prev, [k]: vorherErledigtAt }));
       }

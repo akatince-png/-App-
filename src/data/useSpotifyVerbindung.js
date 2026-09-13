@@ -142,16 +142,24 @@ export function useSpotifyVerbindung(userId) {
     [userId, spotifyVerbindungNeuLaden]
   );
 
+  // Bug-Fix (13.09.): `error` wurde bisher gar nicht geprüft — gleiches
+  // Muster wie bei spotifyPlaylistLoeschen()/spotifyVerbindungTrennen()
+  // oben, hier aber beim ursprünglichen Nachrüsten übersehen.
   const spotifyAnlassEntfernen = useCallback(
     async (anlass) => {
-      await supabase.from("spotify_anlass_playlists").delete().eq("user_id", userId).eq("anlass", anlass);
+      const vorher = spotifyAnlaesse[anlass];
       setSpotifyAnlaesse((prev) => {
         const next = { ...prev };
         delete next[anlass];
         return next;
       });
+      const { error } = await supabase.from("spotify_anlass_playlists").delete().eq("user_id", userId).eq("anlass", anlass);
+      if (error) {
+        console.error(error);
+        setSpotifyAnlaesse((prev) => ({ ...prev, [anlass]: vorher }));
+      }
     },
-    [userId]
+    [userId, spotifyAnlaesse]
   );
 
   // playlistUri: explizit, wenn Aka im Chat eine bestimmte Playlist erkannt

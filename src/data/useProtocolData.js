@@ -251,9 +251,23 @@ export function useProtocolData(userId) {
   const removePeptidRow = useCallback(
     async (name) => {
       if (!protocolId) return;
+      // Bug-Fix (13.09.): bei Fehlschlag verschwand der Eintrag trotzdem
+      // sofort aus der Liste, bis zum nächsten Neuladen — spiegelt jetzt
+      // exakt das Rollback-Muster von hormonEntfernen() in useHormoneData.js.
+      let vorherigeDosierung;
       setPeptideState((prev) => prev.filter((x) => x !== name));
+      setDosierungState((prev) => {
+        vorherigeDosierung = prev[name];
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
       const { error } = await supabase.from("protocol_peptide").delete().eq("protocol_id", protocolId).eq("name", name);
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        setPeptideState((prev) => (prev.includes(name) ? prev : [...prev, name]));
+        setDosierungState((prev) => ({ ...prev, [name]: vorherigeDosierung }));
+      }
     },
     [protocolId]
   );
@@ -276,16 +290,30 @@ export function useProtocolData(userId) {
     [peptide, addPeptidRow]
   );
 
+  // Bug-Fix (13.09.): bei einem Fehlschlag des Updates zeigte die Oberfläche
+  // trotzdem dauerhaft den neuen (nicht gespeicherten) Wert, bis zum
+  // nächsten Neuladen — spiegelt jetzt exakt das Rollback-Muster von
+  // setHormonEinnahmeart()/setHormonDose() in useHormoneData.js, das hier
+  // beim ursprünglichen Nachrüsten übersehen wurde.
   const setEinnahmeart = useCallback(
     (peptid, art) => {
-      setEinnahmeartState((prev) => ({ ...prev, [peptid]: art }));
+      let vorher;
+      setEinnahmeartState((prev) => {
+        vorher = prev[peptid];
+        return { ...prev, [peptid]: art };
+      });
       if (!protocolId) return;
       supabase
         .from("protocol_peptide")
         .update({ einnahmeart: art })
         .eq("protocol_id", protocolId)
         .eq("name", peptid)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setEinnahmeartState((prev) => ({ ...prev, [peptid]: vorher }));
+          }
+        });
     },
     [protocolId]
   );
@@ -293,19 +321,32 @@ export function useProtocolData(userId) {
   const setDose = useCallback(
     (peptid, feld, val) => {
       if (feld === "intervallPreset") {
-        setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], intervallTyp: "fixed", intervallDays: val } }));
+        let vorher;
+        setDosierungState((prev) => {
+          vorher = prev[peptid];
+          return { ...prev, [peptid]: { ...prev[peptid], intervallTyp: "fixed", intervallDays: val } };
+        });
         if (protocolId) {
           supabase
             .from("protocol_peptide")
             .update({ intervall_mode: "fixed", intervall_days: val })
             .eq("protocol_id", protocolId)
             .eq("name", peptid)
-            .then(({ error }) => error && console.error(error));
+            .then(({ error }) => {
+              if (error) {
+                console.error(error);
+                setDosierungState((prev) => ({ ...prev, [peptid]: vorher }));
+              }
+            });
         }
         return;
       }
 
-      setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], [feld]: val } }));
+      let vorher;
+      setDosierungState((prev) => {
+        vorher = prev[peptid];
+        return { ...prev, [peptid]: { ...prev[peptid], [feld]: val } };
+      });
       if (!protocolId) return;
 
       if (feld === "intervallTyp") {
@@ -314,7 +355,12 @@ export function useProtocolData(userId) {
           .update({ intervall_mode: val })
           .eq("protocol_id", protocolId)
           .eq("name", peptid)
-          .then(({ error }) => error && console.error(error));
+          .then(({ error }) => {
+            if (error) {
+              console.error(error);
+              setDosierungState((prev) => ({ ...prev, [peptid]: vorher }));
+            }
+          });
         return;
       }
 
@@ -329,7 +375,12 @@ export function useProtocolData(userId) {
         .update({ [column]: value })
         .eq("protocol_id", protocolId)
         .eq("name", peptid)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setDosierungState((prev) => ({ ...prev, [peptid]: vorher }));
+          }
+        });
     },
     [protocolId]
   );
@@ -365,7 +416,11 @@ export function useProtocolData(userId) {
         dbPatch[column] = value;
       });
 
-      setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], ...localPatch } }));
+      let vorher;
+      setDosierungState((prev) => {
+        vorher = prev[peptid];
+        return { ...prev, [peptid]: { ...prev[peptid], ...localPatch } };
+      });
       if (!protocolId || Object.keys(dbPatch).length === 0) return;
 
       supabase
@@ -373,7 +428,12 @@ export function useProtocolData(userId) {
         .update(dbPatch)
         .eq("protocol_id", protocolId)
         .eq("name", peptid)
-        .then(({ error }) => error && console.error(error));
+        .then(({ error }) => {
+          if (error) {
+            console.error(error);
+            setDosierungState((prev) => ({ ...prev, [peptid]: vorher }));
+          }
+        });
     },
     [protocolId]
   );
@@ -381,15 +441,22 @@ export function useProtocolData(userId) {
   const setPeptidFoto = useCallback(
     async (peptid, file) => {
       if (!protocolId) return;
+      let vorher;
       try {
         const path = await uploadPhoto(userId, file, "praeparate");
-        setDosierungState((prev) => ({ ...prev, [peptid]: { ...prev[peptid], fotoPath: path } }));
+        setDosierungState((prev) => {
+          vorher = prev[peptid];
+          return { ...prev, [peptid]: { ...prev[peptid], fotoPath: path } };
+        });
         const { error } = await supabase
           .from("protocol_peptide")
           .update({ foto_path: path })
           .eq("protocol_id", protocolId)
           .eq("name", peptid);
-        if (error) console.error(error);
+        if (error) {
+          console.error(error);
+          setDosierungState((prev) => ({ ...prev, [peptid]: vorher }));
+        }
       } catch (err) {
         console.error(err);
       }

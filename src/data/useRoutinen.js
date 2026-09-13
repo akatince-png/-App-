@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 import { istRechtzeitig } from "../utils/belohnungZeit";
@@ -42,6 +42,9 @@ export function useRoutinen(userId, belohnungPufferMin) {
   // nutzbar, die Checkliste ist ein zweiter, schnellerer Weg für einzelne
   // Punkte. Schlüssel wie überall in der App: "datum__schrittId".
   const [schrittErledigt, setSchrittErledigt] = useState({});
+  // Doppeltipp-Schutz (13.09.): siehe pendingErledigtRef in
+  // useGewohnheitenData.js.
+  const pendingErledigtRef = useRef({});
 
   useEffect(() => {
     if (!userId) return;
@@ -237,7 +240,9 @@ export function useRoutinen(userId, belohnungPufferMin) {
   const toggleSchrittErledigt = useCallback(
     async (schrittId, datum) => {
       const k = `${datum}__${schrittId}`;
-      const nextVal = !schrittErledigt[k];
+      const aktuellerWert = k in pendingErledigtRef.current ? pendingErledigtRef.current[k] : schrittErledigt[k];
+      const nextVal = !aktuellerWert;
+      pendingErledigtRef.current[k] = nextVal;
       setSchrittErledigt((prev) => ({ ...prev, [k]: nextVal }));
       const { error } = nextVal
         ? await supabase
@@ -246,7 +251,8 @@ export function useRoutinen(userId, belohnungPufferMin) {
         : await supabase.from("routine_schritt_logs").delete().eq("user_id", userId).eq("schritt_id", schrittId).eq("datum", datum);
       if (error) {
         console.error(error);
-        setSchrittErledigt((prev) => ({ ...prev, [k]: !nextVal }));
+        pendingErledigtRef.current[k] = aktuellerWert;
+        setSchrittErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
         return;
       }
       if (!nextVal) return;
