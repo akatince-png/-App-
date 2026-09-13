@@ -1,5 +1,52 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 72) — Button-Farben app-weit vereinheitlicht (Türkis statt Indigo als Rückfall)
+
+Nutzerinnen-Vorgabe anhand zweier Screenshots (Routinen-Ansicht vs.
+Admin-Dashboard): "dass die Bereiche in verschiedenen Modulen
+verschiedene Farben haben, irritiert ein bisschen... bring bitte...
+alle Buttonbereiche wieder auf diese türkise Farbe wie im ersten Bild."
+
+Ursache gefunden: `theme.js` definiert einen generischen Marken-Akzent
+(`accent`/`accentDark`/`accentSoft`) als Rückfallfarbe für alle
+Bereiche OHNE eigenen `KATEGORIE_META`-Eintrag (Admin, Sidebar-
+Auswahlfarbe, Onboarding-Gerüst, generische `PrimaryButton`s) —
+`PrimaryButton`/`Pill`/`CheckRow`/`Stepper` lesen diese Farbe über
+`useBereichColor()`/`BereichColorContext.jsx` automatisch, sobald
+`<Shell bereich="...">` keinen bekannten `KATEGORIE_META`-Schlüssel
+bekommt. Dieser Rückfall wurde am 28.07. auf Indigo/Blau umgestellt.
+Bereiche mit EIGENER `KATEGORIE_META`-Farbe (z. B. Gewohnheiten/
+Routinen, `bereich="gewohnheit"` → Türkis `#24948E`) blieben davon
+unberührt — dadurch liefen "neue" generische Bereiche (Indigo) und
+"alte" Bereiche wie Gewohnheiten/Routinen (weiterhin Türkis) sichtbar
+auseinander.
+
+Fix: `accent`/`accentDark`/`accentSoft` in `theme.js` jetzt exakt
+identisch mit `KATEGORIE_META.gewohnheit` (`dot`/`text`/`bg`) — bewusst
+dieselben drei Werte, nicht nur ein ähnlicher Farbton, damit generische
+und Gewohnheiten-Bereiche exakt zusammenpassen. Kategorie-eigene
+Bereiche (Training rot, Hydration blau, Tageslicht gold, Medikamente
+lila, ...) bleiben komplett unverändert, da sie unabhängig aus
+`KATEGORIE_META` kommen — betroffen ist wirklich nur der Rückfall.
+
+Zusätzlich 3 Stellen gefunden, die die alte Indigo-Farbe unabhängig vom
+theme.js-Token hart codiert hatten (wären durch die Token-Änderung
+NICHT automatisch mit-aktualisiert worden):
+- `ADHSModeToggle.jsx` (Normalmodus-Verlauf auf Home — war sogar die
+  ursprüngliche Referenzfarbe für die Indigo-Wahl vom 28.07.)
+- `AdminUebungsBilderView.jsx` ("Hochladen"/"Ersetzen"-Knopf)
+- `TagesEintragBearbeiten.jsx` (Ausnahme-Hinweis-Badge)
+
+Alle drei jetzt über die theme.js-Token (`accent`/`accentDark`/
+`accentSoft`) statt eigener Hex-Werte, damit künftige Farbänderungen an
+einer einzigen Stelle wirken.
+
+Verifiziert über Playwright-Preview: Home (Normalmodus-Umschalter,
+"+ Neues Protokoll"-Kachel) und Admin-Dashboard ("Coach-Übersicht")
+zeigen jetzt dasselbe Türkis wie die Gewohnheiten/Routinen-Ansicht;
+kategorie-eigene Farben bleiben unverändert bunt. Build + `npx oxlint`
+weiterhin bei 16 Warnungen (Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 71) — Onboarding-Supplemente-Schritt: korrekten KI-Baustein verwenden
 
 Nachtrag zu Teil 70: Nutzerin fragte nach, wie groß die dort als "eigene
