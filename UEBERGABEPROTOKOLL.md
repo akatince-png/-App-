@@ -1,5 +1,36 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 66) — Tagesfortschritt-Balken: Kategorie-Icons als zusätzlicher Anker
+
+Nutzerinnen-Vorgabe: "kleine Symbole unter die Balken setzen, damit man
+nicht nur an der Farbe, sondern auch an diesem Symbol erkennt, um welche
+Protokollart es sich handelt... damit die Vernetzung im Gehirn
+stattfindet... kleine Anker". Bisher stand unter jedem Balken nur ein
+7px-Farbpunkt (identisch geformt, nur die Farbe unterschied sich).
+
+`KATEGORIE_META` (`src/utils/dayItems.js`) bekommt ein neues `icon`-Feld
+je Kategorie — bewusst dieselben Icon-Namen aus dem zentralen
+Linien-Icon-Set (`src/ui/Icon.jsx`), die an anderer Stelle der App schon
+für dieselbe Kategorie verwendet werden (`constants.js`,
+`PlaeneView.jsx`), damit sich die Symbol-Assoziation app-weit verstärkt
+statt für dieses eine Diagramm neu erfunden zu werden: hormon→cross,
+supplement→capsule, mahlzeit→utensils, training→dumbbell,
+gewohnheit→target, hydration→droplet, tageslicht→sun, schlaf→moon,
+atemuebung→wind. Morgen-/Abendroutine stecken (wie Farbe/Hintergrund
+auch) nicht in `KATEGORIE_META`, sondern in einer neuen
+`ROUTINE_ICON`-Map in `HomeView.jsx` (sun/moon) — analog zu
+`ROUTINE_FARBE`/`ROUTINE_HINTERGRUND`.
+
+`TagesfortschrittBalken.jsx` rendert das Icon jetzt statt des Punkts
+unter jedem Balken, in Kategoriefarbe (aktiv) bzw. gedecktem Grau
+(inaktiv/noch nicht eingerichtet) — fällt auf den alten Punkt zurück,
+falls für eine Kategorie kein Icon hinterlegt ist.
+
+Verifiziert über den Playwright-Preview-Harness bei 375px Breite (Mix
+aus aktiven und inaktiven Kategorien im Screenshot bestätigt sowohl
+farbige als auch graue Icon-Darstellung). Build + `npx oxlint` weiterhin
+bei 16 Warnungen (Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 65) — "Weitere Pläne": Grid statt chaotischer Liste
 
 Nutzerinnen-Feedback nach Teil 64: "Und in der App Ansicht auf dem Handy
