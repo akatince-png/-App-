@@ -1,5 +1,36 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 68) — Eigenes "sunrise"-Icon für die Morgenroutine
+
+Nutzerinnen-Vorgabe: "das Symbol für die Morgenroutine von einer Sonne zu
+einer aufgehenden Sonne... sodass einfach nur 'n Spiegelstrich unten ist
+und man nur eine halbe Sonne sieht, damit man das vom Tageslicht
+unterscheiden kann" — Morgenroutine und Tageslicht teilten sich bisher
+beide das volle "sun"-Icon (seit Teil 66/67 an mehreren Stellen app-weit
+konsistent verwendet).
+
+Neues Icon `sunrise` im zentralen Linien-Icon-Set (`src/ui/Icon.jsx`):
+Halbkreis, der auf einer Horizontlinie "aufgeht", mit drei Strahlen
+darüber — bewusst kein Pfeil o. Ä., genau wie beschrieben nur Halbkreis +
+Linie. An allen Stellen ersetzt, die bisher "sun" für Morgenroutine
+verwendet haben (dieselbe Konsistenz-Logik wie in Teil 66/67):
+`PLAENE_TABS` (`constants.js`), `KATEGORIEN` (`utils/errungenschaften.js`),
+`ROUTINE_ICON` (`HomeView.jsx`), sowie die beiden Belohnungsfenster-
+Aufrufe in `RoutineAblauf.jsx` und `useRoutinen.js`. Tageslicht behält
+die volle Sonne unverändert, damit sich beide jetzt klar unterscheiden.
+
+Dabei einen echten Bug in `useRoutinen.js` gefunden und mitgefixt: das
+Belohnungsfenster-Icon beim Abschließen eines einzelnen Routine-Schritts
+war fest auf `"sun"` verdrahtet, unabhängig davon, ob es sich um einen
+Morgen- oder Abend-Schritt handelte — Abendroutine-Schritte zeigten also
+fälschlich eine Sonne statt eines Monds. Jetzt wie in `RoutineAblauf.jsx`
+nach `schritt.routine` unterschieden.
+
+Verifiziert über eine Debug-Preview-Seite (Playwright-Screenshot):
+sunrise/sun/moon nebeneinander sowie das Icon in der tatsächlichen
+14px-Balkengröße. Build + `npx oxlint` weiterhin bei 16 Warnungen
+(Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 67) — Eine Farbskala app-weit: Erfolge/Belohnungsbereich an Home/Pläne angeglichen
 
 Nutzerinnen-Vorgabe nach Teil 66: "Gerne die gleichen Symbole, wie Du
