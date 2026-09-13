@@ -1,5 +1,52 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 77) — Tagebuch: eigener Archiv-Reiter mit PDF-Export statt Liste im Schreibfenster
+
+Nutzerinnen-Vorgabe: "Die Tagebucheinträge sollen als PDF abgespeichert
+werden, also so als A4-Seite... und sollen halt auch aussehen wie eine
+Tagebuchseite... wenn ich etwas abgespeichert habe, will ich das nächste
+Mal, wenn ich das Feld Tagebuch aufrufe, nicht unten sehen, was ich
+zuletzt abgespeichert hatte, sondern es soll... im Archivbereich einen
+Button geben, wo Tagebuch steht... die einzelnen Seiten nachlesen...
+einsehen... als PDF herunterladen... wie es mit den anderen Protokollen
+auch ist."
+
+Neuer Reiter **"Tagebuch"** im Archiv-Hub (`PlanView.jsx`, neue
+`TagebuchTab.jsx`, `AuthenticatedApp.jsx` `ARCHIV_VIEW_IDS`) — genau wie
+die anderen Protokoll-Reiter dort (Protokolle/Statistik/Erfolge/...):
+Liste aller gespeicherten Seiten (Datum + antippbarer Ausschnitt zum
+Nachlesen/Ausklappen), pro Seite ein "Als PDF herunterladen"-Knopf sowie
+weiterhin "Löschen". Nutzt `exportElementAsPdf()` (`utils/pdfExport.js`),
+dieselbe bereits vorhandene clientseitige jsPDF/html2canvas-Funktion, die
+schon für die Wochenübersicht im Einsatz ist — läuft komplett lokal auf
+dem Gerät, nichts wird hochgeladen (bleibt damit konsistent zur
+Datenschutz-Vorgabe aus Teil 73).
+
+Die exportierte Seite ist bewusst wie eine echte Tagebuchseite gestaltet:
+A4-Format (595×842pt, per `strings`/`MediaBox` verifiziert), Serifenschrift,
+kleine "TAGEBUCH"-Kopfzeile, volles Datum kursiv, dezente Trennlinie,
+großzügige Ränder. Bug beim ersten Entwurf (per Playwright-PDF-Test
+gefunden, vor dem Commit behoben): ein `minHeight` in exakter A4-Höhe
+(1123px) führte bei kurzen Einträgen durch einen Rundungsfehler in
+`exportElementAsPdf()`s Paginierung zu einer fast leeren zweiten Seite
+(`/Count 2` statt `1`) — ohne festes `minHeight` endet die Seite jetzt
+einfach dort, wo der Text aufhört, bei langen Einträgen paginiert die
+bestehende Logik weiterhin ganz normal.
+
+`TagebuchModal.jsx` (das Schreibfenster) zeigt jetzt **keine** Liste
+bisheriger Einträge mehr — nach dem Speichern erscheint stattdessen ein
+Bestätigungsbildschirm mit einem Knopf direkt zum neuen Tagebuch-Archiv
+(`onOpenArchiv`-Prop, von `HomeView.jsx` auf `onOpenView("tagebuch")`
+verdrahtet, landet dank der bestehenden `ARCHIV_VIEW_IDS`-Weiche direkt
+auf dem neuen Reiter) oder alternativ "Noch eine Seite schreiben".
+
+Verifiziert per Playwright: Archiv-Liste mit zwei Testeinträgen
+(aufklappen/einklappen funktioniert), echter PDF-Download ausgelöst und
+geprüft (Chromiums PDF-Viewer gerendert: 1 Seite, A4, korrekt gestaltet),
+Schreibfenster zeigt nach dem Speichern den neuen Bestätigungsbildschirm
+statt der alten Liste. `npm run build` + `npx oxlint` weiterhin grün
+(16 Warnungen, unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 76) — Orden auch auf den Direktzugriff-Kacheln (sichtbar auf jedem Gerät)
 
 Direkte Nachbesserung zu Teil 75: "Die Orden dieser Punkte sollen für
