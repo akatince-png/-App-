@@ -764,7 +764,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         return einheiten;
       }
       case "supplemente": {
-        const p = await AIService.peptidAusChat({ verlauf, coachName });
+        const p = await AIService.supplementAusChat({ verlauf, coachName });
         setSuppName(p.name || "");
         setSuppEinnahmeart(p.einnahmeart || "Kapsel");
         setSuppDosierung({
