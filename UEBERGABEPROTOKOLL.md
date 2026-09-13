@@ -1,5 +1,52 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026 (Teil 85) — Echte automatisierte Testsuite aufgebaut (Vitest + Playwright)
+
+Nutzerinnen-Vorgabe: nach dem UI-Test/der Sicherheitsprüfung/Barriere-
+freiheits-Stichprobe (Teile 80-82) sollte künftig eine dauerhafte,
+automatisierte Testsuite existieren, statt jedes Mal neu von Hand oder
+mit Wegwerf-Testskripten zu prüfen. Bisher gab es **keinerlei** Tests im
+Projekt (kein `test`-Skript, keine Test-Bibliothek in package.json).
+
+**Teil 1 — Vitest, Unit-Tests für Kernlogik (Commits `0372d2e`, `b61f457`):**
+`npm test` (= `vitest run`) neu eingerichtet, 73 Tests für die am meisten
+fehleranfällige reine Berechnungslogik: `dates.js`, `belohnungZeit.js`,
+`schedule.js` (alle 4 Intervall-Modi), `kalorien.js`, `errungenschaften.js`,
+`ausgefallenSweep.js`.
+
+**Dabei ein echter, produktiver Bug gefunden und gefixt** (nicht von der
+Nutzerin gemeldet — der Test hat ihn beim Schreiben selbst aufgedeckt):
+`pruefeAusgefalleneEintraege()` (`ausgefallenSweep.js`) berechnete die
+nachzuholenden Tage falsch (`luecke - 1` statt `luecke`) — der Tag, an
+dem der vorige Sweep lief, wurde dadurch für immer übersprungen. Bei
+täglicher App-Nutzung (die Lücke zwischen zwei Sweeps ist dann fast immer
+genau 1 Tag) bedeutete das: die automatische "als ausgefallen markieren"-
+Funktion lief **faktisch nie**. Gefixt, durch Test empirisch bestätigt
+(vorher 0 Aufrufe bei 1-Tage-Lücke, jetzt der erwartete 1 Aufruf).
+
+**Teil 2 — Playwright, E2E-Smoke-Tests (Commit `4032f13`):** `npx
+playwright test` treibt die echte App-Oberfläche über einen echten
+Chromium-Browser, gegen den normalen Vite-Dev-Server. Neuer Harness
+(`e2e/harness/`) rendert `AuthenticatedApp.jsx` mit gemockten Auth-/
+AppData-Context-Werten statt echtem Supabase/echtem Login — dafür
+exportieren `AppDataContext.jsx`/`AuthContext.jsx` jetzt zusätzlich das
+rohe Context-Objekt (rein additiv, ändert am normalen App-Verhalten
+nichts). `e2e/harness/mockAppData.js` rät bei den ~150 Feldern aus
+`useAppData()` per Namens-Heuristik (Proxy), ob ein Feld eine Funktion
+oder welche Art Daten ist — kein Ersatz für echte Fixtures, aber genug
+für einen Absturz-/Navigations-Smoke-Test. 4 Tests: Home lädt fehlerfrei,
+Seitenleisten-Navigation (Archiv → Mehr → Admin → Home), Tagesplan
+erreichbar, Tagebuch-Modal öffnet/schließt per Escape (Regressionstest
+für die Barrierefreiheits-Verbesserung aus Teil 82).
+
+**Für die Zukunft:** `npm test` und `npx playwright test` sollten künftige
+Sitzungen nach größeren Änderungen mit ausführen (wie `npm run build` +
+`npx oxlint` schon jetzt Standard sind) — beide sind jetzt genauso einfach
+aufrufbar. Die Playwright-Testsuite deckt bisher nur Home/Navigation/
+Tagebuch ab, kein Onboarding, keine der 9 Kategorien im Detail, kein
+Admin-Workflow — bei Gelegenheit ausbaufähig, gleiches Harness-Muster
+wiederverwendbar.
+
 ## ✅ Update 13.09.2026 (Teil 84) — Migrationen 0001-0084 vollständig bestätigt deployt
 
 Nutzerin hat bestätigt: auch die zuletzt noch unbestätigten Migrationen
