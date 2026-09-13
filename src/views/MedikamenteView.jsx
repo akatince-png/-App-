@@ -100,6 +100,11 @@ export default function MedikamenteView({ onHome, embedded = false }) {
   } = useAppData();
   const [neuesMedikament, setNeuesMedikament] = useState(NEUES_MEDIKAMENT_LEER);
   const [medikamentError, setMedikamentError] = useState(null);
+  // Bug-Fix (13.09., Teil 60): gleiche Doppeltipp-Sperre wie in
+  // TrainingView.jsx/SupplementeView.jsx — hier bisher nur durch den
+  // DB-Unique-Constraint abgefangen (Fehlermeldung statt Duplikat), aber
+  // konsistent zu den anderen Formularen jetzt ebenfalls verhindert.
+  const [speichertGerade, setSpeichertGerade] = useState(false);
   const [dosisEditOffen, setDosisEditOffen] = useState(null);
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [draftFeedback, setDraftFeedback] = useState({ vertraeglichkeit: "", wirkung: "", nebenwirkungen: [], notizen: "" });
@@ -152,19 +157,25 @@ export default function MedikamenteView({ onHome, embedded = false }) {
   };
 
   const submit = async () => {
+    if (speichertGerade) return;
+    setSpeichertGerade(true);
     setMedikamentError(null);
-    const result = await hormonHinzufuegen(neuesMedikament);
-    if (!result?.ok) {
-      setMedikamentError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
-      return;
+    try {
+      const result = await hormonHinzufuegen(neuesMedikament);
+      if (!result?.ok) {
+        setMedikamentError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+        return;
+      }
+      aenderungVermerken({
+        kategorie: "hormon",
+        itemName: neuesMedikament.name,
+        aktion: "hinzugefügt",
+        detail: `${neuesMedikament.kategorie} · ${neuesMedikament.menge || "–"}`,
+      });
+      setNeuesMedikament(NEUES_MEDIKAMENT_LEER);
+    } finally {
+      setSpeichertGerade(false);
     }
-    aenderungVermerken({
-      kategorie: "hormon",
-      itemName: neuesMedikament.name,
-      aktion: "hinzugefügt",
-      detail: `${neuesMedikament.kategorie} · ${neuesMedikament.menge || "–"}`,
-    });
-    setNeuesMedikament(NEUES_MEDIKAMENT_LEER);
   };
 
   // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
@@ -300,7 +311,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
 
         {medikamentError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{medikamentError}</div>}
         <div style={{ marginTop: 10 }}>
-          <PrimaryButton onClick={submit} disabled={!neuesMedikament.name.trim() || !intervallGueltig(neuesMedikament)}>
+          <PrimaryButton onClick={submit} disabled={speichertGerade || !neuesMedikament.name.trim() || !intervallGueltig(neuesMedikament)}>
             + Zum Protokoll hinzufügen
           </PrimaryButton>
         </div>

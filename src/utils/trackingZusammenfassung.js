@@ -1,4 +1,5 @@
 import { toLocalISODate } from "./dates";
+import { berechneAlter } from "./kalorien";
 
 // Verdichtet Trackingdaten der letzten N Tage zu einem kompakten Text für
 // den Assistenten — NICHT die komplette Rohhistorie bei jeder Anfrage,
@@ -26,16 +27,6 @@ function rund(zahl, stellen = 1) {
 function schnitt(werte) {
   if (!werte.length) return null;
   return werte.reduce((summe, w) => summe + w, 0) / werte.length;
-}
-
-function alterInJahren(geburtsdatumStr) {
-  const geburt = new Date(geburtsdatumStr);
-  if (Number.isNaN(geburt.getTime())) return null;
-  const heute = new Date();
-  let alter = heute.getFullYear() - geburt.getFullYear();
-  const geburtstagNochNichtGehabt = heute.getMonth() < geburt.getMonth() || (heute.getMonth() === geburt.getMonth() && heute.getDate() < geburt.getDate());
-  if (geburtstagNochNichtGehabt) alter -= 1;
-  return alter;
 }
 
 function trendRichtung(werte) {
@@ -277,7 +268,7 @@ export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_Z
     const teile = [];
     if (profil.geschlecht) teile.push(`Geschlecht: ${profil.geschlecht}`);
     if (profil.geburtsdatum) {
-      const alter = alterInJahren(profil.geburtsdatum);
+      const alter = berechneAlter(profil.geburtsdatum);
       teile.push(`Alter: ${alter != null ? `${alter} Jahre` : profil.geburtsdatum}`);
     }
     if (profil.groesse) teile.push(`Größe: ${profil.groesse} cm`);

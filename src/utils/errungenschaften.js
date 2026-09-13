@@ -1,4 +1,4 @@
-import { toLocalISODate } from "./dates";
+import { toLocalISODate, zaehleTageStreak } from "./dates";
 import { F_WARM, F_PLUM, F_EMERALD, F_SLATE } from "../constants";
 
 // Punkte-/Abzeichen-System (Nutzerin-Vorgabe, 11.09.): 1 Punkt pro
@@ -142,14 +142,7 @@ export const PUNKTE_SCHWELLEN = [50, 100, 250, 500, 1000, 2500];
 // "heutiger" Tag den Streak nicht sofort auf 0 zurücksetzt (dieselbe
 // Konvention wie aktuelleSerie() in useGewohnheitenData.js).
 function berechneStreak(tageSet) {
-  let serie = 0;
-  const d = new Date();
-  if (!tageSet.has(toLocalISODate(d))) d.setDate(d.getDate() - 1);
-  while (tageSet.has(toLocalISODate(d))) {
-    serie++;
-    d.setDate(d.getDate() - 1);
-  }
-  return serie;
+  return zaehleTageStreak((tag) => tageSet.has(tag));
 }
 
 // Kernberechnung: aus den rohen Quelldaten (siehe useErrungenschaften.js

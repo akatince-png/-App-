@@ -23,7 +23,7 @@ export function SimpleLineChart({ data, dataKey, stroke, height = 130 }) {
 // Kategorie bekommt ihre eigene, bereits an anderer Stelle etablierte Farbe
 // (KATEGORIE_META.dot), damit sich ein Balken über mehrere Wochen-Diagramme
 // hinweg wiedererkennen lässt.
-export function WochenComplianceChart({ data, height = 140 }) {
+export function WochenComplianceChart({ data = [], height = 140 }) {
   return (
     <div style={{ width: "100%", height }}>
       <ResponsiveContainer>
@@ -43,7 +43,7 @@ export function WochenComplianceChart({ data, height = 140 }) {
   );
 }
 
-export function NebenwirkungenPie({ data, colors }) {
+export function NebenwirkungenPie({ data = [], colors }) {
   return (
     <div style={{ width: 120, height: 120, flexShrink: 0 }}>
       <ResponsiveContainer>

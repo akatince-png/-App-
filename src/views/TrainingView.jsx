@@ -741,7 +741,19 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
   // starten tippen" — baut den Payload direkt aus der Vorlage statt aus dem
   // (evtl. gerade anders befüllten) Formular-State.
   const templateDirektStarten = async (tpl) => {
+    // Bug-Fix (13.09., Teil 60): dieselbe Doppeltipp-Lücke wie beim
+    // Haupt-Formular-Submit oben (submit()) — gleiche speichertGerade-Sperre.
+    if (speichertGerade) return;
+    setSpeichertGerade(true);
     setFehler(null);
+    try {
+      await templateDirektStartenInner(tpl);
+    } finally {
+      setSpeichertGerade(false);
+    }
+  };
+
+  const templateDirektStartenInner = async (tpl) => {
     const result = await trainingHinzufuegen({
       datum: toLocalISODate(new Date()),
       uhrzeit: tpl.uhrzeit || "",

@@ -560,6 +560,16 @@ export function useProtocolData(userId) {
       .single();
     if (createErr) {
       console.error(createErr);
+      // Bug-Fix (13.09., Teil 60): schlug bisher NUR der zweite Schritt
+      // (Insert des neuen Protokolls) fehl, war in der DB kein Peptid-
+      // Protokoll mehr aktiv, obwohl der lokale State (protocolId) weiterhin
+      // auf das jetzt archivierte zeigte — Archivierung zurückrollen, damit
+      // DB und Oberfläche konsistent bleiben.
+      const { error: rollbackError } = await supabase
+        .from("protocols")
+        .update({ status: "active", archived_at: null, injektionen_snapshot: null })
+        .eq("id", protocolId);
+      if (rollbackError) console.error(rollbackError);
       return;
     }
     setProtocolId(created.id);

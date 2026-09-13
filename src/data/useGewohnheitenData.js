@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { toLocalISODate } from "../utils/dates";
+import { zaehleTageStreak } from "../utils/dates";
 
 // Nutzt weiterhin die routines/routine_logs-Tabellen (frühere "Routinen"-
 // Bündelfunktion) — jetzt als einfacher, eigenständiger Gewohnheiten-Tracker:
@@ -167,16 +167,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   // noch offen — ab gestern rückwärts, damit ein noch nicht abgehakter
   // "heutiger" Tag die Serie nicht sofort auf 0 zurücksetzt).
   const aktuelleSerie = useCallback(
-    (gewohnheitId) => {
-      let serie = 0;
-      const d = new Date();
-      if (!gewohnheitErledigt[`${toLocalISODate(d)}__${gewohnheitId}`]) d.setDate(d.getDate() - 1);
-      while (gewohnheitErledigt[`${toLocalISODate(d)}__${gewohnheitId}`]) {
-        serie++;
-        d.setDate(d.getDate() - 1);
-      }
-      return serie;
-    },
+    (gewohnheitId) => zaehleTageStreak((tag) => !!gewohnheitErledigt[`${tag}__${gewohnheitId}`]),
     [gewohnheitErledigt]
   );
 

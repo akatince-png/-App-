@@ -1,9 +1,11 @@
+import { parseLocalISODate } from "./dates";
+
 // Alter in vollen Jahren aus einem ISO-Geburtsdatum — Grundlage für die
 // Mifflin-St-Jeor-Berechnung.
 export function berechneAlter(geburtsdatum) {
   if (!geburtsdatum) return null;
   const heute = new Date();
-  const geboren = new Date(geburtsdatum);
+  const geboren = parseLocalISODate(geburtsdatum);
   if (Number.isNaN(geboren.getTime())) return null;
   let alter = heute.getFullYear() - geboren.getFullYear();
   const geburtstagNochNicht =

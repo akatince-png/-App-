@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Label, PrimaryButton, TextInput } from "./primitives";
 import ErinnerungField from "./ErinnerungField";
 import TimeWheelField from "./TimeWheelField";
@@ -34,7 +34,24 @@ const normalisiereZeiten = (zeiten) =>
 export default function ZeitErinnerungenCard({ kategorie, labelKey, mengeLabel, mengeStandard = "", zeitStandard = "12:00" }) {
   const { erinnerungen, setErinnerung } = useAppData();
   const { t } = useT();
-  const [zeiten, setZeiten] = useState(() => normalisiereZeiten(erinnerungen?.[kategorie]?.zeiten));
+  const [zeiten, setZeitenState] = useState(() => normalisiereZeiten(erinnerungen?.[kategorie]?.zeiten));
+  // Bug-Fix (13.09., Teil 60): `erinnerungen` kommt asynchron aus
+  // useProfileData.js und startet leer ({}), bevor der Profil-Fetch
+  // abgeschlossen ist — der obige useState-Initialwert wurde bisher nur
+  // beim allerersten Render ausgewertet. Fügte die Nutzerin in diesem
+  // kurzen Fenster eine neue Uhrzeit hinzu, überschrieb setErinnerung()
+  // ALLE bereits gespeicherten Zeiten mit nur der einen neuen — echter,
+  // stiller Datenverlust. zeitenBearbeitetRef verhindert, dass der Sync ein
+  // bereits von der Nutzerin angefasstes Feld wieder überschreibt.
+  const zeitenBearbeitetRef = useRef(false);
+  useEffect(() => {
+    if (!zeitenBearbeitetRef.current) setZeitenState(normalisiereZeiten(erinnerungen?.[kategorie]?.zeiten));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [erinnerungen]);
+  const setZeiten = (next) => {
+    zeitenBearbeitetRef.current = true;
+    setZeitenState(next);
+  };
   const [neueZeit, setNeueZeit] = useState(zeitStandard);
   const [neueMenge, setNeueMenge] = useState(mengeStandard);
   const [neuesDatum, setNeuesDatum] = useState("");

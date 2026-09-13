@@ -55,6 +55,20 @@ export function useHauptprotokollData(userId) {
         .single();
       if (error) {
         console.error(error);
+        // Bug-Fix (13.09., Teil 60): schlug bisher NUR der zweite Schritt
+        // (Insert) fehl, blieb in der DB kein Hauptprotokoll mehr aktiv,
+        // während der lokale State weiterhin das alte (jetzt archivierte)
+        // als aktiv zeigte — ohne jede Fehleranzeige, bis später beim
+        // Speichern eines Teilprotokolls unerklärliche Fehler auftraten.
+        // Archivierung zurückrollen, damit DB und Oberfläche konsistent
+        // bleiben.
+        if (bisherAktiv) {
+          const { error: rollbackError } = await supabase
+            .from("hauptprotokolle")
+            .update({ status: "active", archiviert_am: null })
+            .eq("id", bisherAktiv.id);
+          if (rollbackError) console.error(rollbackError);
+        }
         return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
       }
       setHauptprotokolle((prev) => [data, ...prev.map((h) => (h.id === bisherAktiv?.id ? { ...h, status: "archived" } : h))]);

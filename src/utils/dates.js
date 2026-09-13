@@ -32,6 +32,23 @@ export function parseLocalISODate(str) {
   return new Date(y, m - 1, d);
 }
 
+// Zählt, wie viele aufeinanderfolgende Tage rückwärts ab heute (oder ab
+// gestern, falls heute laut pruefeTag() noch nicht erledigt ist)
+// pruefeTag(datumStr) wahr liefert. Gemeinsame Kernlogik für
+// Streak-Berechnungen (13.09., Teil 60: vorher separat und identisch in
+// berechneErrungenschaften() in utils/errungenschaften.js und
+// aktuelleSerie() in useGewohnheitenData.js implementiert).
+export function zaehleTageStreak(pruefeTag) {
+  let serie = 0;
+  const d = new Date();
+  if (!pruefeTag(toLocalISODate(d))) d.setDate(d.getDate() - 1);
+  while (pruefeTag(toLocalISODate(d))) {
+    serie++;
+    d.setDate(d.getDate() - 1);
+  }
+  return serie;
+}
+
 // Vergleicht "jetzt" mit der geplanten Uhrzeit (z. B. "20:00") am selben Tag
 // und liefert einen lesbaren Verspätungs-Text — oder null, wenn's pünktlich
 // war (Toleranz: 5 Minuten). Grundlage fürs lückenlose Tagesprotokoll
