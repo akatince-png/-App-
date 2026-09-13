@@ -1,5 +1,24 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 71) — Onboarding-Supplemente-Schritt: korrekten KI-Baustein verwenden
+
+Nachtrag zu Teil 70: Nutzerin fragte nach, wie groß die dort als "eigene
+Baustelle" dokumentierte, nicht gefixte Sache sei ("supplemente"-
+Onboarding-Schritt ruft `AIService.peptidAusChat()` statt eines eigenen
+Prompts auf). Einschätzung: praktisch klein — das eigentliche Gespräch
+mit dem Coach lief schon über eigene, korrekte Supplement-Prompts, nur
+der unsichtbare Abschluss-Schritt (Gespräch → strukturierte Daten) war
+falsch beschriftet; die extrahierten Felder passen trotzdem exakt
+zusammen (kein Absturz, kein Datenverlust), und das Ergebnis lässt sich
+vor dem Speichern im Formular noch prüfen/korrigieren.
+
+Da der Fix trotzdem klein und risikoarm war, gleich erledigt: Es gab
+bereits einen passenden, korrekt beschrifteten Baustein
+(`AIService.supplementAusChat()`, exakt kompatibles Feld-Format) — nur
+nie an dieser Stelle verwendet. `OnboardingCategoriesView.jsx` ruft
+jetzt `supplementAusChat()` statt `peptidAusChat()` auf. Build + `npx
+oxlint` weiterhin bei 16 Warnungen (Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 70) — Medikamente/Hormone/Peptide app-weit vereinheitlicht
 
 Nutzerinnen-Vorgabe: "Bitte den Bereich Medikamente, Hormone nur in
