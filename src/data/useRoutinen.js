@@ -259,7 +259,13 @@ export function useRoutinen(userId, belohnungPufferMin) {
 
       const schritt = schritte.find((sc) => sc.id === schrittId);
       if (schritt && istRechtzeitig(schrittZeit(schrittId), belohnungPufferMin)) {
-        feuereBelohnung({ text: `„${schritt.name}" erledigt`, icon: "sun", punkte: 1 });
+        // Bug-Fix: war bisher fest auf "sun" verdrahtet — bei Abendroutine-
+        // Schritten zeigte das Belohnungsfenster dadurch fälschlich eine
+        // Sonne statt eines Monds. Jetzt wie in RoutineAblauf.jsx nach
+        // schritt.routine unterschieden (13.09.: Morgenroutine bekam dort
+        // zusätzlich ein eigenes "sunrise"-Icon statt der vollen Sonne, zur
+        // Unterscheidung von Tageslicht).
+        feuereBelohnung({ text: `„${schritt.name}" erledigt`, icon: schritt.routine === "morgen" ? "sunrise" : "moon", punkte: 1 });
       }
 
       if (!schritt) return;

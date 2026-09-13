@@ -470,7 +470,7 @@ export const F_PLUM = ["#9B85B8", "#786198"];
 // Tagesstruktur) soll sichtbar Priorität vor den Substanz-Plänen haben —
 // zusätzlich zu den aufklappbaren Karten im Tagesplan, nicht statt derer.
 export const PLAENE_TABS = [
-  { id: "morgenroutine", label: "Morgen", icon: "sun", grad: F_WARM },
+  { id: "morgenroutine", label: "Morgen", icon: "sunrise", grad: F_WARM },
   { id: "abendroutine", label: "Abend", icon: "moon", grad: F_PLUM },
   { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
   { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },

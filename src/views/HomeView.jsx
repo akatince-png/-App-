@@ -94,7 +94,7 @@ const ROUTINE_HINTERGRUND = { morgenroutine: "#FBEADA", abendroutine: "#E7EBF3" 
 // z. B. constants.js FUNKTIONEN, useRoutinen.js-Belohnung) — Morgen- und
 // Abendroutine stecken nicht in KATEGORIE_META (siehe Kommentar dort),
 // brauchen ihr Icon also wie Farbe/Hintergrund als eigene, kleine Map.
-const ROUTINE_ICON = { morgenroutine: "sun", abendroutine: "moon" };
+const ROUTINE_ICON = { morgenroutine: "sunrise", abendroutine: "moon" };
 // Dunklere, besser lesbare Text-Variante von ROUTINE_FARBE (13.09.) — gleiche
 // Rolle wie KATEGORIE_META[...].text gegenüber .dot, für die "Weitere
 // Pläne"-Kacheln unten, die jetzt vollflächig eingefärbt sind statt nur

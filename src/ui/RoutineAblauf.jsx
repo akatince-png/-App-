@@ -85,7 +85,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
       if (rechtzeitigGestartetRef.current) {
-        feuereBelohnung({ text: `${ROUTINE_LABEL[routine]} abgeschlossen`, icon: routine === "morgen" ? "sun" : "moon", punkte: 1 });
+        feuereBelohnung({ text: `${ROUTINE_LABEL[routine]} abgeschlossen`, icon: routine === "morgen" ? "sunrise" : "moon", punkte: 1 });
       }
       setFertig(true);
     }

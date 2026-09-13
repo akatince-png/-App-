@@ -89,6 +89,17 @@ const PATHS = {
       <path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </>
   ),
+  // Aufgehende Sonne für die Morgenroutine (13.09., Nutzerin-Vorgabe): "nur
+  // ein Spiegelstrich unten... man nur eine halbe Sonne sieht" — damit sie
+  // sich neben dem vollen "sun"-Icon (Tageslicht) unterscheiden lässt, statt
+  // beide dieselbe Form zu teilen.
+  sunrise: (
+    <>
+      <path d="M6.5 17a5.5 5.5 0 0 1 11 0" />
+      <path d="M12 3v4M5.8 9.8l1.8 1.8M18.2 9.8l-1.8 1.8" />
+      <path d="M2 20.5h20" />
+    </>
+  ),
   archive: (
     <>
       <rect x="3" y="4" width="18" height="5" rx="1.2" />

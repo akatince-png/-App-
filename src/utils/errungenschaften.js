@@ -49,7 +49,7 @@ export const KATEGORIEN = [
   {
     key: "morgenroutine",
     label: "Morgenroutine",
-    icon: "sun",
+    icon: "sunrise",
     // Kein KATEGORIE_META-Eintrag für Morgen-/Abendroutine (siehe Kommentar
     // dort) — gleiche Farbe wie ROUTINE_FARBE in HomeView.jsx/
     // EIGENE_TAB_FARBE in PlaeneView.jsx.
