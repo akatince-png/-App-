@@ -22,6 +22,17 @@ function eintragFormatieren(iso) {
   return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
+// Datumszeile oben auf der "Seite" (Nutzerinnen-Vorgabe, 13.09.: "soll
+// natürlich oben dann das aktuelle Datum und die Uhrzeit stehen... so wie
+// es halt in einem Tagebuch wäre") — voller Wochentag/Datum wie auf einer
+// handschriftlichen Tagebuchseite, nicht die knappe "Mi, 13.09."-Kurzform
+// von fmtDate() (dates.js), die anderswo in der App für Listenzeilen reicht.
+function kopfdatumFormatieren(d) {
+  const datum = d.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  const uhrzeit = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  return `${datum}, ${uhrzeit} Uhr`;
+}
+
 export default function TagebuchModal({ onClose }) {
   const coachName = getCoachName();
   const [text, setText] = useState("");
@@ -33,9 +44,19 @@ export default function TagebuchModal({ onClose }) {
   const [gespeichertHinweis, setGespeichertHinweis] = useState(null);
   const [eintraege, setEintraege] = useState(() => tagebuchEintraegeLesen());
   const [offenerEintrag, setOffenerEintrag] = useState(null);
+  const [jetzt, setJetzt] = useState(() => new Date());
   const stopErkennungRef = useRef(null);
 
   useEffect(() => () => stopErkennungRef.current?.(), []);
+
+  // Kopfzeile tickt mit, solange das Fenster offen ist (Minutenauflösung
+  // reicht, siehe kopfdatumFormatieren) — beim tatsächlichen Speichern
+  // zählt ohnehin der echte Zeitpunkt aus tagebuchStorage.js, nicht dieser
+  // Anzeigewert.
+  useEffect(() => {
+    const intervall = setInterval(() => setJetzt(new Date()), 30000);
+    return () => clearInterval(intervall);
+  }, []);
 
   const schliessen = () => {
     stopErkennungRef.current?.();
@@ -131,6 +152,24 @@ export default function TagebuchModal({ onClose }) {
           🔒 Wird nur auf diesem Gerät gespeichert, nie in der Cloud.
         </div>
 
+        <div
+          style={{
+            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontStyle: "italic",
+            fontSize: 12.5,
+            color: textMuted,
+            marginBottom: 8,
+            paddingBottom: 8,
+            borderBottom: `1px solid ${cardBorder}`,
+          }}
+        >
+          {kopfdatumFormatieren(jetzt)}
+        </div>
+
+        {/* Kein maxLength (Nutzerinnen-Vorgabe, 13.09.: "Zeichen sollen
+            unbegrenzt sein") — weder hier noch beim Speichern
+            (tagebuchStorage.js) oder bei der Aka-Überarbeitung
+            (aiService.js) gibt es eine Längenbeschränkung. */}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
