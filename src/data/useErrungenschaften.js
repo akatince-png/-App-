@@ -24,10 +24,8 @@ export function useErrungenschaften(userId, quellen) {
     [
       quellen.supplementErledigt,
       quellen.mahlzeitErledigt,
-      quellen.peptidErledigt,
       quellen.hormonErledigt,
       quellen.gewohnheitErledigt,
-      quellen.rezeptErledigt,
       quellen.trainingEintraege,
       quellen.routineDurchlaeufe,
       quellen.schlafEintraege,

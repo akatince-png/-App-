@@ -92,11 +92,14 @@ const PATHS = {
   // Aufgehende Sonne für die Morgenroutine (13.09., Nutzerin-Vorgabe): "nur
   // ein Spiegelstrich unten... man nur eine halbe Sonne sieht" — damit sie
   // sich neben dem vollen "sun"-Icon (Tageslicht) unterscheiden lässt, statt
-  // beide dieselbe Form zu teilen.
+  // beide dieselbe Form zu teilen. Nachbesserung (13.09.): "die man erkennt
+  // nicht so wirklich, dass das eine Sonne ist" — 4 statt 2 Strahlen,
+  // durchgängig ALLE mit Lücke zum Halbkreis (vorher war die Lücke
+  // inkonsistent), symmetrisch um die Mittelachse verteilt.
   sunrise: (
     <>
       <path d="M6.5 17a5.5 5.5 0 0 1 11 0" />
-      <path d="M12 3v4M5.8 9.8l1.8 1.8M18.2 9.8l-1.8 1.8" />
+      <path d="M9 8.5l-2-3M15 8.5l2-3M5.5 12l-3.5-1.5M18.5 12l3.5-1.5" />
       <path d="M2 20.5h20" />
     </>
   ),

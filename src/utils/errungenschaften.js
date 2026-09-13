@@ -112,6 +112,14 @@ export const KATEGORIEN = [
     holeTage: (q) => tageAusErledigtMap(q.supplementErledigt),
   },
   {
+    // Umfasst seit Migration 0042 (13.08.) auch Peptide — teilen sich
+    // dieselbe Tabelle/Map, siehe Kommentar oben. Bug-Fix (13.09.,
+    // Nutzerin-Vorgabe): stand hier bisher zusätzlich als eigene "Peptide"-
+    // Kategorie mit eigenem Abzeichen-Satz, obwohl inhaltlich längst
+    // dasselbe wie Medikamente — noch dazu über ein Feld ("erledigt", per
+    // Alias auf "peptidErledigt" umbenannt in ErfolgeTab.jsx), das im
+    // AppDataContext gar nicht existiert und daher immer leer war. Die
+    // "Peptide"-Abzeichen waren dadurch technisch unerreichbar.
     key: "medikamente",
     label: "Hormone & Medikamente",
     icon: "cross",
@@ -119,29 +127,11 @@ export const KATEGORIEN = [
     holeTage: (q) => tageAusErledigtMap(q.hormonErledigt),
   },
   {
-    key: "peptide",
-    label: "Peptide",
-    icon: "dna",
-    // Peptide sind seit Migration 0042 Teil von "hormon" (siehe Kommentar
-    // oben) — dieselbe Farbe wie Medikamente statt einer eigenen.
-    grad: gradAus(KATEGORIE_META.hormon.dot),
-    holeTage: (q) => tageAusErledigtMap(q.peptidErledigt),
-  },
-  {
     key: "gewohnheiten",
     label: "Gewohnheiten",
     icon: "target",
     grad: gradAus(KATEGORIE_META.gewohnheit.dot),
     holeTage: (q) => tageAusErledigtMap(q.gewohnheitErledigt),
-  },
-  {
-    key: "drinks",
-    label: "Getränke-Rezepte",
-    icon: "droplet",
-    // Kein eigener KATEGORIE_META-Eintrag — inhaltlich am nächsten an
-    // Hydration, übernimmt deren Farbe.
-    grad: gradAus(KATEGORIE_META.hydration.dot),
-    holeTage: (q) => tageAusErledigtMap(q.rezeptErledigt),
   },
   {
     key: "atemuebungen",
