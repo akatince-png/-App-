@@ -1,5 +1,57 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026 (Teil 59) — Akutmodus "Edge Function"-Fehler behoben + App-weite Fehlermeldungen korrigiert
+
+Nutzerinnen-Vorgabe (mit Screenshot): Im Akutmodus ("Was hilft mir jetzt?"
+→ "Idee holen") erschien die Meldung "Edge Function returned a non-2xx
+status code" statt einer Antwort. Zusätzlich gebeten, die ganze App auf
+ähnliche Fehler zu prüfen.
+
+**Ursache 1 (der eigentliche Absturz):** Die Supabase Edge Functions
+`lexikon` (Akutmodus + Lexikon) und `blutwerte-scan` (Blutwerte-Foto-Scan)
+riefen die Anthropic API mit dem Modellnamen `"claude-sonnet-4-6"` auf —
+das ist keine gültige Modell-ID. Jede Anfrage schlug dadurch serverseitig
+fehl (Anthropic antwortet mit 400, die Edge Function leitet das als 502
+weiter). Betraf ALLE drei Features gleichermaßen, nicht nur den
+Akutmodus. Beide Dateien auf `"claude-sonnet-5"` korrigiert.
+
+**Ursache 2 (warum die Fehlermeldung unlesbar war, app-weit):**
+`supabase.functions.invoke()` liefert bei jedem non-2xx-Status IMMER
+`data: null` zurück — der überall in der App verwendete Ausdruck
+`data?.error || error.message` griff dadurch nie wie beabsichtigt und
+zeigte statt der eigentlich vom Server gesendeten deutschen Meldung
+(z. B. "Antwort konnte nicht geladen werden.") immer nur die generische,
+englische System-Meldung des Supabase-Clients an. Betraf 9 Stellen in 6
+Dateien: `useAkutModus.js`, `useLexikon.js` (2×), `useBiomarkerData.js`,
+`useSpotifyVerbindung.js`, `usePushNotifications.js`,
+`AdminDashboardView.jsx` (3×, Testkonto/Konto anlegen/Einladen). Eine
+Stelle (`services/spotify.js`) hatte dasselbe Problem bereits früher für
+sich allein gelöst (siehe dortiger Kommentar), ohne dass der Fix auf die
+anderen neun Stellen übertragen wurde.
+
+- **`utils/edgeFunctionFehler.js`** (neu): `edgeFunctionFehlertext(error,
+  data, fallback)` — liest den tatsächlichen JSON-Fehlertext aus
+  `error.context` (dort steckt bei einem `FunctionsHttpError` die
+  Original-Antwort der Funktion) aus, mit sauberem Fallback bei
+  Netzwerkfehlern oder nicht-JSON-Antworten. Jetzt an allen 10 Stellen
+  einheitlich verwendet statt dupliziertem/fehlerhaftem Code je Datei.
+- **Getestet**: Node-Skript mit simulierten `FunctionsHttpError`/
+  `FunctionsFetchError`-Objekten — bestätigt korrekte Fehlertext-Extraktion
+  in allen vier Fällen (JSON-Fehlerbody, direkter `data.error`,
+  Netzwerkfehler ohne Body, nicht-JSON-Body). Build + oxlint (weiterhin 18
+  Warnungen, unverändert).
+
+**⚠️ WICHTIG — zusätzlicher Schritt nötig:** Die beiden geänderten Dateien
+unter `supabase/functions/lexikon/index.ts` und
+`supabase/functions/blutwerte-scan/index.ts` laufen auf Supabase-Servern,
+nicht im normalen App-Build — ein reines Push zu GitHub reicht NICHT aus,
+damit der Fix live geht. Im Supabase-Dashboard unter "Edge Functions" →
+`lexikon` bzw. `blutwerte-scan` → Code-Editor öffnen und die Zeile
+`model: "claude-sonnet-4-6"` durch `model: "claude-sonnet-5"` ersetzen
+(oder den kompletten, aktuellen Dateiinhalt aus dem Repo einfügen), dann
+"Deploy" klicken. Erst danach funktioniert der Akutmodus/das Lexikon/der
+Blutwerte-Scan wieder.
+
 ## ✅ Update 12.09.2026, Fortsetzung (Teil 58) — "Aktiv"-Bug: verbleibende Ursachen bei Training/Tageslicht
 
 Nutzerinnen-Vorgabe (mit 3 Screenshots, direkter Folge-Bericht auf Teil 57):
