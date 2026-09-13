@@ -6,7 +6,7 @@
 -- abzuhaken. Eigene, schlanke Log-Tabelle nach demselben Muster wie
 -- routine_logs (Gewohnheiten): eine Zeile = an diesem Tag erledigt,
 -- Löschen = rückgängig gemacht.
-create table public.routine_schritt_logs (
+create table if not exists public.routine_schritt_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   schritt_id uuid not null references public.routine_schritte (id) on delete cascade,
@@ -16,5 +16,6 @@ create table public.routine_schritt_logs (
 );
 
 alter table public.routine_schritt_logs enable row level security;
+drop policy if exists "routine_schritt_logs: eigene Zeilen" on public.routine_schritt_logs;
 create policy "routine_schritt_logs: eigene Zeilen" on public.routine_schritt_logs for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);

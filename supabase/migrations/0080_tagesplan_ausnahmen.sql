@@ -22,7 +22,7 @@
 --
 -- Nur gesetzte Felder gelten als überschrieben — bleibt z. B. `name` leer,
 -- zeigt der Tagesplan weiterhin den Namen aus der Regel.
-create table public.tagesplan_ausnahmen (
+create table if not exists public.tagesplan_ausnahmen (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   kategorie text not null check (kategorie in ('hormon', 'supplement', 'mahlzeit', 'gewohnheit', 'workflow')),
@@ -38,5 +38,6 @@ create table public.tagesplan_ausnahmen (
 );
 
 alter table public.tagesplan_ausnahmen enable row level security;
+drop policy if exists "tagesplan_ausnahmen: eigene Zeilen" on public.tagesplan_ausnahmen;
 create policy "tagesplan_ausnahmen: eigene Zeilen" on public.tagesplan_ausnahmen for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);

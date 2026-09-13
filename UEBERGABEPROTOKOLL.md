@@ -1,6 +1,35 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-## ✅ Update 13.09.2026 (Teil 82) — Barrierefreiheit-Stichprobe abgeschlossen
+## ✅ Update 13.09.2026 (Teil 83) — Migrationen 0079-0082 waren entgegen der Dokumentation bereits deployt; alle 8 offenen Migrationen idempotent nachgerüstet
+
+Auf Nachfrage der Nutzerin: Sie hatte versucht, die als "offen" gelisteten
+Migrationen 0079-0082 im Supabase-SQL-Editor auszuführen — alle vier
+kamen mit "already exists" zurück. Das bedeutet, sie waren entgegen der
+bisherigen Protokoll-Notizen (die keine Ausführungs-Bestätigung hatten)
+**längst deployt** — vermutlich in einer der Sitzungen, in denen die
+jeweilige Funktion (Errungenschaften, Tagesplan-Ausnahmen,
+Belohnungsfenster-Puffer, Cannabis-Felder) gebaut und getestet wurde,
+nur ohne die sonst übliche explizite "✅ erledigt"-Notiz hier im
+Protokoll. Exakt das Muster, vor dem Teil 8 (Abschnitt 9) schon mal
+gewarnt hatte — nur diesmal umgekehrt (als offen notiert, tatsächlich
+längst gelaufen, statt andersherum).
+
+**Alle 8 zu dem Zeitpunkt offen gemeldeten Migrationen (0077-0084)
+nachträglich idempotent gemacht** (`create table if not exists`, `add
+column if not exists`, `drop policy/trigger if exists` vor `create
+policy/trigger` — gleiches Muster wie schon bei 0070/0071/0075/0076 in
+Teil 63), damit ein erneuter Ausführungsversuch nie wieder mit einem
+Fehler abbricht, egal ob eine Migration schon lief oder nicht. Bestehende
+Daten/Policies bleiben davon unberührt, rein additive Absicherung.
+
+**Bestätigter Stand jetzt:**
+- **0079, 0080, 0081, 0082 — bereits deployt** (durch "already exists"
+  bestätigt).
+- **0077, 0078, 0083, 0084 — Status unbestätigt**, keine Rückmeldung der
+  Nutzerin dazu, ob "already exists" oder erfolgreich gelaufen. **0084 ist
+  davon die dringendste** (siehe Teil 81, Sicherheitsfix).
+
+Commit folgt direkt danach.
 
 Dritter Teil der Aufgabe "Tu das bitte jetzt alles" (nach dem
 UI-Durchklick-Test in Teil 80 und der Sicherheitsprüfung in Teil 81).

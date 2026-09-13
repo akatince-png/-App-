@@ -34,6 +34,7 @@ begin
 end;
 $$;
 
+drop trigger if exists profiles_is_admin_schutz_trigger on public.profiles;
 create trigger profiles_is_admin_schutz_trigger
   before update on public.profiles
   for each row execute procedure public.profiles_is_admin_schutz();

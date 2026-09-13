@@ -11,9 +11,9 @@
 -- bei jedem anderen Medikament über die schon vorhandenen generischen Felder
 -- menge/intervall_*/uhrzeiten — dafür braucht es keine neue Spalte.
 alter table public.hormones
-  add column cannabis_thc_prozent numeric,
-  add column cannabis_cbd_prozent numeric,
-  add column cannabis_tabak_menge text,
-  add column cannabis_filter text,
-  add column cannabis_temperatur_grad numeric,
-  add column cannabis_tropfen integer;
+  add column if not exists cannabis_thc_prozent numeric,
+  add column if not exists cannabis_cbd_prozent numeric,
+  add column if not exists cannabis_tabak_menge text,
+  add column if not exists cannabis_filter text,
+  add column if not exists cannabis_temperatur_grad numeric,
+  add column if not exists cannabis_tropfen integer;

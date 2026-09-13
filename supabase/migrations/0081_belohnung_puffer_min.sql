@@ -6,4 +6,4 @@
 -- Wert pro Nutzer, gleiches Muster wie aktive_messwerte etc. Default 10
 -- entspricht der von der Nutzerin für sich selbst gewünschten Vorgabe.
 alter table public.profiles
-  add column belohnung_puffer_min integer not null default 10;
+  add column if not exists belohnung_puffer_min integer not null default 10;

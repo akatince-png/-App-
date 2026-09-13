@@ -9,7 +9,7 @@
 -- Daten abweicht. Nur WELCHE Abzeichen (Streak-/Punkte-Meilensteine)
 -- bereits verdient wurden, muss dauerhaft festgehalten werden — sonst
 -- verschwindet ein Abzeichen wieder, sobald ein Streak später reißt.
-create table public.errungenschaften (
+create table if not exists public.errungenschaften (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   -- z. B. 'training_streak_28', 'global_streak_90', 'global_punkte_500'.
@@ -21,5 +21,6 @@ create table public.errungenschaften (
 );
 
 alter table public.errungenschaften enable row level security;
+drop policy if exists "errungenschaften: eigene Zeilen" on public.errungenschaften;
 create policy "errungenschaften: eigene Zeilen" on public.errungenschaften for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
