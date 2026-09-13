@@ -1,5 +1,129 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 61) — Punch-Liste (Teil 60) komplett abgearbeitet
+
+Nutzerinnen-Vorgabe: "Beginne jetzt bitte mit allen von dir Repo
+hinterlegten zukünftigen Arbeiten" (erste Sitzung), später konkretisiert
+zu "alle vorgenommenen Ziele aus dem Übergabeprotokoll heute umsetzen ...
+ich möchte nichts mehr ausstehen haben." Die in Teil 60 als Backlog
+zurückgestellte Punch-Liste in 5 weiteren Runden (7-11) abgearbeitet —
+zusammen mit den bereits in derselben Sitzung zuvor erledigten Runden 1-6
+ist damit die komplette Teil-60-Liste durchgearbeitet, jeder Punkt entweder
+umgesetzt oder mit konkreter technischer Begründung bewusst zurückgestellt.
+
+**Runde 7 — `TrainingView.jsx`: LiveWorkout ausgelagert.** War eine der
+als "zum Aufteilen" markierten sehr langen Dateien (>1300 Zeilen). Der
+komplette Live-Trainingsablauf (Satz-/Phasen-Logik, Timer, Intervall-
+Musik-Sync) nach `src/ui/LiveWorkout.jsx`, die Nachtraining-Feedback-
+Erfassung nach `src/ui/TrainingFeedbackPanel.jsx` — TrainingView.jsx auf
+~920 Zeilen reduziert. `INTERVALL_FADE_SEK` nach
+`utils/intervallMusikStorage.js` verschoben (sonst zirkulärer Import).
+Getestet: Preview-Harness + Playwright, kompletter Krafttraining-Ablauf
+(Satz → Pause → Satz → Bestätigen → Beenden → Feedback-Panel)
+fehlerfrei, Verhalten identisch zu vorher.
+
+**Runde 8 — Dosis-Feld-Logik zwischen Peptiden und Hormonen/Medikamenten
+zusammengeführt.** `useProtocolData.js` (Peptide) und `useHormoneData.js`
+(Hormone/Medikamente/Cannabis) hatten dieselbe Spalten-Zuordnung,
+Numerisch-Feld-Liste und Wert-Umwandlungslogik für Dosierungsfelder als
+zwei unabhängige Kopien — die laut Teil-60-Analyse eigentliche Ursache,
+warum ein Rollback-Fix in einer Kopie nicht automatisch in der anderen
+landete. Jetzt eine einzige Quelle in `utils/schedule.js`:
+`DOSE_SPALTEN_VOLLSTAENDIG`/`DOSE_NUMERISCHE_FELDER_VOLLSTAENDIG` (hormones
+hat alle Spalten inkl. Cannabis-Details) + `spaltenTeilmenge()` für die
+kleinere Peptid-Teilmenge, `coerceDoseFeldWert()` (bisher viermal fast
+wortgleich), `buildDosePlan()` (bisher zweimal fast wortgleich, per
+Callback parametrisiert). Reine Extraktion, keine Verhaltensänderung.
+Getestet: Node-Skript, das die neuen reinen Funktionen gegen eine
+wörtliche Kopie der ursprünglichen Inline-Logik durchspielt — 384 Feld/
+Wert-Kombinationen für `coerceDoseFeldWert` und 10 synthetische
+Dosierungs-Szenarien (fixed/custom/cycle/weekdays) für `buildDosePlan`,
+jeweils exakt identisches Ergebnis.
+
+**Runde 9 — `AppDataContext.jsx` Re-Render-Fanout behoben.** ~30 Daten-
+Hooks werden zu einem `value`-Objekt zusammengeführt, das jeden
+`useAppData()`-Konsumenten versorgt — bisher ohne Stabilisierung, obwohl
+jeder Hook bei jedem Render ein frisches Objekt-Literal zurückgibt. Jede
+State-Änderung in irgendeinem der 30 Hooks rendert dadurch bisher ALLE
+Konsumenten neu. Ein einfaches `useMemo` um `value` hätte nichts gebracht
+(Dependency-Array bestünde aus denselben, immer neuen Referenzen); ein
+voller Context-Split hätte ~50+ Konsumenten-Dateien app-weit angefasst —
+unverhältnismäßiges Risiko ohne Live-Testing, zumal keiner der 30 Hooks
+einen tickenden Timer enthält (geprüft: `useIntervallMusikSync.js` läuft
+lokal in TrainingView/LiveWorkout/WorkflowTimer, nicht in
+AppDataContext). Stattdessen `src/context/useShallowStableValue.js`:
+vergleicht die ~150 flach zusammengeführten Einzelwerte in `value` selbst
+(Object.is je Schlüssel) statt der 30 Hook-Objekt-Referenzen — funktioniert,
+weil Zustände durchgängig immutabel aktualisiert werden und Setter/
+Toggle-Funktionen durchgängig per `useCallback` stabil sind. Rührt keine
+der 30 Hook-Dateien und keine View an. Getestet: eigenständiger
+Playwright-Test (Provider/Consumer-Struktur, die die echte
+`children`-Weitergabe von App.jsx an AppDataProvider nachbildet) — 5
+Provider-interne State-Änderungen ohne inhaltliche `value`-Änderung lösen
+0 Re-Renders beim Consumer aus, 3 echte Wert-Änderungen lösen genau 3
+Re-Renders aus.
+
+**Runde 10 — `HomeView.jsx`: zwei Widgets ausgelagert.** War ebenfalls
+als "zum Aufteilen" markiert (1113 Zeilen). `TagesfortschrittBalken`
+(Balkendiagramm) und `NachrichtAnCoachCard` (Coach-Kontakt für Coachees)
+waren bereits saubere, rein props-getriebene Komponenten — nach
+`src/ui/TagesfortschrittBalken.jsx` bzw. `src/ui/NachrichtAnCoachCard.jsx`
+verschoben, HomeView.jsx auf 1023 Zeilen reduziert. Nach Durchsicht
+bewusst NICHT weiter aufgeteilt — weder der Haupt-Komponentenkörper von
+HomeView.jsx selbst noch `WochenuebersichtView.jsx`, `KiChat.jsx` oder
+`WochenplanEditor.jsx`: alle vier sind einzelne monolithische
+Komponentenkörper, die lokalen State eng mit Render-Blöcken verweben,
+ohne bereits vorhandene, sauber abtrennbare Teil-Komponenten wie bei
+LiveWorkout — ein erzwungener Split hätte eher neue Prop-Drilling-
+Fehlerquellen geschaffen als Übersichtlichkeit gewonnen.
+
+**Runde 11 — Hydration/Tageslicht: Ziel-/Korrektur-Logik
+zusammengeführt.** `HydrationView.jsx` und `TageslichtView.jsx` teilten
+sich fast wortgleich die Logik für Tagesziel-Entwurf (inkl.
+Änderungsgrund + Änderungsprotokoll-Eintrag), "Verschätzt?"-Korrektur,
+Zurücksetzen mit Bestätigungsdialog und Fehleranzeige — im Punch-Liste-
+Eintrag selbst als Kandidat für einen `useZielMitKorrektur`-Hook benannt.
+Jetzt in `src/ui/useZielMitKorrektur.js`, parametrisiert über
+zielWert/heuteWert/hinzufuegen/zielSetzen/zielZuruecksetzen/
+aenderungVermerken/kategorie/itemName/einheit/kachelName/defaultZiel.
+Bewusst NUR die Logik zusammengeführt, nicht die JSX-Darstellung —
+Hydration hat zusätzlich eine Check-in-Karte, ein gemeinsames Render
+hätte eher eine Konfigurations-Objekt-Wüste erzeugt. Getestet: Playwright
+gegen eine Preview-Harness mit gemocktem AppDataContext (beide Views
+gleichzeitig gemountet, Fehler-Schalter simuliert fehlschlagende
+Supabase-Aufrufe) — Erfolgs- und Fehlerpfad für schnellHinzufuegen,
+Ziel-Wheel + Speichern (Anzeige + aenderungVermerken-Eintrag exakt wie im
+Original formatiert), "Ziel zurücksetzen" erscheint erst ab abweichendem
+Ziel mit korrektem, kachelspezifischem Bestätigungstext.
+
+**Zwei Ermessensfragen vorab mit der Nutzerin geklärt** (Runden 8/9
+betreffen Dosis-Timing bzw. globalen Re-Render-Mechanismus — beides ohne
+Live-Zugriff auf echte Daten nicht vollständig verifizierbar): explizit
+grünes Licht für "vorsichtig angehen" (Runde 8, reine Extraktion + Node-
+Verifikation) bzw. "versuchen" mit Verständnis für eine risikoärmere
+Teilfassung statt eines vollen Context-Splits (Runde 9) eingeholt, bevor
+losgelegt wurde.
+
+**Bewusst nicht angefasst — Abschnitt 10 ("Offene Punkte") gegengelesen:**
+fast ausschließlich Supabase-Dashboard-Aktionen (Migrationen ausführen,
+Edge Functions deployen, Dashboard-Konfiguration prüfen), Live-Browser-
+Tests mit echtem Login/Netzwerkzugriff, oder Scope-Entscheidungen, die
+nur die Nutzerin treffen kann (Groq-Provider, native App, Akutmodus-
+Ausbau) — nichts davon lässt sich aus dieser Sandbox zusätzlich sicher
+umsetzen. Einzige Ausnahme mit echtem Sandbox-Potenzial: Punkt #13
+(`useProfileData.js`-Speicherfehler nur in der Konsole geloggt, nie
+sichtbar; "mindestens `setErinnerung()` sollte Fehler sichtbar
+zurückmelden") — betrifft aber 14 Aufrufstellen in 6 UI-Dateien
+(`ZeitErinnerungenCard.jsx`, `KategorieErinnerung.jsx`, `MehrTab.jsx`,
+`HydrationView.jsx`, `TrainingView.jsx`, `OnboardingCategoriesView.jsx`),
+von denen heute keine geprüft wurde — bewusst zurückgestellt statt
+überstürzt an mehreren unbekannten Stellen gleichzeitig sichtbare
+Fehlerpfade einzuziehen, bleibt als konkret umsetzbarer nächster Schritt
+stehen.
+
+**Getestet (übergreifend)**: `npm run build` + `npx oxlint` nach jeder
+Runde, durchgehend 16 Warnungen (Baseline unverändert, keine neuen).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 60) — App-weite Fehler-/Code-Durchsuchung
 
 Nutzerinnen-Vorgabe: "überprüft die gesamte App nach Bugs und nach
