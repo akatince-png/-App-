@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
 // Verwaltet den Verbindungsstatus + die Standard-Playlist für "Aka startet
 // meine Musik" (siehe 0037_spotify_verbindung.sql). Der eigentliche
@@ -165,7 +166,7 @@ export function useSpotifyVerbindung(userId) {
       });
       setSpotifyTestet(false);
       if (error || data?.error) {
-        const meldung = data?.error || error.message;
+        const meldung = await edgeFunctionFehlertext(error, data, "Wiedergabe konnte nicht gestartet werden.");
         setSpotifyFehler(meldung);
         return { ok: false, error: meldung };
       }

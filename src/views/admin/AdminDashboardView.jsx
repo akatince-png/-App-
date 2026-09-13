@@ -5,6 +5,7 @@ import { accentDark, accentSoft, cardBorder, danger, success, successSoft, textM
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { coachNachrichtSenden } from "../../data/useCoacheeNachrichten";
+import { edgeFunctionFehlertext } from "../../utils/edgeFunctionFehler";
 
 // Bereiche, in denen KiChat.jsx tatsächlich mit bereich="..." aufgerufen
 // wird (siehe grep über src/views) — muss exakt übereinstimmen, sonst
@@ -86,7 +87,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
     });
     setTestAnlegenLaeuft(false);
     if (error || data?.error) {
-      setTestFehler(data?.error || error.message);
+      setTestFehler(await edgeFunctionFehlertext(error, data, "Test-Konto konnte nicht angelegt werden."));
       return;
     }
     setTestKonto({ vorname, email, passwort });
@@ -602,7 +603,7 @@ function NeuerZugangForm({ onCreated }) {
     });
     if (error || data?.error) {
       setSpeichernLaeuft(false);
-      setFehler(data?.error || error.message);
+      setFehler(await edgeFunctionFehlertext(error, data, "Konto konnte nicht angelegt werden."));
       return;
     }
     if (onboardingModus === "lang") {
@@ -668,7 +669,7 @@ function EinladenForm({ onCreated }) {
     });
     setSpeichernLaeuft(false);
     if (error || data?.error) {
-      setFehler(data?.error || error.message);
+      setFehler(await edgeFunctionFehlertext(error, data, "Einladung konnte nicht verschickt werden."));
       return;
     }
     setErfolg(`Einladung an ${email.trim()} verschickt.`);

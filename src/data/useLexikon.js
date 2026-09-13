@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { wissensBasisFuerLexikonKategorie } from "../utils/wissensBasis";
+import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
 export function useLexikon() {
   const [lexikonVerlauf, setLexikonVerlauf] = useState([]);
@@ -20,7 +21,7 @@ export function useLexikon() {
         body: { frage: trimmed, kategorie, kontext },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (error || data?.error) throw new Error(data?.error || error.message);
+      if (error || data?.error) throw new Error(await edgeFunctionFehlertext(error, data, "Antwort konnte gerade nicht geladen werden."));
       setLexikonVerlauf((prev) => {
         const next = [...prev];
         next[next.length - 1] = { frage: trimmed, kategorie, antwort: data.antwort || "Keine Antwort erhalten." };
@@ -54,7 +55,7 @@ export function useLexikon() {
       body: { frage: trimmed, kategorie, kontext },
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
-    if (error || data?.error) throw new Error(data?.error || error.message);
+    if (error || data?.error) throw new Error(await edgeFunctionFehlertext(error, data, "Antwort konnte gerade nicht geladen werden."));
     return data.antwort || "Keine Antwort erhalten.";
   }, []);
 

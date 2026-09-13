@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { toLocalISODate } from "../utils/dates";
+import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
 export function useBiomarkerData(userId) {
   const [biomarker, setBiomarkerState] = useState({});
@@ -66,7 +67,7 @@ export function useBiomarkerData(userId) {
           body: { fotoPath, mediaType: file.type || "image/jpeg" },
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
-        if (error || data?.error) throw new Error(data?.error || error.message);
+        if (error || data?.error) throw new Error(await edgeFunctionFehlertext(error, data, "Werte konnten nicht automatisch erkannt werden."));
 
         const entries = Object.entries(data.werte);
         setBiomarkerState((prev) => {

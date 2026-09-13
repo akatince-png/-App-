@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { VAPID_PUBLIC_KEY } from "../lib/pushConfig";
+import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -105,7 +106,7 @@ export function usePushNotifications(userId) {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (error || data?.error) {
-      const msg = data?.error || error.message;
+      const msg = await edgeFunctionFehlertext(error, data, "Test-Benachrichtigung konnte nicht gesendet werden.");
       setFehler(msg);
       return { ok: false, error: msg };
     }

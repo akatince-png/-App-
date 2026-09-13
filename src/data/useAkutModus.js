@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { wissensBasisFuerPfade } from "../utils/wissensBasis";
+import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
 // Symptom-Kacheln für den Akutmodus (HomeView.jsx/AkutModusKarte.jsx,
 // Nutzerinnen-Vorgabe 16.08.: ein Knopf für Momente akuter
@@ -44,7 +45,7 @@ export function useAkutModus() {
         body: { frage: trimmed, kategorie: "Akutmodus", kontext, modus: "akut" },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (error || data?.error) throw new Error(data?.error || error.message);
+      if (error || data?.error) throw new Error(await edgeFunctionFehlertext(error, data, "Antwort konnte gerade nicht geladen werden."));
       setAntwort(data.antwort || "Keine Antwort erhalten.");
     } catch (err) {
       setFehler(err.message || "Antwort konnte gerade nicht geladen werden.");

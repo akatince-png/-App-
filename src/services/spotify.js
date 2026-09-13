@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
+import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
 
 // Nur die Berechtigungen, die "Aka startet meine Musik" wirklich braucht —
 // keine Bibliotheks-/Freundeslisten-Rechte o. ä.
@@ -40,8 +41,7 @@ export async function spotifyCodeAustauschen(code, targetUserId) {
     body: { code, redirectUri: spotifyRedirectUri(), targetUserId },
   });
   if (error || data?.error) {
-    const kontext = typeof error?.context?.json === "function" ? await error.context.json().catch(() => null) : null;
-    throw new Error(data?.error || kontext?.error || error.message);
+    throw new Error(await edgeFunctionFehlertext(error, data, "Spotify-Verbindung konnte nicht hergestellt werden."));
   }
   return data;
 }
