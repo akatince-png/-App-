@@ -22,6 +22,7 @@ import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "..
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
+import TagebuchModal from "../ui/TagebuchModal";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 
 // Basis-Rollenbeschreibung des Home-Coaches. Die "Background Brain"-Inhalte
@@ -164,6 +165,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // echten Schritte HIER auf der Startseite auf, statt zum Schritte-Editor
   // oder Tagesplan zu springen. null = zugeklappt, sonst "morgen"/"abend".
   const [expandedRoutine, setExpandedRoutine] = useState(null);
+  const [tagebuchOffen, setTagebuchOffen] = useState(false);
 
   // Tap auf die Trainingszeile in "Als Nächstes" soll direkt in den
   // Live-Start-Screen führen (Nutzerin-Korrektur 14.08.: eine reine
@@ -1019,6 +1021,30 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             <div style={{ fontSize: 10.5, color: textMuted }}>{t(o.descKey)}</div>
           </button>
         ))}
+        {/* Tagebuch (13.09., Nutzerin-Vorgabe): gleichgroße Kachel wie die
+            Ordner oben, öffnet TagebuchModal.jsx. Der Text selbst verlässt
+            das Gerät nie in Richtung Supabase (Datenschutz-Vorgabe) —
+            Details dazu in TagebuchModal.jsx/tagebuchStorage.js. */}
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => setTagebuchOffen(true)}
+          style={{
+            textAlign: "left",
+            borderRadius: 18,
+            padding: "14px 10px",
+            cursor: "pointer",
+            background: "#fff",
+            boxShadow: shadow,
+            border: `1px solid ${cardBorder}`,
+          }}
+        >
+          <div style={{ marginBottom: 8 }}>
+            <Icon name="book" size={22} color={accentDark} />
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Tagebuch</div>
+          <div style={{ fontSize: 10.5, color: textMuted }}>Frei schreiben</div>
+        </button>
         {/* "Neues Protokoll" (13.09., Nutzerin-Vorgabe): ersetzt den
             früheren schwebenden runden "+"-Knopf oben rechts (Fab.jsx) —
             fiel dort kaum auf und führte wiederholt dazu, dass die
@@ -1072,6 +1098,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           {trainingFehler} — antippen zum Schließen.
         </div>
       )}
+
+      {tagebuchOffen && <TagebuchModal onClose={() => setTagebuchOffen(false)} />}
     </Shell>
   );
 }

@@ -734,4 +734,27 @@ export const AIService = {
     const data = parseJsonAntwort(antwortJson);
     return { wert: (data.wert ?? antwort).toString() };
   },
+
+  /**
+   * Überarbeitet einen privaten Tagebucheintrag rein sprachlich
+   * (Rechtschreibung, Grammatik, Lesefluss) — verändert bewusst NIE Inhalt,
+   * Bedeutung, Fakten oder Ton, erfindet nichts hinzu und lässt nichts weg.
+   * Reiner Text-zu-Text-Baustein (kein JSON), genutzt in TagebuchModal.jsx.
+   * Der Tagebuchtext selbst wird NUR lokal auf dem Gerät gespeichert (siehe
+   * utils/tagebuchStorage.js) — dieser Aufruf ist die einzige Stelle, an
+   * der der Text (temporär, zum Überarbeiten) das Gerät verlässt, und läuft
+   * nur, wenn die Person aktiv "Mit Aka überarbeiten" antippt.
+   *
+   * @param {{text: string}} params
+   * @returns {Promise<string>}
+   */
+  async tagebuchUeberarbeiten({ text }) {
+    const system = [
+      "Du überarbeitest einen privaten Tagebucheintrag rein sprachlich: Rechtschreibung, Grammatik, Zeichensetzung, Lesefluss.",
+      "Verändere NIEMALS den Inhalt, die Bedeutung, die Fakten oder den persönlichen Ton — erfinde nichts hinzu und lass nichts weg.",
+      "Antworte AUSSCHLIESSLICH mit dem überarbeiteten Text, ohne Anführungszeichen, ohne Einleitung, ohne Erklärung.",
+    ].join(" ");
+    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: text }], json: false });
+    return antwort.trim();
+  },
 };

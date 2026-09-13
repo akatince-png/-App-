@@ -110,6 +110,13 @@ const PATHS = {
       <path d="M10 13h4" />
     </>
   ),
+  // Für Tagebuch (13.09.) — aufgeschlagenes Buch, zwei Seiten mit Knick in
+  // der Mitte.
+  book: (
+    <>
+      <path d="M12 6.5c-1.8-1.3-4-2-6.5-2A2.5 2.5 0 0 0 3 7v10a2 2 0 0 1 2-2c2.2 0 4.3.6 6 1.8M12 6.5c1.8-1.3 4-2 6.5-2A2.5 2.5 0 0 1 21 7v10a2 2 0 0 0-2-2c-2.2 0-4.3.6-6 1.8M12 6.5v11" />
+    </>
+  ),
   // Für Atemübungen (16.08.) — drei geschwungene Linien statt Lunge/Emoji,
   // passend zum restlichen Linien-Icon-Set.
   wind: (
