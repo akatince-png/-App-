@@ -1,5 +1,17 @@
 # Hinweis für Claude
 
+> **Projekt-Identität — zuerst lesen:** Dies ist **AKA**, die ADHS-
+> Management-/Tracking-/Coaching-App (ursprünglich als Peptid-Tracker
+> gedacht) — React + Vite + Supabase, gedacht für **eine erwachsene
+> Nutzerin**. Es gibt ein **komplett separates** zweites Repo,
+> `akatince-png/Kidnapp` ("Arcanova"), eine reine HTML/JS-Kinder-App für
+> ADHS-Routinen (Morgen-/Abendroutine, Sternenenergie, Eltern-Dashboard).
+> Beide Apps drehen sich um ADHS und ähneln sich thematisch — das hat
+> schon zu Verwechslungen geführt. Bevor du hier etwas änderst: prüfe,
+> dass du wirklich in diesem Repo bist (React/Vite/JSX-Dateien unter
+> `src/`, nicht eine einzelne `index.html`) und nicht versehentlich
+> Kontext/Aufgaben aus dem Kidnapp/Arcanova-Repo hierher überträgst.
+
 **Lies zuerst `UEBERGABEPROTOKOLL.md` im Projekt-Root, bevor du irgendetwas
 an diesem Projekt änderst.** Es ist der aktuelle, lebende Übergabestand
 dieser App (Architektur, KI-Coach-System, offene Punkte, Arbeitsweise-
