@@ -152,6 +152,35 @@ body {
   }
 }
 
+/* Home-Tagesfortschritt (HomeView.jsx): auf Tablet/Desktop rechts neben
+   dem Balkendiagramm die Orden-Vorschau statt des sonst ungenutzten
+   Leerraums (Nutzerinnen-Vorgabe 13.09.: "rechts in diesem Feld ist recht
+   viel Platz... links die Tabelle, rechts die Ordner"). Auf dem Handy
+   bleibt es unverändert nur das Balkendiagramm — dort füllt es die Breite
+   ohnehin schon aus, eine zweite Spalte hätte dort keinen Platz und wäre
+   nur zusätzliche Unruhe (siehe TagesfortschrittOrden.jsx).*/
+.mp-tagesfortschritt-grid {
+  display: block;
+}
+.mp-tagesfortschritt-orden {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .mp-tagesfortschritt-grid {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .mp-tagesfortschritt-orden {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+}
+
 /* Sanftes, spürbares Tap-Feedback für Buttons/Karten — kleine, sofortige
    Rückmeldung statt eines stummen Klicks. Deaktiviert für alle, die
    reduzierte Bewegung eingestellt haben. */

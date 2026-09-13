@@ -4,6 +4,8 @@ import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import TagesfortschrittBalken from "../ui/TagesfortschrittBalken";
+import TagesfortschrittOrden from "../ui/TagesfortschrittOrden";
+import { useErrungenschaften } from "../data/useErrungenschaften";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
@@ -106,6 +108,7 @@ const ROUTINE_TEXT = { morgenroutine: "#8A4A1E", abendroutine: "#2C3E5C" };
 export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll }) {
   const { t, tLabel, lang } = useT();
   const {
+    userId,
     hormonPlan,
     hormonErledigt,
     supplemente,
@@ -132,8 +135,12 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     hydrationHeuteMl,
     hydrationZielMl,
     hydrationHinzufuegen,
+    hydrationEintraege,
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
+    tageslichtEintraege,
+    schlafEintraege,
+    atemuebungLogs,
     aenderungVermerken,
     isAdmin,
     coacheeNachrichten,
@@ -554,6 +561,25 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel, ausnahmenNachSchluessel,
       routineSchritte, routineDurchlaeufe, tagStr]);
 
+  // Quelldaten fürs Erfolge-/Orden-System (13.09., Nutzerinnen-Vorgabe:
+  // rechts neben dem Tagesfortschritt-Balkendiagramm sollen die nächsten/
+  // potenziellen Orden je eingerichtetem Bereich auftauchen, siehe
+  // TagesfortschrittOrden.jsx) — derselbe Feld-Satz wie in ErfolgeTab.jsx,
+  // damit ein Orden hier exakt dann farbig wird, wenn es das auch im
+  // Archiv-Reiter "Erfolge" ist. useErrungenschaften() vergibt/speichert
+  // neu erreichte Orden als Nebeneffekt (Supabase-Upsert) — dadurch werden
+  // Orden jetzt schon beim Öffnen von Home vergeben, nicht erst nach einem
+  // Besuch im Erfolge-Reiter.
+  const errungenschaftenQuellen = useMemo(
+    () => ({
+      supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten,
+    }),
+    [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten]
+  );
+  const { kategorien: ordenKategorien, verdiente: ordenVerdiente } = useErrungenschaften(userId, errungenschaftenQuellen);
+
   // Direktzugriff (aktive Pläne) vs. Weitere Pläne (noch nicht eingerichtet)
   // — im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
   // Kategorien, "Weitere Pläne" bleibt dort ganz leer (nur Basics zählen).
@@ -790,7 +816,14 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             statt "2 von 3"), obwohl der Rest laut Notfallmodus bewusst
             Bonus ist. Jetzt beide aus derselben (ggf. gefilterten) Liste. */}
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 18 }}>{statusText(erledigtCount, displayItems.length, lang)}</div>
-        <TagesfortschrittBalken widgets={miniWidgetData} />
+        {/* Ab Tablet-Breite (siehe .mp-tagesfortschritt-grid in index.css)
+            rechts daneben die Orden-Vorschau statt des sonst ungenutzten
+            Leerraums — auf dem Handy bleibt es unverändert nur das
+            Balkendiagramm, das dort ohnehin schon die volle Breite nutzt. */}
+        <div className="mp-tagesfortschritt-grid">
+          <TagesfortschrittBalken widgets={miniWidgetData} />
+          <TagesfortschrittOrden widgets={miniWidgetData} kategorien={ordenKategorien} verdiente={ordenVerdiente} onClick={() => onOpenView("archiv")} />
+        </div>
       </Card>
 
       {/* Als Nächstes/Tagesplan direkt unter dem Tagesfortschritt (12.09.,
