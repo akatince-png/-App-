@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
-import { activeDoseDays } from "../utils/schedule";
+import { buildDosePlan, coerceDoseFeldWert, spaltenTeilmenge } from "../utils/schedule";
 import { toLocalISODate } from "../utils/dates";
 
 function rowToDosierung(row) {
@@ -22,18 +22,16 @@ function rowToDosierung(row) {
   };
 }
 
-const DOSE_FELD_TO_COLUMN = {
-  menge: "menge",
-  customDays: "custom_days",
-  onDays: "on_days",
-  offDays: "off_days",
-  eigenerStart: "eigener_start",
-  weekdays: "weekdays",
-  uhrzeiten: "uhrzeiten",
-  bacWasser: "bac_wasser_ml",
-  spruehstoesse: "spruehstoesse",
-};
+// Peptid-Spalten (protocol_peptide) sind eine Teilmenge der vollständigen
+// Zuordnung aus utils/schedule.js — protocol_peptide hat keine
+// Cannabis-Detailspalten (die gibt es nur bei hormones, siehe
+// useHormoneData.js). Einmalig definiert, damit Spaltennamen nie mehr
+// unabhängig auseinanderdriften können (13.09., Teil 60).
+const DOSE_FELD_TO_COLUMN = spaltenTeilmenge(["menge", "customDays", "onDays", "offDays", "eigenerStart", "weekdays", "uhrzeiten", "bacWasser", "spruehstoesse"]);
 
+// (bewusst eine eigene, kleinere Menge statt DOSE_NUMERISCHE_FELDER_VOLLSTAENDIG
+// aus utils/schedule.js zu importieren — die enthält auch Cannabis-Felder,
+// die es bei Peptiden gar nicht gibt.)
 const NUMERIC_FELDER = new Set(["customDays", "onDays", "offDays", "bacWasser", "spruehstoesse"]);
 
 const DEFAULT_DOSIERUNG = {
@@ -366,9 +364,7 @@ export function useProtocolData(userId) {
 
       const column = DOSE_FELD_TO_COLUMN[feld];
       if (!column) return;
-      let value = val;
-      if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
-      else if (feld === "eigenerStart") value = val === "" ? null : val;
+      const value = coerceDoseFeldWert(feld, val, NUMERIC_FELDER);
 
       supabase
         .from("protocol_peptide")
@@ -409,11 +405,8 @@ export function useProtocolData(userId) {
         }
         const column = DOSE_FELD_TO_COLUMN[feld];
         if (!column) return;
-        let value = val;
-        if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
-        else if (feld === "eigenerStart") value = val === "" ? null : val;
         localPatch = { ...localPatch, [feld]: val };
-        dbPatch[column] = value;
+        dbPatch[column] = coerceDoseFeldWert(feld, val, NUMERIC_FELDER);
       });
 
       let vorher;
@@ -524,23 +517,10 @@ export function useProtocolData(userId) {
     [protocolId, notizen]
   );
 
-  const plan = useMemo(() => {
-    const totalDays = (parseInt(dauer, 10) || 12) * 7;
-    const dosen = [];
-    peptide.forEach((p) => {
-      const d = dosierung[p];
-      if (!d) return;
-      const dates = activeDoseDays(d, startdatum, totalDays);
-      const zeiten = d.uhrzeiten?.length ? d.uhrzeiten : ["20:00"];
-      dates.forEach((date) => {
-        zeiten.forEach((uhrzeit) => {
-          dosen.push({ date, peptid: p, menge: d.menge || "", uhrzeit });
-        });
-      });
-    });
-    dosen.sort((a, b) => a.date - b.date || a.uhrzeit.localeCompare(b.uhrzeit));
-    return dosen;
-  }, [peptide, dosierung, startdatum, dauer]);
+  const plan = useMemo(
+    () => buildDosePlan(peptide, dosierung, startdatum, dauer, (p, d, date, uhrzeit) => ({ date, peptid: p, menge: d.menge || "", uhrzeit })),
+    [peptide, dosierung, startdatum, dauer]
+  );
 
   const protokollArchivieren = useCallback(async () => {
     if (!protocolId) return;

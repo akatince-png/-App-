@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
-import { activeDoseDays } from "../utils/schedule";
+import { buildDosePlan, coerceDoseFeldWert, DOSE_SPALTEN_VOLLSTAENDIG, DOSE_NUMERISCHE_FELDER_VOLLSTAENDIG } from "../utils/schedule";
 import { toLocalISODate } from "../utils/dates";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
@@ -38,35 +38,12 @@ function rowToHormonDosierung(row) {
   };
 }
 
-const DOSE_FELD_TO_COLUMN = {
-  menge: "menge",
-  customDays: "custom_days",
-  onDays: "on_days",
-  offDays: "off_days",
-  eigenerStart: "eigener_start",
-  weekdays: "weekdays",
-  uhrzeiten: "uhrzeiten",
-  bacWasser: "bac_wasser_ml",
-  spruehstoesse: "spruehstoesse",
-  thcProzent: "cannabis_thc_prozent",
-  cbdProzent: "cannabis_cbd_prozent",
-  tabakMenge: "cannabis_tabak_menge",
-  filterTyp: "cannabis_filter",
-  temperaturGrad: "cannabis_temperatur_grad",
-  tropfenAnzahl: "cannabis_tropfen",
-};
-
-const NUMERIC_FELDER = new Set([
-  "customDays",
-  "onDays",
-  "offDays",
-  "bacWasser",
-  "spruehstoesse",
-  "thcProzent",
-  "cbdProzent",
-  "temperaturGrad",
-  "tropfenAnzahl",
-]);
+// hormones hat (anders als protocol_peptide, siehe useProtocolData.js) alle
+// Spalten inkl. Cannabis-Details — deshalb hier die vollständige Zuordnung
+// aus utils/schedule.js direkt verwenden statt einer eigenen Kopie
+// (13.09., Teil 60).
+const DOSE_FELD_TO_COLUMN = DOSE_SPALTEN_VOLLSTAENDIG;
+const NUMERIC_FELDER = DOSE_NUMERISCHE_FELDER_VOLLSTAENDIG;
 
 function toRow(userId, neuesHormon, hauptprotokollId) {
   const isCustom = neuesHormon.intervallTyp === "custom";
@@ -324,9 +301,7 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
 
       const column = DOSE_FELD_TO_COLUMN[feld];
       if (!column) return;
-      let value = val;
-      if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
-      else if (feld === "eigenerStart") value = val === "" ? null : val;
+      const value = coerceDoseFeldWert(feld, val, NUMERIC_FELDER);
 
       supabase
         .from("hormones")
@@ -365,11 +340,8 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
         }
         const column = DOSE_FELD_TO_COLUMN[feld];
         if (!column) return;
-        let value = val;
-        if (NUMERIC_FELDER.has(feld)) value = val === "" ? null : Number(val);
-        else if (feld === "eigenerStart") value = val === "" ? null : val;
         localPatch = { ...localPatch, [feld]: val };
-        dbPatch[column] = value;
+        dbPatch[column] = coerceDoseFeldWert(feld, val, NUMERIC_FELDER);
       });
 
       // Bug-Fix: siehe setHormonDose() — Rollback auf den vorherigen Stand
@@ -496,23 +468,17 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
     [userId, hormonErledigt, hormonFeedback]
   );
 
-  const hormonPlan = useMemo(() => {
-    const totalDays = (parseInt(dauer, 10) || 12) * 7;
-    const dosen = [];
-    hormone.forEach((h) => {
-      const d = hormonDosierung[h];
-      if (!d) return;
-      const dates = activeDoseDays(d, startdatum, totalDays);
-      const zeiten = d.uhrzeiten?.length ? d.uhrzeiten : ["20:00"];
-      dates.forEach((date) => {
-        zeiten.forEach((uhrzeit) => {
-          dosen.push({ date, name: h, menge: d.menge || "", einnahmeart: d.einnahmeart || "Injektion", uhrzeit });
-        });
-      });
-    });
-    dosen.sort((a, b) => a.date - b.date || a.uhrzeit.localeCompare(b.uhrzeit));
-    return dosen;
-  }, [hormone, hormonDosierung, startdatum, dauer]);
+  const hormonPlan = useMemo(
+    () =>
+      buildDosePlan(hormone, hormonDosierung, startdatum, dauer, (h, d, date, uhrzeit) => ({
+        date,
+        name: h,
+        menge: d.menge || "",
+        einnahmeart: d.einnahmeart || "Injektion",
+        uhrzeit,
+      })),
+    [hormone, hormonDosierung, startdatum, dauer]
+  );
 
   return {
     hormone,
