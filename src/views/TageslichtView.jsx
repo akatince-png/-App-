@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Shell, Card, Label, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
@@ -11,6 +11,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
+import { useZielEntwurf } from "../ui/useZielEntwurf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -51,19 +52,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
     tageslichtZielZuruecksetzen,
     aenderungVermerken,
   } = useAppData();
-  const [zielEntwurf, setZielEntwurfState] = useState(String(tageslichtZielMinuten));
-  // Bug-Fix (13.09.): siehe HydrationView.jsx für dasselbe Muster —
-  // tageslichtZielMinuten startet hart auf 30, bevor der asynchrone Fetch
-  // den echten Wert liefert; ohne Sync konnte "Speichern" in diesem
-  // Moment das echte Ziel stillschweigend auf 30 zurücksetzen.
-  const zielBearbeitetRef = useRef(false);
-  useEffect(() => {
-    if (!zielBearbeitetRef.current) setZielEntwurfState(String(tageslichtZielMinuten));
-  }, [tageslichtZielMinuten]);
-  const setZielEntwurf = (v) => {
-    zielBearbeitetRef.current = true;
-    setZielEntwurfState(v);
-  };
+  const [zielEntwurf, setZielEntwurf] = useZielEntwurf(tageslichtZielMinuten);
   const [korrekturEntwurf, setKorrekturEntwurf] = useState("");
   const [zielGrund, setZielGrund] = useState("");
   const [fehler, setFehler] = useState(null);
