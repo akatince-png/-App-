@@ -1,5 +1,45 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🚨 KRITISCH — Update 13.09.2026 (Teil 81) — Sicherheitslücke gefunden und behoben: is_admin-Selbsterhöhung — MUSS von der Nutzerin selbst in Supabase deployt werden
+
+**Diese Umgebung hat keinen Supabase-Zugriff** — die Migration liegt nur
+im Repo, ist aber noch NICHT im echten Produktions-Supabase-Projekt
+angewendet. **Bitte zeitnah selbst im Supabase-Dashboard deployen**
+(SQL-Editor → Inhalt von `supabase/migrations/0084_profiles_is_admin_schutz.sql`
+ausführen, oder per `supabase db push`, falls die Supabase-CLI lokal
+eingerichtet ist).
+
+**Fund (im Rahmen der Sicherheitsprüfung aus Aufgabe "Tu das bitte jetzt
+alles"):** Die RLS-Policy "profiles: eigene Zeile aktualisieren"
+(`0001_init.sql`) erlaubte jeder eingeloggten Person, JEDE Spalte ihrer
+eigenen `profiles`-Zeile per direktem Supabase-Client-Aufruf zu ändern —
+auch `is_admin` (siehe `0035_admin_dashboard.sql`). Grund: die Policy hat
+kein eigenes `WITH CHECK`; Postgres verwendet dann bei UPDATE die
+`USING`-Klausel (`auth.uid() = id`) auch als Schreibprüfung — das prüft
+aber nur, WESSEN Zeile geändert wird, nicht WELCHE Spalten. Jede Person
+hätte sich also z. B. per
+`supabase.from('profiles').update({is_admin:true}).eq('id', eigeneId)`
+selbst zur Admin machen können — mit vollem Zugriff auf ~35 Tabellen
+(alle "admin voller Zugriff"-Policies aus `0035_admin_dashboard.sql`)
+sowie auf die beiden Edge Functions `admin-create-proband` und
+`admin-invite-proband`.
+
+**Fix:** `supabase/migrations/0084_profiles_is_admin_schutz.sql` — ein
+`BEFORE UPDATE`-Trigger auf `profiles`, der `is_admin` unbemerkt auf den
+alten Wert zurücksetzt, außer die aufrufende Person ist selbst bereits
+Admin. Rein additiv, alle anderen Profilfelder bleiben normal änderbar.
+
+**Empirisch validiert** (lokales Postgres 16 mit nachgebautem
+Supabase-Auth-Stub, nicht nur am Code abgelesen): Exploit-Versuch vor dem
+Fix gelang nachweislich (`is_admin` sprang von `false` auf `true`), nach
+Anwenden der Migration schlägt derselbe Versuch fehl (bleibt `false`),
+während eine normale Spalte (`vorname`) im selben Testlauf weiterhin
+änderbar blieb — keine Funktionseinbuße.
+
+Commit: `b4098c4`. **Bereits ins Repo gepusht — aber die eigentliche
+Absicherung wird erst wirksam, sobald die Migration im echten
+Supabase-Projekt ausgeführt wurde.**
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 80) — Systematisches Code-Audit der gesamten App abgeschlossen (Teile 1-10)
 
 Nutzerinnen-Vorgabe: "als Ingenieur bzw. UI/UX-Experte und Programmierer
