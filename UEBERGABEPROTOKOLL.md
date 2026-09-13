@@ -1,5 +1,56 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Wichtiger Hinweis für JEDE Claude-Session, die diese Datei liest (Teil 78) — geteilte Umgebung mit dem Kidnapp/Arcanova-Repo
+
+**Falls du das hier liest: Bevor du irgendetwas an diesem Projekt änderst,
+prüfe, dass du wirklich im AKA-Repo bist** (React/Vite/JSX-Dateien unter
+`src/`, Arbeitsverzeichnis i. d. R. `/home/user/-app-`, `git remote -v`
+zeigt `akatince-png/-app-` bzw. `akatince-png/-App-`) — siehe auch den
+Warnhinweis ganz oben in `CLAUDE.md`.
+
+**Hintergrund (13.09., per `get_session`/`list_environments` nachgeprüft,
+nicht nur vermutet):** Die Claude-Code-Umgebung, in der diese und viele
+frühere Sessions laufen, heißt **"peptid-app/, dort claude starten."**
+(`env_01NuWbRyiyPxpiFB9YCpzbNY`) und hat **beide** Repos als Quelle
+eingetragen — `akatince-png/Kidnapp` (Arcanova, Kinder-App) UND
+`akatince-png/-app-` (diese App, AKA, Erwachsenen-App). Beide liegen
+deshalb im selben Container nebeneinander auf der Platte
+(`/home/user/Kidnapp` und `/home/user/-app-`). Das ist der technische
+Grund, warum es in der Vergangenheit mehrfach zu Verwechslungen zwischen
+den beiden Apps kam — nicht nur ein Flüchtigkeitsfehler beim Lesen des
+Verlaufs. Die Session-Metadaten deuten Kidnapp als "primäres" Repo dieser
+Umgebung an (der getrackte Branch/die "outcomes" zeigen auf Kidnapp) —
+eine frisch gestartete Session in derselben Umgebung landet deshalb
+vermutlich zunächst in `/home/user/Kidnapp`, auch wenn es eigentlich um
+AKA gehen soll.
+
+**Was das für dich (Claude) bedeutet, falls eine neue Session hier
+weitermachen soll:** Wenn die Nutzerin von "Aka", "der Coaching-App" oder
+Ähnlichem spricht, aber das aktuelle Arbeitsverzeichnis/CLAUDE.md auf
+Kidnapp/Arcanova zeigt (reine `index.html`, Kinder-App-Sprache), NICHT
+einfach loslegen — erst zu `/home/user/-app-` wechseln bzw. per `add_repo`
+nachladen, falls das Repo im Container fehlt, und die Diskrepanz notfalls
+kurz ansprechen (siehe frühere Session, in der genau das über
+`AskUserQuestion` geklärt wurde, bevor am Tagebuch-Feature weitergearbeitet
+wurde).
+
+**Transkriptionsfehler, extra hier festgehalten (siehe auch CLAUDE.md):**
+Die Nutzerin sagt "Aka" (den App-internen KI-Coach-Namen), die
+Spracherkennung macht daraus oft **"Acker"** oder "Ecker" — das ist
+IMMER als "Aka"/"AKA" zu lesen, nie als eigenständiges Wort oder gar als
+Hinweis auf ein drittes Projekt.
+
+**Zukunftsplan der Nutzerin (noch NICHT umgesetzt, Stand 13.09.):** Sie
+möchte die beiden Apps auf Umgebungsebene sauber trennen — zwei eigene
+Claude-Code-Umgebungen, je eine ausschließlich mit einem der beiden
+Repos als Quelle, damit eine Session strukturell gar nicht mehr an die
+falsche App geraten kann. Das ist aktuell bewusst zurückgestellt ("ist
+mir jetzt im Moment ein bisschen zu umständlich") — bis dahin bleibt die
+geteilte Umgebung bestehen, und die Prüfung oben (Arbeitsverzeichnis/
+CLAUDE.md/`git remote`) ist der einzige Schutz. Sollte die Trennung
+später nachgeholt werden, kann dieser gesamte Abschnitt (Teil 78)
+gelöscht/verkürzt werden.
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 77) — Tagebuch: eigener Archiv-Reiter mit PDF-Export statt Liste im Schreibfenster
 
 Nutzerinnen-Vorgabe: "Die Tagebucheinträge sollen als PDF abgespeichert

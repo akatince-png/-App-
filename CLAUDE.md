@@ -23,9 +23,10 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   als auch per KI-Coach nutzbar sein — niemals ein manuelles Formular
   entfernen oder verstecken, nur weil es jetzt auch einen KI-Weg gibt.
 - **Die Nutzerin ist nicht technisch versiert**, kommuniziert oft per
-  Spracheingabe mit Transkriptionsfehlern (z. B. "Obama" = Ollama). Bei
-  unklaren Nachrichten lieber kurz nachfragen als auf eine Vermutung eine
-  größere Änderung bauen.
+  Spracheingabe mit Transkriptionsfehlern (z. B. "Obama" = Ollama,
+  "Acker"/"Ecker" = "Aka" — der App-interne KI-Coach-Name). Bei unklaren
+  Nachrichten lieber kurz nachfragen als auf eine Vermutung eine größere
+  Änderung bauen.
 - **Diese Umgebung hat keinen Supabase-/Vercel-Zugriff.** Änderungen an
   Edge Functions oder Migrationen landen im Code, müssen aber von der
   Nutzerin selbst über das Supabase-Dashboard deployt werden — Code
