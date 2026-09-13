@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, Pill, PrimaryButton, TextArea } from "./primitives";
-import { accentDark, accentSoft, textMuted } from "./theme";
+import { accentDark, accentSoft, textMuted, danger } from "./theme";
 import { useAkutModus, AKUT_SYMPTOME, akutmodusEreignisLoggen } from "../data/useAkutModus";
 import { useAppData } from "../context/AppDataContext";
 import AtemTimer from "./AtemTimer";
@@ -338,7 +338,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
 
       {laden && <div style={{ fontSize: 13, color: textMuted, padding: "10px 0" }}>🔎 Denkt kurz nach ...</div>}
 
-      {fehler && <div style={{ fontSize: 12.5, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
+      {fehler && <div style={{ fontSize: 12.5, color: danger, marginTop: 8 }}>{fehler}</div>}
 
       {antwort && (
         <div ref={antwortRef} style={{ marginTop: 4, animation: "fadeInUp 0.4s ease-out" }}>

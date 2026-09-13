@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, PrimaryButton, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import AtemTimer from "../ui/AtemTimer";
-import { textMuted, cardBorder } from "../ui/theme";
+import { textMuted, cardBorder, danger } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 
 const LEER = { name: "", einatmenSek: "4", haltenSek: "4", ausatmenSek: "6", dauerMinuten: "3" };
@@ -81,7 +81,7 @@ export default function AtemuebungenView({ onHome }) {
               </div>
               <button
                 onClick={() => atemuebungEntfernen(u.id)}
-                style={{ border: "none", background: "transparent", color: "#C24545", fontSize: 18, cursor: "pointer" }}
+                style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer" }}
                 title="Löschen"
               >
                 ×
@@ -115,7 +115,7 @@ export default function AtemuebungenView({ onHome }) {
             <div style={{ fontSize: 10.5, color: textMuted, marginBottom: 4 }}>Gesamtdauer (Minuten)</div>
             <TextInput type="number" value={neu.dauerMinuten} onChange={(v) => setNeu({ ...neu, dauerMinuten: v })} placeholder="3" />
           </div>
-          {fehler && <div style={{ fontSize: 12, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
+          {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{fehler}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <div style={{ flex: 1 }}>
               <PrimaryButton onClick={submit} disabled={!neu.name.trim()}>

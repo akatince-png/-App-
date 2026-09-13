@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, TextArea, PrimaryButton } from "./primitives";
-import { accentDark, accentSoft, cardBorder, textMain, textMuted } from "./theme";
+import { accentDark, accentSoft, cardBorder, textMain, textMuted, danger } from "./theme";
 import { useAuth } from "../context/AuthContext";
 
 // Team-Kolleg:innen + Motivationsnachrichten untereinander (siehe
@@ -65,7 +65,7 @@ export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSende
             {senden ? "Wird gesendet …" : "Senden (mit Push)"}
           </PrimaryButton>
         </div>
-        {fehler && <div style={{ fontSize: 12, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
+        {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{fehler}</div>}
       </Card>
 
       {teamNachrichten.length > 0 && (

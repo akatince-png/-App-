@@ -6,7 +6,7 @@ import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import CannabisFelder from "../ui/CannabisFelder";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import AutocompleteInput from "../ui/AutocompleteInput";
-import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { accentSoft, blueSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, PEPTIDE_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
@@ -270,7 +270,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
         onUebernehmen={handleMedikamentUebernehmen}
         uebernehmenLabel="Medikament anlegen"
         renderErgebnis={(m) => (
-          <div style={{ padding: 12, borderRadius: 12, background: "#EAF0F8", fontSize: 12.5, lineHeight: 1.6 }}>
+          <div style={{ padding: 12, borderRadius: 12, background: blueSoft, fontSize: 12.5, lineHeight: 1.6 }}>
             "{m.name}" wurde angelegt · {m.kategorie}
             {m.menge ? ` · ${m.menge}` : ""}
           </div>

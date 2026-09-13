@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, TextArea, PrimaryButton } from "./primitives";
-import { accentDark, accentSoft, textMuted } from "./theme";
+import { accentDark, accentSoft, textMuted, danger } from "./theme";
 
 // Ersetzt für Coachees (istAdminModus === false) den KI-Assistenten als
 // Kontaktweg (13.08., Coach-verwaltetes Modell) — eine einfache Nachricht
@@ -37,7 +37,7 @@ export default function NachrichtAnCoachCard({ nachrichten, onSenden }) {
             {senden ? "Wird gesendet …" : "Nachricht senden"}
           </PrimaryButton>
         </div>
-        {fehler && <div style={{ fontSize: 12, color: "#C24545", marginTop: 8 }}>{fehler}</div>}
+        {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{fehler}</div>}
         {erfolg && <div style={{ fontSize: 12, color: accentDark, marginTop: 8 }}>Nachricht gesendet.</div>}
       </Card>
       {nachrichten?.length > 0 && (
