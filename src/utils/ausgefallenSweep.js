@@ -55,13 +55,20 @@ export async function pruefeAusgefalleneEintraege(appData) {
   }
 
   // Tage zwischen dem letzten Sweep und heute (exklusive heute selbst, das
-  // ist noch nicht vorbei) — bei einer langen Pause auf die letzten
-  // MAX_NACHHOL_TAGE gedeckelt, ältere Tage werden stillschweigend
-  // übersprungen statt einen riesigen Nachhol-Lauf auszulösen.
+  // ist noch nicht vorbei), EINSCHLIESSLICH des letzterSweep-Tags selbst —
+  // der wurde beim vorigen Lauf ja noch als "heute, noch nicht vorbei"
+  // übersprungen, ist also noch nie geprüft worden. Bug-Fix (13.09.,
+  // Testsuite): stand hier bisher `luecke - 1`, was genau diesen Tag für
+  // immer ausließ — bei täglicher Nutzung (Lücke fast immer genau 1 Tag)
+  // wurde dadurch NIE ein Eintrag als "ausgefallen" erfasst, die Funktion
+  // lief nur bei mehrtägigen Pausen überhaupt sichtbar an. Bei einer
+  // langen Pause auf die letzten MAX_NACHHOL_TAGE gedeckelt, ältere Tage
+  // werden stillschweigend übersprungen statt einen riesigen Nachhol-Lauf
+  // auszulösen.
   const letzterSweepDatum = new Date(`${letzterSweep}T00:00:00`);
   const heuteDatum = new Date(`${heuteStr}T00:00:00`);
   const luecke = Math.round((heuteDatum - letzterSweepDatum) / 86400000);
-  const anzahlTage = Math.min(MAX_NACHHOL_TAGE, Math.max(0, luecke - 1));
+  const anzahlTage = Math.min(MAX_NACHHOL_TAGE, Math.max(0, luecke));
 
   for (let i = anzahlTage; i >= 1; i--) {
     const tag = addDays(heuteDatum, -i);
