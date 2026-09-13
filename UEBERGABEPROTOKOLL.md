@@ -1,5 +1,58 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 73) — Neue Funktion: Tagebuch (lokal, mit Diktierfunktion + Aka-Überarbeitung)
+
+Nutzerinnen-Vorgabe: "integrier unten neben dem Button neue Pläne in
+dieser Reihe mit den Ordnern einen gleichgroßen Button mit der Funktion
+Tagebuch... mithilfe der Diktierfunktion und einer eingestellten
+Rechtschreibhilfe oder mithilfe von Aka, der das Ganze dann noch mal
+zusammenfasst... Und das soll dann abspeicherbar sein."
+
+Neue Kachel "Tagebuch" auf Home (`HomeView.jsx`), direkt in derselben
+Zeile/demselben Grid (`.mp-ordner-grid`) wie die drei Ordner-Kacheln
+(Alle Pläne/Archiv/Mehr), gleiche Größe/Form/Icon-Stil (neues `book`-
+Icon in `Icon.jsx`, passend zum bestehenden Linien-Icon-Set statt
+Emoji). Öffnet `TagebuchModal.jsx`, ein Bottom-Sheet nach demselben
+Muster wie `TagesEintragBearbeiten.jsx`:
+
+- Textfeld im Tagebuch-"Seiten"-Look (serifenbetonte Schrift), mit
+  `spellCheck` (geräteeigene Rechtschreibhilfe) und einem
+  Mikrofon-Knopf, der über die bereits vorhandene Spracherkennung
+  (`utils/speech.js`, `starteSprachErkennung`) diktierten Text laufend
+  anhängt.
+- "Mit Aka überarbeiten"-Knopf (neue Methode `AIService.tagebuchUeberarbeiten({text})`
+  in `aiService.js`): rein sprachliche Glättung (Rechtschreibung/
+  Grammatik/Lesefluss), verändert laut System-Prompt ausdrücklich NIE
+  Inhalt, Bedeutung oder Ton. Ergebnis erscheint als Vorschlag mit
+  "Übernehmen"/"Verwerfen" — wird nie automatisch übernommen, die
+  Person sieht immer erst, wie die überarbeitete Seite aussehen würde.
+- Speichern-Knopf + darunter eine Liste bisheriger Einträge (Datum,
+  antippbar zum Aus-/Einklappen, mit Löschen-Option) — sonst wären
+  gespeicherte Einträge unsichtbar und die Funktion kaum nutzbar.
+
+**Datenschutz (wörtliche Vorgabe der Nutzerin):** "aufgrund der
+Datenschutzrichtlinien möchte ich, dass man diese Daten nur auf seinem
+Handy abspeichern kann... und nicht auch auf irgendeinem anderen
+Speicher." Tagebuch-Einträge laufen deshalb bewusst NICHT über
+`useAppData()`/`AppDataContext` (das würde über kurz oder lang zu einer
+Supabase-Tabelle verleiten), sondern über ein komplett eigenständiges,
+rein lokales Modul `utils/tagebuchStorage.js` (`localStorage`, analog zu
+`adhsStorage.js`) — die Texte selbst erreichen Supabase/die Cloud zu
+keinem Zeitpunkt. Die einzige Stelle, an der ein Tagebuchtext das Gerät
+überhaupt verlässt, ist der explizit angetippte "Mit Aka
+überarbeiten"-Knopf (kurzzeitig, zum Überarbeiten, nichts wird dabei
+gespeichert) — alles andere (Schreiben, Diktieren, Speichern, Anzeigen,
+Löschen) bleibt vollständig auf dem Gerät.
+
+Verifiziert über einen isolierten Playwright-Preview-Aufbau (nur
+`TagebuchModal.jsx`, ohne `AppDataContext`, da die Komponente bewusst
+keine Abhängigkeit dorthin hat): Text eingeben → Vorschau/Fehlerfall bei
+"Mit Aka überarbeiten" gegen einen nicht erreichbaren Dummy-Backend
+(schlägt sauber mit Fehlermeldung fehl, kein Absturz) → Speichern (echtes
+`localStorage`, Eintrag korrekt persistiert und nach Neuöffnen des
+Fensters in der Liste sichtbar). `npm run build` + `npx oxlint` (weiterhin
+16 Warnungen, unverändert) beide grün.
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 72) — Button-Farben app-weit vereinheitlicht (Türkis statt Indigo als Rückfall)
 
 Nutzerinnen-Vorgabe anhand zweier Screenshots (Routinen-Ansicht vs.
