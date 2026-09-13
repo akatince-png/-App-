@@ -223,6 +223,10 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const { lang, setLang } = useLanguage();
   const { t, tLabel } = useT();
   const [resetMsg, setResetMsg] = useState(null);
+  // Fehlerbanner für die Erinnerungen-Kategorienliste unten (13.09., Teil 61
+  // — Übergabeprotokoll-Punkt #13): { key, message } statt nur einem Text,
+  // damit die Fehlermeldung direkt bei der betroffenen Kategorie erscheint.
+  const [erinnerungFehler, setErinnerungFehler] = useState(null);
   // Gefahrenzone/"Alles zurücksetzen" (12.09., Nutzerin-Vorgabe): extrem
   // destruktive Aktion, löscht ALLE Protokoll-/Tracking-Daten über die
   // ganze App hinweg unwiderruflich. Ein normales window.confirm() reicht
@@ -487,9 +491,14 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         {[...CATEGORY_STEPS, ...WEITERE_ERINNERUNGEN].map((step, i, alle) => {
           const wert = erinnerungen[step.key];
           const vorlaufMinuten = wert && typeof wert === "object" ? wert.vorlaufMinuten : undefined;
+          const speichern = async (naechsterWert) => {
+            setErinnerungFehler(null);
+            const result = await setErinnerung(step.key, naechsterWert);
+            if (!result?.ok) setErinnerungFehler({ key: step.key, message: result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen." });
+          };
           const setVorlauf = (minuten) => {
             const bestehend = wert && typeof wert === "object" ? wert : {};
-            setErinnerung(step.key, { ...bestehend, aktiv: true, vorlaufMinuten: minuten });
+            speichern({ ...bestehend, aktiv: true, vorlaufMinuten: minuten });
           };
           return (
             <div
@@ -507,7 +516,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                 <Pill
                   label={wert ? t("common.erinnerung.ja") : t("common.erinnerung.nein")}
                   selected={!!wert}
-                  onClick={() => setErinnerung(step.key, !wert)}
+                  onClick={() => speichern(!wert)}
                 />
               </div>
               {wert && (
@@ -516,6 +525,9 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                   onChange={setVorlauf}
                   mitTagen={step.mitTagen ?? (step.key === "training" || step.key === "ernaehrung")}
                 />
+              )}
+              {erinnerungFehler?.key === step.key && (
+                <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{erinnerungFehler.message}</div>
               )}
             </div>
           );

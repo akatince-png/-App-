@@ -543,7 +543,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // Hydration/Tageslicht/Schlaf haben ein eigenes Erinnerungszeiten-Feld
   // (ZeitErinnerungenCard) statt nur eines Ja/Nein-Schalters — dieser
   // generische Handler bleibt nur noch für die übrigen Kategorien relevant.
-  const handleErinnerungChange = (v) => setErinnerung(step.key, v);
+  const handleErinnerungChange = async (v) => {
+    setError(null);
+    const result = await setErinnerung(step.key, v);
+    if (!result?.ok) setError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+  };
 
   // ---------------------------------------------------------------------
   // Ernährung: Zutaten-Zeilen wie im vollen Ernährungsplan.

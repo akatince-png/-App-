@@ -203,8 +203,17 @@ export function useProfileData(userId) {
   // Erinnerungs-Präferenz je Pläne-Kategorie (Ja/Nein) — steuert, ob der
   // serverseitige Erinnerungs-Versand diese Kategorie für den Nutzer
   // berücksichtigt. Gleiches jsonb-Muster wie setCategoryZiel.
+  //
+  // Bug-Fix (13.09., Teil 61 — Übergabeprotokoll-Punkt #13): ein
+  // Speicherfehler landete bisher nur in der Browser-Konsole, nie sichtbar
+  // für die Nutzerin — hat den Erinnerungen-Bug aus Teil 5 wochenlang
+  // unsichtbar gehalten. Gibt jetzt wie resetOnboarding() oben
+  // {ok, error} zurück, damit die Aufrufer (ZeitErinnerungenCard.jsx,
+  // KategorieErinnerung.jsx, MehrTab.jsx, HydrationView.jsx,
+  // TrainingView.jsx, OnboardingCategoriesView.jsx) einen fehlgeschlagenen
+  // Speicherversuch anzeigen können statt ihn nur lautlos zurückzurollen.
   const setErinnerung = useCallback(
-    (kategorie, aktiv) => {
+    async (kategorie, aktiv) => {
       let vorher;
       let next;
       setErinnerungenState((prev) => {
@@ -212,16 +221,13 @@ export function useProfileData(userId) {
         next = { ...prev, [kategorie]: aktiv };
         return next;
       });
-      supabase
-        .from("profiles")
-        .update({ erinnerungen: next })
-        .eq("id", userId)
-        .then(({ error }) => {
-          if (error) {
-            console.error(error);
-            setErinnerungenState(vorher);
-          }
-        });
+      const { error } = await supabase.from("profiles").update({ erinnerungen: next }).eq("id", userId);
+      if (error) {
+        console.error(error);
+        setErinnerungenState(vorher);
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
     },
     [userId]
   );

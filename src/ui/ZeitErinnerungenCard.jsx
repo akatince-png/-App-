@@ -55,41 +55,63 @@ export default function ZeitErinnerungenCard({ kategorie, labelKey, mengeLabel, 
   const [neueZeit, setNeueZeit] = useState(zeitStandard);
   const [neueMenge, setNeueMenge] = useState(mengeStandard);
   const [neuesDatum, setNeuesDatum] = useState("");
+  const [fehler, setFehler] = useState(null);
 
-  const handleErinnerungChange = (v) => {
-    setErinnerung(kategorie, v ? { aktiv: true, zeiten } : false);
+  // Bei einem fehlgeschlagenen Speichern rollt setErinnerung() den echten
+  // `erinnerungen`-Stand zurück — der obige Sync-Effekt würde das lokale
+  // `zeiten` aber NICHT automatisch mitziehen, solange zeitenBearbeitetRef
+  // gesetzt ist (das genau verhindert ja normalerweise, dass fremde Syncs
+  // eine gerade laufende Bearbeitung überschreiben). Bei einem Fehler ist
+  // "gerade laufende Bearbeitung" aber vorbei — Ref zurücksetzen, damit der
+  // nächste Sync (ausgelöst durch das geänderte `erinnerungen` selbst) den
+  // zurückgerollten, echten Stand wieder übernimmt statt den nie
+  // gespeicherten optimistischen Stand stehen zu lassen.
+  const zeitenAendernUndSpeichern = async (next) => {
+    setZeiten(next);
+    setFehler(null);
+    const result = await setErinnerung(kategorie, { aktiv: true, zeiten: next });
+    if (!result?.ok) {
+      setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+      zeitenBearbeitetRef.current = false;
+    }
   };
 
-  const zeitHinzufuegen = () => {
+  const handleErinnerungChange = async (v) => {
+    setFehler(null);
+    const result = await setErinnerung(kategorie, v ? { aktiv: true, zeiten } : false);
+    if (!result?.ok) setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+  };
+
+  const zeitHinzufuegen = async () => {
     if (!neueZeit) return;
     const eintrag = { zeit: neueZeit, startDatum: neuesDatum };
     if (mengeLabel) eintrag.menge = neueMenge;
     const next = [...zeiten, eintrag].sort((a, b) => a.zeit.localeCompare(b.zeit));
-    setZeiten(next);
-    setErinnerung(kategorie, { aktiv: true, zeiten: next });
+    await zeitenAendernUndSpeichern(next);
     setNeueZeit(zeitStandard);
     setNeueMenge(mengeStandard);
     setNeuesDatum("");
   };
   const zeitFeldAendern = (i, feld, val) => {
     const next = zeiten.map((e, idx) => (idx === i ? { ...e, [feld]: val } : e));
-    setZeiten(next);
-    setErinnerung(kategorie, { aktiv: true, zeiten: next });
+    zeitenAendernUndSpeichern(next);
   };
   const zeitEntfernen = (i) => {
     const next = zeiten.filter((_, idx) => idx !== i);
-    setZeiten(next);
-    setErinnerung(kategorie, { aktiv: true, zeiten: next });
+    zeitenAendernUndSpeichern(next);
   };
 
   const vorlaufMinuten = typeof erinnerungen[kategorie]?.vorlaufMinuten === "number" ? erinnerungen[kategorie].vorlaufMinuten : undefined;
-  const setVorlauf = (minuten) => {
-    setErinnerung(kategorie, { aktiv: true, zeiten, vorlaufMinuten: minuten });
+  const setVorlauf = async (minuten) => {
+    setFehler(null);
+    const result = await setErinnerung(kategorie, { aktiv: true, zeiten, vorlaufMinuten: minuten });
+    if (!result?.ok) setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
   };
 
   return (
     <>
       <ErinnerungField value={erinnerungen[kategorie]} onChange={handleErinnerungChange} />
+      {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 8 }}>{fehler}</div>}
 
       {erinnerungen[kategorie] && (
         <div style={{ marginTop: 12 }}>

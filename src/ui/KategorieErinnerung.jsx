@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Label, Pill } from "./primitives";
 import VorlaufFeld from "./VorlaufFeld";
+import { danger } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { useT } from "../i18n/translate";
 
@@ -21,21 +22,29 @@ import { useT } from "../i18n/translate";
 export default function KategorieErinnerung({ kategorie, label, mitTagen = false }) {
   const { erinnerungen, setErinnerung } = useAppData();
   const { t } = useT();
+  const [fehler, setFehler] = useState(null);
   const wert = erinnerungen[kategorie];
   const vorlaufMinuten = wert && typeof wert === "object" ? wert.vorlaufMinuten : undefined;
 
+  const speichern = async (naechsterWert) => {
+    setFehler(null);
+    const result = await setErinnerung(kategorie, naechsterWert);
+    if (!result?.ok) setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+  };
+
   const setVorlauf = (minuten) => {
     const bestehend = wert && typeof wert === "object" ? wert : {};
-    setErinnerung(kategorie, { ...bestehend, aktiv: true, vorlaufMinuten: minuten });
+    speichern({ ...bestehend, aktiv: true, vorlaufMinuten: minuten });
   };
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
         <Label>{label}</Label>
-        <Pill label={wert ? t("common.erinnerung.ja") : t("common.erinnerung.nein")} selected={!!wert} onClick={() => setErinnerung(kategorie, !wert)} />
+        <Pill label={wert ? t("common.erinnerung.ja") : t("common.erinnerung.nein")} selected={!!wert} onClick={() => speichern(!wert)} />
       </div>
       <VorlaufFeld value={vorlaufMinuten} onChange={setVorlauf} mitTagen={mitTagen} />
+      {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
     </div>
   );
 }

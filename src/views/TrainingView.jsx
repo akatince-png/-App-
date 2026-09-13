@@ -432,24 +432,33 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       )}
 
       {wochenplanAnsehenOffen && (
-        <WochenplanEditor
-          trainingWochenplan={trainingWochenplan}
-          wochenplanHinzufuegen={handleWochenplanHinzufuegen}
-          wochenplanBearbeiten={handleWochenplanBearbeiten}
-          wochenplanEntfernen={handleWochenplanEntfernen}
-          wochenplanErinnerungUmschalten={wochenplanErinnerungUmschalten}
-          wochenplanErinnerungenAlleSetzen={wochenplanErinnerungenAlleSetzen}
-          erinnerungenTrainingAktiv={!!erinnerungen.training}
-          onErinnerungenTrainingUmschalten={(v) => setErinnerung("training", v)}
-          trainingsVorlaufMinuten={erinnerungen.training && typeof erinnerungen.training === "object" ? erinnerungen.training.vorlaufMinuten : undefined}
-          onTrainingsVorlaufAendern={(minuten) => {
-            const bestehend = erinnerungen.training && typeof erinnerungen.training === "object" ? erinnerungen.training : {};
-            setErinnerung("training", { ...bestehend, aktiv: true, vorlaufMinuten: minuten });
-          }}
-          titel={null}
-          zeigeFormular={false}
-          onZeileAntippen={setWochenplanVorschau}
-        />
+        <>
+          {fehler && <div style={{ fontSize: 12, color: danger, marginBottom: 12 }}>{fehler}</div>}
+          <WochenplanEditor
+            trainingWochenplan={trainingWochenplan}
+            wochenplanHinzufuegen={handleWochenplanHinzufuegen}
+            wochenplanBearbeiten={handleWochenplanBearbeiten}
+            wochenplanEntfernen={handleWochenplanEntfernen}
+            wochenplanErinnerungUmschalten={wochenplanErinnerungUmschalten}
+            wochenplanErinnerungenAlleSetzen={wochenplanErinnerungenAlleSetzen}
+            erinnerungenTrainingAktiv={!!erinnerungen.training}
+            onErinnerungenTrainingUmschalten={async (v) => {
+              setFehler(null);
+              const result = await setErinnerung("training", v);
+              if (!result?.ok) setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+            }}
+            trainingsVorlaufMinuten={erinnerungen.training && typeof erinnerungen.training === "object" ? erinnerungen.training.vorlaufMinuten : undefined}
+            onTrainingsVorlaufAendern={async (minuten) => {
+              const bestehend = erinnerungen.training && typeof erinnerungen.training === "object" ? erinnerungen.training : {};
+              setFehler(null);
+              const result = await setErinnerung("training", { ...bestehend, aktiv: true, vorlaufMinuten: minuten });
+              if (!result?.ok) setFehler(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
+            }}
+            titel={null}
+            zeigeFormular={false}
+            onZeileAntippen={setWochenplanVorschau}
+          />
+        </>
       )}
 
       {wochenplanVorschau && (

@@ -101,7 +101,8 @@ export default function HydrationView({ onHome, embedded = false }) {
       const bestehende = Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : [];
       const neue = zeiten.map((z) => ({ zeit: z.zeit, menge: z.menge, startDatum: "" }));
       const kombiniert = [...bestehende, ...neue].sort((a, b) => a.zeit.localeCompare(b.zeit));
-      setErinnerung("hydration", { aktiv: true, zeiten: kombiniert });
+      const result = await setErinnerung("hydration", { aktiv: true, zeiten: kombiniert });
+      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
     }
     return { zielMl, zeiten };
   };
