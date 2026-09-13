@@ -1,5 +1,6 @@
 import { toLocalISODate, zaehleTageStreak } from "./dates";
-import { F_WARM, F_PLUM, F_EMERALD, F_SLATE } from "../constants";
+import { KATEGORIE_META } from "./dayItems";
+import { aufhellen } from "../ui/theme";
 
 // Punkte-/Abzeichen-System (Nutzerin-Vorgabe, 11.09.): 1 Punkt pro
 // erledigtem Eintrag, Streaks pro Kategorie + ein globaler Streak über
@@ -7,6 +8,18 @@ import { F_WARM, F_PLUM, F_EMERALD, F_SLATE } from "../constants";
 // in der DB — beides wird bei Bedarf direkt aus den schon vorhandenen
 // "erledigt"-Logs jeder Kategorie berechnet (siehe useErrungenschaften.js
 // für die Speicherung, WELCHE Abzeichen bereits verdient wurden).
+
+// Bug-Fix/Vorgabe (13.09., Nutzerin): Abzeichen/Streaks nutzten bisher 4
+// eigene Gradient-Familien (frühere F_WARM/F_SLATE/F_PLUM/F_EMERALD) statt
+// der KATEGORIE_META-Farbe, die im Home-Tagesfortschritt-Balken und in den
+// "Alle Pläne"-Reitern längst für dieselbe Kategorie verwendet wird —
+// "Training" erschien dadurch z. B. hier bräunlich-orange statt rot wie
+// überall sonst. "die Pläne müssen überall die gleichen Farben haben in
+// der gesamten App" — jetzt dieselbe Basisfarbe, nur als sanfter Verlauf
+// zur aufgehellten Variante statt einer flachen Fläche.
+function gradAus(basisFarbe) {
+  return [basisFarbe, aufhellen(basisFarbe, 20)];
+}
 
 function normalisiereDatum(roh) {
   if (!roh) return null;
@@ -37,7 +50,10 @@ export const KATEGORIEN = [
     key: "morgenroutine",
     label: "Morgenroutine",
     icon: "sun",
-    grad: F_WARM,
+    // Kein KATEGORIE_META-Eintrag für Morgen-/Abendroutine (siehe Kommentar
+    // dort) — gleiche Farbe wie ROUTINE_FARBE in HomeView.jsx/
+    // EIGENE_TAB_FARBE in PlaeneView.jsx.
+    grad: gradAus("#E08A3E"),
     holeTage: (q) =>
       (q.routineDurchlaeufe || []).filter((d) => d.routine === "morgen" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)),
   },
@@ -45,7 +61,7 @@ export const KATEGORIEN = [
     key: "abendroutine",
     label: "Abendroutine",
     icon: "moon",
-    grad: F_PLUM,
+    grad: gradAus("#4E6690"),
     holeTage: (q) =>
       (q.routineDurchlaeufe || []).filter((d) => d.routine === "abend" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)),
   },
@@ -53,14 +69,14 @@ export const KATEGORIEN = [
     key: "schlaf",
     label: "Schlaf",
     icon: "moon",
-    grad: F_PLUM,
+    grad: gradAus(KATEGORIE_META.schlaf.dot),
     holeTage: (q) => (q.schlafEintraege || []).map((e) => normalisiereDatum(e.datum)),
   },
   {
     key: "hydration",
     label: "Hydration",
     icon: "droplet",
-    grad: F_EMERALD,
+    grad: gradAus(KATEGORIE_META.hydration.dot),
     holeTage: (q) =>
       (q.hydrationEintraege || []).filter((e) => q.hydrationZielMl > 0 && e.mengeMl >= q.hydrationZielMl).map((e) => normalisiereDatum(e.datum)),
   },
@@ -68,7 +84,7 @@ export const KATEGORIEN = [
     key: "tageslicht",
     label: "Tageslicht",
     icon: "sun",
-    grad: F_WARM,
+    grad: gradAus(KATEGORIE_META.tageslicht.dot),
     holeTage: (q) =>
       (q.tageslichtEintraege || [])
         .filter((e) => q.tageslichtZielMinuten > 0 && e.minuten >= q.tageslichtZielMinuten)
@@ -78,56 +94,60 @@ export const KATEGORIEN = [
     key: "ernaehrung",
     label: "Ernährung",
     icon: "utensils",
-    grad: F_WARM,
+    grad: gradAus(KATEGORIE_META.mahlzeit.dot),
     holeTage: (q) => tageAusErledigtMap(q.mahlzeitErledigt),
   },
   {
     key: "training",
     label: "Training",
     icon: "dumbbell",
-    grad: F_WARM,
+    grad: gradAus(KATEGORIE_META.training.dot),
     holeTage: (q) => (q.trainingEintraege || []).filter((e) => e.erledigt).map((e) => normalisiereDatum(e.datum)),
   },
   {
     key: "supplemente",
     label: "Supplemente",
     icon: "capsule",
-    grad: F_WARM,
+    grad: gradAus(KATEGORIE_META.supplement.dot),
     holeTage: (q) => tageAusErledigtMap(q.supplementErledigt),
   },
   {
     key: "medikamente",
     label: "Hormone & Medikamente",
     icon: "cross",
-    grad: F_SLATE,
+    grad: gradAus(KATEGORIE_META.hormon.dot),
     holeTage: (q) => tageAusErledigtMap(q.hormonErledigt),
   },
   {
     key: "peptide",
     label: "Peptide",
     icon: "dna",
-    grad: F_SLATE,
+    // Peptide sind seit Migration 0042 Teil von "hormon" (siehe Kommentar
+    // oben) — dieselbe Farbe wie Medikamente statt einer eigenen.
+    grad: gradAus(KATEGORIE_META.hormon.dot),
     holeTage: (q) => tageAusErledigtMap(q.peptidErledigt),
   },
   {
     key: "gewohnheiten",
     label: "Gewohnheiten",
     icon: "target",
-    grad: F_EMERALD,
+    grad: gradAus(KATEGORIE_META.gewohnheit.dot),
     holeTage: (q) => tageAusErledigtMap(q.gewohnheitErledigt),
   },
   {
     key: "drinks",
     label: "Getränke-Rezepte",
     icon: "droplet",
-    grad: F_EMERALD,
+    // Kein eigener KATEGORIE_META-Eintrag — inhaltlich am nächsten an
+    // Hydration, übernimmt deren Farbe.
+    grad: gradAus(KATEGORIE_META.hydration.dot),
     holeTage: (q) => tageAusErledigtMap(q.rezeptErledigt),
   },
   {
     key: "atemuebungen",
     label: "Atemübungen",
     icon: "wind",
-    grad: F_PLUM,
+    grad: gradAus(KATEGORIE_META.atemuebung.dot),
     holeTage: (q) => (q.atemuebungLogs || []).map((l) => normalisiereDatum(l.erstelltAm)),
   },
 ];
