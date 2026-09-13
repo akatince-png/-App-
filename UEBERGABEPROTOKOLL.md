@@ -1,5 +1,44 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 64) — Home-Screen: Kategoriefarben, Gabel-Button-Position, Plus-Button-Sichtbarkeit
+
+Nutzerin-Vorgabe per annotiertem Screenshot (handschriftlich "1"/"2" +
+Pfeil auf den "+"-Button) plus Sprachnachricht, drei Wünsche:
+
+1. **"Weitere Pläne"-Pillen einfärben.** Bisher trug jede Pille nur einen
+   7px-Punkt in der Kategoriefarbe, der Rest war neutral grau. Damit die
+   Probandin die Farben langfristig mit dem Tagesfortschritt-Balken
+   oben assoziiert, hat jetzt der gesamte Button-Hintergrund + Text die
+   Kategoriefarbe aus `KATEGORIE_META` (bzw. `ROUTINE_FARBE`/neu
+   `ROUTINE_TEXT` für Morgen-/Abendroutine, die bewusst keinen
+   `KATEGORIE_META`-Eintrag haben).
+2. **Gabel-Button (`AkutModusTrigger`, "💡 Grad nicht gut?") neben
+   Hydration.** Per Sprachtranskript "Gabel Button" identifiziert durch
+   Ausschlussverfahren: der andere Button (`ADHSModeToggle`) heißt im
+   eigenen Code/Label explizit "Notfallmodus"/"Normalmodus", also muss
+   der gemeinte Button `AkutModusTrigger` sein. Hydration und
+   AkutModusTrigger stehen jetzt als gleich breite Flex-Row nebeneinander;
+   `ADHSModeToggle` nimmt vorerst weiterhin eine volle Zeile darunter ein
+   (Nutzerin: Design dort wird ohnehin nochmal überarbeitet).
+3. **"+"-Button (`Fab.jsx`, "Neues Protokoll") auffälliger platzieren.**
+   Der freischwebende runde Button fiel der Nutzerin gestern nicht auf —
+   sie hat die App deswegen fälschlich für funktional unvollständig
+   gehalten und musste lange suchen. `Fab.jsx` wurde komplett entfernt
+   (toter Code) und durch eine 4. Kachel im `.mp-ordner-grid` ersetzt,
+   direkt neben "Alle Pläne"/"Archiv"/"Mehr" — rechteckig, gleiche Größe
+   wie die Ordner-Kacheln, aber in Blau (`accentDark`), damit sie trotz
+   gleicher Form optisch abgesetzt bleibt.
+
+Geänderte Dateien: `src/views/HomeView.jsx`, `src/AuthenticatedApp.jsx`
+(Prop `onNeuesProtokoll` statt `Fab`-Import, totes `zeigeFab`/
+`istAdminModus` entfernt), `src/ui/Fab.jsx` gelöscht.
+
+Verifiziert über den etablierten Playwright-Preview-Harness (temporärer
+`export { AppDataContext }` + Mock-Provider), Screenshot bei 420px
+Breite bestätigt alle drei Änderungen visuell; Harness danach vollständig
+zurückgebaut (`git status --short` sauber). Build + `npx oxlint` bei
+weiterhin 16 Warnungen (Baseline unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 63) — Migrationen 0070/0076 repariert (idempotent nachgerüstet)
 
 Nutzerin führte die in Teil 61/62 als Copy-Paste-Artifact bereitgestellten
