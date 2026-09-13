@@ -2,6 +2,7 @@ import React from "react";
 import { PrimaryButton } from "./primitives";
 import { cardBorder, textMain, textMuted } from "./theme";
 import { uebungGewichtText, uebungWiederholungenText } from "./UebungenEditor";
+import { useEscapeSchliesst } from "./useEscapeSchliesst";
 
 // Antippbare Vorschau einer Trainingseinheit (14.08., Nutzerin-Vorgabe): in
 // Home/Tagesplan steht bei Training jetzt nur noch "X Übungen" statt der
@@ -11,6 +12,7 @@ import { uebungGewichtText, uebungWiederholungenText } from "./UebungenEditor";
 // Bottom-Sheet statt eigener Seite, damit kein neues Routing nötig ist und
 // "nur mal kurz reingucken" sich auch so anfühlt.
 export default function TrainingVorschau({ art, name, tag, uhrzeit, uebungen, warmup, cooldown, onSchliessen, onStarten }) {
+  useEscapeSchliesst(onSchliessen);
   const liste = (uebungen || []).filter((u) => u.name);
   return (
     <div

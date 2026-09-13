@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../../ui/primitives";
-import { accent, blue, cardBorder, danger, textMuted } from "../../ui/theme";
+import { accent, accentDark, blue, cardBorder, danger, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
@@ -203,7 +203,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
             <button
               type="button"
               onClick={() => setModus("bestehend")}
-              style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "transparent", color: accent, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "transparent", color: accentDark, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               {t("hauptprotokoll.neu.zurueck")}
             </button>

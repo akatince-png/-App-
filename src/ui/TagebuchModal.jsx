@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { PrimaryButton } from "./primitives";
+import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
 import { cardBorder, textMain, textMuted, danger, accentDark, accentSoft } from "./theme";
 import { spracherkennungVerfuegbar, starteSprachErkennung } from "../utils/speech";
@@ -66,6 +67,8 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
     stopErkennungRef.current?.();
     onClose();
   };
+
+  useEscapeSchliesst(schliessen);
 
   const mikrofonUmschalten = () => {
     if (hoert) {

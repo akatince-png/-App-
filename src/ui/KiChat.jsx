@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Label, PrimaryButton, TextInput } from "./primitives";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "./theme";
 import CoachOrb from "./CoachOrb";
+import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
@@ -361,6 +362,8 @@ export default function KiChat({
     sprachausgabeStoppen();
     setOffen(false);
   };
+
+  useEscapeSchliesst(schliessen, offen);
 
   const uebernehmen = async () => {
     setLaden(true);

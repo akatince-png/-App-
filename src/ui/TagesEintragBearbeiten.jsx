@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PrimaryButton, Label, TextInput } from "./primitives";
+import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { cardBorder, textMain, textMuted, danger, accentDark, accentSoft } from "./theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
@@ -42,6 +43,8 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
     ausnahmeEntfernen,
     aenderungVermerken,
   } = useAppData();
+
+  useEscapeSchliesst(onClose);
 
   const [heuteAndersOffen, setHeuteAndersOffen] = useState(false);
   const [uhrzeit, setUhrzeit] = useState(item.uhrzeit || "");
