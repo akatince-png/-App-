@@ -3,6 +3,7 @@ import { TextInput } from "./primitives";
 import { accentDark, accentSoft, cardBorder, danger, success, textMain, textMuted } from "./theme";
 import { LABORWERTE_ALLE, LABORWERTE_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
+import { useFrischWert } from "./useFrischWert";
 
 // Eine Laborwert-Zeile: Label + Info-Button (Lexikon-Erklärung, eigene, vom
 // gewählten KI-Provider unabhängige Anbindung, siehe useLexikon.js) + Eingabe.
@@ -88,19 +89,14 @@ function LaborwertZeile({ name, value, onChange, borderBottom }) {
 // Onboarding (Ersteingabe). Reine Werteingabe ohne Foto/OCR, damit beide
 // Stellen dieselbe Basis benutzen statt eigene Kopien zu pflegen.
 //
-// `frisch`: im Onboarding sollen die Felder leer wirken statt Laborwerte aus
-// einem früheren Durchlauf zu zeigen — ohne bestehende Werte zu löschen
-// (bleiben unangetastet, solange nicht erneut eingetragen). Der ProfilTab
-// zeigt weiterhin ganz normal die echten, zuletzt erfassten Werte.
+// `frisch`: siehe useFrischWert.js.
 export default function LaborwerteFelder({ biomarker, setBiomarkerWert, frisch = false }) {
   const [offeneKategorien, setOffeneKategorien] = useState(() => new Set());
   const [neuerLaborwertName, setNeuerLaborwertName] = useState("");
-  const [lokal, setLokal] = useState({});
-
-  const anzeige = frisch ? lokal : biomarker;
+  const [anzeige, lokalAendern] = useFrischWert(biomarker, frisch, {});
 
   const wertAendern = (name, val) => {
-    if (frisch) setLokal((prev) => ({ ...prev, [name]: val }));
+    lokalAendern((prev) => ({ ...prev, [name]: val }));
     setBiomarkerWert(name, val);
   };
 

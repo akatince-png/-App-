@@ -5,6 +5,7 @@ import { accent, accentDark, accentSoft, cardBorder, textMuted } from "./theme";
 import { ENERGIELEVEL_OPTIONEN, FOTO_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
+import { useFrischWert } from "./useFrischWert";
 
 function leererEintrag(aktiveMesswerte) {
   const base = { datum: toLocalISODate(new Date()) };
@@ -14,19 +15,12 @@ function leererEintrag(aktiveMesswerte) {
 
 // "Wöchentliche Check-ins"-Karte, geteilt zwischen ProfilTab (laufende
 // Pflege) und dem "Profil & Ausgangslage"-Schritt im Onboarding
-// (Ersteingabe) — siehe PersoenlicheDatenCard für dasselbe `frisch`-Muster.
-//
-// `frisch`: im Onboarding sollen weder bereits ausgewählte Messwerte
-// vorangehakt noch bisherige Check-in-Einträge sichtbar sein — ohne die
-// echten Daten zu löschen (bleiben unangetastet, bis aktiv etwas
-// angetippt/gespeichert wird). Der ProfilTab zur laufenden Pflege zeigt
-// weiterhin ganz normal die echten Werte.
+// (Ersteingabe) — `frisch`: siehe useFrischWert.js.
 export default function WoechentlicheCheckinsCard({ frisch = false }) {
   const { aktiveMesswerte, toggleMesswert, combinedMesswertDefs, customMesswerte, addCustomMesswert, removeCustomMesswert, gewichtsEintraege, gewichtHinzufuegen } =
     useAppData();
 
-  const [lokalAktiv, setLokalAktiv] = useState([]);
-  const angezeigteAktiv = frisch ? lokalAktiv : aktiveMesswerte;
+  const [angezeigteAktiv, lokalAktivAendern] = useFrischWert(aktiveMesswerte, frisch, []);
 
   const [neueVariable, setNeueVariable] = useState("");
   const [neuerEintrag, setNeuerEintrag] = useState(() => leererEintrag(angezeigteAktiv));
@@ -36,7 +30,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
   const setEintragFeld = (id, val) => setNeuerEintrag((prev) => ({ ...prev, [id]: val }));
 
   const messwertUmschalten = (id) => {
-    if (frisch) setLokalAktiv((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    lokalAktivAendern((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
     toggleMesswert(id);
   };
 

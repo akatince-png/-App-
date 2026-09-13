@@ -1,25 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, Label, Pill, TextInput } from "./primitives";
 import NumberWheelField from "./NumberWheelField";
 import { useAppData } from "../context/AppDataContext";
+import { useFrischWert } from "./useFrischWert";
 
 // "Persönliche Daten"-Karte, geteilt zwischen ProfilTab (laufende Pflege)
 // und dem "Profil & Ausgangslage"-Schritt im Onboarding (Ersteingabe) — siehe
-// LaborwerteFelder für dasselbe Muster.
-//
-// `frisch`: im Onboarding (v. a. bei "Neues Protokoll") sollen die Felder
-// leer wirken statt bereits gespeicherte Werte aus einem früheren Durchlauf
-// zu zeigen — ohne die bestehenden Daten zu löschen (bleibt unangetastet,
-// solange das jeweilige Feld nicht angefasst wird). Der ProfilTab zur
-// laufenden Pflege zeigt weiterhin ganz normal die echten Werte.
+// LaborwerteFelder für dasselbe Muster (useFrischWert.js).
 export default function PersoenlicheDatenCard({ frisch = false }) {
   const { personalData, setPersonal } = useAppData();
-  const [lokal, setLokal] = useState({ geschlecht: "", geburtsdatum: "", groesse: "", gewichtStart: "" });
-
-  const anzeige = frisch ? lokal : personalData;
+  const [anzeige, lokalAendern] = useFrischWert(personalData, frisch, {
+    geschlecht: "",
+    geburtsdatum: "",
+    groesse: "",
+    gewichtStart: "",
+  });
 
   const aendern = (feld, val) => {
-    if (frisch) setLokal((prev) => ({ ...prev, [feld]: val }));
+    lokalAendern((prev) => ({ ...prev, [feld]: val }));
     setPersonal(feld, val);
   };
 
