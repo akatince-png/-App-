@@ -1,5 +1,27 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026, Fortsetzung (Teil 74) — Tagebuch: Datumszeile + unbegrenzte Zeichenzahl
+
+Direkte Nachbesserung zu Teil 73: "soll natürlich oben dann das aktuelle
+Datum und die Uhrzeit stehen... so wie es halt in einem Tagebuch wäre"
+sowie "Zeichen sollen unbegrenzt sein."
+
+`TagebuchModal.jsx` zeigt jetzt über dem Schreibfeld eine Kopfzeile im
+vollen Tagebuch-Stil ("Sonntag, 13. September 2026, 13:50 Uhr" statt der
+knappen Kurzform aus `dates.js`, die anderswo für Listenzeilen reicht),
+die sich alle 30 Sekunden aktualisiert, solange das Fenster offen ist.
+Der tatsächlich beim Speichern dokumentierte Zeitstempel kommt weiterhin
+aus dem echten Speicherzeitpunkt in `tagebuchStorage.js` — die
+Kopfzeile ist nur die live sichtbare Anzeige während des Schreibens.
+
+Zeichenzahl war schon vorher an keiner Stelle begrenzt (weder im
+Textfeld noch beim Speichern noch bei der Aka-Überarbeitung) — per
+Playwright mit 5000 Zeichen am Stück bestätigt, zusätzlich per Kommentar
+im Code festgehalten, damit später niemand versehentlich ein `maxLength`
+einbaut.
+
+`npm run build` + `npx oxlint` weiterhin grün (16 Warnungen, unverändert).
+
 ## ✅ Update 13.09.2026, Fortsetzung (Teil 73) — Neue Funktion: Tagebuch (lokal, mit Diktierfunktion + Aka-Überarbeitung)
 
 Nutzerinnen-Vorgabe: "integrier unten neben dem Button neue Pläne in
