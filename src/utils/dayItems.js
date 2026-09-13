@@ -23,17 +23,23 @@ export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 // vorher, nur satter/dunkler statt heller/entsättigter — `dot` am
 // deutlichsten angehoben (Ringe/Icons/Buttons, größte Fläche), `bg`/`text`
 // nur leicht (bleiben als helle Badge-/Fließtext-Variante lesbar).
+// `icon` verweist auf einen Namen aus dem zentralen Linien-Icon-Set
+// (src/ui/Icon.jsx) — dieselben Namen, die schon anderswo in der App für
+// dieselbe Kategorie verwendet werden (z. B. constants.js, PlaeneView.jsx),
+// damit sich Farbe UND Symbol app-weit konsistent mit der jeweiligen
+// Kategorie verknüpfen (Nutzerinnen-Vorgabe, 13.09.: kleine Symbole unter
+// den Tagesfortschritt-Balken als zusätzlicher "Anker" neben der Farbe).
 export const KATEGORIE_META = {
-  hormon: { bg: "#EDDFF6", text: "#64338E", dot: "#8436C2", label: "Medikament" },
-  supplement: { bg: "#F5EBD8", text: "#865E16", dot: "#C17F1F", label: "Supplement" },
-  mahlzeit: { bg: "#F5E3D8", text: "#904724", dot: "#D76629", label: "Mahlzeit" },
-  training: { bg: "#F7E4E0", text: "#A23026", dot: "#E22C1B", label: "Training" },
-  gewohnheit: { bg: "#DCF3F1", text: "#1F605B", dot: "#24948E", label: "Gewohnheit" },
+  hormon: { bg: "#EDDFF6", text: "#64338E", dot: "#8436C2", label: "Medikament", icon: "cross" },
+  supplement: { bg: "#F5EBD8", text: "#865E16", dot: "#C17F1F", label: "Supplement", icon: "capsule" },
+  mahlzeit: { bg: "#F5E3D8", text: "#904724", dot: "#D76629", label: "Mahlzeit", icon: "utensils" },
+  training: { bg: "#F7E4E0", text: "#A23026", dot: "#E22C1B", label: "Training", icon: "dumbbell" },
+  gewohnheit: { bg: "#DCF3F1", text: "#1F605B", dot: "#24948E", label: "Gewohnheit", icon: "target" },
   workflow: { bg: "#F5DFEE", text: "#89336C", dot: "#BF328C", label: "Workflow" },
-  hydration: { bg: "#E0EFF7", text: "#246787", dot: "#2990C5", label: "Hydration" },
-  tageslicht: { bg: "#F7EEDF", text: "#866316", dot: "#E8A60B", label: "Tageslicht" },
-  schlaf: { bg: "#E2E4F7", text: "#33377D", dot: "#3940B3", label: "Schlaf" },
-  atemuebung: { bg: "#DEF3EA", text: "#1F6B47", dot: "#2E9C64", label: "Atemübung" },
+  hydration: { bg: "#E0EFF7", text: "#246787", dot: "#2990C5", label: "Hydration", icon: "droplet" },
+  tageslicht: { bg: "#F7EEDF", text: "#866316", dot: "#E8A60B", label: "Tageslicht", icon: "sun" },
+  schlaf: { bg: "#E2E4F7", text: "#33377D", dot: "#3940B3", label: "Schlaf", icon: "moon" },
+  atemuebung: { bg: "#DEF3EA", text: "#1F6B47", dot: "#2E9C64", label: "Atemübung", icon: "wind" },
   notfallmodus: { bg: "#F7E4E0", text: "#A23026", dot: "#D12121", label: "Notfallmodus" },
   zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
 };

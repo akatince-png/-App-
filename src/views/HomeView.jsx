@@ -90,6 +90,11 @@ const ORDNER = [
 // gleiches Muster wie in den beiden anderen Dateien.
 const ROUTINE_FARBE = { morgenroutine: "#E08A3E", abendroutine: "#4E6690" };
 const ROUTINE_HINTERGRUND = { morgenroutine: "#FBEADA", abendroutine: "#E7EBF3" };
+// Gleiche Icon-Namen wie anderswo in der App für dieselbe Routine (siehe
+// z. B. constants.js FUNKTIONEN, useRoutinen.js-Belohnung) — Morgen- und
+// Abendroutine stecken nicht in KATEGORIE_META (siehe Kommentar dort),
+// brauchen ihr Icon also wie Farbe/Hintergrund als eigene, kleine Map.
+const ROUTINE_ICON = { morgenroutine: "sun", abendroutine: "moon" };
 // Dunklere, besser lesbare Text-Variante von ROUTINE_FARBE (13.09.) — gleiche
 // Rolle wie KATEGORIE_META[...].text gegenüber .dot, für die "Weitere
 // Pläne"-Kacheln unten, die jetzt vollflächig eingefärbt sind statt nur
@@ -405,6 +410,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         isEssential: false,
         farbe: ROUTINE_FARBE[kategorie],
         hintergrund: ROUTINE_HINTERGRUND[kategorie],
+        icon: ROUTINE_ICON[kategorie],
         statusText: heuteErledigt ? "heute erledigt" : "heute noch offen",
       });
     });
