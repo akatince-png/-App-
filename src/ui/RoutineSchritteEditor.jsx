@@ -161,7 +161,10 @@ export default function RoutineSchritteEditor({
           <div style={{ fontSize: 11.5, color: textMuted }}>{s.dauerMin} Min.</div>
           <button
             type="button"
-            onClick={() => onEntfernen(s.id)}
+            onClick={() => {
+              if (!window.confirm(`"${s.name}" endgültig aus der Routine entfernen?`)) return;
+              onEntfernen(s.id);
+            }}
             style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
           >
             ×

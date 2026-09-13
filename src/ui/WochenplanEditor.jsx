@@ -546,7 +546,11 @@ export default function WochenplanEditor({
                         )}
                         <button
                           type="button"
-                          onClick={() => wochenplanEntfernen(e.id)}
+                          onClick={() => {
+                            const bezeichnung = e.name || (e.arten.length > 0 ? e.arten.map((a) => tLabel(a)).join(" + ") : "diesen Eintrag");
+                            if (!window.confirm(`"${bezeichnung}" (${e.uhrzeit} Uhr) endgültig aus dem Wochenplan entfernen?`)) return;
+                            wochenplanEntfernen(e.id);
+                          }}
                           style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px" }}
                         >
                           ×

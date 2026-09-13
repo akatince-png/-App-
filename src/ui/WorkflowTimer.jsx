@@ -204,7 +204,10 @@ export default function WorkflowTimer({ onSchliessen }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => presetLoeschen(preset.id)}
+                      onClick={() => {
+                        if (!window.confirm(`"${preset.name}" endgültig löschen? Zugeordnete Zeitpläne und Playlist-Zuordnung gehen dabei mit verloren.`)) return;
+                        presetLoeschen(preset.id);
+                      }}
                       style={{ border: "none", background: "transparent", color: danger, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "4px 6px" }}
                     >
                       🗑
