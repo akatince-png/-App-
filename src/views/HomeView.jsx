@@ -960,14 +960,17 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             <span style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>{t("home.weiterePlaene")}</span>{" "}
             <span style={{ fontSize: 11, color: textMuted }}>— {t("home.weiterePlaene.desc")}</span>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(108px, 1fr))", gap: 8 }}>
             {weiterePlaeneWidgets.map((widget) => {
               // Bug-Fix/Verbesserung (13.09., Nutzerin-Vorgabe): vorher nur
               // ein winziger 7px-Punkt in der Kategorie-Farbe — kaum zu
               // erkennen, und half nicht dabei, die Farben mit dem
               // Tagesfortschritt-Balkendiagramm oben zu verknüpfen. Jetzt
               // trägt die ganze Kachel Hintergrund- und Textfarbe der
-              // Kategorie.
+              // Kategorie. Grid statt Flex-Wrap (13.09., Nutzerin-Vorgabe):
+              // unterschiedlich breite Pillen liefen auf dem Handy nur noch
+              // 1 pro Zeile untereinander — mit gleich breiten Kacheln
+              // ordnen sie sich stattdessen sauber in Reihen.
               const bg = widget.hintergrund || KATEGORIE_META[widget.kategorie]?.bg || "#F7F7F5";
               const textFarbe = ROUTINE_TEXT[widget.kategorie] || KATEGORIE_META[widget.kategorie]?.text || textMuted;
               return (
@@ -976,10 +979,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                   type="button"
                   className="mp-tap"
                   onClick={() => onOpenView(widget.viewId)}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: bg, border: "none", borderRadius: 100, padding: "7px 13px", cursor: "pointer" }}
+                  style={{ textAlign: "left", background: bg, border: "none", borderRadius: 14, padding: "9px 12px", cursor: "pointer" }}
                 >
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: textFarbe }}>{widget.name}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: textFarbe, opacity: 0.75 }}>{t("home.weiterePlaene.einrichten")}</span>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: textFarbe }}>{widget.name}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: textFarbe, opacity: 0.75 }}>{t("home.weiterePlaene.einrichten")}</div>
                 </button>
               );
             })}
