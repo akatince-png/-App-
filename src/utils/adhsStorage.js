@@ -52,7 +52,7 @@ export function getSoundEnabled() {
   try {
     const stored = localStorage.getItem(ADHS_SOUND_KEY);
     return stored === null || stored === "true"; // default on
-  } catch (e) {
+  } catch {
     return true;
   }
 }
@@ -66,18 +66,5 @@ export function saveSoundEnabled(enabled) {
     localStorage.setItem(ADHS_SOUND_KEY, enabled ? "true" : "false");
   } catch (e) {
     console.warn("LocalStorage Speichern fehlgeschlagen:", e);
-  }
-}
-
-/**
- * Reset-Funktion für Debugging/Testing
- */
-export function clearADHSSettings() {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(ADHS_MODE_KEY);
-    localStorage.removeItem(ADHS_SOUND_KEY);
-  } catch (e) {
-    console.warn("LocalStorage Clear fehlgeschlagen:", e);
   }
 }
