@@ -130,71 +130,6 @@ export const AIService = {
   },
 
   /**
-   * Trainingsplan-Assistent — die Ausgabe entspricht 1:1 der Einheiten-
-   * Struktur von wochenplanHinzufuegen() (siehe useTrainingTemplates.js),
-   * lässt sich also pro Eintrag direkt als wochenplanHinzufuegen(einheit)
-   * übergeben.
-   *
-   * @param {{wunsch: string, wochentage?: string[], einheitenProWoche?: number, coachName?: string}} wuensche
-   * @returns {Promise<Array<{wochentag: string, arten: string[], saetze: number, wiederholungen: string, uebungen: string}>>}
-   */
-  async trainingsplanVorschlag({ wunsch, wochentage = [], einheitenProWoche = 3, coachName } = {}) {
-    const system = mitPersona(
-      coachName,
-      [
-        "Du bist ein Trainingsplan-Assistent für eine bestehende App.",
-        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        "Format exakt:",
-        '{ "einheiten": [ { "wochentag": "Mo"|"Di"|"Mi"|"Do"|"Fr"|"Sa"|"So", ' +
-          '"name": string (optional, z. B. "Brusttag", "Montagsworkout" — nur wenn im Gespräch ein Name genannt wurde oder sich einer eindeutig anbietet, sonst leerer String), ' +
-          '"arten": string[] (nur aus: "Krafttraining","Cardio","Bodyweight","Isometrisches Training","Sonstiges"), ' +
-          '"saetze": number, "wiederholungen": string, "uebungen": string (kommagetrennte Übungsliste als ein Textfeld) } ] }',
-      ].join(" ")
-    );
-    const prompt = [
-      `Trainingswunsch: ${wunsch}`,
-      wochentage.length ? `Bevorzugte Wochentage: ${wochentage.join(", ")}` : null,
-      `Anzahl Einheiten pro Woche: ${einheitenProWoche}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: prompt }], json: true });
-    const data = parseJsonAntwort(antwort);
-    if (!Array.isArray(data.einheiten)) throw new Error("Unerwartetes Format: 'einheiten' fehlt oder ist kein Array.");
-    return data.einheiten;
-  },
-
-  /**
-   * Ernährungs- & Makro-Assistent — die zutaten-Struktur je Rezept
-   * entspricht der Zutaten-Liste von mahlzeitHinzufuegen() (siehe
-   * useMealData.js: { name, menge }).
-   *
-   * @param {{kfa?: number, gewicht?: number, kalorienZiel?: number, proteinZiel?: number, kohlenhydrateZiel?: number, fettZiel?: number, coachName?: string}} profil
-   * @returns {Promise<Array<{name: string, zutaten: Array<{name: string, menge: string}>, naehrwerte: {kalorien: number, protein: number, kohlenhydrate: number, fett: number}}>>}
-   */
-  async ernaehrungsplanVorschlag({ kfa, gewicht, kalorienZiel, proteinZiel, kohlenhydrateZiel, fettZiel, coachName } = {}) {
-    const system = mitPersona(
-      coachName,
-      [
-        "Du bist ein Ernährungs-Assistent für Makro-Tracking in einer bestehenden App.",
-        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        "Format exakt:",
-        '{ "rezepte": [ { "name": string, "zutaten": [ { "name": string, "menge": string } ], ' +
-          '"naehrwerte": { "kalorien": number, "protein": number, "kohlenhydrate": number, "fett": number } } ] }',
-      ].join(" ")
-    );
-    const prompt = [
-      `Profil: KFA ${kfa ?? "unbekannt"}%, Gewicht ${gewicht ?? "unbekannt"} kg.`,
-      `Makro-Ziele pro Tag: ${kalorienZiel ?? "?"} kcal, ${proteinZiel ?? "?"}g Protein, ${kohlenhydrateZiel ?? "?"}g Kohlenhydrate, ${fettZiel ?? "?"}g Fett.`,
-      "Schlage 2-3 passende Rezepte inkl. Zutaten und Nährwerten vor, die zu diesen Zielen passen.",
-    ].join("\n");
-    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: prompt }], json: true });
-    const data = parseJsonAntwort(antwort);
-    if (!Array.isArray(data.rezepte)) throw new Error("Unerwartetes Format: 'rezepte' fehlt oder ist kein Array.");
-    return data.rezepte;
-  },
-
-  /**
    * Freies Hin-und-Her mit dem Coach zu einem Thema (z. B. Trainingsplanung)
    * — verlauf ist die komplette bisherige Konversation, damit die KI sich
    * an frühere Antworten hält statt bei jeder Nachricht neu zu starten.
@@ -262,9 +197,9 @@ export const AIService = {
 
   /**
    * Extrahiert aus einem geführten Trainings-Gespräch (siehe coachChat())
-   * den finalen, strukturierten Plan — gleiches JSON-Format wie
-   * trainingsplanVorschlag(), damit sich das Ergebnis genauso direkt an
-   * wochenplanHinzufuegen() weiterreichen lässt.
+   * den finalen, strukturierten Plan — Format passend zu
+   * wochenplanHinzufuegen(), damit sich das Ergebnis direkt weiterreichen
+   * lässt.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
    * @returns {Promise<Array<{wochentag: string, arten: string[], uebungenListe: Array<{name: string, saetze: string, wiederholungen: string, gewicht: string}>}>>}
@@ -352,9 +287,8 @@ export const AIService = {
 
   /**
    * Extrahiert aus einem geführten Ernährungs-Gespräch (siehe coachChat())
-   * die finalen Rezeptvorschläge — gleiches Format wie
-   * ernaehrungsplanVorschlag(), damit sich das Ergebnis genauso direkt an
-   * mahlzeitHinzufuegen() weiterreichen lässt.
+   * die finalen Rezeptvorschläge — Format passend zu mahlzeitHinzufuegen(),
+   * damit sich das Ergebnis direkt weiterreichen lässt.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
    * @returns {Promise<Array<{name: string, zutaten: Array<{name: string, menge: string}>, naehrwerte: {kalorien: number, protein: number, kohlenhydrate: number, fett: number}}>>}
@@ -528,41 +462,6 @@ export const AIService = {
       ],
       verlauf,
       "Fasse das oben besprochene Medikament jetzt als JSON zusammen, wie vereinbart."
-    );
-    if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
-    return data;
-  },
-
-  /**
-   * Extrahiert aus einem geführten Peptid-Gespräch (siehe coachChat()) ein
-   * neues Peptid — gleiches Intervall-/Uhrzeiten-Format wie
-   * medikamentAusChat(), aber ohne "kategorie" (die gibt es bei Peptiden
-   * nicht). Peptide sind seit Migration 0042 Teil von "Medikamente" (siehe
-   * MedikamenteView.jsx: Kategorie "Peptid"). Bug-Fix (13.09., bei
-   * Aufräumarbeiten entdeckt): wurde bis dahin versehentlich auch vom
-   * "supplemente"-Onboarding-Schritt in OnboardingCategoriesView.jsx
-   * verwendet statt supplementAusChat() — dort inzwischen korrigiert.
-   *
-   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{name: string, menge: string, einnahmeart: string, intervallTyp: string, intervallDays: number, customDays: string, onDays: string, offDays: string, weekdays: string[], eigenerStart: string, uhrzeiten: string[]}>}
-   */
-  async peptidAusChat({ verlauf, coachName }) {
-    const data = await ausChatZusammenfassen(
-      coachName,
-      [
-        "Du bist ein Assistent für eine bestehende App, der neue Peptide für Nutzer anlegt.",
-        "Fasse das vorangegangene Gespräch jetzt als fertiges Peptid zusammen.",
-        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        "Format exakt:",
-        '{ "name": string, "menge": string (z. B. "250mcg"), ' +
-          '"einnahmeart": "Injektion"|"Tablette (oral)"|"Kapsel"|"Pulver"|"Tropfen"|"Nasenspray", ' +
-          '"intervallTyp": "fixed"|"custom"|"cycle"|"weekdays" (fixed = alle X Tage, custom = eigene Tagesanzahl, cycle = X Tage an/Y Tage ab, weekdays = feste Wochentage), ' +
-          '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
-          '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +
-          '"eigenerStart": string ("YYYY-MM-DD" falls genannt, sonst leer), "uhrzeiten": string[] (eine oder mehrere "HH:MM") }',
-      ],
-      verlauf,
-      "Fasse das oben besprochene Peptid jetzt als JSON zusammen, wie vereinbart."
     );
     if (!data.name) throw new Error("Unerwartetes Format: 'name' fehlt.");
     return data;
