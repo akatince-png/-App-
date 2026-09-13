@@ -1,5 +1,40 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 13.09.2026 (Teil 82) — Barrierefreiheit-Stichprobe abgeschlossen
+
+Dritter Teil der Aufgabe "Tu das bitte jetzt alles" (nach dem
+UI-Durchklick-Test in Teil 80 und der Sicherheitsprüfung in Teil 81).
+Stichprobenartig geprüft: Tastaturbedienbarkeit der Bottom-Sheets,
+Farbkontraste der Theme-Tokens, fehlender alt-Text.
+
+- **Tastatur:** Keins der Bottom-Sheets/Modals ließ sich per Escape
+  schließen, nur per Tap auf Hintergrund oder ×-Knopf — echte Lücke,
+  behoben mit neuem, wiederverwendbarem Hook `useEscapeSchliesst.js`,
+  verdrahtet in den vier Stellen mit eindeutiger Schließen-Funktion:
+  TagebuchModal, TagesEintragBearbeiten, KiChat (nur solange offen),
+  TrainingVorschau. (Belohnungsfenster/GrundEingabe/WheelPicker haben
+  keinen eigenen Schließen-Handler bzw. sind keine Modals — nicht
+  betroffen.)
+- **Kontraste:** Alle Theme-Token-Farben gegen Weiß nachgerechnet
+  (WCAG-AA, 4.5:1 für normalgroßen Text). Ein echter Treffer:
+  `HauptprotokollErstellenView.jsx` nutzte `accent` (~3.7:1) für den
+  "Zurück"-Knopftext, jetzt `accentDark` (~9:1, dieselbe Farbe, die
+  überall sonst in der App für Text auf Weiß steht). `textMuted` und
+  `danger` liegen mit ~4.9:1/~5.0:1 knapp über der Grenze, unverändert
+  gelassen.
+- **Alt-Text:** alle `<img>`-Tags app-weit geprüft — keine Lücke, jedes
+  Bild hat ein `alt` (eines bewusst leer, ein rein dekoratives
+  Vorschaubild in AdminUebungsBilderView.jsx).
+
+Build + oxlint danach geprüft: unverändert 12 Warnungen (gleiche
+Baseline wie nach dem Code-Audit), keine Regression. Commit `fcae333`,
+gepusht.
+
+**Damit ist die Aufgabe "Tu das bitte jetzt alles" vollständig
+abgeschlossen** (UI-Test, Sicherheitsprüfung, Barrierefreiheit — die
+einzigen Punkte, die von den ursprünglich genannten Testkategorien
+tatsächlich in dieser Umgebung durchführbar waren).
+
 ## 🚨 KRITISCH — Update 13.09.2026 (Teil 81) — Sicherheitslücke gefunden und behoben: is_admin-Selbsterhöhung — MUSS von der Nutzerin selbst in Supabase deployt werden
 
 **Diese Umgebung hat keinen Supabase-Zugriff** — die Migration liegt nur
