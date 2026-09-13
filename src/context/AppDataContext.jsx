@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { pruefeAusgefalleneEintraege } from "../utils/ausgefallenSweep";
+import { useShallowStableValue } from "./useShallowStableValue";
 import { useAuth } from "./AuthContext";
 import { useAdmin } from "./AdminContext";
 import { useProfileData } from "../data/useProfileData";
@@ -144,6 +145,14 @@ export function AppDataProvider({ children }) {
     loading: profileData.loading || protocolData.loading,
   };
 
+  // Stabilisiert die Objekt-Referenz, solange sich keiner der ~150 flach
+  // zusammengeführten Werte oben tatsächlich geändert hat — ohne das würde
+  // jede State-Änderung in irgendeinem der ~30 Daten-Hooks alle
+  // useAppData()-Konsumenten neu rendern, selbst wenn deren jeweils
+  // genutzte Werte unverändert geblieben sind (13.09., Teil 60; Details in
+  // useShallowStableValue.js).
+  const stableValue = useShallowStableValue(value);
+
   // Einmal pro Kalendertag und pro echtem App-Start prüfen, was gestern
   // (bzw. seit dem letzten Öffnen) geplant, aber nie bestätigt wurde, und
   // automatisch als "ausgefallen" im Änderungsprotokoll vermerken — siehe
@@ -151,13 +160,13 @@ export function AppDataProvider({ children }) {
   // Lauf durch StrictMode/Re-Renders innerhalb derselben Sitzung.
   const sweepLaufendRef = useRef(false);
   useEffect(() => {
-    if (value.loading || !userId || sweepLaufendRef.current) return;
+    if (stableValue.loading || !userId || sweepLaufendRef.current) return;
     sweepLaufendRef.current = true;
-    pruefeAusgefalleneEintraege(value);
+    pruefeAusgefalleneEintraege(stableValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value.loading, userId]);
+  }, [stableValue.loading, userId]);
 
-  return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
+  return <AppDataContext.Provider value={stableValue}>{children}</AppDataContext.Provider>;
 }
 
 export function useAppData() {
