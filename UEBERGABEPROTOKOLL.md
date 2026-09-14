@@ -1,5 +1,31 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 92) — Sprache/Farbe bei Verspätungen auf Wohlwollen geprüft (Commit `b3154c5`)
+
+Nächster Punkt aus der App-Bauplan-Liste: gesamte App auf beschämende/
+vorwurfsvolle Sprache bei Verspätungen und Rückständen durchsucht. Der
+KI-Coach hat dafür bereits eine starke Vorgabe im Systemprompt
+(`aiService.js`, Zeile ~66f.: "motivierend statt beschämend", "kein
+schlechtes Gewissen erzeugen") — die meisten statischen Texte waren
+ebenfalls schon neutral/faktisch ("30 Min. später als geplant", "Nicht
+bestätigt am ..."). Zwei Stellen fielen aus diesem Rahmen:
+
+1. **"Verpasst"-Zähler** (Peptid-Statistik `StatistikTab.jsx`,
+   `StatusBadge` in `primitives.jsx`) leuchtete in Alarm-Rot (`danger`)
+   neben Grün ("Erledigt")/Blau ("Geplant") — wirkt wie ein
+   Fehlerzähler statt wie eine neutrale Information. Neuer eigener
+   Farbton `warn`/`warnSoft` (Bernstein `#D97706`, theme.js) — derselbe
+   Wert wie der bereits bestehende "💛 Heute nur Basics ... Kein
+   Druck!"-Notfallmodus-Banner auf Home. `danger`-Rot bleibt echten
+   Fehlern/Löschen vorbehalten.
+2. **Änderungsprotokoll** (`ProtokollLogView.jsx`) zeigte das rohe
+   `aktion`-Feld direkt an — für automatisch erfasste, nicht bestätigte
+   Einträge stand da wörtlich "ausgefallen", liest sich wie ein Verdikt.
+   Neue Anzeige-Beschriftung "Nicht geschafft" NUR fürs Rendering
+   (`AKTION_ANZEIGE`-Map) — der gespeicherte Wert bleibt exakt
+   "ausgefallen", weil `ausgefallenSweep.js` genau danach filtert, um
+   bereits erfasste Tage nicht doppelt einzutragen.
+
 ## ✅ Update 14.09.2026 (Teil 91) — Quest-Rangliste/Wettbewerb optional machen (Commit `90d7cb8`)
 
 Nächster Punkt aus der App-Bauplan-Liste. Die Quest-Rangliste
