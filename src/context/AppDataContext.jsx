@@ -3,152 +3,57 @@ import { pruefeAusgefalleneEintraege } from "../utils/ausgefallenSweep";
 import { useShallowStableValue } from "./useShallowStableValue";
 import { useAuth } from "./AuthContext";
 import { useAdmin } from "./AdminContext";
-import { useProfileData } from "../data/useProfileData";
-import { useProtocolData } from "../data/useProtocolData";
-import { useHormoneData } from "../data/useHormoneData";
-import { useSupplementData } from "../data/useSupplementData";
-import { useDrinkRecipes } from "../data/useDrinkRecipes";
-import { useMealData } from "../data/useMealData";
-import { useGewohnheitenData } from "../data/useGewohnheitenData";
-import { useAtemuebungenData } from "../data/useAtemuebungenData";
-import { useHydrationData } from "../data/useHydrationData";
-import { useTageslichtData } from "../data/useTageslichtData";
-import { useTrainingData } from "../data/useTrainingData";
-import { useTrainingTemplates } from "../data/useTrainingTemplates";
-import { useCheckinData } from "../data/useCheckinData";
-import { useSleepData } from "../data/useSleepData";
-import { useBiomarkerData } from "../data/useBiomarkerData";
-import { usePushNotifications } from "../data/usePushNotifications";
-import { useAenderungsprotokoll } from "../data/useAenderungsprotokoll";
-import { useWochenprotokollMeilenstein } from "../data/useWochenprotokollMeilenstein";
-import { useLexikon } from "../data/useLexikon";
-import { useCoachVerlauf } from "../data/useCoachVerlauf";
-import { useAdminNotizen } from "../data/useAdminNotizen";
-import { useSpotifyVerbindung } from "../data/useSpotifyVerbindung";
-import { useUebungsBilder } from "../data/useUebungsBilder";
-import { useHauptprotokollData } from "../data/useHauptprotokollData";
-import { useRoutinen } from "../data/useRoutinen";
-import { useZeitbloecke } from "../data/useZeitbloecke";
-import { useCoacheeNachrichten } from "../data/useCoacheeNachrichten";
-import { useCoachWissen } from "../data/useCoachWissen";
-import { useWorkflowData } from "../data/useWorkflowData";
-import { useBausteinVersionen } from "../data/useBausteinVersionen";
-import { useQuestData } from "../data/useQuestData";
-import { useTeamData } from "../data/useTeamData";
-import { useTagesplanAusnahmen } from "../data/useTagesplanAusnahmen";
-import { useKompletterReset } from "../data/useKompletterReset";
+import { CoreDataProvider, useCoreData } from "./appData/CoreDataContext";
+import { TrackingDataProvider, useTrackingData } from "./appData/TrackingDataContext";
+import { PlatformDataProvider, usePlatformData } from "./appData/PlatformDataContext";
 
+// Globalen Datentopf aufteilen (App-Bauplan-Punkt): dieser einzelne
+// Provider bündelte vorher ~33 Daten-Hooks direkt in einem einzigen
+// ~150-Felder-Objekt — jede State-Änderung in IRGENDEINEM davon (ein
+// Supplement abhaken, eine neue Team-Nachricht, ...) rendert dadurch
+// JEDE Komponente neu, die überhaupt useAppData() aufruft, selbst wenn
+// deren tatsächlich genutzte Felder unverändert blieben (useShallowStableValue
+// dämpft das schon etwas, hilft aber nicht gegen einen einzelnen
+// riesigen Kontext als Ganzes).
+//
+// Jetzt in drei fachlich getrennte, eigenständige Kontexte aufgeteilt —
+// siehe context/appData/*.jsx:
+//   - CoreDataContext: Profil/Protokoll-Grunddaten + Peptid-/Hormondosen
+//     (Basis, von der die anderen beiden abhängen)
+//   - TrackingDataContext: die täglich aktualisierten "Lebensbereiche"
+//     (Supplemente, Mahlzeiten, Gewohnheiten, Training, Schlaf, ...)
+//   - PlatformDataContext: Coaching/Social + App-Infrastruktur (Team,
+//     Quests, Push, Spotify, Lexikon, ...)
+//
+// useAppData() bleibt als Kompatibilitäts-Fassade bestehen und liefert
+// exakt dasselbe zusammengeführte Objekt wie vorher, in identischer
+// Feld-Reihenfolge (wichtig für die wenigen Fälle, in denen zwei Hooks
+// zufällig denselben Feldnamen tragen könnten — "letzter Spread gewinnt"
+// bleibt an derselben Stelle wie zuvor) — alle ~60 bestehenden
+// useAppData()-Aufrufstellen funktionieren dadurch unverändert weiter,
+// ohne Anpassung. Neuer Code kann stattdessen gezielt useCoreData()/
+// useTrackingData()/usePlatformData() verwenden, um nur auf Änderungen
+// im jeweils tatsächlich gebrauchten Teil zu reagieren — die schrittweise
+// Umstellung bestehender Stellen ist ein für sich abgrenzbarer, risikoarmer
+// nächster Schritt und keine Voraussetzung dafür, dass dieser Umbau schon
+// jetzt seinen Zweck erfüllt.
 const AppDataContext = createContext(null);
 
-export function AppDataProvider({ children }) {
-  const { user } = useAuth();
-  // Im "Verwalten als"-Modus (Admin-Dashboard) lädt/speichert die App die
-  // Daten der ausgewählten Probandin/des Probanden statt der eigenen —
-  // jeder Hook unten nimmt userId ohnehin schon als Parameter, dadurch
-  // reicht dieser eine Umschaltpunkt, um die komplette App stellvertretend
-  // zu bedienen. Root() in App.jsx erzwingt beim Wechsel einen Remount
-  // (key={proband?.id || "self"}), damit kein alter State übrig bleibt.
-  const { proband } = useAdmin();
-  const userId = proband?.id || user?.id;
+function AppDataFacade({ children }) {
+  const core = useCoreData();
+  const tracking = useTrackingData();
+  const platform = usePlatformData();
 
-  const profileData = useProfileData(userId);
-  const protocolData = useProtocolData(userId);
-  const hauptprotokollData = useHauptprotokollData(userId);
-  const hauptprotokollId = hauptprotokollData.aktivesHauptprotokoll?.id || null;
-  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId, profileData.belohnungPufferMin);
-  const supplementData = useSupplementData(userId, hauptprotokollId, profileData.belohnungPufferMin);
-  const drinkData = useDrinkRecipes(userId);
-  const mealData = useMealData(userId, hauptprotokollId, profileData.belohnungPufferMin);
-  const gewohnheitenData = useGewohnheitenData(userId, hauptprotokollId);
-  const atemuebungenData = useAtemuebungenData(userId);
-  const hydrationData = useHydrationData(userId);
-  const tageslichtData = useTageslichtData(userId);
-  const trainingData = useTrainingData(userId);
-  const trainingTemplates = useTrainingTemplates(userId);
-  const checkinData = useCheckinData(userId);
-  const sleepData = useSleepData(userId);
-  const biomarkerData = useBiomarkerData(userId);
-  const pushData = usePushNotifications(userId);
-  const aenderungsprotokollData = useAenderungsprotokoll(userId);
-  const wochenprotokollMeilenstein = useWochenprotokollMeilenstein(userId);
-  const lexikon = useLexikon();
-  const coachVerlaufData = useCoachVerlauf(userId);
-  const adminNotizenData = useAdminNotizen(userId);
-  const spotifyData = useSpotifyVerbindung(userId);
-  const uebungsBilderData = useUebungsBilder(userId);
-  const routinenData = useRoutinen(userId, profileData.belohnungPufferMin);
-  const zeitbloeckeData = useZeitbloecke(userId);
-  const coacheeNachrichtenData = useCoacheeNachrichten(userId);
-  const coachWissenData = useCoachWissen(userId);
-  const workflowData = useWorkflowData(userId);
-  const bausteinVersionenData = useBausteinVersionen(userId);
-  const questData = useQuestData(userId);
-  const teamData = useTeamData(userId);
-  const tagesplanAusnahmenData = useTagesplanAusnahmen(userId);
-  const kompletterResetData = useKompletterReset(userId);
-
-  const value = {
-    userId,
-    ...profileData,
-    ...protocolData,
-    hormone: hormoneData.hormone,
-    hormonDosierung: hormoneData.hormonDosierung,
-    hormonHinzufuegen: hormoneData.hormonHinzufuegen,
-    hormonEntfernen: hormoneData.hormonEntfernen,
-    setHormonFoto: hormoneData.setHormonFoto,
-    setHormonKategorie: hormoneData.setHormonKategorie,
-    setHormonEinnahmeart: hormoneData.setHormonEinnahmeart,
-    setHormonDose: hormoneData.setHormonDose,
-    setHormonDoseBatch: hormoneData.setHormonDoseBatch,
-    hormonErledigt: hormoneData.hormonErledigt,
-    toggleHormonErledigt: hormoneData.toggleHormonErledigt,
-    hormonFeedback: hormoneData.hormonFeedback,
-    saveHormonFeedback: hormoneData.saveHormonFeedback,
-    skipHormonFeedback: hormoneData.skipHormonFeedback,
-    hormonPlan: hormoneData.hormonPlan,
-    ...supplementData,
-    ...drinkData,
-    ...mealData,
-    ...gewohnheitenData,
-    ...atemuebungenData,
-    ...hydrationData,
-    ...tageslichtData,
-    ...trainingData,
-    ...trainingTemplates,
-    ...checkinData,
-    ...sleepData,
-    ...biomarkerData,
-    ...pushData,
-    ...aenderungsprotokollData,
-    ...wochenprotokollMeilenstein,
-    ...lexikon,
-    ...coachVerlaufData,
-    ...adminNotizenData,
-    ...spotifyData,
-    ...uebungsBilderData,
-    ...hauptprotokollData,
-    ...routinenData,
-    ...zeitbloeckeData,
-    ...coacheeNachrichtenData,
-    ...coachWissenData,
-    ...workflowData,
-    ...bausteinVersionenData,
-    ...questData,
-    ...teamData,
-    ...tagesplanAusnahmenData,
-    ...kompletterResetData,
+  const value = useShallowStableValue({
+    ...core,
+    ...tracking,
+    ...platform,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
-    // jeweils ein eigenes `loading`-Feld mitbringen.
-    loading: profileData.loading || protocolData.loading,
-  };
-
-  // Stabilisiert die Objekt-Referenz, solange sich keiner der ~150 flach
-  // zusammengeführten Werte oben tatsächlich geändert hat — ohne das würde
-  // jede State-Änderung in irgendeinem der ~30 Daten-Hooks alle
-  // useAppData()-Konsumenten neu rendern, selbst wenn deren jeweils
-  // genutzte Werte unverändert geblieben sind (13.09., Teil 60; Details in
-  // useShallowStableValue.js).
-  const stableValue = useShallowStableValue(value);
+    // (in core zusammengeführt) ihr eigenes `loading`-Feld mitbringen —
+    // dieselbe Begründung/Reihenfolge wie zuvor im unaufgeteilten
+    // AppDataContext.jsx.
+    loading: core.loading,
+  });
 
   // Einmal pro Kalendertag und pro echtem App-Start prüfen, was gestern
   // (bzw. seit dem letzten Öffnen) geplant, aber nie bestätigt wurde, und
@@ -157,13 +62,35 @@ export function AppDataProvider({ children }) {
   // Lauf durch StrictMode/Re-Renders innerhalb derselben Sitzung.
   const sweepLaufendRef = useRef(false);
   useEffect(() => {
-    if (stableValue.loading || !userId || sweepLaufendRef.current) return;
+    if (value.loading || !value.userId || sweepLaufendRef.current) return;
     sweepLaufendRef.current = true;
-    pruefeAusgefalleneEintraege(stableValue);
+    pruefeAusgefalleneEintraege(value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stableValue.loading, userId]);
+  }, [value.loading, value.userId]);
 
-  return <AppDataContext.Provider value={stableValue}>{children}</AppDataContext.Provider>;
+  return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
+}
+
+export function AppDataProvider({ children }) {
+  const { user } = useAuth();
+  // Im "Verwalten als"-Modus (Admin-Dashboard) lädt/speichert die App die
+  // Daten der ausgewählten Probandin/des Probanden statt der eigenen —
+  // jeder Hook nimmt userId ohnehin schon als Parameter, dadurch reicht
+  // dieser eine Umschaltpunkt, um die komplette App stellvertretend zu
+  // bedienen. Root() in App.jsx erzwingt beim Wechsel einen Remount
+  // (key={proband?.id || "self"}), damit kein alter State übrig bleibt.
+  const { proband } = useAdmin();
+  const userId = proband?.id || user?.id;
+
+  return (
+    <CoreDataProvider userId={userId}>
+      <TrackingDataProvider>
+        <PlatformDataProvider>
+          <AppDataFacade>{children}</AppDataFacade>
+        </PlatformDataProvider>
+      </TrackingDataProvider>
+    </CoreDataProvider>
+  );
 }
 
 export function useAppData() {
