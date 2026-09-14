@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Card } from "../../ui/primitives";
 import { SimpleLineChart, NebenwirkungenPie } from "../../ui/charts";
-import { accent, blue, danger, success, textMuted } from "../../ui/theme";
+import { accent, blue, success, textMuted, warn } from "../../ui/theme";
 import { PIE_COLORS } from "../../constants";
 import { keyOf, sameDay } from "../../utils/dates";
 import { useAppData } from "../../context/AppDataContext";
@@ -61,7 +61,7 @@ export default function StatistikTab() {
             <div style={{ fontSize: 11, color: textMuted }}>Geplant</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: danger }}>{statusCounts.verpasst}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: warn }}>{statusCounts.verpasst}</div>
             <div style={{ fontSize: 11, color: textMuted }}>Verpasst</div>
           </div>
         </div>

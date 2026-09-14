@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { blue, blueSoft, bg, card, cardBorder, danger, shadow, success, successSoft, textMain, textMuted, aufhellen, hexZuRgba } from "./theme";
+import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, aufhellen, hexZuRgba } from "./theme";
 import { BereichColorProvider, useBereichColor } from "./BereichColorContext";
 
 // `bereich` (optional, z. B. "training", "hydration" — Schlüssel aus
@@ -260,7 +260,7 @@ export function StatusBadge({ status }) {
   const map = {
     erledigt: { c: success, bg: successSoft, l: "Erledigt" },
     geplant: { c: blue, bg: blueSoft, l: "Geplant" },
-    verpasst: { c: danger, bg: "#F9E9E9", l: "Verpasst" },
+    verpasst: { c: warn, bg: warnSoft, l: "Verpasst" },
   };
   const s = map[status];
   return (

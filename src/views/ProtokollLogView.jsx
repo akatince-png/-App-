@@ -9,6 +9,18 @@ import ProtokollSeitenView from "./plan/ProtokollSeitenView";
 import { useMehrfachauswahl } from "../ui/useMehrfachauswahl";
 import MehrfachauswahlLeiste from "../ui/MehrfachauswahlLeiste";
 
+// Anzeige-Beschriftung fürs Änderungsprotokoll — bewusst getrennt vom
+// gespeicherten `aktion`-Wert, der u. a. von ausgefallenSweep.js zum
+// Wiedererkennen bereits erfasster Einträge geprüft wird (`e.aktion ===
+// "ausgefallen"`, siehe dort). Das rohe "ausgefallen" klingt wie ein
+// Verdikt ("durchgefallen") — App-Bauplan-Punkt: wohlwollende Sprache
+// auch außerhalb des KI-Chats, nicht nur dort, wo ohnehin schon der
+// Assistenten-Systemprompt greift (aiService.js, "motivierend statt
+// beschämend").
+const AKTION_ANZEIGE = {
+  ausgefallen: "Nicht geschafft",
+};
+
 function datumLabel(datumStr) {
   const [y, m, d] = datumStr.split("-");
   const datum = new Date(`${datumStr}T12:00:00`);
@@ -112,7 +124,7 @@ function AenderungKarte({ e, ausgewaehlt, onUmschalten, onLoeschen }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: 4, background: k.dot, flexShrink: 0 }} />
             <div style={{ fontSize: 13, fontWeight: 700 }}>{e.itemName}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: k.text }}>{e.aktion}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: k.text }}>{AKTION_ANZEIGE[e.aktion] || e.aktion}</div>
           </div>
           {e.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16 }}>{e.detail}</div>}
           {e.grund && <div style={{ fontSize: 12, color: textMuted, marginTop: 2, marginLeft: 16, fontStyle: "italic" }}>„{e.grund}“</div>}

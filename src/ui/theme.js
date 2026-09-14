@@ -30,6 +30,16 @@ export const blueSoft = "#EAF0F8";
 export const success = "#0E7C66"; // Eigenständiges Grün, nur noch für "erledigt"/Erfolg
 export const successSoft = "#E6F3EF";
 export const danger = "#C24545";
+// Bewusst eigenständig von `danger` (App-Bauplan-Punkt, ADHS-Perspektive):
+// ein rotes "Alarm"-Rot für nicht bestätigte/verspätete Einträge wirkt wie
+// ein Vorwurf statt wie eine neutrale Information — genau das, wovon der
+// KI-Coach laut eigenem Systemprompt (aiService.js) ausdrücklich wegwill
+// ("Motivierend statt beschämend"). Gleicher Bernstein-Ton wie der bereits
+// bestehende Notfallmodus-Banner auf Home (`#D97706`, "Kein Druck!") — für
+// "noch offen/nicht geschafft" statt Rot, das echten Fehlern/Löschen
+// vorbehalten bleibt.
+export const warn = "#D97706";
+export const warnSoft = "rgba(217, 119, 6, 0.1)";
 export const textMain = "#15181A";
 export const textMuted = "#6B7178";
 // Etwas tiefer/dunkler als zuvor, damit Karten sich sichtbar vom weißen
