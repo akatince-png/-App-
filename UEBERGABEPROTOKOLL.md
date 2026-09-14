@@ -1,5 +1,35 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 100) — TypeScript eingeführt (Commit `79f2fed`) — App-Bauplan-Liste vollständig abgearbeitet
+
+Letzter der 13 Punkte aus der App-Bauplan-Liste (siehe Teile 88–100,
+alle in dieser Sitzung nacheinander umgesetzt). ~150 Dateien in einem
+Rutsch auf TypeScript umzustellen wäre ein eigenes, mehrwöchiges
+Projekt für sich gewesen — zu riskant, um es ungeprüft in einer
+Sitzung durchzuziehen. Stattdessen:
+
+- `typescript` als Dev-Dependency, `tsconfig.json` mit `allowJs: true`
+  + `checkJs: false` — bestehende .js/.jsx-Dateien laufen unverändert
+  und ungeprüft neben echten .ts/.tsx-Dateien weiter.
+- `npm run typecheck` (`tsc --noEmit`), jetzt Teil von `npm run test:all`.
+- Drei echte, in dieser Sitzung selbst geschriebene Utility-Module auf
+  TypeScript umgestellt (Modul + Test, bewusst diese drei — schon
+  vollständig unit-getestet, klein, eigenständig, ihr Verhalten aus
+  erster Hand bekannt): `queryCache.ts`, `routing.ts`, `gnadentag.ts`.
+  Der Typecheck fand dabei zwei echte kleine Typfehler (kein reines
+  Ritual) — behoben, nicht unterdrückt.
+- Migration der übrigen ~150 Dateien: eigener, über Zeit laufender
+  nächster Schritt (Konvertieren-beim-Anfassen-Policy).
+
+**Damit sind alle 13 Punkte aus dem App-Bauplan-Gespräch umgesetzt,
+getestet und auf `main` gepusht** — 8 kleinere, bereichsweise Fixes
+(Teile 88–96 bzw. 88–97 je nach Zählung) und 5 größere strukturelle
+Umbauten (Code-Splitting, echtes Routing, Datentopf-Aufteilung,
+Caching-Datenschicht, TypeScript-Grundlage). Einzige offene
+Gegenprüfung: Teil 98 (Datentopf-Aufteilung) bittet um einen kurzen
+manuellen Blick in echter Nutzung, siehe dort — alles andere ist ohne
+Einschränkung fertig.
+
 ## ✅ Update 14.09.2026 (Teil 99) — Zentrale Datenschicht mit Caching (Commit `fc0cc99`)
 
 Vierter der fünf größeren strukturellen App-Bauplan-Punkte. Konkreter,
