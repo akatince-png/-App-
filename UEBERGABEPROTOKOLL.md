@@ -1,5 +1,47 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 101) — Nachkontrolle: zwei echte Fehler gefunden und behoben (Commit `0147a63`)
+
+Nutzerinnen-Vorgabe nach Abschluss der 13-Punkte-Liste: noch einmal
+gezielt auf selbst eingebaute Fehler durchsehen, nicht nur "läuft
+grün" als ausreichend nehmen. Dabei zwei reale, bis dahin von den
+Tests nicht erfasste Probleme gefunden — beide entstehen erst im
+Zusammenspiel zweier für sich genommen korrekter Änderungen aus
+unterschiedlichen Teilen dieser Liste:
+
+1. **AuthenticatedApp.jsx (Echtes Routing, Teil 97):** ein aus der URL
+   gelesener View wurde bei JEDEM Mount übernommen — aber
+   AuthenticatedApp mountet nicht nur beim echten Seitenaufruf neu,
+   sondern auch bei jedem Wechsel in/aus dem "Verwalten als"-Modus
+   (`key={proband?.id || "self"}` in App.jsx). Ein Admin, der z. B. auf
+   `#/tagesplan` stand, hätte eine gerade übernommene Coachee-Sitzung
+   sofort auf deren Tagesplan statt (wie vorher und wie erwartet) auf
+   Home gesehen. Fix: ein modul-weites Flag sorgt dafür, dass der Hash
+   nur beim allerersten Laden dieser Registerkarte übernommen wird —
+   jeder weitere Remount startet wieder sauber auf Home.
+2. **AkutModusGlobal.jsx (Teil 90) im Zusammenspiel mit dem neuen
+   Routing (Teil 97):** der schwebende Akutmodus-Knopf lebt außerhalb
+   des `key={view}`-Remounts (bleibt beim Bildschirmwechsel bestehen,
+   wechselt nur seine Sichtbarkeit) — anders als der ursprüngliche
+   Home-Akutmodus, dessen State beim Verlassen von Home automatisch
+   mit wegfällt. Browser-Zurück während das Panel offen war (durch
+   Teil 97 überhaupt erst möglich) ließ `offen` wahr stehen; beim
+   nächsten Sichtbarwerden wäre das Panel ohne jeden Klick von selbst
+   wieder aufgesprungen. Fix: ein Effekt setzt `offen` zurück, sobald
+   die Komponente unsichtbar wird.
+
+Beide Fixes mit neuen, echten E2E-Regressionstests abgesichert — für
+Fund 2 vorab verifiziert (Fix testweise rückgängig gemacht), dass der
+neue Test gegen den unreparierten Code tatsächlich rot ausschlägt statt
+nur grün zu sein, weil er nichts wirklich prüft.
+
+Alle anderen 11 der 13 Punkte beim erneuten Durchgehen (Datenfluss,
+Zustandsverwaltung, Reihenfolge/Grenzfälle, TypeScript-Typprüfung, exakte
+Spread-Reihenfolge im aufgeteilten Datentopf) ohne weitere Befunde.
+
+Build, Lint, Typecheck, 94 Unit- und 32 E2E-Tests grün (E2E zusätzlich
+mit `--repeat-each=2`, 64 Durchläufe).
+
 ## ✅ Update 14.09.2026 (Teil 100) — TypeScript eingeführt (Commit `79f2fed`) — App-Bauplan-Liste vollständig abgearbeitet
 
 Letzter der 13 Punkte aus der App-Bauplan-Liste (siehe Teile 88–100,
