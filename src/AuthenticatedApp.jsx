@@ -23,6 +23,7 @@ import AtemuebungenView from "./views/AtemuebungenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
+import AkutModusGlobal from "./ui/AkutModusGlobal";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
@@ -292,6 +293,7 @@ export default function AuthenticatedApp() {
   return (
     <div className="mp-app-shell">
       <Belohnungsfenster />
+      <AkutModusGlobal sichtbar={view !== "home" && view !== "form"} />
       {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
       <div className="mp-app-main">
         {proband && (
