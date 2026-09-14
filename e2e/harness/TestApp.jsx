@@ -23,8 +23,20 @@ const mockAuthValue = {
   clearInvitePending: () => {},
 };
 
+// Test-Steuerung über URL-Parameter statt separater Harness-Einstiegspunkte
+// — ?onboarding=1 simuliert einen frischen Account (onboardingComplete:
+// false), ?isAdmin=0 einen nicht-administrativen Account. Ausschließlich
+// für e2e/*.spec.js gedacht, wirkt sich auf die echte App nicht aus.
+function leseOverridesAusUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const overrides = {};
+  if (params.get("onboarding") === "1") overrides.onboardingComplete = false;
+  if (params.get("isAdmin") === "0") overrides.isAdmin = false;
+  return overrides;
+}
+
 export default function TestApp() {
-  const appData = baueMockAppData(MOCK_USER_ID);
+  const appData = baueMockAppData(MOCK_USER_ID, leseOverridesAusUrl());
   return (
     <LanguageProvider>
       <AdminProvider>
