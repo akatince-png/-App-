@@ -1,5 +1,6 @@
 import React from "react";
 import { bg, card, cardBorder, accent, accentDark, danger, textMain, textMuted, shadow } from "./theme";
+import { meldeAbsturz } from "../services/errorMonitoring";
 
 // Auffangnetz gegen Abstürze (14.09., Nutzerinnen-Vorgabe aus dem
 // App-Bauplan): ohne das zeigt React bei einem Fehler irgendwo im
@@ -25,6 +26,7 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(fehler, info) {
     // eslint-disable-next-line no-console
     console.error("Auffangnetz hat einen Absturz aufgefangen:", fehler, info?.componentStack);
+    meldeAbsturz(fehler, info?.componentStack);
   }
 
   render() {

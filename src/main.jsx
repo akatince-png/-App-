@@ -2,6 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { initErrorMonitoring } from './services/errorMonitoring.js'
+
+initErrorMonitoring()
 
 // Registrierung ist Voraussetzung für Push-Benachrichtigungen (auch wenn die
 // App gerade geschlossen ist) — schadet nicht, wenn der Browser das nicht
