@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Label, PrimaryButton, TextInput } from "./primitives";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMain, textMuted } from "./theme";
 import CoachOrb from "./CoachOrb";
@@ -408,8 +409,23 @@ export default function KiChat({
   if (!getKiAktiv()) return null;
   if (!istAdminModus) return null;
 
+  // Bug-Fix (14.09., Nutzerinnen-Report): Orb-Knopf und Chat-Modal sind
+  // `position: fixed`, sollen also relativ zum echten Bildschirm sitzen.
+  // Eingebettet in eine Ansicht mit transformierender Vorfahren-Animation
+  // (z. B. die fadeInUp-Phasenwechsel-Animation in OnboardingFlow.jsx —
+  // ein `transform` im CSS erzeugt einen neuen "Containing Block" für
+  // `position: fixed`) wurde "fixed" dadurch relativ zu diesem Vorfahren
+  // statt zum Bildschirm — sichtbar geworden als: das Chat-Modal auf den
+  // Onboarding-Schritten "Laborwerte"/"Routinen" deckte nicht den ganzen
+  // Bildschirm ab, sondern nur einen Ausschnitt, während der "Weiter"-
+  // Knopf darunter dauerhaft unter dem abgedunkelten Hintergrund
+  // hervorschaute, aber unklickbar blieb. Betraf grundsätzlich JEDE Stelle
+  // mit einer transformierenden Vorfahren-Animation, nicht nur diese zwei
+  // Onboarding-Screens. Fix: über createPortal direkt an document.body
+  // rendern, damit "fixed" garantiert relativ zum echten Bildschirm bleibt,
+  // unabhängig davon, wo KiChat im Baum eingebettet ist.
   if (!offen) {
-    return (
+    return createPortal(
       <button
         type="button"
         className="mp-tap"
@@ -432,11 +448,12 @@ export default function KiChat({
         }}
       >
         <CoachOrb zustand="ruhe" size={68} />
-      </button>
+      </button>,
+      document.body
     );
   }
 
-  return (
+  return createPortal(
     <div
       onClick={schliessen}
       style={{
@@ -647,6 +664,7 @@ export default function KiChat({
         )}
         {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{fehler}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

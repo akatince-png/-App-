@@ -39,30 +39,31 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   // Schritt wird über seine eindeutige Überschrift bestätigt, bevor
   // geklickt wird.
   //
-  // dispatchEvent("click") statt .click(): Laborwerte/Routinen betten
-  // KiChat (Coach-Chat, autoStart) ein, dessen Begrüßungsnachricht den
-  // "Weiter"-Button dauerhaft überlappt (bestätigt: kein Animations-
-  // Zwischenzustand, sondern über >10 Retries stabil reproduzierbar,
-  // unabhängig vom Scrollen). dispatchEvent löst den Klick-Handler direkt
-  // am Element aus statt über echtes Browser-Hit-Testing an den
-  // Bildschirm-Koordinaten — für diesen Test reicht das (Ziel ist der
-  // Phasenwechsel, nicht die Klick-Trefferfläche). Der Überlapp selbst
-  // könnte ein echtes Layout-Problem sein (siehe Testlauf-Notiz), war aber
-  // mit den Mock-Daten nicht zweifelsfrei von einem generellen KiChat-
-  // Verhalten zu unterscheiden — wert, es bei Gelegenheit mit echten Daten
-  // im Browser nachzustellen.
+  // Laborwerte/Routinen betten KiChat (Coach-Chat, autoStart) ein — der
+  // öffnet sich automatisch als Vollbild-Modal und verdeckt bewusst den
+  // Rest des Screens (echtes Modal-Verhalten, siehe KiChat.jsx). Ein
+  // Bug-Fund hier (14.09.): das Modal war vorher fälschlich nur
+  // TEILWEISE abgedunkelt/abgeschnitten statt den ganzen Bildschirm zu
+  // decken (position:fixed griff wegen einer transformierenden Vorfahren-
+  // Animation nicht auf den echten Viewport) — der "Weiter"-Button
+  // schaute darunter sichtbar, aber unklickbar hervor. Jetzt per
+  // createPortal behoben; entsprechend schließt der Test das Modal zuerst
+  // ganz normal über "Schließen", wie eine echte Nutzerin es auch tun
+  // müsste.
   for (const titel of ["Ziel & Grund", "Dein Profil & Ausgangslage", "Deine Laborwerte", "Morgen- & Abendroutine"]) {
     await expect(page.getByText(titel, { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Weiter", exact: true }).dispatchEvent("click");
+    const schliessenKnopf = page.getByRole("button", { name: "Schließen" });
+    if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
+    await page.getByRole("button", { name: "Weiter", exact: true }).click();
   }
 
   // Kategorien: "Alles überspringen" führt direkt zum Abschluss-Screen,
   // ohne jede der 8 Kategorien einzeln durchzuklicken. Ist ein <div
   // onClick>, kein <button> — daher getByText statt getByRole("button").
-  await page.getByText("Alles überspringen").dispatchEvent("click");
+  await page.getByText("Alles überspringen").click();
 
   // Abschluss-Screen → zurück auf Home.
-  await page.getByRole("button").last().dispatchEvent("click");
+  await page.getByRole("button").last().click();
   await expect(page.getByText("Tagebuch")).toBeVisible({ timeout: 10000 });
 
   expect(fehler).toEqual([]);
