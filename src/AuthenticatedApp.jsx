@@ -23,6 +23,7 @@ import AtemuebungenView from "./views/AtemuebungenView";
 import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
@@ -331,8 +332,14 @@ export default function AuthenticatedApp() {
             @media (prefers-reduced-motion: reduce) gesetzt, ist die
             @keyframes-Regel in index.css gar nicht registriert, die
             Animation bleibt dann automatisch aus. */}
+        {/* Bildschirm-genaues Auffangnetz (14.09., Nutzerinnen-Vorgabe): stürzt
+            ein einzelner Bildschirm ab, bringt "Zurück zur Startseite"
+            (setView("home")) den key={view}-Wechsel gleich mit — der ganze
+            Wrapper hier remountet dabei automatisch neu, das Auffangnetz
+            setzt sich also von selbst zurück, ohne dass die App komplett neu
+            geladen werden muss. */}
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
-          {screen}
+          <ErrorBoundary onReset={() => setView("home")}>{screen}</ErrorBoundary>
         </div>
       </div>
     </div>

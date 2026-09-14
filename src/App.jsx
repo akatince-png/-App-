@@ -9,6 +9,7 @@ import { textMuted } from "./ui/theme";
 import LoginView from "./views/LoginView";
 import InviteAcceptView from "./views/InviteAcceptView";
 import AuthenticatedApp from "./AuthenticatedApp";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
 
 function LoadingScreen() {
   const { t } = useT();
@@ -43,7 +44,9 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <AdminProvider>
-          <Root />
+          <ErrorBoundary>
+            <Root />
+          </ErrorBoundary>
         </AdminProvider>
       </AuthProvider>
     </LanguageProvider>
