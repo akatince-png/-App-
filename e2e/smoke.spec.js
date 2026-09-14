@@ -40,6 +40,34 @@ test("Tagesplan ist über die Seitenleiste erreichbar", async ({ page }) => {
   expect(fehler).toEqual([]);
 });
 
+test("Echtes Routing: Navigation setzt den URL-Hash, Browser-Zurück/Vorwärts funktioniert (App-Bauplan-Punkt)", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
+
+  await expect(page).toHaveURL(/#\/home$/);
+
+  await nav.getByRole("button", { name: "Tagesplan" }).click();
+  await page.waitForTimeout(200); // Remount-Übergangsanimation (fadeInUp)
+  await expect(page).toHaveURL(/#\/tagesplan$/);
+
+  await nav.getByRole("button", { name: "Archiv" }).click();
+  await expect(page).toHaveURL(/#\/archiv$/);
+
+  // Browser-Zurück: zwei Schritte zurück zu Home, nicht nur einer — jeder
+  // Klick oben hat einen echten Eintrag in der Browser-Historie erzeugt.
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/tagesplan$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/home$/);
+  await expect(page.getByText("Tagebuch")).toBeVisible();
+
+  // Browser-Vorwärts: wieder zurück zum Tagesplan.
+  await page.goForward();
+  await expect(page).toHaveURL(/#\/tagesplan$/);
+
+  expect(fehler).toEqual([]);
+});
+
 test("Tagebuch-Modal öffnet und lässt sich per Escape schließen (Barrierefreiheits-Regressionstest)", async ({ page }) => {
   await page.getByText("Tagebuch").click();
   const textarea = page.getByPlaceholder("Schreib frei drauflos, oder tippe auf das Mikrofon…");

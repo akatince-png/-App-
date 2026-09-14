@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Shell } from "./ui/primitives";
 import { textMuted } from "./ui/theme";
 import { useT } from "./i18n/translate";
@@ -13,6 +13,7 @@ import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
+import { viewAusHash, hashFuerView } from "./utils/routing";
 
 // Code-Splitting (App-Bauplan-Punkt): vorher landeten ALLE Bildschirme —
 // Admin-Bereich, Onboarding-Fragebogen, jede einzelne Kategorie-Ansicht —
@@ -42,6 +43,27 @@ const OnboardingFlow = lazy(() => import("./views/onboarding/OnboardingFlow"));
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch", "profil", "blutzucker", "community"];
+// Alle eigenständigen (nicht in PLAENE_VIEW_IDS/ARCHIV_VIEW_IDS enthaltenen)
+// `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
+// `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
+// bevor er als Startansicht übernommen wird (siehe utils/routing.js).
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "mehr"];
+const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebungsbilder", "admin-uebersicht", "admin-quests", "admin-teams"];
+
+// Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
+// von einem geteilten Link nach einem App-Update) soll nie auf einen
+// unbekannten `view`-Wert führen, das würde beim Screen-Switch unten
+// stillschweigend im Home-Fallback landen, aber mit falscher URL stehen
+// bleiben. admin-* zusätzlich an `isAdmin` gebunden: ein direkt
+// aufgerufener Admin-Link darf eine Coachee nicht in eine Admin-Ansicht
+// bringen, die sie sowieso nicht sehen könnte (RLS blockt die Daten
+// serverseitig ohnehin, aber die Ansicht soll erst gar nicht aufblitzen).
+function istGueltigerView(view, isAdmin) {
+  if (!view) return false;
+  if (EINZEL_VIEWS.includes(view) || PLAENE_VIEW_IDS.includes(view) || ARCHIV_VIEW_IDS.includes(view)) return true;
+  if (ADMIN_VIEWS.includes(view)) return isAdmin;
+  return false;
+}
 
 // Übersetzt die Kategorie eines Tagesplan-Eintrags in die zuständige View —
 // für den ✏️-Bearbeiten-Kurzweg direkt aus dem Tagesplan. Die Pläne-
@@ -145,10 +167,51 @@ export default function AuthenticatedApp() {
 
   useEffect(() => {
     if (!loading && view === null) {
-      // Neue Konten ohne abgeschlossenes Onboarding starten direkt im Frage-Assistenten.
-      setView(onboardingComplete ? "home" : "form");
+      // Neue Konten ohne abgeschlossenes Onboarding starten direkt im Frage-
+      // Assistenten, unabhängig von einem evtl. vorhandenen Hash — sonst
+      // könnte ein alter Lesezeichen-/geteilter Link den Fragebogen umgehen.
+      if (!onboardingComplete) {
+        setView("form");
+        return;
+      }
+      const ausUrl = viewAusHash();
+      setView(istGueltigerView(ausUrl, isAdmin) ? ausUrl : "home");
     }
-  }, [loading, onboardingComplete, view]);
+  }, [loading, onboardingComplete, isAdmin, view]);
+
+  // Echtes Routing (App-Bauplan-Punkt, siehe utils/routing.js): `view` mit
+  // der Browser-URL verknüpfen, statt es reinen React-State bleiben zu
+  // lassen. `skipNaechstenPushRef` verhindert eine Endlosschleife/kaputte
+  // Historie beim Zurück-/Vorwärts-Knopf: dessen `popstate`-Handler setzt
+  // `view` direkt aus dem (schon vom Browser geänderten) Hash — würde der
+  // Push-Effekt darunter danach nochmal `pushState` aufrufen, würde jedes
+  // "Zurück" einen neuen Vorwärts-Eintrag erzeugen und den Knopf faktisch
+  // funktionslos machen.
+  const skipNaechstenPushRef = useRef(false);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const ausUrl = viewAusHash();
+      if (istGueltigerView(ausUrl, isAdmin) && ausUrl !== view) {
+        skipNaechstenPushRef.current = true;
+        setView(ausUrl);
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [view, isAdmin]);
+
+  useEffect(() => {
+    if (view === null) return;
+    if (skipNaechstenPushRef.current) {
+      skipNaechstenPushRef.current = false;
+      return;
+    }
+    const zielHash = hashFuerView(view);
+    if (window.location.hash !== zielHash) {
+      window.history.pushState({ view }, "", zielHash);
+    }
+  }, [view]);
 
   // "Automatisch" heißt hier: beim nächsten App-Öffnen nach Ablauf der
   // ersten 7 Tage seit Protokoll-Start prüfen, ob schon ein Erste-Woche-
