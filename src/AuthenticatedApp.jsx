@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Shell } from "./ui/primitives";
 import { textMuted } from "./ui/theme";
 import { useT } from "./i18n/translate";
@@ -6,21 +6,6 @@ import { useAppData } from "./context/AppDataContext";
 import { useAuth } from "./context/AuthContext";
 import { useAdmin } from "./context/AdminContext";
 import HomeView from "./views/HomeView";
-import AdminDashboardView from "./views/admin/AdminDashboardView";
-import AdminWissenView from "./views/admin/AdminWissenView";
-import AdminFormulareView from "./views/admin/AdminFormulareView";
-import AdminUebungsBilderView from "./views/admin/AdminUebungsBilderView";
-import AdminCoachUebersichtView from "./views/admin/AdminCoachUebersichtView";
-import AdminQuestsView from "./views/admin/AdminQuestsView";
-import AdminTeamsView from "./views/admin/AdminTeamsView";
-import LexikonView from "./views/LexikonView";
-import TagesplanView from "./views/TagesplanView";
-import PlanView from "./views/plan/PlanView";
-import PlaeneView from "./views/plan/PlaeneView";
-import MehrView from "./views/plan/MehrView";
-import GewohnheitenView from "./views/GewohnheitenView";
-import AtemuebungenView from "./views/AtemuebungenView";
-import OnboardingFlow from "./views/onboarding/OnboardingFlow";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
@@ -28,6 +13,32 @@ import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
+
+// Code-Splitting (App-Bauplan-Punkt): vorher landeten ALLE Bildschirme —
+// Admin-Bereich, Onboarding-Fragebogen, jede einzelne Kategorie-Ansicht —
+// in einem einzigen JS-Bundle (Build-Warnung: > 2,3 MB nach Minifizierung),
+// obwohl pro Sitzung immer nur einer davon tatsächlich gebraucht wird. Jetzt
+// per `lazy()` als eigener Chunk nachgeladen, genau dann, wenn `view`
+// erstmals darauf wechselt — der Suspense-Fallback unten (derselbe
+// LoadingScreen wie beim ersten App-Start) deckt die kurze Ladezeit ab.
+// HomeView bleibt bewusst ein normaler, eager Import: sie wird in praktisch
+// jeder Sitzung sofort nach dem Laden gebraucht, ein zusätzlicher
+// Netzwerk-Sprung würde dort nur schaden statt nutzen.
+const AdminDashboardView = lazy(() => import("./views/admin/AdminDashboardView"));
+const AdminWissenView = lazy(() => import("./views/admin/AdminWissenView"));
+const AdminFormulareView = lazy(() => import("./views/admin/AdminFormulareView"));
+const AdminUebungsBilderView = lazy(() => import("./views/admin/AdminUebungsBilderView"));
+const AdminCoachUebersichtView = lazy(() => import("./views/admin/AdminCoachUebersichtView"));
+const AdminQuestsView = lazy(() => import("./views/admin/AdminQuestsView"));
+const AdminTeamsView = lazy(() => import("./views/admin/AdminTeamsView"));
+const LexikonView = lazy(() => import("./views/LexikonView"));
+const TagesplanView = lazy(() => import("./views/TagesplanView"));
+const PlanView = lazy(() => import("./views/plan/PlanView"));
+const PlaeneView = lazy(() => import("./views/plan/PlaeneView"));
+const MehrView = lazy(() => import("./views/plan/MehrView"));
+const GewohnheitenView = lazy(() => import("./views/GewohnheitenView"));
+const AtemuebungenView = lazy(() => import("./views/AtemuebungenView"));
+const OnboardingFlow = lazy(() => import("./views/onboarding/OnboardingFlow"));
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch", "profil", "blutzucker", "community"];
@@ -341,7 +352,9 @@ export default function AuthenticatedApp() {
             setzt sich also von selbst zurück, ohne dass die App komplett neu
             geladen werden muss. */}
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
-          <ErrorBoundary onReset={() => setView("home")}>{screen}</ErrorBoundary>
+          <ErrorBoundary onReset={() => setView("home")}>
+            <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
+          </ErrorBoundary>
         </div>
       </div>
     </div>
