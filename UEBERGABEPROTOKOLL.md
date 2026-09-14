@@ -1,5 +1,47 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ⚠️ Update 14.09.2026 (Teil 98) — Globalen Datentopf aufgeteilt (Commit `ccefca8`) — bitte in echter Nutzung gegenprüfen
+
+Dritter der fünf größeren strukturellen App-Bauplan-Punkte, aus
+demselben Grund vorsichtiger angegangen wie die letzten beiden: berührt
+die Datenschicht, über die praktisch die ganze App läuft.
+
+`AppDataContext.jsx` bündelte bisher ~33 Daten-Hooks direkt in einem
+einzigen ~150-Felder-Objekt — jede Änderung irgendwo (ein Supplement
+abhaken, eine neue Team-Nachricht) rendert dadurch JEDE Komponente neu,
+die überhaupt `useAppData()` aufruft. Jetzt in drei fachliche Kontexte
+aufgeteilt (`src/context/appData/{Core,Tracking,Platform}DataContext.jsx`,
+jeweils mit eigenem Provider, eigener `useShallowStableValue`-
+Stabilisierung): Core (Profil/Protokoll-Grunddaten + Hormondosen),
+Tracking (die täglichen "Lebensbereiche" — höchste Änderungsfrequenz,
+bisher Haupttreiber unnötiger Re-Renders), Platform (Coaching/Social +
+App-Infrastruktur). `AppDataContext.jsx` selbst orchestriert die drei
+nur noch und bleibt als Kompatibilitäts-Fassade bestehen —
+`useAppData()` liefert weiterhin exakt dasselbe Objekt wie vorher, alle
+bestehenden Aufrufstellen unverändert.
+
+**Wichtige Einschränkung, ehrlich benannt statt verschwiegen:** die
+neue Struktur wurde strukturell gegen die alte Datei verifiziert
+(identische Spread-Reihenfolge, identische Hook-Aufruf-Signaturen,
+per Diff geprüft) und Build/Lint/alle 84 Unit- + 31 E2E-Tests sind
+grün — ABER die E2E-Suite hängt `AppDataProvider` selbst gar nicht
+ein (der Test-Harness injiziert einen gemockten Wert direkt in
+denselben Context, bewusst ohne echtes Supabase, siehe
+`e2e/harness/TestApp.jsx`). Die echte Hook-Verkettung (33 Hooks über
+drei verschachtelte Provider gegen die echte Datenbank) konnte in
+dieser Umgebung NICHT automatisiert End-to-End getestet werden — dafür
+bräuchte es einen echten Login mit echten Supabase-Zugangsdaten, die
+hier nicht vorliegen. Bitte nach dem nächsten Deploy einmal bewusst
+durch ein paar Kernbereiche klicken (Supplemente abhaken, Mahlzeit
+eintragen, Team-Nachricht senden) und prüfen, ob alles wie gewohnt
+aussieht, BEVOR dieser Punkt als vollständig abgehakt gilt.
+
+Neuer Code kann künftig gezielt `useCoreData()`/`useTrackingData()`/
+`usePlatformData()` statt `useAppData()` nutzen — die schrittweise
+Umstellung der ~60 bestehenden Aufrufstellen ist ein eigener,
+risikoarmer nächster Schritt, keine Voraussetzung dafür, dass dieser
+Umbau schon jetzt wirkt.
+
 ## ✅ Update 14.09.2026 (Teil 97) — Echtes Routing eingeführt (Commit `d7f52b8`)
 
 Zweiter der fünf größeren strukturellen App-Bauplan-Punkte. `view` in
