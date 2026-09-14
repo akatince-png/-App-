@@ -22,6 +22,7 @@ export function useProfileData(userId) {
   const [erinnerungen, setErinnerungenState] = useState({});
   const [steckbrief, setSteckbriefState] = useState({});
   const [belohnungPufferMin, setBelohnungPufferMinState] = useState(10);
+  const [ranglisteSichtbar, setRanglisteSichtbarState] = useState(true);
 
   useEffect(() => {
     if (!userId) return;
@@ -49,6 +50,7 @@ export function useProfileData(userId) {
         setErinnerungenState(profile.erinnerungen || {});
         setSteckbriefState(profile.steckbrief || {});
         setBelohnungPufferMinState(profile.belohnung_puffer_min ?? 10);
+        setRanglisteSichtbarState(profile.rangliste_sichtbar ?? true);
 
         // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und
         // muss wissen, in welcher Zeitzone eine eingetragene Uhrzeit
@@ -284,6 +286,28 @@ export function useProfileData(userId) {
     [userId]
   );
 
+  // Rangliste/Wettbewerb optional (App-Bauplan-Punkt) — gleiches
+  // Toggle-mit-Rollback-Muster wie toggleDatenteilung.
+  const toggleRanglisteSichtbar = useCallback(() => {
+    let vorher;
+    let next;
+    setRanglisteSichtbarState((prev) => {
+      vorher = prev;
+      next = !prev;
+      return next;
+    });
+    supabase
+      .from("profiles")
+      .update({ rangliste_sichtbar: next })
+      .eq("id", userId)
+      .then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setRanglisteSichtbarState(vorher);
+        }
+      });
+  }, [userId]);
+
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
   const toggleMesswert = useCallback(
@@ -394,5 +418,7 @@ export function useProfileData(userId) {
     setSteckbrief,
     belohnungPufferMin,
     setBelohnungPufferMin,
+    ranglisteSichtbar,
+    toggleRanglisteSichtbar,
   };
 }

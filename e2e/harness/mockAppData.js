@@ -115,7 +115,7 @@ function siehtAusWieZahl(key) {
 }
 
 function siehtAusWieBoolean(key) {
-  return /^(ist|hat|kann|darf)[A-ZÄÖÜ]/.test(key) || /(Aktiv|Verfuegbar|Erledigt|Abgeschlossen)$/.test(key);
+  return /^(ist|hat|kann|darf)[A-ZÄÖÜ]/.test(key) || /(Aktiv|Verfuegbar|Erledigt|Abgeschlossen|Sichtbar)$/.test(key);
 }
 
 // Rückgabewert für gemockte "Erstellen/Speichern"-Funktionen: viele prüfen

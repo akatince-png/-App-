@@ -3,6 +3,7 @@ import { Card } from "./primitives";
 import { accentDark, accentSoft, cardBorder, textMain, textMuted } from "./theme";
 import { questRanglisteLaden } from "../data/useQuestData";
 import { useAuth } from "../context/AuthContext";
+import { useAppData } from "../context/AppDataContext";
 
 const MEDAILLEN = ["🥇", "🥈", "🥉"];
 
@@ -13,8 +14,17 @@ const MEDAILLEN = ["🥇", "🥈", "🥉"];
 // isoliert die eigene Zahl (Gemeinschafts-Aspekt). Lädt eigenständig über
 // die security-definer-Funktion quest_rangliste() (0072), unabhängig vom
 // useQuestData()-Hook, der nur eigene Quests kennt.
-export default function RanglisteKarte() {
+//
+// Wettbewerb optional (App-Bauplan-Punkt, ADHS-Perspektive): Vergleich mit
+// anderen motiviert manche, wirkt bei anderen demotivierend oder beschämend
+// (Rejection Sensitive Dysphoria). `quest_rangliste()` (0085) lässt daher
+// Coachees mit `rangliste_sichtbar = false` in den Daten selbst schon weg —
+// hier zusätzlich für die eigene Karte auf der Startseite: `erzwingeSichtbar`
+// blendet diese Prüfung für die Admin-Verwaltungsansicht aus, die die
+// Rangliste unabhängig von der eigenen Präferenz braucht.
+export default function RanglisteKarte({ erzwingeSichtbar = false }) {
   const { user } = useAuth();
+  const { ranglisteSichtbar } = useAppData();
   const [rangliste, setRangliste] = useState(null);
   const [fehler, setFehler] = useState(null);
 
@@ -33,6 +43,7 @@ export default function RanglisteKarte() {
     };
   }, []);
 
+  if (!erzwingeSichtbar && ranglisteSichtbar === false) return null;
   if (fehler || (rangliste && rangliste.length === 0)) return null;
 
   return (

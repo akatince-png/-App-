@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, Label, Pill, TextInput } from "../../ui/primitives";
-import { accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
 import { useAppData } from "../../context/AppDataContext";
 import { useLanguage } from "../../i18n/LanguageContext";
@@ -208,6 +208,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
     setErinnerung,
     belohnungPufferMin,
     setBelohnungPufferMin,
+    ranglisteSichtbar,
+    toggleRanglisteSichtbar,
     spotifyVerbunden,
     spotifyPlaylists,
     spotifyPlaylistHinzufuegen,
@@ -444,6 +446,45 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           onChange={(v) => setBelohnungPufferMin(v)}
           placeholder="10"
         />
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🏆 Rangliste</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ maxWidth: 280 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Quest-Rangliste zeigen</div>
+            <div style={{ fontSize: 12, color: textMuted }}>
+              Vergleich mit anderen Coachees ein- oder ausblenden. Ausgeschaltet siehst du die Rangliste selbst nicht
+              mehr und tauchst dort auch bei niemand anderem mehr auf.
+            </div>
+          </div>
+          <button
+            onClick={toggleRanglisteSichtbar}
+            style={{
+              width: 46,
+              height: 26,
+              borderRadius: 13,
+              border: "none",
+              background: ranglisteSichtbar ? accent : "#D9EEE7",
+              position: "relative",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                background: "#fff",
+                position: "absolute",
+                top: 3,
+                left: ranglisteSichtbar ? 23 : 3,
+                transition: "left 0.2s ease",
+              }}
+            />
+          </button>
+        </div>
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erinnerungen")}</div>
