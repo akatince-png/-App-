@@ -1,5 +1,54 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 88–90) — Auffangnetz, Fehler-Frühwarnsystem, Akutmodus überall erreichbar
+
+Nutzerinnen-Vorgabe nach dem App-Bauplan-Gespräch: die dort erarbeitete
+13-Punkte-Liste offener Baustellen "Stück für Stück" direkt im Code
+abarbeiten, nicht nur als Vorschläge stehen lassen. Erste drei Punkte:
+
+**Teil 88 — Auffangnetz gegen Abstürze (Commit `3625b92`).** Ohne
+Error Boundary zeigt React bei einem Fehler irgendwo im Komponentenbaum
+eine komplett leere, weiße Seite — man merkt nicht mal, dass etwas
+schiefging. Neue Klassenkomponente `src/ui/ErrorBoundary.jsx`
+(`getDerivedStateFromError`/`componentDidCatch`, einzige Möglichkeit in
+React, einen Fehler-Grenzwert zu bauen), bewusst ohne Abhängigkeit von
+Shell/Context — falls der Fehler durch einen kaputten Context ausgelöst
+wurde, darf die Auffang-Anzeige nicht selbst davon abhängen. Zeigt
+"Zurück zur Startseite" / "Seite komplett neu laden", im Dev-Modus
+zusätzlich die Rohfehlermeldung. In `App.jsx` um die ganze App gelegt,
+zusätzlich in `AuthenticatedApp.jsx` um jeden einzelnen Bildschirm-
+Wechsel — ein Absturz auf einer Unteransicht reißt so nicht die ganze
+App mit, sondern nur den betroffenen Bereich.
+
+**Teil 89 — Fehler-Frühwarnsystem, Sentry (Commit `ef48257`).** Bisher
+erfuhr man von einem Absturz draußen im echten Betrieb nur durch Zufall
+(die Nutzerin berichtet es). Neuer Service
+`src/services/errorMonitoring.js`, angebunden über `@sentry/react`;
+`meldeAbsturz()` wird aus der Error Boundary heraus aufgerufen. Rein
+additiv und ungefährlich: ohne gesetzte `VITE_SENTRY_DSN` bleibt das
+Frühwarnsystem einfach aus, die App läuft normal weiter. `.env.example`
+um die nötige Erklärung/Platzhalter-Zeile ergänzt — kostenloses
+Sentry-Konto reicht für eine Einzelnutzer-App.
+
+**Teil 90 — Akutmodus von jedem Bildschirm aus erreichbar (Commit
+`fe08c3b`).** Der Akutmodus saß bisher nur auf Home (eigene, frühere
+Nutzerinnen-Vorgabe, bleibt dort unverändert bestehen) — ausgerechnet
+der Moment, in dem jemand ihn braucht, passiert aber oft nicht auf der
+Startseite. Neue Komponente `src/ui/AkutModusGlobal.jsx`: schwebender
+💡-Knopf unten links auf allen Bildschirmen außer Home und Onboarding,
+öffnet dasselbe `AkutModusPanel` wie bisher, per `createPortal` an
+`document.body` gerendert (gleicher Grund wie beim KiChat-Fix aus Teil
+87 — sonst könnte eine transformierende Vorfahren-Animation den Knopf
+oder das Panel beschneiden). In `AuthenticatedApp.jsx` neben
+`<Belohnungsfenster />` eingehängt.
+
+Build, Lint, alle 76 Unit- und 30 E2E-Tests grün nach jedem der drei
+Schritte. Nächste Punkte aus der Liste (Team-Rangliste optional machen,
+wohlwollende Sprache bei Rückständen, Gnadentag-Mechanik, Onboarding-
+Quick-Win, Startseite entschlacken, dann die größeren strukturellen
+Punkte Code-Splitting/Routing/Datentopf-Aufteilung/TypeScript) folgen
+in denselben Schritten.
+
 ## ✅ Update 14.09.2026 (Teil 87) — Bug-Fix: Coach-Chat-Modal deckte Bildschirm nur teilweise ab
 
 Die in Teil 86 notierte "Beobachtung" (Coach-Chat überlappt den
