@@ -17,7 +17,17 @@
 // ab, für den es hier wirklich gebraucht wird: einfache, seltener
 // wechselnde GET-artige Abfragen (Ranglisten, Nachschlagewerte, ...), die
 // bei jedem Bildschirmwechsel neu gemountet werden.
-const cache = new Map(); // key -> { data, geladenUm, inFlight: Promise|null }
+interface CacheEintrag<T> {
+  data: T | undefined;
+  geladenUm: number;
+  inFlight: Promise<T> | null;
+}
+
+interface FetchWithCacheOptions {
+  ttlMs?: number;
+}
+
+const cache = new Map<string, CacheEintrag<unknown>>();
 
 /**
  * Lädt `fetcher()` und cacht das Ergebnis unter `key`. Innerhalb von
@@ -28,14 +38,14 @@ const cache = new Map(); // key -> { data, geladenUm, inFlight: Promise|null }
  * teilen sich dieselbe laufende Anfrage, statt doppelt zu laden.
  * Fehler werden NICHT gecacht — der nächste Aufruf versucht es erneut.
  */
-export function fetchWithCache(key, fetcher, { ttlMs = 30000 } = {}) {
-  const eintrag = cache.get(key);
+export function fetchWithCache<T>(key: string, fetcher: () => Promise<T>, { ttlMs = 30000 }: FetchWithCacheOptions = {}): Promise<T> {
+  const eintrag = cache.get(key) as CacheEintrag<T> | undefined;
   if (eintrag?.inFlight) return eintrag.inFlight;
   if (eintrag && Date.now() - eintrag.geladenUm < ttlMs) {
-    return Promise.resolve(eintrag.data);
+    return Promise.resolve(eintrag.data as T);
   }
 
-  const inFlight = fetcher()
+  const inFlight: Promise<T> = fetcher()
     .then((data) => {
       cache.set(key, { data, geladenUm: Date.now(), inFlight: null });
       return data;
@@ -50,12 +60,12 @@ export function fetchWithCache(key, fetcher, { ttlMs = 30000 } = {}) {
 }
 
 /** Verwirft den gecachten Wert für `key` — der nächste Aufruf lädt neu. */
-export function invalidateCache(key) {
+export function invalidateCache(key: string): void {
   cache.delete(key);
 }
 
 // Nur für Tests: leert den kompletten Cache zwischen Testfällen, damit
 // sich Tests nicht gegenseitig über den modul-globalen Cache beeinflussen.
-export function _clearCacheForTests() {
+export function _clearCacheForTests(): void {
   cache.clear();
 }

@@ -33,8 +33,8 @@ describe("fetchWithCache", () => {
   });
 
   it("teilt sich eine gleichzeitig laufende Anfrage für denselben Key (Dedup)", async () => {
-    let aufloesen;
-    const fetcher = vi.fn(() => new Promise((resolve) => (aufloesen = resolve)));
+    let aufloesen!: (wert: string) => void;
+    const fetcher = vi.fn(() => new Promise<string>((resolve) => (aufloesen = resolve)));
     const p1 = fetchWithCache("k4", fetcher);
     const p2 = fetchWithCache("k4", fetcher);
     aufloesen("geteilter-wert");

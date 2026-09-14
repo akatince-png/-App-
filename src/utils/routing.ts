@@ -17,12 +17,12 @@
 // Bildet exakt den bereits bestehenden `view`-String ab (derselbe Wert,
 // den PLAENE_VIEW_IDS/ARCHIV_VIEW_IDS/admin-* usw. in AuthenticatedApp.jsx
 // schon kennen) — kein zweites, paralleles Routen-Konzept.
-export function viewAusHash() {
+export function viewAusHash(): string | null {
   const hash = window.location.hash;
   const match = hash.match(/^#\/(.+)$/);
   return match ? match[1] : null;
 }
 
-export function hashFuerView(view) {
+export function hashFuerView(view: string): string {
   return `#/${view}`;
 }

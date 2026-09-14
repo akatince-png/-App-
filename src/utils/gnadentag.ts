@@ -18,18 +18,35 @@ import { buildDayItems } from "./dayItems";
 const TAGE_ZURUECK = 7;
 const AKTIV_SCHWELLE = 0.5;
 
-export function berechneWochenStats(appData, heute = new Date()) {
+export interface WochenStats {
+  completedDays: number;
+  pauseDays: number;
+  totalDays: number;
+}
+
+// `appData` bleibt bewusst locker typisiert (nicht überall `any`, aber auch
+// keine vollständige Schnittstelle für das ~150-Felder-Objekt aus
+// useAppData()): buildDayItems() selbst ist noch eine ungeprüfte .js-Datei
+// (siehe tsconfig.json, `checkJs: false`) — TypeScript leitet aus deren
+// Ziel-Objekt-Destrukturierung trotzdem einen strikten Parametertyp ab
+// (u. a. mehrere als "erforderlich" erkannte Felder). Eine ebenso strikte
+// Schnittstelle hier hätte ohne eine ebenso strikte, geprüfte Gegenseite
+// dort keinen echten Nutzen, nur Schein-Sicherheit — daher der bewusste,
+// einzelne `as any` genau an der Grenze zu dieser ungeprüften Datei, statt
+// `appData` app-weit unnötig aufzuweichen.
+export function berechneWochenStats(appData: Record<string, unknown>, heute: Date = new Date()): WochenStats {
   let completedDays = 0;
   let pauseDays = 0;
 
   for (let i = 1; i <= TAGE_ZURUECK; i++) {
     const tag = addDays(heute, -i);
-    const items = buildDayItems(tag, appData);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items = buildDayItems(tag, appData as any);
     if (items.length === 0) {
       completedDays += 1; // nichts geplant -> kein verpasster Tag
       continue;
     }
-    const erledigtAnteil = items.filter((it) => it.done).length / items.length;
+    const erledigtAnteil = items.filter((it: { done: boolean }) => it.done).length / items.length;
     if (erledigtAnteil >= AKTIV_SCHWELLE) completedDays += 1;
     else pauseDays += 1;
   }

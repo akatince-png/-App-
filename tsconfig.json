@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    // TypeScript einführen (App-Bauplan-Punkt): bewusst inkrementell statt
+    // einer riskanten Einmal-Umstellung aller ~150 Dateien. `allowJs` +
+    // `checkJs: false` lässt bestehende .js/.jsx-Dateien unverändert und
+    // ungeprüft neben echten .ts/.tsx-Dateien laufen — TypeScript deckt
+    // dadurch von Anfang an strikt genau die Dateien ab, die tatsächlich
+    // schon umgestellt sind (siehe src/lib/queryCache.ts als erstes
+    // Beispiel), statt entweder alles auf einmal (unrealistisch sicher zu
+    // verifizieren) oder gar nichts zu tun.
+    "allowJs": true,
+    "checkJs": false,
+    "strictNullChecks": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "e2e"]
+}
