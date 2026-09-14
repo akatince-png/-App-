@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import WelcomeView from "../WelcomeView";
 import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
+import OnboardingQuickWinView from "./OnboardingQuickWinView";
 import OnboardingIntroView from "./OnboardingIntroView";
 import OnboardingZieleView from "./OnboardingZieleView";
 import OnboardingProfilView from "./OnboardingProfilView";
@@ -14,10 +15,17 @@ import { useAdmin } from "../../context/AdminContext";
 
 // Koordiniert den einmaligen Einrichtungs-Ablauf nach der Registrierung:
 // Willkommens-Folien → Hauptprotokoll anlegen (Name + Startdatum) →
-// Ziel & Grund → Profil & Ausgangslage → Laborwerte → Morgen-/Abendroutine
-// → Kategorien (Schlaf/Hydration/Ernährung/Training/Gewohnheiten/
-// Supplemente/Medikamente/Peptid-Plan, je einzeln überspringbar, alle mit
-// derselben "Jetzt einrichten?"-Gate-Seite) → Abschluss-Screen.
+// Quick-Win-Zwischenscreen → Ziel & Grund → Profil & Ausgangslage →
+// Laborwerte → Morgen-/Abendroutine → Kategorien (Schlaf/Hydration/
+// Ernährung/Training/Gewohnheiten/Supplemente/Medikamente/Peptid-Plan, je
+// einzeln überspringbar, alle mit derselben "Jetzt einrichten?"-Gate-Seite)
+// → Abschluss-Screen.
+//
+// Quick-Win-Zwischenscreen (App-Bauplan-Punkt, ADHS-Perspektive, siehe
+// OnboardingQuickWinView.jsx): direkt nach dem allerersten, kleinsten
+// Schritt (Hauptprotokoll anlegen) gibt's schon eine echte, sichtbare
+// Bestätigung — statt dass der einzige Erfolgsmoment erst ganz am Ende
+// nach dem gesamten langen Fragebogen-Teil kommt.
 //
 // Morgen-/Abendroutine bewusst VOR den Kategorien (Nutzerinnen-Vorgabe,
 // 13.08.): der eigentliche Ursprungsgedanke der App war ADHS-gerechte
@@ -63,7 +71,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const { isAdmin, onboardingModus } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | quickwin | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
   // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
@@ -80,12 +88,14 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
-        onDone={() => setPhase("intro")}
+        onDone={() => setPhase("quickwin")}
         onBack={() => setPhase("welcome")}
         onCancel={onCancel}
         zeigeBestehendesAlsOption={!istDirekterNeuStart}
       />
     );
+  } else if (phase === "quickwin") {
+    screen = <OnboardingQuickWinView onDone={() => setPhase("intro")} onBack={() => setPhase("hauptprotokoll")} />;
   } else if (phase === "intro") {
     // Bei Coach-Begleitung deckt OnboardingIntroView (über OnboardingCoachGuide)
     // Name, Ziele UND Profil direkt mit ab — dann direkt zu "laborwerte"
@@ -94,7 +104,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingIntroView
         onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")}
-        onBack={() => setPhase("hauptprotokoll")}
+        onBack={() => setPhase("quickwin")}
         onCancel={onCancel}
         nurManuell={!istAdminModus}
       />

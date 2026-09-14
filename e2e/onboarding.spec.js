@@ -2,10 +2,11 @@ import { test, expect } from "@playwright/test";
 import { sammleKonsolenfehler } from "./helpers.js";
 
 // Kompletter Onboarding-Durchlauf, ein Screen nach dem anderen: Willkommen
-// (3 Folien) → Hauptprotokoll anlegen → Intro (Name) → Ziele → Profil →
-// Laborwerte → Routinen → Kategorien ("Alles überspringen") → Abschluss →
-// zurück auf Home. Nutzt ?onboarding=1 (siehe e2e/harness/TestApp.jsx), um
-// einen frischen, noch nicht eingerichteten Account zu simulieren.
+// (3 Folien) → Hauptprotokoll anlegen → Quick-Win-Zwischenscreen → Intro
+// (Name) → Ziele → Profil → Laborwerte → Routinen → Kategorien ("Alles
+// überspringen") → Abschluss → zurück auf Home. Nutzt ?onboarding=1 (siehe
+// e2e/harness/TestApp.jsx), um einen frischen, noch nicht eingerichteten
+// Account zu simulieren.
 //
 // Bewusste Grenze: befüllt nur die Felder, die zum Weiterkommen nötig sind
 // (Protokollname, Vorname) — testet NICHT jede einzelne der 8 Kategorien im
@@ -27,6 +28,14 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   await expect(page.getByText("Wie soll dein Protokoll heißen?")).toBeVisible();
   await page.getByPlaceholder("z. B. Sommer 2026").fill("E2E-Test-Protokoll");
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
+
+  // Quick-Win-Zwischenscreen (App-Bauplan-Punkt): erste Bestätigung schon
+  // direkt nach dem ersten kleinen Schritt, bevor der lange Fragebogen-Teil
+  // losgeht. Zwei gleich beschriftete "Weiter geht's"-Knöpfe (Pfeil-
+  // Navigation oben, Haupt-Button unten) — .last() wie beim Abschluss-
+  // Screen weiter unten.
+  await expect(page.getByText("Erster Schritt geschafft!", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Weiter geht's" }).last().click();
 
   // Intro: erst die 3-Wege-Frage ("begleitet" vs. "allein"), dann Name.
   await expect(page.getByText("Ich bin", { exact: false })).toBeVisible();
