@@ -926,7 +926,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               {ISTZUSTAND_FRAGEN[step.key].map((f) => (
                 <div key={f.key} style={{ marginBottom: 10 }}>
                   <Label>{tLabel(f.frage)}</Label>
-                  <TextArea value={istZustand[f.key] || ""} onChange={(v) => setIstZustandFeld(f.key, v)} placeholder={f.placeholder} />
+                  <TextArea value={istZustand[f.key] || ""} onChange={(v) => setIstZustandFeld(f.key, v)} placeholder={f.placeholder} diktierbar />
                 </div>
               ))}
             </div>
@@ -962,9 +962,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           {step.key === "gewohnheiten" && (
             <>
               <Label>{t("onboarding.gewohnheiten.name.label")}</Label>
-              <TextInput value={gName} onChange={setGName} placeholder={t("onboarding.gewohnheiten.name.placeholder")} />
+              <TextInput value={gName} onChange={setGName} placeholder={t("onboarding.gewohnheiten.name.placeholder")} diktierbar />
               <Label>{t("onboarding.gewohnheiten.menge.label")}</Label>
-              <TextInput value={gMenge} onChange={setGMenge} placeholder={t("onboarding.gewohnheiten.menge.placeholder")} />
+              <TextInput value={gMenge} onChange={setGMenge} placeholder={t("onboarding.gewohnheiten.menge.placeholder")} diktierbar />
               <Label>{t("onboarding.gewohnheiten.uhrzeit.label")}</Label>
               <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                 <Pill
@@ -1120,7 +1120,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           {step.key === "ernaehrung" && (
             <>
               <Label>{t("onboarding.ernaehrung.name.label")}</Label>
-              <TextInput value={mahlName} onChange={setMahlName} placeholder={t("onboarding.ernaehrung.name.placeholder")} />
+              <TextInput value={mahlName} onChange={setMahlName} placeholder={t("onboarding.ernaehrung.name.placeholder")} diktierbar />
               <Label>{tLabel("Intervall")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 12 }}>
                 <Pill
@@ -1155,7 +1155,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               {mahlZutaten.map((z, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                   <div style={{ flex: 2 }}>
-                    <TextInput value={z.name} onChange={(v) => zutatAendern(i, "name", v)} placeholder={t("onboarding.ernaehrung.zutat.placeholder")} />
+                    <TextInput value={z.name} onChange={(v) => zutatAendern(i, "name", v)} placeholder={t("onboarding.ernaehrung.zutat.placeholder")} diktierbar />
                   </div>
                   <div style={{ flex: 1 }}>
                     <TextInput value={z.menge} onChange={(v) => zutatAendern(i, "menge", v)} placeholder={t("onboarding.ernaehrung.zutatmenge.placeholder")} />
@@ -1216,7 +1216,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           {step.key === "supplemente" && (
             <>
               <Label>{t("onboarding.supplemente.name.label")}</Label>
-              <TextInput value={suppName} onChange={setSuppName} placeholder={t("onboarding.supplemente.name.placeholder")} />
+              <TextInput value={suppName} onChange={setSuppName} placeholder={t("onboarding.supplemente.name.placeholder")} diktierbar />
               <Label>{tLabel("Einnahmeart")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {EINNAHMEARTEN.map((a) => (
@@ -1234,7 +1234,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           {step.key === "medikamente" && (
             <>
               <Label>{tLabel("Name")}</Label>
-              <TextInput value={medName} onChange={setMedName} placeholder={t("onboarding.medikamente.name.placeholder")} />
+              <TextInput value={medName} onChange={setMedName} placeholder={t("onboarding.medikamente.name.placeholder")} diktierbar />
               <Label>{tLabel("Kategorie")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {MEDIKAMENTE_KATEGORIEN.map((k) => (

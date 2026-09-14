@@ -1,6 +1,79 @@
 import { test, expect } from "@playwright/test";
 import { sammleKonsolenfehler } from "./helpers.js";
 
+// Simuliert die Web-Speech-API (kein echtes Mikrofon im Testrunner
+// verfügbar): `start()` liefert nach kurzer Verzögerung erst ein
+// Zwischenergebnis (onZwischenergebnis, noch nicht bestätigt), danach ein
+// fertiges Endergebnis (onErgebnis) — genau die zwei Stufen, die
+// useDiktat.js (src/ui/useDiktat.js) unterscheidet. Bewusst als eigene
+// Funktion statt Inline-Closure, damit sie unverändert per
+// page.addInitScript() ins Browser-Context-JS injiziert werden kann (läuft
+// dort, nicht in Node — kein Zugriff auf Variablen von hier draußen).
+function fakeSpeechRecognitionEinrichten() {
+  class FakeSpeechRecognition {
+    start() {
+      setTimeout(() => {
+        const zwischen = [{ transcript: "Anton" }];
+        zwischen.isFinal = false;
+        this.onresult?.({ resultIndex: 0, results: [zwischen] });
+      }, 30);
+      setTimeout(() => {
+        const fertig = [{ transcript: "Anton Diktiert" }];
+        fertig.isFinal = true;
+        this.onresult?.({ resultIndex: 0, results: [fertig] });
+        this.onend?.();
+      }, 90);
+    }
+    stop() {
+      this.onend?.();
+    }
+  }
+  window.SpeechRecognition = FakeSpeechRecognition;
+  window.webkitSpeechRecognition = FakeSpeechRecognition;
+}
+
+test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon befüllen (Web-Speech-API, kein AIService-Aufruf)", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  // AIService-Aufrufe müssten (falls die Diktierfunktion fälschlich doch die
+  // KI anspräche) über Supabase Edge Functions laufen — schlägt jeder
+  // fetch-Versuch dorthin fehl, wäre das ein handfester Test-Fehlschlag
+  // statt eines stillen Fallbacks.
+  let kiAufgerufen = false;
+  await page.route("**/functions/v1/**", (route) => {
+    kiAufgerufen = true;
+    route.abort();
+  });
+  await page.addInitScript(fakeSpeechRecognitionEinrichten);
+  await page.goto("/e2e/harness/index.html?onboarding=1");
+
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Los geht's", exact: true }).click();
+  await page.getByPlaceholder("z. B. Sommer 2026").fill("E2E-Test-Protokoll");
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Weiter geht's" }).last().click();
+  await page.getByRole("button", { name: "Nein, ich mach's selbst" }).click();
+
+  const namensfeld = page.getByPlaceholder("z. B. Anton Kaufmann");
+  await expect(namensfeld).toBeVisible();
+  await expect(namensfeld).toHaveValue("");
+
+  await page.getByTitle("Diktieren (ohne KI)").click();
+
+  // Zwischenergebnis: kursiv/blass unterhalb des Felds sichtbar, noch NICHT
+  // im eigentlichen Feldwert (siehe DiktatVorschau in ui/primitives.jsx).
+  await expect(page.getByText("Anton…")).toBeVisible();
+  await expect(namensfeld).toHaveValue("");
+
+  // Endergebnis: landet im echten Feldwert, Zwischenvorschau verschwindet
+  // wieder (Aufnahme endet automatisch, siehe FakeSpeechRecognition oben).
+  await expect(namensfeld).toHaveValue("Anton Diktiert");
+  await expect(page.getByText("Anton…")).not.toBeVisible();
+
+  expect(kiAufgerufen).toBe(false);
+  expect(fehler).toEqual([]);
+});
+
 // Kompletter Onboarding-Durchlauf, ein Screen nach dem anderen: Willkommen
 // (3 Folien) → Hauptprotokoll anlegen → Quick-Win-Zwischenscreen → Intro
 // (Name) → Ziele → Profil → Laborwerte → Routinen → Kategorien ("Alles

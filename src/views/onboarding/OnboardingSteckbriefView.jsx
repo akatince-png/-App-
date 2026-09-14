@@ -42,6 +42,7 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
               value={steckbrief.supplementeWelche || ""}
               onChange={(v) => setSteckbrief({ supplementeWelche: v })}
               placeholder="z. B. Magnesium, Vitamin D, Omega-3 ..."
+              diktierbar
             />
           </>
         )}
@@ -62,12 +63,14 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
           value={steckbrief.sportMenge || ""}
           onChange={(v) => setSteckbrief({ sportMenge: v })}
           placeholder="z. B. 2x pro Woche"
+          diktierbar
         />
         <Label>Kurze Beschreibung (optional)</Label>
         <TextArea
           value={steckbrief.sportBeschreibung || ""}
           onChange={(v) => setSteckbrief({ sportBeschreibung: v })}
           placeholder="z. B. Krafttraining im Studio, oder Laufen im Park ..."
+          diktierbar
         />
       </Card>
 

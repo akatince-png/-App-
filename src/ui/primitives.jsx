@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, aufhellen, hexZuRgba } from "./theme";
+import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, danger, accentDark, aufhellen, hexZuRgba } from "./theme";
 import { BereichColorProvider, useBereichColor } from "./BereichColorContext";
+import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
+import { useDiktat } from "./useDiktat";
 
 // `bereich` (optional, z. B. "training", "hydration" — Schlüssel aus
 // KATEGORIE_META in utils/dayItems.js): färbt PrimaryButton/Pill/CheckRow/
@@ -205,8 +207,55 @@ export function Label({ children }) {
   );
 }
 
-export const TextInput = React.forwardRef(function TextInput({ value, onChange, placeholder, type = "text", onKeyPress }, ref) {
+// Mikrofon-Knopf für TextInput/TextArea — rein optisch dasselbe Knopf-Muster
+// wie schon in OnboardingCoachFreitext.jsx/TagebuchModal.jsx (rundes Icon,
+// rötlich+danger während der Aufnahme, sonst accentDark), hier aber absolut
+// positioniert am Feldrand statt als eigenständiges Element daneben.
+function DiktatKnopf({ hoert, onClick, style }) {
   return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={hoert ? "Aufnahme stoppen" : "Diktieren (ohne KI)"}
+      style={{
+        position: "absolute",
+        width: 30,
+        height: 30,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "50%",
+        border: "none",
+        background: hoert ? "#FDE9EC" : "rgba(0,0,0,0.06)",
+        color: hoert ? danger : accentDark,
+        cursor: "pointer",
+        flexShrink: 0,
+        ...style,
+      }}
+    >
+      {hoert ? <StopIcon size={13} /> : <MikrofonIcon size={15} />}
+    </button>
+  );
+}
+
+// Zeigt den noch unsicheren, gerade erst erkannten Satzteil kursiv/blass an
+// — bewusst optisch abgesetzt vom bereits bestätigten Feldwert (der normal/
+// fett im Feld selbst steht), damit erkennbar bleibt, was noch "in der
+// Schwebe" ist, bevor es beim Satzende in den echten Wert übernommen wird
+// (Nutzerinnen-Vorgabe, 14.09.: Diktat fürs Formular-Ausfüllen, ohne KI).
+function DiktatVorschau({ text }) {
+  return (
+    <div style={{ fontSize: 12.5, fontStyle: "italic", color: textMuted, marginTop: 4, paddingLeft: 2 }}>{text}…</div>
+  );
+}
+
+export const TextInput = React.forwardRef(function TextInput(
+  { value, onChange, placeholder, type = "text", onKeyPress, diktierbar = false },
+  ref
+) {
+  const diktat = useDiktat({ value, onChange, aktiv: diktierbar && type === "text" });
+
+  const feld = (
     <input
       ref={ref}
       className="mp-input"
@@ -219,7 +268,7 @@ export const TextInput = React.forwardRef(function TextInput({ value, onChange, 
         width: "100%",
         boxSizing: "border-box",
         minHeight: 46,
-        padding: "12px 14px",
+        padding: diktat.verfuegbar ? "12px 42px 12px 14px" : "12px 14px",
         borderRadius: 14,
         border: `1px solid ${cardBorder}`,
         background: "#FAFBFA",
@@ -229,10 +278,23 @@ export const TextInput = React.forwardRef(function TextInput({ value, onChange, 
       }}
     />
   );
+
+  if (!diktat.verfuegbar) return feld;
+
+  return (
+    <div style={{ position: "relative" }}>
+      {feld}
+      <DiktatKnopf hoert={diktat.hoert} onClick={diktat.umschalten} style={{ right: 8, top: 8 }} />
+      {diktat.hoert && diktat.interim && <DiktatVorschau text={diktat.interim} />}
+      {diktat.fehler && <div style={{ fontSize: 12, color: danger, marginTop: 4 }}>{diktat.fehler}</div>}
+    </div>
+  );
 });
 
-export function TextArea({ value, onChange, placeholder }) {
-  return (
+export function TextArea({ value, onChange, placeholder, diktierbar = false }) {
+  const diktat = useDiktat({ value, onChange, aktiv: diktierbar });
+
+  const feld = (
     <textarea
       className="mp-input"
       value={value}
@@ -242,7 +304,7 @@ export function TextArea({ value, onChange, placeholder }) {
       style={{
         width: "100%",
         boxSizing: "border-box",
-        padding: "12px 14px",
+        padding: diktat.verfuegbar ? "12px 42px 12px 14px" : "12px 14px",
         borderRadius: 14,
         border: `1px solid ${cardBorder}`,
         background: "#FAFBFA",
@@ -253,6 +315,17 @@ export function TextArea({ value, onChange, placeholder }) {
         fontFamily: "inherit",
       }}
     />
+  );
+
+  if (!diktat.verfuegbar) return feld;
+
+  return (
+    <div style={{ position: "relative" }}>
+      {feld}
+      <DiktatKnopf hoert={diktat.hoert} onClick={diktat.umschalten} style={{ right: 8, top: 8 }} />
+      {diktat.hoert && diktat.interim && <DiktatVorschau text={diktat.interim} />}
+      {diktat.fehler && <div style={{ fontSize: 12, color: danger, marginTop: 4 }}>{diktat.fehler}</div>}
+    </div>
   );
 }
 

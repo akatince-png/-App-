@@ -182,7 +182,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
 
       <Card>
         <Label>{t("hauptprotokoll.name.label")}</Label>
-        <TextInput value={name} onChange={setName} placeholder={t("hauptprotokoll.name.placeholder")} />
+        <TextInput value={name} onChange={setName} placeholder={t("hauptprotokoll.name.placeholder")} diktierbar />
         <div style={{ display: "flex", flexWrap: "wrap", marginTop: 4 }}>
           {BEISPIELE.map((b) => (
             <Pill key={b} label={b} selected={name === b} onClick={() => setName(b)} />

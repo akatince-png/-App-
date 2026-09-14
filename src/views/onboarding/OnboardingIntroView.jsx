@@ -159,6 +159,7 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
           value={name}
           onChange={setName}
           placeholder="z. B. Anton Kaufmann"
+          diktierbar
           onKeyPress={(e) => {
             if (e.key === "Enter" && name.trim()) {
               handleContinue();

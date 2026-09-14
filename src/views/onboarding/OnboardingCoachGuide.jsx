@@ -304,6 +304,7 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
                 value={wert}
                 onChange={setWert}
                 placeholder={schritt.placeholder}
+                diktierbar
                 onKeyPress={(e) => e.key === "Enter" && kannWeiter && !interpretationLaden && antwortAbschicken()}
               />
             )}
