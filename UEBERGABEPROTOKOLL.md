@@ -1,5 +1,36 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 99) — Zentrale Datenschicht mit Caching (Commit `fc0cc99`)
+
+Vierter der fünf größeren strukturellen App-Bauplan-Punkte. Konkreter,
+im Code auffindbarer Auslöser: `AuthenticatedApp.jsx` mountet den
+aktiven Bildschirm bei jedem `view`-Wechsel komplett neu (für die
+fadeInUp-Übergangsanimation) — jede Komponente mit eigenem
+`useEffect`-Datenabruf, unabhängig vom zentralen `AppDataProvider`,
+lädt ihre Daten dadurch bei jedem erneuten Besuch neu. Home → Mehr →
+zurück zu Home fragte z. B. die Quest-Rangliste jedes Mal komplett neu
+ab, auch wenn seit dem letzten Besuch vor Sekunden nichts passiert war.
+
+Neu: `src/lib/queryCache.js` (reines Cache-Modul: TTL + Dedup
+gleichzeitiger Anfragen für denselben Key, Fehler werden nicht
+gecacht) + `src/lib/useCachedQuery.js` (React-Hook-Anbindung). Bewusst
+ein schlankes, selbst geschriebenes Modul statt React Query/SWR: die
+~33 Daten-Hooks unter `src/data/` haben schon eigene, sorgfältig
+gebaute optimistische Updates samt Rollback bei Fehlern (mehrere
+frühere Teile dieses Protokolls) — die alle auf eine Bibliotheks-
+eigene Mutations-API umzustellen wäre ein eigener, riesiger Umbau für
+sich. Dieses Modul deckt genau den Fall ab, für den es hier gebraucht
+wird: einfache GET-artige Abfragen, die bei jedem Bildschirmwechsel
+neu gemountet werden.
+
+`RanglisteKarte.jsx` als erster echter, vollständig getesteter
+Anwendungsfall umgestellt (Cache-Key `"quest-rangliste"`, 30s TTL,
+geteilt zwischen Home und `AdminQuestsView`). Die Migration der
+restlichen ~5 Stellen mit eigenem Ad-hoc-Datenabruf (Admin-Views, die
+strukturell andere Cross-User-Abfragen machen) ist ein eigener,
+risikoarmer nächster Schritt — kein Blocker dafür, dass die neue
+Infrastruktur schon jetzt echten Nutzen bringt.
+
 ## ⚠️ Update 14.09.2026 (Teil 98) — Globalen Datentopf aufgeteilt (Commit `ccefca8`) — bitte in echter Nutzung gegenprüfen
 
 Dritter der fünf größeren strukturellen App-Bauplan-Punkte, aus
