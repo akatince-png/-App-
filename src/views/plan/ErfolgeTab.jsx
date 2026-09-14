@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { Card } from "../../ui/primitives";
 import Icon from "../../ui/Icon";
+import GraceDayCard from "../../ui/GraceDayCard";
 import { accent, accentSoft, cardBorder, textMain, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 import { useErrungenschaften } from "../../data/useErrungenschaften";
+import { berechneWochenStats } from "../../utils/gnadentag";
 import { STREAK_SCHWELLEN, PUNKTE_SCHWELLEN, badgeLabel, badgeBeschreibung, alleBadges } from "../../utils/errungenschaften";
 
 function naechsteSchwelle(wert, schwellen) {
@@ -71,6 +73,8 @@ export default function ErfolgeTab() {
 
   const { gesamtPunkte, kategorien, globalerStreak, verdiente, ladend, neueBadgeKeys } = useErrungenschaften(userId, quellen);
 
+  const wochenStats = useMemo(() => berechneWochenStats(appData), [appData]);
+
   const erreichteAbzeichen = useMemo(
     () => Object.entries(verdiente).sort(([, a], [, b]) => new Date(b) - new Date(a)),
     [verdiente]
@@ -103,6 +107,8 @@ export default function ErfolgeTab() {
 
   return (
     <>
+      <GraceDayCard weeklyStats={wochenStats} />
+
       <Card style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-around" }}>
           <div style={{ textAlign: "center" }}>
