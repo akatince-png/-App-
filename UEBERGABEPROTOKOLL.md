@@ -1,5 +1,21 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 95) — Startseite entschlacken (Commit `c327f91`)
+
+Nächster Punkt aus der App-Bauplan-Liste. Home versteht sich laut
+bestehenden Kommentaren selbst als "ein Tagesassistent, kein Menü" —
+die Reihenfolge widersprach dem aber: die Quests-/Rangliste-/Team-/
+Coach-Nachricht-Karten standen direkt zwischen den Schnellaktionen
+(Hydration/Akutmodus-Knopf) und dem eigentlichen Tagesfortschritt/
+"Als Nächstes". Genau der Teil, den man als Erstes braucht ("Was steht
+heute an?"), verschwand dadurch hinter vier Motivations-/Social-Karten.
+
+Reine Umsortierung in `HomeView.jsx`, nichts entfernt oder in der
+Funktion verändert: der Block (QuestsKarte/RanglisteKarte/TeamKarte/
+NachrichtAnCoachCard bzw. der Home-KiChat im Admin-Modus) sitzt jetzt
+NACH "Als Nächstes", VOR "Direktzugriff" — bleibt vollständig
+erreichbar, nur nicht mehr im Weg zum eigentlichen Tagesinhalt.
+
 ## ✅ Update 14.09.2026 (Teil 94) — Onboarding: schneller kleiner Erfolg an den Anfang (Commit `47b7ba6`)
 
 Nächster Punkt aus der App-Bauplan-Liste. Der Onboarding-Ablauf war
