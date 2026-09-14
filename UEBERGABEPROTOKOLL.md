@@ -1,5 +1,30 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 91) — Quest-Rangliste/Wettbewerb optional machen (Commit `90d7cb8`)
+
+Nächster Punkt aus der App-Bauplan-Liste. Die Quest-Rangliste
+(`RanglisteKarte.jsx`, ursprünglich eigene Nutzerinnen-Vorgabe vom
+16.08. — "die Leute sollen halt meine Coachees gegeneinander antreten
+können") zeigte bisher zwangsweise alle Coachees allen anderen.
+Vergleich mit anderen motiviert manche Menschen, wirkt bei anderen
+(gerade in schlechten Phasen — Stichwort Rejection Sensitive
+Dysphoria, bei ADHS besonders verbreitet) demotivierend oder
+beschämend statt anspornend.
+
+Neue Spalte `rangliste_sichtbar` auf `profiles` (Migration 0085,
+Default `true` — nichts ändert sich, bis jemand aktiv abschaltet).
+`quest_rangliste()` filtert selbst schon danach, nicht erst im
+Frontend — wer sich ausblendet, verschwindet serverseitig aus den
+Daten, nicht nur optisch. Neuer Schalter in "Mehr" → Profil-
+Einstellungen (`MehrTab.jsx`, gleicher Toggle-Button-Stil wie die
+Datenteilung in `CommunityTab.jsx`): einmal umgelegt, sieht man die
+Rangliste selbst nicht mehr UND taucht bei niemand anderem mehr darin
+auf — bewusst symmetrisch in beide Richtungen. Die
+Admin-Verwaltungsansicht (`AdminQuestsView.jsx`, neuer
+`erzwingeSichtbar`-Prop an `RanglisteKarte`) bleibt davon unberührt —
+der Coach braucht die Übersicht unabhängig von der eigenen (dort
+ohnehin irrelevanten) Präferenz.
+
 ## ✅ Update 14.09.2026 (Teil 88–90) — Auffangnetz, Fehler-Frühwarnsystem, Akutmodus überall erreichbar
 
 Nutzerinnen-Vorgabe nach dem App-Bauplan-Gespräch: die dort erarbeitete
