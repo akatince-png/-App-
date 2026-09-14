@@ -1,5 +1,35 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 93) — Gnadentag-/Vergebungsmechanik reaktivieren (Commit `32017cc`)
+
+Nächster Punkt aus der App-Bauplan-Liste. `GraceDayCard.jsx` gab es
+schon einmal (Wochenrückblick mit Anti-Scham-Messaging), war aber im
+Code-Audit (Teil 5, 13.09.) zu Recht als toter Code entfernt worden —
+die Komponente war nirgends importiert, hatte keine echte
+Datengrundlage (nahm `weeklyStats` nur als Prop entgegen, ohne dass
+irgendwer sie befüllt hätte) und war stilistisch ein Fremdkörper
+(hartcodierte Hex-Farben statt theme.js).
+
+Jetzt neu aufgebaut statt nur zurückgeholt:
+- **`utils/gnadentag.js`** (neu, mit Tests): `berechneWochenStats()`
+  nutzt `buildDayItems()` — dieselbe Ist-geplant-Logik wie Tagesplan/
+  `ausgefallenSweep.js` (Teil 87/Bug-Fix) statt einer zweiten,
+  unabhängigen Berechnung. Ein Tag ohne geplante Punkte zählt NICHT
+  als Pause (nichts stand an); ab 50%+ erledigten Punkten gilt ein Tag
+  als "aktiv".
+- **`ui/GraceDayCard.jsx`** neu geschrieben: theme.js-Tokens statt
+  eigener Hex-Werte (inkl. des neuen `warn`-Bernstein-Tons aus Teil 92
+  für die "Pausen"-Kachel — passt thematisch zusammen).
+- In **`ErfolgeTab.jsx`** oben eingehängt, vor der bestehenden Punkte-/
+  Streak-/Abzeichen-Übersicht — der Reiter war bisher rein additiv
+  (Punkte, Streaks, Abzeichen), ohne Platz für "es ist okay, wenn mal
+  nicht alles geklappt hat".
+
+Kernbotschaft bleibt wie im Original: "Pausen sind nicht Scheitern. Du
+machst das richtig." — kein Streak-Reset-Gefühl bei einem einzigen
+ausgelassenen Punkt, dieselbe Grundhaltung wie der KI-Coach-Systemprompt
+("motivierend statt beschämend", `aiService.js`).
+
 ## ✅ Update 14.09.2026 (Teil 92) — Sprache/Farbe bei Verspätungen auf Wohlwollen geprüft (Commit `b3154c5`)
 
 Nächster Punkt aus der App-Bauplan-Liste: gesamte App auf beschämende/
