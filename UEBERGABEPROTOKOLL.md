@@ -1,5 +1,35 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 97) — Echtes Routing eingeführt (Commit `d7f52b8`)
+
+Zweiter der fünf größeren strukturellen App-Bauplan-Punkte. `view` in
+`AuthenticatedApp.jsx` war bisher reiner React-State, nirgends mit der
+echten Browser-URL verknüpft: ein Lesezeichen landete beim Öffnen immer
+auf Home, der Zurück-Knopf des Browsers tat gar nichts (kein Eintrag in
+der Historie), ein Neuladen mittendrin setzte unsichtbar auf den
+Startbildschirm zurück.
+
+Neues `utils/routing.js`: bewusst Hash-Routing (`#/tagesplan`) statt
+"sauberer" Pfade — Pfad-Routing bräuchte eine serverseitige SPA-
+Fallback-Regel, die für dieses Projekt nirgends konfiguriert ist (kein
+`vercel.json` im Repo); ohne die würde ein direkter Aufruf oder ein
+Neuladen von z. B. `/tagesplan` mit einem 404 vom Hosting scheitern.
+Hash-Routing braucht dagegen auf keinem Host irgendeine
+Zusatzkonfiguration.
+
+In `AuthenticatedApp.jsx`: jeder `view`-Wechsel pusht jetzt einen
+echten History-Eintrag, ein `popstate`-Listener übernimmt Zurück/
+Vorwärts direkt in `view` (mit Ref-Guard gegen eine kaputte Historie/
+Endlosschleife zwischen Push- und Popstate-Effekt). Ein aus der URL
+gelesener View wird beim App-Start nur übernommen, wenn er bekannt ist
+UND — bei `admin-*` — `isAdmin` zutrifft: ein alter oder manipulierter
+Link darf weder in einen unbekannten Zustand noch in eine Admin-Ansicht
+führen, die eine Coachee sowieso nicht sehen könnte.
+
+Neuer E2E-Test (`smoke.spec.js`) prüft die eigentliche Funktion, nicht
+nur "nichts kaputt": Navigation setzt den Hash, Browser-Zurück/Vorwärts
+wandert tatsächlich durch die zuvor besuchten Bildschirme.
+
 ## ✅ Update 14.09.2026 (Teil 96) — Code-Splitting eingeführt (Commit `7e3fa70`)
 
 Nächster Punkt aus der App-Bauplan-Liste — der erste der fünf größeren
