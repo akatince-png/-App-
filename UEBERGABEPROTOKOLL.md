@@ -1,5 +1,30 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 96) — Code-Splitting eingeführt (Commit `7e3fa70`)
+
+Nächster Punkt aus der App-Bauplan-Liste — der erste der fünf größeren
+strukturellen Punkte. Der Produktions-Build warnte schon länger ("Some
+chunks are larger than 500 kB"): die komplette App — Admin-Bereich,
+Onboarding-Fragebogen, jede einzelne Kategorie-Ansicht — landete in
+einem einzigen JS-Bundle (~2,37 MB minifiziert), obwohl pro Sitzung
+immer nur ein Bruchteil davon tatsächlich gebraucht wird.
+
+In `AuthenticatedApp.jsx`: alle Bildschirme außer `HomeView` (praktisch
+jede Sitzung sofort nach dem Laden gebraucht, ein zusätzlicher
+Netzwerk-Sprung dort würde nur schaden) jetzt per `React.lazy()` als
+eigener Chunk — nachgeladen genau dann, wenn `view` erstmals darauf
+wechselt. `<Suspense fallback={<LoadingScreen />}>` sitzt dabei
+INNERHALB der bestehenden Error Boundary (Teil 88), nicht daneben —
+schlägt ein Chunk-Nachladeversuch fehl (z. B. Netzwerkfehler), fängt
+das Auffangnetz das mit auf statt einer leeren Seite.
+
+Haupt-Bundle dadurch von ~2,37 MB auf ~695 KB (≈ -71%), der Rest
+verteilt sich jetzt auf ~15 eigene, pro Bildschirm nachgeladene Chunks
+(TagesplanView, AdminDashboardView, MehrView, GewohnheitenView,
+OnboardingFlow, PlaeneView, ...). E2E-Suite (deckt jeden dieser
+Bildschirme ab) zusätzlich mit `--repeat-each=2` verifiziert (60
+Durchläufe) — keine Flakiness durch die neue Async-Ladezeit.
+
 ## ✅ Update 14.09.2026 (Teil 95) — Startseite entschlacken (Commit `c327f91`)
 
 Nächster Punkt aus der App-Bauplan-Liste. Home versteht sich laut
