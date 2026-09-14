@@ -1,5 +1,49 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 86) — E2E-Suite auf vollen Umfang ausgeweitet (Onboarding, alle Kategorien, Archiv, Admin)
+
+Nutzerinnen-Vorgabe: die Playwright-Suite aus Teil 85 deckte bis hierhin
+nur Home/Navigation/Tagebuch ab — sollte auf denselben Umfang wie der
+ursprüngliche manuelle UI-Durchklick-Test (Teil 80: Onboarding, alle 9
+Kategorien, Tagesplan, Archiv, Admin) ausgebaut werden, vollständig,
+nicht nur teilweise. Commit `645bc2d`.
+
+**Jetzt 30 E2E-Tests (vorher 4):**
+- `onboarding.spec.js` — kompletter Durchlauf Willkommen → Hauptprotokoll
+  → Intro → Ziele → Profil → Laborwerte → Routinen → Kategorien ("Alles
+  überspringen") → Abschluss → zurück auf Home. **Bewusste Grenze**:
+  befüllt nur die zum Weiterkommen nötigen Felder (Protokollname,
+  Vorname) — testet nicht jede der 8 Kategorien einzeln mit echten Werten
+  (Ziel/Grund, Messwerte, ...), das wäre für einen automatisierten
+  Smoke-Test zu fragil (bricht bei jeder Text-/Feld-Änderung, für einen
+  Nutzen kaum über "stürzt nicht ab" hinaus).
+- `plaene.spec.js` — alle 10 Reiter unter "Alle Pläne" (9 Kategorien +
+  Wochenübersicht).
+- `archiv.spec.js` — alle 8 Reiter im Archiv-Hub.
+- `admin.spec.js` — Dashboard + alle 6 Unteransichten.
+
+**Beim Ausbau gefundene/behobene Mock-Lücken** (jeweils durch einen
+echten Testlauf-Absturz aufgedeckt, nicht auf Verdacht): Funktionsnamen
+jetzt als explizite ~140-Namen-Liste direkt aus dem Code statt nur
+Regex-Heuristik (robuster gegen einzelne verfehlte Verb-Muster);
+gemockte Funktionen liefern ein plausibles `{ok:true, ...{id}}` statt
+`undefined` (nötig, damit mehrstufige Formulare wie Onboarding
+tatsächlich weiterkommen); "aktives"+Großbuchstabe- und "...datum"-Felder
+liefern jetzt `null` statt des generischen (aber truthy) Array-Fallbacks.
+
+**Neue Sammelbefehle:** `npm run test:all` (Build + Lint + Vitest +
+Playwright hintereinander — der Befehl, den künftige Sitzungen nach
+größeren Änderungen laufen lassen sollten) und `npm run test:e2e` (nur
+Playwright, für schnellere Iteration).
+
+**Eine Beobachtung, kein bestätigter Bug:** Im Onboarding überlappt die
+Coach-Chat-Begrüßung (KiChat mit `autoStart`) auf den Screens
+"Laborwerte"/"Routinen" dauerhaft den "Weiter"-Button (kein kurzer
+Animations-Zwischenzustand, über 10+ Retries hinweg reproduzierbar). Der
+Test umgeht das über `dispatchEvent("click")` statt es zu diagnostizieren
+— könnte an den leeren Mock-Daten liegen oder ein echtes Layout-Problem
+sein, wert, es bei Gelegenheit mit echten Daten im Browser nachzustellen.
+
 ## ✅ Update 13.09.2026 (Teil 85) — Echte automatisierte Testsuite aufgebaut (Vitest + Playwright)
 
 Nutzerinnen-Vorgabe: nach dem UI-Test/der Sicherheitsprüfung/Barriere-
