@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AkutModusPanel } from "./AkutModusKarte";
 import { useAppData } from "../context/AppDataContext";
@@ -26,6 +26,20 @@ export default function AkutModusGlobal({ sichtbar }) {
   const istAdminModus = proband !== null || isAdmin;
 
   useEscapeSchliesst(() => setOffen(false), offen);
+
+  // Bug-Fix (Nachkontrolle): dieser Knopf lebt außerhalb des
+  // `key={view}`-Remounts in AuthenticatedApp.jsx (bleibt beim
+  // Bildschirmwechsel bestehen, wechselt nur seine Sichtbarkeit) — anders
+  // als der ursprüngliche Home-Akutmodus, dessen `akutOffen`-State beim
+  // Verlassen von Home automatisch mit wegfällt, weil HomeView dabei
+  // komplett neu gemountet wird. Ohne diesen Effekt könnte `offen` "true"
+  // bleiben, obwohl der Knopf gerade unsichtbar ist (z. B. Browser-Zurück
+  // während das Panel offen war, zurück auf Home) — beim nächsten
+  // Sichtbarwerden würde das Panel dann ohne jeden Klick von selbst
+  // wieder aufspringen.
+  useEffect(() => {
+    if (!sichtbar) setOffen(false);
+  }, [sichtbar]);
 
   if (!sichtbar) return null;
 

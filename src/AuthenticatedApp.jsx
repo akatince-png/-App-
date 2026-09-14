@@ -65,6 +65,11 @@ function istGueltigerView(view, isAdmin) {
   return false;
 }
 
+// Modul-weit statt Komponenten-State (siehe Kommentar an der Nutzung
+// weiter unten): muss genau einmal pro Browser-Registerkarte "wahr"
+// werden, nicht bei jedem Remount von AuthenticatedApp.
+let anfangsHashSchonVerwendet = false;
+
 // Übersetzt die Kategorie eines Tagesplan-Eintrags in die zuständige View —
 // für den ✏️-Bearbeiten-Kurzweg direkt aus dem Tagesplan. Die Pläne-
 // Kategorien landen jetzt alle im "Alle Pläne"-Hub (PlaeneView), der
@@ -174,8 +179,26 @@ export default function AuthenticatedApp() {
         setView("form");
         return;
       }
-      const ausUrl = viewAusHash();
-      setView(istGueltigerView(ausUrl, isAdmin) ? ausUrl : "home");
+      // Bug-Fix (Nachkontrolle): ein aus der URL gelesener View darf nur
+      // beim allerersten Laden dieser Browser-Registerkarte übernommen
+      // werden. AuthenticatedApp wird nämlich nicht nur beim echten
+      // Seitenaufruf neu gemountet, sondern auch bei jedem Wechsel in den
+      // oder aus dem "Verwalten als"-Modus (key={proband?.id || "self"} in
+      // App.jsx) — ohne diese Sperre hätte z. B. ein Admin, der gerade auf
+      // #/tagesplan steht, beim Start einer Coachee-Verwaltung sofort
+      // deren Tagesplan gesehen statt wie vorher (und wie von "Verwalten
+      // als" erwartet) auf Home zu landen. anfangsHashSchonVerwendet lebt
+      // auf Modul-Ebene und überlebt daher genau diese Remounts, obwohl
+      // der Komponenten-State jedes Mal frisch startet.
+      if (!anfangsHashSchonVerwendet) {
+        anfangsHashSchonVerwendet = true;
+        const ausUrl = viewAusHash();
+        if (istGueltigerView(ausUrl, isAdmin)) {
+          setView(ausUrl);
+          return;
+        }
+      }
+      setView("home");
     }
   }, [loading, onboardingComplete, isAdmin, view]);
 

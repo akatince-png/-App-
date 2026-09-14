@@ -68,6 +68,31 @@ test("Echtes Routing: Navigation setzt den URL-Hash, Browser-Zurück/Vorwärts f
   expect(fehler).toEqual([]);
 });
 
+test("AkutModusGlobal öffnet sich nach Browser-Zurück/Vorwärts nicht von selbst wieder (Nachkontrolle)", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
+  const akutKnopf = page.getByRole("button", { name: "Akutmodus — grad nicht gut?" });
+
+  // AkutModusGlobal ist auf Home bewusst ausgeblendet (eigener Akutmodus
+  // dort) — auf Tagesplan öffnen und wieder verlassen, ohne ihn manuell zu
+  // schließen: der Knopf sitzt außerhalb des key={view}-Remounts, sein
+  // offen-State überlebt daher einen Sichtbarkeits-Wechsel von selbst aus.
+  await nav.getByRole("button", { name: "Tagesplan" }).click();
+  await page.waitForTimeout(200);
+  await akutKnopf.click();
+  await expect(page.getByText("💡 Was hilft mir jetzt?")).toBeVisible();
+
+  await page.goBack(); // zurück auf Home, AkutModusGlobal wird unsichtbar
+  await expect(page).toHaveURL(/#\/home$/);
+
+  await page.goForward(); // wieder auf Tagesplan, AkutModusGlobal wieder sichtbar
+  await expect(page).toHaveURL(/#\/tagesplan$/);
+  await expect(page.getByText("💡 Was hilft mir jetzt?")).not.toBeVisible();
+  await expect(akutKnopf).toBeVisible();
+
+  expect(fehler).toEqual([]);
+});
+
 test("Tagebuch-Modal öffnet und lässt sich per Escape schließen (Barrierefreiheits-Regressionstest)", async ({ page }) => {
   await page.getByText("Tagebuch").click();
   const textarea = page.getByPlaceholder("Schreib frei drauflos, oder tippe auf das Mikrofon…");
