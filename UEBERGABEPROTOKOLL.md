@@ -1,5 +1,36 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 87) — Bug-Fix: Coach-Chat-Modal deckte Bildschirm nur teilweise ab
+
+Die in Teil 86 notierte "Beobachtung" (Coach-Chat überlappt den
+"Weiter"-Button im Onboarding) war ein echter Bug, kein Testartefakt —
+Nutzerinnen-Vorgabe: "Alles, was Du im Code erkennst, wird auch mit
+Sicherheit im echten Leben so sein... darfst Du das gerne einfach so in
+Ordnung bringen." Commit `b19c197`.
+
+**Ursache:** `KiChat.jsx` rendert Chat-Orb und -Modal mit `position:
+fixed` (soll relativ zum echten Bildschirm sitzen). Eingebettet in eine
+Ansicht mit transformierender Vorfahren-Animation (z. B. die fadeInUp-
+Phasenwechsel-Animation in `OnboardingFlow.jsx` — ein CSS-`transform`
+erzeugt einen neuen "Containing Block" für `position: fixed`) wurde
+"fixed" dadurch relativ zu diesem Vorfahren statt zum Bildschirm. Auf den
+Onboarding-Schritten "Laborwerte"/"Routinen" (KiChat läuft dort mit
+`autoStart` automatisch an) deckte das Modal dadurch nicht den ganzen
+Bildschirm ab, sondern nur einen abgeschnittenen Ausschnitt — der
+"Weiter"-Button darunter war sichtbar, aber unklickbar. Wirkte wie
+kaputtes Layout, nicht wie ein absichtliches "erst schließen, dann
+weiter". Betraf grundsätzlich jede Stelle mit einer transformierenden
+Vorfahren-Animation, nicht nur diese zwei Onboarding-Screens.
+
+**Fix:** Orb-Knopf und Modal werden jetzt per `createPortal` direkt an
+`document.body` gerendert — garantiert unabhängig davon, wo KiChat im
+Baum eingebettet ist. Empirisch mit Vorher/Nachher-Screenshots bestätigt
+(Modal deckt jetzt korrekt den kompletten Bildschirm ab, "Weiter" ist
+danach wieder normal per Schließen-Knopf erreichbar, wie bei jedem
+anderen Modal in der App auch). `onboarding.spec.js` entsprechend
+angepasst: schließt das Modal jetzt über den echten "Schließen"-Knopf
+statt es zu umgehen.
+
 ## ✅ Update 14.09.2026 (Teil 86) — E2E-Suite auf vollen Umfang ausgeweitet (Onboarding, alle Kategorien, Archiv, Admin)
 
 Nutzerinnen-Vorgabe: die Playwright-Suite aus Teil 85 deckte bis hierhin
@@ -36,13 +67,9 @@ Playwright hintereinander — der Befehl, den künftige Sitzungen nach
 größeren Änderungen laufen lassen sollten) und `npm run test:e2e` (nur
 Playwright, für schnellere Iteration).
 
-**Eine Beobachtung, kein bestätigter Bug:** Im Onboarding überlappt die
-Coach-Chat-Begrüßung (KiChat mit `autoStart`) auf den Screens
-"Laborwerte"/"Routinen" dauerhaft den "Weiter"-Button (kein kurzer
-Animations-Zwischenzustand, über 10+ Retries hinweg reproduzierbar). Der
-Test umgeht das über `dispatchEvent("click")` statt es zu diagnostizieren
-— könnte an den leeren Mock-Daten liegen oder ein echtes Layout-Problem
-sein, wert, es bei Gelegenheit mit echten Daten im Browser nachzustellen.
+**Update (Teil 87, direkt im Anschluss):** die "Beobachtung" unten war
+kein Mock-Artefakt, sondern ein echter Bug — gefunden, bestätigt und
+behoben, siehe Teil 87.
 
 ## ✅ Update 13.09.2026 (Teil 85) — Echte automatisierte Testsuite aufgebaut (Vitest + Playwright)
 
