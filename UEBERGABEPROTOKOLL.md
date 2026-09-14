@@ -1,5 +1,112 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🧭 STAND & LESE-REIHENFOLGE FÜR DEN NÄCHSTEN AGENTEN (14.09.2026, Abend — bitte ZUERST lesen)
+
+**An den nächsten Agenten:** Bitte dieses Dokument selbst vollständig
+einlesen, bevor irgendetwas an dieser App verändert wird — insbesondere
+Abschnitt 3 (Design-System) und den neuen Abschnitt 13 (Test-
+Infrastruktur) weiter unten. Grund für diesen Absatz: In der vorigen
+Sitzung wurde per Versehen kurz gegen das **falsche** Repo gearbeitet
+(ein komplett separates zweites Projekt, "Kidnapp"/Arcanova, eine
+Kinder-ADHS-App — siehe die Warnung in Abschnitt „Wichtiger Hinweis…"
+weiter unten). Der Fehler wurde bemerkt, sofort verworfen und beide
+Repos wurden danach geprüft: **kein Code/keine Verbindung ist aus
+Versehen ins Kidnapp-Repo gelangt**, AKA selbst ist davon unberührt.
+Genau um so etwas künftig zu vermeiden — und damit keine neue Sitzung
+aus Unwissenheit eigene Farben/Designs/Muster erfindet, die es hier
+längst gibt — jetzt diese Kurzübersicht:
+
+- **Gesamtstatus:** Die komplette 13-Punkte-„App-Bauplan"-Liste der
+  Nutzerin ist fertig umgesetzt, getestet und deployt (Details: Teile
+  88–101 unten). Die kritische Sicherheitslücke (`profiles.is_admin`-
+  Selbsterhöhung, Teil 81) ist bestätigt im echten Supabase-Projekt
+  geschlossen (Teil 84). Kein bekannter offener Sicherheits- oder
+  Blocker-Punkt zum aktuellen Zeitpunkt.
+- **Design-System — bitte NICHT neu erfinden:** Alle Farben, Abstände
+  und Bauteile sind in `src/ui/theme.js` (Farb-Tokens) und
+  `src/ui/primitives.jsx` (`Shell`, `Card`, `PrimaryButton`, `Pill`,
+  `Label`, `TextInput`, `TextArea`, `CheckRow`, `Stepper`, `StatusBadge`,
+  …) bereits definiert. **Kein CSS-Framework** (kein Tailwind, kein
+  Bootstrap) — alles Inline-`style={{}}` gegen diese Tokens. Vor jeder
+  neuen Komponente/Farbe erst hier nachschauen, ob es das betreffende
+  Bauteil/den Farbton nicht schon gibt — Details + vollständige
+  Farbtabelle in Abschnitt 3.
+- **Tests — bitte immer laufen lassen, nicht nur „sieht gut aus":** Vor
+  jedem Commit `npm run build && npx oxlint <geänderte Dateien> && npm
+  run typecheck && npm test` (Vitest, aktuell 98 Tests) und
+  `npx playwright test` (E2E, aktuell 34 Tests) — alles muss grün sein.
+  Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
+  schreibt: neuer Abschnitt 13 weiter unten.
+- **Heute neu (Teil 102):** Diktierfunktion ohne KI-Beteiligung für
+  Formularfelder (Web-Speech-API, kein AIService-Aufruf, kein
+  KI-Kontingent verbraucht) — Details in der Chronik direkt unten.
+- **Zwei ehrliche, noch offene Restpunkte** (keine Fehler, aber vor
+  „100 % fertig" der Nutzerin selbst zu bestätigen):
+  1. Die Datentopf-Aufteilung (Teil 98) wurde nur strukturell + gegen
+     gemockte Testdaten verifiziert, nicht gegen eine echte
+     Supabase-Login-Session — einmal bewusst durch Kernbereiche klicken
+     (Supplement abhaken, Mahlzeit eintragen, Team-Nachricht senden),
+     bevor dieser Punkt als 100 % bestätigt gilt.
+  2. Spotify-Auto-Play braucht ein "aktives Gerät" zur Wake-up-Zeit
+     (externe Spotify-Einschränkung, kein Code-Bug, Abschnitt 8) und die
+     Erinnerungs-Edge-Function `send-due-reminders` wird NICHT
+     automatisch deployt — beides liegt außerhalb dessen, was ein Agent
+     aus der Sandbox heraus verifizieren kann.
+- **Empfohlene Lesereihenfolge:** erst Abschnitte 1–13 (Grundlagen,
+  einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
+  dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
+  Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 14.09.2026 (Teil 102) — Diktierfunktion ohne KI für Onboarding-Formularfelder (Commit `b3aae48`)
+
+Nutzerinnen-Vorgabe: das bestehende KI-gestützte Onboarding
+(`OnboardingCoachFreitext.jsx`, „frei erzählen" + KI ordnet den Feldern
+zu) ermüdet sie bei häufiger Nutzung, und das KI-Kontingent ist knapp
+(siehe Offene Punkte, Gemini-429). Gewünscht: eine reine
+Spracherkennung fürs Ausfüllen einzelner Formularfelder, komplett OHNE
+KI-Beteiligung — plus eine optische Unterscheidung zwischen dem gerade
+erst (unsicher) erkannten Satzteil und dem bereits bestätigten Text.
+
+**Neu:** `src/ui/useDiktat.js` — ein wiederverwendbarer Hook um die
+bereits bestehende `starteSprachErkennung()` (`utils/speech.js`, reine
+Web-Speech-API, dieselbe Funktion, die schon TagebuchModal.jsx und
+OnboardingCoachFreitext.jsx fürs Mikrofon nutzen — **kein**
+`AIService`-Aufruf, kein Netzwerk, kein KI-Kontingent). Neu daran: der
+noch unsichere Zwischenteil (`interim`) wird separat nach außen
+gereicht statt sofort in den Feldwert geschrieben.
+
+**`src/ui/primitives.jsx`:** `TextInput`/`TextArea` haben ein neues,
+standardmäßig AUS-geschaltetes `diktierbar`-Prop bekommen (alle ~55
+bestehenden Aufrufstellen dieser beiden Komponenten bleiben dadurch
+unverändert — nur explizit angegebene Stellen zeigen das
+Mikrofon-Icon). Bei aktivem Diktat: Mikrofon-Knopf oben rechts im Feld,
+Zwischenergebnis erscheint kursiv/blass unterhalb des Felds ("Anton…"),
+erst der fertige Satz landet normal-gewichtet im echten Feldwert.
+
+**Angewendet auf** die freien Textfelder der nicht-KI-gestützten
+Onboarding-Screens: Name (`OnboardingIntroView.jsx`), Steckbrief-
+Freitextfelder (`OnboardingSteckbriefView.jsx`), Hauptprotokoll-Name
+(`HauptprotokollErstellenView.jsx`), den generischen Freitext-Schritt
+der geführten Coach-Fragen (`OnboardingCoachGuide.jsx`, Phase 1) sowie
+alle Namens-/Freitextfelder der Kategorien-Einrichtung
+(`OnboardingCategoriesView.jsx`: Gewohnheiten-Name/-Menge,
+Ernährung-Mahlzeitname/-Zutat, Supplement-Name, Medikament-Name, „Dein
+aktueller Stand"-Freitext je Kategorie). Bewusst NICHT auf Zahl-/Datum-
+Felder (Zieltage, Hydration-ml, Startdatum) — dort hilft Diktat nicht.
+
+**Tests:** 4 neue Unit-Tests (`src/ui/useDiktat.test.jsx` — Zwischen-/
+Endergebnis-Trennung, Anhängen mehrerer Sätze, Start/Stop, Fehlerfall)
+plus ein neuer E2E-Test (`e2e/onboarding.spec.js`) mit simulierter
+`SpeechRecognition` (kein echtes Mikrofon im Testrunner), der zusätzlich
+jeden Netzwerkaufruf an `**/functions/v1/**` abfängt und den Test
+scheitern lässt, falls doch eine Edge Function (KI) aufgerufen würde —
+stellt die „ohne KI"-Vorgabe damit nicht nur durch Code-Lesen, sondern
+messbar sicher. Build, Lint, Typecheck, 98 Unit- und 34 E2E-Tests grün.
+
+---
+
 ## ✅ Update 14.09.2026 (Teil 101) — Nachkontrolle: zwei echte Fehler gefunden und behoben (Commit `0147a63`)
 
 Nutzerinnen-Vorgabe nach Abschluss der 13-Punkte-Liste: noch einmal
@@ -4790,7 +4897,12 @@ dass die Coachin im Hintergrund mit Aka arbeitet.**
 
 ## 2. Tech-Stack
 
-- **Frontend:** React 19 + Vite 8, reines JavaScript (kein TypeScript).
+- **Frontend:** React 19 + Vite 8. Seit Teil 100 (14.09.) gibt es eine
+  TypeScript-Infrastruktur (`tsconfig.json`, `npm run typecheck` =
+  `tsc --noEmit`) — bestehende Dateien bleiben `.jsx`/`.js`, neue/stark
+  überarbeitete Module werden nach und nach als `.ts`/`.tsx` angelegt
+  (bisher u. a. `src/lib/queryCache.ts`, `src/utils/routing.ts`,
+  `src/utils/gnadentag.ts`). Kein Zwang, alles auf einmal zu migrieren.
 - **Backend:** Supabase (Postgres, Auth, Storage, Row Level Security, Edge
   Functions in Deno/TypeScript).
 - **Hosting:** Vercel. **Aktuelle, bestätigte Live-Adresse:
@@ -4879,14 +4991,49 @@ supabase/
     └── admin-create-proband/       Neues Coachee-Konto anlegen
 ```
 
-### Design-System
+### Design-System — bitte lesen, bevor irgendwo eine neue Farbe/Komponente entsteht
 
-Plain CSS + Tokens aus `src/ui/theme.js`:
-`accent = "#6366F1"` (Indigo, Marken-Akzent), `success = "#0E7C66"`,
-`danger = "#C24545"`, `textMain = "#15181A"`, `textMuted = "#6B7178"`,
-`bg = card = "#FFFFFF"`. Hilfsfunktionen `aufhellen()`/`hexZuRgba()` erzeugen
-Verlaufs-/Glow-Farbtöne für `PrimaryButton` (135°-Zweifarben-Verlauf +
-farbiger Schatten + Press-Animation) zur Laufzeit aus jeder Bereichsfarbe.
+**Kein CSS-Framework** (kein Tailwind, kein Bootstrap, kein Material UI).
+Durchgehend Inline-`style={{}}`-Objekte gegen zentrale Farb-Tokens aus
+`src/ui/theme.js`:
+
+| Token | Wert | Verwendung |
+|---|---|---|
+| `accent` | `#6366F1` (Indigo) | Marken-Akzent, Standardfarbe außerhalb bereichsfarbiger Screens |
+| `accentDark` | `#1F605B` | dunklere Akzentvariante (Mikrofon-Icons, Coach-Elemente — deckt sich mit `KATEGORIE_META.gewohnheit.text`) |
+| `accentSoft` | `#DCF3F1` | heller Akzent-Hintergrund (deckt sich mit `KATEGORIE_META.gewohnheit.bg`) |
+| `success` | `#0E7C66` | Erfolg/Erledigt |
+| `danger` | `#C24545` | Fehler, Löschen, aktive Mikrofon-Aufnahme |
+| `warn` / `blue` | s. `theme.js` | Status-Badges (`StatusBadge`: geplant/verpasst) |
+| `textMain` | `#15181A` | Haupttext |
+| `textMuted` | `#6B7178` | Nebentext, Platzhalter, Zwischenergebnis-Vorschau bei Diktat |
+| `bg` / `card` | `#FFFFFF` | Hintergrund/Karten |
+| `cardBorder` | s. `theme.js` | Standard-Rahmenfarbe aller Eingabefelder/Karten |
+
+Hilfsfunktionen `aufhellen()`/`hexZuRgba()` erzeugen Verlaufs-/Glow-Farbtöne
+für `PrimaryButton` (135°-Zweifarben-Verlauf + farbiger Schatten +
+Press-Animation) zur Laufzeit aus jeder Bereichsfarbe — **neue Farbtöne
+also nicht von Hand hex-kodieren, sondern über diese Funktionen aus einem
+bestehenden Token ableiten.**
+
+**Wiederverwendbare Bauteile, bevor etwas Neues gebaut wird — alle in
+`src/ui/primitives.jsx`:** `Shell` (Seiten-Rahmen inkl. `bereich`-Prop für
+automatische Bereichsfarbe), `Card`, `Label`, `Pill` (Auswahl-Chip),
+`PrimaryButton`, `CheckRow`, `Stepper` (Onboarding-Fortschrittspunkte),
+`StatusBadge`, `TextInput`/`TextArea` (inkl. optionalem `diktierbar`-Prop
+für die Mikrofon-Diktierfunktion, Teil 102 — Standard ist AUS, siehe
+Abschnitt 13). Weitere häufig gebrauchte, NICHT in primitives.jsx
+liegende, aber genauso wiederzuverwendende Bausteine: `MikrofonIcon`/
+`StopIcon` (`ui/MikrofonIcons.jsx`, gezeichnete SVG-Icons statt Emoji für
+jede Sprach-Bedienung app-weit), `useEscapeSchliesst`/`useDiktat`
+(`ui/*.js`-Hooks für Modal-Verhalten bzw. Diktat), `TimeWheelField`,
+`NumberWheelField` (Zeit-/Zahleingabe-Räder).
+
+**Faustregel für jede neue Sitzung:** Vor einer neuen Farbe/einem neuen
+Button-/Karten-Stil immer zuerst `theme.js` + `primitives.jsx`
+durchsuchen — mit an Sicherheit grenzender Wahrscheinlichkeit gibt es das
+gesuchte Bauteil oder den gesuchten Farbton schon, auch wenn der Name auf
+den ersten Blick nicht offensichtlich ist.
 
 **Bereichsfarben** (`KATEGORIE_META` in `src/utils/dayItems.js` —
 `{bg, text, dot}` je Kategorie, gesteuert über `BereichColorContext.jsx` via
@@ -5290,7 +5437,7 @@ sonst nie auffallen lassen.
   `0069_...`), reine Datenmigrationen (kein Schema-Change) genauso wie
   Schema-Änderungen.
 - **Dieses Dokument aktuell halten** — bei viel Veränderung lieber die
-  betroffenen Abschnitte 1-12 direkt überarbeiten, statt nur oben in der
+  betroffenen Abschnitte 1-13 direkt überarbeiten, statt nur oben in der
   Update-Chronik neue Absätze aufzustapeln (die Chronik ganz oben in diesem
   Dokument bleibt trotzdem wertvoll als Detail-Historie einzelner
   Sitzungen — beides ergänzt sich).
@@ -5373,3 +5520,86 @@ Code wegzuwerfen.
 davon unberührt — eine native App ändert nichts an der Architektur
 (Supabase-Backend, Admin-/Verwalten-als-Modus), nur an der Hülle und den
 nativen Zusatzmöglichkeiten.
+
+---
+
+## 13. Test-Infrastruktur (Vitest + Playwright) — Stand 14.09.2026
+
+Zwei getrennte Ebenen, unterschiedliches Werkzeug, unterschiedlicher Zweck.
+**Vor jedem Commit beide laufen lassen** — siehe Abschnitt 11.
+
+### 13.1 Unit-Tests (Vitest) — aktuell 98 Tests in 12 Dateien
+
+- Config: `vitest.config.js` (separat von `vite.config.js`, damit
+  `vite dev`/`vite build` unberührt bleiben), `environment: "jsdom"`,
+  Setup-Datei `src/setupTests.js`.
+- Befehl: `npm test` (= `vitest run`).
+- Liegen direkt neben der getesteten Datei (`xyz.js` → `xyz.test.js`,
+  bzw. `.test.jsx`/`.test.ts` je nach Ziel). Zwei Muster im Projekt:
+  1. **Reine Logik/Utilities** (`utils/dates.test.js`,
+     `utils/kalorien.test.js`, `utils/schedule.test.js`,
+     `utils/gnadentag.test.ts`, `utils/routing.test.ts`,
+     `utils/belohnungZeit.test.js`, `utils/ausgefallenSweep.test.js`,
+     `utils/errungenschaften.test.js`, `lib/queryCache.test.ts`) — direkte
+     Funktionsaufrufe mit `expect()`, kein Rendering.
+  2. **Hooks/Komponenten mit Nebeneffekten** (`ui/ErrorBoundary.test.jsx`,
+     `lib/useCachedQuery.test.jsx`, `ui/useDiktat.test.jsx`, neu Teil 102)
+     — `render()`/`screen`/`fireEvent`/`act` aus
+     `@testing-library/react`, externe Abhängigkeiten (Supabase, KI,
+     Web-Speech-API) per `vi.mock(...)` ersetzt. Beispielmuster siehe
+     `ui/useDiktat.test.jsx`: eine winzige Test-Wrapper-Komponente rendert
+     den Hook, `vi.mock("../utils/speech")` ersetzt die echte
+     Spracherkennung durch steuerbare Mock-Callbacks.
+- **Wichtige Grenze, ehrlich benannt (gilt strukturell für alle
+  Unit-Tests hier):** es läuft nie eine echte Supabase-Verbindung mit —
+  jeder Datenzugriff ist gemockt. Unit-Tests prüfen also *Logik*, nicht
+  *echte Backend-Integration*. Für Letzteres siehe die Einschränkung zu
+  Teil 98 oben in der Lese-Reihenfolge-Box.
+
+### 13.2 End-to-End-Tests (Playwright) — aktuell 34 Tests in 5 Dateien
+
+- Config: `playwright.config.js`. Befehl: `npx playwright test`
+  (einzelne Datei: `npx playwright test e2e/onboarding.spec.js`).
+- Laufen gegen einen echten gerenderten Browser (Chromium), aber gegen
+  einen **eigenen Test-Harness** (`e2e/harness/index.html` +
+  `TestApp.jsx` + `mockAppData.js`), NICHT gegen die echte
+  `main.jsx`/echtes Supabase — es gibt keinen Netzwerkzugriff auf das
+  echte Backend aus dieser Umgebung heraus. `TestApp.jsx` injiziert einen
+  gemockten `AppDataContext`-Wert direkt, ohne echten Login. Genau diese
+  Grenze ist der Grund für die Teil-98-Einschränkung oben.
+- Dateien nach Bereich aufgeteilt: `smoke.spec.js` (Grundnavigation,
+  Routing, AkutModusGlobal, Tagebuch-Escape), `onboarding.spec.js`
+  (kompletter Onboarding-Durchlauf + Diktierfunktion, Teil 102),
+  `admin.spec.js`, `archiv.spec.js`, `plaene.spec.js` (rendert jeden
+  Reiter/jede Unteransicht einmal durch, prüft auf Konsolenfehler).
+- **Gemeinsames Muster** (`e2e/helpers.js`, `sammleKonsolenfehler(page)`):
+  jeder Test sammelt `pageerror`- und `console.error`-Ereignisse während
+  des Durchlaufs und prüft am Ende `expect(fehler).toEqual([])` —
+  Netzwerkrauschen der Sandbox (`net::ERR_*`) wird dabei bewusst
+  ignoriert (kein App-Bug), alles andere zählt als Fehlschlag.
+- **Externe Browser-APIs mocken:** `page.addInitScript(...)` VOR
+  `page.goto(...)` — läuft im Browser-Kontext, nicht in Node, kann also
+  keine Variablen von außerhalb der übergebenen Funktion sehen.
+  Referenz-Beispiel: der `FakeSpeechRecognition`-Mock in
+  `onboarding.spec.js` (Teil 102) simuliert `SpeechRecognition`, inkl.
+  `page.route("**/functions/v1/**", ...)`, um zusätzlich zu beweisen,
+  dass dabei keine Edge Function (KI) aufgerufen wird.
+- **Bewusste Grenze** (siehe Kommentar in `onboarding.spec.js`): der
+  komplette Onboarding-Test befüllt nur Pflichtfelder, prüft nicht jede
+  der 9 Kategorien inhaltlich im Detail — das wäre extrem
+  änderungsanfällig für kaum Mehrwert. Inhaltliche Prüfung einzelner
+  Kategorien passiert stattdessen in `plaene.spec.js` gegen bereits
+  eingerichtete Mock-Daten.
+
+### 13.3 Vor jedem Commit — vollständige Kommandokette
+
+```
+npm run build && npx oxlint <geänderte Dateien> && npm run typecheck && npm test && npx playwright test
+```
+
+Alle fünf Schritte müssen sauber durchlaufen, bevor committet/gepusht
+wird (siehe auch Abschnitt 11). `oxlint` ohne Argumente prüft das ganze
+Projekt und listet dabei auch einige länger bestehende, unkritische
+Warnungen (`react(only-export-components)`, betrifft Context-Dateien mit
+zusätzlichen Exports) — das sind keine neuen Fehler, nur bei tatsächlich
+neuen `error`-Meldungen (nicht `warning`) eingreifen.
