@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card } from "./primitives";
 import { accentDark, accentSoft, cardBorder, textMain, textMuted } from "./theme";
 import { questRanglisteLaden } from "../data/useQuestData";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
+import { useCachedQuery } from "../lib/useCachedQuery";
 
 const MEDAILLEN = ["🥇", "🥈", "🥉"];
 
@@ -22,26 +23,27 @@ const MEDAILLEN = ["🥇", "🥈", "🥉"];
 // hier zusätzlich für die eigene Karte auf der Startseite: `erzwingeSichtbar`
 // blendet diese Prüfung für die Admin-Verwaltungsansicht aus, die die
 // Rangliste unabhängig von der eigenen Präferenz braucht.
+//
+// Zentrale Datenschicht mit Caching (App-Bauplan-Punkt, siehe
+// lib/queryCache.js): AuthenticatedApp.jsx mountet den aktiven Bildschirm
+// bei jedem `view`-Wechsel komplett neu — ohne Caching würde ein Home →
+// Mehr → zurück zu Home dieselbe Rangliste jedes Mal erneut komplett neu
+// abfragen, obwohl sich in wenigen Sekunden kaum etwas ändert. Über
+// useCachedQuery() statt eines eigenen useEffect+useState-Paars: derselbe
+// Cache-Key "quest-rangliste" wird sowohl hier als auch in
+// AdminQuestsView.jsx verwendet, beide teilen sich dieselben Daten.
 export default function RanglisteKarte({ erzwingeSichtbar = false }) {
   const { user } = useAuth();
   const { ranglisteSichtbar } = useAppData();
-  const [rangliste, setRangliste] = useState(null);
-  const [fehler, setFehler] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    questRanglisteLaden().then((result) => {
-      if (cancelled) return;
-      if (!result.ok) {
-        setFehler(result.error);
-        return;
-      }
-      setRangliste(result.rangliste.filter((r) => r.questsAngenommen > 0 || r.questsErledigt > 0));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: rangliste, error: fehler } = useCachedQuery(
+    "quest-rangliste",
+    async () => {
+      const result = await questRanglisteLaden();
+      if (!result.ok) throw new Error(result.error);
+      return result.rangliste.filter((r) => r.questsAngenommen > 0 || r.questsErledigt > 0);
+    },
+    { ttlMs: 30000 }
+  );
 
   if (!erzwingeSichtbar && ranglisteSichtbar === false) return null;
   if (fehler || (rangliste && rangliste.length === 0)) return null;
