@@ -1,5 +1,26 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## ✅ Update 14.09.2026 (Teil 94) — Onboarding: schneller kleiner Erfolg an den Anfang (Commit `47b7ba6`)
+
+Nächster Punkt aus der App-Bauplan-Liste. Der Onboarding-Ablauf war
+bisher: Willkommens-Folien → Hauptprotokoll anlegen → Intro → Ziel &
+Grund → Profil → Laborwerte → Morgen-/Abendroutine → Kategorien (bis
+zu 8!) → erst DANN der Abschluss-Screen mit dem einzigen echten
+Erfolgsmoment. Bei ADHS reißt Motivation/Aufgabeninitiierung gerade an
+so langen Durststrecken ohne Zwischen-Belohnung am ehesten ab.
+
+Neuer Zwischenscreen `OnboardingQuickWinView.jsx`, eingehängt als neue
+Phase "quickwin" zwischen "hauptprotokoll" und "intro"
+(`OnboardingFlow.jsx`): direkt nach dem allerersten, kleinsten Schritt
+(Protokoll anlegen — Name + Startdatum, wenige Sekunden) gibt's schon
+eine sichtbare Bestätigung, bewusst im selben visuellen Muster
+(Farbverlauf-Icon, Glückwunsch-Ton) wie der bestehende Abschluss-
+Screen — Anfang und Ende des Onboardings sollen sich wie
+zusammengehörige Erfolgsmomente anfühlen, nicht nur das Ende. Neue
+i18n-Schlüssel `onboarding.quickwin.*` in allen drei Sprachen
+(de/en/tr, `src/i18n/dict/onboarding.js`). `e2e/onboarding.spec.js`
+entsprechend um den neuen Screen erweitert.
+
 ## ✅ Update 14.09.2026 (Teil 93) — Gnadentag-/Vergebungsmechanik reaktivieren (Commit `32017cc`)
 
 Nächster Punkt aus der App-Bauplan-Liste. `GraceDayCard.jsx` gab es
