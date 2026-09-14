@@ -660,114 +660,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         />
       )}
 
-      {!istAdminModus ? (
-        <>
-          <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
-          <RanglisteKarte />
-          <TeamKarte
-            team={team}
-            teamKollegen={teamKollegen}
-            teamNachrichten={teamNachrichten}
-            onSenden={teamNachrichtSenden}
-            onGelesen={teamNachrichtGelesen}
-          />
-          <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
-        </>
-      ) : (
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
-          Frag alles rund um deine Pläne, oder lass eine neue Gewohnheit anlegen.
-        </div>
-        <KiChat
-          bereich="home"
-          systemPrompt={HOME_SYSTEM_PROMPT_BASIS}
-          einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was — ich kann dir auch direkt bei jedem Bereich der App helfen, z. B. eine neue Gewohnheit anlegen, ein Supplement hinzufügen oder einen Trainingsplan aufstellen.`}
-          pruefeBereitschaft={handleBereitschaftPruefen}
-          onUebernehmen={handleUniverselleUebernahme}
-          uebernehmenLabels={BEREICH_LABELS}
-          renderErgebnis={(ergebnis) => {
-            if (!ergebnis?.bereich) {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  Ich konnte noch nichts Konkretes zum Übernehmen finden — magst du genauer sagen, worum es gehen soll?
-                </div>
-              );
-            }
-            const { bereich, daten } = ergebnis;
-            if (bereich === "gewohnheit") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt{daten.uhrzeit ? ` · ${daten.uhrzeit} Uhr` : daten.urzeitVon ? ` · ${daten.urzeitVon}–${daten.urzeitBis} Uhr` : ""}
-                  {daten.menge ? ` · ${daten.menge}` : ""}
-                </div>
-              );
-            }
-            if (bereich === "supplement") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt · {daten.tageszeiten.join(", ")}
-                  {daten.hinweis ? ` · ${daten.hinweis}` : ""}
-                </div>
-              );
-            }
-            if (bereich === "medikament") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt · {daten.kategorie}
-                  {daten.menge ? ` · ${daten.menge}` : ""}
-                </div>
-              );
-            }
-            if (bereich === "hydration") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  {daten.zielMl ? `Tagesziel auf ${daten.zielMl} ml gesetzt. ` : ""}
-                  {daten.zeiten.length > 0 ? `${daten.zeiten.length} neue Erinnerungszeit${daten.zeiten.length === 1 ? "" : "en"} hinzugefügt.` : ""}
-                </div>
-              );
-            }
-            if (bereich === "tageslicht") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  Tagesziel auf {daten.zielMinuten} Minuten gesetzt.
-                </div>
-              );
-            }
-            if (bereich === "training") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  {daten.length} Einheit{daten.length === 1 ? "" : "en"} in den Wochenplan übernommen.
-                </div>
-              );
-            }
-            if (bereich === "ernaehrung") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  {daten.length} Rezept{daten.length === 1 ? "" : "e"} als Mahlzeiten angelegt.
-                </div>
-              );
-            }
-            if (bereich === "schlaf") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  Schlaf-Eintrag mit {daten.stunden} h gespeichert{daten.schlafqualitaet ? ` (${daten.schlafqualitaet})` : ""}.
-                </div>
-              );
-            }
-            if (bereich === "workflow") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt · {daten.arbeitMin} Min. Arbeit / {daten.pauseMin} Min. Pause
-                  {daten.uhrzeit ? ` · ${daten.uhrzeit} Uhr` : ""}
-                </div>
-              );
-            }
-            return null;
-          }}
-        />
-      </div>
-      )}
-
       {/* Notfallmodus-Umschalter: eigene volle Zeile (13.09., Nutzerin-
           Vorgabe) — vorher schmal neben dem Akutmodus-Knopf, der jetzt
           stattdessen oben neben Hydration sitzt (beides häufigere
@@ -960,6 +852,123 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </Card>
         )}
       </div>
+
+      {/* Quests/Rangliste/Team/Coach-Nachricht: bewusst HIER statt ganz oben
+          (App-Bauplan-Punkt, "Startseite entschlacken") — standen vorher
+          direkt zwischen den Schnellaktionen und dem eigentlichen
+          Tagesfortschritt/"Als Nächstes", verdeckten also genau den Teil,
+          den man als Erstes braucht ("Was steht heute an?"). Home ist ein
+          Tagesassistent, kein Menü (siehe Kommentar bei "Als Nächstes" oben)
+          — das gilt auch für die Reihenfolge: Aufgaben zuerst, Motivations-/
+          Team-Bausteine danach. Bleiben vollständig erhalten, nur weiter
+          unten statt im Weg. */}
+      {!istAdminModus ? (
+        <>
+          <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
+          <RanglisteKarte />
+          <TeamKarte
+            team={team}
+            teamKollegen={teamKollegen}
+            teamNachrichten={teamNachrichten}
+            onSenden={teamNachrichtSenden}
+            onGelesen={teamNachrichtGelesen}
+          />
+          <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
+        </>
+      ) : (
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
+          Frag alles rund um deine Pläne, oder lass eine neue Gewohnheit anlegen.
+        </div>
+        <KiChat
+          bereich="home"
+          systemPrompt={HOME_SYSTEM_PROMPT_BASIS}
+          einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was — ich kann dir auch direkt bei jedem Bereich der App helfen, z. B. eine neue Gewohnheit anlegen, ein Supplement hinzufügen oder einen Trainingsplan aufstellen.`}
+          pruefeBereitschaft={handleBereitschaftPruefen}
+          onUebernehmen={handleUniverselleUebernahme}
+          uebernehmenLabels={BEREICH_LABELS}
+          renderErgebnis={(ergebnis) => {
+            if (!ergebnis?.bereich) {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  Ich konnte noch nichts Konkretes zum Übernehmen finden — magst du genauer sagen, worum es gehen soll?
+                </div>
+              );
+            }
+            const { bereich, daten } = ergebnis;
+            if (bereich === "gewohnheit") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  "{daten.name}" wurde angelegt{daten.uhrzeit ? ` · ${daten.uhrzeit} Uhr` : daten.urzeitVon ? ` · ${daten.urzeitVon}–${daten.urzeitBis} Uhr` : ""}
+                  {daten.menge ? ` · ${daten.menge}` : ""}
+                </div>
+              );
+            }
+            if (bereich === "supplement") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  "{daten.name}" wurde angelegt · {daten.tageszeiten.join(", ")}
+                  {daten.hinweis ? ` · ${daten.hinweis}` : ""}
+                </div>
+              );
+            }
+            if (bereich === "medikament") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  "{daten.name}" wurde angelegt · {daten.kategorie}
+                  {daten.menge ? ` · ${daten.menge}` : ""}
+                </div>
+              );
+            }
+            if (bereich === "hydration") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  {daten.zielMl ? `Tagesziel auf ${daten.zielMl} ml gesetzt. ` : ""}
+                  {daten.zeiten.length > 0 ? `${daten.zeiten.length} neue Erinnerungszeit${daten.zeiten.length === 1 ? "" : "en"} hinzugefügt.` : ""}
+                </div>
+              );
+            }
+            if (bereich === "tageslicht") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  Tagesziel auf {daten.zielMinuten} Minuten gesetzt.
+                </div>
+              );
+            }
+            if (bereich === "training") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  {daten.length} Einheit{daten.length === 1 ? "" : "en"} in den Wochenplan übernommen.
+                </div>
+              );
+            }
+            if (bereich === "ernaehrung") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  {daten.length} Rezept{daten.length === 1 ? "" : "e"} als Mahlzeiten angelegt.
+                </div>
+              );
+            }
+            if (bereich === "schlaf") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  Schlaf-Eintrag mit {daten.stunden} h gespeichert{daten.schlafqualitaet ? ` (${daten.schlafqualitaet})` : ""}.
+                </div>
+              );
+            }
+            if (bereich === "workflow") {
+              return (
+                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+                  "{daten.name}" wurde angelegt · {daten.arbeitMin} Min. Arbeit / {daten.pauseMin} Min. Pause
+                  {daten.uhrzeit ? ` · ${daten.uhrzeit} Uhr` : ""}
+                </div>
+              );
+            }
+            return null;
+          }}
+        />
+      </div>
+      )}
 
       {/* Direktzugriff: nur die aktiven Pläne (schon eingerichtet, echte
           Daten) — Gewohnheiten/Morgen-/Abendroutine stecken jetzt mit drin,
