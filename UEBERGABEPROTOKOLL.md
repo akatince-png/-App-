@@ -62,6 +62,67 @@ längst gibt — jetzt diese Kurzübersicht:
 
 ---
 
+## ✅ Update 15.09.2026 (Teil 105) — "Neues Protokoll": Bestätigungs-Nachfrage statt blindem Archivieren + zwei bestehende Features gegengeprüft (Commit `6a7c9e2`)
+
+Drei Nutzerinnen-Anliegen in einer Nachricht, zwei davon bereits erledigt
+(nur gegengeprüft, nichts gebaut), eines neu umgesetzt:
+
+**1. Fortschrittsfotos (Körperteile fokussieren) — bereits vorhanden,
+nichts gebaut.** Existiert in `WoechentlicheCheckinsCard.jsx` (geteilt
+zwischen ProfilTab unter "Mehr" und dem Onboarding-Schritt "Profil &
+Ausgangslage"): Foto-Upload mit Kategorien `FOTO_KATEGORIEN` (Taille,
+Arme, Ganzkörper, Gesicht, Haare, Haut, `constants.js`), verknüpft mit
+jedem Gewichts-/Messwert-Eintrag, Anzeige über `SignedPhoto`. Der
+Nutzerin mitgeteilt, wo sie das findet — keine Code-Änderung nötig.
+
+**2. Bereiche nachträglich aktivieren/deaktivieren + Inhalte
+nachbearbeiten — ebenfalls bereits vorhanden.** "Mehr" → "Aktuelles
+Protokoll" (`AktuellesProtokoll` in `MehrTab.jsx`) zeigt alle 9
+Bausteine (Schlaf/Hydration/Tageslicht/Ernährung/Training/Gewohnheiten/
+Supplemente/Medikamente/Atemübungen) mit An-/Aus-Umschalter, unabhängig
+vom Onboarding-Assistenten — genau der "aktivieren/nicht aktivieren"-
+Knopf pro Bereich, den die Nutzerin sich wünschte. Bearbeiten der
+Inhalte selbst passiert weiterhin direkt im jeweiligen Reiter unter
+"Alle Pläne". Der Nutzerin mitgeteilt, wo sie das findet.
+
+**3. Archivieren beim "Neues Protokoll"-Knopf lief bisher blind —
+NEU behoben.** Wörtliche Vorgabe: "möchte ich erstmal gefragt werden,
+möchtest du das archivieren ... und ich möchte auch darüber informiert
+werden, auf welchem Stand das alte Protokoll ist ... das soll nicht
+einfach blind passieren." Bisher archivierte `neuesProtokoll()`
+(`AuthenticatedApp.jsx`) das laufende Peptid-Protokoll sofort beim
+Klick auf den "+"-Button, ohne jede Rückfrage.
+
+Neuer Zwischenschritt: `NeuesProtokollBestaetigenView.jsx` (neuer
+`view`-Zustand `"neuesProtokollBestaetigen"`, hängt sich automatisch
+ins bestehende generische Hash-Routing ein, kein Update an
+`utils/routing.ts` nötig) zeigt Name, "seit [Datum] · Woche X" und die
+Anzahl aktiver Bereiche des aktuellen Hauptprotokolls (aus
+`aktivesHauptprotokoll`/`teilprotokolle`, keine neue Datenbankabfrage)
+und verlangt ein explizites "Ja, archivieren und neu beginnen" oder
+"Abbrechen, beim aktuellen Protokoll bleiben". Erst nach "Ja" läuft die
+bisherige `neuesProtokoll()`-Logik. Kein aktives Hauptprotokoll
+(Edge-Case) → der Screen übersteht sich selbst automatisch, ohne leere
+Nachfrage.
+
+`e2e/harness/mockAppData.js` musste dafür `aktivesHauptprotokoll`/
+`teilprotokolle` erstmals mocken (vorher generischer `null`/`[]`-
+Fallback) — bewusst NUR für den normalen "schon eingerichtetes Konto"-
+Harness-Zustand, nicht für `?onboarding=1` (frischer Account hat noch
+kein aktives Hauptprotokoll; ohne diese Unterscheidung hätte
+`HauptprotokollErstellenView` im echten Erst-Onboarding-Test fälschlich
+"Weiter mit diesem Protokoll" angeboten statt des leeren Namensfelds —
+beim ersten Durchlauf dieser Änderung tatsächlich aufgetreten und
+gefixt, bevor gepusht wurde).
+
+**Tests:** neuer E2E-Test für den Bestätigungs-Screen (zeigt
+Protokoll-Stand korrekt, "Abbrechen" bleibt nachweislich auf Home ohne
+zu archivieren), bestehende "Neues Protokoll"-Tests aus Teil 103/104 um
+den zusätzlichen Bestätigungsschritt ergänzt. Build, Lint, Typecheck,
+98 Unit- und 36 E2E-Tests grün.
+
+---
+
 ## ✅ Update 15.09.2026 (Teil 104) — Nachtrag zu Teil 103: "Ziel & Grund" bleibt bei "Neues Protokoll" Pflicht-Schritt (Commit `37b07c5`)
 
 Direkte Nutzerinnen-Rückmeldung auf Teil 103: ein Ziel (oder ausdrücklich
