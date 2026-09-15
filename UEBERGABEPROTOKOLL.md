@@ -34,7 +34,7 @@ längst gibt — jetzt diese Kurzübersicht:
 - **Tests — bitte immer laufen lassen, nicht nur „sieht gut aus":** Vor
   jedem Commit `npm run build && npx oxlint <geänderte Dateien> && npm
   run typecheck && npm test` (Vitest, aktuell 100 Tests) und
-  `npx playwright test` (E2E, aktuell 37 Tests) — alles muss grün sein.
+  `npx playwright test` (E2E, aktuell 38 Tests) — alles muss grün sein.
   Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
   schreibt: Abschnitt 13 weiter unten.
 - **Neu seit dem letzten Durchgang:** Diktierfunktion ohne KI-Beteiligung
@@ -48,6 +48,11 @@ längst gibt — jetzt diese Kurzübersicht:
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
+- **✅ Nachkontrolle 15.09. (Teil 109):** Alle Änderungen seit dem letzten
+  Checkpoint (Teil 102–108, Commits `b3aae48`..`145dbf5`) wurden noch
+  einmal manuell auf Bugs durchgesehen (Zeilen-für-Zeilen-Diff-Lektüre +
+  Handnachvollzug der State-Machines) UND per Build/Lint/Typecheck/Tests
+  gegengeprüft — keine neuen Fehler gefunden, siehe Details unten.
 - **Zwei ehrliche, noch offene Restpunkte** (keine Fehler, aber vor
   „100 % fertig" der Nutzerin selbst zu bestätigen):
   1. Die Datentopf-Aufteilung (Teil 98) wurde nur strukturell + gegen
@@ -64,6 +69,70 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 15.09.2026 (Teil 109) — Nachkontrolle: Bug-Review aller Änderungen seit Teil 101 (Commits `b3aae48`..`145dbf5`)
+
+Auf Wunsch der Nutzerin ("ich habe jetzt keine Zeit, das nachzuschauen")
+wurden **alle** Code-Änderungen dieser Sitzung seit dem letzten
+Nachkontroll-Checkpoint (Teil 101, Commit `bc6f979`) noch einmal
+durchgesehen — Diktierfunktion, "Neues Protokoll"-Fix + Bestätigungs-
+Nachfrage, PDF-Zentrierung, Bildschirmzeit-Feature + dessen Onboarding-
+Integration. Umfang: 7 Code-Commits, 30 geänderte Dateien,
+1382 Zeilen hinzugefügt / 55 entfernt.
+
+**Vorgehen — zwei Ebenen, wie bei Teil 101:**
+
+1. **Manuelle Lektüre:** jede substanzielle Datei komplett gelesen und
+   die Logik von Hand nachvollzogen, mit besonderem Fokus auf die
+   riskantesten Stellen:
+   - `OnboardingFlow.jsx`: die komplette Phasen-State-Machine für alle
+     Pfade durchgespielt (normales Erst-Onboarding, direkter Neustart
+     über "+", Ja/Nein-Abzweigung bei "Werte aktualisieren?").
+   - `NeuesProtokollBestaetigenView.jsx`: Async-/Effect-Timing geprüft
+     (Ref-Guard gegen Endlosschleife, Verhalten nach Unmount).
+   - `BildschirmzeitView.jsx`: Zusammenspiel der invertierten
+     Limit-Logik (mehr = schlechter, anders als bei allen anderen
+     Kategorien) mit den gemeinsam genutzten Bauteilen `ProgressRing`,
+     `TagesfortschrittBalken` und den Erfolgs-Orden geprüft.
+   - `OnboardingCategoriesView.jsx`: alle ~10 verstreuten Stellen, an
+     denen "bildschirmzeit" als Kategorie-Schlüssel eingetragen wurde,
+     gegeneinander abgeglichen (keine Tippfehler, keine vergessene
+     Stelle).
+   - `primitives.jsx`: die neue `diktierbar`-Prop auf Einhaltung der
+     React-Hook-Regeln geprüft (Hook wird immer aufgerufen, nur die
+     Wirkung wird bedingt).
+   - Alle kleinen Registrierungs-Dateien (`constants.js`, `dayItems.js`,
+     `Icon.jsx`, `categorySteps.js`, `MehrTab.jsx`, `PlaeneView.jsx`,
+     `TrackingDataContext.jsx`, `useKompletterReset.js`) gegeneinander
+     abgeglichen.
+
+   **Ergebnis der Lektüre:** keine neuen Bugs gefunden. Eine
+   vorbestehende (nicht neu eingeführte) architektonische Unschönheit
+   wurde identifiziert: Das Archivieren eines alten Peptid-Protokolls
+   (im "Ja"-Pfad von `NeuesProtokollBestaetigenView`) läuft nicht
+   atomar mit dem späteren Archivieren des Hauptprotokolls in
+   `HauptprotokollErstellenView` zusammen. Das gab es aber schon vor
+   der heutigen Änderung — die neue Bestätigungs-Nachfrage macht die
+   Lage strikt besser (Nutzerin sieht jetzt vorher, was passiert),
+   nicht schlechter. Eine vollständige Lösung wäre ein größerer,
+   eigenständiger Umbau und war nicht Teil der heutigen Aufgabe.
+
+2. **Empirische Gegenprobe** (nach der Lektüre, zur Bestätigung):
+   - `npm run build` → ✅ erfolgreich (`✓ built in 813ms`).
+   - `npx oxlint src/ e2e/ supabase/` → ✅ sauber (keine neuen Warnungen
+     außer der bekannten, harmlosen `only-export-components`-Meldung).
+   - `npm run typecheck` → ✅ keine Fehler.
+   - `npm test` → ✅ **100 von 100** Unit-Tests grün.
+   - `npx playwright test` → ✅ **38 von 38** E2E-Tests grün (inkl. der
+     drei neuen Tests für Bestätigungs-Nachfrage, Diktierfunktion und
+     Bildschirmzeit-Onboarding-Fragen).
+
+**Fazit:** Anders als bei Teil 101 (dort wurden zwei echte Bugs gefunden
+und behoben) hat diese Nachkontrolle **keine neuen Fehler** ergeben —
+weder in der Handlektüre noch in den automatisierten Prüfungen. Alle
+Änderungen seit Teil 102 gelten als geprüft und stabil.
 
 ---
 
