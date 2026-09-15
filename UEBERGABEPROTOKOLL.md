@@ -62,6 +62,47 @@ längst gibt — jetzt diese Kurzübersicht:
 
 ---
 
+## ✅ Update 15.09.2026 (Teil 104) — Nachtrag zu Teil 103: "Ziel & Grund" bleibt bei "Neues Protokoll" Pflicht-Schritt (Commit `37b07c5`)
+
+Direkte Nutzerinnen-Rückmeldung auf Teil 103: ein Ziel (oder ausdrücklich
+keins — "Alltagsprotokoll" ohne konkretes Ziel ist eine gültige, bewusste
+Wahl) gehört zu jedem neuen Protokoll dazu und darf deshalb NICHT hinter
+dem optionalen Ja/Nein-Gate verschwinden, anders als Profildaten
+(Geschlecht/Geburtsdatum/Größe/Gewicht) — die beschreiben die Person
+selbst, nicht das einzelne Protokoll, und dürfen deshalb optional/
+vorausgefüllt bleiben. Ausdrückliche Zusatz-Vorgabe: wenn "Ziel & Grund"
+für ein neues Protokoll erscheint, MUSS die Checkbox-Liste leer sein,
+nicht mit den alten Zielen vorausgefüllt.
+
+**Umgesetzt:** `OnboardingFlow.jsx` zeigt bei "Neues Protokoll"
+(`istDirekterNeuStart`) jetzt IMMER "Ziel & Grund" direkt nach
+Protokollname/Datum, bevor der Ja/Nein-Screen (jetzt nur noch für
+Profildaten zuständig, Text entsprechend angepasst: "Fast geschafft"
+statt "Neues Protokoll") überhaupt erscheint. Die geforderte Leer-
+Garantie war bei genauerem Hinsehen bereits durch bestehenden,
+unveränderten Code erfüllt (nicht neu gebaut, nur verifiziert): der
+"+"-Button ruft in `AuthenticatedApp.jsx` VOR dem Öffnen des
+Onboarding-Formulars `protokollArchivieren()` auf
+(`useProtocolData.js`) — das archiviert das bisherige aktive
+Peptid-Protokoll (dort liegt `ziele`, historisch aus dem separaten
+Peptid-Assistenten) und legt sofort ein neues mit `ziele: []` an, bevor
+der Ziele-Bildschirm überhaupt erreichbar ist.
+
+Beide E2E-Tests aus Teil 103 entsprechend angepasst (Ziel & Grund jetzt
+immer sichtbar vor dem Gate, Ja-Pfad führt zu Profil statt zu Ziele).
+Build, Lint, Typecheck, 98 Unit- und 35 E2E-Tests grün.
+
+**Offen/im Raum stehen gelassen, NICHT umgesetzt** (Nutzerin dachte im
+selben Atemzug laut weiter, aber ohne konkreten Auftrag): Fortschritts-
+fotos vom eigenen Körper hinzufügen und bestimmte Körperteile "in den
+Fokus setzen" können. Klar als vage Idee erkennbar (Satz bricht mit
+"...oder so, aber ja." ab), absichtlich NICHT gebaut — bei Bedarf beim
+nächsten Mal konkret nachfragen, was genau gewünscht ist (eigener
+Bereich? Teil des Profils? Vorher-Nachher-Vergleich?), bevor irgendwas
+entsteht.
+
+---
+
 ## ✅ Update 15.09.2026 (Teil 103) — Bug-Fix: "Neues Protokoll" verlangte bei bestehendem Konto das komplette Erst-Onboarding erneut (Commit `8c3ef12`)
 
 Nutzerinnen-Bug-Report: der "+"-Button ("Neues Protokoll", `startPhase=
