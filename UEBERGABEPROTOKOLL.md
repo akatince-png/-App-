@@ -45,12 +45,9 @@ längst gibt — jetzt diese Kurzübersicht:
   "Bildschirmzeit" (Teil 107, manuelles Tracking — automatisches
   Auslesen vom Telefon ist aus einer Web-App heraus technisch nicht
   möglich — jetzt auch als eigener Schritt im Erst-Onboarding, Teil 108).
-- **🔴 Ein echter offener Deploy-Punkt:** Migration
-  `0086_bildschirmzeit.sql` liegt im Repo, wurde aber noch NICHT im
-  echten Supabase-Projekt ausgeführt — muss die Nutzerin einmal im
-  SQL-Editor nachziehen, sonst wirft die neue Bildschirmzeit-Kategorie
-  einen Datenbankfehler. Bei Sitzungsstart als Erstes nachfragen, ob das
-  schon erledigt wurde.
+- **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
+  im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
+  Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
 - **Zwei ehrliche, noch offene Restpunkte** (keine Fehler, aber vor
   „100 % fertig" der Nutzerin selbst zu bestätigen):
   1. Die Datentopf-Aufteilung (Teil 98) wurde nur strukturell + gegen
@@ -129,14 +126,11 @@ harte Plattformgrenze, keine Umsetzungsfrage — gilt für jede Web-App,
 nicht nur für AKA. Deshalb wie jede andere Kategorie rein manuelles
 Eintragen.
 
-**🔴 Erfordert eine manuelle Aktion der Nutzerin, bevor die Funktion
-live nutzbar ist:** Migration `supabase/migrations/0086_bildschirmzeit.sql`
-(zwei neue Tabellen `bildschirmzeit_logs`/`bildschirmzeit_settings`, exakt
-nach demselben Muster wie `0033_tageslicht.sql`) liegt im Repo, wurde
-aber noch NICHT im echten Supabase-Projekt ausgeführt — muss die
-Nutzerin einmal im SQL-Editor nachziehen, sonst schlägt jeder
-Lese-/Schreibversuch auf die neue Kategorie mit einem Datenbankfehler
-fehl.
+**✅ Migration `supabase/migrations/0086_bildschirmzeit.sql`** (zwei neue
+Tabellen `bildschirmzeit_logs`/`bildschirmzeit_settings`, exakt nach
+demselben Muster wie `0033_tageslicht.sql`) — von der Nutzerin am
+15.09. abends bestätigt im echten Supabase-Projekt ausgeführt. Kein
+offener Deploy-Punkt mehr.
 
 **Umsetzung:** gleicher Aufbau wie Tageslicht (ein Log-Eintrag pro Tag
 in Minuten + ein Tagesziel als eigene Einstellung), aber mit einem
