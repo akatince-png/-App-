@@ -40,6 +40,7 @@ const MehrView = lazy(() => import("./views/plan/MehrView"));
 const GewohnheitenView = lazy(() => import("./views/GewohnheitenView"));
 const AtemuebungenView = lazy(() => import("./views/AtemuebungenView"));
 const OnboardingFlow = lazy(() => import("./views/onboarding/OnboardingFlow"));
+const NeuesProtokollBestaetigenView = lazy(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch", "profil", "blutzucker", "community"];
@@ -257,6 +258,13 @@ export default function AuthenticatedApp() {
   // Bearbeiten öffnen (bestätigter Bug: alte Auswahl blieb stehen). Ist das
   // aktive Protokoll schon leer (z. B. direkt nach dem Archivieren), ist
   // nichts zu tun.
+  //
+  // Läuft jetzt NICHT mehr blind beim Knopf-Klick (Nutzerinnen-Vorgabe,
+  // 15.09.: "möchte ich erstmal gefragt werden, möchtest du das
+  // archivieren ... und über den Stand des alten Protokolls informiert
+  // werden") — der "+"-Button wechselt stattdessen nur noch zu
+  // view="neuesProtokollBestaetigen" (siehe unten), diese Funktion hier
+  // wird erst nach explizitem "Ja" auf dem Bestätigungs-Screen aufgerufen.
   const neuesProtokoll = async () => {
     if (ziele.length > 0 || peptide.length > 0) {
       await protokollArchivieren();
@@ -266,7 +274,9 @@ export default function AuthenticatedApp() {
 
   let screen;
 
-  if (view === "form") {
+  if (view === "neuesProtokollBestaetigen") {
+    screen = <NeuesProtokollBestaetigenView onBestaetigt={neuesProtokoll} onAbbrechen={() => setView("home")} />;
+  } else if (view === "form") {
     screen = !onboardingComplete ? (
       // onCancel=signOut: ohne abgeschlossenes Onboarding gibt es noch keine
       // "home"-Ansicht, in die man abbrechen könnte — einzig sinnvoller
@@ -376,7 +386,7 @@ export default function AuthenticatedApp() {
           setOffenesTrainingId(id);
           setView("training");
         }}
-        onNeuesProtokoll={neuesProtokoll}
+        onNeuesProtokoll={() => setView("neuesProtokollBestaetigen")}
       />
     );
   }

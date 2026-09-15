@@ -81,12 +81,35 @@ const FUNKTIONS_SUFFIXE =
 // onboardingComplete gezielt auf false zu setzen (siehe e2e/harness/TestApp.jsx),
 // um den Onboarding-Flow statt der Hauptansicht zu erreichen.
 function explizit(userId, overrides) {
+  // ?onboarding=1 (siehe TestApp.jsx) simuliert einen wirklich frischen
+  // Account (overrides.onboardingComplete === false) — der hat naturgemäß
+  // noch KEIN aktives Hauptprotokoll. Der Fake unten gilt deshalb nur für
+  // den normalen "schon eingerichtetes Konto"-Harness-Zustand, sonst würde
+  // z. B. HauptprotokollErstellenView.jsx im echten Erst-Onboarding
+  // fälschlich "Weiter mit diesem Protokoll" statt des leeren Namensfelds
+  // anbieten (gibtBestehendesAnGeboten prüft genau dieses Feld).
+  const istFrischesOnboarding = overrides?.onboardingComplete === false;
   return {
     userId,
     loading: false,
     onboardingComplete: true,
     isAdmin: true,
     belohnungPufferMin: 10,
+    // Ein voll eingerichtetes Testkonto (Standard-Harness-Zustand) hätte in
+    // echt immer ein aktives Hauptprotokoll — ohne diesen Mock würde die
+    // generische siehtAusWieId()-Heuristik `null` liefern und z. B.
+    // NeuesProtokollBestaetigenView.jsx (fragt vor "Neues Protokoll" nach
+    // Bestätigung + zeigt den Stand des alten Protokolls) sofort automatisch
+    // weiterspringen, statt sich testen zu lassen.
+    aktivesHauptprotokoll: istFrischesOnboarding
+      ? null
+      : { id: "e2e-hauptprotokoll-1", name: "E2E-Testprotokoll", startdatum: "2026-01-01", status: "active" },
+    teilprotokolle: istFrischesOnboarding
+      ? []
+      : [
+          { hauptprotokoll_id: "e2e-hauptprotokoll-1", kategorie: "schlaf", aktiv: true, aktiviert_am: "2026-01-01T00:00:00.000Z" },
+          { hauptprotokoll_id: "e2e-hauptprotokoll-1", kategorie: "hydration", aktiv: true, aktiviert_am: "2026-01-01T00:00:00.000Z" },
+        ],
     ...overrides,
   };
 }

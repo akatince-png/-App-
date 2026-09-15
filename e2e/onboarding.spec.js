@@ -153,17 +153,46 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
 
 // Nutzerinnen-Vorgabe (15.09.): "Neues Protokoll" bei einem bereits
 // bestehenden, fertig eingerichteten Konto (Standard-Harness-Zustand, kein
-// ?onboarding=1) soll NICHT mehr den kompletten Erst-Onboarding-Fragebogen
-// nochmal durchlaufen (Name erneut abfragen, Quick-Win-Feier für den
+// ?onboarding=1) fragt zuerst per NeuesProtokollBestaetigenView.jsx nach
+// ("möchte ich erstmal gefragt werden ... das soll nicht einfach blind
+// passieren") und läuft danach NICHT mehr den kompletten Erst-Onboarding-
+// Fragebogen nochmal durch (Name erneut abfragen, Quick-Win-Feier für den
 // "ersten Schritt") — aber "Ziel & Grund" bleibt bewusst ein Pflicht-
 // Schritt (jedes Protokoll bekommt sein eigenes Ziel oder ausdrücklich
 // keins), nur die Profildaten stecken hinter einem optionalen Ja/Nein-
 // Zwischenschirm (OnboardingWerteAktualisierenView.jsx).
-test("Neues Protokoll (bestehendes Konto): überspringt Name & Quick-Win, fragt aber weiterhin nach Ziel & Grund", async ({ page }) => {
+test("Neues Protokoll (bestehendes Konto): fragt vor dem Archivieren nach, zeigt den Stand des alten Protokolls", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
+
+  // Bestätigungs-Screen zeigt Name, Startdatum und Anzahl aktiver Bereiche
+  // des BISHERIGEN Protokolls (aus mockAppData.js: "E2E-Testprotokoll",
+  // seit 2026-01-01, zwei aktive Teilprotokolle) — informiert VOR jeder
+  // Archivierung, statt blind zu archivieren.
+  await expect(page.getByText("Neues Protokoll beginnen?")).toBeVisible();
+  await expect(page.getByText("E2E-Testprotokoll", { exact: true })).toBeVisible();
+  await expect(page.getByText("seit 2026-01-01", { exact: false })).toBeVisible();
+  await expect(page.getByText("2 Bereiche aktiv", { exact: true })).toBeVisible();
+
+  // "Abbrechen": kein Archivieren, keine Weiterleitung ins Formular —
+  // bleibt auf Home.
+  await page.getByRole("button", { name: "Abbrechen, beim aktuellen Protokoll bleiben" }).click();
+  await expect(page.getByText("Tagebuch")).toBeVisible();
+  await expect(page.getByPlaceholder("z. B. Sommer 2026")).not.toBeVisible();
+
+  expect(fehler).toEqual([]);
+});
+
+test("Neues Protokoll (bestehendes Konto): nach Bestätigung überspringt Name & Quick-Win, fragt aber weiterhin nach Ziel & Grund", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html");
+
+  await page.getByRole("button", { name: "Neues Protokoll" }).click();
+  await expect(page.getByText("Neues Protokoll beginnen?")).toBeVisible();
+  await page.getByRole("button", { name: "Ja, archivieren und neu beginnen" }).click();
+
   await expect(page.getByPlaceholder("z. B. Sommer 2026")).toBeVisible();
   await page.getByPlaceholder("z. B. Sommer 2026").fill("Zweites Protokoll");
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
@@ -198,6 +227,7 @@ test("Neues Protokoll (bestehendes Konto): „Ja, kurz aktualisieren“ führt n
   await page.goto("/e2e/harness/index.html");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
+  await page.getByRole("button", { name: "Ja, archivieren und neu beginnen" }).click();
   await page.getByPlaceholder("z. B. Sommer 2026").fill("Drittes Protokoll");
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
   await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
