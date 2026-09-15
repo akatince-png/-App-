@@ -82,7 +82,7 @@ test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon be
 // Account zu simulieren.
 //
 // Bewusste Grenze: befüllt nur die Felder, die zum Weiterkommen nötig sind
-// (Protokollname, Vorname) — testet NICHT jede einzelne der 8 Kategorien im
+// (Protokollname, Vorname) — testet NICHT jede einzelne der 9 Kategorien im
 // Detail mit echten Werten (Ziel/Grund, Messwerte, ...). Das wäre ein enorm
 // fragiles Unterfangen (bricht bei jeder Text-/Feld-Änderung) für einen
 // Nutzen, der über "stürzt nicht ab" kaum hinausgeht — echte inhaltliche
@@ -147,6 +147,75 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   // Abschluss-Screen → zurück auf Home.
   await page.getByRole("button").last().click();
   await expect(page.getByText("Tagebuch")).toBeVisible({ timeout: 10000 });
+
+  expect(fehler).toEqual([]);
+});
+
+// Nutzerinnen-Vorgabe (15.09.): Bildschirmzeit muss auch als eigener
+// Kategorie-Schritt im Erst-Onboarding abgefragt werden (nicht nur über
+// "Mehr" nachträglich erreichbar) — mit den vier von ihr konkret genannten
+// Reflexionsfragen (üblicher Verbrauch, Haupttätigkeit, Reduzieren
+// vorstellbar, künftiges Limit). Fährt denselben Weg wie der komplette
+// Onboarding-Test oben bis zu den Kategorien, klickt dort Schlaf/Hydration/
+// Tageslicht bewusst weg (unterschiedliche Skip-Wege: Schlaf/Tageslicht
+// haben noch die "Jetzt/Später einrichten"-Gate-Seite, Hydration nicht —
+// siehe effectiveModus in OnboardingCategoriesView.jsx), um beim vierten
+// Schritt (Bildschirmzeit) anzukommen.
+test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttätigkeit, Reduzieren-Vorstellung und Limit ab", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html?onboarding=1");
+
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Los geht's", exact: true }).click();
+  await page.getByPlaceholder("z. B. Sommer 2026").fill("E2E-Test-Protokoll");
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Weiter geht's" }).last().click();
+  await page.getByRole("button", { name: "Nein, ich mach's selbst" }).click();
+  await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+
+  for (const titel of ["Ziel & Grund", "Dein Profil & Ausgangslage", "Deine Laborwerte", "Morgen- & Abendroutine"]) {
+    await expect(page.getByText(titel, { exact: true })).toBeVisible();
+    const schliessenKnopf = page.getByRole("button", { name: "Schließen" });
+    if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
+    await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  }
+
+  // Schlaf: hat noch die Gate-Seite ("Jetzt/Später einrichten").
+  await expect(page.getByText("Schlafplan einrichten?")).toBeVisible();
+  await page.getByRole("button", { name: "Später einrichten" }).click();
+
+  // Hydration: KEINE Gate-Seite (effectiveModus fest auf "jetzt"), startet
+  // direkt im KiChat-Vollbild-Modal — erst schließen, dann überspringen.
+  const hydrationSchliessen = page.getByRole("button", { name: "Schließen" });
+  if (await hydrationSchliessen.isVisible().catch(() => false)) await hydrationSchliessen.click();
+  await page.getByRole("button", { name: "Doch überspringen" }).click();
+
+  // Tageslicht: wieder mit Gate-Seite.
+  await expect(page.getByText("Tageslichtplan einrichten?")).toBeVisible();
+  await page.getByRole("button", { name: "Später einrichten" }).click();
+
+  // Bildschirmzeit: Gate-Seite, dann "Jetzt einrichten".
+  await expect(page.getByText("Bildschirmzeitplan einrichten?")).toBeVisible();
+  await page.getByRole("button", { name: "Jetzt einrichten" }).click();
+
+  const bildschirmzeitSchliessen = page.getByRole("button", { name: "Schließen" });
+  if (await bildschirmzeitSchliessen.isVisible().catch(() => false)) await bildschirmzeitSchliessen.click();
+
+  // Die drei Ist-Zustand-Reflexionsfragen und das Limit-Feld müssen alle
+  // sichtbar sein — genau die Fragen aus der Nutzerinnen-Vorgabe.
+  await expect(page.getByText("Wie viel Bildschirmzeit hast Du üblicherweise am Tag?", { exact: true })).toBeVisible();
+  await expect(page.getByText("Was machst Du am meisten am Telefon?", { exact: true })).toBeVisible();
+  await expect(page.getByText("Kannst Du Dir vorstellen, das zu reduzieren?", { exact: true })).toBeVisible();
+  await expect(page.getByText("Tageslimit in Minuten (Obergrenze, nicht Ziel zum Erreichen)", { exact: true })).toBeVisible();
+
+  await page.getByPlaceholder("z. B. 60").fill("45");
+  await page.getByRole("button", { name: "Speichern & weiter", exact: true }).click();
+
+  // Danach kommt Ernährung — bestätigt, dass der neue Schritt sauber ins
+  // bestehende Karussell einreiht, statt es zu unterbrechen.
+  await expect(page.getByText("Ernährungsplan einrichten?")).toBeVisible();
 
   expect(fehler).toEqual([]);
 });

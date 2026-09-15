@@ -26,6 +26,7 @@ const SCHRITT_ZU_KATEGORIE = {
   schlaf: "schlaf",
   hydration: "hydration",
   tageslicht: "tageslicht",
+  bildschirmzeit: "bildschirmzeit",
   ernaehrung: "mahlzeit",
   training: "training",
   gewohnheiten: "gewohnheit",
@@ -46,6 +47,8 @@ const KATEGORIE_COACH_PROMPTS = {
     "Du hilfst dabei, ein tägliches Trinkziel einzurichten. Frag nach, wie viel die Person aktuell trinkt und was ein realistisches Tagesziel wäre. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
   tageslicht:
     "Du hilfst dabei, ein tägliches Tageslicht-/Freiluft-Ziel in Minuten einzurichten. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
+  bildschirmzeit:
+    "Du hilfst dabei, ein tägliches Bildschirmzeit-Limit einzurichten (v. a. Freizeit-Scrollen am Telefon). Frag nach: wie viel Bildschirmzeit die Person üblicherweise hat, was sie am meisten am Telefon macht, ob sie sich vorstellen kann, das zu reduzieren, und wie viel Bildschirmzeit sie sich künftig als Limit setzen möchte (eine Obergrenze, kein Ziel zum Erreichen). Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
   ernaehrung:
     "Du hilfst dabei, eine Mahlzeit für den Wochenplan einzurichten. Frag nach Name, Zutaten, an welchen Wochentagen sie stattfindet, und der Uhrzeit. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.",
   training:
@@ -66,6 +69,8 @@ const KATEGORIE_EINLEITUNG = {
   schlaf: (coachName) => `Hi, ich bin ${coachName}! Wann gehst du normalerweise ins Bett, und wann willst du aufwachen?`,
   hydration: (coachName) => `Hi, ich bin ${coachName}! Wie viel trinkst du aktuell am Tag, und was wäre ein gutes Tagesziel für dich?`,
   tageslicht: (coachName) => `Hi, ich bin ${coachName}! Wie viel Zeit verbringst du aktuell draußen bei Tageslicht, und was wäre ein realistisches Ziel pro Tag?`,
+  bildschirmzeit: (coachName) =>
+    `Hi, ich bin ${coachName}! Wie viel Bildschirmzeit hast du üblicherweise am Tag, und was machst du am meisten am Telefon? Kannst du dir vorstellen, das zu reduzieren — und wie viel Bildschirmzeit willst du dir künftig als Limit setzen?`,
   ernaehrung: (coachName) => `Hi, ich bin ${coachName}! Erzähl mir von einer Mahlzeit, die du regelmäßig isst — was ist drin, an welchen Tagen, und um wie viel Uhr?`,
   training: (coachName) => `Hi, ich bin ${coachName}! Wie sieht dein Training aktuell aus, und was schwebt dir für den Plan vor?`,
   supplemente: (coachName) => `Hi, ich bin ${coachName}! Welches Supplement möchtest du eintragen? Sag mir Dosierung, Einnahmeart und wann du es nimmst.`,
@@ -84,6 +89,11 @@ export const ISTZUSTAND_FRAGEN = {
   hydration: [
     { key: "menge", frage: "Wie viel trinkst Du aktuell am Tag?", placeholder: "z. B. ca. 1 Liter" },
     { key: "getraenke", frage: "Was trinkst Du außer Wasser?", placeholder: "z. B. Kaffee, Saft, Limonade …" },
+  ],
+  bildschirmzeit: [
+    { key: "ueblich", frage: "Wie viel Bildschirmzeit hast Du üblicherweise am Tag?", placeholder: "z. B. ca. 3-4 Stunden" },
+    { key: "taetigkeit", frage: "Was machst Du am meisten am Telefon?", placeholder: "z. B. Social Media, Nachrichten, Videos …" },
+    { key: "reduzieren", frage: "Kannst Du Dir vorstellen, das zu reduzieren?", placeholder: "" },
   ],
   ernaehrung: [{ key: "aktuell", frage: "Wie ernährst Du dich aktuell?", placeholder: "z. B. unregelmäßig, viel Fast Food …" }],
   training: [{ key: "aktuell", frage: "Wie sieht dein aktuelles Training/Sport aus?", placeholder: "z. B. 1x pro Woche, gar nicht, unregelmäßig …" }],
@@ -198,6 +208,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     hydrationZielSetzen,
     tageslichtZielMinuten,
     tageslichtZielSetzen,
+    bildschirmzeitZielMinuten,
+    bildschirmzeitZielSetzen,
     mahlzeitHinzufuegen,
     wochenplanMahlzeitSetzen,
     supplementHinzufuegen,
@@ -290,6 +302,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // Kommentar oben.
   const [tageslichtMinuten, setTageslichtMinuten] = useState("");
 
+  // Bildschirmzeit — analog zu Tageslicht bewusst leer statt vorbelegt.
+  // Anders als bei Tageslicht ist der Wert hier eine gewünschte
+  // OBERGRENZE, kein Mindestwert (siehe BildschirmzeitView.jsx).
+  const [bildschirmzeitMinuten, setBildschirmzeitMinuten] = useState("");
+
   // Ernährung — Wochentage (an welchen Tagen gilt diese Mahlzeit) + eine
   // einzelne Uhrzeit statt der pauschalen Morgens/Mittags/Abends-Auswahl,
   // damit sie später wie jede andere Mahlzeit über meal_wochenplan
@@ -367,6 +384,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setSchlafBloecke([neuerSchlafblock([...WOCHENTAGE])]);
     setHydrationMl("");
     setTageslichtMinuten("");
+    setBildschirmzeitMinuten("");
     setMahlName("");
     setMahlIntervallTyp("weekdays");
     setMahlTage([...WOCHENTAGE]);
@@ -531,6 +549,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       const neuesZiel = tageslichtMinuten.trim() === "" ? tageslichtZielMinuten : Math.max(0, Number(tageslichtMinuten) || 0);
       await tageslichtZielSetzen(neuesZiel);
       setCategoryZiel("tageslicht", { modus: ziel.modus, wochen: ziel.wochen });
+    } else if (step.key === "bildschirmzeit") {
+      const neuesLimit = bildschirmzeitMinuten.trim() === "" ? bildschirmzeitZielMinuten : Math.max(0, Number(bildschirmzeitMinuten) || 0);
+      await bildschirmzeitZielSetzen(neuesLimit);
+      setCategoryZiel("bildschirmzeit", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
       // gespeichert (wochenplanHinzufuegen/-Entfernen, wie in TrainingView) —
@@ -739,6 +761,15 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         if (tl.zielMinuten) await tageslichtZielSetzen(Math.max(0, Number(tl.zielMinuten) || 0));
         return tl;
       }
+      case "bildschirmzeit": {
+        const bz = await AIService.bildschirmzeitAusChat({ verlauf, coachName });
+        setBildschirmzeitMinuten(String(bz.zielMinuten));
+        if (bz.zielMinuten) await bildschirmzeitZielSetzen(Math.max(0, Number(bz.zielMinuten) || 0));
+        if (bz.istZustandUeblich) setIstZustandFeld("ueblich", bz.istZustandUeblich);
+        if (bz.istZustandTaetigkeit) setIstZustandFeld("taetigkeit", bz.istZustandTaetigkeit);
+        if (bz.istZustandReduzieren) setIstZustandFeld("reduzieren", bz.istZustandReduzieren);
+        return bz;
+      }
       case "ernaehrung": {
         const m = await AIService.mahlzeitplanAusChat({ verlauf, coachName });
         if (!m.name?.trim()) throw new Error(t("onboarding.error.name"));
@@ -818,6 +849,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       text = "Trinkziel wurde direkt gespeichert.";
     } else if (step.key === "tageslicht") {
       text = "Tageslicht-Ziel wurde direkt gespeichert.";
+    } else if (step.key === "bildschirmzeit") {
+      text = "Bildschirmzeit-Limit wurde direkt gespeichert.";
     }
     return <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>{text}</div>;
   };
@@ -1114,6 +1147,22 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                 {tLabel("Wie viele Minuten am Tag möchtest du bewusst im Freien/Tageslicht verbringen?")}
               </div>
               <ZeitErinnerungenCard kategorie="tageslicht" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="12:00" />
+            </>
+          )}
+
+          {step.key === "bildschirmzeit" && (
+            <>
+              <Label>{tLabel("Tageslimit in Minuten (Obergrenze, nicht Ziel zum Erreichen)")}</Label>
+              <TextInput
+                type="number"
+                value={bildschirmzeitMinuten}
+                onChange={setBildschirmzeitMinuten}
+                placeholder={bildschirmzeitZielMinuten ? String(bildschirmzeitZielMinuten) : "z. B. 60"}
+              />
+              <div style={{ fontSize: 11, color: textMuted, marginTop: 4, marginBottom: 18 }}>
+                {tLabel("Wie viel Bildschirmzeit möchtest du künftig maximal am Tag haben?")}
+              </div>
+              <ZeitErinnerungenCard kategorie="bildschirmzeit" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="20:00" />
             </>
           )}
 

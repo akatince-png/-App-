@@ -17,6 +17,7 @@ export const CATEGORY_STEPS = [
   { key: "schlaf", icon: "😴", label: "Schlafplan" },
   { key: "hydration", icon: "💧", label: "Hydrationsplan" },
   { key: "tageslicht", icon: "☀️", label: "Tageslichtplan" },
+  { key: "bildschirmzeit", icon: "📱", label: "Bildschirmzeitplan" },
   { key: "ernaehrung", icon: "🍽️", label: "Ernährungsplan" },
   { key: "training", icon: "🏋️", label: "Trainingsplan" },
   { key: "gewohnheiten", icon: "🌱", label: "Gewohnheitenplan" },

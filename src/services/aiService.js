@@ -365,6 +365,36 @@ export const AIService = {
   },
 
   /**
+   * Extrahiert aus einem geführten Bildschirmzeit-Gespräch (siehe
+   * coachChat()) ein neues Tageslimit in Minuten sowie die Ist-Zustand-
+   * Reflexionsfragen (siehe ISTZUSTAND_FRAGEN.bildschirmzeit in
+   * OnboardingCategoriesView.jsx). Anders als bei Tageslicht ist
+   * "zielMinuten" hier eine gewünschte OBERGRENZE, kein Mindestwert.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{zielMinuten: number, istZustandUeblich: string, istZustandTaetigkeit: string, istZustandReduzieren: string}>}
+   */
+  async bildschirmzeitAusChat({ verlauf, coachName }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines täglichen Bildschirmzeit-Limits hilft (v. a. Freizeit-Scrollen am Telefon).",
+        "Fasse das vorangegangene Gespräch jetzt zusammen.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "zielMinuten": number (gewünschtes Tageslimit in Minuten, aus dem Gespräch abgeleitet — eine Obergrenze, kein Mindestwert), ' +
+          '"istZustandUeblich": string (wie viel Bildschirmzeit die Person laut Gespräch üblicherweise hat, z. B. "ca. 3 Stunden" — leer wenn nicht genannt), ' +
+          '"istZustandTaetigkeit": string (was sie am meisten am Telefon macht, z. B. "Social Media, Videos" — leer wenn nicht genannt), ' +
+          '"istZustandReduzieren": string (ob und wie sie sich vorstellen kann, die Zeit zu reduzieren — leer wenn nicht genannt) }',
+      ],
+      verlauf,
+      "Fasse das oben besprochene Bildschirmzeit-Limit jetzt als JSON zusammen, wie vereinbart."
+    );
+    if (typeof data.zielMinuten !== "number") throw new Error("Unerwartetes Format: 'zielMinuten' fehlt oder ist keine Zahl.");
+    return data;
+  },
+
+  /**
    * Extrahiert aus einem geführten Workflow-Gespräch (siehe coachChat()) ein
    * neues Intervall-Preset, optional direkt mit einer Zeitplan-Zuordnung
    * (Wochentage + Uhrzeit) — Format entspricht dem, was
