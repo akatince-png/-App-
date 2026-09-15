@@ -33,16 +33,24 @@ längst gibt — jetzt diese Kurzübersicht:
   Farbtabelle in Abschnitt 3.
 - **Tests — bitte immer laufen lassen, nicht nur „sieht gut aus":** Vor
   jedem Commit `npm run build && npx oxlint <geänderte Dateien> && npm
-  run typecheck && npm test` (Vitest, aktuell 98 Tests) und
-  `npx playwright test` (E2E, aktuell 34 Tests) — alles muss grün sein.
+  run typecheck && npm test` (Vitest, aktuell 100 Tests) und
+  `npx playwright test` (E2E, aktuell 37 Tests) — alles muss grün sein.
   Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
-  schreibt: neuer Abschnitt 13 weiter unten.
+  schreibt: Abschnitt 13 weiter unten.
 - **Neu seit dem letzten Durchgang:** Diktierfunktion ohne KI-Beteiligung
-  für Formularfelder (Teil 102) sowie ein Bug-Fix, bei dem "Neues
-  Protokoll" (der "+"-Button bei bestehendem Konto) fälschlich das
-  komplette Erst-Onboarding erneut verlangte, inkl. erneuter
-  Namensabfrage (Teil 103, 15.09.) — Details in der Chronik direkt
-  unten.
+  für Formularfelder (Teil 102); Bug-Fix "Neues Protokoll" (Teil
+  103–105: kein Voll-Onboarding mehr bei bestehendem Konto, "Ziel &
+  Grund" bleibt Pflicht, Bestätigungs-Nachfrage vorm Archivieren);
+  einheitliche PDF-Zentrierung (Teil 106); neue Kategorie
+  "Bildschirmzeit" (Teil 107, manuelles Tracking — automatisches
+  Auslesen vom Telefon ist aus einer Web-App heraus technisch nicht
+  möglich).
+- **🔴 Ein echter offener Deploy-Punkt:** Migration
+  `0086_bildschirmzeit.sql` liegt im Repo, wurde aber noch NICHT im
+  echten Supabase-Projekt ausgeführt — muss die Nutzerin einmal im
+  SQL-Editor nachziehen, sonst wirft die neue Bildschirmzeit-Kategorie
+  einen Datenbankfehler. Bei Sitzungsstart als Erstes nachfragen, ob das
+  schon erledigt wurde.
 - **Zwei ehrliche, noch offene Restpunkte** (keine Fehler, aber vor
   „100 % fertig" der Nutzerin selbst zu bestätigen):
   1. Die Datentopf-Aufteilung (Teil 98) wurde nur strukturell + gegen
@@ -59,6 +67,68 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 15.09.2026 (Teil 107) — Neue Kategorie: Bildschirmzeit-Tracking, manuell (Commit `68f4973`)
+
+Nutzerinnen-Vorgabe: neues Tracking-Feld für die Zeit am Telefon, v. a.
+Freizeit-Scrollen. Ursprünglicher Wunsch war, das evtl. direkt mit der
+telefoneigenen Bildschirmzeit-Erfassung zu verbinden — dazu vorab
+ehrlich geklärt: **automatisches Auslesen ist aus einer Browser-/PWA-App
+heraus technisch nicht möglich**, weder iOS noch Android geben Web-Apps
+Zugriff auf ihre Screen-Time-/Digital-Wellbeing-Daten. Das ist eine
+harte Plattformgrenze, keine Umsetzungsfrage — gilt für jede Web-App,
+nicht nur für AKA. Deshalb wie jede andere Kategorie rein manuelles
+Eintragen.
+
+**🔴 Erfordert eine manuelle Aktion der Nutzerin, bevor die Funktion
+live nutzbar ist:** Migration `supabase/migrations/0086_bildschirmzeit.sql`
+(zwei neue Tabellen `bildschirmzeit_logs`/`bildschirmzeit_settings`, exakt
+nach demselben Muster wie `0033_tageslicht.sql`) liegt im Repo, wurde
+aber noch NICHT im echten Supabase-Projekt ausgeführt — muss die
+Nutzerin einmal im SQL-Editor nachziehen, sonst schlägt jeder
+Lese-/Schreibversuch auf die neue Kategorie mit einem Datenbankfehler
+fehl.
+
+**Umsetzung:** gleicher Aufbau wie Tageslicht (ein Log-Eintrag pro Tag
+in Minuten + ein Tagesziel als eigene Einstellung), aber mit einem
+wichtigen inhaltlichen Unterschied: das Ziel ist hier eine OBERGRENZE
+(man will darunter bleiben), kein Mindestwert zum Erreichen wie bei
+Hydration/Tageslicht — Motivationstext, Ringfarbe (Warnfarbe bei
+Überschreitung) und Beschriftungen ("Limit" statt "Ziel") entsprechend
+angepasst. Bewusst OHNE die KiChat-gestützte Zielfindung, die
+Tageslicht/Hydration haben — ein eigenes KI-Gespräch nur für ein
+einzelnes manuelles Feld wäre unverhältnismäßig gewesen.
+
+Vollständig als eigene Kategorie eingebunden: Datenhook
+(`useBildschirmzeitData.js`), eigene View, Pläne-Reiter, Home-Mini-
+Widget, An-/Ausschalten unter "Mehr" → "Aktuelles Protokoll" (läuft
+OHNE Onboarding-Assistenten-Schritt — `teilprotokollSpeichern` legt die
+Zeile bei Bedarf selbst an, siehe Code-Kommentar in
+`OnboardingWerteAktualisierenView`-Nachbarschaft), eigene Farbe/Icon
+("smartphone"), Erinnerungszeiten, Reset-Fähigkeit unter "Gefahrenzone".
+
+**Bewusst NICHT angebunden** (Scope-Entscheidung, alle drei über "Mehr"
+jederzeit nachträglich erreichbar, keine Voraussetzung für volle
+Funktionsfähigkeit): Erfolge-/Orden-System, KiChat/AIService-gestützte
+Zieleinrichtung, Erst-Onboarding-Assistent
+(`OnboardingCategoriesView.jsx` — riesige, fragile Datei, bewusst nicht
+angefasst; Aktivierung funktioniert nachweislich auch ohne diesen
+Schritt über den Bausteine-Schalter).
+
+Nebenbei gefundener und behobener Bug im E2E-Test-Harness
+(`mockAppData.js`): Feldnamen, die auf "...Minuten" enden (betraf schon
+`tageslichtZielMinuten`/`tageslichtHeuteMinuten`, jetzt auch die neuen
+Bildschirmzeit-Felder), trafen keines der Zahlen-Erkennungsmuster und
+fielen fälschlich auf einen leeren Array-Fallback statt auf `0` —
+betraf nur die Test-Oberfläche, nicht die echte App/Datenbank, jetzt
+korrigiert.
+
+Build, Lint, Typecheck, 100 Unit- und 37 E2E-Tests grün. Zusätzlich
+manuell im Browser durchgeklickt (Tab-Wechsel, Ring/Motivationstext,
+Schnell-Hinzufügen, Tageslimit-Feld, Erinnerung, Verlauf) — Screenshots
+geprüft, sieht konsistent zu den übrigen Kategorien aus.
 
 ---
 
