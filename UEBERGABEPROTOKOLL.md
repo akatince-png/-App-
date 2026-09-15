@@ -62,6 +62,42 @@ längst gibt — jetzt diese Kurzübersicht:
 
 ---
 
+## ✅ Update 15.09.2026 (Teil 106) — PDF-Export: einheitlicher Seitenrand + Zentrierung für alle PDFs (Commit `3f65fb7`)
+
+Nutzerinnen-Vorgabe: "die PDFs werden nicht sauber erstellt, die sind
+nicht gut zentriert ... jede mögliche PDF überprüfen ... die
+Voreinstellungen so gestellt." Alle drei bestehenden PDF-Exporte
+(Tagebuch-Seiten, Coaching-Vorlagen, Wochenübersicht) teilen sich
+denselben zentralen `exportElementAsPdf()` in `utils/pdfExport.js` —
+ein einziger Fix dort behebt alle drei gleichzeitig.
+
+**Ursache:** Das erfasste Bild füllte randlos die komplette A4-
+Seitenbreite und wurde immer oben an der Seite angeheftet (`y=0`). Bei
+kurzem Inhalt (der häufigste Fall: eine einzelne Tagebuchseite, ein
+einzelnes ausgefülltes Formular) blieb dadurch unten sehr viel Weißraum
+übrig, während der Inhalt oben "klebte" — genau das, was als "nicht gut
+zentriert" auffiel.
+
+**Fix:** 15mm Seitenrand rundum (Druck-/Word-Standard). Passt der
+Inhalt auf eine Seite, wird er zusätzlich vertikal mittig platziert.
+Zu langer Inhalt blättert wie vorher seitenweise weiter, jetzt mit
+demselben Rand links/rechts auf jeder Seite (kein Rand oben/unten
+zwischen den Seiten — würde sonst benachbarte Seiteninhalte sichtbar
+in die Randzone bluten lassen, siehe Code-Kommentar).
+
+**Empirisch validiert, nicht nur am Code abgelesen** (Vorgabe aus
+Abschnitt 11 dieses Dokuments): über einen echten, im Browser
+(Playwright) erzeugten Tagebuch- UND Wochenübersicht-Export per
+`pdfplumber` (Python) nachgemessen — exakt gleiche Ränder
+links=rechts und oben=unten bestätigt (z. B. 42.5pt/42.5pt links/
+rechts, 337.7pt/337.7pt oben/unten bei der kurzen Tagebuchseite).
+Zusätzlich dauerhaft als Unit-Test abgesichert (`pdfExport.test.js`,
+jsPDF/html2canvas gemockt): Einzelseiten-Fall (mittig, x=15) und
+Mehrseiten-Fall (gleicher linker Rand auf jeder Seite). Build, Lint,
+Typecheck, 100 Unit- und 36 E2E-Tests grün.
+
+---
+
 ## ✅ Update 15.09.2026 (Teil 105) — "Neues Protokoll": Bestätigungs-Nachfrage statt blindem Archivieren + zwei bestehende Features gegengeprüft (Commit `6a7c9e2`)
 
 Drei Nutzerinnen-Anliegen in einer Nachricht, zwei davon bereits erledigt
