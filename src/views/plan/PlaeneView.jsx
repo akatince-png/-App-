@@ -8,6 +8,7 @@ import Icon from "../../ui/Icon";
 import SchlafView from "../SchlafView";
 import HydrationView from "../HydrationView";
 import TageslichtView from "../TageslichtView";
+import BildschirmzeitView from "../BildschirmzeitView";
 import NutritionView from "../NutritionView";
 import TrainingView from "../TrainingView";
 import SupplementeView from "../SupplementeView";
@@ -28,6 +29,7 @@ const VIEWS = {
   schlaf: SchlafView,
   hydration: HydrationView,
   tageslicht: TageslichtView,
+  bildschirmzeit: BildschirmzeitView,
   ernaehrung: NutritionView,
   training: TrainingView,
   supplemente: SupplementeView,
@@ -46,6 +48,7 @@ const TAB_ZU_KATEGORIE = {
   schlaf: "schlaf",
   hydration: "hydration",
   tageslicht: "tageslicht",
+  bildschirmzeit: "bildschirmzeit",
   ernaehrung: "mahlzeit",
   training: "training",
   supplemente: "supplement",

@@ -137,6 +137,14 @@ const PATHS = {
   flame: (
     <path d="M12 2.5s5 4.5 5 9.5a5 5 0 0 1-10 0c0-1.3.6-2.3 1.3-3.2.3 1 1.1 1.7 1.9 1.4C9 8.5 8.5 6 12 2.5Z" />
   ),
+  // Für Bildschirmzeit (15.09.) — Telefon-Umriss mit Home-Strich unten,
+  // passend zum restlichen Linien-Icon-Set.
+  smartphone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2" />
+      <path d="M10.5 18.3h3" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 20, color = "currentColor", strokeWidth = 1.8 }) {

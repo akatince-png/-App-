@@ -140,6 +140,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     tageslichtHeuteMinuten,
     tageslichtZielMinuten,
     tageslichtEintraege,
+    bildschirmzeitHeuteMinuten,
+    bildschirmzeitZielMinuten,
     schlafEintraege,
     atemuebungLogs,
     aenderungVermerken,
@@ -552,6 +554,24 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       unit: "min",
     });
 
+    // Bildschirmzeit — gleicher Aufbau wie Tageslicht, Standard-Limit 60
+    // Minuten (siehe 0086_bildschirmzeit.sql). Anders als bei allen anderen
+    // Mini-Widgets ist "dailyCount/dailyTotal" hier eine Obergrenze statt
+    // eines Mindestziels — der Balken füllt sich also mit "verbrauchtem
+    // Budget", nicht mit Fortschritt zu einem wünschenswerten Zustand.
+    widgets.push({
+      name: tLabel("Bildschirmzeit"),
+      kategorie: "bildschirmzeit",
+      viewId: "bildschirmzeit",
+      aktiv: bildschirmzeitHeuteMinuten > 0 || (bildschirmzeitZielMinuten > 0 && bildschirmzeitZielMinuten !== 60),
+      dailyCount: Math.min(bildschirmzeitHeuteMinuten, bildschirmzeitZielMinuten),
+      dailyTotal: bildschirmzeitZielMinuten || 1,
+      weeklyCount: 0,
+      weeklyTotal: 1,
+      isEssential: false,
+      unit: "min",
+    });
+
     // Immer die volle Liste zurückgeben (auch inaktive) — "Direktzugriff"/
     // "Weitere Pläne" (siehe unten im Render) filtern selbst nach aktiv/
     // inaktiv, und das Balkendiagramm oben braucht ohnehin alle Kategorien.
@@ -559,7 +579,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   }, [hormonPlan, hormonErledigt, supplemente, supplementErledigt,
       mahlzeiten, mahlzeitErledigt, mealWochenplan, trainingEintraege, trainingNachDatum, trainingWochenplan, trainingTemplates,
       gewohnheiten, gewohnheitErledigt, workflowPlaene, workflowPresets, hydrationHeuteMl, hydrationZielMl, hydrationHinzufuegen,
-      tageslichtHeuteMinuten, tageslichtZielMinuten, heuteItems, today, tLabel, ausnahmenNachSchluessel,
+      tageslichtHeuteMinuten, tageslichtZielMinuten, bildschirmzeitHeuteMinuten, bildschirmzeitZielMinuten,
+      heuteItems, today, tLabel, ausnahmenNachSchluessel,
       routineSchritte, routineDurchlaeufe, tagStr]);
 
   // Quelldaten fürs Erfolge-/Orden-System (13.09., Nutzerinnen-Vorgabe:

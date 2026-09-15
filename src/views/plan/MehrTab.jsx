@@ -48,6 +48,7 @@ const BAUSTEINE_KATEGORIEN = [
   { kategorie: "schlaf", label: "Schlaf" },
   { kategorie: "hydration", label: "Hydration" },
   { kategorie: "tageslicht", label: "Tageslicht" },
+  { kategorie: "bildschirmzeit", label: "Bildschirmzeit" },
   { kategorie: "ernaehrung", label: "Ernährung" },
   { kategorie: "training", label: "Training" },
   { kategorie: "gewohnheiten", label: "Gewohnheiten" },
@@ -69,6 +70,8 @@ function snapshotFuer(kategorie, appData) {
       return { zielMl: appData.hydrationZielMl };
     case "tageslicht":
       return { zielMinuten: appData.tageslichtZielMinuten };
+    case "bildschirmzeit":
+      return { zielMinuten: appData.bildschirmzeitZielMinuten };
     case "ernaehrung":
       return { mahlzeiten: appData.mahlzeiten, mealWochenplan: appData.mealWochenplan };
     case "training":

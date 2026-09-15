@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { sammleKonsolenfehler } from "./helpers.js";
 
-// Alle 10 Reiter unter "Alle Pläne" (PlaeneView.jsx) durchklicken — die 9
+// Alle 11 Reiter unter "Alle Pläne" (PlaeneView.jsx) durchklicken — die 10
 // Kategorien aus PLAENE_TABS plus Wochenübersicht. Ziel: jede Kategorie-
 // Ansicht rendert ohne Absturz mit den (leeren) Mock-Daten.
 const PLAENE_LABELS = [
@@ -10,6 +10,7 @@ const PLAENE_LABELS = [
   "Schlaf",
   "Hydration",
   "Tageslicht",
+  "Bildschirmzeit",
   "Ernährung",
   "Training",
   "Supplemente",

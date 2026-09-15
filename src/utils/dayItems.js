@@ -40,6 +40,7 @@ export const KATEGORIE_META = {
   tageslicht: { bg: "#F7EEDF", text: "#866316", dot: "#E8A60B", label: "Tageslicht", icon: "sun" },
   schlaf: { bg: "#E2E4F7", text: "#33377D", dot: "#3940B3", label: "Schlaf", icon: "moon" },
   atemuebung: { bg: "#DEF3EA", text: "#1F6B47", dot: "#2E9C64", label: "Atemübung", icon: "wind" },
+  bildschirmzeit: { bg: "#E7EAEF", text: "#414F63", dot: "#5B6B84", label: "Bildschirmzeit", icon: "smartphone" },
   notfallmodus: { bg: "#F7E4E0", text: "#A23026", dot: "#D12121", label: "Notfallmodus" },
   zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
 };

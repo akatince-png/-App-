@@ -134,7 +134,13 @@ function siehtAusWieId(key) {
 }
 
 function siehtAusWieZahl(key) {
-  return /(Min|Ml|Prozent|Punkte|Tage|Anzahl|Ziel|Dauer)$/.test(key);
+  // Bug-Fix (15.09., beim Einbau von Bildschirmzeit gefunden): "Minuten"
+  // ausgeschrieben (z. B. "tageslichtZielMinuten", "bildschirmzeitHeuteMinuten")
+  // endete bisher auf keines der Muster ("Min$" trifft nur die Abkürzung,
+  // nicht "...Minuten") und fiel dadurch fälschlich in den generischen
+  // Array-Fallback — leere Zahlenfelder wirkten dadurch in der Oberfläche
+  // leer statt 0, obwohl der echte Hook nie ein Array liefert.
+  return /(Min|Minuten|Ml|Prozent|Punkte|Tage|Anzahl|Ziel|Dauer)$/.test(key);
 }
 
 function siehtAusWieBoolean(key) {

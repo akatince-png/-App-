@@ -475,6 +475,7 @@ export const PLAENE_TABS = [
   { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
   { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },
   { id: "tageslicht", label: "Tageslicht", icon: "sun", grad: F_WARM },
+  { id: "bildschirmzeit", label: "Bildschirmzeit", icon: "smartphone", grad: F_SLATE },
   { id: "ernaehrung", label: "Ernährung", icon: "utensils", grad: F_WARM },
   { id: "training", label: "Training", icon: "dumbbell", grad: F_WARM },
   { id: "supplemente", label: "Supplemente", icon: "capsule", grad: F_WARM },
