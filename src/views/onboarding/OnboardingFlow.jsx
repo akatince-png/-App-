@@ -42,15 +42,33 @@ import { useAdmin } from "../../context/AdminContext";
 // "Neues Protokoll" beim "+"-Button (Nutzerinnen-Vorgabe, 15.09.,
 // istDirekterNeuStart unten): läuft NICHT mehr den kompletten
 // Erst-Onboarding-Fragebogen nochmal durch — Name/Quick-Win-Feier machen
-// bei einem bereits bestehenden Konto keinen Sinn, und Ziel/Profildaten
-// sind schon gespeichert. Startet direkt bei "hauptprotokoll" (Name+Datum
-// fürs neue Protokoll), geht danach sofort zu "werteAktualisieren" (siehe
-// OnboardingWerteAktualisierenView.jsx: "Nein, weiter" springt direkt zu
-// den inhaltlichen Protokoll-Schritten, "Ja" führt noch kurz durch Ziel +
-// Profil, beide vorausgefüllt mit den bestehenden Werten) — die Phasen
-// "quickwin" und "intro" (Name erneut abfragen) werden dabei komplett
-// übersprungen. Der ursprüngliche Erst-Onboarding-Ablauf (ohne
-// startPhase="hauptprotokoll") bleibt davon unberührt.
+// bei einem bereits bestehenden Konto keinen Sinn. Startet direkt bei
+// "hauptprotokoll" (Name+Datum fürs neue Protokoll), geht danach sofort zu
+// "ziele" — die Phasen "quickwin" und "intro" (Name erneut abfragen)
+// werden dabei komplett übersprungen.
+//
+// "Ziel & Grund" bleibt bewusst ein PFLICHT-Schritt auch für "Neues
+// Protokoll" (Nutzerinnen-Vorgabe, 15.09.: "es ist ja ohnehin klar, dass
+// ein Ziel für das jeweilige Protokoll definiert werden muss oder wird...
+// kann auch einfach nur Alltagsprotokoll sein") — jedes neue Protokoll
+// bekommt sein eigenes Ziel (oder ausdrücklich keins, leer lassen und
+// "Weiter" reicht). Die Checkbox-Liste ist dabei garantiert LEER, nicht
+// mit den alten Zielen vorausgefüllt: `neuesProtokoll()` in
+// AuthenticatedApp.jsx archiviert das bisherige aktive Peptid-Protokoll
+// und legt ein neues mit `ziele: []` an (useProtocolData.js,
+// protokollArchivieren), bevor dieser Bildschirm überhaupt erreichbar
+// ist — anders als die Profildaten (Geschlecht/Geburtsdatum/Größe/
+// Gewicht), die sich sinnvollerweise NICHT pro Protokoll zurücksetzen,
+// weil sie die Person selbst beschreiben, nicht das einzelne Protokoll.
+//
+// Nach "ziele" kommt "werteAktualisieren" (siehe
+// OnboardingWerteAktualisierenView.jsx) — fragt NUR noch nach den
+// Profildaten: "Nein, weiter" springt direkt zu den inhaltlichen
+// Protokoll-Schritten, "Ja" führt noch kurz durch Profil, vorausgefüllt
+// mit den bestehenden gespeicherten Werten (hier ist Vorausfüllen
+// richtig — man bearbeitet echte, weiterhin gültige Personendaten, legt
+// kein neues Protokoll-Ziel fest). Der ursprüngliche Erst-Onboarding-
+// Ablauf (ohne startPhase="hauptprotokoll") bleibt davon unberührt.
 //
 // Coach-verwaltetes Modell (Nutzerinnen-Vorgabe, 13.08.): eine Person, die
 // NICHT selbst Admin ist und auch nicht gerade von der Admin verwaltet
@@ -77,7 +95,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const { isAdmin, onboardingModus } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | quickwin | werteAktualisieren | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
   // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
@@ -89,14 +107,15 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   // Schritt der volle Fragebogen (Erst-Onboarding) oder der verkürzte
   // Ablauf über "werteAktualisieren" (bestehendes Konto) folgt.
   const [istDirekterNeuStart] = useState(startPhase === "hauptprotokoll");
-  // Nur relevant für istDirekterNeuStart: ob "Ziel"/"Profil" in diesem Lauf
-  // tatsächlich gezeigt wurden (über "Ja, kurz aktualisieren" in
+  // Nur relevant für istDirekterNeuStart: ob "Profil" in diesem Lauf
+  // tatsächlich gezeigt wurde (über "Ja, kurz aktualisieren" in
   // OnboardingWerteAktualisierenView) — steuert die Zurück-Ziele von
-  // "ziele"/"laborwerte"/"steckbrief" weiter unten, damit der
-  // Zurück-Pfeil nie auf eine in diesem Lauf übersprungene Phase
-  // (z. B. "intro"/"profil") zeigt. Beim normalen Erst-Onboarding immer
-  // wahr, weil dort ohnehin jede Phase der Reihe nach durchlaufen wird.
-  const [zieleProfilBesucht, setZieleProfilBesucht] = useState(!istDirekterNeuStart);
+  // "laborwerte"/"steckbrief" weiter unten, damit der Zurück-Pfeil nie auf
+  // eine in diesem Lauf übersprungene Phase zeigt. Beim normalen
+  // Erst-Onboarding immer wahr, weil dort ohnehin jede Phase der Reihe
+  // nach durchlaufen wird. "Ziel & Grund" selbst braucht kein eigenes
+  // Flag mehr — die Phase wird bei istDirekterNeuStart jetzt IMMER gezeigt.
+  const [profilBesucht, setProfilBesucht] = useState(!istDirekterNeuStart);
 
   let screen;
 
@@ -105,7 +124,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
-        onDone={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "quickwin")}
+        onDone={() => setPhase(istDirekterNeuStart ? "ziele" : "quickwin")}
         onBack={() => setPhase("welcome")}
         onCancel={onCancel}
         zeigeBestehendesAlsOption={!istDirekterNeuStart}
@@ -113,18 +132,6 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     );
   } else if (phase === "quickwin") {
     screen = <OnboardingQuickWinView onDone={() => setPhase("intro")} onBack={() => setPhase("hauptprotokoll")} />;
-  } else if (phase === "werteAktualisieren") {
-    screen = (
-      <OnboardingWerteAktualisierenView
-        onJa={() => {
-          setZieleProfilBesucht(true);
-          setPhase("ziele");
-        }}
-        onNein={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
-        onBack={() => setPhase("hauptprotokoll")}
-        onCancel={onCancel}
-      />
-    );
   } else if (phase === "intro") {
     // Bei Coach-Begleitung deckt OnboardingIntroView (über OnboardingCoachGuide)
     // Name, Ziele UND Profil direkt mit ab — dann direkt zu "laborwerte"
@@ -141,8 +148,20 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "ziele") {
     screen = (
       <OnboardingZieleView
-        onDone={() => setPhase("profil")}
-        onBack={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "intro")}
+        onDone={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "profil")}
+        onBack={() => setPhase(istDirekterNeuStart ? "hauptprotokoll" : "intro")}
+        onCancel={onCancel}
+      />
+    );
+  } else if (phase === "werteAktualisieren") {
+    screen = (
+      <OnboardingWerteAktualisierenView
+        onJa={() => {
+          setProfilBesucht(true);
+          setPhase("profil");
+        }}
+        onNein={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
+        onBack={() => setPhase("ziele")}
         onCancel={onCancel}
       />
     );
@@ -150,7 +169,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingProfilView
         onDone={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
-        onBack={() => setPhase("ziele")}
+        onBack={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "ziele")}
         onCancel={onCancel}
       />
     );
@@ -158,7 +177,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingSteckbriefView
         onDone={() => setPhase("celebration")}
-        onBack={() => setPhase(zieleProfilBesucht ? "profil" : "werteAktualisieren")}
+        onBack={() => setPhase(profilBesucht ? "profil" : "werteAktualisieren")}
         onCancel={onCancel}
       />
     );
@@ -166,7 +185,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingLaborwerteView
         onDone={() => setPhase("routinen")}
-        onBack={() => setPhase(zieleProfilBesucht ? "profil" : "werteAktualisieren")}
+        onBack={() => setPhase(profilBesucht ? "profil" : "werteAktualisieren")}
         onCancel={onCancel}
       />
     );

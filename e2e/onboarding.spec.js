@@ -155,10 +155,11 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
 // bestehenden, fertig eingerichteten Konto (Standard-Harness-Zustand, kein
 // ?onboarding=1) soll NICHT mehr den kompletten Erst-Onboarding-Fragebogen
 // nochmal durchlaufen (Name erneut abfragen, Quick-Win-Feier für den
-// "ersten Schritt") — nur Protokollname+Datum, danach ein einziger Ja/Nein-
-// Zwischenschirm (OnboardingWerteAktualisierenView.jsx), ob Ziel/Profil
-// aktualisiert werden sollen.
-test("Neues Protokoll (bestehendes Konto): überspringt Name & Quick-Win, „Nein“ springt direkt zu den Laborwerten", async ({ page }) => {
+// "ersten Schritt") — aber "Ziel & Grund" bleibt bewusst ein Pflicht-
+// Schritt (jedes Protokoll bekommt sein eigenes Ziel oder ausdrücklich
+// keins), nur die Profildaten stecken hinter einem optionalen Ja/Nein-
+// Zwischenschirm (OnboardingWerteAktualisierenView.jsx).
+test("Neues Protokoll (bestehendes Konto): überspringt Name & Quick-Win, fragt aber weiterhin nach Ziel & Grund", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html");
 
@@ -172,13 +173,19 @@ test("Neues Protokoll (bestehendes Konto): überspringt Name & Quick-Win, „Nei
   await expect(page.getByText("Erster Schritt geschafft!", { exact: false })).not.toBeVisible();
   await expect(page.getByText("Stell dich vor", { exact: false })).not.toBeVisible();
 
-  // Stattdessen direkt der neue Ja/Nein-Zwischenschirm.
-  await expect(page.getByText("Neues Protokoll 🎉")).toBeVisible();
+  // "Ziel & Grund" kommt trotzdem direkt als nächstes — jedes neue
+  // Protokoll bekommt sein eigenes Ziel (oder ausdrücklich keins).
+  await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+
+  // Danach der Ja/Nein-Zwischenschirm — fragt nur noch nach Profildaten,
+  // nicht mehr nach dem Ziel (das war gerade schon dran).
+  await expect(page.getByText("Fast geschafft 🎉")).toBeVisible();
   await page.getByRole("button", { name: "Nein, weiter geht's" }).click();
 
-  // "Nein" überspringt Ziel & Grund und Profil komplett, landet direkt bei
-  // den Laborwerten (KiChat-Modal dort schließen, wie im vollen Durchlauf).
-  await expect(page.getByText("Ziel & Grund", { exact: true })).not.toBeVisible();
+  // "Nein" überspringt Profil komplett, landet direkt bei den Laborwerten
+  // (KiChat-Modal dort schließen, wie im vollen Durchlauf).
+  await expect(page.getByText("Dein Profil & Ausgangslage", { exact: true })).not.toBeVisible();
   await expect(page.getByText("Deine Laborwerte", { exact: true })).toBeVisible();
   const schliessenKnopf = page.getByRole("button", { name: "Schließen" });
   if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
@@ -186,16 +193,18 @@ test("Neues Protokoll (bestehendes Konto): überspringt Name & Quick-Win, „Nei
   expect(fehler).toEqual([]);
 });
 
-test("Neues Protokoll (bestehendes Konto): „Ja, kurz aktualisieren“ führt noch durch Ziel & Grund", async ({ page }) => {
+test("Neues Protokoll (bestehendes Konto): „Ja, kurz aktualisieren“ führt noch durch Profil & Ausgangslage", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
   await page.getByPlaceholder("z. B. Sommer 2026").fill("Drittes Protokoll");
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
   await page.getByRole("button", { name: "Ja, kurz aktualisieren" }).click();
 
-  await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
+  await expect(page.getByText("Dein Profil & Ausgangslage", { exact: true })).toBeVisible();
 
   expect(fehler).toEqual([]);
 });
