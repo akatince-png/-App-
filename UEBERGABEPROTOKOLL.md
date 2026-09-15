@@ -44,7 +44,7 @@ längst gibt — jetzt diese Kurzübersicht:
   einheitliche PDF-Zentrierung (Teil 106); neue Kategorie
   "Bildschirmzeit" (Teil 107, manuelles Tracking — automatisches
   Auslesen vom Telefon ist aus einer Web-App heraus technisch nicht
-  möglich).
+  möglich — jetzt auch als eigener Schritt im Erst-Onboarding, Teil 108).
 - **🔴 Ein echter offener Deploy-Punkt:** Migration
   `0086_bildschirmzeit.sql` liegt im Repo, wurde aber noch NICHT im
   echten Supabase-Projekt ausgeführt — muss die Nutzerin einmal im
@@ -67,6 +67,53 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 15.09.2026 (Teil 108) — Nachtrag zu Teil 107: Bildschirmzeit als eigener Kategorie-Schritt im Erst-Onboarding (Commit `6f96338`)
+
+Direkte Nutzerinnen-Rückfrage auf Teil 107: die neue Kategorie war zwar
+überall sonst integriert (Home, Pläne-Reiter, "Mehr" → Aktuelles
+Protokoll), fehlte aber im geführten Erst-Onboarding
+(`OnboardingCategoriesView.jsx`) — dort bewusst ausgelassen (siehe Teil
+107, "bewusst NICHT angebunden"). Die Nutzerin wollte das ausdrücklich
+drin haben, mit vier konkreten Reflexionsfragen: "Wie viel
+Bildschirmzeit hast du üblicherweise? Wie viel willst du in Zukunft
+haben? Was machst du am meisten am Telefon? Kannst du dir vorstellen,
+es zu reduzieren?"
+
+**Umgesetzt** nach exakt demselben Muster wie die 8 bestehenden
+Kategorien in diesem (großen, aber jetzt doch angefassten) Screen:
+neuer Schritt direkt nach Tageslicht in `categorySteps.js`, drei
+Reflexionsfragen in `ISTZUSTAND_FRAGEN.bildschirmzeit` (üblicher
+Verbrauch/Haupttätigkeit/Reduzieren-Vorstellung), das Zahlenfeld selbst
+beantwortet "wie viel künftig" (als Obergrenze, nicht Mindestwert,
+konsistent mit Teil 107).
+
+**Wichtige Erkenntnis beim Umsetzen, die die ursprüngliche
+Scope-Entscheidung aus Teil 107 revidierte:** `KiChat` mit `autoStart`
+rendert in diesem Screen für JEDE Kategorie automatisch einen
+Coach-Chat — das ist kein Opt-in pro Kategorie, sondern fest in der
+Architektur verankert. Ohne eigene Anbindung wäre der Chat für
+Bildschirmzeit zwar nicht abgestürzt, aber bei jedem Versuch mit dem
+festen Fehlertext "Für diesen Bereich gibt es noch keine
+Assistenten-Begleitung" gescheitert — spürbar kaputt gewirkt. Deshalb
+zusätzlich `AIService.bildschirmzeitAusChat()` (`aiService.js`, analog
+zu `tageslichtAusChat`/`hydrationAusChat`) sowie die passenden
+`KATEGORIE_COACH_PROMPTS`/`KATEGORIE_EINLEITUNG`/
+`onUebernehmenKategorie`-Einträge ergänzt. Das ist NICHT dasselbe wie
+die KiChat-Anbindung, die für `BildschirmzeitView.jsx` selbst (die
+laufende Nutzung unter "Pläne") bewusst weiterhin fehlt — dort gibt es
+diesen Architektur-Zwang nicht, ein eigenes KI-Gespräch nur fürs
+Nachjustieren eines einzelnen Zahlenfelds bleibt dort unverhältnismäßig.
+
+Neuer E2E-Test führt einmal komplett durch Schlaf/Hydration/Tageslicht
+bis zu Bildschirmzeit (dabei die zwei unterschiedlichen Skip-Wege
+demonstriert — Schlaf/Tageslicht haben eine Gate-Seite, Hydration
+startet direkt im KiChat-Modal), bestätigt alle drei Reflexionsfragen
+und das Limit-Feld sichtbar sind, speichert, und bestätigt den
+nahtlosen Übergang zu Ernährung danach. Build, Lint, Typecheck, 100
+Unit- und 38 E2E-Tests grün.
 
 ---
 
