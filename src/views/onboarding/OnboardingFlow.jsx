@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import WelcomeView from "../WelcomeView";
 import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
 import OnboardingQuickWinView from "./OnboardingQuickWinView";
+import OnboardingWerteAktualisierenView from "./OnboardingWerteAktualisierenView";
 import OnboardingIntroView from "./OnboardingIntroView";
 import OnboardingZieleView from "./OnboardingZieleView";
 import OnboardingProfilView from "./OnboardingProfilView";
@@ -15,11 +16,11 @@ import { useAdmin } from "../../context/AdminContext";
 
 // Koordiniert den einmaligen Einrichtungs-Ablauf nach der Registrierung:
 // Willkommens-Folien → Hauptprotokoll anlegen (Name + Startdatum) →
-// Quick-Win-Zwischenscreen → Ziel & Grund → Profil & Ausgangslage →
-// Laborwerte → Morgen-/Abendroutine → Kategorien (Schlaf/Hydration/
-// Ernährung/Training/Gewohnheiten/Supplemente/Medikamente/Peptid-Plan, je
-// einzeln überspringbar, alle mit derselben "Jetzt einrichten?"-Gate-Seite)
-// → Abschluss-Screen.
+// Quick-Win-Zwischenscreen → Vorstellung (Name) → Ziel & Grund → Profil &
+// Ausgangslage → Laborwerte → Morgen-/Abendroutine → Kategorien (Schlaf/
+// Hydration/Ernährung/Training/Gewohnheiten/Supplemente/Medikamente/
+// Peptid-Plan, je einzeln überspringbar, alle mit derselben "Jetzt
+// einrichten?"-Gate-Seite) → Abschluss-Screen.
 //
 // Quick-Win-Zwischenscreen (App-Bauplan-Punkt, ADHS-Perspektive, siehe
 // OnboardingQuickWinView.jsx): direkt nach dem allerersten, kleinsten
@@ -38,13 +39,18 @@ import { useAdmin } from "../../context/AdminContext";
 // Laborwerte waren der letzte Kategorie-Schritt ("Biomarker-Plan") — beide
 // gelten aber protokollweit und nicht nur für einen Teilbereich.
 //
-// Derselbe Ablauf wird auch für den "+"-Button bei bestehenden Konten
-// wiederverwendet ("Neues Protokoll") — dort startet er direkt bei
-// "hauptprotokoll" (die Willkommens-Folien sind nur für echte
-// Erstanmeldungen sinnvoll), durchläuft danach aber exakt dieselben
-// Schritte in derselben Reihenfolge, und bekommt über `onCancel` einen
-// echten Abbrechen-Knopf, den es beim ursprünglichen Erst-Onboarding nicht
-// gibt.
+// "Neues Protokoll" beim "+"-Button (Nutzerinnen-Vorgabe, 15.09.,
+// istDirekterNeuStart unten): läuft NICHT mehr den kompletten
+// Erst-Onboarding-Fragebogen nochmal durch — Name/Quick-Win-Feier machen
+// bei einem bereits bestehenden Konto keinen Sinn, und Ziel/Profildaten
+// sind schon gespeichert. Startet direkt bei "hauptprotokoll" (Name+Datum
+// fürs neue Protokoll), geht danach sofort zu "werteAktualisieren" (siehe
+// OnboardingWerteAktualisierenView.jsx: "Nein, weiter" springt direkt zu
+// den inhaltlichen Protokoll-Schritten, "Ja" führt noch kurz durch Ziel +
+// Profil, beide vorausgefüllt mit den bestehenden Werten) — die Phasen
+// "quickwin" und "intro" (Name erneut abfragen) werden dabei komplett
+// übersprungen. Der ursprüngliche Erst-Onboarding-Ablauf (ohne
+// startPhase="hauptprotokoll") bleibt davon unberührt.
 //
 // Coach-verwaltetes Modell (Nutzerinnen-Vorgabe, 13.08.): eine Person, die
 // NICHT selbst Admin ist und auch nicht gerade von der Admin verwaltet
@@ -71,7 +77,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const { isAdmin, onboardingModus } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | quickwin | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | quickwin | werteAktualisieren | intro | ziele | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
   // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
@@ -79,7 +85,18 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   // neues anzulegen. Der explizite "+"-Button ("Neues Protokoll") startet
   // absichtlich direkt mit startPhase="hauptprotokoll" — dort ist ein neues
   // Protokoll der ganze Zweck, also bleibt es beim bisherigen Verhalten.
+  // Dieselbe Unterscheidung steuert jetzt auch, ob nach dem Hauptprotokoll-
+  // Schritt der volle Fragebogen (Erst-Onboarding) oder der verkürzte
+  // Ablauf über "werteAktualisieren" (bestehendes Konto) folgt.
   const [istDirekterNeuStart] = useState(startPhase === "hauptprotokoll");
+  // Nur relevant für istDirekterNeuStart: ob "Ziel"/"Profil" in diesem Lauf
+  // tatsächlich gezeigt wurden (über "Ja, kurz aktualisieren" in
+  // OnboardingWerteAktualisierenView) — steuert die Zurück-Ziele von
+  // "ziele"/"laborwerte"/"steckbrief" weiter unten, damit der
+  // Zurück-Pfeil nie auf eine in diesem Lauf übersprungene Phase
+  // (z. B. "intro"/"profil") zeigt. Beim normalen Erst-Onboarding immer
+  // wahr, weil dort ohnehin jede Phase der Reihe nach durchlaufen wird.
+  const [zieleProfilBesucht, setZieleProfilBesucht] = useState(!istDirekterNeuStart);
 
   let screen;
 
@@ -88,7 +105,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
-        onDone={() => setPhase("quickwin")}
+        onDone={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "quickwin")}
         onBack={() => setPhase("welcome")}
         onCancel={onCancel}
         zeigeBestehendesAlsOption={!istDirekterNeuStart}
@@ -96,6 +113,18 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     );
   } else if (phase === "quickwin") {
     screen = <OnboardingQuickWinView onDone={() => setPhase("intro")} onBack={() => setPhase("hauptprotokoll")} />;
+  } else if (phase === "werteAktualisieren") {
+    screen = (
+      <OnboardingWerteAktualisierenView
+        onJa={() => {
+          setZieleProfilBesucht(true);
+          setPhase("ziele");
+        }}
+        onNein={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
+        onBack={() => setPhase("hauptprotokoll")}
+        onCancel={onCancel}
+      />
+    );
   } else if (phase === "intro") {
     // Bei Coach-Begleitung deckt OnboardingIntroView (über OnboardingCoachGuide)
     // Name, Ziele UND Profil direkt mit ab — dann direkt zu "laborwerte"
@@ -110,7 +139,13 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       />
     );
   } else if (phase === "ziele") {
-    screen = <OnboardingZieleView onDone={() => setPhase("profil")} onBack={() => setPhase("intro")} onCancel={onCancel} />;
+    screen = (
+      <OnboardingZieleView
+        onDone={() => setPhase("profil")}
+        onBack={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "intro")}
+        onCancel={onCancel}
+      />
+    );
   } else if (phase === "profil") {
     screen = (
       <OnboardingProfilView
@@ -120,9 +155,21 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       />
     );
   } else if (phase === "steckbrief") {
-    screen = <OnboardingSteckbriefView onDone={() => setPhase("celebration")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
+    screen = (
+      <OnboardingSteckbriefView
+        onDone={() => setPhase("celebration")}
+        onBack={() => setPhase(zieleProfilBesucht ? "profil" : "werteAktualisieren")}
+        onCancel={onCancel}
+      />
+    );
   } else if (phase === "laborwerte") {
-    screen = <OnboardingLaborwerteView onDone={() => setPhase("routinen")} onBack={() => setPhase("profil")} onCancel={onCancel} />;
+    screen = (
+      <OnboardingLaborwerteView
+        onDone={() => setPhase("routinen")}
+        onBack={() => setPhase(zieleProfilBesucht ? "profil" : "werteAktualisieren")}
+        onCancel={onCancel}
+      />
+    );
   } else if (phase === "routinen") {
     screen = <OnboardingRoutinenView onDone={() => setPhase("categories")} onBack={() => setPhase("laborwerte")} onCancel={onCancel} />;
   } else if (phase === "categories") {
