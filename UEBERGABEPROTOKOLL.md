@@ -37,9 +37,12 @@ längst gibt — jetzt diese Kurzübersicht:
   `npx playwright test` (E2E, aktuell 34 Tests) — alles muss grün sein.
   Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
   schreibt: neuer Abschnitt 13 weiter unten.
-- **Heute neu (Teil 102):** Diktierfunktion ohne KI-Beteiligung für
-  Formularfelder (Web-Speech-API, kein AIService-Aufruf, kein
-  KI-Kontingent verbraucht) — Details in der Chronik direkt unten.
+- **Neu seit dem letzten Durchgang:** Diktierfunktion ohne KI-Beteiligung
+  für Formularfelder (Teil 102) sowie ein Bug-Fix, bei dem "Neues
+  Protokoll" (der "+"-Button bei bestehendem Konto) fälschlich das
+  komplette Erst-Onboarding erneut verlangte, inkl. erneuter
+  Namensabfrage (Teil 103, 15.09.) — Details in der Chronik direkt
+  unten.
 - **Zwei ehrliche, noch offene Restpunkte** (keine Fehler, aber vor
   „100 % fertig" der Nutzerin selbst zu bestätigen):
   1. Die Datentopf-Aufteilung (Teil 98) wurde nur strukturell + gegen
@@ -56,6 +59,43 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 15.09.2026 (Teil 103) — Bug-Fix: "Neues Protokoll" verlangte bei bestehendem Konto das komplette Erst-Onboarding erneut (Commit `8c3ef12`)
+
+Nutzerinnen-Bug-Report: der "+"-Button ("Neues Protokoll", `startPhase=
+"hauptprotokoll"`) führte bisher exakt denselben Fragebogen wie beim
+allerersten Onboarding durch — inklusive erneuter Namensabfrage,
+Quick-Win-Feier ("Erster Schritt geschafft!") und Ziel-/Profildaten
+(Geschlecht/Geburtsdatum/Größe/Gewicht). Bei einem bereits bestehenden,
+eingerichteten Konto ist das unnötig und ermüdend — die Person ist
+schon bekannt, nur das neue Protokoll selbst (Name+Datum) ist neu.
+
+**Neuer Ablauf beim "+"-Button:** Hauptprotokoll-Name/Datum → neuer
+Ja/Nein-Zwischenschirm (`OnboardingWerteAktualisierenView.jsx`) → "Nein"
+(Standardfall, Haupt-Button) springt direkt zu den inhaltlichen
+Protokoll-Schritten (Laborwerte bzw. Steckbrief), "Ja, kurz
+aktualisieren" führt noch durch Ziel & Grund und Profil — beide
+vorausgefüllt mit den bestehenden gespeicherten Werten, nichts geht
+verloren. Die Phasen "quickwin" und "intro" (Namensabfrage) werden beim
+"+"-Button jetzt IMMER übersprungen. Das ursprüngliche Erst-Onboarding
+(ohne `startPhase`-Override, also die eigentliche Erstregistrierung)
+läuft unverändert mit allen Schritten durch — nur der Wiederholungsfall
+über den "+"-Button wurde verkürzt.
+
+Zurück-Navigation (`onBack`) von "ziele"/"laborwerte"/"steckbrief"
+musste dabei mit angepasst werden (neues `zieleProfilBesucht`-Flag in
+`OnboardingFlow.jsx`), damit der Zurück-Pfeil nie auf eine in diesem
+Lauf tatsächlich übersprungene Phase zeigt (z. B. nicht auf "intro",
+wenn die Namensabfrage in diesem Lauf gar nicht gezeigt wurde).
+
+**Tests:** zwei neue E2E-Tests in `e2e/onboarding.spec.js` (Nein-Pfad:
+Name/Quick-Win/Ziel/Profil bleiben komplett unsichtbar, landet direkt
+bei "Deine Laborwerte"; Ja-Pfad: führt weiterhin durch "Ziel & Grund").
+Der bestehende Erst-Onboarding-Test bleibt unverändert grün — betrifft
+ausschließlich den `startPhase="hauptprotokoll"`-Einstieg. Build, Lint,
+Typecheck, 98 Unit- und 35 E2E-Tests grün.
 
 ---
 
