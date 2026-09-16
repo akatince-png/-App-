@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Shell, Card, Label, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import GrundEingabe from "../ui/GrundEingabe";
 import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
 import NumberWheelField from "../ui/NumberWheelField";
+import DenkpauseNudge from "../ui/DenkpauseNudge";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { KATEGORIE_META } from "../utils/dayItems";
@@ -86,6 +87,16 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
   });
 
   const ueberLimit = bildschirmzeitZielMinuten > 0 && bildschirmzeitHeuteMinuten > bildschirmzeitZielMinuten;
+  const restMinuten = bildschirmzeitZielMinuten - bildschirmzeitHeuteMinuten;
+  // Denkpause (Nutzerinnen-Vorgabe 16.09.): kurz vorm Limit statt einer
+  // Ermahnung ein freiwilliges Rätsel als Alternative zum Reflex "kurz aufs
+  // Handy schauen" anbieten — nicht mehr, wenn das Limit schon gerissen ist
+  // (dann ist der Moment vorbei, kein Nachtreten) oder noch kein Limit
+  // gesetzt ist. `denkpauseVersteckt` ist bewusst nur Sitzungs-/Render-
+  // State, kein persistierter Wert — bei jedem neuen Aufruf der Ansicht
+  // darf die Denkpause wieder erscheinen.
+  const [denkpauseVersteckt, setDenkpauseVersteckt] = useState(false);
+  const zeigeDenkpause = bildschirmzeitZielMinuten > 0 && !ueberLimit && restMinuten <= 15 && !denkpauseVersteckt;
 
   const content = (
     <>
@@ -137,6 +148,13 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
           ))}
         </div>
       </Card>
+
+      {zeigeDenkpause && (
+        <DenkpauseNudge
+          text={`Noch ${restMinuten} Min. bis zum Limit. 30-Sek.-Rätsel statt scrollen?`}
+          onDismiss={() => setDenkpauseVersteckt(true)}
+        />
+      )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verschätzt?</div>
       <Card style={{ marginBottom: 14 }}>

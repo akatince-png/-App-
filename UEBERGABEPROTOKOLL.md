@@ -33,7 +33,7 @@ längst gibt — jetzt diese Kurzübersicht:
   Farbtabelle in Abschnitt 3.
 - **Tests — bitte immer laufen lassen, nicht nur „sieht gut aus":** Vor
   jedem Commit `npm run build && npx oxlint <geänderte Dateien> && npm
-  run typecheck && npm test` (Vitest, aktuell 100 Tests) und
+  run typecheck && npm test` (Vitest, aktuell 110 Tests) und
   `npx playwright test` (E2E, aktuell 38 Tests) — alles muss grün sein.
   Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
   schreibt: Abschnitt 13 weiter unten.
@@ -44,15 +44,39 @@ längst gibt — jetzt diese Kurzübersicht:
   einheitliche PDF-Zentrierung (Teil 106); neue Kategorie
   "Bildschirmzeit" (Teil 107, manuelles Tracking — automatisches
   Auslesen vom Telefon ist aus einer Web-App heraus technisch nicht
-  möglich — jetzt auch als eigener Schritt im Erst-Onboarding, Teil 108).
+  möglich — jetzt auch als eigener Schritt im Erst-Onboarding, Teil 108);
+  neues Feature "Denkpause" (Teil 110, freiwillige Mini-Denksportaufgaben
+  + Punkte-/Erfolge-Integration); Bug-Fix "KI ploppt bei Laborwerten
+  automatisch auf" (Teil 111).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
+- **🔴 Migration `0087_denkpause.sql` noch NICHT deployt:** neue Tabelle
+  `denkpause_ergebnisse` fürs neue "Denkpause"-Feature (Teil 110) — bitte
+  im echten Supabase-Projekt ausführen, danach kurz Bescheid geben, dann
+  wird dieser Hinweis entfernt (gleiches Vorgehen wie bei Migration 0086).
+  Bis dahin läuft die App weiter, aber jeder Denkpause-Versuch scheitert
+  beim Speichern (Fehler landet nur in der Konsole, kein Absturz).
 - **✅ Nachkontrolle 15.09. (Teil 109):** Alle Änderungen seit dem letzten
   Checkpoint (Teil 102–108, Commits `b3aae48`..`145dbf5`) wurden noch
   einmal manuell auf Bugs durchgesehen (Zeilen-für-Zeilen-Diff-Lektüre +
   Handnachvollzug der State-Machines) UND per Build/Lint/Typecheck/Tests
   gegengeprüft — keine neuen Fehler gefunden, siehe Details unten.
+- **🔜 Geplant, sobald die native App verfügbar ist (nicht vergessen!):**
+  die Nutzerin plant, AKA nächsten Monat als echte native App über den
+  Apple App Store bereitzustellen — sobald das steht, hier weitermachen:
+  1. **Wecker-Ausschalten mit Denkpause-Rätsel:** eine Denkpause (siehe
+     Teil 110, `DenkpauseNudge.jsx`/`src/data/denkpausen*.js`) beim
+     morgendlichen Wecker-Ausschalten anbieten, per iOS-Shortcut/native
+     Alarm-Integration — aus der Web-App heraus technisch nicht möglich
+     (siehe Denkpausen-Mockup, Beispiel 1). "Normal ausschalten" muss
+     als Option erhalten bleiben.
+  2. **Allgemein mehr Kurzbefehle/Verlinkungen mit dem Telefon:** die
+     Nutzerin möchte, sobald die App "richtig" installiert ist (nicht
+     mehr nur Web/PWA), stärker mit iOS-Shortcuts/Widgets/Deep-Links
+     arbeiten — noch nicht weiter konkretisiert, einfach im Hinterkopf
+     behalten und bei Gelegenheit proaktiv ansprechen, was sich davon
+     sinnvoll umsetzen lässt.
 - **Zwei ehrliche, noch offene Restpunkte** (keine Fehler, aber vor
   „100 % fertig" der Nutzerin selbst zu bestätigen):
   1. Die Datentopf-Aufteilung (Teil 98) wurde nur strukturell + gegen
@@ -69,6 +93,106 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 16.09.2026 (Teil 111) — Bug-Fix: KI ploppte bei den Laborwerten automatisch auf
+
+**Nutzerinnen-Report:** "bei den Laborwerten ploppt immer automatisch die
+KI auf und fragt nach den Laborwerten — das soll nicht automatisch
+passieren, ich hab sogar extra 'ich möchte selbst ausführen' angeklickt,
+trotzdem passiert es, das ist schon seit Wochen so."
+
+**Ursache gefunden:** `OnboardingLaborwerteView.jsx` rendert seinen
+`<KiChat>` mit der Prop `autoStart` — anders als bei den Onboarding-
+Kategorie-Schritten (Schlaf, Training, …), wo `autoStart` bewusst erst
+NACH einem expliziten Klick auf "Jetzt einrichten" gesetzt wird
+(`effectiveModus === "jetzt"`, siehe OnboardingCategoriesView.jsx),
+stand es hier fest im Code — unabhängig von jeder Wahl der Nutzerin.
+`autoStart` öffnet den Chat nicht nur sichtbar, sondern spricht laut
+Kommentar in KiChat.jsx auch sofort die Begrüßung vor und startet
+danach automatisch das Mikrofon — dadurch wirkt es besonders aufdring­
+lich. Der globale "Assistent aktiv/ausgeschaltet"-Schalter (Mehr →
+Einstellungen) hätte das zwar theoretisch komplett unterdrücken können,
+aber offenbar unabhängig davon: das Laborwerte-Fenster hatte schlicht
+keinerlei Gate, es öffnete sich bei JEDEM Betreten des Schritts.
+
+**Fix:** `autoStart` von `OnboardingLaborwerteView.jsx` entfernt. Der
+Coach-Chat verhält sich dort jetzt wie überall sonst in der App: ein
+antippbarer, schwebender Orb unten am Bildschirmrand — öffnet sich nur
+noch, wenn die Nutzerin aktiv draufklickt. Die manuelle Eingabe über
+`LaborwerteCard` (inkl. Foto-Upload) bleibt unverändert die Standard-
+Ansicht auf diesem Schritt. Kein anderer Onboarding-Schritt war
+betroffen (Kategorie-Schritte korrekt hinter "Jetzt einrichten" gegated,
+"Routinen"-Schritt hat aktuell gar kein KiChat).
+
+Getestet: Build/Lint/Typecheck/Unit-Tests grün, `e2e/onboarding.spec.js`
+(der Haupt-Onboarding-Durchlauf, der bisher das Laborwerte-Modal defensiv
+schloss, falls es offen war) bleibt grün — der Check ist weiterhin
+vorhanden, greift jetzt aber einfach nie mehr.
+
+---
+
+## ✅ Update 16.09.2026 (Teil 110) — Neues Feature: "Denkpause" (freiwillige Mini-Denksportaufgaben) + Punkte-/Erfolge-Integration
+
+**Vorgeschichte:** Im Rahmen der Themenfarben-/Tagesplan-Farbkacheln-
+Diskussion (siehe Mockups) kam die Idee auf, kurze, freiwillige
+Denksportaufgaben als ADHS-gerechte "Anlasser" vor Handlungen anzubieten
+(z. B. statt aufs Handy zu scrollen). Nutzerinnen-Vorgabe: volle
+Zustimmung zum Konzept aus dem Denkpausen-Mockup, dazu zwei
+Erweiterungen — (1) je 100 Aufgaben in mehreren Bereichen für
+Abwechslung, (2) Denkpausen sollen ins bestehende Punktesystem
+einzahlen UND unter "Erfolge" pro Kategorie gezählt werden (gelöst/nicht
+gelöst).
+
+**Content (400 Aufgaben, alle strukturell + stichprobenartig geprüft):**
+- `src/data/denkpausenMathe.js` — 100 Kopfrechen-/Logik-Aufgaben,
+  deterministisch per Skript generiert (Addition, Subtraktion,
+  Multiplikation, Division, Prozent, Zahlenreihen, Textaufgaben) — jede
+  Antwort programmatisch auf Korrektheit geprüft, nicht nur von einem
+  Modell behauptet.
+- `src/data/denkpausenWortspiele.js`, `denkpausenRaetsel.js`,
+  `denkpausenWissen.js` — je 100 Aufgaben, parallel von drei Subagenten
+  erstellt, danach JEWEILS unabhängig nachgeprüft (Schema, Duplikate,
+  Antwortverteilung) statt dem Eigenbericht der Agenten blind zu
+  vertrauen. Rätsel hatte eine schiefe Antwortverteilung (9/28/41/22) —
+  per Nachbearbeitungs-Skript auf 25/25/25/25 korrigiert, Inhalte
+  unverändert.
+
+**Neue Bausteine:**
+- `src/ui/DenkpauseNudge.jsx`: zwei feste Regeln hart im Code verankert
+  (nicht nur Doku) — "Nee, weiter" ist in JEDER Phase erreichbar (nie
+  eine Sackgasse), und nach einer Antwort gibt es in diesem Moment kein
+  sichtbares "falsch", nur die richtige Antwort kurz hervorgehoben.
+- Eingebaut in `BildschirmzeitView.jsx` (Nudge nahe am Tageslimit, ≤15
+  Min. übrig) und `TagesplanView.jsx` (Übergangs-Moment vor der
+  Abendroutine-Sektion, nur "heute", nur solange etwas offen ist).
+  Wecker-Ausschalten bewusst NICHT gebaut — siehe "Geplant, sobald native
+  App verfügbar" oben, technisch aus der Web-App heraus nicht möglich.
+- **Migration `0087_denkpause.sql`** (🔴 noch nicht deployt, siehe oben):
+  Tabelle `denkpause_ergebnisse` (user_id, kategorie, richtig,
+  erstellt_am) — jeder Versuch wird geloggt, nicht nur richtige.
+- `src/data/useDenkpauseData.js` + Registrierung in
+  `TrackingDataContext.jsx` (gleiches Muster wie `useAtemuebungenData.js`)
+  und `useKompletterReset.js`.
+- **Punkte-Integration:** neue Kategorie "Denkpause" in
+  `utils/errungenschaften.js` — nur RICHTIG beantwortete Denkpausen
+  zählen als Punkt (1 Punkt pro erledigtem Eintrag, dieselbe "Währung"
+  wie jeder andere Lebensbereich), damit sich das wie echtes
+  Punkte-verdienen anfühlt statt wie reine Teilnahme.
+- **Erfolge-Ansicht** (`ErfolgeTab.jsx`, unter Archiv → Erfolge, dort wo
+  auch die Abzeichen/Trophäen sind): neuer Block "Denkpausen" zeigt pro
+  Kategorie (Mathe/Wortspiele/Rätsel/Allgemeinwissen), wie viele Aufgaben
+  gelöst UND wie viele nicht gelöst wurden — bewusst nur Zähler, keine
+  Liste einzelner Fragen.
+- Neuer `puzzle`-Icon-Versuch in `Icon.jsx` wurde verworfen (händisch
+  gezeichneter SVG-Pfad sah beim Rendern wie ein wirres Knäuel aus, nicht
+  wie ein Puzzleteil) — stattdessen das bestehende `book`-Icon
+  wiederverwendet. Lehre: neue Linien-Icons immer erst isoliert rendern
+  und ansehen, bevor sie eingebaut werden.
+
+Getestet: Build/Lint/Typecheck grün, 110 Unit-Tests (10 neu:
+`denkpausen.test.js` + `DenkpauseNudge.test.jsx`), 38 E2E-Tests grün.
 
 ---
 

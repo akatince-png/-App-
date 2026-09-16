@@ -34,6 +34,7 @@ export function useErrungenschaften(userId, quellen) {
       quellen.hydrationZielMl,
       quellen.tageslichtEintraege,
       quellen.tageslichtZielMinuten,
+      quellen.denkpauseErgebnisse,
     ]
   );
 

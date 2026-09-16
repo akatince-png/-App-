@@ -9,6 +9,7 @@ import { useAtemuebungenData } from "../../data/useAtemuebungenData";
 import { useHydrationData } from "../../data/useHydrationData";
 import { useTageslichtData } from "../../data/useTageslichtData";
 import { useBildschirmzeitData } from "../../data/useBildschirmzeitData";
+import { useDenkpauseData } from "../../data/useDenkpauseData";
 import { useTrainingData } from "../../data/useTrainingData";
 import { useTrainingTemplates } from "../../data/useTrainingTemplates";
 import { useCheckinData } from "../../data/useCheckinData";
@@ -39,6 +40,7 @@ export function TrackingDataProvider({ children }) {
   const hydrationData = useHydrationData(userId);
   const tageslichtData = useTageslichtData(userId);
   const bildschirmzeitData = useBildschirmzeitData(userId);
+  const denkpauseData = useDenkpauseData(userId);
   const trainingData = useTrainingData(userId);
   const trainingTemplates = useTrainingTemplates(userId);
   const checkinData = useCheckinData(userId);
@@ -54,6 +56,7 @@ export function TrackingDataProvider({ children }) {
     ...hydrationData,
     ...tageslichtData,
     ...bildschirmzeitData,
+    ...denkpauseData,
     ...trainingData,
     ...trainingTemplates,
     ...checkinData,

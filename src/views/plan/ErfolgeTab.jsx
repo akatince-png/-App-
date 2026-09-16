@@ -7,6 +7,7 @@ import { useAppData } from "../../context/AppDataContext";
 import { useErrungenschaften } from "../../data/useErrungenschaften";
 import { berechneWochenStats } from "../../utils/gnadentag";
 import { STREAK_SCHWELLEN, PUNKTE_SCHWELLEN, badgeLabel, badgeBeschreibung, alleBadges } from "../../utils/errungenschaften";
+import { DENKPAUSEN_KATEGORIEN } from "../../data/denkpausen";
 
 function naechsteSchwelle(wert, schwellen) {
   return schwellen.find((s) => s > wert) ?? null;
@@ -38,6 +39,7 @@ export default function ErfolgeTab() {
     hydrationZielMl,
     tageslichtEintraege,
     tageslichtZielMinuten,
+    denkpauseErgebnisse,
   } = appData;
 
   const quellen = useMemo(
@@ -54,6 +56,7 @@ export default function ErfolgeTab() {
       hydrationZielMl,
       tageslichtEintraege,
       tageslichtZielMinuten,
+      denkpauseErgebnisse,
     }),
     [
       supplementErledigt,
@@ -68,8 +71,23 @@ export default function ErfolgeTab() {
       hydrationZielMl,
       tageslichtEintraege,
       tageslichtZielMinuten,
+      denkpauseErgebnisse,
     ]
   );
+
+  // Solved/Nicht-gelöst je Denkpause-Kategorie (Nutzerinnen-Vorgabe,
+  // 16.09.: "wie viele Mathe-Quests... gelöst hat, und auch wie viele
+  // nicht" — bewusst nur Zähler pro Kategorie, keine Liste einzelner
+  // Fragen). Läuft unabhängig vom Punktesystem oben.
+  const denkpauseStats = useMemo(
+    () =>
+      DENKPAUSEN_KATEGORIEN.map((k) => {
+        const ergebnisse = (denkpauseErgebnisse || []).filter((e) => e.kategorie === k.id);
+        return { id: k.id, label: k.label, geloest: ergebnisse.filter((e) => e.richtig).length, nichtGeloest: ergebnisse.filter((e) => !e.richtig).length };
+      }),
+    [denkpauseErgebnisse]
+  );
+  const denkpauseGesamt = denkpauseStats.reduce((sum, k) => sum + k.geloest + k.nichtGeloest, 0);
 
   const { gesamtPunkte, kategorien, globalerStreak, verdiente, ladend, neueBadgeKeys } = useErrungenschaften(userId, quellen);
 
@@ -188,6 +206,30 @@ export default function ErfolgeTab() {
           </div>
         </Card>
       )}
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Denkpausen</div>
+      <Card style={{ marginBottom: 14 }}>
+        {denkpauseGesamt === 0 ? (
+          <div style={{ fontSize: 13, color: textMuted }}>
+            Noch keine Denkpause gemacht — löst du eine, zählt jede richtige Antwort auch hier oben als Punkt mit.
+          </div>
+        ) : (
+          denkpauseStats
+            .filter((k) => k.geloest + k.nichtGeloest > 0)
+            .map((k) => (
+              <div
+                key={k.id}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{k.label}</span>
+                <span style={{ fontSize: 12, color: textMuted }}>
+                  <span style={{ color: accent, fontWeight: 700 }}>{k.geloest} gelöst</span>
+                  {k.nichtGeloest > 0 && <> · {k.nichtGeloest} nicht</>}
+                </span>
+              </div>
+            ))
+        )}
+      </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verdiente Abzeichen</div>
       <Card style={{ marginBottom: 14 }}>

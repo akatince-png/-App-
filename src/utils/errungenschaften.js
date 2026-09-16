@@ -144,6 +144,22 @@ export const KATEGORIEN = [
     grad: gradAus(KATEGORIE_META.atemuebung.dot),
     holeTage: (q) => (q.atemuebungLogs || []).map((l) => normalisiereDatum(l.erstelltAm)),
   },
+  {
+    // Denkpause (16.09., Nutzerinnen-Vorgabe): kein eigener Lebensbereich
+    // in KATEGORIE_META (siehe dayItems.js) — bereichsübergreifend, nicht
+    // an ein <Shell bereich="…"> gebunden. Nur RICHTIG beantwortete
+    // Denkpausen zählen als Punkt, damit sich das "seine fehlenden Punkte
+    // aus anderen Bereichen einholen" auch wirklich wie Punkte verdienen
+    // anfühlt statt wie reine Teilnahme. Die separate Solved/Nicht-gelöst-
+    // Aufschlüsselung je Denkpause-Kategorie (Mathe/Wortspiele/Rätsel/
+    // Allgemeinwissen) läuft NICHT über dieses Punktesystem, sondern
+    // eigenständig in ErfolgeTab.jsx.
+    key: "denkpause",
+    label: "Denkpause",
+    icon: "book",
+    grad: gradAus("#C0447E"),
+    holeTage: (q) => (q.denkpauseErgebnisse || []).filter((e) => e.richtig).map((e) => normalisiereDatum(e.erstelltAm)),
+  },
 ];
 
 // Streak-Meilensteine gelten pro Kategorie UND global.

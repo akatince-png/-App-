@@ -21,6 +21,7 @@ import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import TrainingVorschau from "../ui/TrainingVorschau";
 import { QuestsKarte } from "../ui/QuestsKarte";
+import DenkpauseNudge from "../ui/DenkpauseNudge";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -149,6 +150,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   // Uhrzeit) bleiben bewusst außen vor, da nicht eindeutig morgens/abends.
   const [morgenOffen, setMorgenOffen] = useState(false);
   const [abendOffen, setAbendOffen] = useState(false);
+  const [denkpauseVersteckt, setDenkpauseVersteckt] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(null);
   const [feedbackKategorie, setFeedbackKategorie] = useState(null);
   const [trainingFehler, setTrainingFehler] = useState(null);
@@ -348,6 +350,13 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   }, [selectedDate, buckets]);
 
   const erledigtCount = tagesItems.filter((i) => i.done).length;
+
+  // Denkpause (Nutzerinnen-Vorgabe 16.09.): ein kurzer, freiwilliger
+  // Übergangs-Moment zwischen den Routine-Übersichten (Morgen/Abend) und
+  // dem Rest des Tagesplans — nur für "heute" und nur, solange noch etwas
+  // offen ist (an einem abgeschlossenen Tag gibt es nichts, wozu man
+  // "übergehen" müsste).
+  const zeigeUebergangsDenkpause = modus === "tag" && sameDay(selectedDate, today) && !denkpauseVersteckt && tagesItems.some((i) => !i.done);
 
   // Rendert eine Liste von Stunden-Blöcken (siehe bucketsFor) — geteilt
   // zwischen der normalen Tagesansicht und den aufgeklappten Morgen-/
@@ -708,6 +717,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             )}
           </Card>
           </div>
+
+          {zeigeUebergangsDenkpause && (
+            <DenkpauseNudge text="Kurzer Denksport vorm Umschalten?" onDismiss={() => setDenkpauseVersteckt(true)} />
+          )}
 
           <div className="mp-tagesplan-zeitbloecke-grid">{renderZeitbloecke(restBuckets)}</div>
         </>

@@ -51,6 +51,7 @@ const RESET_TABELLEN = [
   "teilprotokolle",
   "errungenschaften",
   "atemuebung_logs",
+  "denkpause_ergebnisse",
   "akutmodus_log",
   "drink_logs",
   "drink_recipe_ingredients",
