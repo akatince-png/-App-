@@ -61,7 +61,9 @@ längst gibt — jetzt diese Kurzübersicht:
   wirklich (Teil 115); Home-Tagesfortschritt-Balkendiagramm hat jetzt eine
   Tag/Woche/Monat/Gesamt-Auswahl (Gesamt nur bei Protokollen älter als
   einen Monat) — funktioniert auch im Coach-Verwalten-Modus automatisch
-  mit (Teil 116).
+  mit (Teil 116); Bug-Fix: "Bildschirmzeit" und "Atemübungen" konnten nie
+  als Teilprotokoll gespeichert werden, DB-Check fehlte beide Kategorien
+  (Teil 117, Migration 0088 — 🔴 noch nicht deployt, siehe unten).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
@@ -71,6 +73,17 @@ längst gibt — jetzt diese Kurzübersicht:
   wird dieser Hinweis entfernt (gleiches Vorgehen wie bei Migration 0086).
   Bis dahin läuft die App weiter, aber jeder Denkpause-Versuch scheitert
   beim Speichern (Fehler landet nur in der Konsole, kein Absturz).
+- **🔴 Migration `0088_teilprotokolle_bildschirmzeit_atemuebungen.sql`
+  noch NICHT deployt — DIESE IST SICHTBAR, NICHT NUR STILL:** die
+  Nutzerin hat den Fehler live in der App gesehen ("Speichern
+  fehlgeschlagen: new row for relation teilprotokolle violates check
+  constraint teilprotokolle_kategorie_check") beim Bildschirmzeit-
+  Onboarding-Schritt (Teil 117 unten — derselbe Bug wie schon einmal bei
+  Migration 0067 mit Tageslicht: neue Kategorie eingeführt, aber der
+  DB-Check nie mit erweitert). Bitte im echten Supabase-Projekt
+  ausführen, danach Bescheid geben. Bis dahin scheitert das Speichern von
+  "Bildschirmzeit" (Onboarding-Kategorien-Schritt) UND "Atemübungen"
+  (An-/Abschalten unter Mehr) sichtbar mit einer Fehlermeldung.
 - **✅ Nachkontrolle 15.09. (Teil 109):** Alle Änderungen seit dem letzten
   Checkpoint (Teil 102–108, Commits `b3aae48`..`145dbf5`) wurden noch
   einmal manuell auf Bugs durchgesehen (Zeilen-für-Zeilen-Diff-Lektüre +
@@ -113,6 +126,43 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## 🔴 Update 16.09.2026 (Teil 117) — Bug-Fix: "Bildschirmzeit"/"Atemübungen" konnten nie als Teilprotokoll gespeichert werden (Migration 0088, noch nicht deployt)
+
+**Nutzerinnen-Report** (mit Screenshot): beim Bildschirmzeit-Onboarding-
+Schritt, Klick auf "Speichern & weiter", erscheint sichtbar
+`Speichern fehlgeschlagen: new row for relation "teilprotokolle" violates
+check constraint "teilprotokolle_kategorie_check"`.
+
+**Root Cause:** exakt derselbe Bug wie schon einmal bei Migration 0067
+(damals mit "tageslicht") — die `teilprotokolle`-Tabelle hat einen
+Postgres-CHECK-Constraint, der die erlaubten `kategorie`-Werte fest
+auflistet. Als "Bildschirmzeit" (0086_bildschirmzeit.sql, Teil 107) und
+"Atemübungen" (0076_atemuebungen.sql) als neue Lebensbereiche eingeführt
+wurden, wurde jeweils vergessen, diesen Check mit zu erweitern —
+`teilprotokollSpeichern(hauptprotokollId, "bildschirmzeit", ...)`
+(Onboarding-Kategorien-Schritt) und `teilprotokollSpeichern(...,
+"atemuebungen", ...)` (An-/Abschalten unter Mehr, `MehrTab.jsx`
+`BAUSTEINE_KATEGORIEN`) schlagen seitdem fehl. Anders als beim
+Tageslicht-Fall 0067 landet der Fehler hier NICHT nur still in der
+Konsole, sondern wird der Nutzerin direkt angezeigt (die
+Fehlerbehandlung dafür — "wartet und bricht bei Fehler ab, statt
+stillschweigend weiterzuspringen" — ist genau der Bug-Fix aus Teil
+103–105).
+
+**Umgesetzt:** `supabase/migrations/0088_teilprotokolle_bildschirmzeit_atemuebungen.sql`
+— derselbe drop-and-recreate-Constraint-Ansatz wie 0067, jetzt mit
+`bildschirmzeit` und `atemuebungen` ergänzt. Alle App-seitig tatsächlich
+verwendeten `kategorie`-Werte (`CATEGORY_STEPS` in `categorySteps.js` +
+`BAUSTEINE_KATEGORIEN` in `MehrTab.jsx` + der Schlaf-Sonderfall in
+`OnboardingRoutinenView.jsx`, Teil 113) wurden gegen den neuen Constraint
+geprüft — vollständig abgedeckt.
+
+**🔴 Migration NOCH NICHT im echten Supabase-Projekt ausgeführt** — reine
+SQL-Änderung, kein App-Code betroffen, deshalb kein Build/Lint/Typecheck/
+Test-Lauf nötig für diesen Teil. Bitte deployen, danach Bescheid geben.
 
 ---
 
