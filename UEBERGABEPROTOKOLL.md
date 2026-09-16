@@ -106,6 +106,21 @@ längst gibt — jetzt diese Kurzübersicht:
   seitdem sichtbar beim Speichern — bei dieser App potenziell der
   häufigste gewählte Wert überhaupt. Bitte im echten Supabase-Projekt
   ausführen, danach Bescheid geben.
+- **🔴 Edge Function `send-due-reminders` NICHT (nur) über eine Migration
+  zu beheben — braucht ein manuelles Redeploy:** zweite Suchrunde (Teil
+  119) auf Bitte der Nutzerin, diesmal außerhalb der Datenbank-Checks —
+  `BildschirmzeitView.jsx` bindet genau wie Hydration/Tageslicht/Schlaf
+  eine Erinnerungszeiten-Liste ein (`ZeitErinnerungenCard`), aber die
+  Edge Function, die die Push-Benachrichtigungen tatsächlich verschickt,
+  kannte die Kategorie "bildschirmzeit" nicht — Nutzerinnen konnten
+  Erinnerungszeiten dafür einstellen und speichern, es wäre aber NIE eine
+  Benachrichtigung verschickt worden (stiller Funktionsausfall, kein
+  Fehler irgendwo sichtbar). Im Code bereits behoben (`ZEITEN_KATEGORIEN`
+  in `supabase/functions/send-due-reminders/index.ts` um "bildschirmzeit"
+  ergänzt) — Edge Functions deployen aber NICHT automatisch mit einer
+  Migration, das braucht einen eigenen manuellen Schritt (`supabase
+  functions deploy send-due-reminders` oder über das Dashboard). Bitte
+  danach Bescheid geben.
 - **✅ Nachkontrolle 15.09. (Teil 109):** Alle Änderungen seit dem letzten
   Checkpoint (Teil 102–108, Commits `b3aae48`..`145dbf5`) wurden noch
   einmal manuell auf Bugs durchgesehen (Zeilen-für-Zeilen-Diff-Lektüre +
@@ -148,6 +163,53 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## 🔴 Update 16.09.2026 (Teil 119) — Zweite Nachkontrolle: Erinnerungs-Edge-Function kannte "bildschirmzeit" nicht (Redeploy nötig)
+
+**Nutzerinnen-Frage** (nach Teil 118): "ist es möglich, dass es noch
+weitere solcher versteckten Dinge gibt? Musst du das vielleicht jetzt
+noch einmal in einem anderen Bereich noch überprüfen?" — ja, Teil 118 hat
+nur EINE Fehler-Art durchsucht (DB-Check-Constraints mit fester
+Werte-Liste). Zwei weitere Bereiche desselben Grundmusters ("neue
+Kategorie eingeführt, andere Stelle nicht mitgezogen") geprüft:
+
+1. **RLS-Policies:** jede Tabelle mit `enable row level security` gegen
+   alle `create policy ... on public.<tabelle>`-Zeilen über sämtliche
+   Migrationen gegengeprüft — keine Tabelle ohne mindestens eine Policy
+   gefunden. Kein Fund.
+2. **Erinnerungs-Edge-Function `send-due-reminders/index.ts`:** jede
+   Kategorie, die irgendwo in der App eine Erinnerungs-UI einbindet
+   (`ZeitErinnerungenCard`/`KategorieErinnerung`), gegen die Kategorien
+   geprüft, die die Edge Function tatsächlich abfragt. **Fund:**
+   `ZEITEN_KATEGORIEN` (der Abschnitt für Hydration/Tageslicht/Schlaf —
+   Erinnerungen mit einer frei konfigurierbaren Uhrzeiten-Liste) enthielt
+   "bildschirmzeit" nicht, obwohl `BildschirmzeitView.jsx` seit Teil 107
+   genau dieselbe `<ZeitErinnerungenCard kategorie="bildschirmzeit">`
+   einbindet wie die anderen drei. Alle übrigen Kategorien (Gewohnheiten,
+   Training, Ernährung, Medikamente/Supplemente/Peptide, Morgen-/
+   Abendroutine, Workflow) wurden einzeln nachverfolgt — alle korrekt an
+   ihre jeweilige Tabelle/ihren jeweiligen Erinnerungs-Mechanismus
+   angebunden, kein weiterer Fund.
+
+**Umgesetzt:** `ZEITEN_KATEGORIEN` in
+`supabase/functions/send-due-reminders/index.ts` um `{ kategorie:
+"bildschirmzeit", icon: "📱", einheit: "Bildschirmzeit-Check", mitMenge:
+false }` ergänzt — exakt dasselbe Muster wie die drei bestehenden
+Einträge.
+
+**Wichtiger Unterschied zu den Migrationen 0087–0090:** das hier ist
+KEINE SQL-Datei — Edge Functions werden nicht über `supabase db push`
+mit ausgerollt, sondern brauchen ein eigenes, separates Redeploy (`supabase
+functions deploy send-due-reminders` oder über das Supabase-Dashboard).
+Ohne dieses Redeploy bleibt der Fix wirkungslos, obwohl der Code im Repo
+schon korrigiert ist.
+
+Kein Build/Lint/Typecheck/Test-Lauf möglich für diese Datei (Deno-
+Edge-Function, kein Teil der Vite/Vitest-Toolchain dieses Repos) — Änderung
+manuell gegengelesen (reine Ergänzung eines Array-Eintrags, exakt im
+bestehenden Muster).
 
 ---
 

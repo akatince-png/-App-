@@ -382,10 +382,18 @@ Deno.serve(async (req) => {
     // Intervall-Logik (ZeitErinnerungenCard.jsx) — kumulative Tageswerte
     // ohne Einzeltermin, daher nur Erinnerung + Vorab-Erinnerung, kein
     // Nachfass-Fenster (keine bestätigbare Einzelaktion mit eigenem Log).
+    // Bug-Fix (16.09.): "bildschirmzeit" fehlte hier, obwohl
+    // BildschirmzeitView.jsx dieselbe <ZeitErinnerungenCard kategorie=
+    // "bildschirmzeit"> wie Hydration/Tageslicht/Schlaf einbindet — die
+    // Oberfläche ließ Erinnerungszeiten anlegen/speichern, aber diese
+    // Funktion prüfte die Kategorie nie, es wurde also nie eine
+    // Push-Benachrichtigung dafür verschickt (stiller Funktionsausfall,
+    // kein Fehler irgendwo sichtbar).
     const ZEITEN_KATEGORIEN: { kategorie: string; icon: string; einheit: string; mitMenge: boolean }[] = [
       { kategorie: "hydration", icon: "💧", einheit: "Trinken", mitMenge: true },
       { kategorie: "tageslicht", icon: "☀️", einheit: "Tageslicht/Raus gehen", mitMenge: false },
       { kategorie: "schlaf", icon: "🌙", einheit: "Schlafenszeit", mitMenge: false },
+      { kategorie: "bildschirmzeit", icon: "📱", einheit: "Bildschirmzeit-Check", mitMenge: false },
     ];
     for (const zk of ZEITEN_KATEGORIEN) {
       for (const [userId, info] of nutzerInfo) {
