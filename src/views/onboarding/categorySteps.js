@@ -30,3 +30,14 @@ export const CATEGORY_STEPS = [
   { key: "supplemente", icon: "💊", label: "Supplementplan" },
   { key: "medikamente", icon: "🩺", label: "Medikamentenplan" },
 ];
+
+// Laborwerte und Morgen-/Abendroutine zählen als die ersten beiden Schritte
+// derselben durchnummerierten "Protokoll"-Schrittfolge wie die 8
+// Kategorien-Pläne oben — Nutzerinnen-Vorgabe (16.09.): "Blutwerte, Morgen-
+// und Abendroutine ... gehören auch in die gleiche Reihenfolge" wie die
+// Kategorie-Schritte, statt wie bisher optisch wie eigenständige, schlichte
+// Seiten ohne den nummerierten Fortschrittsbalken (Stepper) davor zu wirken.
+// Siehe OnboardingLaborwerteView.jsx (Schritt 1) und
+// OnboardingRoutinenView.jsx (Schritt 2).
+export const PROTOKOLL_SCHRITT_OFFSET = 2;
+export const PROTOKOLL_SCHRITTE_GESAMT = CATEGORY_STEPS.length + PROTOKOLL_SCHRITT_OFFSET;

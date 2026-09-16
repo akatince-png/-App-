@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shell, PrimaryButton, Card, Label, Pill, TextArea } from "../../ui/primitives";
+import { Shell, PrimaryButton, Card, Label, Pill, TextArea, Stepper } from "../../ui/primitives";
 import { cardBorder, textMuted, accentSoft, accentDark, danger } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import RoutineSchritteEditor from "../../ui/RoutineSchritteEditor";
@@ -11,6 +11,7 @@ import { WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
 import { ISTZUSTAND_FRAGEN } from "./OnboardingCategoriesView";
+import { PROTOKOLL_SCHRITTE_GESAMT } from "./categorySteps";
 
 const neuerSchlafblock = (wochentage) => ({
   id: Math.random().toString(36).slice(2),
@@ -176,6 +177,11 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
   return (
     <Shell>
       <OnboardingNavArrows onBack={onBack} backLabel={t("onboarding.zurueck")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
+
+      <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 10 }}>
+        {t("onboarding.categories.progress", { current: 2, total: PROTOKOLL_SCHRITTE_GESAMT })}
+      </div>
+      <Stepper step={1} total={PROTOKOLL_SCHRITTE_GESAMT} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <div style={{ fontSize: 28 }}>🌅🌙</div>

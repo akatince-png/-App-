@@ -1,5 +1,5 @@
 import React from "react";
-import { Shell, PrimaryButton } from "../../ui/primitives";
+import { Shell, PrimaryButton, Stepper } from "../../ui/primitives";
 import { cardBorder, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import LaborwerteCard from "../../ui/LaborwerteCard";
@@ -8,6 +8,7 @@ import { AIService } from "../../services/aiService";
 import { getCoachName } from "../../utils/coachStorage";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
+import { PROTOKOLL_SCHRITTE_GESAMT } from "./categorySteps";
 
 // "Laborwerte" — eigener Onboarding-Schritt direkt nach dem Profil und vor
 // den Plänen: falls schon ein Laborbericht vorliegt, kann er hier gleich
@@ -31,6 +32,11 @@ export default function OnboardingLaborwerteView({ onDone, onBack, onCancel }) {
   return (
     <Shell>
       <OnboardingNavArrows onBack={onBack} backLabel={t("onboarding.zurueck")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
+
+      <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 10 }}>
+        {t("onboarding.categories.progress", { current: 1, total: PROTOKOLL_SCHRITTE_GESAMT })}
+      </div>
+      <Stepper step={0} total={PROTOKOLL_SCHRITTE_GESAMT} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <div style={{ fontSize: 28 }}>🩸</div>

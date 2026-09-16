@@ -10,7 +10,7 @@ import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
-import { CATEGORY_STEPS } from "./categorySteps";
+import { CATEGORY_STEPS, PROTOKOLL_SCHRITT_OFFSET, PROTOKOLL_SCHRITTE_GESAMT } from "./categorySteps";
 import { useT } from "../../i18n/translate";
 import { toLocalISODate } from "../../utils/dates";
 import KiChat from "../../ui/KiChat";
@@ -774,7 +774,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>
-            {t("onboarding.categories.progress", { current: index + 1, total: CATEGORY_STEPS.length })}
+            {t("onboarding.categories.progress", { current: index + 1 + PROTOKOLL_SCHRITT_OFFSET, total: PROTOKOLL_SCHRITTE_GESAMT })}
           </div>
           {(index > 0 || onBackToStart) && (
             <div className="mp-tap" onClick={zurueck} style={{ fontSize: 15, fontWeight: 700, color: textMuted, cursor: "pointer", padding: "8px 12px" }}>
@@ -798,7 +798,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           )}
         </div>
       </div>
-      <Stepper step={index} total={CATEGORY_STEPS.length} />
+      <Stepper step={index + PROTOKOLL_SCHRITT_OFFSET} total={PROTOKOLL_SCHRITTE_GESAMT} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
         <div style={{ fontSize: 28 }}>{step.icon}</div>

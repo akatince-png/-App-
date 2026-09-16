@@ -51,7 +51,10 @@ längst gibt — jetzt diese Kurzübersicht:
   Weckzeit/Startzeit + Vorab-Erinnerung + größer lesbare, separate
   Schritte-Liste (Teil 112); Schlafplan ist kein eigener Onboarding-
   Schritt mehr, sondern jetzt Teil derselben Seite wie Morgen-/
-  Abendroutine (Teil 113).
+  Abendroutine (Teil 113); Laborwerte und Morgen-/Abendroutine zeigen
+  jetzt denselben nummerierten Stepper wie die 8 Kategorie-Schritte —
+  eine durchgehende "1 von 10" bis "10 von 10"-Zählung statt eines
+  optischen Bruchs (Teil 114).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
@@ -93,32 +96,74 @@ längst gibt — jetzt diese Kurzübersicht:
      Erinnerungs-Edge-Function `send-due-reminders` wird NICHT
      automatisch deployt — beides liegt außerhalb dessen, was ein Agent
      aus der Sandbox heraus verifizieren kann.
-- **Zwei offene Entscheidungen, auf die die Nutzerin noch nicht
-  geantwortet hat** (16.09., zusammen mit dem Wunsch nach Teil 113
-  geäußert — bewusst NICHT selbstständig umgesetzt, weil beides ein
-  größerer Umbau ist, der ihre explizite Design-Entscheidung braucht):
-  1. **Visuelle Uneinheitlichkeit im Onboarding:** die "normalen" Seiten
-     (Laborwerte, Morgen-/Abendroutine, ...) sehen anders aus als die 8
-     Kategorie-Schritte (`OnboardingCategoriesView.jsx`), die oben einen
-     nummerierten "1 bis 8"-Fortschrittsbalken (`Stepper`-Komponente)
-     zeigen — die Nutzerin fand den Bruch "designtechnisch blöd" und
-     möchte ENTWEDER überall den schlichten Stil ODER überall den
-     nummerierten Stepper-Stil. Noch nicht geklärt, welche Richtung.
-  2. **"Neues Protokoll" (Bestandskonto) fragt nicht mehr "mit KI oder
-     allein":** bei `istDirekterNeuStart` (Einstieg über den
-     "+"-Button) wird die `intro`-Phase komplett übersprungen, dadurch
-     taucht `OnboardingIntroView`s begleitet-vs-allein-Frage nie auf —
-     die KI poppt dadurch unkontrolliert in den Kategorie-Schritten auf.
-     Die Nutzerin möchte stattdessen beim Start eines neuen Protokolls
-     als Bestandsnutzerin gefragt werden: laufendes Protokoll abbrechen?
-     Name des neuen Protokolls? Profilwerte aktualisieren? Allein oder
-     mit KI (diese Frage eher früher in der Reihenfolge)? — noch nicht
-     umgesetzt, Design mit ihr abstimmen, bevor `OnboardingFlow.jsx`
-     umgebaut wird.
+- **Eine offene Entscheidung, noch nicht umgesetzt** (16.09., zusammen mit
+  dem Wunsch nach Teil 113 geäußert): **"Neues Protokoll" (Bestandskonto)
+  fragt nicht mehr "mit KI oder allein":** bei `istDirekterNeuStart`
+  (Einstieg über den "+"-Button) wird die `intro`-Phase komplett
+  übersprungen, dadurch taucht `OnboardingIntroView`s begleitet-vs-allein-
+  Frage nie auf — die KI poppt dadurch unkontrolliert in den Kategorie-
+  Schritten auf. Die Nutzerin möchte stattdessen beim Start eines neuen
+  Protokolls als Bestandsnutzerin gefragt werden: laufendes Protokoll
+  abbrechen? Name des neuen Protokolls? Profilwerte aktualisieren? Allein
+  oder mit KI (diese Frage eher früher in der Reihenfolge)? — noch nicht
+  umgesetzt, Design mit ihr abstimmen, bevor `OnboardingFlow.jsx` umgebaut
+  wird. (Die zweite ursprünglich offene Frage — visuelle Uneinheitlichkeit
+  zwischen "normalen" Onboarding-Seiten und den nummerierten
+  Kategorie-Schritten — ist seit Teil 114 geklärt und umgesetzt: die
+  Nutzerin hat sich für den nummerierten Stepper-Stil überall
+  entschieden.)
 - **Empfohlene Lesereihenfolge:** erst Abschnitte 1–13 (Grundlagen,
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 16.09.2026 (Teil 114) — Einheitlicher nummerierter Stepper über Laborwerte, Morgen-/Abendroutine und die 8 Kategorie-Schritte
+
+**Nutzerinnen-Vorgabe:** die "normalen" Onboarding-Seiten (Laborwerte,
+Morgen-/Abendroutine) sahen bisher schlicht aus, dann sprang die Optik auf
+einmal auf die 8 Kategorie-Schritte um, die oben einen nummerierten
+"1 bis 8"-Fortschrittsbalken (`Stepper`-Komponente) zeigen — "das sieht
+doch total blöd aus... designtechnisch auch blöd aus". Auf Nachfrage
+(überall schlicht vs. überall Stepper) hat sich die Nutzerin für **überall
+den nummerierten Stepper-Stil** entschieden. "Blutwerte, Morgen- und
+Abendroutine ... gehören auch in die gleiche Reihenfolge" wie die
+Kategorie-Schritte.
+
+**Umgesetzt:** Laborwerte und Morgen-/Abendroutine (mit dem seit Teil 113
+mit eingebauten Schlafplan) zählen jetzt als die ersten beiden Schritte
+EINER durchgehenden, zehnteiligen Zählung statt zweier isolierter Seiten
+vor den 8 Kategorie-Schritten:
+- `categorySteps.js`: neue Konstanten `PROTOKOLL_SCHRITT_OFFSET` (= 2,
+  Laborwerte + Routinen) und `PROTOKOLL_SCHRITTE_GESAMT` (=
+  `CATEGORY_STEPS.length + PROTOKOLL_SCHRITT_OFFSET` = 10) — einzige
+  Quelle für die Gesamtzahl, keine der drei Views zählt selbst.
+- `OnboardingLaborwerteView.jsx`: `<Stepper step={0}
+  total={PROTOKOLL_SCHRITTE_GESAMT} />` + Fortschrittstext "1 von 10"
+  direkt unter der bestehenden Pfeil-Navigation ergänzt — exakt dieselbe
+  Stepper-Komponente wie bei den Kategorie-Schritten, keine neue gebaut.
+- `OnboardingRoutinenView.jsx`: dasselbe, `step={1}` → "2 von 10".
+- `OnboardingCategoriesView.jsx`: Fortschrittstext und `<Stepper>` nutzen
+  jetzt `index + PROTOKOLL_SCHRITT_OFFSET` statt `index` und
+  `PROTOKOLL_SCHRITTE_GESAMT` statt `CATEGORY_STEPS.length` — die 8
+  Kategorie-Schritte zählen dadurch automatisch als "3 von 10" bis
+  "10 von 10" weiter, ohne dass sich an ihrer eigenen Logik (Reihenfolge,
+  Gate-Seiten, Speichern) etwas ändert.
+- Laborwerte/Routinen bekommen bewusst **keinen** eigenen "Alles
+  überspringen"-Link (den gibt es nur bei den Kategorie-Schritten, weil
+  dort mehrere gleichartige Schritte auf einmal übersprungen werden
+  können) — nur den Fortschrittsbalken selbst, um die Optik zu vereinheitlichen,
+  ohne die Navigationslogik der beiden Seiten zu verändern.
+
+Getestet: Build/Lint/Typecheck grün, 115 Unit-Tests grün (unverändert),
+38 E2E-Tests grün (keine Anpassung nötig — kein Test prüfte bisher den
+genauen Zählertext). Zusätzlich per Playwright durch Laborwerte →
+Routinen → ersten Kategorie-Schritt (Hydration) navigiert und den
+durchgehenden Zähler "1 von 10" → "2 von 10" → "3 von 10" sowie den
+wachsenden Fortschrittsbalken per Screenshot gegengeprüft.
+
+Keine neue Migration nötig — rein visuelle/Navigations-Änderung.
 
 ---
 
