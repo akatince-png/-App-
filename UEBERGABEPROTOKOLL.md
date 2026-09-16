@@ -84,6 +84,28 @@ längst gibt — jetzt diese Kurzübersicht:
   ausführen, danach Bescheid geben. Bis dahin scheitert das Speichern von
   "Bildschirmzeit" (Onboarding-Kategorien-Schritt) UND "Atemübungen"
   (An-/Abschalten unter Mehr) sichtbar mit einer Fehlermeldung.
+- **🔴 Migration `0089_aenderungsprotokoll_fehlende_kategorien.sql` noch
+  NICHT deployt — STILL, nicht sichtbar:** auf Bitte der Nutzerin ("check
+  auch bitte den Rest ... oder andere Bereiche wie diesen") gefunden beim
+  gezielten Durchsuchen ALLER DB-Check-Constraints gegen den tatsächlichen
+  App-Code (Teil 118 unten). Der `kategorie`-Check von `aenderungsprotokoll`
+  (dem "Tagesverlauf" unter Archiv → Protokolle) fehlten seit Jahren schon
+  "workflow", "notfallmodus", "protokoll", "tageslicht", "bildschirmzeit"
+  — jede dieser Änderungen (Workout-Flow-Ausnahmen, Notfallmodus an/aus,
+  Baustein an/ausschalten unter Mehr, Ziel-Korrekturen bei Tageslicht/
+  Bildschirmzeit) fehlt seitdem lautlos im Tagesverlauf, weil der Fehler
+  nur in der Konsole landet (kein sichtbarer Effekt, `useAenderungsprotokoll.js`
+  fängt ihn ab). Bitte im echten Supabase-Projekt ausführen, danach
+  Bescheid geben.
+- **🔴 Migration `0090_hormones_kategorie_adhs_cannabis.sql` noch NICHT
+  deployt — SICHTBAR:** ebenfalls bei derselben Durchsuchung gefunden —
+  die Medikamente-Kategorien-Auswahl bietet "ADHS-Medikation" und
+  "Cannabis" an (letzteres seit den Cannabis-Feldern, Migration 0082),
+  aber der DB-Check der `hormones`-Tabelle kennt beide Werte nicht. Jede
+  Medikament-Neuanlage mit einer dieser beiden Kategorien scheitert
+  seitdem sichtbar beim Speichern — bei dieser App potenziell der
+  häufigste gewählte Wert überhaupt. Bitte im echten Supabase-Projekt
+  ausführen, danach Bescheid geben.
 - **✅ Nachkontrolle 15.09. (Teil 109):** Alle Änderungen seit dem letzten
   Checkpoint (Teil 102–108, Commits `b3aae48`..`145dbf5`) wurden noch
   einmal manuell auf Bugs durchgesehen (Zeilen-für-Zeilen-Diff-Lektüre +
@@ -126,6 +148,74 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## 🔴 Update 16.09.2026 (Teil 118) — Nachkontrolle: systematische Suche nach demselben Bug-Muster in der ganzen App (Migrationen 0089 + 0090, beide noch nicht deployt)
+
+**Nutzerinnen-Bitte** (nach dem Bildschirmzeit-Fund, Teil 117): "check
+auch bitte gleich den Rest der Sachen, die du heute verändert hast und
+bearbeitet hast oder andere Bereiche wie diesen, ob da Bugs sind oder
+Probleme."
+
+**Vorgehen:** zwei getrennte Durchgänge.
+
+**1. Die heutigen Code-Änderungen selbst (Teile 113–116) noch einmal
+gegengeprüft** — Schlaf-Merge, Stepper-Vereinheitlichung, KI-Wahl-Screen,
+Home-Zeitraum-Auswahl: Zurück/Weiter-Übergänge, Edge Cases (leeres
+`schlafBloecke`, fehlendes `aktivesHauptprotokoll`, negative/fehlende
+Tage-seit-Start-Werte) noch einmal einzeln durchgespielt. Keine neuen
+Fehler gefunden — alle vier Features verhalten sich wie in ihren
+jeweiligen Teilen oben beschrieben und getestet.
+
+**2. Systematische Suche nach demselben Bug-MUSTER in der ganzen App**
+(nicht nur den heutigen Änderungen): der Bildschirmzeit-Fehler war ein
+Postgres-CHECK-Constraint, dessen erlaubte Werte-Liste nie erweitert
+wurde, als eine neue Kategorie dazukam. Also: JEDEN "kategorie in
+(...)"-artigen CHECK-Constraint aus allen `supabase/migrations/*.sql`-
+Dateien gegen die tatsächlich im App-Code verwendeten Werte
+gegengeprüft (`grep` über alle Migrationen + alle Aufrufstellen der
+jeweiligen Speicher-Funktion). Ergebnis: **zwei weitere, unabhängige
+Fundstellen desselben Musters**, beide nicht mit heutigen Änderungen
+zusammenhängend, sondern schon länger bestehend:
+
+- **`aenderungsprotokoll_kategorie_check`** (Tagesverlauf/Änderungs-Log,
+  Migration 0019, seitdem nie erweitert): erlaubte bisher nur `peptid,
+  hormon, supplement, training, gewohnheit, hydration, mahlzeit`. Fehlten:
+  `workflow` (Workout-Flow-Einträge/-Ausnahmen, `GewohnheitenView.jsx`/
+  `TagesEintragBearbeiten.jsx`/`useUniversellerCoach.js`), `notfallmodus`
+  (`HomeView.jsx`, Notfallmodus an/aus), `protokoll` (`MehrTab.jsx`,
+  Baustein an/ausschalten + "Version festhalten"), `tageslicht` und
+  `bildschirmzeit` (`useZielMitKorrektur.js`, Ziel-Korrektur-Vermerk).
+  Besonders tückisch: `useAenderungsprotokoll.js`s `aenderungVermerken()`
+  fängt den Fehler ab und loggt nur `console.error` — kein Wurf, keine
+  UI-Fehlermeldung. Diese Änderungen fehlten seitdem einfach lautlos im
+  Tagesverlauf, ohne dass es je auffiel. → `0089_aenderungsprotokoll_fehlende_kategorien.sql`.
+- **`hormones_kategorie_check`** (Medikamente, zuletzt in Migration 0042
+  erweitert): `MEDIKAMENTE_KATEGORIEN` in `constants.js` (direkt als
+  Auswahl in `MedikamenteView.jsx` gerendert) enthält "ADHS-Medikation"
+  und "Cannabis" (Cannabis-Felder kamen mit Migration 0082 dazu) — beide
+  fehlten im DB-Check. Anders als beim Tagesverlauf-Fall scheitert das
+  hier SICHTBAR (derselbe "wartet und bricht bei Fehler ab"-Mechanismus
+  wie beim Bildschirmzeit-Fund). "ADHS-Medikation" ist bei dieser
+  ADHS-Coaching-App vermutlich einer der am häufigsten gewählten Werte
+  überhaupt. → `0090_hormones_kategorie_adhs_cannabis.sql`.
+
+**Bewusst NICHT als Bug behandelt** (geprüft, aber kein CHECK-Verstoß):
+`tagesplan_ausnahmen_kategorie_check` (passt exakt zu
+`AUSNAHME_KATEGORIEN` in `TagesEintragBearbeiten.jsx`), `rolle`/
+`absender`-Checks bei Coach-Nachrichten (passen exakt), `quests.typ`
+(passt exakt), Routine-/Wochentag-Checks (passen exakt). Die
+KI-Kategorisierung in `aiService.js`/`useUniversellerCoach.js` kennt
+"bildschirmzeit"/"atemuebungen" nicht als eigenen Fall — das ist eine
+fehlende FUNKTION (der Universelle Coach kann diese zwei Bereiche bisher
+nicht frei zuordnen), kein Bug/Absturz, da App-seitig konsistent (die
+KI würde diese Werte nie vorschlagen) — nicht mit behoben, da außerhalb
+des Bug-Scopes; bei Bedarf separat ansprechen.
+
+**🔴 Beide Migrationen NOCH NICHT im echten Supabase-Projekt
+ausgeführt** — reine SQL-Änderungen, kein App-Code betroffen. Bitte
+zusammen mit 0087 und 0088 deployen, danach Bescheid geben.
 
 ---
 
