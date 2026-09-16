@@ -13,8 +13,14 @@
 // beschreiben die Ausgangslage, keinen Plan, den man "einrichtet", und
 // laufen deshalb als eigener Schritt vor den Kategorien (siehe
 // OnboardingFlow → OnboardingLaborwerteView).
+//
+// Schlafplan ist seit 16.09. (Nutzerinnen-Vorgabe: "Schlafplan mit der
+// Morgen- und Abendroutine gleich zusammentun, die hängen ja alle
+// unmittelbar miteinander zusammen") ebenfalls KEIN eigener Kategorie-
+// Schritt mehr — die Bettzeit/Aufwachzeit-Einrichtung läuft jetzt direkt
+// auf der Morgen-/Abendroutine-Seite (OnboardingRoutinenView.jsx), eine
+// Onboarding-Seite weniger.
 export const CATEGORY_STEPS = [
-  { key: "schlaf", icon: "😴", label: "Schlafplan" },
   { key: "hydration", icon: "💧", label: "Hydrationsplan" },
   { key: "tageslicht", icon: "☀️", label: "Tageslichtplan" },
   { key: "bildschirmzeit", icon: "📱", label: "Bildschirmzeitplan" },

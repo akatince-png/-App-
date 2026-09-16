@@ -1,13 +1,61 @@
-import React from "react";
-import { Shell, PrimaryButton, Card, Label } from "../../ui/primitives";
-import { cardBorder, textMuted } from "../../ui/theme";
+import React, { useState, useEffect } from "react";
+import { Shell, PrimaryButton, Card, Label, Pill, TextArea } from "../../ui/primitives";
+import { cardBorder, textMuted, accentSoft, accentDark, danger } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import RoutineSchritteEditor from "../../ui/RoutineSchritteEditor";
 import RoutineSchritteListe from "../../ui/RoutineSchritteListe";
 import TimeWheelField from "../../ui/TimeWheelField";
 import KategorieErinnerung from "../../ui/KategorieErinnerung";
+import ZeitErinnerungenCard from "../../ui/ZeitErinnerungenCard";
+import { WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
+import { ISTZUSTAND_FRAGEN } from "./OnboardingCategoriesView";
+
+const neuerSchlafblock = (wochentage) => ({
+  id: Math.random().toString(36).slice(2),
+  wochentage,
+  bettzeit: "22:30",
+  aufwachzeit: "06:30",
+});
+
+function berechneSchlafstunden(bett, auf) {
+  if (!bett || !auf) return "–";
+  const [bh, bm] = bett.split(":").map(Number);
+  const [ah, am] = auf.split(":").map(Number);
+  let minuten = ah * 60 + am - (bh * 60 + bm);
+  if (minuten <= 0) minuten += 24 * 60;
+  return Math.round((minuten / 60) * 10) / 10;
+}
+
+function toggleInArray(arr, val) {
+  return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+}
+
+function AddZeile({ label, onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: "100%",
+        padding: "8px",
+        borderRadius: 10,
+        border: "1px dashed #C7D8D2",
+        background: "transparent",
+        color: disabled ? textMuted : accentDark,
+        fontSize: 12,
+        fontWeight: 700,
+        cursor: disabled ? "not-allowed" : "pointer",
+        marginBottom: 6,
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
 
 // Morgen-/Abendroutine bewusst direkt nach Ziel/Profil/Laborwerte und VOR
 // den 9 Kategorie-Plänen (Schlaf, Peptide, Supplemente, ...) — Nutzerinnen-
@@ -25,11 +73,105 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
     routineSchrittVerschieben,
     routineEinstellungen,
     routineZeitrahmenSetzen,
+    categoryZiele,
+    setCategoryZiel,
+    aktivesHauptprotokoll,
+    teilprotokollSpeichern,
   } = useAppData();
   const morgenSchritte = routineSchritte.filter((s) => s.routine === "morgen");
   const abendSchritte = routineSchritte.filter((s) => s.routine === "abend");
   const morgenEinstellung = routineEinstellungen.morgen || { startZeit: "", endZeit: "" };
   const abendEinstellung = routineEinstellungen.abend || { startZeit: "", endZeit: "" };
+
+  // Schlaf — seit 16.09. hier statt als eigener Kategorie-Schritt
+  // (Nutzerinnen-Vorgabe: "Schlafplan mit der Morgen- und Abendroutine gleich
+  // zusammentun, die hängen ja alle unmittelbar miteinander zusammen"). Genau
+  // dieselbe Bettzeit/Aufwachzeit-Blöcke-Logik wie zuvor in
+  // OnboardingCategoriesView.jsx, nur hierher verschoben; die Datenform
+  // (categoryZiele.schlaf, teilprotokolle-Zeile) bleibt unverändert, damit
+  // MehrTab.jsx, OnboardingCompletionView.jsx & Co. unverändert weiterlaufen.
+  const [schlafIntervallTyp, setSchlafIntervallTyp] = useState("weekdays"); // "fixed" | "weekdays"
+  const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
+  const [schlafIstZustand, setSchlafIstZustand] = useState("");
+  const [schlafSaving, setSchlafSaving] = useState(false);
+  const [schlafError, setSchlafError] = useState(null);
+
+  useEffect(() => {
+    const gespeicherteBloecke = categoryZiele?.schlaf?.bloecke;
+    if (gespeicherteBloecke?.length) {
+      setSchlafIntervallTyp(
+        gespeicherteBloecke.length === 1 && gespeicherteBloecke[0].wochentage.length === WOCHENTAGE.length ? "fixed" : "weekdays"
+      );
+      setSchlafBloecke(gespeicherteBloecke.map((b) => ({ ...neuerSchlafblock(b.wochentage), ...b })));
+    }
+    if (categoryZiele?.schlaf?.istZustand?.aktuell) {
+      setSchlafIstZustand(categoryZiele.schlaf.istZustand.aktuell);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const tageBelegtVonAnderen = (idx) => schlafBloecke.filter((_, i) => i !== idx).flatMap((b) => b.wochentage);
+  const verfuegbareTage = (idx) => WOCHENTAGE.filter((tag) => !tageBelegtVonAnderen(idx).includes(tag));
+  const toggleBlockTag = (idx, tag) => {
+    setSchlafBloecke((prev) => prev.map((b, i) => (i === idx ? { ...b, wochentage: toggleInArray(b.wochentage, tag) } : b)));
+  };
+  const blockAlleUmschalten = (idx) => {
+    const verfuegbar = verfuegbareTage(idx);
+    setSchlafBloecke((prev) =>
+      prev.map((b, i) => {
+        if (i !== idx) return b;
+        const vollstaendig = verfuegbar.length > 0 && verfuegbar.every((t) => b.wochentage.includes(t));
+        return { ...b, wochentage: vollstaendig ? [] : [...verfuegbar] };
+      })
+    );
+  };
+  const setBlockFeld = (idx, feld, val) => {
+    setSchlafBloecke((prev) => prev.map((b, i) => (i === idx ? { ...b, [feld]: val } : b)));
+  };
+  const schlafblockHinzufuegen = () => {
+    const belegt = schlafBloecke.flatMap((b) => b.wochentage);
+    const frei = WOCHENTAGE.filter((t) => !belegt.includes(t));
+    if (frei.length === 0) return;
+    setSchlafBloecke((prev) => [...prev, neuerSchlafblock(frei)]);
+  };
+  const schlafblockEntfernen = (idx) => {
+    setSchlafBloecke((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+  };
+  const alleTageVergeben = WOCHENTAGE.every((t) => schlafBloecke.some((b) => b.wochentage.includes(t)));
+
+  const weiter = async () => {
+    setSchlafError(null);
+    setSchlafSaving(true);
+    const bloecke =
+      schlafIntervallTyp === "fixed"
+        ? [{ ...schlafBloecke[0], wochentage: [...WOCHENTAGE] }]
+        : schlafBloecke;
+    setCategoryZiel("schlaf", {
+      bloecke: bloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
+      istZustand: { aktuell: schlafIstZustand },
+    });
+    if (aktivesHauptprotokoll?.id) {
+      try {
+        const result = await teilprotokollSpeichern(aktivesHauptprotokoll.id, "schlaf", {
+          aktiv: true,
+          eigenerStartdatum: null,
+          laufzeitWochen: null,
+        });
+        if (!result?.ok) {
+          setSchlafError(result?.error || t("onboarding.error.speichern"));
+          setSchlafSaving(false);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        setSchlafError(err?.message || t("onboarding.error.speichern"));
+        setSchlafSaving(false);
+        return;
+      }
+    }
+    setSchlafSaving(false);
+    onDone({ key: "schlaf", icon: "😴", label: "Schlafplan" });
+  };
 
   return (
     <Shell>
@@ -89,8 +231,91 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
 
       <RoutineSchritteListe routine="abend" schritte={abendSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
 
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>😴 Schlafplan</div>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+          Wann gehst du normalerweise ins Bett, wann willst du aufwachen? Schließt direkt an deine Abendroutine an.
+        </div>
+        <Label>{tLabel("Intervall")}</Label>
+        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 16 }}>
+          <Pill label={tLabel("Täglich")} selected={schlafIntervallTyp === "fixed"} onClick={() => setSchlafIntervallTyp("fixed")} />
+          <Pill
+            label={tLabel("Bestimmte Wochentage")}
+            selected={schlafIntervallTyp === "weekdays"}
+            onClick={() => setSchlafIntervallTyp("weekdays")}
+          />
+        </div>
+        {schlafIntervallTyp === "fixed" ? (
+          <div style={{ padding: "12px", borderRadius: 12, background: accentSoft, marginBottom: 14 }}>
+            <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
+            <TimeWheelField value={schlafBloecke[0]?.bettzeit || "22:30"} onChange={(v) => setBlockFeld(0, "bettzeit", v)} />
+            <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
+            <TimeWheelField value={schlafBloecke[0]?.aufwachzeit || "06:30"} onChange={(v) => setBlockFeld(0, "aufwachzeit", v)} />
+            <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
+              {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(schlafBloecke[0]?.bettzeit, schlafBloecke[0]?.aufwachzeit) })}
+            </div>
+          </div>
+        ) : (
+          <>
+            {schlafBloecke.map((block, idx) => (
+              <div
+                key={block.id}
+                style={{
+                  marginBottom: idx < schlafBloecke.length - 1 ? 20 : 0,
+                  paddingBottom: idx < schlafBloecke.length - 1 ? 16 : 0,
+                  borderBottom: idx < schlafBloecke.length - 1 ? `1px solid ${cardBorder}` : "none",
+                }}
+              >
+                <Label>{t("onboarding.schlaf.tage.label")}</Label>
+                <div style={{ display: "flex", flexWrap: "wrap" }}>
+                  <Pill
+                    label={t("onboarding.schlaf.alle")}
+                    selected={verfuegbareTage(idx).length > 0 && verfuegbareTage(idx).every((t2) => block.wochentage.includes(t2))}
+                    onClick={() => blockAlleUmschalten(idx)}
+                  />
+                  {verfuegbareTage(idx).map((tag) => (
+                    <Pill key={tag} label={tag} selected={block.wochentage.includes(tag)} onClick={() => toggleBlockTag(idx, tag)} />
+                  ))}
+                </div>
+                <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
+                <TimeWheelField value={block.bettzeit} onChange={(v) => setBlockFeld(idx, "bettzeit", v)} />
+                <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
+                <TimeWheelField value={block.aufwachzeit} onChange={(v) => setBlockFeld(idx, "aufwachzeit", v)} />
+                <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
+                  {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(block.bettzeit, block.aufwachzeit) })}
+                </div>
+                {schlafBloecke.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => schlafblockEntfernen(idx)}
+                    style={{ marginTop: 8, border: "none", background: "transparent", color: danger, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 0 }}
+                  >
+                    {t("onboarding.schlaf.block.entfernen")}
+                  </button>
+                )}
+              </div>
+            ))}
+            <div style={{ marginTop: 12 }}>
+              <AddZeile label={t("onboarding.schlaf.block.hinzufuegen")} onClick={schlafblockHinzufuegen} disabled={alleTageVergeben} />
+            </div>
+          </>
+        )}
+        <div style={{ marginTop: 16 }}>
+          <Label>{ISTZUSTAND_FRAGEN.schlaf[0].frage}</Label>
+          <TextArea value={schlafIstZustand} onChange={setSchlafIstZustand} placeholder={ISTZUSTAND_FRAGEN.schlaf[0].placeholder} diktierbar />
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <ZeitErinnerungenCard kategorie="schlaf" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="22:00" />
+        </div>
+        {schlafError && (
+          <div style={{ marginTop: 12, fontSize: 12.5, color: danger, fontWeight: 600 }}>{schlafError}</div>
+        )}
+      </Card>
+
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-        <PrimaryButton onClick={onDone}>{tLabel("Weiter")}</PrimaryButton>
+        <PrimaryButton onClick={weiter} disabled={schlafSaving}>
+          {schlafSaving ? "Einen Moment..." : tLabel("Weiter")}
+        </PrimaryButton>
         {onCancel && (
           <button
             type="button"

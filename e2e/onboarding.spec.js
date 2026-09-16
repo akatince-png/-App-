@@ -133,12 +133,22 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
     await expect(page.getByText(titel, { exact: true })).toBeVisible();
     const schliessenKnopf = page.getByRole("button", { name: "Schließen" });
     if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
+    if (titel === "Morgen- & Abendroutine") {
+      // Schlaf ist seit 16.09. auf derselben Seite mit eingerichtet (siehe
+      // OnboardingRoutinenView.jsx), statt eines eigenen Kategorie-Schritts.
+      await expect(page.getByText("😴 Schlafplan")).toBeVisible();
+    }
     await page.getByRole("button", { name: "Weiter", exact: true }).click();
   }
 
-  // Kategorien: "Alles überspringen" führt direkt zum Abschluss-Screen,
-  // ohne jede der 8 Kategorien einzeln durchzuklicken. Ist ein <div
-  // onClick>, kein <button> — daher getByText statt getByRole("button").
+  // Kategorien: erster Schritt ist jetzt Hydration (Schlaf ist seit 16.09.
+  // kein eigener Kategorie-Schritt mehr, siehe Morgen-/Abendroutine oben) —
+  // die hat KEINE Gate-Seite (effectiveModus fest auf "jetzt") und öffnet
+  // direkt das KiChat-Vollbild-Modal, das erst geschlossen werden muss, bevor
+  // "Alles überspringen" (ein <div onClick>, kein <button> — daher getByText
+  // statt getByRole("button")) den Rest der Kategorien überspringt.
+  const kategorienSchliessen = page.getByRole("button", { name: "Schließen" });
+  if (await kategorienSchliessen.isVisible().catch(() => false)) await kategorienSchliessen.click();
   await page.getByText("Alles überspringen").click();
 
   // Abschluss-Screen → zurück auf Home.
@@ -153,11 +163,12 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
 // "Mehr" nachträglich erreichbar) — mit den vier von ihr konkret genannten
 // Reflexionsfragen (üblicher Verbrauch, Haupttätigkeit, Reduzieren
 // vorstellbar, künftiges Limit). Fährt denselben Weg wie der komplette
-// Onboarding-Test oben bis zu den Kategorien, klickt dort Schlaf/Hydration/
-// Tageslicht bewusst weg (unterschiedliche Skip-Wege: Schlaf/Tageslicht
-// haben noch die "Jetzt/Später einrichten"-Gate-Seite, Hydration nicht —
-// siehe effectiveModus in OnboardingCategoriesView.jsx), um beim vierten
-// Schritt (Bildschirmzeit) anzukommen.
+// Onboarding-Test oben bis zu den Kategorien, klickt dort Hydration/
+// Tageslicht bewusst weg (unterschiedliche Skip-Wege: Tageslicht hat noch
+// die "Jetzt/Später einrichten"-Gate-Seite, Hydration nicht — siehe
+// effectiveModus in OnboardingCategoriesView.jsx), um beim dritten Schritt
+// (Bildschirmzeit) anzukommen. Schlaf ist seit 16.09. kein eigener
+// Kategorie-Schritt mehr (siehe Morgen-/Abendroutine oben).
 test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttätigkeit, Reduzieren-Vorstellung und Limit ab", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1");
@@ -178,10 +189,6 @@ test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttät
     if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
     await page.getByRole("button", { name: "Weiter", exact: true }).click();
   }
-
-  // Schlaf: hat noch die Gate-Seite ("Jetzt/Später einrichten").
-  await expect(page.getByText("Schlafplan einrichten?")).toBeVisible();
-  await page.getByRole("button", { name: "Später einrichten" }).click();
 
   // Hydration: KEINE Gate-Seite (effectiveModus fest auf "jetzt"), startet
   // direkt im KiChat-Vollbild-Modal — erst schließen, dann überspringen.

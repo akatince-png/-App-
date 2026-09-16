@@ -49,7 +49,9 @@ längst gibt — jetzt diese Kurzübersicht:
   + Punkte-/Erfolge-Integration); Bug-Fix "KI ploppt bei Laborwerten
   automatisch auf" (Teil 111); Morgen-/Abendroutine im Onboarding:
   Weckzeit/Startzeit + Vorab-Erinnerung + größer lesbare, separate
-  Schritte-Liste (Teil 112).
+  Schritte-Liste (Teil 112); Schlafplan ist kein eigener Onboarding-
+  Schritt mehr, sondern jetzt Teil derselben Seite wie Morgen-/
+  Abendroutine (Teil 113).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
@@ -91,10 +93,114 @@ längst gibt — jetzt diese Kurzübersicht:
      Erinnerungs-Edge-Function `send-due-reminders` wird NICHT
      automatisch deployt — beides liegt außerhalb dessen, was ein Agent
      aus der Sandbox heraus verifizieren kann.
+- **Zwei offene Entscheidungen, auf die die Nutzerin noch nicht
+  geantwortet hat** (16.09., zusammen mit dem Wunsch nach Teil 113
+  geäußert — bewusst NICHT selbstständig umgesetzt, weil beides ein
+  größerer Umbau ist, der ihre explizite Design-Entscheidung braucht):
+  1. **Visuelle Uneinheitlichkeit im Onboarding:** die "normalen" Seiten
+     (Laborwerte, Morgen-/Abendroutine, ...) sehen anders aus als die 8
+     Kategorie-Schritte (`OnboardingCategoriesView.jsx`), die oben einen
+     nummerierten "1 bis 8"-Fortschrittsbalken (`Stepper`-Komponente)
+     zeigen — die Nutzerin fand den Bruch "designtechnisch blöd" und
+     möchte ENTWEDER überall den schlichten Stil ODER überall den
+     nummerierten Stepper-Stil. Noch nicht geklärt, welche Richtung.
+  2. **"Neues Protokoll" (Bestandskonto) fragt nicht mehr "mit KI oder
+     allein":** bei `istDirekterNeuStart` (Einstieg über den
+     "+"-Button) wird die `intro`-Phase komplett übersprungen, dadurch
+     taucht `OnboardingIntroView`s begleitet-vs-allein-Frage nie auf —
+     die KI poppt dadurch unkontrolliert in den Kategorie-Schritten auf.
+     Die Nutzerin möchte stattdessen beim Start eines neuen Protokolls
+     als Bestandsnutzerin gefragt werden: laufendes Protokoll abbrechen?
+     Name des neuen Protokolls? Profilwerte aktualisieren? Allein oder
+     mit KI (diese Frage eher früher in der Reihenfolge)? — noch nicht
+     umgesetzt, Design mit ihr abstimmen, bevor `OnboardingFlow.jsx`
+     umgebaut wird.
 - **Empfohlene Lesereihenfolge:** erst Abschnitte 1–13 (Grundlagen,
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 16.09.2026 (Teil 113) — Schlafplan ist kein eigener Onboarding-Schritt mehr, sondern Teil der Morgen-/Abendroutine-Seite
+
+**Nutzerinnen-Vorgabe:** "Eigentlich kannst du dann den Schlafplan mit
+der Morgen- und Abendroutine gleich zusammentun, denn die hängen ja alle
+unmittelbar miteinander zusammen. Also dann wäre auch eine Seite weniger
+im Onboarding nötig." — der Schlafplan-Kategorie-Schritt (bisher der
+erste der 8 `CATEGORY_STEPS`) verschwindet als eigene Seite; seine
+Bettzeit/Aufwachzeit-Einrichtung läuft jetzt direkt unter der
+Morgen-/Abendroutine-Seite (`OnboardingRoutinenView.jsx`, siehe Teil
+112), eine Onboarding-Seite weniger.
+
+**Umgesetzt:**
+- `categorySteps.js`: `schlaf`-Eintrag aus `CATEGORY_STEPS` entfernt
+  (Hydration ist jetzt der erste Kategorie-Schritt).
+- `OnboardingCategoriesView.jsx`: alle Schlaf-spezifischen Teile entfernt
+  — `SCHRITT_ZU_KATEGORIE`/`KATEGORIE_COACH_PROMPTS`/
+  `KATEGORIE_EINLEITUNG`-Einträge, die Block-Helfer
+  (`neuerSchlafblock`/`berechneSchlafstunden`/Wochentage-Zuweisung je
+  Block), den `schlaf`-Zweig in `speichernUndWeiter()`/
+  `onUebernehmenKategorie()`/`renderKategorieErgebnis()`, die komplette
+  Render-JSX. **Bewusst stehen gelassen:** `ISTZUSTAND_FRAGEN.schlaf`
+  (weiterhin exportiert, jetzt von `OnboardingRoutinenView.jsx`
+  importiert) und `toggleInArray` (wird noch von Ernährung gebraucht).
+- `aiService.js`: `schlafzielAusChat()` entfernt (war nur noch von der
+  gelöschten Schlaf-Coach-Integration aufgerufen — totes Coach-Chat-
+  Feature für Schlaf gibt es auf der neuen Seite bewusst nicht, passend
+  zum Rest von `OnboardingRoutinenView.jsx`, das ebenfalls ohne KI-Chat
+  auskommt).
+- `OnboardingRoutinenView.jsx`: neue dritte Karte "😴 Schlafplan" nach
+  der Abendroutine, vor "Weiter" — exakt dieselbe Bettzeit/Aufwachzeit-
+  Block-Logik wie zuvor in `OnboardingCategoriesView.jsx` (Intervall
+  "Täglich"/"Bestimmte Wochentage", mehrere Blöcke mit je eigenen
+  Wochentagen fürs Wecker-Szenario, Ist-Zustand-Frage, Erinnerungszeiten
+  über `<ZeitErinnerungenCard kategorie="schlaf">`), nur hierher
+  verschoben statt neu erfunden. Der "Weiter"-Button speichert jetzt
+  zusätzlich `categoryZiele.schlaf` + eine `teilprotokolle`-Zeile für
+  `schlaf` (`teilprotokollSpeichern`), bevor er weiterschaltet — dieselbe
+  Datenform wie vorher, weil `MehrTab.jsx` (Bausteine an/abschaltbar),
+  `OnboardingCompletionView.jsx` (Abschluss-Screen-Detailanzeige) und
+  `SchlafView.jsx` unverändert darauf angewiesen bleiben. Kein
+  Zieldauer-Feld (`ZieldauerField`/"wie lange") übernommen — Routinen
+  kennen dieses Konzept generell nicht, passt zum Rest der Seite.
+- `OnboardingFlow.jsx`: `routinen`- und `categories`-Phasenübergänge von
+  Ersetzen- auf Anhängen-Semantik umgestellt (`onDone`/`onFinished`
+  bauen `eingerichteteBereiche` jetzt inkrementell auf, statt es jedes
+  Mal zu überschreiben) — sonst wäre der von der Routinen-Seite
+  gemeldete Schlaf-Bereich beim Weiterschalten in die Kategorien sofort
+  wieder verloren gegangen. Gegen Duplikate abgesichert (nach Schlüssel
+  gefiltert), falls jemand über "Zurück" mehrfach durch Routinen/
+  Kategorien läuft.
+- `e2e/onboarding.spec.js`: beide betroffenen Tests angepasst — der
+  komplette Durchlauf schließt jetzt vor "Alles überspringen" das
+  KiChat-Modal von Hydration (jetzt erster Kategorie-Schritt statt
+  Schlaf, das anders als Schlaf keine Gate-Seite hat) und prüft
+  zusätzlich, dass "😴 Schlafplan" auf der Routinen-Seite sichtbar ist;
+  der Bildschirmzeit-Test überspringt Schlaf nicht mehr als eigenen
+  Schritt.
+
+Getestet: Build/Lint/Typecheck grün, 115 Unit-Tests grün (unverändert —
+kein neuer Unit-Test nötig, da keine neue eigenständige Komponente
+entstanden ist, sondern bestehende Logik verschoben wurde), 38 E2E-Tests
+grün (2 Tests angepasst, siehe oben). Zusätzlich per Playwright durch den
+echten Onboarding-Flow bis zur Routinen-Seite navigiert und die neue
+Schlafplan-Karte visuell gegengeprüft (Screenshot) — fügt sich sauber
+zwischen Abendroutine und "Weiter" ein, gleiche Kartenoptik wie
+Morgen-/Abendroutine.
+
+**Keine neue Migration nötig** — `categoryZiele.schlaf` und die
+`teilprotokolle`-Zeile für `schlaf` liefen schon vorher über bestehende
+Tabellen/Funktionen, nur der Einrichtungsort im Onboarding hat sich
+geändert.
+
+**Zwei damit zusammenhängende, von der Nutzerin selbst angesprochene
+Punkte sind bewusst NICHT mit umgesetzt** (siehe die beiden Bullet-Punkte
+oben in der STAND-Box) — beide brauchen erst ihre Design-Entscheidung:
+die visuelle Uneinheitlichkeit zwischen den "normalen" Onboarding-Seiten
+und den nummerierten Kategorie-Schritten, und die fehlende
+"allein/mit KI"-Nachfrage beim Start eines neuen Protokolls als
+Bestandsnutzerin.
 
 ---
 

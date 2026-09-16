@@ -557,30 +557,6 @@ export const AIService = {
   },
 
   /**
-   * Extrahiert aus einem Gespräch über den Schlafrhythmus (Onboarding-
-   * Kategorien-Schritt "Schlaf", siehe OnboardingCategoriesView.jsx) eine
-   * gewünschte Bett-/Aufwachzeit — anders als schlafAusChat() geht es hier
-   * um ein Ziel/Rhythmus, nicht um einen Eintrag für eine bestimmte Nacht.
-   *
-   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{bettzeit: string, aufwachzeit: string, istZustand: string}>}
-   */
-  async schlafzielAusChat({ verlauf, coachName }) {
-    return ausChatZusammenfassen(
-      coachName,
-      [
-        "Du bist ein Assistent für eine bestehende App, der beim Einrichten eines gewünschten Schlafrhythmus hilft (übliche Bett- und Aufwachzeit, nicht ein einzelner Eintrag für eine Nacht).",
-        "Fasse das vorangegangene Gespräch jetzt zusammen.",
-        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bettzeit": string ("HH:MM"), "aufwachzeit": string ("HH:MM"), ' +
-          '"istZustand": string (Zusammenfassung, wie der aktuelle/bisherige Schlaf der Person laut Gespräch ist — z. B. "unruhig, wacht oft auf, schläft meist erst nach 23 Uhr ein" — leer wenn nichts dazu gesagt wurde) }',
-      ],
-      verlauf,
-      "Fasse den oben besprochenen Schlafrhythmus jetzt als JSON zusammen, wie vereinbart."
-    );
-  },
-
-  /**
    * Extrahiert aus einem Gespräch über eine geplante Mahlzeit (Onboarding-
    * Kategorien-Schritt "Ernährung", siehe OnboardingCategoriesView.jsx)
    * Name, Zutaten, Wochentage und Uhrzeit — anders als

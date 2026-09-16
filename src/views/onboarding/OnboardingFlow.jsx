@@ -190,14 +190,26 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       />
     );
   } else if (phase === "routinen") {
-    screen = <OnboardingRoutinenView onDone={() => setPhase("categories")} onBack={() => setPhase("laborwerte")} onCancel={onCancel} />;
+    screen = (
+      <OnboardingRoutinenView
+        onDone={(schlafBereich) => {
+          if (schlafBereich) {
+            setEingerichteteBereiche((prev) => [...prev.filter((b) => b.key !== "schlaf"), schlafBereich]);
+          }
+          setPhase("categories");
+        }}
+        onBack={() => setPhase("laborwerte")}
+        onCancel={onCancel}
+      />
+    );
   } else if (phase === "categories") {
     screen = (
       <OnboardingCategoriesView
         onCancel={onCancel}
         onBackToStart={() => setPhase("routinen")}
         onFinished={(bereiche) => {
-          setEingerichteteBereiche(bereiche);
+          const neueSchluessel = bereiche.map((b) => b.key);
+          setEingerichteteBereiche((prev) => [...prev.filter((b) => !neueSchluessel.includes(b.key)), ...bereiche]);
           setPhase("celebration");
         }}
       />
