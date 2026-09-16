@@ -67,12 +67,18 @@ längst gibt — jetzt diese Kurzübersicht:
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
-- **🔴 Migration `0087_denkpause.sql` noch NICHT deployt:** neue Tabelle
-  `denkpause_ergebnisse` fürs neue "Denkpause"-Feature (Teil 110) — bitte
-  im echten Supabase-Projekt ausführen, danach kurz Bescheid geben, dann
-  wird dieser Hinweis entfernt (gleiches Vorgehen wie bei Migration 0086).
-  Bis dahin läuft die App weiter, aber jeder Denkpause-Versuch scheitert
-  beim Speichern (Fehler landet nur in der Konsole, kein Absturz).
+- **🔴 Migration `0087_denkpause.sql` noch NICHT (vollständig) deployt:**
+  neue Tabelle `denkpause_ergebnisse` fürs "Denkpause"-Feature (Teil 110).
+  Die Nutzerin meldete beim Ausführen "relation denkpause_ergebnisse
+  already exists" (16.09.) — die Tabelle stand also schon von einem
+  früheren Versuch, aber das Skript hatte kein "falls schon vorhanden,
+  überspringen" und brach deshalb sofort an der ersten Zeile ab, OHNE
+  Policy/Index anzulegen (exakt dasselbe Muster wie schon einmal bei
+  0071/0076 gelöst). Jetzt mit `if not exists`/`drop policy if exists`
+  nachgerüstet (Teil 120) — bitte die KORRIGIERTE Fassung noch einmal
+  ausführen (überspringt die schon vorhandene Tabelle automatisch, legt
+  aber Policy + Index nach, falls die noch fehlen), danach Bescheid
+  geben, dann wird dieser Hinweis entfernt.
 - **🔴 Migration `0088_teilprotokolle_bildschirmzeit_atemuebungen.sql`
   noch NICHT deployt — DIESE IST SICHTBAR, NICHT NUR STILL:** die
   Nutzerin hat den Fehler live in der App gesehen ("Speichern
@@ -163,6 +169,30 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## 🔴 Update 16.09.2026 (Teil 120) — Migration 0087 (Denkpause) nachträglich idempotent gemacht
+
+**Nutzerinnen-Report:** beim Ausführen von `0087_denkpause.sql` meldete
+Supabase "relation denkpause_ergebnisse already exists".
+
+**Root Cause:** die Tabelle war offenbar schon aus einem früheren Versuch
+vorhanden, das Skript hatte aber kein `if not exists` — `create table`
+bricht in diesem Fall sofort mit Fehler ab, wodurch die beiden folgenden
+Anweisungen (RLS-Policy, Index) gar nicht mehr ausgeführt werden. Exakt
+dasselbe Problem wurde in dieser App schon zweimal gelöst (Migration
+0071: `routine_schritte`/`routine_einstellungen`; Migration 0076:
+`atemuebungen`/`atemuebung_logs`/`akutmodus_log`) — diesmal wurde beim
+Schreiben von 0087 schlicht vergessen, densel­ben Guard mit
+anzuwenden.
+
+**Umgesetzt:** `0087_denkpause.sql` auf `create table if not exists`,
+`drop policy if exists` vor `create policy` und `create index if not
+exists` umgestellt — sicher erneut ausführbar, unabhängig davon, wie weit
+ein vorheriger Versuch schon gekommen war.
+
+Keine Auswirkung auf App-Code, reine SQL-Korrektur.
 
 ---
 
