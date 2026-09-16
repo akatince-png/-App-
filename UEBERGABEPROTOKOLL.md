@@ -54,7 +54,11 @@ längst gibt — jetzt diese Kurzübersicht:
   Abendroutine (Teil 113); Laborwerte und Morgen-/Abendroutine zeigen
   jetzt denselben nummerierten Stepper wie die 8 Kategorie-Schritte —
   eine durchgehende "1 von 10" bis "10 von 10"-Zählung statt eines
-  optischen Bruchs (Teil 114).
+  optischen Bruchs (Teil 114); "Neues Protokoll" (Bestandskonto) fragt
+  jetzt direkt nach dem Protokollnamen, ob Aka beim Einrichten helfen soll
+  oder ob es alleine laufen soll — die Wahl unterdrückt das bisher
+  unkontrollierte automatische KI-Popup auf den folgenden Seiten
+  wirklich (Teil 115).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
@@ -96,26 +100,75 @@ längst gibt — jetzt diese Kurzübersicht:
      Erinnerungs-Edge-Function `send-due-reminders` wird NICHT
      automatisch deployt — beides liegt außerhalb dessen, was ein Agent
      aus der Sandbox heraus verifizieren kann.
-- **Eine offene Entscheidung, noch nicht umgesetzt** (16.09., zusammen mit
-  dem Wunsch nach Teil 113 geäußert): **"Neues Protokoll" (Bestandskonto)
-  fragt nicht mehr "mit KI oder allein":** bei `istDirekterNeuStart`
-  (Einstieg über den "+"-Button) wird die `intro`-Phase komplett
-  übersprungen, dadurch taucht `OnboardingIntroView`s begleitet-vs-allein-
-  Frage nie auf — die KI poppt dadurch unkontrolliert in den Kategorie-
-  Schritten auf. Die Nutzerin möchte stattdessen beim Start eines neuen
-  Protokolls als Bestandsnutzerin gefragt werden: laufendes Protokoll
-  abbrechen? Name des neuen Protokolls? Profilwerte aktualisieren? Allein
-  oder mit KI (diese Frage eher früher in der Reihenfolge)? — noch nicht
-  umgesetzt, Design mit ihr abstimmen, bevor `OnboardingFlow.jsx` umgebaut
-  wird. (Die zweite ursprünglich offene Frage — visuelle Uneinheitlichkeit
-  zwischen "normalen" Onboarding-Seiten und den nummerierten
-  Kategorie-Schritten — ist seit Teil 114 geklärt und umgesetzt: die
-  Nutzerin hat sich für den nummerierten Stepper-Stil überall
-  entschieden.)
+- **Keine offenen Entscheidungen mehr aus dem 16.09.-Themenblock:** die
+  visuelle Uneinheitlichkeit zwischen "normalen" Onboarding-Seiten und den
+  nummerierten Kategorie-Schritten ist seit Teil 114 geklärt und umgesetzt
+  (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
+  "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
+  `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
 - **Empfohlene Lesereihenfolge:** erst Abschnitte 1–13 (Grundlagen,
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 16.09.2026 (Teil 115) — "Neues Protokoll" fragt jetzt "allein oder mit Aka", unterdrückt automatisches KI-Popup wirklich
+
+**Nutzerinnen-Vorgabe:** beim Start eines neuen Protokolls über den
+"+"-Button als Bestandsnutzerin sprang die KI trotzdem auf jeder Seite
+automatisch auf, obwohl nie danach gefragt wurde. Gewünscht: "ich möchte
+gefragt werden ... ob ich das laufende Protokoll abbrechen möchte, wie das
+Protokoll heißen soll, ob ich nochmal Werte überarbeiten muss, ob ich es
+alleine oder mit der KI machen möchte, das mit der KI vielleicht viel
+früher von der Reihenfolge sinnvoller."
+
+**Vorgefunden:** Drei der vier gewünschten Fragen existierten bereits —
+Abbrechen-Bestätigung (`NeuesProtokollBestaetigenView.jsx`, Teil
+103–105), Protokollname (`HauptprotokollErstellenView.jsx`), Werte-
+Update (`OnboardingWerteAktualisierenView.jsx`). Es fehlte ausschließlich
+die "allein oder mit KI"-Frage: bei `istDirekterNeuStart` (Einstieg über
+den "+"-Button) übersprang `OnboardingFlow.jsx` die Phasen `quickwin`/
+`intro` komplett, wo diese Frage beim allerersten Onboarding steckt
+(`OnboardingIntroView.jsx`) — dadurch wurde sie nie gestellt.
+
+**Root Cause des automatischen Popups:** `KiChat.jsx` prüft global
+`getKiAktiv()` (`coachStorage.js`, localStorage, Standard AN) — nur wenn
+das global ausgeschaltet ist, rendert KiChat überhaupt nicht. Es gab
+bisher aber KEINEN Weg, diesen Schalter aus dem Onboarding heraus zu
+setzen (auch nicht beim allerersten Onboarding — selbst dort setzt "Nein,
+ich mach's selbst" in `OnboardingIntroView.jsx` nur, WIE der eigene
+Name/Ziel/Profil erfasst wird, nicht ob KiChat auf späteren Seiten
+erscheint). `saveKiAktiv()` wurde bisher ausschließlich vom Schalter unter
+Mehr → "Assistent aktiv" aufgerufen.
+
+**Umgesetzt:**
+- Neue Datei `OnboardingKiWahlView.jsx`: einfacher Zwei-Wege-Screen ("Mit
+  Aka" / "Alleine, ohne Aka"), Stil an `OnboardingWerteAktualisierenView.jsx`
+  angelehnt. Ruft beim Antippen `saveKiAktiv(true|false)` auf — derselbe
+  globale Schalter wie unter Mehr, damit es KEINE zweite,
+  konkurrierende Ein-/Aus-Quelle für den Assistenten gibt.
+- `OnboardingFlow.jsx`: neue Phase `kiWahl`, eingehängt direkt nach
+  `hauptprotokoll` (Protokollname) und vor `ziele` — nur für
+  `istDirekterNeuStart` erreichbar, der reguläre Erst-Onboarding-Ablauf
+  bleibt unverändert (dort deckt weiterhin `OnboardingIntroView` die
+  Namenseingabe ab, ohne dass etwas an dessen Verhalten geändert wurde —
+  bewusst nicht mit angefasst, um den Umfang auf die "Neues Protokoll"-
+  Vorgabe zu begrenzen).
+- `e2e/onboarding.spec.js`: die beiden bestehenden "Neues Protokoll"-Tests
+  um den neuen Zwischenschritt ergänzt (klicken "Mit Aka" durch, damit sich
+  am Rest nichts ändert) + ein komplett neuer Test, der beweist, dass
+  "Alleine, ohne Aka" das automatische KiChat-Modal auf Laborwerte UND dem
+  ersten erreichten Kategorie-Schritt tatsächlich unterdrückt (Abwesenheit
+  des "Schließen"-Buttons als Beleg für "kein offenes Modal").
+
+Getestet: Build/Lint/Typecheck grün, 115 Unit-Tests grün (unverändert),
+39 E2E-Tests grün (2 bestehende angepasst, 1 neuer Test). Zusätzlich per
+Playwright visuell gegengeprüft (Screenshot des neuen "Wie soll's
+laufen?"-Screens).
+
+Keine neue Migration nötig — `saveKiAktiv()`/`localStorage` existierten
+schon vollständig, nur ein neuer Aufrufort dafür.
 
 ---
 

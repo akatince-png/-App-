@@ -4,6 +4,7 @@ import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
 import OnboardingQuickWinView from "./OnboardingQuickWinView";
 import OnboardingWerteAktualisierenView from "./OnboardingWerteAktualisierenView";
 import OnboardingIntroView from "./OnboardingIntroView";
+import OnboardingKiWahlView from "./OnboardingKiWahlView";
 import OnboardingZieleView from "./OnboardingZieleView";
 import OnboardingProfilView from "./OnboardingProfilView";
 import OnboardingLaborwerteView from "./OnboardingLaborwerteView";
@@ -43,9 +44,11 @@ import { useAdmin } from "../../context/AdminContext";
 // istDirekterNeuStart unten): läuft NICHT mehr den kompletten
 // Erst-Onboarding-Fragebogen nochmal durch — Name/Quick-Win-Feier machen
 // bei einem bereits bestehenden Konto keinen Sinn. Startet direkt bei
-// "hauptprotokoll" (Name+Datum fürs neue Protokoll), geht danach sofort zu
-// "ziele" — die Phasen "quickwin" und "intro" (Name erneut abfragen)
-// werden dabei komplett übersprungen.
+// "hauptprotokoll" (Name+Datum fürs neue Protokoll), geht danach zu
+// "kiWahl" (Nutzerinnen-Vorgabe, 16.09.: "ob ich es alleine oder mit der KI
+// machen möchte", siehe OnboardingKiWahlView.jsx — bewusst früh, direkt
+// nach dem Protokollnamen) und dann zu "ziele" — die Phasen "quickwin" und
+// "intro" (Name erneut abfragen) werden dabei komplett übersprungen.
 //
 // "Ziel & Grund" bleibt bewusst ein PFLICHT-Schritt auch für "Neues
 // Protokoll" (Nutzerinnen-Vorgabe, 15.09.: "es ist ja ohnehin klar, dass
@@ -95,7 +98,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const { isAdmin, onboardingModus } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
+  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
   // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
@@ -124,12 +127,14 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
-        onDone={() => setPhase(istDirekterNeuStart ? "ziele" : "quickwin")}
+        onDone={() => setPhase(istDirekterNeuStart ? "kiWahl" : "quickwin")}
         onBack={() => setPhase("welcome")}
         onCancel={onCancel}
         zeigeBestehendesAlsOption={!istDirekterNeuStart}
       />
     );
+  } else if (phase === "kiWahl") {
+    screen = <OnboardingKiWahlView onDone={() => setPhase("ziele")} onBack={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
   } else if (phase === "quickwin") {
     screen = <OnboardingQuickWinView onDone={() => setPhase("intro")} onBack={() => setPhase("hauptprotokoll")} />;
   } else if (phase === "intro") {
@@ -149,7 +154,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingZieleView
         onDone={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "profil")}
-        onBack={() => setPhase(istDirekterNeuStart ? "hauptprotokoll" : "intro")}
+        onBack={() => setPhase(istDirekterNeuStart ? "kiWahl" : "intro")}
         onCancel={onCancel}
       />
     );

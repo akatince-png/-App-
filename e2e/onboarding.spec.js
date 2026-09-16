@@ -275,6 +275,12 @@ test("Neues Protokoll (bestehendes Konto): nach Bestätigung überspringt Name &
   await expect(page.getByText("Erster Schritt geschafft!", { exact: false })).not.toBeVisible();
   await expect(page.getByText("Stell dich vor", { exact: false })).not.toBeVisible();
 
+  // Neu (16.09.): direkt nach dem Protokollnamen kommt die Frage "allein
+  // oder mit Aka" — vorher fehlte diese Nachfrage bei "Neues Protokoll"
+  // komplett, siehe OnboardingKiWahlView.jsx.
+  await expect(page.getByText("Wie soll's laufen?", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Mit Aka", exact: true }).click();
+
   // "Ziel & Grund" kommt trotzdem direkt als nächstes — jedes neue
   // Protokoll bekommt sein eigenes Ziel (oder ausdrücklich keins).
   await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
@@ -303,11 +309,60 @@ test("Neues Protokoll (bestehendes Konto): „Ja, kurz aktualisieren“ führt n
   await page.getByRole("button", { name: "Ja, archivieren und neu beginnen" }).click();
   await page.getByPlaceholder("z. B. Sommer 2026").fill("Drittes Protokoll");
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await expect(page.getByText("Wie soll's laufen?", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Mit Aka", exact: true }).click();
   await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Weiter", exact: true }).click();
   await page.getByRole("button", { name: "Ja, kurz aktualisieren" }).click();
 
   await expect(page.getByText("Dein Profil & Ausgangslage", { exact: true })).toBeVisible();
+
+  expect(fehler).toEqual([]);
+});
+
+// Nutzerinnen-Vorgabe (16.09.): "ich möchte selbst ausführen angeklickt ...
+// und trotzdem poppt immer die KI auf" — die neue "Wie soll's laufen?"-Frage
+// (OnboardingKiWahlView.jsx) muss die Wahl "Alleine" auch wirklich
+// durchsetzen: kein automatisch geöffnetes KiChat-Modal mehr, weder bei
+// Laborwerte noch beim ersten Kategorie-Schritt (Hydration hat sonst IMMER
+// effectiveModus="jetzt" + <KiChat autoStart>, unabhängig vom
+// Kategorie-Gate). "Schließen" ist der eindeutige Beleg für ein offenes
+// KiChat-Vollbild-Modal (siehe KiChat.jsx) — dessen Abwesenheit beweist,
+// dass getKiAktiv() jetzt false ist.
+test("Neues Protokoll (bestehendes Konto): „Alleine, ohne Aka“ unterdrückt das automatische KI-Popup auf den folgenden Seiten", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html");
+
+  await page.getByRole("button", { name: "Neues Protokoll" }).click();
+  await page.getByRole("button", { name: "Ja, archivieren und neu beginnen" }).click();
+  await page.getByPlaceholder("z. B. Sommer 2026").fill("Viertes Protokoll");
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+
+  await expect(page.getByText("Wie soll's laufen?", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Alleine, ohne Aka", exact: true }).click();
+
+  await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await expect(page.getByText("Fast geschafft 🎉")).toBeVisible();
+  await page.getByRole("button", { name: "Nein, weiter geht's" }).click();
+
+  await expect(page.getByText("Deine Laborwerte", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Schließen" })).not.toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+
+  await expect(page.getByText("Morgen- & Abendroutine", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+
+  // Kategorien: der Standard-Harness-Zustand (bestehendes Konto, kein
+  // ?onboarding=1) hat schon eine abgeschlossene "hydration"-teilprotokolle-
+  // Zeile (siehe mockAppData.js) — das Zwischenspeichern-Feature (siehe
+  // OnboardingCategoriesView.jsx) steigt deshalb direkt beim zweiten
+  // Kategorie-Schritt (Tageslicht) wieder ein, nicht bei Hydration. Auch
+  // Tageslicht hätte hier sonst automatisch das KiChat-Modal geöffnet,
+  // sobald "Jetzt einrichten" angetippt wird.
+  await expect(page.getByText("Tageslichtplan einrichten?", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Jetzt einrichten" }).click();
+  await expect(page.getByRole("button", { name: "Schließen" })).not.toBeVisible();
 
   expect(fehler).toEqual([]);
 });
