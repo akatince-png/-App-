@@ -33,8 +33,8 @@ längst gibt — jetzt diese Kurzübersicht:
   Farbtabelle in Abschnitt 3.
 - **Tests — bitte immer laufen lassen, nicht nur „sieht gut aus":** Vor
   jedem Commit `npm run build && npx oxlint <geänderte Dateien> && npm
-  run typecheck && npm test` (Vitest, aktuell 115 Tests) und
-  `npx playwright test` (E2E, aktuell 38 Tests) — alles muss grün sein.
+  run typecheck && npm test` (Vitest, aktuell 124 Tests) und
+  `npx playwright test` (E2E, aktuell 39 Tests) — alles muss grün sein.
   Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
   schreibt: Abschnitt 13 weiter unten.
 - **Neu seit dem letzten Durchgang:** Diktierfunktion ohne KI-Beteiligung
@@ -58,7 +58,10 @@ längst gibt — jetzt diese Kurzübersicht:
   jetzt direkt nach dem Protokollnamen, ob Aka beim Einrichten helfen soll
   oder ob es alleine laufen soll — die Wahl unterdrückt das bisher
   unkontrollierte automatische KI-Popup auf den folgenden Seiten
-  wirklich (Teil 115).
+  wirklich (Teil 115); Home-Tagesfortschritt-Balkendiagramm hat jetzt eine
+  Tag/Woche/Monat/Gesamt-Auswahl (Gesamt nur bei Protokollen älter als
+  einen Monat) — funktioniert auch im Coach-Verwalten-Modus automatisch
+  mit (Teil 116).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
@@ -110,6 +113,65 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 16.09.2026 (Teil 116) — Home-Tagesfortschritt: Tag/Woche/Monat/Gesamt-Auswahl fürs Balkendiagramm
+
+**Nutzerinnen-Vorgabe:** im Home-Bereich mit dem Tagesfortschritt-
+Balkendiagramm zwischen Wochen- und Monatsdiagramm wählen können können
+(Pills über oder unter dem Kasten) — soll genauso funktionieren, wenn sie
+als Coach in einen Coachee-Account wechselt ("Verwalten als"). Zusätzlich,
+falls ein Protokoll länger als einen Monat läuft: eine "Gesamt"-Option,
+die die prozentuale Erfolgs-/Nicht-Erfolgs-Verteilung je Bereich über die
+gesamte Protokolllaufzeit zeigt.
+
+**Ansatz:** Statt einer zweiten, abweichenden "Wochen-Zählung" wird die
+schon bestehende, zentrale Datenquelle aus dem Erfolge-/Streak-System
+(`utils/errungenschaften.js`: `KATEGORIEN` + `holeTage(quellen)` — liefert
+pro Lebensbereich exakt die Tage, an denen er als erledigt zählt, dieselbe
+Definition wie Streaks/Punkte in Archiv → Erfolge) wiederverwendet. Ein
+Tag, der hier im Wochen-/Monats-Balken als "erledigt" zählt, ist exakt
+derselbe Tag, der auch einen Streak-Tag in Archiv → Erfolge ausmacht —
+keine zweite, konkurrierende Definition von "erfolgreich".
+
+**Umgesetzt:**
+- Neue Datei `utils/zeitraumFortschritt.js`: `widgetsFuerZeitraum(zeitraum,
+  miniWidgetData, quellen, hauptprotokollStartdatum)` baut aus den
+  Home-Widgets (`HomeView.jsx`, `miniWidgetData`) eine Variante fürs
+  gewählte Zeitfenster — gibt für "tag" die Widgets unverändert zurück,
+  für "woche"/"monat"/"gesamt" ersetzt sie `dailyCount`/`dailyTotal` durch
+  "an wie vielen der letzten X Tage erledigt" / "X" (`TagesfortschrittBalken.jsx`
+  bleibt dadurch komplett unverändert — sie bekommt einfach ein anderes
+  Widget-Array). Der Nenner wird auf die tatsächlich seit Protokollstart
+  vergangenen Tage gedeckelt, damit ein frisch gestartetes Protokoll in
+  der Wochenansicht nicht künstlich schlecht aussieht (2 von 2 Tagen statt
+  2 von 7). `gesamtVerfuegbar(startdatum)` prüft, ob das Protokoll wirklich
+  schon länger als 31 Tage läuft.
+- Kategorien ohne Eintrag im Erfolge-System (aktuell nur Bildschirmzeit —
+  bewusst kein Teil davon, weil es ein Limit statt eines Mindestziels ist,
+  siehe Kommentar in `errungenschaften.js`) werden für Woche/Monat/Gesamt
+  wie eine inaktive Kategorie (grauer Balken) behandelt, statt mit einer
+  irreführenden zweiten Erfolgs-Definition zu rechnen.
+- `HomeView.jsx`: neue Pill-Reihe ("Tag"/"Woche"/"Monat"/ggf. "Gesamt")
+  direkt über dem Balkendiagramm im "Tagesfortschritt"-Kasten, `useState`
+  für die Auswahl, `aktivesHauptprotokoll` neu aus `useAppData()`
+  destrukturiert. Die Orden-Vorschau (`TagesfortschrittOrden`) bleibt
+  bewusst bei den unveränderten Tages-Widgets — die zeigt ohnehin
+  Streak-Badges, keinen Zeitraum-Wert. Funktioniert im Coach-Verwalten-
+  Modus automatisch mit, weil `HomeView.jsx` dieselbe Komponente für
+  beide ist und `useAppData()` im Verwalten-Modus schon auf den
+  verwalteten Account zeigt — keine Sonderbehandlung nötig.
+
+Getestet: Build/Lint/Typecheck grün, 124 Unit-Tests grün (9 neu:
+`zeitraumFortschritt.test.js` — Zeitraum-Zählung, Nenner-Deckelung bei
+frischem Protokoll, Bildschirmzeit-Sonderfall, `gesamtVerfuegbar`-
+Grenzfälle), 39 E2E-Tests grün (unverändert). Zusätzlich per Playwright
+visuell durch alle vier Zeiträume auf der Home-Seite geklickt (Screenshot)
+— Pills schalten korrekt um, "Gesamt" erscheint (Standard-Harness-
+Protokoll läuft seit 01.01.2026).
+
+Keine neue Migration nötig — reine Auswertung bereits vorhandener Daten.
 
 ---
 

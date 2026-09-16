@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Shell, Card } from "../ui/primitives";
+import { Shell, Card, Pill } from "../ui/primitives";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
@@ -7,6 +7,7 @@ import TagesfortschrittBalken from "../ui/TagesfortschrittBalken";
 import TagesfortschrittOrden from "../ui/TagesfortschrittOrden";
 import { useErrungenschaften } from "../data/useErrungenschaften";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
+import { widgetsFuerZeitraum, gesamtVerfuegbar } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
@@ -145,6 +146,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     schlafEintraege,
     atemuebungLogs,
     aenderungVermerken,
+    aktivesHauptprotokoll,
     isAdmin,
     coacheeNachrichten,
     coacheeNachrichtSenden,
@@ -602,6 +604,25 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente } = useErrungenschaften(userId, errungenschaftenQuellen);
 
+  // Zeitraum-Auswahl fürs Tagesfortschritt-Balkendiagramm (16.09.,
+  // Nutzerinnen-Vorgabe): "die Möglichkeit, zwischen Wochen- und
+  // Monatsdiagramm noch weiter zu wählen ... auch ich als Coach, wenn ich
+  // beim Coachee reingehe" — funktioniert im Verwalten-Modus automatisch
+  // mit, weil HomeView dieselbe Komponente für beide ist und useAppData()
+  // dann schon auf den verwalteten Account zeigt. "Gesamt" (ganze
+  // Protokolllaufzeit) erscheint erst, wenn das Protokoll wirklich länger
+  // als einen Monat läuft (sonst wäre es nur eine Dopplung von "Monat").
+  const [zeitraum, setZeitraum] = useState("tag"); // "tag" | "woche" | "monat" | "gesamt"
+  const zeigeGesamtOption = gesamtVerfuegbar(aktivesHauptprotokoll?.startdatum);
+  // Fällt auf "monat" zurück, falls "gesamt" gewählt war und die Option
+  // inzwischen nicht mehr zutrifft (z. B. neues, frisches Protokoll) —
+  // sonst würde ein leerer/falscher Zustand hängen bleiben.
+  const effektiverZeitraum = zeitraum === "gesamt" && !zeigeGesamtOption ? "monat" : zeitraum;
+  const zeitraumWidgets = useMemo(
+    () => widgetsFuerZeitraum(effektiverZeitraum, miniWidgetData, errungenschaftenQuellen, aktivesHauptprotokoll?.startdatum),
+    [effektiverZeitraum, miniWidgetData, errungenschaftenQuellen, aktivesHauptprotokoll]
+  );
+
   // Direktzugriff (aktive Pläne) vs. Weitere Pläne (noch nicht eingerichtet)
   // — im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
   // Kategorien, "Weitere Pläne" bleibt dort ganz leer (nur Basics zählen).
@@ -729,13 +750,22 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             Notfallmodus einen irreführend niedrigen Bruch (z. B. "2 von 9"
             statt "2 von 3"), obwohl der Rest laut Notfallmodus bewusst
             Bonus ist. Jetzt beide aus derselben (ggf. gefilterten) Liste. */}
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 18 }}>{statusText(erledigtCount, displayItems.length, lang)}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>{statusText(erledigtCount, displayItems.length, lang)}</div>
+        {/* Zeitraum-Wahl fürs Balkendiagramm darunter (16.09., Nutzerinnen-
+            Vorgabe) — bewusst über dem Diagramm, direkt als Steuerung dafür
+            lesbar, statt irgendwo sonst auf der Seite. */}
+        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 4, marginLeft: -4 }}>
+          <Pill label="Tag" selected={zeitraum === "tag"} onClick={() => setZeitraum("tag")} />
+          <Pill label="Woche" selected={zeitraum === "woche"} onClick={() => setZeitraum("woche")} />
+          <Pill label="Monat" selected={zeitraum === "monat"} onClick={() => setZeitraum("monat")} />
+          {zeigeGesamtOption && <Pill label="Gesamt" selected={zeitraum === "gesamt"} onClick={() => setZeitraum("gesamt")} />}
+        </div>
         {/* Ab Tablet-Breite (siehe .mp-tagesfortschritt-grid in index.css)
             rechts daneben die Orden-Vorschau statt des sonst ungenutzten
             Leerraums — auf dem Handy bleibt es unverändert nur das
             Balkendiagramm, das dort ohnehin schon die volle Breite nutzt. */}
         <div className="mp-tagesfortschritt-grid">
-          <TagesfortschrittBalken widgets={miniWidgetData} />
+          <TagesfortschrittBalken widgets={zeitraumWidgets} />
           <TagesfortschrittOrden widgets={miniWidgetData} kategorien={ordenKategorien} verdiente={ordenVerdiente} onClick={() => onOpenView("archiv")} />
         </div>
       </Card>
