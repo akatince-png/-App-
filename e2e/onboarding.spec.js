@@ -121,17 +121,14 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   // Schritt wird über seine eindeutige Überschrift bestätigt, bevor
   // geklickt wird.
   //
-  // Laborwerte/Routinen betten KiChat (Coach-Chat, autoStart) ein — der
-  // öffnet sich automatisch als Vollbild-Modal und verdeckt bewusst den
-  // Rest des Screens (echtes Modal-Verhalten, siehe KiChat.jsx). Ein
-  // Bug-Fund hier (14.09.): das Modal war vorher fälschlich nur
-  // TEILWEISE abgedunkelt/abgeschnitten statt den ganzen Bildschirm zu
-  // decken (position:fixed griff wegen einer transformierenden Vorfahren-
-  // Animation nicht auf den echten Viewport) — der "Weiter"-Button
-  // schaute darunter sichtbar, aber unklickbar hervor. Jetzt per
-  // createPortal behoben; entsprechend schließt der Test das Modal zuerst
-  // ganz normal über "Schließen", wie eine echte Nutzerin es auch tun
-  // müsste.
+  // Bug-Fix (16.09., Nutzerinnen-Report "die KI ploppt bei den
+  // Laborwerten immer automatisch auf"): Laborwerte bettete KiChat bisher
+  // mit `autoStart` ein — öffnete sich automatisch als Vollbild-Modal,
+  // sprach die Begrüßung vor und startete sogar automatisch das Mikrofon,
+  // ganz ohne Zutun. Jetzt wie überall sonst nur noch ein antippbarer,
+  // schwebender Orb (kein automatisches Öffnen mehr) — der defensive
+  // `isVisible()`-Check unten bleibt trotzdem stehen, für den Fall, dass
+  // irgendein Onboarding-Schritt künftig wieder ein Modal einblendet.
   for (const titel of ["Ziel & Grund", "Dein Profil & Ausgangslage", "Deine Laborwerte", "Morgen- & Abendroutine"]) {
     await expect(page.getByText(titel, { exact: true })).toBeVisible();
     const schliessenKnopf = page.getByRole("button", { name: "Schließen" });

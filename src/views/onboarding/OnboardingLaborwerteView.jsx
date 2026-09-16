@@ -46,7 +46,6 @@ export default function OnboardingLaborwerteView({ onDone, onBack, onCancel }) {
         einleitung={`Hi, ich bin ${getCoachName()}! Hast du Laborwerte da? Sag sie mir einfach, oder mach unten ein Foto vom Befund — ich trag sie für dich ein.`}
         onUebernehmen={handleLaborwerteUebernehmen}
         uebernehmenLabel="Werte eintragen"
-        autoStart
         renderErgebnis={(werte) => (
           <div style={{ padding: 12, borderRadius: 12, background: "#EAF3F8", fontSize: 12.5, lineHeight: 1.6 }}>
             {Object.keys(werte).length} Wert{Object.keys(werte).length === 1 ? "" : "e"} eingetragen.
