@@ -465,20 +465,23 @@ export const F_PLUM = ["#9B85B8", "#786198"];
 // was aktiv mit Zeiten/Zielen geplant wird (Grundlagen zuerst, dann
 // Substanzen aufsteigend nach Eingriffstiefe). Ersetzt die frühere
 // DASHBOARD_TIERS-"tracker"-Gruppe, jetzt als Reiter statt Dashboard-Kacheln.
-// Morgen-/Abendroutine stehen bewusst ganz vorne (Nutzerinnen-Vorgabe,
-// 13.08.): der eigentliche Ursprungszweck der App (ADHS-gerechte
-// Tagesstruktur) soll sichtbar Priorität vor den Substanz-Plänen haben —
+// Morgen-/Abendroutine stehen bewusst als letzte Kachel-Reihe (Nutzerinnen-
+// Vorgabe, 16.09., löst die frühere "ganz vorne"-Vorgabe vom 13.08. ab):
+// bei 3 Kacheln pro Reihe bilden sie bei 11 Einträgen die letzte,
+// zweigeteilte Reihe (links Morgen, rechts Abend) und fallen dadurch als
+// eigener Block sofort ins Auge — der eigentliche Ursprungszweck der App
+// (ADHS-gerechte Tagesstruktur) soll weiterhin sichtbar hervorstechen,
 // zusätzlich zu den aufklappbaren Karten im Tagesplan, nicht statt derer.
 export const PLAENE_TABS = [
-  { id: "morgenroutine", label: "Morgen", icon: "sunrise", grad: F_WARM },
-  { id: "abendroutine", label: "Abend", icon: "moon", grad: F_PLUM },
-  { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
-  { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },
   { id: "tageslicht", label: "Tageslicht", icon: "sun", grad: F_WARM },
+  { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },
+  { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
   { id: "bildschirmzeit", label: "Bildschirmzeit", icon: "smartphone", grad: F_SLATE },
   { id: "ernaehrung", label: "Ernährung", icon: "utensils", grad: F_WARM },
   { id: "training", label: "Training", icon: "dumbbell", grad: F_WARM },
   { id: "supplemente", label: "Supplemente", icon: "capsule", grad: F_WARM },
   { id: "medikamente", label: "Medikamente", icon: "cross", grad: F_SLATE },
   { id: "wochenuebersicht", label: "Wochenübersicht", icon: "calendarWeek", grad: F_SLATE },
+  { id: "morgenroutine", label: "Morgen", icon: "sunrise", grad: F_WARM },
+  { id: "abendroutine", label: "Abend", icon: "moon", grad: F_PLUM },
 ];
