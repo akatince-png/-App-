@@ -605,7 +605,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
         Für ein einmaliges Training an einem bestimmten Tag — anders als der Wochenplan wiederholt sich das nicht. Auch zum nachträglichen Eintragen, was du schon gemacht hast.
       </div>
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ flex: 1 }}>
             <Label>Datum</Label>

@@ -71,7 +71,7 @@ export default function SchlafView({ onHome, embedded = false }) {
         <ViewHeader title="😴 Schlaf" onHome={onHome} />
       )}
 
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>🌙 Und, wie hast du geschlafen?</div>
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>Trag's ein, bevor der Tag dich einholt — dauert 10 Sekunden.</div>
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>

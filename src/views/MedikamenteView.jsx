@@ -277,7 +277,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
         )}
       />
 
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen (manuell)</div>
         <Label>Name</Label>
         {neuesMedikament.kategorie === "Peptid" ? (

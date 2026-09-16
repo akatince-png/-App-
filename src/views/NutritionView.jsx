@@ -433,7 +433,7 @@ export default function NutritionView({ onHome, embedded = false }) {
       />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <Label>Name</Label>
         <TextInput value={neueMahlzeit.name} onChange={(v) => setNeueMahlzeit((p) => ({ ...p, name: v }))} placeholder="z. B. Erste Mahlzeit / Proteinmahlzeit" />
 

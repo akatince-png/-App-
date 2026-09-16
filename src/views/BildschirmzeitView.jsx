@@ -111,7 +111,7 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Schnell hinzufügen</div>
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {SCHNELLAUSWAHL.map((opt) => (
             <button

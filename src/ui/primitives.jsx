@@ -58,14 +58,22 @@ export function Stepper({ step, total }) {
 // per ref.scrollIntoView() ins Bild scrollen kann (UX-Fix 11.09.: neue
 // Ergebnisse waren sonst nicht sichtbar, ohne dass die Nutzerin selbst
 // scrollt) — ohne übergebenen ref verhält sich die Komponente unverändert.
-export const Card = React.forwardRef(function Card({ children, style }, ref) {
+// `akzent` (optional, Nutzerinnen-Vorgabe 16.09.: "Aktionsfelder farblich
+// mehr hervorheben, damit deutlicher wird, wo der große Bezug ist") färbt
+// die Karte in der Bereichsfarbe des umgebenden <Shell bereich="…">
+// (getönter Hintergrund + farbiger Rand, per Mockup-Vorschau als "Variante
+// E: Getönt + Rahmen" ausgewählt) — für das jeweils eine Aktionsfeld pro
+// Kategorie-Screen (z. B. "Und, wie hast du geschlafen?", "Schnell
+// hinzufügen"), nicht für jede Karte auf der Seite.
+export const Card = React.forwardRef(function Card({ children, style, akzent }, ref) {
+  const { accent: bereichAccent, accentSoft: bereichAccentSoft } = useBereichColor();
   return (
     <div
       ref={ref}
       className="mp-card"
       style={{
-        background: card,
-        border: `1px solid ${cardBorder}`,
+        background: akzent ? bereichAccentSoft : card,
+        border: akzent ? `2px solid ${bereichAccent}` : `1px solid ${cardBorder}`,
         borderRadius: 24,
         padding: 22,
         boxShadow: shadow,

@@ -330,7 +330,7 @@ function SupplementeSection() {
       />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neues Supplement (manuell)</div>
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <Label>Name</Label>
         <TextInput value={neuesSupplement.name} onChange={(v) => setNeuesSupplement((p) => ({ ...p, name: v }))} placeholder="z. B. Omega-3" />
         <Label>Tageszeit(en)</Label>

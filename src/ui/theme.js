@@ -69,3 +69,13 @@ export function aufhellen(hex, prozent) {
   const mix = (kanal) => Math.round(kanal + (255 - kanal) * (prozent / 100));
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
+
+// Für "erledigt"-Kacheln im Tagesplan (TagesplanView.jsx, Nutzerinnen-
+// Vorgabe 16.09.: Bereichsfarben als volle Fläche statt nur als Punkt) —
+// dunkelt die Bereichsfarbe leicht ab, damit weißer Text auf hellen Tönen
+// wie Tageslicht-Gelb noch lesbar bleibt.
+export function verdunkeln(hex, prozent) {
+  const { r, g, b } = hexZuRgb(hex);
+  const mix = (kanal) => Math.round(kanal * (1 - prozent / 100));
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}

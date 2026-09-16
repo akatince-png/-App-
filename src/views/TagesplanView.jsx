@@ -1,8 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea } from "../ui/primitives";
+import { Shell, Card, Label, Pill, PrimaryButton, TextArea } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, danger, hexZuRgba, textMuted, verdunkeln } from "../ui/theme";
+import Icon from "../ui/Icon";
 import {
   NEBENWIRKUNGEN_OPTIONEN,
   VERTRAEGLICHKEIT_OPTIONEN,
@@ -384,65 +385,118 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             )}
           </div>
           <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
-            {entries.map((item, i) => {
-              const k = KATEGORIE[item.kategorie];
-              const isOpen = feedbackOpen === item.key;
-              return (
-                <div key={item.key} style={{ padding: "12px 0", borderBottom: i < entries.length - 1 ? `1px solid ${cardBorder}` : "none" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {entries.map((item) => {
+                const k = KATEGORIE[item.kategorie];
+                const isOpen = feedbackOpen === item.key;
+                const kFarbe = item.farbe || k.dot;
+                const erledigt = !!item.done;
+                return (
+                  <div key={item.key}>
                     <div
-                      onClick={item.kategorie === "training" ? () => setTrainingVorschau(item) : undefined}
-                      style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: item.kategorie === "training" ? "pointer" : "default" }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 10,
+                        padding: "10px 12px",
+                        borderRadius: 16,
+                        border: `1.5px solid ${erledigt ? "transparent" : hexZuRgba(kFarbe, 0.35)}`,
+                        background: erledigt ? verdunkeln(kFarbe, 8) : k.bg,
+                      }}
                     >
-                      <div style={{ width: 8, height: 8, borderRadius: 4, background: item.farbe || k.dot, marginTop: 6, flexShrink: 0 }} />
-                      <div>
-                        <div style={{ fontSize: 14.5, fontWeight: 700 }}>
-                          {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}>· {item.uhrzeit}</span>}
+                      <div
+                        onClick={item.kategorie === "training" ? () => setTrainingVorschau(item) : undefined}
+                        style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, cursor: item.kategorie === "training" ? "pointer" : "default" }}
+                      >
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 999,
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: erledigt ? "rgba(255, 255, 255, 0.28)" : "#fff",
+                          }}
+                        >
+                          {k.icon ? (
+                            <Icon name={k.icon} size={16} color={erledigt ? "#fff" : kFarbe} />
+                          ) : (
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: erledigt ? "#fff" : kFarbe }} />
+                          )}
                         </div>
-                        {item.detail && <div style={{ fontSize: 12, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
-                        <div style={{ fontSize: 10, fontWeight: 700, color: k.text, background: k.bg, display: "inline-block", padding: "2px 8px", borderRadius: 8, marginTop: 4 }}>
-                          {k.label}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 14.5, fontWeight: 700, color: erledigt ? "#fff" : undefined }}>{item.name}</div>
+                          <div style={{ fontSize: 12, marginTop: 1, color: erledigt ? "rgba(255, 255, 255, 0.85)" : textMuted }}>
+                            {item.uhrzeit ? `${item.uhrzeit} · ` : ""}
+                            {k.label}
+                          </div>
+                          {item.detail && (
+                            <div style={{ fontSize: 11.5, marginTop: 1, color: erledigt ? "rgba(255, 255, 255, 0.8)" : textMuted }}>{item.detail}</div>
+                          )}
                         </div>
                       </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        {item.kategorie !== "training" && item.kategorie !== "zeitblock" && onEditItem && (
+                          <button
+                            className="mp-tap"
+                            onClick={() => onEditItem(item.kategorie, item.refId)}
+                            title="Bearbeiten"
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 10,
+                              border: "none",
+                              background: erledigt ? "rgba(255, 255, 255, 0.28)" : "#fff",
+                              fontSize: 13,
+                              cursor: "pointer",
+                            }}
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        {item.kategorie === "zeitblock" || item.kategorie === "workflow" ? null : erledigt ? (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 800,
+                              padding: "8px 12px",
+                              borderRadius: 10,
+                              background: "rgba(255, 255, 255, 0.92)",
+                              color: verdunkeln(kFarbe, 12),
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            ✓ Erledigt
+                          </span>
+                        ) : (
+                          <button
+                            className="mp-tap"
+                            onClick={item.onConfirm}
+                            style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: kFarbe, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                          >
+                            {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      {item.kategorie !== "training" && item.kategorie !== "zeitblock" && onEditItem && (
-                        <button
-                          className="mp-tap"
-                          onClick={() => onEditItem(item.kategorie, item.refId)}
-                          title="Bearbeiten"
-                          style={{ width: 32, height: 32, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 13, cursor: "pointer" }}
-                        >
-                          ✏️
-                        </button>
-                      )}
-                      {item.kategorie === "zeitblock" || item.kategorie === "workflow" ? null : item.done ? (
-                        <StatusBadge status="erledigt" />
-                      ) : (
-                        <button
-                          className="mp-tap"
-                          onClick={item.onConfirm}
-                          style={{ minHeight: 40, padding: "8px 16px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
-                        >
-                          {item.kategorie === "training" ? "Training starten" : "Bestätigen"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
 
-                  {["hormon", "supplement"].includes(item.kategorie) && isOpen && (
-                    <FeedbackPanel
-                      kategorie={item.kategorie}
-                      draftFeedback={draftFeedback}
-                      setDraftFeedback={setDraftFeedback}
-                      toggleDraftNebenwirkung={toggleDraftNebenwirkung}
-                      onSkip={() => handleSkipFeedback(item.doseRef)}
-                      onSave={() => handleSaveFeedback(item.doseRef)}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                    {["hormon", "supplement"].includes(item.kategorie) && isOpen && (
+                      <FeedbackPanel
+                        kategorie={item.kategorie}
+                        draftFeedback={draftFeedback}
+                        setDraftFeedback={setDraftFeedback}
+                        toggleDraftNebenwirkung={toggleDraftNebenwirkung}
+                        onSkip={() => handleSkipFeedback(item.doseRef)}
+                        onSave={() => handleSaveFeedback(item.doseRef)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         </div>
       );

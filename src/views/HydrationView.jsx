@@ -145,7 +145,7 @@ export default function HydrationView({ onHome, embedded = false }) {
       />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Schnell hinzufügen</div>
-      <Card style={{ marginBottom: 14 }}>
+      <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {SCHNELLAUSWAHL.map((opt) => (
             <button
