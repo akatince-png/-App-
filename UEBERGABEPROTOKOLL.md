@@ -63,70 +63,24 @@ längst gibt — jetzt diese Kurzübersicht:
   einen Monat) — funktioniert auch im Coach-Verwalten-Modus automatisch
   mit (Teil 116); Bug-Fix: "Bildschirmzeit" und "Atemübungen" konnten nie
   als Teilprotokoll gespeichert werden, DB-Check fehlte beide Kategorien
-  (Teil 117, Migration 0088 — 🔴 noch nicht deployt, siehe unten).
+  (Teil 117, Migration 0088 — ✅ deployt, siehe unten).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
-- **🔴 Migration `0087_denkpause.sql` noch NICHT (vollständig) deployt:**
-  neue Tabelle `denkpause_ergebnisse` fürs "Denkpause"-Feature (Teil 110).
-  Die Nutzerin meldete beim Ausführen "relation denkpause_ergebnisse
-  already exists" (16.09.) — die Tabelle stand also schon von einem
-  früheren Versuch, aber das Skript hatte kein "falls schon vorhanden,
-  überspringen" und brach deshalb sofort an der ersten Zeile ab, OHNE
-  Policy/Index anzulegen (exakt dasselbe Muster wie schon einmal bei
-  0071/0076 gelöst). Jetzt mit `if not exists`/`drop policy if exists`
-  nachgerüstet (Teil 120) — bitte die KORRIGIERTE Fassung noch einmal
-  ausführen (überspringt die schon vorhandene Tabelle automatisch, legt
-  aber Policy + Index nach, falls die noch fehlen), danach Bescheid
-  geben, dann wird dieser Hinweis entfernt.
-- **🔴 Migration `0088_teilprotokolle_bildschirmzeit_atemuebungen.sql`
-  noch NICHT deployt — DIESE IST SICHTBAR, NICHT NUR STILL:** die
-  Nutzerin hat den Fehler live in der App gesehen ("Speichern
-  fehlgeschlagen: new row for relation teilprotokolle violates check
-  constraint teilprotokolle_kategorie_check") beim Bildschirmzeit-
-  Onboarding-Schritt (Teil 117 unten — derselbe Bug wie schon einmal bei
-  Migration 0067 mit Tageslicht: neue Kategorie eingeführt, aber der
-  DB-Check nie mit erweitert). Bitte im echten Supabase-Projekt
-  ausführen, danach Bescheid geben. Bis dahin scheitert das Speichern von
-  "Bildschirmzeit" (Onboarding-Kategorien-Schritt) UND "Atemübungen"
-  (An-/Abschalten unter Mehr) sichtbar mit einer Fehlermeldung.
-- **🔴 Migration `0089_aenderungsprotokoll_fehlende_kategorien.sql` noch
-  NICHT deployt — STILL, nicht sichtbar:** auf Bitte der Nutzerin ("check
-  auch bitte den Rest ... oder andere Bereiche wie diesen") gefunden beim
-  gezielten Durchsuchen ALLER DB-Check-Constraints gegen den tatsächlichen
-  App-Code (Teil 118 unten). Der `kategorie`-Check von `aenderungsprotokoll`
-  (dem "Tagesverlauf" unter Archiv → Protokolle) fehlten seit Jahren schon
-  "workflow", "notfallmodus", "protokoll", "tageslicht", "bildschirmzeit"
-  — jede dieser Änderungen (Workout-Flow-Ausnahmen, Notfallmodus an/aus,
-  Baustein an/ausschalten unter Mehr, Ziel-Korrekturen bei Tageslicht/
-  Bildschirmzeit) fehlt seitdem lautlos im Tagesverlauf, weil der Fehler
-  nur in der Konsole landet (kein sichtbarer Effekt, `useAenderungsprotokoll.js`
-  fängt ihn ab). Bitte im echten Supabase-Projekt ausführen, danach
-  Bescheid geben.
-- **🔴 Migration `0090_hormones_kategorie_adhs_cannabis.sql` noch NICHT
-  deployt — SICHTBAR:** ebenfalls bei derselben Durchsuchung gefunden —
-  die Medikamente-Kategorien-Auswahl bietet "ADHS-Medikation" und
-  "Cannabis" an (letzteres seit den Cannabis-Feldern, Migration 0082),
-  aber der DB-Check der `hormones`-Tabelle kennt beide Werte nicht. Jede
-  Medikament-Neuanlage mit einer dieser beiden Kategorien scheitert
-  seitdem sichtbar beim Speichern — bei dieser App potenziell der
-  häufigste gewählte Wert überhaupt. Bitte im echten Supabase-Projekt
-  ausführen, danach Bescheid geben.
-- **🔴 Edge Function `send-due-reminders` NICHT (nur) über eine Migration
-  zu beheben — braucht ein manuelles Redeploy:** zweite Suchrunde (Teil
-  119) auf Bitte der Nutzerin, diesmal außerhalb der Datenbank-Checks —
-  `BildschirmzeitView.jsx` bindet genau wie Hydration/Tageslicht/Schlaf
-  eine Erinnerungszeiten-Liste ein (`ZeitErinnerungenCard`), aber die
-  Edge Function, die die Push-Benachrichtigungen tatsächlich verschickt,
-  kannte die Kategorie "bildschirmzeit" nicht — Nutzerinnen konnten
-  Erinnerungszeiten dafür einstellen und speichern, es wäre aber NIE eine
-  Benachrichtigung verschickt worden (stiller Funktionsausfall, kein
-  Fehler irgendwo sichtbar). Im Code bereits behoben (`ZEITEN_KATEGORIEN`
-  in `supabase/functions/send-due-reminders/index.ts` um "bildschirmzeit"
-  ergänzt) — Edge Functions deployen aber NICHT automatisch mit einer
-  Migration, das braucht einen eigenen manuellen Schritt (`supabase
-  functions deploy send-due-reminders` oder über das Dashboard). Bitte
-  danach Bescheid geben.
+- **✅ Migrationen 0087–0090 + Edge Function `send-due-reminders`:** von
+  der Nutzerin bestätigt ausgeführt/deployt (16.09., Abend) — kein
+  offener Deploy-Punkt mehr aus den Teilen 117–120. Im Einzelnen:
+  `0087_denkpause.sql` (Denkpause-Tabelle, musste wegen "already exists"
+  einmal nachträglich idempotent gemacht und erneut ausgeführt werden,
+  Teil 120), `0088_teilprotokolle_bildschirmzeit_atemuebungen.sql`
+  (Bildschirmzeit/Atemübungen konnten nie als Teilprotokoll gespeichert
+  werden, Teil 117), `0089_aenderungsprotokoll_fehlende_kategorien.sql`
+  (Tagesverlauf verschluckte mehrere Kategorien lautlos, Teil 118),
+  `0090_hormones_kategorie_adhs_cannabis.sql` ("ADHS-Medikation"/
+  "Cannabis" scheiterten beim Speichern, Teil 118), sowie das manuelle
+  Redeploy der Edge Function `send-due-reminders` (Bildschirmzeit-
+  Erinnerungen wurden nie verschickt, Teil 119). Alle fünf Bugs sind
+  damit live behoben.
 - **✅ Nachkontrolle 15.09. (Teil 109):** Alle Änderungen seit dem letzten
   Checkpoint (Teil 102–108, Commits `b3aae48`..`145dbf5`) wurden noch
   einmal manuell auf Bugs durchgesehen (Zeilen-für-Zeilen-Diff-Lektüre +
