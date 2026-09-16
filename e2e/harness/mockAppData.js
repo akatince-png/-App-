@@ -181,7 +181,18 @@ export function baueMockAppData(userId, overrides) {
       if (cache.has(key)) return cache.get(key);
 
       let wert;
-      if (siehtAusWieFunktion(key)) {
+      if (key === "routineSchrittZeit") {
+        // Bug-Fix (16.09., beim Bau der Routine-Schritte-Liste gefunden):
+        // eine synchrone ABFRAGE-Funktion (liefert direkt einen String,
+        // kein Promise wie jede "echte" Aktion) — passt weder zur
+        // generischen Funktions-Heuristik unten (die IMMER ein Promise
+        // liefert, hier hätte das rendernde `{zeit && ...}` ein Promise-
+        // Objekt statt eines Strings bekommen) noch zu den übrigen
+        // Mustern. War bisher unbemerkt, weil kein Test `routineSchritte`
+        // je mit echten Einträgen füllte — RoutineHeuteChecklist.jsx nutzt
+        // dieselbe Funktion genauso und wäre ebenso betroffen gewesen.
+        wert = () => "";
+      } else if (siehtAusWieFunktion(key)) {
         wert = (..._args) => Promise.resolve(baueErfolgsErgebnis());
       } else if (siehtAusWieId(key)) {
         // Bug-Fix (beim ersten Testlauf gefunden): ein generischer

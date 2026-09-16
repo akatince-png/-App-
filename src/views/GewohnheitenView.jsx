@@ -13,6 +13,7 @@ import { toLocalISODate, verspaetungText } from "../utils/dates";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
+import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import WorkflowTimer from "../ui/WorkflowTimer";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
@@ -362,27 +363,27 @@ export default function GewohnheitenView({ onHome }) {
             routine="morgen"
             schritte={routineSchritte.filter((s) => s.routine === "morgen")}
             onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
-            onEntfernen={routineSchrittEntfernen}
-            onVerschieben={routineSchrittVerschieben}
             mahlzeiten={mahlzeiten}
             supplemente={supplemente}
             hormone={hormone}
             trainingWochenplan={trainingWochenplan}
             gewohnheiten={gewohnheiten}
           />
+          <RoutineSchritteListe routine="morgen" schritte={routineSchritte.filter((s) => s.routine === "morgen")} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+
           <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
           <RoutineSchritteEditor
             routine="abend"
             schritte={routineSchritte.filter((s) => s.routine === "abend")}
             onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
-            onEntfernen={routineSchrittEntfernen}
-            onVerschieben={routineSchrittVerschieben}
             mahlzeiten={mahlzeiten}
             supplemente={supplemente}
             hormone={hormone}
             trainingWochenplan={trainingWochenplan}
             gewohnheiten={gewohnheiten}
           />
+          <RoutineSchritteListe routine="abend" schritte={routineSchritte.filter((s) => s.routine === "abend")} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+
           <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
           <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
         </Card>

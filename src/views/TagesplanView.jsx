@@ -19,6 +19,7 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
+import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import TrainingVorschau from "../ui/TrainingVorschau";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import DenkpauseNudge from "../ui/DenkpauseNudge";
@@ -666,13 +667,19 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   </button>
                 </div>
                 {schritteBearbeiten.morgen && (
-                  <RoutineSchritteEditor
-                    routine="morgen"
-                    schritte={routineSchritte.filter((s) => s.routine === "morgen")}
-                    onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
-                    onEntfernen={routineSchrittEntfernen}
-                    onVerschieben={routineSchrittVerschieben}
-                  />
+                  <>
+                    <RoutineSchritteEditor
+                      routine="morgen"
+                      schritte={routineSchritte.filter((s) => s.routine === "morgen")}
+                      onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
+                    />
+                    <RoutineSchritteListe
+                      routine="morgen"
+                      schritte={routineSchritte.filter((s) => s.routine === "morgen")}
+                      onEntfernen={routineSchrittEntfernen}
+                      onVerschieben={routineSchrittVerschieben}
+                    />
+                  </>
                 )}
               </div>
             )}
@@ -705,13 +712,19 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   </button>
                 </div>
                 {schritteBearbeiten.abend && (
-                  <RoutineSchritteEditor
-                    routine="abend"
-                    schritte={routineSchritte.filter((s) => s.routine === "abend")}
-                    onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
-                    onEntfernen={routineSchrittEntfernen}
-                    onVerschieben={routineSchrittVerschieben}
-                  />
+                  <>
+                    <RoutineSchritteEditor
+                      routine="abend"
+                      schritte={routineSchritte.filter((s) => s.routine === "abend")}
+                      onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
+                    />
+                    <RoutineSchritteListe
+                      routine="abend"
+                      schritte={routineSchritte.filter((s) => s.routine === "abend")}
+                      onEntfernen={routineSchrittEntfernen}
+                      onVerschieben={routineSchrittVerschieben}
+                    />
+                  </>
                 )}
               </div>
             )}

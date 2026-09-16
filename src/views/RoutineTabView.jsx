@@ -8,6 +8,7 @@ import { buildDayItems } from "../utils/dayItems";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
+import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import KiChat from "../ui/KiChat";
 import { AIService } from "../services/aiService";
@@ -220,14 +221,17 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
               routine={routine}
               schritte={schritteFuerRoutine}
               onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen(routine, name, dauerMin)}
-              onEntfernen={routineSchrittEntfernen}
-              onVerschieben={routineSchrittVerschieben}
               mahlzeiten={mahlzeiten}
               supplemente={supplemente}
               hormone={hormone}
               trainingWochenplan={trainingWochenplan}
               gewohnheiten={gewohnheiten}
             />
+          </Card>
+
+          <RoutineSchritteListe routine={routine} schritte={schritteFuerRoutine} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+
+          <Card style={{ marginBottom: 16 }}>
             <SpotifyAnlassPicker anlass={ROUTINE_ANLASS[routine]} label={`🎵 Playlist für die ${ROUTINE_LABEL[routine]}`} />
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
               <KategorieErinnerung kategorie={ROUTINE_ANLASS[routine]} label={`🔔 Erinnerung ${ROUTINE_LABEL[routine]}`} />

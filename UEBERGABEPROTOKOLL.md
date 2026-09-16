@@ -33,7 +33,7 @@ längst gibt — jetzt diese Kurzübersicht:
   Farbtabelle in Abschnitt 3.
 - **Tests — bitte immer laufen lassen, nicht nur „sieht gut aus":** Vor
   jedem Commit `npm run build && npx oxlint <geänderte Dateien> && npm
-  run typecheck && npm test` (Vitest, aktuell 110 Tests) und
+  run typecheck && npm test` (Vitest, aktuell 115 Tests) und
   `npx playwright test` (E2E, aktuell 38 Tests) — alles muss grün sein.
   Vollständige Erklärung der Testphilosophie + wie man einen neuen Test
   schreibt: Abschnitt 13 weiter unten.
@@ -47,7 +47,9 @@ längst gibt — jetzt diese Kurzübersicht:
   möglich — jetzt auch als eigener Schritt im Erst-Onboarding, Teil 108);
   neues Feature "Denkpause" (Teil 110, freiwillige Mini-Denksportaufgaben
   + Punkte-/Erfolge-Integration); Bug-Fix "KI ploppt bei Laborwerten
-  automatisch auf" (Teil 111).
+  automatisch auf" (Teil 111); Morgen-/Abendroutine im Onboarding:
+  Weckzeit/Startzeit + Vorab-Erinnerung + größer lesbare, separate
+  Schritte-Liste (Teil 112).
 - **✅ Migration `0086_bildschirmzeit.sql`:** von der Nutzerin bestätigt
   im echten Supabase-Projekt ausgeführt (15.09., Abend) — kein offener
   Deploy-Punkt mehr, Bildschirmzeit ist live nutzbar.
@@ -93,6 +95,64 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 16.09.2026 (Teil 112) — Morgen-/Abendroutine: Weckzeit, Vorab-Erinnerung, größer lesbare Schritte-Liste
+
+**Nutzerinnen-Vorgabe** (zum Onboarding-Schritt "Morgen- & Abendroutine",
+mit Screenshot): drei Dinge.
+
+1. Die bereits angelegten Schritte sollen nicht mehr klein, ganz oben im
+   Editor stehen ("kleine Listenform oberhalb"), sondern in einem
+   eigenen, separaten Fenster unter dem jeweiligen Bereich, in klar
+   lesbaren, ausreichend großen Druckbuchstaben.
+2. Der Morgenroutine soll man gleich die Weckzeit hinzufügen können —
+   die Routine schließt direkt ans Aufwachen an.
+3. Der Abendroutine soll man sowohl eine Start-Uhrzeit als auch einen
+   Vorlauf ("Hey, es ist Viertel vor neun...") für eine Vorab-Erinnerung
+   geben können.
+
+**Vorgefunden:** Die komplette Infrastruktur dafür existierte bereits —
+nur nicht im Onboarding. `routine_einstellungen` (Start-/Endzeit je
+Routine, `routineZeitrahmenSetzen()` in `useRoutinen.js`) und die
+generische `<KategorieErinnerung>`-Komponente (Ja/Nein + Vorlauf-Minuten,
+liest/schreibt `erinnerungen[kategorie]`) waren schon lange im
+"Routinen"-Tab (`RoutineTabView.jsx`) verbaut — sogar die Erinnerungs-
+Edge-Function (`send-due-reminders`) unterstützte "morgenroutine"/
+"abendroutine" inkl. Vorlauf bereits vollständig. Reine Portierung ins
+Onboarding, keine neue Migration nötig.
+
+**Umgesetzt:**
+- `OnboardingRoutinenView.jsx`: `TimeWheelField` für die Weckzeit
+  (Morgenroutine) bzw. den Beginn (Abendroutine) + `<KategorieErinnerung
+  kategorie="abendroutine">` für den Vorlauf-Hinweis.
+- Neue Komponente `RoutineSchritteListe.jsx`: eigene, größere (16px statt
+  13px) Anzeige der Schritte samt errechneter Uhrzeit je Schritt
+  (`routineSchrittZeit()`, dieselbe Herleitung wie in
+  `RoutineHeuteChecklist.jsx`) — inkl. Auf/Ab/Löschen. Aus
+  `RoutineSchritteEditor.jsx` herausgelöst (die zeigte die Liste bisher
+  klein und ganz oben, noch vor den Eingabefeldern) und jetzt als
+  eigene Karte UNTER der jeweiligen Eingabe-Karte platziert — betrifft
+  automatisch alle vier Einsatzorte (Onboarding, `RoutineTabView.jsx`,
+  `GewohnheitenView.jsx`, `TagesplanView.jsx`-Bearbeiten-Modus), nicht
+  nur das Onboarding.
+- **Bug in der Test-Harness gefunden und behoben** (beim visuellen
+  Gegenprüfen mit echten Test-Schritten, nicht nur Code-Lektüre):
+  `routineSchrittZeit` ist eine synchrone ABFRAGE-Funktion (liefert
+  direkt einen String), passte aber zu keinem Muster der generischen
+  Mock-Heuristik in `e2e/harness/mockAppData.js` — die hätte ein Promise
+  statt eines Strings geliefert, Absturz beim Rendern. War vorher nie
+  aufgefallen, weil kein Test `routineSchritte` je mit echten Einträgen
+  füllte; betraf latent auch das längst bestehende
+  `RoutineHeuteChecklist.jsx`. Jetzt als expliziter Sonderfall
+  `() => ""` gemockt.
+
+Getestet: Build/Lint/Typecheck grün, 115 Unit-Tests (5 neu:
+`RoutineSchritteListe.test.jsx`), 38 E2E-Tests grün — zusätzlich per
+Playwright durch den echten Onboarding-Flow bis zu diesem Schritt
+navigiert und mit eingesetzten Test-Schritten visuell gegengeprüft
+(Screenshot), nicht nur die leere Ansicht.
 
 ---
 

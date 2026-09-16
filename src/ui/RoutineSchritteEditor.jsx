@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Label, Pill, TextInput } from "./primitives";
 import NumberWheelField from "./NumberWheelField";
-import { accentDark, cardBorder, danger, success, textMuted } from "./theme";
+import { accentDark, danger, success, textMuted } from "./theme";
 
 // Beispiel-Schritte je Routine (14.08., Nutzerin-Vorgabe: "ein paar
 // Beispiele, damit jemand, der nicht so einfallsreich ist, darauf kommt,
@@ -73,8 +73,6 @@ function kategorieItems(tab, { mahlzeiten, supplemente, hormone, trainingWochenp
 export default function RoutineSchritteEditor({
   schritte,
   onHinzufuegen,
-  onEntfernen,
-  onVerschieben,
   routine,
   mahlzeiten = [],
   supplemente = [],
@@ -137,41 +135,6 @@ export default function RoutineSchritteEditor({
 
   return (
     <div style={{ marginTop: 10 }}>
-      {sortiert.map((s, i) => (
-        <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: `1px solid ${cardBorder}` }}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <button
-              type="button"
-              onClick={() => onVerschieben(s.id, "hoch")}
-              disabled={i === 0}
-              style={{ border: "none", background: "transparent", color: i === 0 ? cardBorder : accentDark, fontSize: 11, cursor: i === 0 ? "default" : "pointer", padding: 0 }}
-            >
-              ▲
-            </button>
-            <button
-              type="button"
-              onClick={() => onVerschieben(s.id, "runter")}
-              disabled={i === sortiert.length - 1}
-              style={{ border: "none", background: "transparent", color: i === sortiert.length - 1 ? cardBorder : accentDark, fontSize: 11, cursor: i === sortiert.length - 1 ? "default" : "pointer", padding: 0 }}
-            >
-              ▼
-            </button>
-          </div>
-          <div style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>{s.name}</div>
-          <div style={{ fontSize: 11.5, color: textMuted }}>{s.dauerMin} Min.</div>
-          <button
-            type="button"
-            onClick={() => {
-              if (!window.confirm(`"${s.name}" endgültig aus der Routine entfernen?`)) return;
-              onEntfernen(s.id);
-            }}
-            style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
-          >
-            ×
-          </button>
-        </div>
-      ))}
-
       {beispiele.length > 0 && (
         <div style={{ marginTop: 10 }}>
           <div style={{ fontSize: 11, color: textMuted, marginBottom: 4 }}>Ideen zum Antippen:</div>
