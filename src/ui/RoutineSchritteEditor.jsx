@@ -183,7 +183,7 @@ export default function RoutineSchritteEditor({
         </div>
         <div style={{ width: 80 }}>
           <Label>Min.</Label>
-          <NumberWheelField value={dauerMin} onChange={setDauerMin} min={1} max={120} step={5} />
+          <NumberWheelField value={dauerMin} onChange={setDauerMin} min={1} max={60} step={1} />
         </div>
         <button
           type="button"

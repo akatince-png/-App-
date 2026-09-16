@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import WelcomeView from "../WelcomeView";
 import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
 import OnboardingQuickWinView from "./OnboardingQuickWinView";
@@ -14,6 +14,51 @@ import OnboardingSteckbriefView from "./OnboardingSteckbriefView";
 import OnboardingCompletionView from "./OnboardingCompletionView";
 import { useAppData } from "../../context/AppDataContext";
 import { useAdmin } from "../../context/AdminContext";
+import { useAuth } from "../../context/AuthContext";
+
+// Bug-Fix (Nutzerinnen-Report, 16.09.: "wenn ich die Seite aktualisiere, bin
+// ich wieder ganz am Anfang"): `phase` lebte bisher nur in useState — ein
+// Browser-Reload (z. B. weil ein Speichern-Versuch mittendrin fehlschlug und
+// die Person die Seite neu geladen hat) warf den kompletten Fortschritt weg
+// und startete wieder bei `startPhase`. Jetzt wird die aktuelle Phase bei
+// jedem Wechsel in localStorage gespiegelt und beim (Wieder-)Laden zurück-
+// gelesen — aber nur, wenn sie zu genau diesem Lauf gehört (gleiche
+// `userId`+`startPhase`), damit ein Reload mitten im normalen
+// Erst-Onboarding nicht versehentlich in einem alten "Neues Protokoll"-Lauf
+// (oder umgekehrt) landet. Wird bewusst gelöscht, sobald der Ablauf normal
+// zu Ende läuft (`onDone`) oder abgebrochen wird (`onCancel`) — ein danach
+// neu gestarteter Durchlauf soll wieder ganz vorne beginnen, nicht im alten
+// Fortschritt stecken bleiben.
+const ONBOARDING_PHASE_KEY = "onboardingPhaseFortschritt";
+
+function ladeGespeichertePhase(userId, startPhase) {
+  if (typeof window === "undefined") return null;
+  try {
+    const gespeichert = JSON.parse(localStorage.getItem(ONBOARDING_PHASE_KEY) || "null");
+    if (!gespeichert || gespeichert.userId !== userId || gespeichert.startPhase !== startPhase) return null;
+    return gespeichert.phase || null;
+  } catch {
+    return null;
+  }
+}
+
+function speicherePhase(userId, startPhase, phase) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ONBOARDING_PHASE_KEY, JSON.stringify({ userId, startPhase, phase }));
+  } catch {
+    // LocalStorage nicht verfügbar — Fortschritt geht bei einem Reload dann weiter verloren, wie bisher.
+  }
+}
+
+function loescheGespeichertePhase() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(ONBOARDING_PHASE_KEY);
+  } catch {
+    // ignorieren
+  }
+}
 
 // Koordiniert den einmaligen Einrichtungs-Ablauf nach der Registrierung:
 // Willkommens-Folien → Hauptprotokoll anlegen (Name + Startdatum) →
@@ -96,9 +141,27 @@ import { useAdmin } from "../../context/AdminContext";
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
   const { proband } = useAdmin();
   const { isAdmin, onboardingModus } = useAppData();
+  const { user } = useAuth();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
-  const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
+  const [phase, setPhase] = useState(
+    () => ladeGespeichertePhase(user?.id, startPhase) || startPhase
+  ); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
+  useEffect(() => {
+    speicherePhase(user?.id, startPhase, phase);
+  }, [user?.id, startPhase, phase]);
+  const handleDone = onDone
+    ? (...args) => {
+        loescheGespeichertePhase();
+        onDone(...args);
+      }
+    : onDone;
+  const handleCancel = onCancel
+    ? (...args) => {
+        loescheGespeichertePhase();
+        onCancel(...args);
+      }
+    : onCancel;
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
   // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
@@ -123,18 +186,18 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   let screen;
 
   if (phase === "welcome") {
-    screen = <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
+    screen = <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={handleCancel} />;
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
         onDone={() => setPhase(istDirekterNeuStart ? "kiWahl" : "quickwin")}
         onBack={() => setPhase("welcome")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
         zeigeBestehendesAlsOption={!istDirekterNeuStart}
       />
     );
   } else if (phase === "kiWahl") {
-    screen = <OnboardingKiWahlView onDone={() => setPhase("ziele")} onBack={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
+    screen = <OnboardingKiWahlView onDone={() => setPhase("ziele")} onBack={() => setPhase("hauptprotokoll")} onCancel={handleCancel} />;
   } else if (phase === "quickwin") {
     screen = <OnboardingQuickWinView onDone={() => setPhase("intro")} onBack={() => setPhase("hauptprotokoll")} />;
   } else if (phase === "intro") {
@@ -146,7 +209,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingIntroView
         onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")}
         onBack={() => setPhase("quickwin")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
         nurManuell={!istAdminModus}
       />
     );
@@ -155,7 +218,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingZieleView
         onDone={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "profil")}
         onBack={() => setPhase(istDirekterNeuStart ? "kiWahl" : "intro")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     );
   } else if (phase === "werteAktualisieren") {
@@ -167,7 +230,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
         }}
         onNein={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
         onBack={() => setPhase("ziele")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     );
   } else if (phase === "profil") {
@@ -175,7 +238,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingProfilView
         onDone={() => setPhase(vollstaendigesOnboarding ? "laborwerte" : "steckbrief")}
         onBack={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "ziele")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     );
   } else if (phase === "steckbrief") {
@@ -183,7 +246,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingSteckbriefView
         onDone={() => setPhase("celebration")}
         onBack={() => setPhase(profilBesucht ? "profil" : "werteAktualisieren")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     );
   } else if (phase === "laborwerte") {
@@ -191,7 +254,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingLaborwerteView
         onDone={() => setPhase("routinen")}
         onBack={() => setPhase(profilBesucht ? "profil" : "werteAktualisieren")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     );
   } else if (phase === "routinen") {
@@ -204,13 +267,13 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
           setPhase("categories");
         }}
         onBack={() => setPhase("laborwerte")}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     );
   } else if (phase === "categories") {
     screen = (
       <OnboardingCategoriesView
-        onCancel={onCancel}
+        onCancel={handleCancel}
         onBackToStart={() => setPhase("routinen")}
         onFinished={(bereiche) => {
           const neueSchluessel = bereiche.map((b) => b.key);
@@ -223,7 +286,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingCompletionView
         eingerichteteBereiche={eingerichteteBereiche}
-        onDone={onDone}
+        onDone={handleDone}
         onBack={() => setPhase(vollstaendigesOnboarding ? "categories" : "steckbrief")}
       />
     );

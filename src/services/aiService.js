@@ -286,6 +286,43 @@ export const AIService = {
   },
 
   /**
+   * Wie routineAusChat(), aber für den Onboarding-Schritt "Morgen- &
+   * Abendroutine" (siehe OnboardingRoutinenView.jsx), der Morgenroutine,
+   * Abendroutine UND Schlafplan zusammen auf einer Seite zeigt (deshalb hier
+   * EIN gemeinsamer Chat statt drei einzelner, schon weil pro Seite nur ein
+   * schwebender Aka-Knopf sinnvoll Platz hat, siehe KiChat.jsx). Ergebnis
+   * deckt entsprechend alle drei Teile ab; jeder Teil ist optional (leeres
+   * Array bzw. null), falls im Gespräch nicht alles genannt wurde.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
+   * @returns {Promise<{morgenSchritte: Array<{name: string, dauerMin: number}>, abendSchritte: Array<{name: string, dauerMin: number}>, bettzeit: string|null, aufwachzeit: string|null}>}
+   */
+  async morgenAbendroutineAusChat({ verlauf, coachName }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der Morgenroutine, Abendroutine und Schlafplan als zusammenhängendes Setup anlegt.",
+        "Fasse das vorangegangene Gespräch jetzt zusammen, jeweils in der besprochenen Reihenfolge.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "morgenSchritte": [ { "name": string, "dauerMin": number (Minuten, Schätzung falls nicht genannt) } ], ' +
+          '"abendSchritte": [ { "name": string, "dauerMin": number } ], ' +
+          '"bettzeit": string|null ("HH:MM", wann normalerweise ins Bett gegangen wird), ' +
+          '"aufwachzeit": string|null ("HH:MM", wann normalerweise aufgewacht wird) }',
+        "Leere Arrays bzw. null für Teile, die im Gespräch nicht vorkamen.",
+      ],
+      verlauf,
+      "Fasse das oben Besprochene jetzt als JSON zusammen, wie vereinbart."
+    );
+    return {
+      morgenSchritte: Array.isArray(data.morgenSchritte) ? data.morgenSchritte : [],
+      abendSchritte: Array.isArray(data.abendSchritte) ? data.abendSchritte : [],
+      bettzeit: data.bettzeit || null,
+      aufwachzeit: data.aufwachzeit || null,
+    };
+  },
+
+  /**
    * Extrahiert aus einem geführten Ernährungs-Gespräch (siehe coachChat())
    * die finalen Rezeptvorschläge — Format passend zu mahlzeitHinzufuegen(),
    * damit sich das Ergebnis direkt weiterreichen lässt.

@@ -786,16 +786,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
             {tLabel("Alles überspringen")}
           </div>
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
-              title={tLabel("Abbrechen")}
-            >
-              ⌂
-            </button>
-          )}
         </div>
       </div>
       <Stepper step={index + PROTOKOLL_SCHRITT_OFFSET} total={PROTOKOLL_SCHRITTE_GESAMT} />
@@ -831,6 +821,32 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             <PrimaryButton variant="ghost" onClick={() => weiter(false)}>
               {tLabel("Später einrichten")}
             </PrimaryButton>
+            {/* Bug-Fix (Nutzerinnen-Report, 16.09.: "keine Symmetrie ... unten
+                haben die zum Beispiel noch das Abbrechen"): Laborwerte/
+                Routinen zeigen "Abbrechen" schon länger als eigenen Knopf
+                unter den Haupt-Aktionen (siehe OnboardingLaborwerteView.jsx/
+                OnboardingRoutinenView.jsx) — hier saß er bisher nur als
+                kleiner Icon-Knopf (⌂) oben rechts neben "Alles überspringen".
+                Jetzt derselbe Knopf am selben Ort wie überall sonst im
+                Onboarding. */}
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: `1px solid ${cardBorder}`,
+                  background: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 150ms ease-out",
+                }}
+              >
+                {tLabel("Abbrechen")}
+              </button>
+            )}
           </div>
         </Card>
       )}
@@ -840,6 +856,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
             Sag {getCoachName()}, was du hier einrichten möchtest — er füllt die Felder für dich aus.
           </div>
+          {/* Bug-Fix (Nutzerinnen-Report, 16.09.: "bei Hydration ploppt das
+              Fenster gleich komplett auf"): `autoStart` öffnete den Chat hier
+              unaufgefordert, sobald "Jetzt einrichten" getippt wurde — anders
+              als bei Laborwerte (siehe OnboardingLaborwerteView.jsx, Teil 111,
+              genau dort schon als Bug behoben) und der neuen Routinen-Karte
+              (siehe OnboardingRoutinenView.jsx) zeigt Aka jetzt überall
+              einheitlich nur den schwebenden Orb-Knopf — ein Tap öffnet den
+              Chat, statt dass er sich von selbst aufdrängt. */}
           <KiChat
             key={step.key}
             systemPrompt={KATEGORIE_COACH_PROMPTS[step.key]}
@@ -849,7 +873,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             onUebernehmen={onUebernehmenKategorie}
             uebernehmenLabel="Übernehmen"
             renderErgebnis={renderKategorieErgebnis}
-            autoStart
           />
         <Card>
           {ISTZUSTAND_FRAGEN[step.key] && (
@@ -1191,6 +1214,24 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   {tLabel("Doch überspringen")}
                 </PrimaryButton>
               </>
+            )}
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: `1px solid ${cardBorder}`,
+                  background: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 150ms ease-out",
+                }}
+              >
+                {tLabel("Abbrechen")}
+              </button>
             )}
           </div>
         </Card>

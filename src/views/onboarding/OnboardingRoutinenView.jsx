@@ -7,6 +7,9 @@ import RoutineSchritteListe from "../../ui/RoutineSchritteListe";
 import TimeWheelField from "../../ui/TimeWheelField";
 import KategorieErinnerung from "../../ui/KategorieErinnerung";
 import ZeitErinnerungenCard from "../../ui/ZeitErinnerungenCard";
+import KiChat from "../../ui/KiChat";
+import { AIService } from "../../services/aiService";
+import { getCoachName } from "../../utils/coachStorage";
 import { WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
@@ -140,6 +143,24 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
   };
   const alleTageVergeben = WOCHENTAGE.every((t) => schlafBloecke.some((b) => b.wochentage.includes(t)));
 
+  // Bug-Fix (Nutzerinnen-Report, 16.09.: "bei Morgenroutine, Abendroutine
+  // und Schlaf kann ich Aka nicht einsetzen, ich habe keinen Button") —
+  // diese Seite hatte bisher gar keine KiChat-Einbindung, obwohl die dafür
+  // nötige Extraktion (AIService.morgenAbendroutineAusChat) existiert und an
+  // anderer Stelle (RoutineTabView.jsx: routineAusChat) längst produktiv
+  // läuft. EIN gemeinsamer Chat für alle drei Karten (statt drei einzelner)
+  // — der schwebende Aka-Knopf ist `position: fixed` und würde bei mehreren
+  // gleichzeitig eingebetteten KiChat-Instanzen exakt übereinander liegen.
+  const handleRoutineUebernehmen = async (verlauf) => {
+    const coachName = getCoachName();
+    const r = await AIService.morgenAbendroutineAusChat({ verlauf, coachName });
+    r.morgenSchritte.forEach((s) => routineSchrittHinzufuegen("morgen", s.name, s.dauerMin || 5));
+    r.abendSchritte.forEach((s) => routineSchrittHinzufuegen("abend", s.name, s.dauerMin || 5));
+    if (r.bettzeit) setBlockFeld(0, "bettzeit", r.bettzeit);
+    if (r.aufwachzeit) setBlockFeld(0, "aufwachzeit", r.aufwachzeit);
+    return r;
+  };
+
   const weiter = async () => {
     setSchlafError(null);
     setSchlafSaving(true);
@@ -192,6 +213,22 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
         (Schlaf, Training, Supplemente, ...) sind Bausteine, die sich später in diese beiden Routinen einordnen. Leg jetzt schon fest,
         welche Schritte für dich zu einem guten Start bzw. Abschluss des Tages gehören — kannst du jederzeit später anpassen.
       </div>
+
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Sag {getCoachName()}, was zu deiner Morgen-/Abendroutine und deinem Schlaf gehört — er füllt die Felder unten für dich aus.
+      </div>
+      <KiChat
+        bereich="morgenAbendroutine"
+        systemPrompt="Du hilfst dabei, Morgenroutine, Abendroutine und Schlafplan für eine bestehende App aufzubauen. Frag nach, was die Person sowieso schon jeden Morgen/Abend macht (kein Neuanfang von null), in welcher Reihenfolge, wie lange jeder Schritt ungefähr dauert, und wann sie normalerweise ins Bett geht bzw. aufwacht. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Lass uns deine Morgen- und Abendroutine sowie deinen Schlafrhythmus aufbauen — was gehört für dich dazu?`}
+        onUebernehmen={handleRoutineUebernehmen}
+        uebernehmenLabel="Übernehmen"
+        renderErgebnis={() => (
+          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+            Felder ausgefüllt — bitte kurz prüfen und unten speichern.
+          </div>
+        )}
+      />
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌅 Morgenroutine</div>
