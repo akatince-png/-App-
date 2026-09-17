@@ -154,6 +154,9 @@ const KATEGORIE_LABEL = {
   gewohnheiten: "Gewohnheiten",
   supplemente: "Supplemente",
   medikamente: "Medikamente",
+  morgenroutine: "Morgenroutine",
+  abendroutine: "Abendroutine",
+  projekt: "Projekte & Zeitblöcke",
 };
 
 // Generischer Snapshot-Renderer statt eigener Formatierung je Kategorie

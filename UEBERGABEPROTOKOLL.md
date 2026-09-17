@@ -200,8 +200,21 @@ längst gibt — jetzt diese Kurzübersicht:
      stattdessen zurück ins bestehende Formular oben (Button wechselt zu
      "Eintrag ändern" + "Abbrechen"). Keine neue Migration nötig (nur
      UPDATE/DELETE auf bestehende Tabellen).
-  7. ⏳ "Version festhalten" für Morgenroutine/Abendroutine + Zeitblöcke —
-     noch offen.
+  7. ✅ "Version festhalten" für Morgenroutine/Abendroutine + Projekte
+     ergänzt — neue `WEITERE_VERSIONIERBARE_BAUSTEINE`-Liste in
+     `MehrTab.jsx` (eigene Karte "Weitere Bausteine" unter dem
+     bestehenden "Aktuelles Protokoll", NUR der 📌-Knopf, bewusst OHNE
+     den Aktiv/Inaktiv-Pill — diese drei sind keine teilprotokolle, ein
+     An-/Ausschalten würde konzeptionell keinen Sinn ergeben).
+     `snapshotFuer()` um die drei neuen Fälle ergänzt (Morgenroutine/
+     Abendroutine: Schritte + Zeitrahmen, Abend zusätzlich Schlafplan;
+     Projekt: die Projekt-Liste). Zeitblöcke selbst bleiben ausgenommen
+     (gleiche Begründung wie bei Punkt 2 — einmalige Kalendereinträge
+     ohne versionierbaren Zustand). `baustein_versionen.kategorie` ist
+     eine reine `text`-Spalte ohne CHECK-Constraint — keine neue
+     Migration nötig. `ProtokollLogView.jsx` (Archiv → Protokolle) zeigt
+     die drei neuen Kategorien jetzt auch mit sprechendem Label statt
+     des rohen Schlüssels.
   8. ⏳ Redundante Routinen-Sektion in `GewohnheitenView.jsx` angleichen —
      noch offen.
 - **✅ 17.09.2026 (Teil 125):** Die Routine-Granularität aus Teil 122 ("ganze

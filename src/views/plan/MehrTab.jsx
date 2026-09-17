@@ -57,6 +57,19 @@ const BAUSTEINE_KATEGORIEN = [
   { kategorie: "atemuebungen", label: "Atemübungen" },
 ];
 
+// Morgen-/Abendroutine und Projekte/Zeitblöcke (17.09., Konsistenz-Check):
+// "Version festhalten" gab es bisher für diese drei nicht, obwohl sich
+// ihre Konfiguration genauso ändern kann wie bei jedem Baustein oben.
+// Bewusst NICHT in BAUSTEINE_KATEGORIEN mit aufgenommen — die sind keine
+// teilprotokolle (siehe Kommentar oben), ein An-/Ausschalten macht für sie
+// konzeptionell keinen Sinn. Eigene, kleinere Liste ohne den Aktiv/
+// Inaktiv-Pill, nur mit dem 📌-Knopf.
+const WEITERE_VERSIONIERBARE_BAUSTEINE = [
+  { kategorie: "morgenroutine", label: "Morgenroutine" },
+  { kategorie: "abendroutine", label: "Abendroutine" },
+  { kategorie: "projekt", label: "Projekte & Zeitblöcke" },
+];
+
 // Baut den Schnappschuss der aktuell geltenden Werte je Kategorie — reine
 // Snapshots (kein automatisches Diffing), ausgelöst über "Version
 // festhalten" (Nutzerinnen-Vorgabe, 15.08.: "die alte Einstellung soll noch
@@ -84,6 +97,16 @@ function snapshotFuer(kategorie, appData) {
       return { hormone: appData.hormone };
     case "atemuebungen":
       return { atemuebungen: appData.atemuebungen };
+    case "morgenroutine":
+      return { schritte: appData.routineSchritte?.filter((s) => s.routine === "morgen"), zeitrahmen: appData.routineEinstellungen?.morgen };
+    case "abendroutine":
+      return {
+        schritte: appData.routineSchritte?.filter((s) => s.routine === "abend"),
+        zeitrahmen: appData.routineEinstellungen?.abend,
+        schlafplan: appData.categoryZiele?.schlaf,
+      };
+    case "projekt":
+      return { projekte: appData.projekte };
     default:
       return null;
   }
@@ -190,6 +213,46 @@ function AktuellesProtokoll() {
             </div>
           );
         })}
+      </Card>
+
+      {/* Kein Aktiv/Inaktiv hier (siehe Kommentar bei
+          WEITERE_VERSIONIERBARE_BAUSTEINE oben) — nur "Version festhalten". */}
+      <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>Weitere Bausteine</div>
+      <div style={{ fontSize: 11, color: textMuted, marginBottom: 10 }}>
+        Immer aktiv, kein An-/Ausschalten — aber genauso versionierbar.
+      </div>
+      <Card style={{ marginBottom: 20 }}>
+        {WEITERE_VERSIONIERBARE_BAUSTEINE.map((b, i) => (
+          <div
+            key={b.kategorie}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "9px 0",
+              borderBottom: i < WEITERE_VERSIONIERBARE_BAUSTEINE.length - 1 ? `1px solid ${cardBorder}` : "none",
+            }}
+          >
+            <div style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</div>
+            <button
+              onClick={() => versionFuerBausteinFesthalten(b)}
+              disabled={versionLaeuft === b.kategorie}
+              title="Aktuelle Einstellung als Version festhalten"
+              style={{
+                border: `1px solid ${cardBorder}`,
+                background: "#fff",
+                borderRadius: 8,
+                width: 28,
+                height: 28,
+                fontSize: 13,
+                cursor: versionLaeuft === b.kategorie ? "wait" : "pointer",
+                opacity: versionLaeuft === b.kategorie ? 0.5 : 1,
+              }}
+            >
+              📌
+            </button>
+          </div>
+        ))}
       </Card>
     </>
   );
