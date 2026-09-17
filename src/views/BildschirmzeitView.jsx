@@ -10,6 +10,7 @@ import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe, siehe
 // dayItems.js (KATEGORIE_META.bildschirmzeit).
@@ -203,6 +204,7 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
             Limit zurücksetzen
           </button>
         )}
+        <ItemVerlauf kategorie="bildschirmzeit" itemName="Bildschirmzeit-Limit" />
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>

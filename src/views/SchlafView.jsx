@@ -13,6 +13,7 @@ import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import SchlafplanCard, { neuerSchlafblock } from "../ui/SchlafplanCard";
+import ItemVerlauf from "../ui/ItemVerlauf";
 import { toLocalISODate } from "../utils/dates";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
@@ -227,6 +228,9 @@ export default function SchlafView({ onHome, embedded = false }) {
         onIstZustandChange={handleSchlafIstZustand}
         zeigeErinnerung={false}
       />
+      <div style={{ marginTop: -10, marginBottom: 14 }}>
+        <ItemVerlauf kategorie="schlaf" itemName="Schlafplan" />
+      </div>
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
         Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Assistent trägt den Eintrag für dich ein.

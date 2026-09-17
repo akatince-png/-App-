@@ -134,8 +134,19 @@ längst gibt — jetzt diese Kurzübersicht:
      `zeigeErinnerung={false}` (SchlafView hat schon eine eigene
      Erinnerungs-Karte). Playwright-Sichtprüfung: Karte sichtbar,
      Intervall-Umschalten funktioniert, keine Konsolenfehler.
-  2. ⏳ ItemVerlauf für Schlaf/Hydration/Tageslicht/Bildschirmzeit/
-     Wochenübersicht — noch offen.
+  2. ✅ ItemVerlauf für Schlaf (Schlafplan), Hydration (Trinkziel),
+     Tageslicht (Tageslichtziel) und Bildschirmzeit (Bildschirmzeit-Limit)
+     ergänzt — bei den letzten drei loggt `useZielMitKorrektur.js` (der
+     schon geteilte Ziel-Speichern-Hook) das "geändert" bereits seit
+     längerem korrekt, es fehlte nur die `<ItemVerlauf>`-Anzeige selbst.
+     Für Wochenübersicht/Projekte NEU: Migration `0092_
+     aenderungsprotokoll_projekt.sql` (Kategorie "projekt" ergänzt, noch
+     **nicht deployt** — siehe Chat) + `aenderungVermerken()` beim
+     Anlegen/Entfernen eines Projekts + `<ItemVerlauf>` pro Projekt-Zeile
+     (Chips → Zeilen-Layout umgebaut, damit der Verlauf-Link Platz hat).
+     Bewusst NICHT für einzelne Zeitblöcke selbst (siehe Begründung im
+     Chat: einmalige Kalendereinträge ohne "geändert"-Konzept, Verlauf
+     würde nach dem Löschen ohnehin mit der Zeile verschwinden).
   3. ⏳ Feedback-Formular für Ernährung/Gewohnheiten vereinheitlichen —
      noch offen.
   4. ⏳ Supplemente: manuelles Dosierintervall-Formular — noch offen.

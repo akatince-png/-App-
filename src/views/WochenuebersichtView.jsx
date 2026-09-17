@@ -15,6 +15,7 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import TagesEintragBearbeiten from "../ui/TagesEintragBearbeiten";
 import RoutineTagesPeek from "../ui/RoutineTagesPeek";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -86,6 +87,7 @@ export default function WochenuebersichtView({
     schlafEintraege,
     ausnahmenNachSchluessel,
     protokollEintraege,
+    aenderungVermerken,
     routineSchritte,
     routineDurchlaeufe,
     routineSchrittErledigt,
@@ -217,6 +219,17 @@ export default function WochenuebersichtView({
     }
     if (!neuerBlock.projektId) setNeuerBlock((p) => ({ ...p, projektId: result.projekt.id }));
     setNeuesProjekt("");
+    // Nutzerin-Vorgabe (17.09., Konsistenz-Check): Projekte bekommen wie
+    // andere benannte Einträge einen "Verlauf"-Link — Migration 0092 ergänzt
+    // dafür die nötige Kategorie "projekt" im Änderungsprotokoll.
+    aenderungVermerken({ kategorie: "projekt", itemName: result.projekt.name, aktion: "hinzugefügt", detail: "" });
+  };
+
+  // Der Projektname wird VOR dem Entfernen für den Protokoll-Eintrag
+  // gebraucht — nach projektEntfernen() ist die Zeile schon verschwunden.
+  const projektEntfernenUndProtokollieren = (projekt) => {
+    projektEntfernen(projekt.id);
+    aenderungVermerken({ kategorie: "projekt", itemName: projekt.name, aktion: "entfernt", detail: "" });
   };
 
   const blockEintragen = async () => {
@@ -500,30 +513,22 @@ export default function WochenuebersichtView({
         </div>
 
         {projekte.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 10 }}>
+          <div style={{ marginBottom: 10 }}>
             {projekte.map((p) => (
               <div
                 key={p.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 10px",
-                  marginRight: 6,
-                  marginBottom: 6,
-                  borderRadius: 20,
-                  border: `1px solid ${cardBorder}`,
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
+                style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}
               >
                 <div style={{ width: 9, height: 9, borderRadius: 5, background: projektFarbe(p), flexShrink: 0 }} />
-                {p.name}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.name}</div>
+                  <ItemVerlauf kategorie="projekt" itemName={p.name} />
+                </div>
                 <button
                   type="button"
-                  onClick={() => projektEntfernen(p.id)}
+                  onClick={() => projektEntfernenUndProtokollieren(p)}
                   title="Projekt löschen"
-                  style={{ border: "none", background: "transparent", color: danger, fontSize: 14, cursor: "pointer", padding: 0, marginLeft: 2 }}
+                  style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
                 >
                   ×
                 </button>

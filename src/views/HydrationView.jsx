@@ -14,6 +14,7 @@ import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
 // ist Blau, passend zu den bunten Home-Mini-Widgets.
@@ -246,6 +247,7 @@ export default function HydrationView({ onHome, embedded = false }) {
             Ziel zurücksetzen
           </button>
         )}
+        <ItemVerlauf kategorie="hydration" itemName="Trinkziel" />
       </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerungen</div>
