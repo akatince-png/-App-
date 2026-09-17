@@ -119,7 +119,7 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
-- **🔶 17.09.2026 (Teil 126, läuft):** Nutzerin bat um einen Konsistenz-
+- **✅ 17.09.2026 (Teil 126, abgeschlossen):** Nutzerin bat um einen Konsistenz-
   Check über ALLE Kategorie-Bereiche ("welche Bereiche andere Funktionen
   haben als andere") — ein Explore-Agent hat alle 11 Bereiche verglichen
   (ItemVerlauf, Version festhalten, Feedback-Formular, Einzeltag-Ausnahme,
@@ -215,8 +215,31 @@ längst gibt — jetzt diese Kurzübersicht:
      Migration nötig. `ProtokollLogView.jsx` (Archiv → Protokolle) zeigt
      die drei neuen Kategorien jetzt auch mit sprechendem Label statt
      des rohen Schlüssels.
-  8. ⏳ Redundante Routinen-Sektion in `GewohnheitenView.jsx` angleichen —
-     noch offen.
+  8. ✅ Redundante Routinen-Sektion in `GewohnheitenView.jsx` angeglichen
+     — bewusst NICHT aufgelöst/entfernt (der prominente Einstieg dort ist
+     eine explizite Nutzerinnen-Vorgabe vom 13.08., als "Gewohnheiten" im
+     Home-Menü zu "Routinen" wurde), sondern auf Feature-Parität mit
+     `RoutineTabView.jsx` gebracht: Zeitrahmen-Editor (mit Protokollierung)
+     und `<ItemVerlauf>` für beide Routinen ergänzt, plus die
+     `SchlafplanCard` samt eigenem `<ItemVerlauf>` auf dem Abend-Kärtchen.
+     Dabei die Schlafplan-Logik (State + Speichern + Debounce), die bis
+     dahin dreifach fast wortgleich in `RoutineTabView.jsx`/`SchlafView.jsx`
+     (Punkt 1) und jetzt hier gestanden hätte, in einen neuen geteilten
+     Hook `useSchlafplanBearbeitung.js` gezogen — bewusst nur für diese
+     NEUE Stelle genutzt, die beiden bestehenden (schon verifizierten)
+     Stellen unangetastet gelassen, um deren Verifikation nicht erneut
+     aufzumachen. Keine neue Migration nötig.
+
+  **Alle 8 Punkte abgeschlossen.** Offene Migrationen aus diesem
+  Themenblock, die die Nutzerin noch im Supabase-Dashboard ausführen muss
+  (SQL-Text wurde jeweils im Chat mitgeschickt): `0092_
+  aenderungsprotokoll_projekt.sql` (Punkt 2, Projekte-Verlauf) und
+  `0093_notizen_mahlzeit_gewohnheit.sql` (Punkt 3, Notiz-Feld). Migration
+  0091 aus Teil 122 war zu diesem Zeitpunkt schon deployt. Vollständige
+  Verifikation je Punkt: `npm run build` + `npx oxlint` + `npm run
+  typecheck` + `npx vitest run` (136 Tests) + `npx playwright test`
+  (voller E2E-Lauf, 39 Tests) jeweils grün, zusätzlich gezielte
+  Playwright-Sichtprüfungen (Screenshots) für jede optisch neue Stelle.
 - **✅ 17.09.2026 (Teil 125):** Die Routine-Granularität aus Teil 122 ("ganze
   Routine als ein Punkt pro Tag überall, aber pro Einzelschritt aufklappbar,
   auch OHNE die Routine erst zu starten") ist jetzt umgesetzt — der zuvor in

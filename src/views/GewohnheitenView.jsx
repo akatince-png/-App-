@@ -19,6 +19,8 @@ import WorkflowTimer from "../ui/WorkflowTimer";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import SchlafplanCard from "../ui/SchlafplanCard";
+import { useSchlafplanBearbeitung } from "../ui/useSchlafplanBearbeitung";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -159,6 +161,10 @@ export default function GewohnheitenView({ onHome }) {
     routineSchrittEntfernen,
     routineSchrittVerschieben,
     routineDurchlaufSpeichern,
+    routineEinstellungen,
+    routineZeitrahmenSetzen,
+    categoryZiele,
+    setCategoryZiel,
     mahlzeiten,
     supplemente,
     hormone,
@@ -275,6 +281,7 @@ export default function GewohnheitenView({ onHome }) {
   // dieser Funktion zunächst übersehen wurde. Gleiches Wrapper-Muster wie
   // dort, hier verallgemeinert auf beide Routinen statt fest auf eine.
   const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
+  const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
   const routineSchrittHinzufuegenUndProtokollieren = async (routine, name, dauerMin) => {
     const result = await routineSchrittHinzufuegen(routine, name, dauerMin);
     if (result?.ok !== false) {
@@ -301,6 +308,24 @@ export default function GewohnheitenView({ onHome }) {
       });
     }
   };
+  // Zeitrahmen (17.09., Konsistenz-Check) — fehlte hier bisher komplett,
+  // obwohl er in RoutineTabView.jsx längst editierbar + protokolliert ist.
+  const zeitrahmenAendernUndProtokollieren = async (routine, startZeit, endZeit) => {
+    const vorher = routineEinstellungen[routine] || {};
+    const result = await routineZeitrahmenSetzen(routine, startZeit, endZeit);
+    if (result?.ok) {
+      aenderungVermerken({
+        kategorie: ROUTINE_KATEGORIE[routine],
+        itemName: ROUTINE_LABEL[routine],
+        aktion: "geändert",
+        detail: `Zeitrahmen: ${vorher.startZeit || "–"}–${vorher.endZeit || "–"} → ${startZeit || "–"}–${endZeit || "–"}`,
+      });
+    }
+  };
+  // Schlafplan (17.09., Konsistenz-Check) — nur auf dem Abend-Kärtchen,
+  // gleiche geteilte Logik wie SchlafView.jsx/RoutineTabView.jsx.
+  const { schlafIntervallTyp, schlafBloecke, schlafIstZustand, handleSchlafIntervallTyp, handleSchlafBloecke, handleSchlafIstZustand } =
+    useSchlafplanBearbeitung({ categoryZiele, setCategoryZiel, aenderungVermerken });
 
   const handleEntfernen = (g) => {
     aenderungVermerken({
@@ -411,6 +436,23 @@ export default function GewohnheitenView({ onHome }) {
             onEntfernen={(id) => routineSchrittEntfernenUndProtokollieren("morgen", id)}
             onVerschieben={(id, richtung) => routineSchrittVerschiebenUndProtokollieren("morgen", id, richtung)}
           />
+          <Label>Zeitrahmen</Label>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <TimeWheelField
+                value={routineEinstellungen.morgen?.startZeit}
+                onChange={(v) => zeitrahmenAendernUndProtokollieren("morgen", v, routineEinstellungen.morgen?.endZeit)}
+              />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
+            <div style={{ flex: 1 }}>
+              <TimeWheelField
+                value={routineEinstellungen.morgen?.endZeit}
+                onChange={(v) => zeitrahmenAendernUndProtokollieren("morgen", routineEinstellungen.morgen?.startZeit, v)}
+              />
+            </div>
+          </div>
+          <ItemVerlauf kategorie="morgenroutine" itemName="Morgenroutine" />
 
           <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
           <RoutineSchritteEditor
@@ -429,6 +471,35 @@ export default function GewohnheitenView({ onHome }) {
             onEntfernen={(id) => routineSchrittEntfernenUndProtokollieren("abend", id)}
             onVerschieben={(id, richtung) => routineSchrittVerschiebenUndProtokollieren("abend", id, richtung)}
           />
+          <Label>Zeitrahmen</Label>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <TimeWheelField
+                value={routineEinstellungen.abend?.startZeit}
+                onChange={(v) => zeitrahmenAendernUndProtokollieren("abend", v, routineEinstellungen.abend?.endZeit)}
+              />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
+            <div style={{ flex: 1 }}>
+              <TimeWheelField
+                value={routineEinstellungen.abend?.endZeit}
+                onChange={(v) => zeitrahmenAendernUndProtokollieren("abend", routineEinstellungen.abend?.startZeit, v)}
+              />
+            </div>
+          </div>
+          <ItemVerlauf kategorie="abendroutine" itemName="Abendroutine" />
+
+          <SchlafplanCard
+            intervallTyp={schlafIntervallTyp}
+            onIntervallTypChange={handleSchlafIntervallTyp}
+            bloecke={schlafBloecke}
+            onBloeckeChange={handleSchlafBloecke}
+            istZustand={schlafIstZustand}
+            onIstZustandChange={handleSchlafIstZustand}
+          />
+          <div style={{ marginTop: -8, marginBottom: 16 }}>
+            <ItemVerlauf kategorie="schlaf" itemName="Schlafplan" />
+          </div>
 
           <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
           <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />
