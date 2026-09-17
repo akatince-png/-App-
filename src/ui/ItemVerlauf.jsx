@@ -6,7 +6,7 @@ import { useAppData } from "../context/AppDataContext";
 // beschreiben (Dosis geändert, Schritt hinzugefügt/entfernt, Version
 // festgehalten) — im Unterschied zu "erledigt"/"ausgefallen"/"Ausnahme
 // zurückgenommen", die eine tatsächliche Handlung AN EINEM TAG beschreiben.
-const VERLAUF_AKTIONEN = ["geändert", "hinzugefügt", "entfernt", "Version festgehalten"];
+export const VERLAUF_AKTIONEN = ["geändert", "hinzugefügt", "entfernt", "Version festgehalten"];
 
 function datumUhrzeit(iso) {
   return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });

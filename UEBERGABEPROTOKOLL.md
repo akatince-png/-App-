@@ -119,6 +119,36 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **🔶 17.09.2026 (Teil 127, läuft):** Nach Teil 126 bat die Nutzerin um
+  einen vollständigen Funktions-/Regressionstest ("nicht wieder eine neue
+  Überraschung", konkrete Frage: "werde ich gefragt: nur heute oder ganze
+  Protokolllaufbahn, und wird das im Tagesprotokoll angezeigt?"). Dabei
+  einen ECHTEN, seit Bau von `TagesEintragBearbeiten.jsx` bestehenden Bug
+  gefunden und behoben: gleich FÜNF `aktion`-Werte aus drei Dateien
+  (`TagesEintragBearbeiten.jsx`: "geändert (nur dieser Tag)"/"entfällt
+  (nur dieser Tag)"; `HomeView.jsx`: "aktiviert"/"beendet" beim
+  Notfallmodus, dessen eigener Kommentar ausdrücklich "damit im Protokoll
+  sichtbar ist" verspricht; `MehrTab.jsx`: "aktiviert"/"deaktiviert" beim
+  Baustein-Umschalten) wurden protokolliert, standen aber in KEINER der
+  beiden Anzeige-Filterlisten (`ProtokollLogView.jsx` TAGESVERLAUF_
+  AKTIONEN, `ItemVerlauf.jsx` VERLAUF_AKTIONEN) — landeten lautlos in der
+  DB, ohne je irgendwo angezeigt zu werden. Alle fünf jetzt zu
+  TAGESVERLAUF_AKTIONEN ergänzt (Tages-Ereignisse, keine dauerhafte
+  Struktur-Änderung). Beide Listen jetzt exportiert + neuer Test
+  `utils/aktionSichtbarkeit.test.js`, der die GESAMTE Codebasis nach
+  `aktion: "..."`-Literalen durchsucht und verhindert, dass sich genau
+  dieser Bug beim nächsten neuen Feature unbemerkt wiederholt. Zusätzlich
+  `ui/TagesEintragBearbeiten.test.jsx` (16 Fälle, gab es bisher trotz
+  zentraler Rolle gar nicht) — deckt "Heute anders"/"Entfällt heute"/
+  "Ausnahme zurücknehmen"/Erledigt-Toggle/"Dauerhaft ändern"-Navigation
+  für alle 7 Kategorien ab. Ein von einem Explore-Agenten parallel
+  durchgeführter Kategorie/itemName-Konsistenz-Check zwischen allen
+  `<ItemVerlauf>`-Stellen und den zugehörigen `aenderungVermerken()`-
+  Aufrufen fand dagegen KEINE Diskrepanz (alle 15 Fundstellen exakt
+  übereinstimmend). Vollständige Test-Suite danach grün: 153 Vitest-Tests
+  (17 neu), 39 Playwright-Tests. **Noch nicht abgeschlossen** — weitere
+  Bereiche werden noch geprüft (PDF-Export/Archiv-Sichtbarkeit von
+  Änderungen, siehe Chat).
 - **✅ 17.09.2026 (Teil 126, abgeschlossen):** Nutzerin bat um einen Konsistenz-
   Check über ALLE Kategorie-Bereiche ("welche Bereiche andere Funktionen
   haben als andere") — ein Explore-Agent hat alle 11 Bereiche verglichen

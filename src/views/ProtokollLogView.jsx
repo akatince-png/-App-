@@ -23,7 +23,31 @@ const AKTION_ANZEIGE = {
 
 // Siehe Kommentar bei aenderungGruppen weiter unten — nur echte
 // Tagesereignisse gehören in den Tagesverlauf, keine Struktur-Änderungen.
-const TAGESVERLAUF_AKTIONEN = ["erledigt", "ausgefallen", "Ausnahme zurückgenommen"];
+//
+// Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+// angezeigt?" — bei genauerem Hinsehen fielen GLEICH DREI Aktion-Werte
+// durchs Raster, nicht nur einer): jede Stelle im Code, die
+// aenderungVermerken() aufruft, MUSS ihren `aktion`-Wert entweder hier
+// oder in ItemVerlauf.jsx (VERLAUF_AKTIONEN) eintragen — sonst landet der
+// Eintrag zwar in der DB, taucht aber NIRGENDS in der Oberfläche auf.
+// Betroffen waren: TagesEintragBearbeiten.jsx ("geändert (nur dieser
+// Tag)"/"entfällt (nur dieser Tag)", seit dessen Bau), HomeView.jsx
+// ("aktiviert"/"beendet" beim Notfallmodus — dessen eigener Kommentar dort
+// sagt ausdrücklich "damit im Protokoll sichtbar ist, wie lange ein
+// Notfalltag gedauert hat", wurde aber nie umgesetzt) und MehrTab.jsx
+// ("aktiviert"/"deaktiviert" beim Ein-/Ausschalten eines Bausteins). Alle
+// fünf sind Tages-EREIGNISSE (keine dauerhafte Struktur-Änderung einer
+// wiederkehrenden Regel), deshalb hier und nicht in ItemVerlauf.jsx.
+export const TAGESVERLAUF_AKTIONEN = [
+  "erledigt",
+  "ausgefallen",
+  "Ausnahme zurückgenommen",
+  "geändert (nur dieser Tag)",
+  "entfällt (nur dieser Tag)",
+  "aktiviert",
+  "deaktiviert",
+  "beendet",
+];
 
 function datumLabel(datumStr) {
   const [y, m, d] = datumStr.split("-");
