@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import TimeWheelField from "../ui/TimeWheelField";
@@ -10,10 +10,12 @@ import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import SchlafplanCard, { neuerSchlafblock } from "../ui/SchlafplanCard";
 import KiChat from "../ui/KiChat";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import { WOCHENTAGE } from "../constants";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -72,9 +74,58 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     ausnahmenNachSchluessel,
     spotifyAnlaesse,
     spotifyPlaylists,
+    categoryZiele,
+    setCategoryZiel,
   } = useAppData();
 
   const [ablaufAktiv, setAblaufAktiv] = useState(false);
+  // Bug-Fix (Nutzerinnen-Report, 17.09.: "ob diese Protokolle... im
+  // Nachhinein noch über die Reiter Morgens- und Abendroutine bearbeitbar
+  // sind"): der Schlafplan (Bettzeit/Aufwachzeit, seit Teil 113 Teil dieser
+  // Seite im Onboarding, siehe OnboardingRoutinenView.jsx) hatte danach
+  // NIRGENDS eine Bearbeiten-Möglichkeit — dieser Reiter kannte "schlaf"
+  // bisher gar nicht. Nur auf dem "abend"-Reiter gezeigt (schließt direkt an
+  // die Abendroutine an, wie schon im Onboarding so angeordnet) — anders als
+  // dort ohne eigenen "Weiter"-Knopf: jede Änderung speichert hier sofort
+  // über setCategoryZiel, wie der Rest dieser (live editierbaren) Seite.
+  const [schlafIntervallTyp, setSchlafIntervallTyp] = useState("weekdays");
+  const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
+  const [schlafIstZustand, setSchlafIstZustand] = useState("");
+
+  useEffect(() => {
+    if (routine !== "abend") return;
+    const gespeicherteBloecke = categoryZiele?.schlaf?.bloecke;
+    if (gespeicherteBloecke?.length) {
+      setSchlafIntervallTyp(
+        gespeicherteBloecke.length === 1 && gespeicherteBloecke[0].wochentage.length === WOCHENTAGE.length ? "fixed" : "weekdays"
+      );
+      setSchlafBloecke(gespeicherteBloecke.map((b) => ({ ...neuerSchlafblock(b.wochentage), ...b })));
+    }
+    if (categoryZiele?.schlaf?.istZustand?.aktuell) {
+      setSchlafIstZustand(categoryZiele.schlaf.istZustand.aktuell);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routine]);
+
+  const speichereSchlafplan = (typ, bloecke, istZustandText) => {
+    const effektiveBloecke = typ === "fixed" ? [{ ...bloecke[0], wochentage: [...WOCHENTAGE] }] : bloecke;
+    setCategoryZiel("schlaf", {
+      bloecke: effektiveBloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
+      istZustand: { aktuell: istZustandText },
+    });
+  };
+  const handleSchlafIntervallTyp = (typ) => {
+    setSchlafIntervallTyp(typ);
+    speichereSchlafplan(typ, schlafBloecke, schlafIstZustand);
+  };
+  const handleSchlafBloecke = (neueBloecke) => {
+    setSchlafBloecke(neueBloecke);
+    speichereSchlafplan(schlafIntervallTyp, neueBloecke, schlafIstZustand);
+  };
+  const handleSchlafIstZustand = (text) => {
+    setSchlafIstZustand(text);
+    speichereSchlafplan(schlafIntervallTyp, schlafBloecke, text);
+  };
   // Nutzerin-Vorgabe (12.09.): dieser Reiter soll in erster Linie zeigen,
   // was heute in der Routine ansteht — bestätigen, fertig. Die Einrichtung
   // (Schritte, Playlist-Auswahl, Erinnerung, Zeitrahmen) wirkte bisher wie
@@ -268,6 +319,17 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
               </div>
             </div>
           </Card>
+
+          {routine === "abend" && (
+            <SchlafplanCard
+              intervallTyp={schlafIntervallTyp}
+              onIntervallTypChange={handleSchlafIntervallTyp}
+              bloecke={schlafBloecke}
+              onBloeckeChange={handleSchlafBloecke}
+              istZustand={schlafIstZustand}
+              onIstZustandChange={handleSchlafIstZustand}
+            />
+          )}
 
           {ueberlappendeItems.length > 0 && (
             <Card style={{ marginBottom: 16 }}>

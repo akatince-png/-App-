@@ -119,10 +119,148 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **🔴 17.09.2026 (Teil 121), noch offen für die nächste Sitzung:**
+  vertiefte Prüfung von Morgen-/Abendroutine + Schlaf auf Nutzerinnen-Bitte
+  hat zwei echte Bugs gefunden und behoben (doppelte Punktevergabe bei
+  Checkliste+geführtem Ablauf am selben Tag; Schlafplan war nach dem
+  Onboarding nirgends mehr bearbeitbar) — Details unten. **Zwei weitere,
+  bewusst NICHT unaufgefordert umgesetzte Befunde** brauchen zuerst eine
+  Entscheidung der Nutzerin, bevor daran gearbeitet wird: (1) Morgen-/
+  Abendroutine-Schritte tauchen absichtlich nicht in Wochenübersicht/
+  Monatsansicht auf (Architekturfrage, keine Kleinigkeit), (2) Änderungen an
+  Routine-Schritten/Zeitrahmen landen nie im Tagesverlauf/Änderungsprotokoll
+  (bräuchte eine neue Migration, die die Nutzerin selbst deployen müsste).
 - **Empfohlene Lesereihenfolge:** erst Abschnitte 1–13 (Grundlagen,
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## 🔴 Update 17.09.2026 (Teil 121) — Vertiefte Prüfung Morgen-/Abendroutine + Schlaf: zwei Bugs gefunden+behoben, zwei Architekturfragen offen
+
+**Nutzerinnen-Bitte:** "seit einigen Tagen versuchen wir die Morgen- und
+Abendroutine zu starten, allerdings sind so viele Kleinigkeiten noch nicht
+in Ordnung" — bat um eine vollständige Durchprüfung: werden eingetragene
+Schritte korrekt angezeigt/in Tages-/Wochen-/Monatsplan übernommen, sind
+bereits erstellte Routinen über die Pläne-Reiter Morgens/Abends im
+Nachhinein bearbeitbar und werden Änderungen dokumentiert, erscheint die
+Belohnung nach Abschluss und wird sie im Punktesystem/Archiv → Erfolge
+sichtbar dokumentiert — Schlafqualität eingeschlossen, da funktional
+zusammenhängend.
+
+**Wichtige Einschränkung dieser Sitzung:** diese Umgebung hat keinen
+Supabase-Zugriff (siehe CLAUDE.md) — ein echter End-to-End-Klicktest mit
+echten Daten war nicht möglich. Die Prüfung lief deshalb als gründlicher
+Code-Nachvollzug jeder Datenfluss-Kette (Speichern → Anzeige → Belohnung →
+Punkte) plus einem isolierten Vitest-Beispiel, das eine der beiden
+gefundenen Bugs empirisch nachstellt (nach demselben Muster wie die
+früheren "isoliert mit Node/Beispieldaten geprüft"-Einträge in diesem
+Dokument). Der bestehende E2E-Mock-Harness (`e2e/harness/mockAppData.js`)
+ist bewusst zustandslos (reiner Rendering-Smoke-Test, siehe Kommentar
+dort) — er kann Speichern→Anzeige-Rundläufe mit echten Daten nicht
+nachstellen, nur "stürzt nicht ab" bestätigen.
+
+### Gefunden + behoben
+
+1. **Doppelte Punktevergabe bei Morgen-/Abendroutine, wenn beide Wege am
+   selben Tag genutzt werden.** `RoutineHeuteChecklist.jsx` (Checkliste auf
+   Home/im Pläne-Reiter) speichert automatisch einen `routine_durchlaeufe`-
+   Eintrag, sobald ALLE Schritte für heute abgehakt sind — UND prüfte dabei
+   selbst schon, ob für heute nicht längst einer existiert
+   (`schonDurchlauf` in `useRoutinen.js`). Der geführte Ablauf
+   (`RoutineAblauf.jsx`, erreichbar über drei Stellen: `TagesplanView.jsx`,
+   `RoutineTabView.jsx`, `GewohnheitenView.jsx`) speicherte beim Abschluss
+   dagegen UNGEPRÜFT — wer z. B. morgens schon alle Schritte einzeln
+   abgehakt UND später zusätzlich "Morgenroutine starten" durchgeht, bekam
+   zwei Zeilen für denselben Tag. `utils/errungenschaften.js` zählt jede
+   Zeile aus `routineDurchlaeufe` als eigenen Punkt (`tage.length`, keine
+   Datums-Entdopplung) — zwei Zeilen verdoppelten die Morgen-/Abendroutine-
+   Punkte in Archiv → Erfolge (der Streak blieb korrekt, da dort über ein
+   `Set` gezählt wird). Empirisch mit einem temporären Vitest-Fall gegen
+   `berechneErrungenschaften()` nachgestellt und bestätigt (Fall danach
+   wieder entfernt, nicht Teil der Suite).
+   **Fix:** `durchlaufSpeichern()` in `useRoutinen.js` prüft jetzt selbst
+   zentral, ob für `routine`+heute schon eine Zeile existiert, bevor
+   überhaupt eingefügt wird — schützt damit automatisch JEDEN Aufrufer
+   (Checkliste, geführter Ablauf, künftige weitere Wege), nicht nur den
+   einen, der schon eine eigene Prüfung hatte.
+2. **Schlafplan (Bettzeit/Aufwachzeit) war nach dem Onboarding nirgends
+   mehr bearbeitbar.** Seit Teil 113 (16.09.) ist der Schlafplan Teil
+   derselben Onboarding-Seite wie Morgen-/Abendroutine
+   (`OnboardingRoutinenView.jsx`) — die laufende "Pläne"-Ansicht
+   (`RoutineTabView.jsx`, Reiter "Morgens"/"Abends") kannte "schlaf" davor
+   aber gar nicht (0 Treffer bei der Suche). Der separate "Schlaf"-Reiter
+   (`SchlafView.jsx`) ist ein ANDERES Feature (nächtlicher Schlaf-Log:
+   Stunden/Qualität/erholt, füllt `schlafEintraege` fürs Erfolge-System) —
+   nicht dasselbe wie der wiederkehrende Bettzeit/Aufwachzeit-Plan
+   (`categoryZiele.schlaf`). Einmal im Onboarding gesetzt, gab es
+   schlicht keine Stelle mehr, das zu ändern (nur ein Nur-Lese-Snapshot
+   unter Mehr → "Version festhalten").
+   **Fix:** die Schlafplan-Karte aus `OnboardingRoutinenView.jsx`
+   ausgelagert in eine neue, kontrollierte Komponente
+   `src/ui/SchlafplanCard.jsx` (kein eigener State, nur Props) — genutzt
+   von beiden Stellen: Onboarding (sammelt Änderungen weiter bis zum
+   abschließenden "Weiter", unverändertes Verhalten) UND `RoutineTabView.jsx`
+   (neu, nur auf dem "Abend"-Reiter unter "⚙️ Einstellungen", direkt nach
+   "Zeitrahmen" — speichert jede Änderung sofort über `setCategoryZiel`,
+   wie der Rest dieser Seite schon lange funktioniert). Per Playwright
+   gegen den lokalen Dev-Server visuell bestätigt: Karte erscheint korrekt,
+   "Täglich"/"Bestimmte Wochentage"-Umschalter funktioniert, Bettzeit/
+   Aufwachzeit-Felder + "Ziel: X Std. Schlaf"-Berechnung wie im Onboarding.
+
+**Getestet:** Build/Lint/Typecheck grün, 124 Unit-Tests grün, 39 E2E-Tests
+grün (inkl. `Pläne-Reiter "Abend"` weiterhin ohne Konsolenfehler). Zusätzlich
+visuell per Playwright-Screenshot gegen den echten Dev-Server geprüft (siehe
+Fix 2 oben) — Screenshots danach wieder entfernt, nicht committet.
+
+### Geprüft, aber NICHT unaufgefordert verändert — braucht erst eine Entscheidung
+
+3. **Routine-Schritte tauchen nicht im Tages-/Wochen-/Monatsplan auf.**
+   `buildDayItems()` (`utils/dayItems.js`) erzeugt für Morgen-/Abendroutine-
+   Schritte grundsätzlich keine Einträge — bewusste Design-Entscheidung
+   laut Kommentar in `RoutineTabView.jsx`: "die Routine ist eine Sammlung
+   frei benannter Schritte, kein Tracker-Item", sonst würden in der
+   Wochenübersicht/Monatsansicht "tote Einträge" ohne echte Kategorie-Farbe
+   auftauchen. Was im Tagesplan unter "Morgenroutine"/"Abendroutine"
+   aufklappt (`morgenItems`/`abendItems` in `TagesplanView.jsx`), ist KEINE
+   Anzeige der eigenen Routine-Schritte, sondern eine reine Zeit-Bucket-
+   Gruppierung von ANDEREN, ohnehin geplanten Punkten (Training, Supplemente,
+   ...), die zufällig vor 11 bzw. nach 18 Uhr liegen. Die echten,
+   konfigurierten Routine-Schritte mit Bestätigungspunkt sieht man nur über
+   `RoutineHeuteChecklist` (Home + Pläne-Reiter). In der Wochenübersicht/
+   Monatsansicht (`WochenuebersichtView.jsx`) kommen Morgen-/Abendroutine
+   überhaupt nicht vor (0 Treffer). Das ist wahrscheinlich (mit-)gemeint,
+   wenn die Nutzerin von "Zusammenhänge nicht in Ordnung" spricht — aber
+   eine Änderung hier ist eine echte Architekturfrage (sollen Routine-
+   Schritte eigene, farbige dayItems werden? mit welcher Kategorie-Farbe?
+   zählen sie dann auch für Erfolge/Streaks doppelt zur bestehenden
+   `routine_durchlaeufe`-Zählung?), keine Kleinigkeit — bewusst nicht
+   unaufgefordert umgebaut. Bitte einmal mit der Nutzerin klären, was
+   sie sich dort konkret wünscht.
+4. **Änderungen an Routine-Schritten/Zeitrahmen werden nirgends
+   dokumentiert.** `useRoutinen.js` ruft an keiner Stelle
+   `aenderungVermerken()` auf — Schritt hinzufügen/entfernen/verschieben,
+   Zeitrahmen ändern, Schlafplan ändern landen NIE im Tagesverlauf/
+   Änderungsprotokoll (Archiv → Protokolle), anders als die meisten übrigen
+   Kategorien. Selbst wenn man das nachrüsten wollte: die Kategorie
+   "routine" (oder "schlaf" für den Schlafplan-Teil) fehlt bisher komplett
+   in `aenderungsprotokoll_kategorie_check` (vgl. Teil 118 — derselbe
+   CHECK-Constraint, dem dort schon fünf andere Kategorien fehlten) —
+   bräuchte also zusätzlich eine neue Migration, die die Nutzerin selbst im
+   Supabase-Dashboard ausführen müsste. Bewusst nicht unaufgefordert als
+   neue Migration vorbereitet, ohne vorher zu wissen, ob dieser
+   Dokumentations-Umfang für Routine-Schritte überhaupt gewünscht ist
+   (bei einem frei benannten Schritt wie "Duschen" ist unklar, ob ein
+   Tagesverlauf-Eintrag genauso sinnvoll ist wie bei z. B. einer
+   Medikamentendosis-Änderung).
+
+**Nicht abschließend klärbar aus der Sandbox:** die von der Nutzerin
+gemeldete "Sprachfunktion funktioniert bei Blutwerten nicht" (aus einer
+früheren Sitzung/anderem Kontext) ließ sich hier nicht nachstellen — kein
+offensichtlicher Code-Bug gefunden, könnte am 14.09. bereits behoben worden
+sein (Teil 87, KiChat-Fixed-Position-Bug). Bitte nach dem nächsten Deploy
+gegenprüfen, ob es noch auftritt.
 
 ---
 
