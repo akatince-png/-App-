@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextArea, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { SimpleLineChart } from "../ui/charts";
 import { cardBorder, danger, textMuted } from "../ui/theme";
-import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
+import { SCHLAFQUALITAET_OPTIONEN, WOCHENTAGE } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
 import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
@@ -12,6 +12,7 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import SchlafplanCard, { neuerSchlafblock } from "../ui/SchlafplanCard";
 import { toLocalISODate } from "../utils/dates";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
@@ -30,10 +31,81 @@ const LEERER_EINTRAG = {
 };
 
 export default function SchlafView({ onHome, embedded = false }) {
-  const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage } = useAppData();
+  const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage, categoryZiele, setCategoryZiel, aenderungVermerken } = useAppData();
   const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState(LEERER_EINTRAG);
   const [detailsOffen, setDetailsOffen] = useState(false);
   const [schlafError, setSchlafError] = useState(null);
+
+  // Schlafplan-Editor (Bettzeit/Aufwachzeit je Wochentag) — bis 17.09. nur
+  // über RoutineTabView.jsx (Abend-Reiter) oder das Onboarding erreichbar
+  // (Nutzerinnen-Report: "wer 'Schlaf' direkt öffnet, kann den Schlafplan
+  // gar nicht bearbeiten"). Gleiches Muster wie dort: `categoryZiele.schlaf`
+  // ist die gemeinsame Quelle, sofortiges Speichern über setCategoryZiel
+  // statt eines eigenen "Weiter"-Knopfs wie im Onboarding.
+  const [schlafIntervallTyp, setSchlafIntervallTyp] = useState("weekdays");
+  const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
+  const [schlafIstZustand, setSchlafIstZustand] = useState("");
+  const schlafIstZustandGespeichertRef = useRef("");
+
+  useEffect(() => {
+    const gespeicherteBloecke = categoryZiele?.schlaf?.bloecke;
+    if (gespeicherteBloecke?.length) {
+      setSchlafIntervallTyp(
+        gespeicherteBloecke.length === 1 && gespeicherteBloecke[0].wochentage.length === WOCHENTAGE.length ? "fixed" : "weekdays"
+      );
+      setSchlafBloecke(gespeicherteBloecke.map((b) => ({ ...neuerSchlafblock(b.wochentage), ...b })));
+    }
+    const geladenerIstZustand = categoryZiele?.schlaf?.istZustand?.aktuell || "";
+    setSchlafIstZustand(geladenerIstZustand);
+    schlafIstZustandGespeichertRef.current = geladenerIstZustand;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const beschreibeSchlafbloecke = (bloecke) => bloecke.map((b) => `${b.wochentage.join(",") || "–"} ${b.bettzeit}–${b.aufwachzeit}`).join("; ");
+
+  const speichereSchlafplan = (typ, bloecke, istZustandText) => {
+    const effektiveBloecke = typ === "fixed" ? [{ ...bloecke[0], wochentage: [...WOCHENTAGE] }] : bloecke;
+    setCategoryZiel("schlaf", {
+      bloecke: effektiveBloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
+      istZustand: { aktuell: istZustandText },
+    });
+    schlafIstZustandGespeichertRef.current = istZustandText;
+  };
+  const handleSchlafIntervallTyp = (typ) => {
+    const vorherText = schlafIntervallTyp === "fixed" ? "Täglich" : "Bestimmte Wochentage";
+    const nachherText = typ === "fixed" ? "Täglich" : "Bestimmte Wochentage";
+    setSchlafIntervallTyp(typ);
+    speichereSchlafplan(typ, schlafBloecke, schlafIstZustand);
+    if (typ !== schlafIntervallTyp) {
+      aenderungVermerken({ kategorie: "schlaf", itemName: "Schlafplan", aktion: "geändert", detail: `Intervall: ${vorherText} → ${nachherText}` });
+    }
+  };
+  const handleSchlafBloecke = (neueBloecke) => {
+    const vorherDetail = beschreibeSchlafbloecke(schlafBloecke);
+    setSchlafBloecke(neueBloecke);
+    speichereSchlafplan(schlafIntervallTyp, neueBloecke, schlafIstZustand);
+    aenderungVermerken({ kategorie: "schlaf", itemName: "Schlafplan", aktion: "geändert", detail: `${vorherDetail} → ${beschreibeSchlafbloecke(neueBloecke)}` });
+  };
+  const handleSchlafIstZustand = (text) => {
+    // Bewusst KEINE sofortige Speicherung/Protokollierung hier, siehe
+    // RoutineTabView.jsx für dieselbe Begründung — Debounce-Effekt unten.
+    setSchlafIstZustand(text);
+  };
+  useEffect(() => {
+    if (schlafIstZustand === schlafIstZustandGespeichertRef.current) return;
+    const timeout = setTimeout(() => {
+      const vorher = schlafIstZustandGespeichertRef.current;
+      speichereSchlafplan(schlafIntervallTyp, schlafBloecke, schlafIstZustand);
+      aenderungVermerken({
+        kategorie: "schlaf",
+        itemName: "Schlafplan",
+        aktion: "geändert",
+        detail: `Aktueller Schlaf: ${vorher || "–"} → ${schlafIstZustand || "–"}`,
+      });
+    }, 800);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schlafIstZustand, schlafIntervallTyp, schlafBloecke]);
 
   const submit = async () => {
     setSchlafError(null);
@@ -145,6 +217,16 @@ export default function SchlafView({ onHome, embedded = false }) {
           <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
         </div>
       </Card>
+
+      <SchlafplanCard
+        intervallTyp={schlafIntervallTyp}
+        onIntervallTypChange={handleSchlafIntervallTyp}
+        bloecke={schlafBloecke}
+        onBloeckeChange={handleSchlafBloecke}
+        istZustand={schlafIstZustand}
+        onIstZustandChange={handleSchlafIstZustand}
+        zeigeErinnerung={false}
+      />
 
       <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
         Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Assistent trägt den Eintrag für dich ein.

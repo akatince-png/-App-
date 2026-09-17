@@ -119,6 +119,33 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **🔶 17.09.2026 (Teil 126, läuft):** Nutzerin bat um einen Konsistenz-
+  Check über ALLE Kategorie-Bereiche ("welche Bereiche andere Funktionen
+  haben als andere") — ein Explore-Agent hat alle 11 Bereiche verglichen
+  (ItemVerlauf, Version festhalten, Feedback-Formular, Einzeltag-Ausnahme,
+  Intervall-Editor, Diktat, Erinnerungen, Edit/Löschen, eigene Checkliste).
+  Ergebnis: 8 echte Asymmetrien gefunden, die Nutzerin will ALLE 8 nach und
+  nach beheben lassen, mit Verifikation je Schritt. Fortschritt (wird bei
+  jedem weiteren Punkt hier ergänzt statt neuer Teile):
+  1. ✅ Schlafplan-Editor (Bettzeit/Aufwachzeit) jetzt auch direkt in
+     `SchlafView.jsx` bearbeitbar, nicht mehr nur über `RoutineTabView.jsx`
+     (Abend-Reiter) oder Onboarding — nutzt dieselbe `SchlafplanCard.jsx`
+     und dasselbe `categoryZiele.schlaf`/`setCategoryZiel`-Muster, mit
+     `zeigeErinnerung={false}` (SchlafView hat schon eine eigene
+     Erinnerungs-Karte). Playwright-Sichtprüfung: Karte sichtbar,
+     Intervall-Umschalten funktioniert, keine Konsolenfehler.
+  2. ⏳ ItemVerlauf für Schlaf/Hydration/Tageslicht/Bildschirmzeit/
+     Wochenübersicht — noch offen.
+  3. ⏳ Feedback-Formular für Ernährung/Gewohnheiten vereinheitlichen —
+     noch offen.
+  4. ⏳ Supplemente: manuelles Dosierintervall-Formular — noch offen.
+  5. ⏳ Training: Heute-Checkliste — noch offen.
+  6. ⏳ Einzeleinträge bearbeiten/löschen bei Schlaf/Hydration/Tageslicht/
+     Bildschirmzeit — noch offen.
+  7. ⏳ "Version festhalten" für Morgenroutine/Abendroutine + Zeitblöcke —
+     noch offen.
+  8. ⏳ Redundante Routinen-Sektion in `GewohnheitenView.jsx` angleichen —
+     noch offen.
 - **✅ 17.09.2026 (Teil 125):** Die Routine-Granularität aus Teil 122 ("ganze
   Routine als ein Punkt pro Tag überall, aber pro Einzelschritt aufklappbar,
   auch OHNE die Routine erst zu starten") ist jetzt umgesetzt — der zuvor in
