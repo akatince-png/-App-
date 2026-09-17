@@ -18,6 +18,7 @@ import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import WorkflowTimer from "../ui/WorkflowTimer";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
 import { QuestsKarte } from "../ui/QuestsKarte";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
@@ -136,6 +137,7 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
           {heuteErledigt ? "✓ Heute erledigt" : "Heute erledigen"}
         </PrimaryButton>
       </div>
+      <ItemVerlauf kategorie="gewohnheit" itemName={g.name} />
     </Card>
   );
 }
@@ -266,6 +268,40 @@ export default function GewohnheitenView({ onHome }) {
     return { ...w, arbeitMin, pauseMin, gesamtMin };
   };
 
+  // Nutzerinnen-Vorgabe (17.09.): "Alle Veränderungen sollen immer im
+  // Tagesverlauf mit auftauchen" — dieser Screen ist ein DRITTER
+  // Einstiegspunkt, um Morgen-/Abendroutine-Schritte zu bearbeiten (neben
+  // RoutineTabView.jsx, wo das schon protokolliert wird), der beim Bauen
+  // dieser Funktion zunächst übersehen wurde. Gleiches Wrapper-Muster wie
+  // dort, hier verallgemeinert auf beide Routinen statt fest auf eine.
+  const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
+  const routineSchrittHinzufuegenUndProtokollieren = async (routine, name, dauerMin) => {
+    const result = await routineSchrittHinzufuegen(routine, name, dauerMin);
+    if (result?.ok !== false) {
+      aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: name, aktion: "hinzugefügt", detail: `${dauerMin || 5} Min.` });
+    }
+    return result;
+  };
+  const routineSchrittEntfernenUndProtokollieren = (routine, id) => {
+    const schritt = routineSchritte.find((s) => s.id === id);
+    routineSchrittEntfernen(id);
+    if (schritt) {
+      aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: schritt.name, aktion: "entfernt", detail: `${schritt.dauerMin} Min.` });
+    }
+  };
+  const routineSchrittVerschiebenUndProtokollieren = (routine, id, richtung) => {
+    const schritt = routineSchritte.find((s) => s.id === id);
+    routineSchrittVerschieben(id, richtung);
+    if (schritt) {
+      aenderungVermerken({
+        kategorie: ROUTINE_KATEGORIE[routine],
+        itemName: schritt.name,
+        aktion: "geändert",
+        detail: `Reihenfolge geändert (${richtung === "hoch" ? "nach oben" : "nach unten"})`,
+      });
+    }
+  };
+
   const handleEntfernen = (g) => {
     aenderungVermerken({
       kategorie: "gewohnheit",
@@ -362,27 +398,37 @@ export default function GewohnheitenView({ onHome }) {
           <RoutineSchritteEditor
             routine="morgen"
             schritte={routineSchritte.filter((s) => s.routine === "morgen")}
-            onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("morgen", name, dauerMin)}
+            onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegenUndProtokollieren("morgen", name, dauerMin)}
             mahlzeiten={mahlzeiten}
             supplemente={supplemente}
             hormone={hormone}
             trainingWochenplan={trainingWochenplan}
             gewohnheiten={gewohnheiten}
           />
-          <RoutineSchritteListe routine="morgen" schritte={routineSchritte.filter((s) => s.routine === "morgen")} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+          <RoutineSchritteListe
+            routine="morgen"
+            schritte={routineSchritte.filter((s) => s.routine === "morgen")}
+            onEntfernen={(id) => routineSchrittEntfernenUndProtokollieren("morgen", id)}
+            onVerschieben={(id, richtung) => routineSchrittVerschiebenUndProtokollieren("morgen", id, richtung)}
+          />
 
           <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14 }}>🌙 Abendroutine-Schritte</div>
           <RoutineSchritteEditor
             routine="abend"
             schritte={routineSchritte.filter((s) => s.routine === "abend")}
-            onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen("abend", name, dauerMin)}
+            onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegenUndProtokollieren("abend", name, dauerMin)}
             mahlzeiten={mahlzeiten}
             supplemente={supplemente}
             hormone={hormone}
             trainingWochenplan={trainingWochenplan}
             gewohnheiten={gewohnheiten}
           />
-          <RoutineSchritteListe routine="abend" schritte={routineSchritte.filter((s) => s.routine === "abend")} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+          <RoutineSchritteListe
+            routine="abend"
+            schritte={routineSchritte.filter((s) => s.routine === "abend")}
+            onEntfernen={(id) => routineSchrittEntfernenUndProtokollieren("abend", id)}
+            onVerschieben={(id, richtung) => routineSchrittVerschiebenUndProtokollieren("abend", id, richtung)}
+          />
 
           <SpotifyAnlassPicker anlass="morgenroutine" label="🎵 Playlist für die Morgenroutine" />
           <SpotifyAnlassPicker anlass="abendroutine" label="🎵 Playlist für die Abendroutine" />

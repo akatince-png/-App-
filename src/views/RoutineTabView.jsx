@@ -11,6 +11,7 @@ import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import SchlafplanCard, { neuerSchlafblock } from "../ui/SchlafplanCard";
+import ItemVerlauf from "../ui/ItemVerlauf";
 import KiChat from "../ui/KiChat";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
@@ -413,17 +414,23 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
                 <TimeWheelField value={einstellung.endZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(einstellung.startZeit, v)} />
               </div>
             </div>
+            <ItemVerlauf kategorie={ROUTINE_ANLASS[routine]} itemName={ROUTINE_LABEL[routine]} />
           </Card>
 
           {routine === "abend" && (
-            <SchlafplanCard
-              intervallTyp={schlafIntervallTyp}
-              onIntervallTypChange={handleSchlafIntervallTyp}
-              bloecke={schlafBloecke}
-              onBloeckeChange={handleSchlafBloecke}
-              istZustand={schlafIstZustand}
-              onIstZustandChange={handleSchlafIstZustand}
-            />
+            <>
+              <SchlafplanCard
+                intervallTyp={schlafIntervallTyp}
+                onIntervallTypChange={handleSchlafIntervallTyp}
+                bloecke={schlafBloecke}
+                onBloeckeChange={handleSchlafBloecke}
+                istZustand={schlafIstZustand}
+                onIstZustandChange={handleSchlafIstZustand}
+              />
+              <div style={{ marginTop: -8, marginBottom: 16 }}>
+                <ItemVerlauf kategorie="schlaf" itemName="Schlafplan" />
+              </div>
+            </>
           )}
 
           {ueberlappendeItems.length > 0 && (

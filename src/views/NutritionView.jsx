@@ -15,6 +15,7 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Ernährung
 // ist Terrakotta, passend zu den bunten Home-Mini-Widgets.
@@ -205,6 +206,7 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           </div>
         </div>
       )}
+      <ItemVerlauf kategorie="mahlzeit" itemName={m.name} />
     </div>
   );
 }

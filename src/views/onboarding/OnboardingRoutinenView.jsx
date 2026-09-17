@@ -183,7 +183,7 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
         </div>
       </Card>
 
-      <RoutineSchritteListe routine="morgen" schritte={morgenSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+      <RoutineSchritteListe routine="morgen" schritte={morgenSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} zeigeVerlauf={false} />
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌙 Abendroutine</div>
@@ -205,7 +205,7 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
         </div>
       </Card>
 
-      <RoutineSchritteListe routine="abend" schritte={abendSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+      <RoutineSchritteListe routine="abend" schritte={abendSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} zeigeVerlauf={false} />
 
       <SchlafplanCard
         intervallTyp={schlafIntervallTyp}

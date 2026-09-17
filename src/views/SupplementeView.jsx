@@ -12,6 +12,7 @@ import ViewHeader from "../ui/ViewHeader";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
@@ -92,6 +93,7 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto }) {
           </div>
         </div>
       )}
+      <ItemVerlauf kategorie="supplement" itemName={s.name} />
     </div>
   );
 }

@@ -119,6 +119,17 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **✅ 17.09.2026 (Teil 123):** Nutzerin hat Teil 122 präzisiert — die
+  Testosteron-Dosis-Änderung war nur ein BEISPIEL für ein app-weites
+  Prinzip, nicht nur für Routine/Schlafplan: strukturelle Änderungen
+  (Dosis/Zeiten/Name geändert, Eintrag hinzugefügt/entfernt) gehören
+  NIRGENDS mehr in den Tagesverlauf/Wochenverlauf/Monatsverlauf — der zeigt
+  nur noch den aktuellen Ist-Zustand je Zeitraum (was wurde erledigt/ist
+  ausgefallen). Die Änderungs-Historie gehört stattdessen "ins Protokoll
+  selbst" für die Retro-Perspektive als Coach. Umgesetzt für ALLE
+  Kategorien (Nutzerinnen-Entscheidung: app-weit, nicht nur Routine), neue
+  Verlaufs-Ansicht pro Einzelposten gebaut (Nutzerinnen-Entscheidung, nicht
+  nur die bestehende "Version festhalten"-Funktion) — Details unten.
 - **✅ 17.09.2026 (Teil 122):** Nutzerin hat auf die zwei Rückfragen aus
   Teil 121 geantwortet — beide Punkte sind jetzt gewollt: Tagesverlauf-
   Dokumentation für Routine-/Schlafplan-Änderungen ist umgesetzt (Migration
@@ -146,6 +157,72 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 17.09.2026 (Teil 123) — Struktur-Änderungen app-weit aus Tagesverlauf raus, neue Verlaufs-Ansicht pro Eintrag
+
+**Nutzerinnen-Präzisierung zu Teil 122:** "Die Veränderung selber, dass ich
+zum Beispiel von 10 Milligramm Testosteron auf 20 Milligramm Testosteron in
+der Folgewoche gewechselt habe, soll lediglich im Protokoll einsehbar sein,
+nicht im Tagesverlauf. ... Nur in den Protokollen selber ... damit ich
+später nachvollziehen kann als Coach, was die Leute wann, wie, wo gemacht
+haben. ... Der Tagesverlauf soll immer den aktuellsten Stand der Dinge nach
+entsprechenden Zeit- und Datumrahmen anzeigen." Auf Rückfrage: **app-weit**
+für alle Kategorien (nicht nur Routine/Schlafplan aus Teil 122) und als
+**neue Verlaufs-Ansicht pro Einzelposten** (nicht nur die bestehende
+manuelle "Version festhalten"-Funktion).
+
+**Root Cause:** `aenderungVermerken()` (Teil-Nummer der ursprünglichen
+Einführung liegt vor Beginn dieses Dokuments) wurde von Anfang an für ZWEI
+grundverschiedene Dinge in EINEN Feed geschrieben — echte Tagesereignisse
+(`aktion: "erledigt"`, z. B. eine Dosis wurde genommen) UND strukturelle
+Planänderungen (`aktion: "geändert"/"hinzugefügt"/"entfernt"`, z. B. eine
+Dosis wurde von 10mg auf 20mg umgestellt). Beide landeten gemeinsam im
+"📝 Tagesverlauf" (`ProtokollLogView.jsx`), wodurch sich echte Tages-
+Ereignisse und reine Konfigurations-Historie gegenseitig zumüllten.
+
+**Umgesetzt:**
+- **Neue Komponente `src/ui/ItemVerlauf.jsx`**: liest `protokollEintraege`
+  (schon vollständig über `useAppData()` geladen, keine neue Abfrage
+  nötig), filtert rein clientseitig nach `kategorie`+`itemName` UND nur die
+  vier Struktur-Aktionen (`geändert`, `hinzugefügt`, `entfernt`, `Version
+  festgehalten`) — zeigt sie chronologisch mit Datum/Uhrzeit, Detail und
+  Grund, aufklappbar hinter einem kleinen "🕐 Verlauf (n)"-Knopf. EIN
+  gemeinsames Bauteil statt eigener Logik je Kategorie-Ansicht.
+- **`ProtokollLogView.jsx`**: der "📝 Tagesverlauf"-Abschnitt filtert jetzt
+  auf `TAGESVERLAUF_AKTIONEN = ["erledigt", "ausgefallen", "Ausnahme
+  zurückgenommen"]` — alles andere (Struktur-Änderungen) taucht dort nicht
+  mehr auf. Mehrfachauswahl/"Alle löschen" arbeitet jetzt konsistent auf
+  derselben gefilterten Liste (vorher auf der vollen, ungefilterten Liste —
+  hätte sonst mehr/andere Einträge markiert, als tatsächlich sichtbar
+  waren). Leer-Hinweis-Text angepasst (verweist jetzt auf "🕐 Verlauf" beim
+  jeweiligen Eintrag für Plan-Änderungen).
+- **`<ItemVerlauf kategorie="..." itemName="...">` eingebaut in:**
+  `MedikamenteView.jsx` (je Medikament/Hormon/Peptid), `SupplementeView.jsx`
+  (je Supplement), `NutritionView.jsx` (je Mahlzeit), `GewohnheitenView.jsx`
+  (je Gewohnheit), `WochenplanEditor.jsx`/`TrainingView.jsx` (je Wochentag-
+  Gruppe im Trainings-Wochenplan), `RoutineSchritteListe.jsx` (je Routine-
+  Schritt — neuer `zeigeVerlauf`-Prop, `false` im Onboarding, da dort noch
+  nichts protokolliert wird), `RoutineTabView.jsx` (Zeitrahmen + Schlafplan).
+- **Bug-Fix währenddessen gefunden (Selbst-Review, wie von der Nutzerin
+  gefordert):** `GewohnheitenView.jsx` hat einen DRITTEN, bisher übersehenen
+  Einstiegspunkt für Morgen-/Abendroutine-Schritte (eigene eingebettete
+  "Routinen"-Sektion, unabhängig von `RoutineTabView.jsx`) — rief
+  `routineSchrittHinzufuegen`/`-Entfernen`/`-Verschieben` bisher UNGEWRAPPT
+  auf, ohne jede Tagesverlauf-Protokollierung aus Teil 122. Gleiches
+  Wrapper-Muster wie in `RoutineTabView.jsx` jetzt auch hier ergänzt.
+  Zusätzlich beim ersten Anlauf `ItemVerlauf` in `SupplementeView.jsx`
+  eingebaut, aber den Import vergessen — von `oxlint` (`jsx-no-undef`)
+  sofort aufgefangen, bevor es committet wurde.
+- Migration 0091 aus Teil 122 deckt die nötigen Kategorie-Werte
+  (`morgenroutine`/`abendroutine`/`schlaf`) für den CHECK-Constraint schon
+  ab — keine weitere Migration nötig, `ItemVerlauf` liest nur um, schreibt
+  nichts Neues.
+
+**Getestet:** Build/Lint/Typecheck grün, 129 Unit-Tests grün (3 neu:
+`ItemVerlauf.test.jsx` — filtert korrekt nach kategorie+itemName+Aktion,
+zeigt Anzahl im Button, Leer-Hinweis ohne Treffer), 39 E2E-Tests grün.
 
 ---
 
