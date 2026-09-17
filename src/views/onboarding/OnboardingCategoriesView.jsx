@@ -469,15 +469,22 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       // nicht "auf 0 setzen" — sonst würde reines Durchklicken das
       // bestehende Ziel überschreiben.
       const neuesZiel = hydrationMl.trim() === "" ? hydrationZielMl : Math.max(0, Number(hydrationMl) || 0);
-      await hydrationZielSetzen(neuesZiel);
+      // Bug-Fix (17.09., "Testlauf"-Nachkontrolle): hydrationZielSetzen()/
+      // tageslichtZielSetzen()/bildschirmzeitZielSetzen() geben wie überall
+      // sonst {ok, error} zurück — hier wurde das bisher verworfen, `result`
+      // blieb auf dem Anfangswert {ok: true} stehen, egal ob der Schreib-
+      // vorgang tatsächlich geklappt hat. Bei einem Fehlschlag (Netzwerk)
+      // sprang der Onboarding-Flow trotzdem sofort zum nächsten Schritt,
+      // ohne dass das Ziel je gespeichert wurde und ohne jede Fehlermeldung.
+      result = await hydrationZielSetzen(neuesZiel);
       setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "tageslicht") {
       const neuesZiel = tageslichtMinuten.trim() === "" ? tageslichtZielMinuten : Math.max(0, Number(tageslichtMinuten) || 0);
-      await tageslichtZielSetzen(neuesZiel);
+      result = await tageslichtZielSetzen(neuesZiel);
       setCategoryZiel("tageslicht", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "bildschirmzeit") {
       const neuesLimit = bildschirmzeitMinuten.trim() === "" ? bildschirmzeitZielMinuten : Math.max(0, Number(bildschirmzeitMinuten) || 0);
-      await bildschirmzeitZielSetzen(neuesLimit);
+      result = await bildschirmzeitZielSetzen(neuesLimit);
       setCategoryZiel("bildschirmzeit", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
@@ -650,7 +657,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         const h = await AIService.hydrationAusChat({ verlauf, coachName });
         if (h.zielMl) {
           setHydrationMl(String(h.zielMl));
-          await hydrationZielSetzen(Math.max(0, Number(h.zielMl) || 0));
+          // Bug-Fix (17.09., "Testlauf"-Nachkontrolle): siehe
+          // speichernUndWeiter() oben — dieselbe Lücke gab es auch hier im
+          // Coach-Übernahme-Pfad, das Ergebnis von hydrationZielSetzen()
+          // wurde bisher verworfen, ein Fehlschlag also nie gemeldet.
+          const result = await hydrationZielSetzen(Math.max(0, Number(h.zielMl) || 0));
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
         }
         if (h.istZustandMenge) setIstZustandFeld("menge", h.istZustandMenge);
         if (h.istZustandGetraenke) setIstZustandFeld("getraenke", h.istZustandGetraenke);
@@ -659,13 +671,19 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       case "tageslicht": {
         const tl = await AIService.tageslichtAusChat({ verlauf, coachName });
         setTageslichtMinuten(String(tl.zielMinuten));
-        if (tl.zielMinuten) await tageslichtZielSetzen(Math.max(0, Number(tl.zielMinuten) || 0));
+        if (tl.zielMinuten) {
+          const result = await tageslichtZielSetzen(Math.max(0, Number(tl.zielMinuten) || 0));
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        }
         return tl;
       }
       case "bildschirmzeit": {
         const bz = await AIService.bildschirmzeitAusChat({ verlauf, coachName });
         setBildschirmzeitMinuten(String(bz.zielMinuten));
-        if (bz.zielMinuten) await bildschirmzeitZielSetzen(Math.max(0, Number(bz.zielMinuten) || 0));
+        if (bz.zielMinuten) {
+          const result = await bildschirmzeitZielSetzen(Math.max(0, Number(bz.zielMinuten) || 0));
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        }
         if (bz.istZustandUeblich) setIstZustandFeld("ueblich", bz.istZustandUeblich);
         if (bz.istZustandTaetigkeit) setIstZustandFeld("taetigkeit", bz.istZustandTaetigkeit);
         if (bz.istZustandReduzieren) setIstZustandFeld("reduzieren", bz.istZustandReduzieren);
