@@ -119,41 +119,75 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
-- **🔶 17.09.2026 (Teil 128, läuft):** Direkt nach Teil 127 bat die
-  Nutzerin um einen weiteren, noch tieferen Testlauf — diesmal nicht auf
-  Protokoll-Sichtbarkeit fokussiert, sondern auf die Speicherpfade selbst
-  ("speichern die Masken/Fenster wirklich, und an der richtigen Stelle?").
-  Ursprünglich als 7 parallele Recherche-Agenten geplant (je ein
-  Themenbereich); alle 7 sind sofort an einem Session-Rate-Limit
-  gescheitert, bevor sie irgendein Ergebnis liefern konnten — deshalb von
-  Hand weitergemacht, Datei für Datei, statt es nochmal parallel zu
-  versuchen. Bisher direkt durchgelesen und gegen die jeweiligen
-  Supabase-Aufrufe/Migrationen geprüft: `useHormoneData.js`,
-  `useSupplementData.js`, `useHydrationData.js`, `useTageslichtData.js`,
-  `useBildschirmzeitData.js`, `useSleepData.js`, `useMealData.js`,
-  `useGewohnheitenData.js`, `useRoutinen.js` (Routine-Schritte inkl.
-  Verschieben/Reihenfolge), `useTrainingData.js` + `LiveWorkout.jsx`,
-  `useTagesplanAusnahmen.js` (Heute-anders-Mechanismus), `useWorkflowData.js`,
-  `useZeitbloecke.js`. Dabei EINEN echten Bug gefunden und behoben:
-  `toggleGewohnheitErledigt()` löscht beim Entabhaken einer Gewohnheit die
-  komplette `routine_logs`-Zeile — inklusive einer evtl. gespeicherten
-  Notiz. Der lokale `gewohnheitNotizen`-Stand zog das nicht nach, die
-  Notiz blieb in der Anzeige (TagesplanView.jsx) sichtbar, obwohl sie in
-  der DB schon weg war; beim erneuten Abhaken wäre sie dauerhaft verloren
-  gewesen, ohne dass die Oberfläche das je verraten hätte. Jetzt wird der
-  lokale Notiz-Stand beim Entabhaken korrekt mitgelöscht (mit Rollback bei
-  einem DB-Fehler, wie überall sonst in dieser Datei). Alle anderen
-  geprüften Speicherpfade waren korrekt: Optimistic-Update-mit-Rollback
-  durchgängig vorhanden, Upsert-Konfliktschlüssel stimmen mit den
-  tatsächlichen DB-Unique-Constraints überein, keine Kategorie-Verwechslung
-  trotz sehr ähnlichem Code (Hydration/Tageslicht/Bildschirmzeit sind
-  fast identische Dateien — sauber durchgehend umbenannt, keine
-  Kopier-Reste gefunden), Live-Workout speichert beim Abschluss immer den
-  VOLLSTÄNDIGEN Übungs-Stand (kein Datenverlust einzelner Sätze). Build +
-  Lint + komplette Vitest-Suite (158 Tests) danach weiterhin grün. **Noch
-  nicht abgeschlossen** — Profil/Einstellungen, Onboarding,
-  Admin/Team/Coach-Bereiche (Quests, Checkins, Biomarker, Coach-Nachrichten,
-  Erfolge) sind in dieser Runde noch nicht durchgesehen worden.
+- **✅ 17.09.2026 (Teil 128, abgeschlossen):** Direkt nach Teil 127 bat
+  die Nutzerin um einen weiteren, noch tieferen Testlauf — diesmal nicht
+  auf Protokoll-Sichtbarkeit fokussiert, sondern auf die Speicherpfade
+  selbst ("speichern die Masken/Fenster wirklich, und an der richtigen
+  Stelle?"), mit der ausdrücklichen Ansage, so oft wie möglich
+  nachzukontrollieren. Ursprünglich als 7 parallele Recherche-Agenten
+  geplant (je ein Themenbereich); alle 7 sind sofort an einem
+  Session-Rate-Limit gescheitert, bevor sie irgendein Ergebnis liefern
+  konnten — deshalb von Hand weitergemacht, Datei für Datei, statt es
+  nochmal parallel zu versuchen. Am Ende WIRKLICH JEDE Datei unter
+  `src/data/` mit eigenen Schreibpfaden durchgelesen und gegen die
+  jeweiligen Supabase-Aufrufe/Migrationen geprüft — Medikamente/
+  Supplemente/Ernährung/Gewohnheiten/Routinen (inkl. Verschieben/
+  Reihenfolge)/Training (inkl. `LiveWorkout.jsx`)/Hydration/Tageslicht/
+  Bildschirmzeit/Schlaf/Zeitblöcke/Projekte/Workflows/Heute-anders-
+  Ausnahmen/Profil & Einstellungen/Checkins/Biomarker/Quests/Teams/
+  Coach- und Admin-Nachrichten/Wissens-Basis/Erfolge/Peptid-Legacy-Daten
+  — plus eine Stichprobe des Onboarding-Flows (Zwischenstand UND
+  eingegebene Daten überleben ein Neuladen mitten im Ablauf: Phase liegt
+  in `localStorage`, die eigentlichen Formularfelder gehen sofort und
+  einzeln über dieselben Funktionen wie im normalen Profil-Tab in die DB
+  — keine separate, verlustanfällige Zwischenspeicherung). Dabei ZWEI
+  echte Bugs gefunden und behoben:
+  1. `toggleGewohnheitErledigt()` (`useGewohnheitenData.js`) löscht beim
+     Entabhaken einer Gewohnheit die komplette `routine_logs`-Zeile —
+     inklusive einer evtl. gespeicherten Notiz. Der lokale
+     `gewohnheitNotizen`-Stand zog das nicht nach, die Notiz blieb in der
+     Anzeige (TagesplanView.jsx) sichtbar, obwohl sie in der DB schon weg
+     war; beim erneuten Abhaken wäre sie dauerhaft verloren gewesen, ohne
+     dass die Oberfläche das je verraten hätte. Jetzt wird der lokale
+     Notiz-Stand beim Entabhaken korrekt mitgelöscht (mit Rollback bei
+     einem DB-Fehler).
+  2. Der deutlich wichtigere Fund: `setCategoryZiel`/`setErinnerung`/
+     `setSteckbrief`/`toggleMesswert`/`addCustomMesswert`/
+     `removeCustomMesswert` in `useProfileData.js` lesen jeweils den
+     KOMPLETTEN jsonb-Wert einer `profiles`-Spalte, patchen ihn lokal und
+     schreiben ihn komplett zurück. Tippt die Nutzerin schnell
+     hintereinander auf zwei VERSCHIEDENE Einstellungen (z. B. zwei
+     Erinnerungen in der Liste in "Mehr" — bei ADHS keine Seltenheit),
+     trug jeder Tap einen beim Klick eingefrorenen Stand in einen eigenen
+     Netzwerk-Request; kam die ältere Antwort NACH der neueren an
+     (Netzwerk garantiert keine Reihenfolge), überschrieb sie die neuere
+     Änderung in der Datenbank wieder — lautlos, ohne dass die Anzeige
+     (die längst beides korrekt zeigte) das je verraten hätte. Neuer
+     `useSpaltenSchreiber()`-Helfer serialisiert jetzt alle
+     Schreibvorgänge auf dieselbe Spalte hintereinander und liest den zu
+     schreibenden Wert erst im Moment der tatsächlichen Ausführung aus
+     einer Ref — jeder Request trägt dadurch immer den zu diesem
+     Zeitpunkt aktuellsten, vollständig zusammengeführten Stand, egal in
+     welcher Reihenfolge die Antworten tatsächlich eintreffen. Codebasis-
+     weit nach demselben Bugmuster gesucht (jede Datei mit einem
+     `{ ...prev, [schlüssel]: ... }`-Zwischenschritt vor einem
+     `.update()`/`.upsert()`) — überall sonst betrifft das entweder eine
+     rein lokale Zusammenführung vor einem PRO-ZEILE-Schreibvorgang
+     (sicher, da jede Zeile ihre eigene ID hat) oder echte Peptid-/
+     Dosierungs-Datensätze mit eigener Zeile pro Präparat — nur die
+     `profiles`-Spalten aus useProfileData.js bündeln mehrere
+     unabhängige Werte in EINER Spalte und waren dadurch betroffen.
+  Alle anderen geprüften Speicherpfade waren korrekt: Optimistic-Update-
+  mit-Rollback durchgängig vorhanden, Upsert-Konfliktschlüssel stimmen mit
+  den tatsächlichen DB-Unique-Constraints überein, keine
+  Kategorie-Verwechslung trotz sehr ähnlichem Code
+  (Hydration/Tageslicht/Bildschirmzeit sind fast identische Dateien —
+  sauber durchgehend umbenannt, keine Kopier-Reste gefunden), Live-Workout
+  speichert beim Abschluss immer den VOLLSTÄNDIGEN Übungs-Stand (kein
+  Datenverlust einzelner Sätze), Quests/Checkins/Biomarker/Team-/Coach-
+  Nachrichten sind durchgängig Zeile-pro-Eintrag ohne Sammel-Objekt und
+  damit ohne das Race-Risiko aus Fund 2. Build + Lint + komplette
+  Vitest-Suite (158 Tests) danach weiterhin grün.
 - **✅ 17.09.2026 (Teil 127, abgeschlossen):** Nach Teil 126 bat die
   Nutzerin um einen vollständigen Funktions-/Regressionstest ("nicht
   wieder eine neue Überraschung", konkrete Fragen: "Übermittelt es? Wird
