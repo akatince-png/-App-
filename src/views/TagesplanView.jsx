@@ -449,7 +449,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                        {item.kategorie !== "training" && item.kategorie !== "zeitblock" && onEditItem && (
+                        {item.kategorie !== "training" && onEditItem && (
                           <button
                             className="mp-tap"
                             onClick={() => onEditItem(item.kategorie, item.refId)}

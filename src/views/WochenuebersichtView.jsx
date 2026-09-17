@@ -155,7 +155,15 @@ export default function WochenuebersichtView({
   // heißt geschlossen.
   const [bearbeitenItem, setBearbeitenItem] = useState(null);
   const [bearbeitenDatum, setBearbeitenDatum] = useState(null);
-  const AUSNAHME_KLICKBAR = useMemo(() => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow"]), []);
+  // Seit 17.09. (Nutzerinnen-Vorgabe "alle Tagespunkte sollen einsehbar
+  // sein") für ALLE von buildDayItems() gelieferten Kategorien klickbar,
+  // nicht mehr nur die fünf Ausnahme-fähigen — TagesEintragBearbeiten.jsx
+  // zeigt für Training/Zeitblock dann nur noch die reine Info-Ansicht
+  // (siehe dortiger Kommentar zu AUSNAHME_KATEGORIEN).
+  const AUSNAHME_KLICKBAR = useMemo(
+    () => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow", "training", "zeitblock"]),
+    []
+  );
   const oeffneBearbeiten = (item, datumObj) => {
     if (!AUSNAHME_KLICKBAR.has(item.kategorie)) return;
     setBearbeitenItem(item);
@@ -650,15 +658,18 @@ export default function WochenuebersichtView({
             ) : (
               tagesItems.map((item, i, arr) => {
                 const k = KATEGORIE_META[item.kategorie];
+                const klickbar = AUSNAHME_KLICKBAR.has(item.kategorie);
                 return (
                   <div
                     key={item.key}
+                    onClick={klickbar ? () => oeffneBearbeiten(item, selectedDate) : undefined}
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 10,
                       padding: "10px 8px",
                       borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
+                      cursor: klickbar ? "pointer" : "default",
                     }}
                   >
                     <div style={{ width: 8, height: 8, borderRadius: 4, background: item.farbe || k.dot, flexShrink: 0 }} />

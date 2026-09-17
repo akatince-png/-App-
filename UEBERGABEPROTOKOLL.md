@@ -119,6 +119,30 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **✅ 17.09.2026 (Teil 124):** Nutzerin hat weiter präzisiert — nicht nur
+  die Struktur-Historie (Teil 123) soll pro Eintrag einsehbar sein, sondern
+  JEDER einzelne Tagespunkt (alle Kategorien) soll überall (Tagesplan,
+  Wochenübersicht Tag/Woche/Monat) antippbar sein und zeigen, was dahinter
+  konfiguriert ist — ohne Umweg über die volle Protokoll-Seite. Umgesetzt:
+  `TagesEintragBearbeiten.jsx` öffnet sich jetzt für ALLE Kategorien (vorher
+  nur 5 von 9) — Training/Zeitblock bekommen eine reduzierte Nur-Info-Karte
+  ohne Erledigt-/Ausnahme-Bedienung, aber mit demselben "Dauerhaft
+  ändern"/"Zum Protokoll"-Knopf; `AUSNAHME_KLICKBAR` in
+  `WochenuebersichtView.jsx` erweitert auf alle Kategorien, plus die
+  bisher komplett klicklose Tages-Listenansicht (day mode) bekam dieselbe
+  Klick-Logik wie Woche/Monat; `TagesplanView.jsx` bekam den ✏️-
+  Bearbeiten-Knopf jetzt auch für Zeitblock (Training hat weiterhin seine
+  eigene Vorschau). Neu in beiden Kategorie→View-Maps (`KATEGORIE_ZU_VIEW`
+  in TagesEintragBearbeiten.jsx, `KATEGORIE_TO_VIEW` in
+  AuthenticatedApp.jsx): `training → training`, `zeitblock →
+  wochenuebersicht`. Build/Lint/Typecheck/129 Vitest-Tests/17 relevante
+  Playwright-Tests grün. **Noch offen (nicht Teil dieser Änderung):** die
+  Routine-Granularität aus Teil 122 ("ganze Routine als ein Punkt überall,
+  aber pro Einzelschritt aufklappbar") ist von der Nutzerin gewünscht,
+  aber noch nicht gebaut — Morgen-/Abendroutine tauchen weiterhin nicht als
+  Tagesplan-/Wochen-/Monats-Punkt auf (bewusste `buildDayItems()`-
+  Auslassung, siehe dort), das ist ein eigenes, größeres Stück Arbeit für
+  die nächste Sitzung.
 - **✅ 17.09.2026 (Teil 123):** Nutzerin hat Teil 122 präzisiert — die
   Testosteron-Dosis-Änderung war nur ein BEISPIEL für ein app-weites
   Prinzip, nicht nur für Routine/Schlafplan: strukturelle Änderungen
@@ -157,6 +181,78 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 17.09.2026 (Teil 124) — Jeder Tagespunkt überall antippbar, zeigt was dahinter steckt
+
+**Nutzerinnen-Vorgabe:** "Alle Tagespunkte sollen einsehbar sein... ohne
+groß in die Protokolle reingehen zu müssen... wenn ich da drauf klicke,
+möchte ich in dem Bereich landen und auch sehen, was ich da hinterlegt
+habe." Konkret am Beispiel Testosteron/Supplemente: beim Antippen soll
+sichtbar werden, was an Dosis/Uhrzeit/Detail dahintersteckt — für ALLE
+Kategorien (Medikamente, Supplemente, Mahlzeiten, Training, Gewohnheiten,
+Workflow, Zeitblöcke), nicht nur die, die es bisher konnten. Die genaue
+technische Verkettung hat die Nutzerin ausdrücklich an mich delegiert
+("Ich weiß nicht, was da die gesündeste Verkettung ist, aber das möchte
+ich").
+
+**Ausgangslage:** `TagesEintragBearbeiten.jsx` (Bottom-Sheet, aus Teil
+~110 für Wochen-/Monatsübersicht gebaut) konnte das schon — aber nur für
+5 von 9 Kategorien (`hormon, supplement, mahlzeit, gewohnheit, workflow`).
+Training/Zeitblock waren komplett ausgeschlossen. Zusätzlich hatte die
+Tages-Listenansicht (day mode) in `WochenuebersichtView.jsx` GAR KEINE
+Klick-Bedienung, und `TagesplanView.jsx` hatte für Zeitblock keinen
+Bearbeiten-Zugang (nur Training über eine eigene Vorschau).
+
+**Umsetzung (bewusst die bestehende Komponente erweitert statt eine neue
+zu bauen — vermeidet Duplikat-UI):**
+- `TagesEintragBearbeiten.jsx`: `KATEGORIE_ZU_VIEW` um `training →
+  training` und `zeitblock → wochenuebersicht` ergänzt. Der "Dauerhaft
+  ändern"-Knopf war bisher nur innerhalb des `kannAusnahme`-Blocks
+  gerendert (also nie für Training/Zeitblock sichtbar) — jetzt ein
+  eigener, von `kannAusnahme` unabhängiger Block, der für jede Kategorie
+  mit einem Eintrag in `KATEGORIE_ZU_VIEW` erscheint. Label wechselt je
+  nach `kannAusnahme`: "Dauerhaft ändern..." (kann eine Tages-Ausnahme)
+  vs. "Zum Protokoll →" (Training/Zeitblock — keine Ausnahme, nur
+  Info+Navigation). Erledigt-Checkbox und "Heute anders"-Formular bleiben
+  wie zuvor auf die 5 Ausnahme-fähigen Kategorien begrenzt (`kannAusnahme`/
+  `kannErledigt` unverändert) — für Training/Zeitblock zeigt die Karte
+  dann nur Name/Kategorie/Datum/Uhrzeit/Detail plus den Navigations-Knopf.
+- `WochenuebersichtView.jsx`: `AUSNAHME_KLICKBAR`-Set um `training` und
+  `zeitblock` erweitert (steuert Klickbarkeit in Woche- UND
+  Monatsraster, beide lasen schon aus demselben Set). Der Tages-
+  Listenmodus (bisher ohne jede Klick-Bedienung) bekam denselben
+  `onClick={klickbar ? () => oeffneBearbeiten(item, selectedDate) : ...}`
+  wie das Wochenraster.
+- `TagesplanView.jsx`: Bedingung für den ✏️-Bearbeiten-Knopf von
+  `kategorie !== "training" && kategorie !== "zeitblock"` auf nur noch
+  `kategorie !== "training"` verengt — Zeitblock bekommt jetzt den Knopf
+  (navigiert über `onEditItem` → `KATEGORIE_TO_VIEW.zeitblock` →
+  "wochenuebersicht", wo die Projekte/Zeitblöcke-Bearbeitung ohnehin
+  bereits lebt). Training behält seine eigene `TrainingVorschau`
+  (unverändert) statt zusätzlich diesen Knopf zu bekommen.
+- `AuthenticatedApp.jsx`: `KATEGORIE_TO_VIEW` (dieselbe Übersetzungs-
+  Tabelle wie `KATEGORIE_ZU_VIEW` oben, aber für den Tagesplan-Kurzweg)
+  um dieselben zwei Einträge ergänzt, damit beide Wege konsistent zum
+  selben Ziel navigieren.
+
+**Warum Zeitblock ohne eigene Zielseite trotzdem funktioniert:** Projekte/
+Zeitblöcke werden inhaltlich direkt in `WochenuebersichtView.jsx` verwaltet
+(kein eigener Tab) — "Zum Protokoll" landet dort genau richtig.
+
+**Bewusst NICHT angefasst:** die Erledigt-/Ausnahme-Logik selbst (nur die
+Sichtbarkeits-/Navigations-Schicht), und die Routine-Granularität aus
+Teil 122 (siehe offener Punkt oben) — Morgen-/Abendroutine erzeugen nach
+wie vor keine `buildDayItems()`-Einträge und tauchen deshalb in keiner
+dieser Ansichten als eigener Punkt auf.
+
+**Verifikation (Nutzerinnen-Vorgabe "Code immer doppelt checken"):**
+`npm run build` ✅, `npx oxlint` ✅ (nur vorbestehende `only-export-
+components`-Warnungen, keine neuen), `npm run typecheck` ✅, `npx vitest
+run` ✅ (129/129), `npx playwright test e2e/plaene.spec.js
+e2e/smoke.spec.js` ✅ (17/17, deckt alle Pläne-Reiter inkl.
+Wochenübersicht + Tagesplan-Navigation ab).
 
 ---
 
