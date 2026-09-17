@@ -39,10 +39,11 @@ export function Stepper({ step, total = STEP_TITLES.length }) {
   );
 }
 
-export function Card({ children, style }) {
+export function Card({ children, style, className, onClick }) {
   return (
     <div
-      className="mp-card"
+      className={className ? `mp-card ${className}` : "mp-card"}
+      onClick={onClick}
       style={{
         background: card,
         border: `1px solid ${cardBorder}`,
