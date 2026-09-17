@@ -1,8 +1,44 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { MESSWERT_DEFS } from "../constants";
 
 const DEFAULT_AKTIVE = ["gewicht", "kfa", "taille", "blutdruck", "ruhepuls", "energie"];
+
+// Bug-Fix (17.09., "Testlauf"-Nachkontrolle): setCategoryZiel/setErinnerung/
+// setSteckbrief/toggleMesswert etc. lesen alle den kompletten jsonb-Wert,
+// bauen lokal ein gepatchtes Objekt/Array und schreiben es KOMPLETT zurück
+// ("ganze Spalte überschreiben" statt gezieltem DB-seitigem Merge). Tippt
+// die Nutzerin schnell hintereinander auf zwei VERSCHIEDENE Einstellungen
+// (z. B. zwei Erinnerungen in der Liste in "Mehr" — bei ADHS keine
+// Seltenheit, siehe pendingErledigtRef-Muster in mehreren anderen Dateien
+// für dasselbe Verhalten bei EINEM Wert), lief bisher jeder Tap mit einem
+// beim Klick eingefrorenen ("next") Stand direkt in einen eigenen
+// Netzwerk-Request — kommt die ÄLTERE Antwort NACH der neueren an (Netzwerk
+// garantiert keine Reihenfolge), überschreibt sie die neuere Änderung in
+// der DB wieder, lautlos, ohne dass die Anzeige (die längst beides korrekt
+// zeigt) das je verrät. Serialisiert alle Schreibvorgänge auf dieselbe
+// profiles-Spalte hintereinander UND liest den zu schreibenden Wert erst
+// im Moment der tatsächlichen Ausführung aus einer Ref — dadurch trägt
+// JEDER Request, ganz gleich in welcher Reihenfolge er tatsächlich
+// abgeschickt wird, immer den zu diesem Zeitpunkt aktuellsten, bereits
+// vollständig zusammengeführten Stand.
+function useSpaltenSchreiber(userId, column) {
+  const ref = useRef(undefined);
+  const ketteRef = useRef(Promise.resolve());
+  const schreiben = useCallback(
+    (wert) => {
+      ref.current = wert;
+      const aufgabe = ketteRef.current.then(() => supabase.from("profiles").update({ [column]: ref.current }).eq("id", userId));
+      ketteRef.current = aufgabe.then(
+        () => {},
+        () => {}
+      );
+      return aufgabe;
+    },
+    [userId, column]
+  );
+  return schreiben;
+}
 
 export function useProfileData(userId) {
   const [loading, setLoading] = useState(true);
@@ -179,6 +215,7 @@ export function useProfileData(userId) {
   // "eine Zeile pro Nutzer"-Tabelle (Schlaf, Hydration, Ernährung, Training,
   // Supplemente, Medikamente) — Peptide/Gewohnheiten haben dafür eigene
   // Spalten (protocols.dauer_wochen bzw. routines.ziel_tage).
+  const categoryZieleSchreiben = useSpaltenSchreiber(userId, "category_ziele");
   const setCategoryZiel = useCallback(
     (kategorie, patch) => {
       let vorher;
@@ -188,18 +225,14 @@ export function useProfileData(userId) {
         next = { ...prev, [kategorie]: patch };
         return next;
       });
-      supabase
-        .from("profiles")
-        .update({ category_ziele: next })
-        .eq("id", userId)
-        .then(({ error }) => {
-          if (error) {
-            console.error(error);
-            setCategoryZieleState(vorher);
-          }
-        });
+      categoryZieleSchreiben(next).then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setCategoryZieleState(vorher);
+        }
+      });
     },
-    [userId]
+    [categoryZieleSchreiben]
   );
 
   // Erinnerungs-Präferenz je Pläne-Kategorie (Ja/Nein) — steuert, ob der
@@ -214,6 +247,7 @@ export function useProfileData(userId) {
   // KategorieErinnerung.jsx, MehrTab.jsx, HydrationView.jsx,
   // TrainingView.jsx, OnboardingCategoriesView.jsx) einen fehlgeschlagenen
   // Speicherversuch anzeigen können statt ihn nur lautlos zurückzurollen.
+  const erinnerungenSchreiben = useSpaltenSchreiber(userId, "erinnerungen");
   const setErinnerung = useCallback(
     async (kategorie, aktiv) => {
       let vorher;
@@ -223,7 +257,7 @@ export function useProfileData(userId) {
         next = { ...prev, [kategorie]: aktiv };
         return next;
       });
-      const { error } = await supabase.from("profiles").update({ erinnerungen: next }).eq("id", userId);
+      const { error } = await erinnerungenSchreiben(next);
       if (error) {
         console.error(error);
         setErinnerungenState(vorher);
@@ -231,7 +265,7 @@ export function useProfileData(userId) {
       }
       return { ok: true };
     },
-    [userId]
+    [erinnerungenSchreiben]
   );
 
   // Kurzer "Steckbrief" aus dem reduzierten Coachee-Onboarding (13.08.) —
@@ -239,6 +273,7 @@ export function useProfileData(userId) {
   // werden (die richtet die Admin stellvertretend ein), sondern der Admin
   // nur als Vorbereitung fürs Erstgespräch dienen. Gleiches jsonb-Muster
   // wie setCategoryZiel/setErinnerung.
+  const steckbriefSchreiben = useSpaltenSchreiber(userId, "steckbrief");
   const setSteckbrief = useCallback(
     (felder) => {
       let vorher;
@@ -248,18 +283,14 @@ export function useProfileData(userId) {
         next = { ...prev, ...felder };
         return next;
       });
-      supabase
-        .from("profiles")
-        .update({ steckbrief: next })
-        .eq("id", userId)
-        .then(({ error }) => {
-          if (error) {
-            console.error(error);
-            setSteckbriefState(vorher);
-          }
-        });
+      steckbriefSchreiben(next).then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setSteckbriefState(vorher);
+        }
+      });
     },
-    [userId]
+    [steckbriefSchreiben]
   );
 
   // Admin-konfigurierbarer Puffer fürs Belohnungsfenster (Nutzerin-Vorgabe,
@@ -310,6 +341,7 @@ export function useProfileData(userId) {
 
   const combinedMesswertDefs = useMemo(() => [...MESSWERT_DEFS, ...customMesswerte], [customMesswerte]);
 
+  const aktiveMesswerteSchreiben = useSpaltenSchreiber(userId, "aktive_messwerte");
   const toggleMesswert = useCallback(
     (id) => {
       let vorher;
@@ -319,18 +351,14 @@ export function useProfileData(userId) {
         next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
         return next;
       });
-      supabase
-        .from("profiles")
-        .update({ aktive_messwerte: next })
-        .eq("id", userId)
-        .then(({ error }) => {
-          if (error) {
-            console.error(error);
-            setAktiveMesswerte(vorher);
-          }
-        });
+      aktiveMesswerteSchreiben(next).then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setAktiveMesswerte(vorher);
+        }
+      });
     },
-    [userId]
+    [aktiveMesswerteSchreiben]
   );
 
   const addCustomMesswert = useCallback(
@@ -359,13 +387,9 @@ export function useProfileData(userId) {
         next = [...prev, id];
         return next;
       });
-      supabase
-        .from("profiles")
-        .update({ aktive_messwerte: next })
-        .eq("id", userId)
-        .then(({ error: e }) => e && console.error(e));
+      aktiveMesswerteSchreiben(next).then(({ error: e }) => e && console.error(e));
     },
-    [userId, combinedMesswertDefs]
+    [userId, combinedMesswertDefs, aktiveMesswerteSchreiben]
   );
 
   // Entfernt einen selbst angelegten Messwert wieder (z. B. einen versehentlich
@@ -384,13 +408,9 @@ export function useProfileData(userId) {
         next = prev.filter((x) => x !== id);
         return next;
       });
-      supabase
-        .from("profiles")
-        .update({ aktive_messwerte: next })
-        .eq("id", userId)
-        .then(({ error: e }) => e && console.error(e));
+      aktiveMesswerteSchreiben(next).then(({ error: e }) => e && console.error(e));
     },
-    [userId]
+    [userId, aktiveMesswerteSchreiben]
   );
 
   return {
