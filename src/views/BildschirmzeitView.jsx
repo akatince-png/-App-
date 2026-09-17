@@ -11,6 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import EintragVerlaufListe from "../ui/EintragVerlaufListe";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe, siehe
 // dayItems.js (KATEGORIE_META.bildschirmzeit).
@@ -59,6 +60,8 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
     bildschirmzeitHinzufuegen,
     bildschirmzeitZielSetzen,
     bildschirmzeitZielZuruecksetzen,
+    bildschirmzeitEintragSetzen,
+    bildschirmzeitEintragLoeschen,
     aenderungVermerken,
   } = useAppData();
   const {
@@ -215,21 +218,15 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
       {bildschirmzeitEintraege.length > 0 && (
         <>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verlauf</div>
-          <Card>
-            {bildschirmzeitEintraege
-              .slice()
-              .reverse()
-              .slice(0, 10)
-              .map((e) => (
-                <div
-                  key={e.datum}
-                  style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}
-                >
-                  <span style={{ color: textMuted }}>{e.datum}</span>
-                  <span style={{ fontWeight: 700 }}>{e.minuten} Min.</span>
-                </div>
-              ))}
-          </Card>
+          <EintragVerlaufListe
+            eintraege={bildschirmzeitEintraege}
+            feld="minuten"
+            einheit="Min."
+            max={720}
+            step={5}
+            onSetzen={bildschirmzeitEintragSetzen}
+            onLoeschen={bildschirmzeitEintragLoeschen}
+          />
         </>
       )}
     </>

@@ -13,6 +13,7 @@ import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import EintragVerlaufListe from "../ui/EintragVerlaufListe";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -51,6 +52,8 @@ export default function TageslichtView({ onHome, embedded = false }) {
     tageslichtHinzufuegen,
     tageslichtZielSetzen,
     tageslichtZielZuruecksetzen,
+    tageslichtEintragSetzen,
+    tageslichtEintragLoeschen,
     aenderungVermerken,
   } = useAppData();
   const {
@@ -201,21 +204,15 @@ export default function TageslichtView({ onHome, embedded = false }) {
       {tageslichtEintraege.length > 0 && (
         <>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verlauf</div>
-          <Card>
-            {tageslichtEintraege
-              .slice()
-              .reverse()
-              .slice(0, 10)
-              .map((e) => (
-                <div
-                  key={e.datum}
-                  style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}
-                >
-                  <span style={{ color: textMuted }}>{e.datum}</span>
-                  <span style={{ fontWeight: 700 }}>{e.minuten} Min.</span>
-                </div>
-              ))}
-          </Card>
+          <EintragVerlaufListe
+            eintraege={tageslichtEintraege}
+            feld="minuten"
+            einheit="Min."
+            max={720}
+            step={5}
+            onSetzen={tageslichtEintragSetzen}
+            onLoeschen={tageslichtEintragLoeschen}
+          />
         </>
       )}
     </>

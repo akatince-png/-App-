@@ -144,6 +144,46 @@ export function useHydrationData(userId) {
     [userId]
   );
 
+  // Bearbeiten/Löschen eines EINZELNEN Tages-Eintrags (17.09., Konsistenz-
+  // Check) — bisher ließ sich nur der HEUTIGE Tag über hydrationHinzufuegen
+  // (relativ, per Delta) ändern; ein vergangener Tag war weder korrigierbar
+  // noch löschbar, anders als bei Medikamenten/Supplementen/Mahlzeiten/
+  // Trainingseinheiten. Absolute Mengenangabe statt Delta, da hier — anders
+  // als beim schnellen "+250 ml"-Tap — der Zielwert direkt bekannt ist.
+  const hydrationEintragSetzen = useCallback(
+    async (datum, mengeMl) => {
+      const wert = Math.max(0, Number(mengeMl) || 0);
+      const vorher = hydrationEintraege.find((e) => e.datum === datum);
+      setHydrationEintraege((prev) => {
+        const bestehend = prev.find((e) => e.datum === datum) || {};
+        return [...prev.filter((e) => e.datum !== datum), { ...bestehend, datum, mengeMl: wert }].sort((a, b) => a.datum.localeCompare(b.datum));
+      });
+      const { error } = await supabase.from("hydration_logs").upsert({ user_id: userId, datum, menge_ml: wert }, { onConflict: "user_id,datum" });
+      if (error) {
+        console.error(error);
+        setHydrationEintraege((prev) => (vorher ? [...prev.filter((e) => e.datum !== datum), vorher] : prev.filter((e) => e.datum !== datum)));
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
+    },
+    [userId, hydrationEintraege]
+  );
+
+  const hydrationEintragLoeschen = useCallback(
+    async (datum) => {
+      const vorher = hydrationEintraege.find((e) => e.datum === datum);
+      setHydrationEintraege((prev) => prev.filter((e) => e.datum !== datum));
+      const { error } = await supabase.from("hydration_logs").delete().eq("user_id", userId).eq("datum", datum);
+      if (error) {
+        console.error(error);
+        if (vorher) setHydrationEintraege((prev) => [...prev, vorher].sort((a, b) => a.datum.localeCompare(b.datum)));
+        return { ok: false, error: `Löschen fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
+    },
+    [userId, hydrationEintraege]
+  );
+
   return {
     hydrationEintraege,
     hydrationHeuteMl,
@@ -152,5 +192,7 @@ export function useHydrationData(userId) {
     hydrationZielSetzen,
     hydrationZielZuruecksetzen,
     hydrationCheckinSpeichern,
+    hydrationEintragSetzen,
+    hydrationEintragLoeschen,
   };
 }

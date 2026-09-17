@@ -185,8 +185,21 @@ längst gibt — jetzt diese Kurzübersicht:
      "Cannot read properties of undefined (reading 'filter')". Jetzt
      Defaults ergänzt, mit Playwright-Testlauf bestätigt (kompletter
      E2E-Lauf: 39/39 grün, keine Regression durch den Fix).
-  6. ⏳ Einzeleinträge bearbeiten/löschen bei Schlaf/Hydration/Tageslicht/
-     Bildschirmzeit — noch offen.
+  6. ✅ Einzeleinträge bearbeiten/löschen bei Schlaf/Hydration/Tageslicht/
+     Bildschirmzeit — bisher ließ sich nur der HEUTIGE Tag korrigieren
+     (Hydration/Tageslicht/Bildschirmzeit: relatives Delta via "Verschätzt?",
+     Schlaf: gar keine Korrektur/kein Löschen), ein vergangener Tag war nie
+     bearbeitbar oder löschbar. Neue `…EintragSetzen(datum, wert)`/
+     `…EintragLoeschen(datum)`-Funktionen in `useHydrationData.js`/
+     `useTageslichtData.js`/`useBildschirmzeitData.js` (absolute Werte statt
+     Delta) sowie `schlafEintragLoeschen()` in `useSleepData.js` (Bearbeiten
+     ging dort schon vorher über erneutes `schlafHinzufuegen()` mit
+     demselben Datum, nur Löschen fehlte). Neue geteilte Komponente
+     `EintragVerlaufListe.jsx` (✏️ öffnet Inline-Bearbeiten mit Löschen) für
+     die drei "Tages-Gesamtsumme"-Kategorien; Schlaf lädt einen Eintrag
+     stattdessen zurück ins bestehende Formular oben (Button wechselt zu
+     "Eintrag ändern" + "Abbrechen"). Keine neue Migration nötig (nur
+     UPDATE/DELETE auf bestehende Tabellen).
   7. ⏳ "Version festhalten" für Morgenroutine/Abendroutine + Zeitblöcke —
      noch offen.
   8. ⏳ Redundante Routinen-Sektion in `GewohnheitenView.jsx` angleichen —

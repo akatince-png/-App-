@@ -98,6 +98,40 @@ export function useTageslichtData(userId) {
     return { ok: true };
   }, [userId, tageslichtZielMinuten]);
 
+  // Bearbeiten/Löschen eines einzelnen Tages-Eintrags — siehe
+  // hydrationEintragSetzen()/hydrationEintragLoeschen() in
+  // useHydrationData.js für die ausführliche Begründung, gleiches Muster.
+  const tageslichtEintragSetzen = useCallback(
+    async (datum, minuten) => {
+      const wert = Math.max(0, Number(minuten) || 0);
+      const vorher = tageslichtEintraege.find((e) => e.datum === datum);
+      setTageslichtEintraege((prev) => [...prev.filter((e) => e.datum !== datum), { datum, minuten: wert }].sort((a, b) => a.datum.localeCompare(b.datum)));
+      const { error } = await supabase.from("tageslicht_logs").upsert({ user_id: userId, datum, minuten: wert }, { onConflict: "user_id,datum" });
+      if (error) {
+        console.error(error);
+        setTageslichtEintraege((prev) => (vorher ? [...prev.filter((e) => e.datum !== datum), vorher] : prev.filter((e) => e.datum !== datum)));
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
+    },
+    [userId, tageslichtEintraege]
+  );
+
+  const tageslichtEintragLoeschen = useCallback(
+    async (datum) => {
+      const vorher = tageslichtEintraege.find((e) => e.datum === datum);
+      setTageslichtEintraege((prev) => prev.filter((e) => e.datum !== datum));
+      const { error } = await supabase.from("tageslicht_logs").delete().eq("user_id", userId).eq("datum", datum);
+      if (error) {
+        console.error(error);
+        if (vorher) setTageslichtEintraege((prev) => [...prev, vorher].sort((a, b) => a.datum.localeCompare(b.datum)));
+        return { ok: false, error: `Löschen fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
+    },
+    [userId, tageslichtEintraege]
+  );
+
   return {
     tageslichtEintraege,
     tageslichtHeuteMinuten,
@@ -105,5 +139,7 @@ export function useTageslichtData(userId) {
     tageslichtHinzufuegen,
     tageslichtZielSetzen,
     tageslichtZielZuruecksetzen,
+    tageslichtEintragSetzen,
+    tageslichtEintragLoeschen,
   };
 }

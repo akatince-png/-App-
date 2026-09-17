@@ -15,6 +15,7 @@ import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import EintragVerlaufListe from "../ui/EintragVerlaufListe";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
 // ist Blau, passend zu den bunten Home-Mini-Widgets.
@@ -47,6 +48,8 @@ export default function HydrationView({ onHome, embedded = false }) {
     hydrationZielSetzen,
     hydrationZielZuruecksetzen,
     hydrationCheckinSpeichern,
+    hydrationEintragSetzen,
+    hydrationEintragLoeschen,
     aenderungVermerken,
     erinnerungen,
     setErinnerung,
@@ -263,21 +266,15 @@ export default function HydrationView({ onHome, embedded = false }) {
       {hydrationEintraege.length > 0 && (
         <>
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Verlauf</div>
-          <Card>
-            {hydrationEintraege
-              .slice()
-              .reverse()
-              .slice(0, 10)
-              .map((e) => (
-                <div
-                  key={e.datum}
-                  style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}
-                >
-                  <span style={{ color: textMuted }}>{e.datum}</span>
-                  <span style={{ fontWeight: 700 }}>{e.mengeMl} ml</span>
-                </div>
-              ))}
-          </Card>
+          <EintragVerlaufListe
+            eintraege={hydrationEintraege}
+            feld="mengeMl"
+            einheit="ml"
+            max={5000}
+            step={50}
+            onSetzen={hydrationEintragSetzen}
+            onLoeschen={hydrationEintragLoeschen}
+          />
         </>
       )}
     </>

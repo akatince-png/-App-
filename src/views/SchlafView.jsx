@@ -32,7 +32,8 @@ const LEERER_EINTRAG = {
 };
 
 export default function SchlafView({ onHome, embedded = false }) {
-  const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage, categoryZiele, setCategoryZiel, aenderungVermerken } = useAppData();
+  const { schlafEintraege, schlafHinzufuegen, schlafEintragLoeschen, schlafDurchschnitt7Tage, categoryZiele, setCategoryZiel, aenderungVermerken } =
+    useAppData();
   const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState(LEERER_EINTRAG);
   const [detailsOffen, setDetailsOffen] = useState(false);
   const [schlafError, setSchlafError] = useState(null);
@@ -117,6 +118,33 @@ export default function SchlafView({ onHome, embedded = false }) {
     }
     setNeuerSchlafEintrag(LEERER_EINTRAG);
     setDetailsOffen(false);
+  };
+
+  // Bearbeiten eines vergangenen Eintrags (17.09., Konsistenz-Check) —
+  // schlafHinzufuegen() upsert't schon länger pro Datum, es fehlte nur der
+  // Weg, einen bestehenden Tag zurück ins Formular zu laden. Löschen war
+  // bisher gar nicht möglich.
+  const istBearbeitung = schlafEintraege.some((e) => e.datum === neuerSchlafEintrag.datum);
+  const bearbeiten = (e) => {
+    setNeuerSchlafEintrag({
+      datum: e.datum,
+      stunden: String(e.stunden ?? ""),
+      schlafqualitaet: e.schlafqualitaet || "",
+      einschlafzeit: e.einschlafzeit || "",
+      durchgeschlafen: e.durchgeschlafen ?? null,
+      erholt: e.erholt ?? null,
+      traeume: e.traeume || "",
+      bemerkungen: e.bemerkungen || "",
+    });
+    setDetailsOffen(true);
+  };
+  const loeschen = async (datum) => {
+    if (!window.confirm("Diesen Schlaf-Eintrag wirklich löschen?")) return;
+    await schlafEintragLoeschen(datum);
+    if (neuerSchlafEintrag.datum === datum) {
+      setNeuerSchlafEintrag(LEERER_EINTRAG);
+      setDetailsOffen(false);
+    }
   };
 
   // Übergabe an <KiChat onUebernehmen>: legt den im Gespräch besprochenen
@@ -214,8 +242,22 @@ export default function SchlafView({ onHome, embedded = false }) {
         )}
 
         {schlafError && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{schlafError}</div>}
-        <div style={{ marginTop: 12 }}>
-          <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
+        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <PrimaryButton onClick={submit}>{istBearbeitung ? "Eintrag ändern" : "Eintrag hinzufügen"}</PrimaryButton>
+          </div>
+          {istBearbeitung && (
+            <button
+              type="button"
+              onClick={() => {
+                setNeuerSchlafEintrag(LEERER_EINTRAG);
+                setDetailsOffen(false);
+              }}
+              style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+            >
+              Abbrechen
+            </button>
+          )}
         </div>
       </Card>
 
@@ -284,9 +326,27 @@ export default function SchlafView({ onHome, embedded = false }) {
               .reverse()
               .slice(0, 10)
               .map((e, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}>
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}>
                   <span style={{ color: textMuted }}>{e.datum}</span>
-                  <span style={{ fontWeight: 700 }}>{e.stunden} h</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontWeight: 700 }}>{e.stunden} h</span>
+                    <button
+                      type="button"
+                      onClick={() => bearbeiten(e)}
+                      title="Bearbeiten"
+                      style={{ border: "none", background: "transparent", color: textMuted, fontSize: 13, cursor: "pointer", padding: "0 2px" }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loeschen(e.datum)}
+                      title="Löschen"
+                      style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
           </Card>
