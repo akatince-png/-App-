@@ -119,6 +119,41 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **🔶 17.09.2026 (Teil 128, läuft):** Direkt nach Teil 127 bat die
+  Nutzerin um einen weiteren, noch tieferen Testlauf — diesmal nicht auf
+  Protokoll-Sichtbarkeit fokussiert, sondern auf die Speicherpfade selbst
+  ("speichern die Masken/Fenster wirklich, und an der richtigen Stelle?").
+  Ursprünglich als 7 parallele Recherche-Agenten geplant (je ein
+  Themenbereich); alle 7 sind sofort an einem Session-Rate-Limit
+  gescheitert, bevor sie irgendein Ergebnis liefern konnten — deshalb von
+  Hand weitergemacht, Datei für Datei, statt es nochmal parallel zu
+  versuchen. Bisher direkt durchgelesen und gegen die jeweiligen
+  Supabase-Aufrufe/Migrationen geprüft: `useHormoneData.js`,
+  `useSupplementData.js`, `useHydrationData.js`, `useTageslichtData.js`,
+  `useBildschirmzeitData.js`, `useSleepData.js`, `useMealData.js`,
+  `useGewohnheitenData.js`, `useRoutinen.js` (Routine-Schritte inkl.
+  Verschieben/Reihenfolge), `useTrainingData.js` + `LiveWorkout.jsx`,
+  `useTagesplanAusnahmen.js` (Heute-anders-Mechanismus), `useWorkflowData.js`,
+  `useZeitbloecke.js`. Dabei EINEN echten Bug gefunden und behoben:
+  `toggleGewohnheitErledigt()` löscht beim Entabhaken einer Gewohnheit die
+  komplette `routine_logs`-Zeile — inklusive einer evtl. gespeicherten
+  Notiz. Der lokale `gewohnheitNotizen`-Stand zog das nicht nach, die
+  Notiz blieb in der Anzeige (TagesplanView.jsx) sichtbar, obwohl sie in
+  der DB schon weg war; beim erneuten Abhaken wäre sie dauerhaft verloren
+  gewesen, ohne dass die Oberfläche das je verraten hätte. Jetzt wird der
+  lokale Notiz-Stand beim Entabhaken korrekt mitgelöscht (mit Rollback bei
+  einem DB-Fehler, wie überall sonst in dieser Datei). Alle anderen
+  geprüften Speicherpfade waren korrekt: Optimistic-Update-mit-Rollback
+  durchgängig vorhanden, Upsert-Konfliktschlüssel stimmen mit den
+  tatsächlichen DB-Unique-Constraints überein, keine Kategorie-Verwechslung
+  trotz sehr ähnlichem Code (Hydration/Tageslicht/Bildschirmzeit sind
+  fast identische Dateien — sauber durchgehend umbenannt, keine
+  Kopier-Reste gefunden), Live-Workout speichert beim Abschluss immer den
+  VOLLSTÄNDIGEN Übungs-Stand (kein Datenverlust einzelner Sätze). Build +
+  Lint + komplette Vitest-Suite (158 Tests) danach weiterhin grün. **Noch
+  nicht abgeschlossen** — Profil/Einstellungen, Onboarding,
+  Admin/Team/Coach-Bereiche (Quests, Checkins, Biomarker, Coach-Nachrichten,
+  Erfolge) sind in dieser Runde noch nicht durchgesehen worden.
 - **✅ 17.09.2026 (Teil 127, abgeschlossen):** Nach Teil 126 bat die
   Nutzerin um einen vollständigen Funktions-/Regressionstest ("nicht
   wieder eine neue Überraschung", konkrete Fragen: "Übermittelt es? Wird
