@@ -113,11 +113,37 @@ export function useProtocolData(userId) {
           .select()
           .single();
         if (error) {
-          console.error(error);
-          setLoading(false);
-          return;
+          // Zwei nahezu gleichzeitige Mount-Versuche (z. B. React StrictMode
+          // Doppel-Invoke) können beide "kein aktives Protokoll" sehen und
+          // beide einen Insert versuchen — der zweite verletzt dann den
+          // "ein aktives Protokoll pro Nutzer"-Constraint. Statt hier
+          // aufzugeben (und protocolId dauerhaft null zu lassen), das
+          // inzwischen vom anderen Versuch angelegte aktive Protokoll neu
+          // laden.
+          if (error.code === "23505") {
+            const { data: retryActive } = await supabase
+              .from("protocols")
+              .select("*")
+              .eq("user_id", userId)
+              .eq("status", "active")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (retryActive) {
+              active = retryActive;
+            } else {
+              console.error(error);
+              setLoading(false);
+              return;
+            }
+          } else {
+            console.error(error);
+            setLoading(false);
+            return;
+          }
+        } else {
+          active = created;
         }
-        active = created;
       }
 
       const { data: peptideRows } = await supabase
