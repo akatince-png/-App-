@@ -117,6 +117,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     mahlzeiten,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
+    mahlzeitNotizen,
+    mahlzeitNotizSpeichern,
     mealWochenplan,
     trainingEintraege,
     trainingNachDatum,
@@ -126,6 +128,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     gewohnheiten,
     gewohnheitErledigt,
     toggleGewohnheitErledigt,
+    gewohnheitNotizen,
+    gewohnheitNotizSpeichern,
     workflowPlaene,
     workflowPresets,
     projekte,
@@ -192,6 +196,34 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     else if (feedbackKategorie === "supplement") skipSupplementFeedback(dose);
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
+  };
+
+  // Leichte, optionale Notiz für Mahlzeiten/Gewohnheiten (17.09.,
+  // Konsistenz-Check) — bewusst kein Zwischenschritt wie bei Medikamenten/
+  // Supplementen (siehe FeedbackPanel oben): Bestätigen bleibt sofort,
+  // dieses Symbol erscheint erst DANACH und ist rein optional. `notizOffen`
+  // hält je item.key, ob die kleine Notiz-Box aufgeklappt ist; `notizEntwurf`
+  // den gerade bearbeiteten Text, bis er gespeichert wird.
+  const [notizOffen, setNotizOffen] = useState({});
+  const [notizEntwurf, setNotizEntwurf] = useState({});
+  const notizKategorien = ["mahlzeit", "gewohnheit"];
+  const notizSchluessel = (item) => {
+    const tagStr = toLocalISODate(selectedDate);
+    if (item.kategorie === "mahlzeit") return `${tagStr}__${item.raw.id}__${item.logZeit ?? item.uhrzeit}`;
+    return `${tagStr}__${item.raw.id}`;
+  };
+  const notizOeffnen = (item) => {
+    const schluessel = notizSchluessel(item);
+    const bestehend = item.kategorie === "mahlzeit" ? mahlzeitNotizen[schluessel] : gewohnheitNotizen[schluessel];
+    setNotizEntwurf((prev) => ({ ...prev, [item.key]: bestehend || "" }));
+    setNotizOffen((prev) => ({ ...prev, [item.key]: true }));
+  };
+  const notizSpeichern = (item) => {
+    const text = notizEntwurf[item.key] ?? "";
+    const tagStr = toLocalISODate(selectedDate);
+    if (item.kategorie === "mahlzeit") mahlzeitNotizSpeichern(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit, text);
+    else gewohnheitNotizSpeichern(tagStr, item.raw.id, text);
+    setNotizOffen((prev) => ({ ...prev, [item.key]: false }));
   };
 
   const today = new Date();
@@ -482,6 +514,28 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                             ✏️
                           </button>
                         )}
+                        {notizKategorien.includes(item.kategorie) && erledigt && (
+                          <button
+                            className="mp-tap"
+                            onClick={() => notizOeffnen(item)}
+                            title="Notiz"
+                            style={{
+                              position: "relative",
+                              width: 32,
+                              height: 32,
+                              borderRadius: 10,
+                              border: "none",
+                              background: "rgba(255, 255, 255, 0.28)",
+                              fontSize: 13,
+                              cursor: "pointer",
+                            }}
+                          >
+                            📝
+                            {(item.kategorie === "mahlzeit" ? mahlzeitNotizen[notizSchluessel(item)] : gewohnheitNotizen[notizSchluessel(item)]) && (
+                              <div style={{ position: "absolute", top: 2, right: 2, width: 7, height: 7, borderRadius: 4, background: kFarbe, border: "1px solid #fff" }} />
+                            )}
+                          </button>
+                        )}
                         {item.kategorie === "zeitblock" || item.kategorie === "workflow" ? null : erledigt ? (
                           <span
                             style={{
@@ -517,6 +571,29 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                         onSkip={() => handleSkipFeedback(item.doseRef)}
                         onSave={() => handleSaveFeedback(item.doseRef)}
                       />
+                    )}
+
+                    {notizKategorien.includes(item.kategorie) && notizOffen[item.key] && (
+                      <div style={{ marginTop: 8, padding: 12, borderRadius: 14, background: accentSoft, border: `1px solid ${cardBorder}` }}>
+                        <Label>Notiz (optional)</Label>
+                        <TextArea
+                          value={notizEntwurf[item.key] ?? ""}
+                          onChange={(v) => setNotizEntwurf((prev) => ({ ...prev, [item.key]: v }))}
+                          placeholder="z. B. wie's geschmeckt/vertragen wurde oder wie es gelaufen ist..."
+                        />
+                        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                          <div style={{ flex: 1 }}>
+                            <PrimaryButton onClick={() => setNotizOffen((prev) => ({ ...prev, [item.key]: false }))} variant="ghost">
+                              Abbrechen
+                            </PrimaryButton>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <PrimaryButton onClick={() => notizSpeichern(item)} variant="success">
+                              Speichern
+                            </PrimaryButton>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );

@@ -147,8 +147,18 @@ längst gibt — jetzt diese Kurzübersicht:
      Bewusst NICHT für einzelne Zeitblöcke selbst (siehe Begründung im
      Chat: einmalige Kalendereinträge ohne "geändert"-Konzept, Verlauf
      würde nach dem Löschen ohnehin mit der Zeile verschwinden).
-  3. ⏳ Feedback-Formular für Ernährung/Gewohnheiten vereinheitlichen —
-     noch offen.
+  3. ✅ Feedback für Mahlzeiten/Gewohnheiten — Nutzerin hat sich (Rückfrage)
+     bewusst GEGEN eine 1:1-Kopie des Medikamenten-Formulars entschieden
+     (Verträglichkeit/Nebenwirkungen passt inhaltlich nicht, und ein
+     Pflicht-Zwischenschritt vor jedem Bestätigen wäre bei diesen viel
+     häufiger genutzten Kategorien eher Reibung als Hilfe) — stattdessen
+     ein leichtes, OPTIONALES Notiz-Symbol (📝, mit Punkt-Marker sobald
+     eine Notiz existiert), das erst nach dem Bestätigen erscheint,
+     Bestätigen selbst bleibt weiterhin ein einziger Tap. Neu: Migration
+     `0093_notizen_mahlzeit_gewohnheit.sql` (Spalte `notizen` in
+     `meal_logs`/`routine_logs`, noch **nicht deployt**), `useMealData.js`/
+     `useGewohnheitenData.js` bekamen je `…Notizen`-State +
+     `…NotizSpeichern()`.
   4. ⏳ Supplemente: manuelles Dosierintervall-Formular — noch offen.
   5. ⏳ Training: Heute-Checkliste — noch offen.
   6. ⏳ Einzeleinträge bearbeiten/löschen bei Schlaf/Hydration/Tageslicht/
