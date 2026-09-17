@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import TimeWheelField from "../ui/TimeWheelField";
@@ -76,6 +76,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     spotifyPlaylists,
     categoryZiele,
     setCategoryZiel,
+    aenderungVermerken,
   } = useAppData();
 
   const [ablaufAktiv, setAblaufAktiv] = useState(false);
@@ -91,6 +92,10 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
   const [schlafIntervallTyp, setSchlafIntervallTyp] = useState("weekdays");
   const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
   const [schlafIstZustand, setSchlafIstZustand] = useState("");
+  // Zuletzt tatsächlich gespeicherter Freitext — Grundlage für den
+  // Diff-Text im Tagesverlauf UND dafür, den Debounce-Effekt weiter unten
+  // von einem "nichts geändert"-Durchlauf zu unterscheiden.
+  const schlafIstZustandGespeichertRef = useRef("");
 
   useEffect(() => {
     if (routine !== "abend") return;
@@ -101,11 +106,13 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
       );
       setSchlafBloecke(gespeicherteBloecke.map((b) => ({ ...neuerSchlafblock(b.wochentage), ...b })));
     }
-    if (categoryZiele?.schlaf?.istZustand?.aktuell) {
-      setSchlafIstZustand(categoryZiele.schlaf.istZustand.aktuell);
-    }
+    const geladenerIstZustand = categoryZiele?.schlaf?.istZustand?.aktuell || "";
+    setSchlafIstZustand(geladenerIstZustand);
+    schlafIstZustandGespeichertRef.current = geladenerIstZustand;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routine]);
+
+  const beschreibeSchlafbloecke = (bloecke) => bloecke.map((b) => `${b.wochentage.join(",") || "–"} ${b.bettzeit}–${b.aufwachzeit}`).join("; ");
 
   const speichereSchlafplan = (typ, bloecke, istZustandText) => {
     const effektiveBloecke = typ === "fixed" ? [{ ...bloecke[0], wochentage: [...WOCHENTAGE] }] : bloecke;
@@ -113,19 +120,59 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
       bloecke: effektiveBloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
       istZustand: { aktuell: istZustandText },
     });
+    schlafIstZustandGespeichertRef.current = istZustandText;
   };
   const handleSchlafIntervallTyp = (typ) => {
+    const vorherText = schlafIntervallTyp === "fixed" ? "Täglich" : "Bestimmte Wochentage";
+    const nachherText = typ === "fixed" ? "Täglich" : "Bestimmte Wochentage";
     setSchlafIntervallTyp(typ);
     speichereSchlafplan(typ, schlafBloecke, schlafIstZustand);
+    if (typ !== schlafIntervallTyp) {
+      aenderungVermerken({ kategorie: "schlaf", itemName: "Schlafplan", aktion: "geändert", detail: `Intervall: ${vorherText} → ${nachherText}` });
+    }
   };
   const handleSchlafBloecke = (neueBloecke) => {
+    const vorherDetail = beschreibeSchlafbloecke(schlafBloecke);
     setSchlafBloecke(neueBloecke);
     speichereSchlafplan(schlafIntervallTyp, neueBloecke, schlafIstZustand);
+    aenderungVermerken({ kategorie: "schlaf", itemName: "Schlafplan", aktion: "geändert", detail: `${vorherDetail} → ${beschreibeSchlafbloecke(neueBloecke)}` });
   };
   const handleSchlafIstZustand = (text) => {
+    // Bewusst KEINE sofortige Speicherung/Protokollierung hier — anders als
+    // Bloecke/Intervall (diskrete Taps) tippt man hier Zeichen für Zeichen;
+    // ein Tagesverlauf-/Speicher-Aufruf pro Tastenanschlag wäre unbrauchbar
+    // "geräuschig". Persistenz + Protokoll-Eintrag laufen deshalb entkoppelt
+    // über den debounce-Effekt unten, erst 800ms nach der letzten Änderung.
     setSchlafIstZustand(text);
-    speichereSchlafplan(schlafIntervallTyp, schlafBloecke, text);
   };
+  // Bug-Fix (Selbstprüfung vor dem Commit): schlafIntervallTyp/schlafBloecke
+  // standen ursprünglich NICHT in den Dependencies dieses Debounce-Effekts —
+  // klickte man kurz nach dem Tippen zusätzlich noch einen Wochentag an
+  // (handleSchlafBloecke speichert sofort), lief der bereits laufende
+  // 800ms-Timer trotzdem weiter und speicherte beim Auslösen die zu diesem
+  // Zeitpunkt VERALTETEN Bloecke aus seinem eigenen Erstellungs-Zeitpunkt —
+  // das hätte die gerade erst gespeicherte Bloecke-Änderung stillschweigend
+  // wieder überschrieben. Jetzt als Dependency ergänzt: jede Bloecke-/
+  // Intervall-Änderung bricht einen noch laufenden Text-Timer ab und
+  // plant ihn (falls noch ein Text-Unterschied besteht) mit frischem
+  // Stand neu — der Guard oben verhindert dabei unnötige Neu-Terminierung,
+  // wenn der Text ohnehin schon aktuell gespeichert ist.
+  useEffect(() => {
+    if (routine !== "abend") return;
+    if (schlafIstZustand === schlafIstZustandGespeichertRef.current) return;
+    const timeout = setTimeout(() => {
+      const vorher = schlafIstZustandGespeichertRef.current;
+      speichereSchlafplan(schlafIntervallTyp, schlafBloecke, schlafIstZustand);
+      aenderungVermerken({
+        kategorie: "schlaf",
+        itemName: "Schlafplan",
+        aktion: "geändert",
+        detail: `Aktueller Schlaf: ${vorher || "–"} → ${schlafIstZustand || "–"}`,
+      });
+    }, 800);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schlafIstZustand, schlafIntervallTyp, schlafBloecke, routine]);
   // Nutzerin-Vorgabe (12.09.): dieser Reiter soll in erster Linie zeigen,
   // was heute in der Routine ansteht — bestätigen, fertig. Die Einrichtung
   // (Schritte, Playlist-Auswahl, Erinnerung, Zeitrahmen) wirkte bisher wie
@@ -192,9 +239,52 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     schritteFuerRoutine,
   ]);
 
+  // Nutzerinnen-Vorgabe (17.09.): "Alle Veränderungen sollen immer im
+  // Tagesverlauf mit auftauchen" — bisher rief useRoutinen.js an keiner
+  // Stelle aenderungVermerken() auf. Ein Wrapper je Mutation statt einzeln
+  // an jeder der (mehreren) Aufrufstellen unten, damit keine übersehen wird.
+  const schrittHinzufuegenUndProtokollieren = async (name, dauerMin) => {
+    const result = await routineSchrittHinzufuegen(routine, name, dauerMin);
+    if (result?.ok !== false) {
+      aenderungVermerken({ kategorie: ROUTINE_ANLASS[routine], itemName: name, aktion: "hinzugefügt", detail: `${dauerMin || 5} Min.` });
+    }
+    return result;
+  };
+  const schrittEntfernenUndProtokollieren = (id) => {
+    const schritt = schritteFuerRoutine.find((s) => s.id === id);
+    routineSchrittEntfernen(id);
+    if (schritt) {
+      aenderungVermerken({ kategorie: ROUTINE_ANLASS[routine], itemName: schritt.name, aktion: "entfernt", detail: `${schritt.dauerMin} Min.` });
+    }
+  };
+  const schrittVerschiebenUndProtokollieren = (id, richtung) => {
+    const schritt = schritteFuerRoutine.find((s) => s.id === id);
+    routineSchrittVerschieben(id, richtung);
+    if (schritt) {
+      aenderungVermerken({
+        kategorie: ROUTINE_ANLASS[routine],
+        itemName: schritt.name,
+        aktion: "geändert",
+        detail: `Reihenfolge geändert (${richtung === "hoch" ? "nach oben" : "nach unten"})`,
+      });
+    }
+  };
+  const zeitrahmenAendernUndProtokollieren = (neueStartZeit, neueEndZeit) => {
+    const vorherStart = einstellung.startZeit;
+    const vorherEnde = einstellung.endZeit;
+    routineZeitrahmenSetzen(routine, neueStartZeit, neueEndZeit);
+    if (neueStartZeit === vorherStart && neueEndZeit === vorherEnde) return;
+    aenderungVermerken({
+      kategorie: ROUTINE_ANLASS[routine],
+      itemName: ROUTINE_LABEL[routine],
+      aktion: "geändert",
+      detail: `Zeitrahmen: ${vorherStart || "–"}–${vorherEnde || "–"} → ${neueStartZeit || "–"}–${neueEndZeit || "–"}`,
+    });
+  };
+
   const uebernehmen = (item) => {
     const dauerMin = item.raw?.dauerMin || 5;
-    routineSchrittHinzufuegen(routine, item.name, dauerMin);
+    schrittHinzufuegenUndProtokollieren(item.name, dauerMin);
   };
 
   // Übergabe an <KiChat onUebernehmen> weiter unten: lässt Aka aus dem
@@ -203,7 +293,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
   // manuelle "Schritte einrichten" oben (routineSchrittHinzufuegen).
   const handleRoutineUebernehmen = async (verlauf) => {
     const schritte = await AIService.routineAusChat({ verlauf, coachName: getCoachName() });
-    schritte.forEach((s) => routineSchrittHinzufuegen(routine, s.name, s.dauerMin || 5));
+    schritte.forEach((s) => schrittHinzufuegenUndProtokollieren(s.name, s.dauerMin || 5));
     return schritte;
   };
 
@@ -271,7 +361,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
             <RoutineSchritteEditor
               routine={routine}
               schritte={schritteFuerRoutine}
-              onHinzufuegen={(name, dauerMin) => routineSchrittHinzufuegen(routine, name, dauerMin)}
+              onHinzufuegen={schrittHinzufuegenUndProtokollieren}
               mahlzeiten={mahlzeiten}
               supplemente={supplemente}
               hormone={hormone}
@@ -280,7 +370,12 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
             />
           </Card>
 
-          <RoutineSchritteListe routine={routine} schritte={schritteFuerRoutine} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+          <RoutineSchritteListe
+            routine={routine}
+            schritte={schritteFuerRoutine}
+            onEntfernen={schrittEntfernenUndProtokollieren}
+            onVerschieben={schrittVerschiebenUndProtokollieren}
+          />
 
           <Card style={{ marginBottom: 16 }}>
             <SpotifyAnlassPicker anlass={ROUTINE_ANLASS[routine]} label={`🎵 Playlist für die ${ROUTINE_LABEL[routine]}`} />
@@ -311,11 +406,11 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <div style={{ flex: 1 }}>
-                <TimeWheelField value={einstellung.startZeit} onChange={(v) => routineZeitrahmenSetzen(routine, v, einstellung.endZeit)} />
+                <TimeWheelField value={einstellung.startZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(v, einstellung.endZeit)} />
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
               <div style={{ flex: 1 }}>
-                <TimeWheelField value={einstellung.endZeit} onChange={(v) => routineZeitrahmenSetzen(routine, einstellung.startZeit, v)} />
+                <TimeWheelField value={einstellung.endZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(einstellung.startZeit, v)} />
               </div>
             </div>
           </Card>

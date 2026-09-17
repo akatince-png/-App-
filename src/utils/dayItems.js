@@ -43,6 +43,17 @@ export const KATEGORIE_META = {
   bildschirmzeit: { bg: "#E7EAEF", text: "#414F63", dot: "#5B6B84", label: "Bildschirmzeit", icon: "smartphone" },
   notfallmodus: { bg: "#F7E4E0", text: "#A23026", dot: "#D12121", label: "Notfallmodus" },
   zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
+  // Morgen-/Abendroutine bekamen bewusst KEINEN Eintrag hier, solange
+  // buildDayItems() für sie keine Tagesplan-Einträge erzeugt (siehe
+  // RoutineTabView.jsx/ROUTINE_FARBE-Kommentar) — sonst wären es "tote"
+  // Einträge ohne echte Verwendung in Wochen-/Monatsansicht. Jetzt trotzdem
+  // ergänzt (Nutzerinnen-Vorgabe, 17.09.: Änderungen an Routinen sollen im
+  // Tagesverlauf auftauchen) — ProtokollLogView.jsx (AenderungKarte) braucht
+  // die Farbe für den Punkt vor jedem Änderungsprotokoll-Eintrag, unabhängig
+  // davon, ob Routine-Schritte auch als eigene dayItems auftauchen. Gleiche
+  // Farben wie ROUTINE_FARBE (HomeView.jsx/RoutineTabView.jsx/PlaeneView.jsx).
+  morgenroutine: { bg: "#FBE8D3", text: "#8A4E12", dot: "#E08A3E", label: "Morgenroutine", icon: "sunrise" },
+  abendroutine: { bg: "#E1E7F0", text: "#2E3E5C", dot: "#4E6690", label: "Abendroutine", icon: "moon" },
 };
 
 // Farbrotation für Projekte (14.08., Nutzerin-Vorgabe: "sollen dann

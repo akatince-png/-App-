@@ -119,6 +119,18 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **✅ 17.09.2026 (Teil 122):** Nutzerin hat auf die zwei Rückfragen aus
+  Teil 121 geantwortet — beide Punkte sind jetzt gewollt: Tagesverlauf-
+  Dokumentation für Routine-/Schlafplan-Änderungen ist umgesetzt (Migration
+  0091, noch nicht deployt, siehe Details unten). Die Aufnahme der Routine-
+  Schritte in Wochenübersicht/Monatsansicht ist NOCH NICHT umgesetzt —
+  dafür lief zuerst eine zweite Rückfrage zur genauen Granularität (ganze
+  Routine pro Tag vs. einzelne Schritte), da die Antwort das bestehende
+  Punkte-/Streak-Modell (Teil 39/51) mit berührt. **Außerdem, dauerhaft ab
+  jetzt gültig:** die Nutzerin bittet ausdrücklich um sorgfältigere
+  Selbstprüfung während der Entwicklung selbst (Code doppelt checken),
+  nicht erst nachträglich auf Nachfrage — bitte für jede künftige Änderung
+  beachten, nicht nur für diesen Themenblock.
 - **🔴 17.09.2026 (Teil 121), noch offen für die nächste Sitzung:**
   vertiefte Prüfung von Morgen-/Abendroutine + Schlaf auf Nutzerinnen-Bitte
   hat zwei echte Bugs gefunden und behoben (doppelte Punktevergabe bei
@@ -134,6 +146,78 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 17.09.2026 (Teil 122) — Tagesverlauf-Dokumentation für Routine/Schlafplan umgesetzt, Rückfrage zu Wochen-/Monatsansicht
+
+**Nutzerinnen-Antwort auf Teil 121:** "Alle Veränderungen sollen immer im
+Tagesverlauf mit auftauchen" + "ich möchte diese Routine-Schritte in die
+Wochenübersicht und Monatsansicht mit aufnehmen" + die generelle Bitte,
+Code künftig während des Bauens selbst doppelt zu prüfen statt erst
+nachträglich auf Nachfrage.
+
+### Umgesetzt: Tagesverlauf-Dokumentation
+
+- **Migration `0091_aenderungsprotokoll_routine_schlaf.sql`** (🔴 noch
+  nicht deployt): ergänzt `aenderungsprotokoll_kategorie_check` um
+  `morgenroutine`, `abendroutine`, `schlaf` — ohne diesen Constraint
+  scheitert jeder neue `aenderungVermerken()`-Aufruf unten lautlos
+  (`useAenderungsprotokoll.js` fängt den Fehler ab, kein Wurf/UI-Fehler,
+  gleiches Verhalten wie bei den Funden in Teil 117/118).
+- **`utils/dayItems.js`**: `KATEGORIE_META` um `morgenroutine`/
+  `abendroutine` ergänzt (gleiche Farben wie `ROUTINE_FARBE` überall
+  sonst) — `ProtokollLogView.jsx`s `AenderungKarte` braucht das für den
+  farbigen Punkt vor jedem Tagesverlauf-Eintrag. `schlaf` hatte schon
+  einen Eintrag (von `SchlafView.jsx` mitgenutzt).
+- **`RoutineTabView.jsx`**: Wrapper-Funktionen um `routineSchrittHinzufuegen`/
+  `-Entfernen`/`-Verschieben`/`routineZeitrahmenSetzen` protokollieren jetzt
+  jede Änderung (`aktion`: hinzugefügt/entfernt/geändert, mit
+  Vorher→Nachher-Detail bei Zeitrahmen/Reihenfolge). Der neue Schlafplan-
+  Teil (Teil 121) protokolliert Intervall- und Bettzeit/Aufwachzeit-
+  Änderungen sofort; der freie "Wie ist dein aktueller Schlaf?"-Text läuft
+  bewusst über einen 800ms-Debounce-Effekt (sonst ein Tagesverlauf-Eintrag
+  pro Tastenanschlag) — **beim Selbst-Review vor dem Commit noch ein
+  eigener Bug darin gefunden und behoben**: `schlafIntervallTyp`/
+  `schlafBloecke` standen ursprünglich nicht in den Dependencies dieses
+  Debounce-Effekts — ein Wochentag-Klick kurz nach dem Tippen hätte vom
+  bereits laufenden Text-Timer beim Auslösen mit veraltetem Bloecke-Stand
+  überschrieben werden können. Jetzt als Dependency ergänzt, dadurch bricht
+  jede Bloecke-/Intervall-Änderung einen noch laufenden Text-Timer ab und
+  plant ihn bei Bedarf mit frischem Stand neu.
+- **`RoutineHeuteChecklist.jsx`** (Home + eingebettet in `RoutineTabView.jsx`):
+  protokolliert jetzt "erledigt" beim Bestätigen eines Schritts — nur beim
+  Bestätigen, nicht beim Zurücknehmen (kein Zurücknehmen-Pfad in dieser
+  Komponente, jeder Klick hier ist immer ein echtes Bestätigen).
+- Bewusst NICHT geändert: die ursprüngliche Einrichtung während des
+  Onboardings (`OnboardingRoutinenView.jsx`) protokolliert weiterhin
+  nichts — konsistent mit ausnahmslos jeder anderen Kategorie in der App
+  (Supplemente, Medikamente, Training, ...), die ebenfalls nur in ihrer
+  jeweiligen laufenden "Pläne"-Ansicht protokollieren, nie während des
+  Erst-Onboardings (kein "Vorher"-Zustand an Tag null).
+
+**Getestet:** Build/Lint/Typecheck grün, 126 Unit-Tests grün (2 neu:
+`RoutineHeuteChecklist.test.jsx` — protokolliert korrekt beim Bestätigen,
+kein zweiter Bestätigen-Knopf für einen bereits erledigten Schritt), 39
+E2E-Tests grün. Der Debounce-Bugfix wurde durch genaues Nachvollziehen der
+Effekt-Abhängigkeiten gefunden (kein automatisierter Test dafür — bräuchte
+Fake-Timer + vollständigen `RoutineTabView`-Render mit sehr vielen
+Abhängigkeiten, siehe Abschnitt 13 zur Kosten/Nutzen-Abwägung bei sehr
+schweren Komponenten).
+
+### Noch offen: Routine-Schritte in Wochenübersicht/Monatsansicht
+
+**Noch nicht umgesetzt**, weil eine echte Weichenstellung besteht, die erst
+mit der Nutzerin geklärt werden muss (siehe Frage im Chat, 17.09.): das
+bestehende Punkte-/Streak-System (Teil 39) UND die Home-Widgets (Teil 51,
+`ROUTINE_FARBE`-Kommentar) behandeln eine Morgen-/Abendroutine bewusst als
+EIN Ganzes pro Tag ("komplett erledigt oder nicht", kein Bruchteil) — die
+Nutzerin sagte aber "Routine-Schritte" (Plural), was auf eine Anzeige der
+EINZELNEN Schritte in der Wochen-/Monatsansicht hindeuten könnte. Beides
+gleichzeitig einzubauen, ohne vorher zu klären, welches Modell gilt, hätte
+ein hohes Risiko für genau die Art von Inkonsistenz-Bug, die diese ganze
+Prüfung erst ausgelöst hat (z. B. Wochenübersicht zeigt 60% Fortschritt,
+während Archiv → Erfolge/Home weiterhin nur "erledigt/offen" kennt).
 
 ---
 

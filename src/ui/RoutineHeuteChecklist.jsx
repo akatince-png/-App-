@@ -16,11 +16,24 @@ const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 // unabhängig vom geführten "Routine starten"-Ablauf (RoutineAblauf.jsx),
 // der für alle, die lieber Schritt für Schritt mit Timer durchgehen,
 // weiterhin unverändert verfügbar bleibt.
+const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
+
 export default function RoutineHeuteChecklist({ routine }) {
-  const { routineSchritte, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten } = useAppData();
+  const { routineSchritte, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken } = useAppData();
   const heute = toLocalISODate(new Date());
   const schritte = routineSchritte.filter((s) => s.routine === routine).sort((a, b) => a.reihenfolge - b.reihenfolge);
   const farbe = ROUTINE_FARBE[routine];
+
+  // Nutzerinnen-Vorgabe (17.09.): "Alle Veränderungen sollen immer im
+  // Tagesverlauf mit auftauchen" — nur beim Bestätigen protokolliert (nicht
+  // beim Rückgängigmachen), gleiches Muster wie GewohnheitenView.jsx. Diese
+  // Komponente zeigt den "Bestätigen"-Knopf ohnehin nur, solange der Schritt
+  // noch offen ist (siehe unten) — jeder Klick hier ist also immer ein
+  // echtes Bestätigen, nie ein Zurücknehmen.
+  const bestaetigen = (schritt) => {
+    routineSchrittErledigtUmschalten(schritt.id, heute);
+    aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: schritt.name, aktion: "erledigt", detail: "" });
+  };
 
   if (schritte.length === 0) {
     return (
@@ -60,7 +73,7 @@ export default function RoutineHeuteChecklist({ routine }) {
             ) : (
               <button
                 type="button"
-                onClick={() => routineSchrittErledigtUmschalten(s.id, heute)}
+                onClick={() => bestaetigen(s)}
                 style={{
                   flexShrink: 0,
                   padding: "7px 16px",
