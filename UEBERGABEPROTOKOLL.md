@@ -188,6 +188,36 @@ längst gibt — jetzt diese Kurzübersicht:
   Nachrichten sind durchgängig Zeile-pro-Eintrag ohne Sammel-Objekt und
   damit ohne das Race-Risiko aus Fund 2. Build + Lint + komplette
   Vitest-Suite (158 Tests) danach weiterhin grün.
+- **✅ 17.09.2026 (Teil 129, abgeschlossen):** Nutzerin behauptete, es gebe
+  "wirklich keinen einzigen Test mehr" — bewusst NICHT einfach zugestimmt,
+  sondern ehrlich benannt, was nach Teil 128 noch NICHT geprüft war: die
+  Admin-Ansichten selbst (nur die zugrunde liegenden Funktionen waren
+  geprüft, nicht ob jeder Knopf sie auch aufruft) und der größte Teil des
+  Onboarding-Flows (nur 1 von 16 Dateien stichprobenhaft). Beides jetzt
+  nachgeholt: alle 7 Admin-Ansichten (`AdminQuestsView`, `AdminTeamsView`,
+  `AdminWissenView`, `AdminFormulareView` — bewusst ohne DB-Zugriff, siehe
+  eigener Kommentar dort —, `AdminUebungsBilderView`,
+  `AdminCoachUebersichtView`, `AdminDashboardView` inkl. `AdminNotizPanel`/
+  `CoacheeNachrichtenPanel`) durchgelesen — alle korrekt verdrahtet, laden
+  nach jeder Änderung frisch aus der DB statt sich auf lokalen State zu
+  verlassen. Dazu die zwei Onboarding-Schritte mit dem größten
+  Blast-Radius (`HauptprotokollErstellenView.jsx` + `useHauptprotokollData.js`:
+  Anlegen archiviert korrekt das alte, mit Rollback bei Fehlschlag;
+  `NeuesProtokollBestaetigenView.jsx`: die Rückfrage vor dem Archivieren) —
+  beide korrekt. DABEI EINEN DRITTEN ECHTEN BUG in
+  `OnboardingCategoriesView.jsx` gefunden: `speichernUndWeiter()` UND
+  `onUebernehmenKategorie()` (der Coach-Übernahme-Pfad) verwarfen für die
+  Kategorien Hydration/Tageslicht/Bildschirmzeit das {ok, error}-Ergebnis
+  von `hydrationZielSetzen()`/`tageslichtZielSetzen()`/
+  `bildschirmzeitZielSetzen()` — im Unterschied zu Gewohnheiten/Ernährung/
+  Supplementen/Medikamenten im SELBEN Switch, die ihr Ergebnis korrekt
+  prüfen. Bei einem Fehlschlag (z. B. Netzwerkfehler während des
+  Onboardings) sprang der Flow trotzdem sofort zum nächsten Schritt bzw.
+  zeigte "wurde direkt gespeichert" an, ohne dass das Ziel je in der
+  Datenbank ankam — für genau diese drei Kategorien, ausgerechnet beim
+  allerersten Einrichten. Jetzt behoben: beide Stellen prüfen das
+  Ergebnis wie alle anderen Kategorien auch. Build + Lint + komplette
+  Vitest-Suite (158 Tests) danach weiterhin grün.
 - **✅ 17.09.2026 (Teil 127, abgeschlossen):** Nach Teil 126 bat die
   Nutzerin um einen vollständigen Funktions-/Regressionstest ("nicht
   wieder eine neue Überraschung", konkrete Fragen: "Übermittelt es? Wird
