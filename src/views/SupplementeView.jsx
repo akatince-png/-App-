@@ -4,6 +4,7 @@ import GrundEingabe from "../ui/GrundEingabe";
 import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { HINWEISE, NEBENWIRKUNGEN_OPTIONEN, TAGESZEITEN, WIRKUNG_OPTIONEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
+import { describeInterval } from "../utils/schedule";
 import { useAppData } from "../context/AppDataContext";
 import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
@@ -13,15 +14,23 @@ import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
+import { supplementToRow } from "../data/useSupplementData";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
 const { dot: accent, text: accentDark } = KATEGORIE_META.supplement;
 
-function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto }) {
+function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto, onIntervallAendern }) {
   const [offen, setOffen] = useState(false);
   const [entwurf, setEntwurf] = useState({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis });
   const [grund, setGrund] = useState("");
+  // Dosierintervall bearbeiten (17.09., Konsistenz-Check) — bisher ließ sich
+  // das Intervall/die Uhrzeiten eines Supplements nur beim Anlegen (Onboarding)
+  // oder über Aka setzen, nachträglich manuell gar nicht — anders als bei
+  // Medikamenten (DosisBearbeitenPanel dort). Gleiche Komponente, gleiches
+  // Toggle-Muster.
+  const [dosisEditOffen, setDosisEditOffen] = useState(false);
 
   const toggleZeit = (z) =>
     setEntwurf((p) => ({ ...p, tageszeiten: p.tageszeiten.includes(z) ? p.tageszeiten.filter((x) => x !== z) : [...p.tageszeiten, z] }));
@@ -52,6 +61,7 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto }) {
               {(s.uhrzeiten?.length ? s.uhrzeiten : s.tageszeiten).join(", ")}
               {s.menge && ` · ${s.menge}`}
               {s.hinweis && ` · ${s.hinweis}`}
+              {s.uhrzeiten?.length ? ` · ${describeInterval(s)}` : ""}
             </div>
           </div>
         </div>
@@ -92,6 +102,21 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto }) {
             </PrimaryButton>
           </div>
         </div>
+      )}
+      <button
+        onClick={() => setDosisEditOffen((v) => !v)}
+        style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0, marginTop: 6 }}
+      >
+        {dosisEditOffen ? "Dosis-Bearbeitung schließen" : "Dosis/Intervall bearbeiten"}
+      </button>
+      {dosisEditOffen && (
+        <DosisBearbeitenPanel
+          dosierung={s}
+          onSpeichern={(entwurf2, grund2) => {
+            onIntervallAendern(s, entwurf2, grund2);
+            setDosisEditOffen(false);
+          }}
+        />
       )}
       <ItemVerlauf kategorie="supplement" itemName={s.name} />
     </div>
@@ -284,6 +309,25 @@ function SupplementeSection() {
       aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "geändert", detail: aenderungen.join("; "), grund });
     }
     supplementAendern(s.id, entwurf);
+  };
+
+  // Dosierintervall bearbeiten (17.09., Konsistenz-Check) — Gegenstück zu
+  // MedikamenteView.jsx handleDosisSpeichern, nur mit supplementToRow() statt
+  // setHormonDoseBatch(), da supplementAendern() (anders als bei Hormonen)
+  // die Feld-Namen 1:1 als Supabase-Spaltennamen erwartet.
+  const handleIntervallSpeichern = (s, entwurf, grund) => {
+    const aenderungen = [];
+    if (entwurf.menge !== s.menge) aenderungen.push(`Menge: ${s.menge || "–"} → ${entwurf.menge || "–"}`);
+    if (entwurf.intervallTyp !== s.intervallTyp || entwurf.intervallDays !== s.intervallDays) {
+      aenderungen.push(`Intervall: ${describeInterval(s)} → ${describeInterval(entwurf)}`);
+    }
+    if (JSON.stringify(entwurf.uhrzeiten) !== JSON.stringify(s.uhrzeiten)) {
+      aenderungen.push(`Uhrzeit: ${(s.uhrzeiten || []).join(", ")} → ${(entwurf.uhrzeiten || []).join(", ")}`);
+    }
+    if (aenderungen.length > 0) {
+      aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "geändert", detail: aenderungen.join("; "), grund });
+    }
+    supplementAendern(s.id, supplementToRow(entwurf));
   };
 
   const handleEntfernen = (s) => {
@@ -536,7 +580,15 @@ function SupplementeSection() {
           <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Plan verwalten</div>
           <Card>
             {supplemente.map((s, i) => (
-              <SupplementZeile key={s.id} s={s} istLetzte={i === supplemente.length - 1} onAendern={handleAendern} onEntfernen={handleEntfernen} onFoto={setSupplementFoto} />
+              <SupplementZeile
+                key={s.id}
+                s={s}
+                istLetzte={i === supplemente.length - 1}
+                onAendern={handleAendern}
+                onEntfernen={handleEntfernen}
+                onFoto={setSupplementFoto}
+                onIntervallAendern={handleIntervallSpeichern}
+              />
             ))}
           </Card>
         </>

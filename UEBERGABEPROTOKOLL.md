@@ -159,7 +159,17 @@ längst gibt — jetzt diese Kurzübersicht:
      `meal_logs`/`routine_logs`, noch **nicht deployt**), `useMealData.js`/
      `useGewohnheitenData.js` bekamen je `…Notizen`-State +
      `…NotizSpeichern()`.
-  4. ⏳ Supplemente: manuelles Dosierintervall-Formular — noch offen.
+  4. ✅ Supplemente: manuelles Dosierintervall-Formular ergänzt — Intervall/
+     Uhrzeiten ließen sich bisher nur beim Anlegen (Onboarding) oder über
+     Aka setzen, nachträglich manuell gar nicht. `SupplementeView.jsx`
+     bekam denselben `DosisBearbeitenPanel` wie `MedikamenteView.jsx`
+     (unverändert wiederverwendet) unter einem neuen "Dosis/Intervall
+     bearbeiten"-Knopf pro Supplement. `supplementToRow()` (bisher nur
+     modulintern in `useSupplementData.js`) jetzt exportiert, da
+     `supplementAendern()` — anders als bei Hormonen — Feld-Namen 1:1 als
+     Supabase-Spalten erwartet (ohne die Umwandlung wäre `intervallTyp`
+     statt `intervall_mode` gesendet worden und beim Speichern
+     gescheitert).
   5. ⏳ Training: Heute-Checkliste — noch offen.
   6. ⏳ Einzeleinträge bearbeiten/löschen bei Schlaf/Hydration/Tageslicht/
      Bildschirmzeit — noch offen.
