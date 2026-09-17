@@ -2,6 +2,7 @@ import React from "react";
 import { Card, StatusBadge } from "./primitives";
 import { cardBorder, textMuted } from "./theme";
 import { toLocalISODate } from "../utils/dates";
+import { routineTagesStatus } from "../utils/routineStatus";
 import { useAppData } from "../context/AppDataContext";
 
 const ROUTINE_FARBE = { morgen: "#E08A3E", abend: "#4E6690" };
@@ -18,10 +19,18 @@ const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 // weiterhin unverändert verfügbar bleibt.
 const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
 
-export default function RoutineHeuteChecklist({ routine }) {
-  const { routineSchritte, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken } = useAppData();
-  const heute = toLocalISODate(new Date());
-  const schritte = routineSchritte.filter((s) => s.routine === routine).sort((a, b) => a.reihenfolge - b.reihenfolge);
+// `datum` optional (Standard: heute) — seit 17.09. (Nutzerin-Vorgabe "die
+// Einzelschritte einsehen können") wird dieselbe Komponente auch für
+// vergangene Tage aus Tagesplan/Wochenübersicht/Monatsansicht verwendet,
+// um "reinzugucken", was an einem Tag erledigt war. Ein bereits über den
+// geführten Ablauf abgeschlossener Tag zeigt dann alle Schritte als
+// erledigt an (siehe routineTagesStatus), auch ohne einzelne
+// `routine_schritt_logs`.
+export default function RoutineHeuteChecklist({ routine, datum }) {
+  const { routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken } =
+    useAppData();
+  const heute = datum || toLocalISODate(new Date());
+  const { schritte, schrittIstErledigt } = routineTagesStatus(routine, heute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
   const farbe = ROUTINE_FARBE[routine];
 
   // Nutzerinnen-Vorgabe (17.09.): "Alle Veränderungen sollen immer im
@@ -49,7 +58,7 @@ export default function RoutineHeuteChecklist({ routine }) {
     <Card style={{ marginTop: 8 }}>
       {schritte.map((s, i) => {
         const zeit = routineSchrittZeit(s.id);
-        const done = !!routineSchrittErledigt[`${heute}__${s.id}`];
+        const done = schrittIstErledigt(s.id);
         return (
           <div
             key={s.id}

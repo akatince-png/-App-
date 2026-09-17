@@ -13,11 +13,13 @@ import {
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE } from "../utils/dayItems";
+import { routineTagesStatus } from "../utils/routineStatus";
 import { useAppData } from "../context/AppDataContext";
 import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import RoutineAblauf from "../ui/RoutineAblauf";
+import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import TrainingVorschau from "../ui/TrainingVorschau";
@@ -129,6 +131,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     projekte,
     zeitbloecke,
     routineSchritte,
+    routineDurchlaeufe,
+    routineSchrittErledigt,
     routineSchrittHinzufuegen,
     routineSchrittEntfernen,
     routineSchrittVerschieben,
@@ -334,10 +338,21 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const restItems = useMemo(() => tagesItems.filter((i) => !i.hour || (i.hour >= "11" && i.hour < "18")), [tagesItems]);
   const restBuckets = useMemo(() => bucketsFor(restItems), [restItems, bucketsFor]);
 
-  function routineZusammenfassung(items) {
-    const kategorien = [...new Set(items.map((i) => KATEGORIE[i.kategorie]?.label).filter(Boolean))];
-    return `${items.length} Schritt${items.length === 1 ? "" : "e"}${kategorien.length ? ` · ${kategorien.join(", ")}` : ""}`;
-  }
+  // Tages-Status der ECHTEN Routine-Schritte (Nutzerin-Vorgabe, 17.09.: "die
+  // ganze Routine pro Tag sehen") — nicht zu verwechseln mit morgenItems/
+  // abendItems oben, die alle sonstigen Kategorie-Punkte im selben
+  // Zeitfenster gruppieren (z. B. ein Supplement um 7 Uhr), aber selbst
+  // KEINE Routine-Schritte sind (buildDayItems() liefert die nie, siehe
+  // dayItems.js).
+  const selectedDateStr = useMemo(() => toLocalISODate(selectedDate), [selectedDate]);
+  const morgenRoutineStatus = useMemo(
+    () => routineTagesStatus("morgen", selectedDateStr, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt }),
+    [selectedDateStr, routineSchritte, routineDurchlaeufe, routineSchrittErledigt]
+  );
+  const abendRoutineStatus = useMemo(
+    () => routineTagesStatus("abend", selectedDateStr, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt }),
+    [selectedDateStr, routineSchritte, routineDurchlaeufe, routineSchrittErledigt]
+  );
 
   // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick
   // erkennbar, ohne die ganze Liste durchgehen zu müssen. Nur relevant, wenn
@@ -648,12 +663,21 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             >
               <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌅 Morgenroutine</div>
               <div style={{ fontSize: 11.5, color: textMuted }}>
-                {morgenItems.length > 0 ? routineZusammenfassung(morgenItems) : "Noch nichts geplant"} {morgenOffen ? "▲" : "▼"}
+                {morgenRoutineStatus.anzahlGesamt > 0
+                  ? `${morgenRoutineStatus.anzahlErledigt}/${morgenRoutineStatus.anzahlGesamt} Schritte`
+                  : "Noch keine Schritte eingerichtet"}{" "}
+                {morgenOffen ? "▲" : "▼"}
               </div>
             </button>
             {morgenOffen && (
               <div style={{ marginTop: 12 }}>
-                {morgenItems.length > 0 && renderZeitbloecke(bucketsFor(morgenItems))}
+                <RoutineHeuteChecklist routine="morgen" datum={selectedDateStr} />
+                {morgenItems.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 11.5, fontWeight: 700, color: textMuted, margin: "14px 0 6px" }}>Außerdem am Morgen geplant</div>
+                    {renderZeitbloecke(bucketsFor(morgenItems))}
+                  </>
+                )}
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <div style={{ flex: 1 }}>
                     <PrimaryButton onClick={() => setAblaufRoutine("morgen")}>▶️ Morgenroutine starten</PrimaryButton>
@@ -693,12 +717,21 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             >
               <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌙 Abendroutine</div>
               <div style={{ fontSize: 11.5, color: textMuted }}>
-                {abendItems.length > 0 ? routineZusammenfassung(abendItems) : "Noch nichts geplant"} {abendOffen ? "▲" : "▼"}
+                {abendRoutineStatus.anzahlGesamt > 0
+                  ? `${abendRoutineStatus.anzahlErledigt}/${abendRoutineStatus.anzahlGesamt} Schritte`
+                  : "Noch keine Schritte eingerichtet"}{" "}
+                {abendOffen ? "▲" : "▼"}
               </div>
             </button>
             {abendOffen && (
               <div style={{ marginTop: 12 }}>
-                {abendItems.length > 0 && renderZeitbloecke(bucketsFor(abendItems))}
+                <RoutineHeuteChecklist routine="abend" datum={selectedDateStr} />
+                {abendItems.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 11.5, fontWeight: 700, color: textMuted, margin: "14px 0 6px" }}>Außerdem am Abend geplant</div>
+                    {renderZeitbloecke(bucketsFor(abendItems))}
+                  </>
+                )}
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <div style={{ flex: 1 }}>
                     <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine starten</PrimaryButton>

@@ -4,6 +4,7 @@ import ViewHeader from "../ui/ViewHeader";
 import TimeWheelField from "../ui/TimeWheelField";
 import { accent, accentDark, accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, projektFarbe } from "../utils/dayItems";
+import { mitRoutinePseudoItems } from "../utils/routineStatus";
 import { WochenComplianceChart } from "../ui/charts";
 import { exportElementAsPdf } from "../utils/pdfExport";
 import { describeInterval, activeDoseDays } from "../utils/schedule";
@@ -13,6 +14,7 @@ import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoa
 import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import TagesEintragBearbeiten from "../ui/TagesEintragBearbeiten";
+import RoutineTagesPeek from "../ui/RoutineTagesPeek";
 
 const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -84,6 +86,10 @@ export default function WochenuebersichtView({
     schlafEintraege,
     ausnahmenNachSchluessel,
     protokollEintraege,
+    routineSchritte,
+    routineDurchlaeufe,
+    routineSchrittErledigt,
+    routineEinstellungen,
   } = appData;
 
   // Bug-Fix (Performance/Ruckeln): Diese View reichte bisher überall den
@@ -143,6 +149,14 @@ export default function WochenuebersichtView({
     ]
   );
 
+  // Gleiches Prinzip wie dayItemsQuelldaten oben, nur für die Routine-
+  // Pseudo-Punkte (Nutzerin-Vorgabe, 17.09.: "ganze Routine pro Tag sehen,
+  // Einzelschritte aufklappbar") — siehe routineStatus.js.
+  const routineQuelldaten = useMemo(
+    () => ({ routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineEinstellungen }),
+    [routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineEinstellungen]
+  );
+
   const [exportLaeuft, setExportLaeuft] = useState(false);
   const [vorschauUrl, setVorschauUrl] = useState(null);
   const exportRef = useRef(null);
@@ -159,13 +173,23 @@ export default function WochenuebersichtView({
   // sein") für ALLE von buildDayItems() gelieferten Kategorien klickbar,
   // nicht mehr nur die fünf Ausnahme-fähigen — TagesEintragBearbeiten.jsx
   // zeigt für Training/Zeitblock dann nur noch die reine Info-Ansicht
-  // (siehe dortiger Kommentar zu AUSNAHME_KATEGORIEN).
+  // (siehe dortiger Kommentar zu AUSNAHME_KATEGORIEN). "morgenroutine"/
+  // "abendroutine" (die Routine-Pseudo-Punkte, siehe routineQuelldaten
+  // oben) sind ebenfalls klickbar, öffnen aber statt TagesEintragBearbeiten
+  // das neue RoutineTagesPeek — siehe oeffneBearbeiten unten.
   const AUSNAHME_KLICKBAR = useMemo(
-    () => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow", "training", "zeitblock"]),
+    () => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow", "training", "zeitblock", "morgenroutine", "abendroutine"]),
     []
   );
+  // Bottom-Sheet zum "Reingucken" in eine Routine (Nutzerin-Vorgabe, 17.09.)
+  // — routinePeek === null heißt geschlossen, analog zu bearbeitenItem oben.
+  const [routinePeek, setRoutinePeek] = useState(null);
   const oeffneBearbeiten = (item, datumObj) => {
     if (!AUSNAHME_KLICKBAR.has(item.kategorie)) return;
+    if (item.kategorie === "morgenroutine" || item.kategorie === "abendroutine") {
+      setRoutinePeek({ routine: item.raw.routine, datum: item.raw.datum });
+      return;
+    }
     setBearbeitenItem(item);
     setBearbeitenDatum(toLocalISODate(datumObj));
   };
@@ -220,13 +244,22 @@ export default function WochenuebersichtView({
   const montag = useMemo(() => addDays(selectedDate, -((selectedDate.getDay() + 6) % 7)), [selectedDate]);
   const wochentage = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(montag, i)), [montag]);
 
-  const tagesItems = useMemo(() => buildDayItems(selectedDate, dayItemsQuelldaten), [selectedDate, dayItemsQuelldaten]);
+  // Seit 17.09. inkl. Routine-Pseudo-Punkten (siehe routineQuelldaten/
+  // mitRoutinePseudoItems oben) — buildDayItems() selbst erzeugt bewusst
+  // weiterhin keine Routine-Einträge (siehe dortiger Kommentar).
+  const tagesItems = useMemo(
+    () => mitRoutinePseudoItems(buildDayItems(selectedDate, dayItemsQuelldaten), selectedDate, routineQuelldaten),
+    [selectedDate, dayItemsQuelldaten, routineQuelldaten]
+  );
 
   // Vorberechnete Tages-Items für Wochenraster (Ansicht + PDF-Export teilen
   // sich dieselbe Woche) — siehe dayItemsQuelldaten-Kommentar oben: ohne
   // diese Memoisierung liefen bis zu 7 buildDayItems()-Aufrufe bei jedem
   // Render neu, auch wenn sich nichts an der Woche geändert hatte.
-  const wochenItemsProTag = useMemo(() => wochentage.map((d) => buildDayItems(d, dayItemsQuelldaten)), [wochentage, dayItemsQuelldaten]);
+  const wochenItemsProTag = useMemo(
+    () => wochentage.map((d) => mitRoutinePseudoItems(buildDayItems(d, dayItemsQuelldaten), d, routineQuelldaten)),
+    [wochentage, dayItemsQuelldaten, routineQuelldaten]
+  );
 
   // Dasselbe fürs Monatsraster — Tage des sichtbaren Monats + je Tag die
   // vorberechneten Items, statt bis zu 31 buildDayItems()-Aufrufen direkt
@@ -239,10 +272,10 @@ export default function WochenuebersichtView({
     for (let i = 0; i < startOffset; i++) tage.push(null);
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const datum = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
-      tage.push({ datum, items: buildDayItems(datum, dayItemsQuelldaten) });
+      tage.push({ datum, items: mitRoutinePseudoItems(buildDayItems(datum, dayItemsQuelldaten), datum, routineQuelldaten) });
     }
     return tage;
-  }, [monthDate, dayItemsQuelldaten]);
+  }, [monthDate, dayItemsQuelldaten, routineQuelldaten]);
 
   const substanzen = useMemo(() => {
     const p = peptide.map((name) => ({ name, kategorie: "Peptid", d: dosierung[name] }));
@@ -1145,6 +1178,9 @@ export default function WochenuebersichtView({
             setBearbeitenDatum(null);
           }}
         />
+      )}
+      {routinePeek && (
+        <RoutineTagesPeek routine={routinePeek.routine} datum={routinePeek.datum} onClose={() => setRoutinePeek(null)} />
       )}
     </>
   );

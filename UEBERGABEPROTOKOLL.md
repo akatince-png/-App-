@@ -119,6 +119,45 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
+- **✅ 17.09.2026 (Teil 125):** Die Routine-Granularität aus Teil 122 ("ganze
+  Routine als ein Punkt pro Tag überall, aber pro Einzelschritt aufklappbar,
+  auch OHNE die Routine erst zu starten") ist jetzt umgesetzt — der zuvor in
+  Teil 124 als offen benannte größere Posten. Neu: `utils/routineStatus.js`
+  (reiner Helper, nicht Teil von `buildDayItems()` — siehe dortiger
+  Architektur-Kommentar) berechnet den Tages-Status einer Routine
+  (`X/Y Schritte`, ob ein Durchlauf abgeschlossen ist) und erzeugt daraus
+  Pseudo-Punkte im selben Format wie `buildDayItems()`. Diese Pseudo-Punkte
+  fließen jetzt in `WochenuebersichtView.jsx` (Tag-/Wochen-/Monatsansicht)
+  ein und sind dort genauso antippbar wie jeder andere Punkt (Teil 124) —
+  öffnen aber statt `TagesEintragBearbeiten.jsx` das neue
+  `RoutineTagesPeek.jsx` (Bottom-Sheet), das die bestehende
+  `RoutineHeuteChecklist.jsx` (jetzt mit optionalem `datum`-Prop, Standard
+  heute) für den angetippten Tag zeigt — Einzelschritte einsehen UND
+  bestätigen, ohne die Routine zu starten, für jeden beliebigen Tag. In
+  `TagesplanView.jsx` wurde außerdem ein Bug behoben: die aufklappbare
+  "🌅 Morgenroutine"/"🌙 Abendroutine"-Karte zeigte bisher fälschlich eine
+  Zusammenfassung ALLER Punkte anderer Kategorien im selben Zeitfenster
+  (z. B. ein Supplement um 7 Uhr) statt der echten Routine-Schritte — jetzt
+  zeigt die Kopfzeile den echten Routine-Status, und beim Aufklappen
+  erscheint zusätzlich (additiv, nichts entfernt) die echte Checkliste
+  über den sonstigen Zeitfenster-Punkten. Ein abgeschlossener Durchlauf
+  über den geführten Ablauf (`RoutineAblauf.jsx`, schreibt keine einzelnen
+  `routine_schritt_logs`) zählt automatisch alle Schritte als erledigt —
+  in `routineTagesStatus()` abgesichert und mit Test belegt. Bewusst NICHT
+  angefasst: die Compliance-/Statistik-Berechnung in
+  `WochenuebersichtView.jsx` (zählt weiterhin nur "echte" `buildDayItems()`-
+  Punkte, keine Routine-Pseudo-Punkte — Routinen haben ihr eigenes Punkte-/
+  Streak-System, Teil 39/51) und der kompakte Wochen-Tagesüberblick
+  innerhalb von `TagesplanView.jsx` selbst (Modus "Woche", eigene
+  hartkodierte Kategorie-Badge-Liste, zeigt schon jetzt nicht alle
+  Kategorien — Antippen eines Tages führt ohnehin in den vollständigen
+  "Tag"-Modus mit der neuen Checkliste). Neue Tests:
+  `utils/routineStatus.test.js` (9 Fälle: Status mit/ohne Durchlauf, leere
+  Routine, Pseudo-Punkt-Erzeugung inkl. Zeitrahmen-Fallback, Einfügen+
+  Sortieren in eine bestehende Liste). Verifikation: `npm run build` ✅,
+  `npx oxlint` ✅ (nur vorbestehende Warnungen), `npm run typecheck` ✅,
+  `npx vitest run` ✅ (136/136), `npx playwright test e2e/plaene.spec.js
+  e2e/smoke.spec.js e2e/archiv.spec.js` ✅ (25/25).
 - **✅ 17.09.2026 (Teil 124):** Nutzerin hat weiter präzisiert — nicht nur
   die Struktur-Historie (Teil 123) soll pro Eintrag einsehbar sein, sondern
   JEDER einzelne Tagespunkt (alle Kategorien) soll überall (Tagesplan,
@@ -181,6 +220,103 @@ längst gibt — jetzt diese Kurzübersicht:
   einmal geschrieben, werden bei größeren Umbauten aktuell gehalten),
   dann bei Bedarf die Chronik ab „Teil 102" weiter unten (chronologisches
   Detail-Protokoll jeder einzelnen Sitzung, ältere Teile weiter unten).
+
+---
+
+## ✅ Update 17.09.2026 (Teil 125) — Routine als ein Punkt pro Tag überall, mit Drilldown auf Einzelschritte
+
+**Nutzerinnen-Vorgabe** (Antwort auf die Rückfrage zur Granularität aus
+Teil 122, lange Sprachnachricht): sie will BEIDES — "die ganze Routine
+pro Tag" als EIN Punkt (Tagesplan, Wochenübersicht, Monatsansicht,
+konsistent mit dem bestehenden Punkte-/Streak-Modell), UND draufklicken
+können, um die Einzelschritte einzusehen und einzeln abzuhaken. Wichtig,
+mehrfach betont: "reingucken" muss auch OHNE die Routine zu starten
+funktionieren ("ich möchte morgens reingucken können, wie war meine
+Routine noch mal") — kein Zwang, durch den geführten Ablauf zu gehen, nur
+um den Status zu sehen.
+
+**Architektur-Entscheidung:** `buildDayItems()` bleibt bewusst unverändert
+(erzeugt weiterhin keine Routine-Einträge, siehe dessen eigener
+Kommentar) — die Routine-Punkte werden als eigene "Pseudo-Items" im selben
+Format daneben erzeugt (`utils/routineStatus.js`) und erst bei der
+Anzeige in die jeweilige Liste eingemischt. Vorteil: die bestehende
+Rendering-Logik in `WochenuebersichtView.jsx` (Farbpunkt, Uhrzeit, Name,
+Detail, Klick-Handler) funktioniert für Routine-Punkte automatisch mit,
+ohne Sonderfälle in jeder der drei Ansichten (Tag/Woche/Monat) einzeln
+nachzubauen.
+
+**`utils/routineStatus.js` (neu):**
+- `routineTagesStatus(routine, datum, {routineSchritte, routineDurchlaeufe,
+  routineSchrittErledigt})` — liefert `{schritte, abgeschlossen,
+  anzahlErledigt, anzahlGesamt, schrittIstErledigt(id)}` für einen Tag.
+  Wichtige Feinheit (durch einen Test abgesichert): der geführte Ablauf
+  (`RoutineAblauf.jsx`) schreibt beim Durchlaufen KEINE einzelnen
+  `routine_schritt_logs` (das macht nur die Direkt-Checkliste), sondern
+  nur den fertigen `routine_durchlaeufe`-Eintrag am Ende. Ein Tag mit
+  einem solchen Durchlauf muss deshalb explizit ALLE aktuell
+  konfigurierten Schritte als erledigt zählen, nicht nur die (evtl. gar
+  keine) einzeln protokollierten.
+- `routinePseudoItems(datum, ctx)` — ein Pseudo-Punkt pro Routine mit
+  mindestens einem Schritt (`kategorie: "morgenroutine"/"abendroutine"`,
+  `detail: "X/Y Schritte"`, `done: abgeschlossen`, `uhrzeit` aus dem
+  konfigurierten Zeitrahmen-Start oder einem Richtwert 06:00/20:00).
+  `raw: {routine, datum}` trägt die Info für den Klick-Handler weiter.
+- `mitRoutinePseudoItems(items, datum, ctx)` — fügt die Pseudo-Punkte in
+  eine `buildDayItems()`-Liste ein und sortiert neu nach Uhrzeit (gleiche
+  Sortierlogik wie in `dayItems.js`).
+
+**`WochenuebersichtView.jsx`:** `tagesItems`/`wochenItemsProTag`/
+`monatsTageMitItems` (die drei zentralen, memoisierten Item-Listen für
+Tag-/Wochen-/Monatsansicht) laufen jetzt durch `mitRoutinePseudoItems()`
+— neue `routineQuelldaten`-Zwischenablage nach demselben Muster wie
+`dayItemsQuelldaten` (Performance-Fix, Teil ~110), damit sich die Listen
+nur bei wirklich relevanten Änderungen neu berechnen. `AUSNAHME_KLICKBAR`
+(Teil 124) um `morgenroutine`/`abendroutine` erweitert; `oeffneBearbeiten`
+verzweigt für diese beiden Kategorien zu einem neuen `routinePeek`-State
+statt zu `bearbeitenItem` — öffnet `RoutineTagesPeek.jsx` statt
+`TagesEintragBearbeiten.jsx` (die Routine hat keine Ausnahme-/Erledigt-
+Bedienung im Sinne dieser Komponente, sondern ihre eigene Checkliste).
+Bewusst NICHT angefasst: die Compliance-/Statistik-Berechnung (nutzt
+weiterhin nur `buildDayItems()` direkt) — Routinen haben ihr eigenes,
+etabliertes Punkte-/Streak-System (Teil 39/51), das hier nicht doppelt
+gezählt werden soll.
+
+**`RoutineHeuteChecklist.jsx`:** neuer optionaler `datum`-Prop (Standard:
+heute) — dieselbe Komponente wird jetzt sowohl auf der Startseite (nur
+heute, unverändert) als auch für beliebige Tage aus Tagesplan/
+Wochenübersicht wiederverwendet. Nutzt jetzt `routineTagesStatus()` für
+den Erledigt-Status statt direkt `routineSchrittErledigt` zu lesen — dadurch
+zeigt ein über den geführten Ablauf abgeschlossener Tag automatisch alle
+Schritte als erledigt (keine "Bestätigen"-Knöpfe mehr), auch ohne
+Änderung am Confirm-Verhalten selbst.
+
+**`RoutineTagesPeek.jsx` (neu):** Bottom-Sheet im selben visuellen Stil wie
+`TagesEintragBearbeiten.jsx` — Kopfzeile (Emoji + Routine-Name + Datum)
+plus die eingebettete `RoutineHeuteChecklist`. Bewusst KEIN "Routine
+starten"-Knopf hier (der geführte Ablauf mit Timer lebt weiterhin nur in
+`TagesplanView.jsx`, die dafür nötige State-Maschine dort nicht
+duplizieren) — reines Reingucken + Einzelschritte bestätigen, für jeden
+Tag.
+
+**`TagesplanView.jsx` — Bug-Fix nebenbei gefunden:** die aufklappbare
+"🌅 Morgenroutine"-Karte zeigte in der Kopfzeile bisher
+`routineZusammenfassung(morgenItems)` — eine Zusammenfassung ALLER
+Tagesplan-Punkte vor 11 Uhr (Testosteron, Supplemente, was auch immer um
+diese Zeit geplant ist), NICHT der echten Routine-Schritte. Jetzt zeigt
+die Kopfzeile `routineTagesStatus()` ("X/Y Schritte"), und beim Aufklappen
+erscheint zusätzlich ZUERST die echte `RoutineHeuteChecklist`, DANACH
+(unverändert, nur mit neuer Zwischenüberschrift "Außerdem am Morgen
+geplant") die bisherige Liste der sonstigen Zeitfenster-Punkte — nichts
+entfernt, nur ergänzt und richtig beschriftet. Die inzwischen ungenutzte
+`routineZusammenfassung()`-Funktion wurde entfernt.
+
+**Verifikation** (Nutzerinnen-Vorgabe "Code immer doppelt checken"): neue
+Datei `utils/routineStatus.test.js` (9 Fälle, siehe oben) plus vollständiger
+Lauf: `npm run build` ✅, `npx oxlint` ✅ (nur vorbestehende Warnungen,
+keine neuen), `npm run typecheck` ✅, `npx vitest run` ✅ (136/136 — 7 neue
+gegenüber Teil 124), `npx playwright test e2e/plaene.spec.js
+e2e/smoke.spec.js e2e/archiv.spec.js` ✅ (25/25, deckt Tagesplan +
+Wochenübersicht ohne Konsolenfehler ab).
 
 ---
 
