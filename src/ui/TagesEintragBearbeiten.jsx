@@ -4,7 +4,7 @@ import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { cardBorder, textMain, textMuted, danger, accentDark, accentSoft } from "./theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
-import { fmtDate } from "../utils/dates";
+import { fmtDate, verspaetungText } from "../utils/dates";
 
 // Kategorie -> Ziel-Reiter in PlaeneView.jsx (für den "dauerhaft ändern"-
 // Knopf, siehe AuthenticatedApp.jsx KATEGORIE_TO_VIEW für dasselbe Muster
@@ -76,11 +76,25 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
     // Bewusst über item.raw / originalUhrzeit statt der evtl. per Ausnahme
     // überschriebenen Anzeigefelder — der Log-Eintrag richtet sich immer
     // nach der ECHTEN geplanten Uhrzeit/Name, siehe dayItems.js.
+    const warErledigt = !!item.done;
     if (item.kategorie === "hormon") await toggleHormonErledigt(datum, item.raw.name, item.raw.uhrzeit);
     else if (item.kategorie === "supplement") await toggleSupplementErledigt(datum, item.raw.id, item.originalUhrzeit);
     else if (item.kategorie === "mahlzeit") await toggleMahlzeitErledigt(datum, item.raw.id, item.logZeit ?? item.originalUhrzeit);
     else if (item.kategorie === "gewohnheit") await toggleGewohnheitErledigt(datum, item.raw.id);
     else if (item.kategorie === "training") return; // hat eigene Bearbeiten-Wege, keine Ausnahmen-Karte
+    // Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+    // angezeigt?"): das Abhaken über diese Karte (Wochen-/Monatsübersicht)
+    // rief bisher kein aenderungVermerken() auf, nur beim Zurücknehmen
+    // (nicht beim Abhaken selbst) protokolliert — wie in GewohnheitenView.jsx
+    // handleToggleHeute().
+    if (!warErledigt) {
+      aenderungVermerken({
+        kategorie: item.kategorie,
+        itemName: item.raw.name,
+        aktion: "erledigt",
+        detail: verspaetungText(item.logZeit ?? item.originalUhrzeit) || "",
+      });
+    }
   };
 
   const heuteAndersSpeichern = async () => {

@@ -90,6 +90,38 @@ describe("TagesEintragBearbeiten", () => {
     expect(toggleHormonErledigt).toHaveBeenCalledWith(DATUM, "Testosteron", "08:00");
   });
 
+  // Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+  // angezeigt?"): Abhaken über DIESE Karte (Wochen-/Monatsübersicht) rief
+  // bisher gar kein aenderungVermerken() auf — im Unterschied zum
+  // Zurücknehmen einer Ausnahme, das schon protokollierte. Jetzt wie
+  // GewohnheitenView.jsx handleToggleHeute(): nur beim Abhaken (nicht beim
+  // Zurücknehmen des Häkchens) wird "erledigt" vermerkt.
+  it.each([
+    ["hormon", { name: "Testosteron", uhrzeit: "08:00" }],
+    ["supplement", { id: "s1", name: "Vitamin D" }],
+    ["mahlzeit", { id: "m1", name: "Frühstück" }],
+    ["gewohnheit", { id: "g1", name: "Meditieren", uhrzeit: "08:00" }],
+  ])("'Erledigt'-Checkbox vermerkt 'erledigt' im Protokoll für Kategorie %s", async (kategorie, raw) => {
+    render(<TagesEintragBearbeiten item={baueItem({ kategorie, raw, name: raw.name })} datum={DATUM} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /Erledigt/ }));
+    await vi.waitFor(() =>
+      expect(aenderungVermerken).toHaveBeenCalledWith(expect.objectContaining({ kategorie, itemName: raw.name, aktion: "erledigt" }))
+    );
+  });
+
+  it("'Erledigt'-Checkbox vermerkt NICHTS im Protokoll beim Zurücknehmen (Häkchen war schon gesetzt)", async () => {
+    render(
+      <TagesEintragBearbeiten
+        item={baueItem({ kategorie: "hormon", raw: { name: "Testosteron", uhrzeit: "08:00" }, done: true })}
+        datum={DATUM}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: /Erledigt/ }));
+    await vi.waitFor(() => expect(toggleHormonErledigt).toHaveBeenCalled());
+    expect(aenderungVermerken).not.toHaveBeenCalled();
+  });
+
   it('"Heute anders" öffnet das Formular und speichert eine Ausnahme mit korrektem kategorie/refId', async () => {
     const onClose = vi.fn();
     render(<TagesEintragBearbeiten item={baueItem()} datum={DATUM} onClose={onClose} />);

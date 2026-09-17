@@ -10,7 +10,7 @@ import {
   WIRKUNG_OPTIONEN,
   WOCHENTAGE,
 } from "../constants";
-import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE } from "../utils/dayItems";
 import { routineTagesStatus } from "../utils/routineStatus";
@@ -144,6 +144,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     quests,
     questFortschrittSpeichern,
     ausnahmenNachSchluessel,
+    aenderungVermerken,
   } = useAppData();
 
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
@@ -185,15 +186,32 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       ...prev,
       nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
     }));
+  // Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+  // angezeigt?"): das Bestätigen von Medikamenten/Supplementen über DIESE
+  // Ansicht (den täglichen Hauptbildschirm) rief bisher kein
+  // aenderungVermerken() auf — nur die jeweils eigene Kategorie-Ansicht
+  // (MedikamenteView.jsx/SupplementeView.jsx) protokollierte korrekt.
+  // Gleiches Format wie dort ("Lückenloses Tagesprotokoll", 28.07.).
+  const protokollZeile = (dose, feedback, kategorie) => {
+    const verspaetung = verspaetungText(dose.uhrzeit ?? dose.zeit);
+    const teile = [verspaetung];
+    if (kategorie === "hormon" && feedback?.vertraeglichkeit) teile.push(`Verträglichkeit: ${feedback.vertraeglichkeit}`);
+    if (feedback?.wirkung) teile.push(`Wirkung: ${feedback.wirkung}`);
+    if ((feedback?.nebenwirkungen || []).length > 0) teile.push(`Nebenwirkungen: ${feedback.nebenwirkungen.join(", ")}`);
+    if (feedback?.notizen) teile.push(feedback.notizen);
+    return teile.filter(Boolean).join(" · ");
+  };
   const handleSaveFeedback = (dose) => {
     if (feedbackKategorie === "hormon") saveHormonFeedback(dose, draftFeedback);
     else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, draftFeedback);
+    aenderungVermerken({ kategorie: feedbackKategorie, itemName: dose.name, aktion: "erledigt", detail: protokollZeile(dose, draftFeedback, feedbackKategorie) });
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
   };
   const handleSkipFeedback = (dose) => {
     if (feedbackKategorie === "hormon") skipHormonFeedback(dose);
     else if (feedbackKategorie === "supplement") skipSupplementFeedback(dose);
+    aenderungVermerken({ kategorie: feedbackKategorie, itemName: dose.name, aktion: "erledigt", detail: protokollZeile(dose, null, feedbackKategorie) });
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
   };
@@ -221,8 +239,23 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const notizSpeichern = (item) => {
     const text = notizEntwurf[item.key] ?? "";
     const tagStr = toLocalISODate(selectedDate);
+    const schluessel = notizSchluessel(item);
+    const vorher = (item.kategorie === "mahlzeit" ? mahlzeitNotizen[schluessel] : gewohnheitNotizen[schluessel]) || "";
     if (item.kategorie === "mahlzeit") mahlzeitNotizSpeichern(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit, text);
     else gewohnheitNotizSpeichern(tagStr, item.raw.id, text);
+    // Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+    // angezeigt?"): die Notiz-Funktion (Konsistenz-Check, Punkt 3) rief
+    // bisher gar kein aenderungVermerken() auf — sie war dadurch selbst
+    // ein Fall genau des Bugs, den die Nachfrage aufgedeckt hat (siehe
+    // ProtokollLogView.jsx TAGESVERLAUF_AKTIONEN).
+    if (text.trim() !== vorher.trim()) {
+      aenderungVermerken({
+        kategorie: item.kategorie,
+        itemName: item.name,
+        aktion: !vorher.trim() ? "Notiz hinzugefügt" : !text.trim() ? "Notiz entfernt" : "Notiz geändert",
+        detail: text || "",
+      });
+    }
     setNotizOffen((prev) => ({ ...prev, [item.key]: false }));
   };
 
@@ -308,13 +341,28 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       return items.map((item) => {
         if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "hormon") };
         if (item.kategorie === "supplement") {
-          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
+          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit, name: item.raw.name };
           return { ...item, doseRef, onConfirm: () => openFeedback(doseRef, item.key, "supplement") };
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
-        if (item.kategorie === "gewohnheit") return { ...item, onConfirm: () => toggleGewohnheitErledigt(tagStr, item.raw.id) };
+        if (item.kategorie === "gewohnheit")
+          return {
+            ...item,
+            onConfirm: () => {
+              const warErledigt = item.done;
+              toggleGewohnheitErledigt(tagStr, item.raw.id);
+              if (!warErledigt) aenderungVermerken({ kategorie: "gewohnheit", itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.uhrzeit) || "" });
+            },
+          };
         if (item.kategorie === "zeitblock") return item;
-        return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit) };
+        return {
+          ...item,
+          onConfirm: () => {
+            const warErledigt = item.done;
+            toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit);
+            if (!warErledigt) aenderungVermerken({ kategorie: "mahlzeit", itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.logZeit ?? item.uhrzeit) || "" });
+          },
+        };
       });
     },
     [
@@ -340,6 +388,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       zeitbloecke,
       ausnahmenNachSchluessel,
       starteTraining,
+      aenderungVermerken,
     ]
   );
 

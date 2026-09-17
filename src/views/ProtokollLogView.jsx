@@ -47,6 +47,12 @@ export const TAGESVERLAUF_AKTIONEN = [
   "aktiviert",
   "deaktiviert",
   "beendet",
+  // Notiz-Funktion für Mahlzeiten/Gewohnheiten (Konsistenz-Check, Punkt 3)
+  // — beim ersten Bau selbst noch ohne aenderungVermerken()-Aufruf,
+  // derselbe Bug wie oben, nur in eigenem Code statt in altem.
+  "Notiz hinzugefügt",
+  "Notiz geändert",
+  "Notiz entfernt",
 ];
 
 function datumLabel(datumStr) {

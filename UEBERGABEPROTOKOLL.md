@@ -119,36 +119,88 @@ längst gibt — jetzt diese Kurzübersicht:
   (überall Stepper-Stil), die fehlende "allein/mit KI"-Nachfrage bei
   "Neues Protokoll" ist seit Teil 115 umgesetzt (neuer Zwischenschritt
   `OnboardingKiWahlView.jsx`, direkt nach dem Protokollnamen).
-- **🔶 17.09.2026 (Teil 127, läuft):** Nach Teil 126 bat die Nutzerin um
-  einen vollständigen Funktions-/Regressionstest ("nicht wieder eine neue
-  Überraschung", konkrete Frage: "werde ich gefragt: nur heute oder ganze
-  Protokolllaufbahn, und wird das im Tagesprotokoll angezeigt?"). Dabei
-  einen ECHTEN, seit Bau von `TagesEintragBearbeiten.jsx` bestehenden Bug
-  gefunden und behoben: gleich FÜNF `aktion`-Werte aus drei Dateien
-  (`TagesEintragBearbeiten.jsx`: "geändert (nur dieser Tag)"/"entfällt
-  (nur dieser Tag)"; `HomeView.jsx`: "aktiviert"/"beendet" beim
-  Notfallmodus, dessen eigener Kommentar ausdrücklich "damit im Protokoll
-  sichtbar ist" verspricht; `MehrTab.jsx`: "aktiviert"/"deaktiviert" beim
-  Baustein-Umschalten) wurden protokolliert, standen aber in KEINER der
-  beiden Anzeige-Filterlisten (`ProtokollLogView.jsx` TAGESVERLAUF_
-  AKTIONEN, `ItemVerlauf.jsx` VERLAUF_AKTIONEN) — landeten lautlos in der
-  DB, ohne je irgendwo angezeigt zu werden. Alle fünf jetzt zu
-  TAGESVERLAUF_AKTIONEN ergänzt (Tages-Ereignisse, keine dauerhafte
-  Struktur-Änderung). Beide Listen jetzt exportiert + neuer Test
+- **✅ 17.09.2026 (Teil 127, abgeschlossen):** Nach Teil 126 bat die
+  Nutzerin um einen vollständigen Funktions-/Regressionstest ("nicht
+  wieder eine neue Überraschung", konkrete Fragen: "Übermittelt es? Wird
+  im Tagesprotokoll angezeigt? Werde ich gefragt: nur heute oder ganze
+  Protokolllaufbahn? Sind die PDF-/Überblicksprotokolle im Detail
+  einsehbar?"). Dabei insgesamt ACHT echte, teils seit sehr langer Zeit
+  bestehende Bugs gefunden und behoben, alle derselben Bugklasse oder eng
+  verwandt — "protokolliert, aber nirgends sichtbar" bzw. "gar nicht erst
+  protokolliert":
+  1.-5. Fünf `aktion`-Werte aus drei Dateien (`TagesEintragBearbeiten.jsx`:
+     "geändert (nur dieser Tag)"/"entfällt (nur dieser Tag)";
+     `HomeView.jsx`: "aktiviert"/"beendet" beim Notfallmodus, dessen
+     eigener Kommentar ausdrücklich "damit im Protokoll sichtbar ist"
+     verspricht; `MehrTab.jsx`: "aktiviert"/"deaktiviert" beim
+     Baustein-Umschalten) wurden protokolliert, standen aber in KEINER der
+     beiden Anzeige-Filterlisten (`ProtokollLogView.jsx` TAGESVERLAUF_
+     AKTIONEN, `ItemVerlauf.jsx` VERLAUF_AKTIONEN) — landeten lautlos in
+     der DB, ohne je irgendwo angezeigt zu werden. Alle fünf zu
+     TAGESVERLAUF_AKTIONEN ergänzt.
+  6. Die Notiz-Funktion für Mahlzeiten/Gewohnheiten in `TagesplanView.jsx`
+     (selbst erst in Teil 126, Punkt 3 gebaut) rief beim Speichern gar
+     kein `aenderungVermerken()` auf — derselbe Bug, nur im eigenen statt
+     im alten Code. Jetzt protokolliert sie ("Notiz hinzugefügt"/
+     "geändert"/"entfernt" je nach Vorher/Nachher-Zustand, alle drei neu
+     in TAGESVERLAUF_AKTIONEN), und `aenderungVermerken` wurde in die
+     `useAppData()`-Destrukturierung der Datei nachgetragen (fehlte dort
+     komplett).
+  7.-8. Der eigentliche Hauptfund: das Bestätigen ("Bestätigen"-Knopf im
+     Tagesplan, Erledigt-Checkbox in der Wochen-/Monatsübersicht) von
+     Medikamenten/Supplementen/Gewohnheiten/Mahlzeiten rief über die
+     ZWEI meistgenutzten täglichen Bildschirme
+     (`TagesplanView.jsx` — Haupt-Tagesplan; `TagesEintragBearbeiten.jsx`
+     — Bottom-Sheet aus Wochen-/Monatsübersicht) NIE `aenderungVermerken`
+     auf, obwohl dieselbe Handlung über die jeweils eigene Kategorie-
+     Ansicht (`MedikamenteView.jsx`/`SupplementeView.jsx`/
+     `GewohnheitenView.jsx`/`NutritionView.jsx`) schon immer korrekt
+     protokolliert hat. Für die zwei mit Abstand häufigsten
+     Bestätigungswege der App bedeutete das: "wird im Tagesprotokoll
+     angezeigt?" war bisher meist mit "nein" zu beantworten. Behoben in
+     beiden Dateien, exakt nach dem in den drei Kategorie-Ansichten
+     bereits bewährten Format (`protokollZeile()`-Muster mit
+     `verspaetungText()`, `aktion: "erledigt"` — bereits in
+     TAGESVERLAUF_AKTIONEN, kein neuer Wert nötig) und mit Schutz gegen
+     doppeltes Loggen beim Zurücknehmen eines Häkchens (nur beim Übergang
+     zu "erledigt", nicht beim Entabhaken — wie schon in
+     `GewohnheitenView.jsx handleToggleHeute()`).
+  Die PDF-Export-Frage ("soll dann auch in den PDF-Protokollen einsehbar
+  sein") brauchte dagegen KEINE eigene Code-Änderung: der Abschnitt
+  "Änderungen im Zeitraum" in `WochenuebersichtView.jsx` liest
+  `protokollEintraege` schon unbedingt nach Datumsbereich, ohne eigenen
+  aktion-Filter — sobald die zugrunde liegenden `aenderungVermerken()`-
+  Aufrufe korrekt UND sichtbar sind (siehe oben), erscheinen sie
+  automatisch auch im PDF und in den Überblicksprotokollen.
+  Beide Anzeige-Filterlisten sind jetzt exportiert + neuer Test
   `utils/aktionSichtbarkeit.test.js`, der die GESAMTE Codebasis nach
   `aktion: "..."`-Literalen durchsucht und verhindert, dass sich genau
-  dieser Bug beim nächsten neuen Feature unbemerkt wiederholt. Zusätzlich
-  `ui/TagesEintragBearbeiten.test.jsx` (16 Fälle, gab es bisher trotz
-  zentraler Rolle gar nicht) — deckt "Heute anders"/"Entfällt heute"/
-  "Ausnahme zurücknehmen"/Erledigt-Toggle/"Dauerhaft ändern"-Navigation
-  für alle 7 Kategorien ab. Ein von einem Explore-Agenten parallel
-  durchgeführter Kategorie/itemName-Konsistenz-Check zwischen allen
-  `<ItemVerlauf>`-Stellen und den zugehörigen `aenderungVermerken()`-
-  Aufrufen fand dagegen KEINE Diskrepanz (alle 15 Fundstellen exakt
-  übereinstimmend). Vollständige Test-Suite danach grün: 153 Vitest-Tests
-  (17 neu), 39 Playwright-Tests. **Noch nicht abgeschlossen** — weitere
-  Bereiche werden noch geprüft (PDF-Export/Archiv-Sichtbarkeit von
-  Änderungen, siehe Chat).
+  diese Bugklasse beim nächsten neuen Feature unbemerkt wiederholt.
+  Zusätzlich `ui/TagesEintragBearbeiten.test.jsx` (jetzt 22 Fälle, gab es
+  bisher trotz zentraler Rolle gar nicht) — deckt "Heute anders"/
+  "Entfällt heute"/"Ausnahme zurücknehmen"/Erledigt-Toggle (inkl. der
+  neuen `aenderungVermerken`-Protokollierung und ihres Schutzes gegen
+  doppeltes Loggen)/"Dauerhaft ändern"-Navigation für alle 7 Kategorien
+  ab. Ein von einem Explore-Agenten parallel durchgeführter
+  Kategorie/itemName-Konsistenz-Check zwischen allen `<ItemVerlauf>`-
+  Stellen und den zugehörigen `aenderungVermerken()`-Aufrufen fand
+  dagegen KEINE Diskrepanz (alle 15 Fundstellen exakt übereinstimmend).
+  **Bewusste Lücke, ehrlich benannt:** `TagesplanView.jsx` selbst hat
+  (wie alle Dateien in `src/views/`) keine eigene Unit-Test-Datei — das
+  entspricht der bestehenden Test-Konvention dieser App (Views laufen
+  über Playwright-Smoke-Tests, nicht über gerenderte Unit-Tests), wurde
+  hier aber nicht durchbrochen, weil die Datei sehr groß/verzweigt ist
+  und ein neuer Render-Test dafür unverhältnismäßig aufwändig geworden
+  wäre. Die Korrektheit der Änderung wurde stattdessen durch genaues
+  Nachlesen und 1:1-Abgleich mit den drei bereits testabgedeckten
+  Kategorie-Ansichten sichergestellt — ein einmaliges manuelles
+  Durchklicken (Medikament/Supplement/Gewohnheit/Mahlzeit im Tagesplan
+  bestätigen, danach im Tagesverlauf nachsehen) durch die Nutzerin selbst
+  würde hier die letzte Lücke zur vollen Gewissheit schließen.
+  Vollständige Test-Suite danach grün: 158 Vitest-Tests, 39
+  Playwright-Tests, `npm run build` + `npx oxlint` fehlerfrei (eine durch
+  den Fix ausgelöste `exhaustive-deps`-Warnung in `TagesplanView.jsx`
+  wurde noch im selben Schritt behoben).
 - **✅ 17.09.2026 (Teil 126, abgeschlossen):** Nutzerin bat um einen Konsistenz-
   Check über ALLE Kategorie-Bereiche ("welche Bereiche andere Funktionen
   haben als andere") — ein Explore-Agent hat alle 11 Bereiche verglichen
