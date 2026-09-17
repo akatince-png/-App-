@@ -170,7 +170,21 @@ längst gibt — jetzt diese Kurzübersicht:
      Supabase-Spalten erwartet (ohne die Umwandlung wäre `intervallTyp`
      statt `intervall_mode` gesendet worden und beim Speichern
      gescheitert).
-  5. ⏳ Training: Heute-Checkliste — noch offen.
+  5. ✅ Training: Heute-Checkliste ergänzt — `TrainingView.jsx` zeigte
+     bisher nur Verlauf (schon erledigt) + Live-Start, kein "das steht
+     heute laut Wochenplan an"-Überblick wie die anderen Kategorien. Neue
+     "Heute"-Karte oben auf der Seite (gleiche `buildDayItems()`-Ableitung
+     wie in TagesplanView.jsx, gefiltert auf "training"), "Training
+     starten" materialisiert einen virtuellen Wochenplan-Punkt genauso wie
+     dort. **Dabei einen echten, vorbestehenden Bug gefunden und
+     behoben** (Selbst-Check vor dem Commit): `buildDayItems()` hatte für
+     `hormonPlan`/`hormonErledigt`/`hormonDosierung`/`supplemente`/
+     `supplementErledigt`/`mahlzeiten`/`mahlzeitErledigt` KEINE Default-
+     Werte (anders als alle anderen Parameter) — ein Aufruf, der (wie
+     meiner) nur die für Training nötigen Felder mitgibt, crashte mit
+     "Cannot read properties of undefined (reading 'filter')". Jetzt
+     Defaults ergänzt, mit Playwright-Testlauf bestätigt (kompletter
+     E2E-Lauf: 39/39 grün, keine Regression durch den Fix).
   6. ⏳ Einzeleinträge bearbeiten/löschen bei Schlaf/Hydration/Tageslicht/
      Bildschirmzeit — noch offen.
   7. ⏳ "Version festhalten" für Morgenroutine/Abendroutine + Zeitblöcke —
