@@ -219,6 +219,20 @@ löschbar.
 
 ---
 
+### Nachtrag Teil 121 — Nachtblau-Design, Gehirn + Tagesfortschritt in einer Karte
+
+- **Nachtblau als App-Farbe** (Wunsch der Nutzerin: „alle Bereiche, die einheitlich grün waren, sollen Nachtblau sein“):
+  - `theme.js`: accent `#3B4BA8`, accentDark `#1B2150`, accentSoft `#E7E9F7`; success/„erledigt“ `#2F3E96`.
+  - Dazu neue Tokens `nachtVerlauf`, `nachtSchatten`, `logoTuerkis`, `logoBlau`, `logoVerlauf` für die Highlight-Elemente (Spielstand-Karte, Gehirn, große Feier-Karte).
+  - Bereichsfarben (KATEGORIE_META) und der rote Notfallmodus bleiben.
+  - Restliche fest eingebaute Grüntöne ersetzt: QuickTaskList, KiChat-Orb-Schein, Onboarding-Schatten, Puls-Animation in `index.css`.
+- **Gehirn + Diagramm in einer Karte** (`ui/GehirnKarte.jsx`):
+  - Klassische Gehirn-Seitenansicht mit Lappen, Seiten- und Zentralfurche, Windungen im Logo-Linienstil, Kleinhirn und Hirnstamm.
+  - Die Zeitraum-Wahl Tag/Woche/Monat/Gesamt steuert Regionen (`berechneGehirnZeitraum` in `utils/gehirn.js`, Zuordnung `WIDGET_REGION`) und die Balken darunter.
+  - Antippen einer Region hebt ihre Balken hervor.
+  - Die separate Tagesfortschritt-Karte auf Home ist entfallen, ebenso `TagesfortschrittBalken.jsx`/`TagesfortschrittOrden.jsx`; die Orden sind unter Erfolge zu sehen.
+- **Bug-Fix** `kalendertageSeit()` (`utils/zeitraumFortschritt.js`): Tage seit Protokollstart nach örtlichem Datum. Vorher ignorierte die Wochen-/Monatsansicht kurz nach Mitternacht den Vortag (UTC-Verschiebung).
+
 ### Nachtrag Teil 121 — Gehirn, 800 Denksport-Aufgaben, Denksport-Seite
 
 - **„Dein Gehirn“ statt „Deine Welt“** (`utils/gehirn.js`, `ui/GehirnKarte.jsx`), gestaltet nach dem Logo: Gehirn von vorne, links Linienzeichnung, rechts Punktewolke, die sich mit der Wochenladung zur ganzen Hälfte sammelt; der offene Logo-Ring zeigt den Wochenfortschritt; Regionen = große Punkte plus Legende mit Ladebalken. Die Bereiche sind zu 6 Regionen zusammengefasst:
