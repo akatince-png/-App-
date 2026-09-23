@@ -7,7 +7,7 @@ import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { AIService } from "../services/aiService";
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
-import { getCoachName, getVorlesenAktiv, getKiAktiv, getCoachVorgestellt, saveCoachVorgestellt } from "../utils/coachStorage";
+import { getCoachName, getVorlesenAktiv, getKiAktiv, getCoachVorgestellt, saveCoachVorgestellt, getKiAutoStartUnterdrueckt } from "../utils/coachStorage";
 import { spracherkennungVerfuegbar, sprachausgabeVerfuegbar, sprachausgabeStoppen, sprich, starteSprachErkennung } from "../utils/speech";
 import { wissensBasisText } from "../utils/wissensBasis";
 import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
@@ -149,7 +149,9 @@ export default function KiChat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, adminNotizenKontext, bereich, spotifyKontextText, coachWissenText]);
   const [spotifyHinweis, setSpotifyHinweis] = useState(null);
-  const [offen, setOffen] = useState(() => autoStart);
+  // Nicht offen starten, wenn im Onboarding "Nein, ich mach's selbst"
+  // gewählt wurde (siehe getKiAutoStartUnterdrueckt) — der Orb bleibt da.
+  const [offen, setOffen] = useState(() => autoStart && !getKiAutoStartUnterdrueckt());
   const [verlauf, setVerlauf] = useState([]);
   const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);
   const [eingabe, setEingabe] = useState("");
@@ -351,7 +353,7 @@ export default function KiChat({
   // das Erscheinen dieses Screens gilt bereits als Zustimmung zum Gespräch.
   // Läuft nicht, wenn der Assistent global ausgeschaltet ist (siehe unten).
   useEffect(() => {
-    if (!autoStart || eingeleitetRef.current || !getKiAktiv()) return;
+    if (!autoStart || eingeleitetRef.current || !getKiAktiv() || getKiAutoStartUnterdrueckt()) return;
     eingeleitetRef.current = true;
     starteGespraech();
     // eslint-disable-next-line react-hooks/exhaustive-deps

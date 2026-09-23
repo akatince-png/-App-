@@ -256,7 +256,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   const gruss = stunde < 12 ? t("home.greeting.morgen") : stunde < 18 ? t("home.greeting.tag") : t("home.greeting.abend");
 
   // Lade Benutzernamen aus localStorage
-  const userName = typeof window !== "undefined" ? localStorage.getItem("user_name") : null;
+  // Im "Verwalten als"-Modus den Coachee begrüßen, nicht den auf diesem
+  // Gerät gespeicherten Namen der Coachin (der liegt in localStorage und
+  // gehört zum Gerät, nicht zum gerade verwalteten Profil).
+  const userName = proband ? proband.vorname || null : typeof window !== "undefined" ? localStorage.getItem("user_name") : null;
 
   // Performance-Fix (12.09., Bug-Report "Tagesplan ruckelt" — betrifft auch
   // den Home-Bildschirm, der bei jedem Öffnen zuerst angezeigt wird): lief

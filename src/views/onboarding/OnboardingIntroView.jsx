@@ -6,7 +6,7 @@ import CoachOrb from "../../ui/CoachOrb";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import OnboardingCoachGuide from "./OnboardingCoachGuide";
 import OnboardingCoachFreitext from "./OnboardingCoachFreitext";
-import { getCoachName } from "../../utils/coachStorage";
+import { getCoachName, saveKiAutoStartUnterdrueckt } from "../../utils/coachStorage";
 import { useT } from "../../i18n/translate";
 
 /**
@@ -75,10 +75,10 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <PrimaryButton onClick={() => setModus("begleitet-frei")}>Ja, ich erzähl einfach frei</PrimaryButton>
+            <PrimaryButton onClick={() => { saveKiAutoStartUnterdrueckt(false); setModus("begleitet-frei"); }}>Ja, ich erzähl einfach frei</PrimaryButton>
             <button
               type="button"
-              onClick={() => setModus("begleitet-schritt")}
+              onClick={() => { saveKiAutoStartUnterdrueckt(false); setModus("begleitet-schritt"); }}
               style={{
                 padding: "13px 16px",
                 borderRadius: 12,
@@ -94,7 +94,10 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
             </button>
             <button
               type="button"
-              onClick={() => setModus("manuell")}
+              onClick={() => {
+                saveKiAutoStartUnterdrueckt(true);
+                setModus("manuell");
+              }}
               style={{
                 padding: "13px 16px",
                 borderRadius: 12,

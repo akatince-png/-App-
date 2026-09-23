@@ -4,6 +4,11 @@
 
 body {
   margin: 0;
+  /* Dieselbe Schrift wie Shell (ui/primitives.jsx) auch für Elemente
+     außerhalb einer Shell — Belohnungsfenster, Verwalten-als-/Zusatz-
+     protokoll-Band, Seitenleiste — die sonst in der Browser-Standard-
+     schrift (Serifen) erschienen. */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* Tablet-/Desktop-Layout: die App war fest auf 420px Inhaltsbreite

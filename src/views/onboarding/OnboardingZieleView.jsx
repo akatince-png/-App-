@@ -17,7 +17,7 @@ export default function OnboardingZieleView({ onDone, onBack, onCancel }) {
 
   return (
     <Shell>
-      <OnboardingNavArrows onBack={onBack} backLabel={t("onboarding.zurueck")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
+      <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
         <div style={{ fontSize: 28 }}>🎯</div>

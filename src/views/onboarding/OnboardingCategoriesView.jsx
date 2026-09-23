@@ -760,7 +760,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     <Shell bereich={SCHRITT_ZU_KATEGORIE[step.key]}>
       <OnboardingNavArrows
         onBack={index > 0 || onBackToStart ? zurueck : undefined}
-        backLabel={t("onboarding.zurueck")}
+        backLabel={tLabel("Zurück")}
         // Bug-Fix: Während effectiveModus === "jetzt" (Formular gerade
         // ausgefüllt) rief dieser obere Pfeil unconditioned weiter(false)
         // auf — dasselbe "überspringen", das sonst nur "Später einrichten"
@@ -778,11 +778,10 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>
             {t("onboarding.categories.progress", { current: index + 1 + PROTOKOLL_SCHRITT_OFFSET, total: PROTOKOLL_SCHRITTE_GESAMT })}
           </div>
-          {(index > 0 || onBackToStart) && (
-            <div className="mp-tap" onClick={zurueck} style={{ fontSize: 15, fontWeight: 700, color: textMuted, cursor: "pointer", padding: "8px 12px" }}>
-              {t("onboarding.zurueck")}
-            </div>
-          )}
+          {/* Zweiter "← Zurück"-Link hier entfernt (UX-Review 23.09.): die
+              Navigationsleiste direkt darüber bietet denselben Weg schon —
+              zwei Zurück-Knöpfe übereinander wirkten wie zwei verschiedene
+              Aktionen. */}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>

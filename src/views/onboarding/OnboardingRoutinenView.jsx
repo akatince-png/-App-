@@ -176,7 +176,7 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
 
   return (
     <Shell>
-      <OnboardingNavArrows onBack={onBack} backLabel={t("onboarding.zurueck")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
+      <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
 
       <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 10 }}>
         {t("onboarding.categories.progress", { current: 2, total: PROTOKOLL_SCHRITTE_GESAMT })}

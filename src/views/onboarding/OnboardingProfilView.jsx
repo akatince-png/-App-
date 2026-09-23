@@ -27,7 +27,7 @@ export default function OnboardingProfilView({ onDone, onBack, onCancel }) {
 
   return (
     <Shell>
-      <OnboardingNavArrows onBack={onBack} backLabel={t("onboarding.zurueck")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
+      <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <div style={{ fontSize: 28 }}>👤</div>

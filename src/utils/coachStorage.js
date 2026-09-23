@@ -105,3 +105,31 @@ export function saveKiAktiv(aktiv) {
     // LocalStorage nicht verfügbar — Einstellung gilt dann nur für diese Sitzung.
   }
 }
+
+// "Nein, ich mach's selbst" im Erst-Onboarding (UX-Review 23.09.): bisher
+// hatte die Wahl keinerlei Wirkung — auf den folgenden Kategorie-Seiten
+// öffnete sich Aka trotzdem automatisch und verdeckte das halbe Formular.
+// Bewusst NUR für diese Browser-Sitzung und NUR das automatische Aufpoppen
+// (sessionStorage): der Assistent bleibt per Tipp auf den Orb erreichbar
+// und ist nicht app-weit ausgeschaltet (dafür gibt es den Schalter unter
+// "Mehr" bzw. die Wahl "Allein" bei "Neues Protokoll").
+const KI_AUTOSTART_AUS_KEY = "kiAutoStartUnterdrueckt";
+
+export function getKiAutoStartUnterdrueckt() {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(KI_AUTOSTART_AUS_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function saveKiAutoStartUnterdrueckt(unterdrueckt) {
+  if (typeof window === "undefined") return;
+  try {
+    if (unterdrueckt) sessionStorage.setItem(KI_AUTOSTART_AUS_KEY, "true");
+    else sessionStorage.removeItem(KI_AUTOSTART_AUS_KEY);
+  } catch {
+    // sessionStorage nicht verfügbar — dann bleibt es beim bisherigen Verhalten.
+  }
+}

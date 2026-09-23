@@ -93,7 +93,9 @@ export default function NeuesProtokollBestaetigenView({ onBestaetigt, onParallel
         </div>
       </Card>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* paddingBottom: der schwebende "Grad nicht gut?"-Knopf unten links
+          verdeckte sonst den Abbrechen-Knopf. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 80 }}>
         <PrimaryButton onClick={bestaetigen} disabled={laedt} variant={onParallel ? "ghost" : "accent"}>
           {laedt ? "Einen Moment…" : "Ja, archivieren und neu beginnen"}
         </PrimaryButton>
