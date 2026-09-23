@@ -1,13 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { Shell, Card, Pill } from "../ui/primitives";
+import { Shell, Card } from "../ui/primitives";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
-import TagesfortschrittBalken from "../ui/TagesfortschrittBalken";
-import TagesfortschrittOrden from "../ui/TagesfortschrittOrden";
 import { useErrungenschaften } from "../data/useErrungenschaften";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
-import { widgetsFuerZeitraum, gesamtVerfuegbar } from "../utils/zeitraumFortschritt";
+import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
@@ -652,6 +650,18 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // inzwischen nicht mehr zutrifft (z. B. neues, frisches Protokoll) —
   // sonst würde ein leerer/falscher Zustand hängen bleiben.
   const effektiverZeitraum = zeitraum === "gesamt" && !zeigeGesamtOption ? "monat" : zeitraum;
+  // Länge des gewählten Zeitraums in Tagen — für die Gehirn-Ladung der
+  // Bereiche ohne eigenen Balken (Schlaf, Atemübungen, Denkpause).
+  const zeitraumTage =
+    effektiverZeitraum === "tag"
+      ? 1
+      : effektiverZeitraum === "woche"
+        ? 7
+        : effektiverZeitraum === "monat"
+          ? 30
+          : aktivesHauptprotokoll?.startdatum
+            ? Math.max(1, kalendertageSeit(aktivesHauptprotokoll.startdatum, today) + 1)
+            : 30;
   const zeitraumWidgets = useMemo(
     () => widgetsFuerZeitraum(effektiverZeitraum, miniWidgetData, errungenschaftenQuellen, aktivesHauptprotokoll?.startdatum),
     [effektiverZeitraum, miniWidgetData, errungenschaftenQuellen, aktivesHauptprotokoll]
@@ -846,7 +856,19 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} />}
-      {!isEmergencyMode && <GehirnKarte kategorien={ordenKategorien} onOpenErfolge={() => onOpenView("erfolge")} onDenksport={() => onOpenView("denksport")} />}
+      {/* Gehirn + Tagesfortschritt in einer Karte (23.09.) — auch im
+          Notfallmodus, wie vorher das Tagesfortschritt-Diagramm. */}
+      <GehirnKarte
+        kategorien={ordenKategorien}
+        widgets={zeitraumWidgets}
+        zeitraum={effektiverZeitraum}
+        setZeitraum={setZeitraum}
+        tage={zeitraumTage}
+        zeigeGesamt={zeigeGesamtOption}
+        onOpenErfolge={() => onOpenView("erfolge")}
+        onDenksport={() => onOpenView("denksport")}
+        onOpenView={onOpenView}
+      />
 
       {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
           Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,
@@ -936,45 +958,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         </div>
       )}
 
-      {/* Tagesfortschritt zuerst — die Startseite ist ein Tagesassistent, kein
-          Menü. Balkendiagramm statt Ring (12.09., Nutzerinnen-Vorgabe): ein
-          Balken je Lebensbereich statt einer einzelnen Ring-Zahl, zeigt auf
-          einen Blick, wo es heute hakt. Der frühere zweite Ring ("Routinen")
-          ist weg — Gewohnheiten/Morgen-/Abendroutine stecken jetzt gleich-
-          berechtigt mit allen anderen Bereichen im Direktzugriff unten. */}
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 4 }}>{t("home.tagesfortschritt")}</div>
-        {/* Bug-Fix: statusText() gibt teils ganze Sätze zurück (z. B. "Nur
-            noch zwei Aufgaben bis zum Tagesziel."), keine kurze Zahl — in
-            einer Zeile nebeneinander mit dem Label lief das ineinander.
-            Jetzt eigene Zeile darunter.
-            Zweiter Bug-Fix: erledigtCount zählt schon im Notfallmodus nur
-            die essenziellen Kategorien (aus displayItems), total kam bisher
-            trotzdem aus dem ungefilterten heuteItems.length — zeigte im
-            Notfallmodus einen irreführend niedrigen Bruch (z. B. "2 von 9"
-            statt "2 von 3"), obwohl der Rest laut Notfallmodus bewusst
-            Bonus ist. Jetzt beide aus derselben (ggf. gefilterten) Liste. */}
-        {/* Status-Satz steht seit dem Spielstand-Umbau (23.09.) oben in der
-            SpielstandKarte — hier nur noch Abstand zur Zeitraum-Wahl. */}
-        <div style={{ marginBottom: 10 }} />
-        {/* Zeitraum-Wahl fürs Balkendiagramm darunter (16.09., Nutzerinnen-
-            Vorgabe) — bewusst über dem Diagramm, direkt als Steuerung dafür
-            lesbar, statt irgendwo sonst auf der Seite. */}
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 4, marginLeft: -4 }}>
-          <Pill label="Tag" selected={zeitraum === "tag"} onClick={() => setZeitraum("tag")} />
-          <Pill label="Woche" selected={zeitraum === "woche"} onClick={() => setZeitraum("woche")} />
-          <Pill label="Monat" selected={zeitraum === "monat"} onClick={() => setZeitraum("monat")} />
-          {zeigeGesamtOption && <Pill label="Gesamt" selected={zeitraum === "gesamt"} onClick={() => setZeitraum("gesamt")} />}
-        </div>
-        {/* Ab Tablet-Breite (siehe .mp-tagesfortschritt-grid in index.css)
-            rechts daneben die Orden-Vorschau statt des sonst ungenutzten
-            Leerraums — auf dem Handy bleibt es unverändert nur das
-            Balkendiagramm, das dort ohnehin schon die volle Breite nutzt. */}
-        <div className="mp-tagesfortschritt-grid">
-          <TagesfortschrittBalken widgets={zeitraumWidgets} />
-          <TagesfortschrittOrden widgets={miniWidgetData} kategorien={ordenKategorien} verdiente={ordenVerdiente} onClick={() => onOpenView("archiv")} />
-        </div>
-      </Card>
 
       {/* Quests/Rangliste/Team/Coach-Nachricht: bewusst HIER statt ganz oben
           (App-Bauplan-Punkt, "Startseite entschlacken") — standen vorher

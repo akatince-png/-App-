@@ -101,3 +101,50 @@ export function berechneGehirn(kategorien, heute = new Date()) {
 
   return { regionen, verbindungen, gesamtLadung, aktiv: regionen.filter((r) => r.zustand === "aktiv").length, genutzt: genutzt.length };
 }
+
+// Zuordnung der Tagesfortschritt-Balken (Home-Widgets) zu den Regionen —
+// seit 23.09. sind Diagramm und Gehirn eine Karte: dieselbe Zeitraum-Wahl
+// (Tag/Woche/Monat/Gesamt) steuert Balken UND Gehirn.
+export const WIDGET_REGION = {
+  gewohnheit: "fokus",
+  morgenroutine: "fokus",
+  abendroutine: "fokus",
+  bildschirmzeit: "fokus",
+  training: "bewegung",
+  hormon: "energie",
+  supplement: "energie",
+  mahlzeit: "energie",
+  hydration: "energie",
+  tageslicht: "rhythmus",
+};
+// Bereiche ohne eigenen Balken: zählen über ihre erledigten Tage im Zeitraum.
+const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", denkpause: "fokus" };
+
+// widgets: Balken-Daten des gewählten Zeitraums (dailyCount/dailyTotal je
+// Bereich, siehe utils/zeitraumFortschritt.js); tage: Länge des Zeitraums.
+export function berechneGehirnZeitraum({ widgets, kategorien, tage, heute = new Date() }) {
+  const basis = berechneGehirn(kategorien, heute); // Serien/Nervenbahnen
+  const fenster = new Set(Array.from({ length: Math.max(1, tage) }, (_, i) => toLocalISODate(addDays(heute, -i))));
+  const anteile = Object.fromEntries(REGIONEN.map((r) => [r.key, []]));
+
+  (widgets || []).forEach((w) => {
+    const region = WIDGET_REGION[w.kategorie];
+    if (!region || !w.aktiv) return;
+    anteile[region].push(Math.min(1, (w.dailyCount || 0) / (w.dailyTotal || 1)));
+  });
+  (kategorien || []).forEach((k) => {
+    const region = OHNE_BALKEN[k.key];
+    if (!region || !(k.tageListe || []).length) return;
+    anteile[region].push(k.tageListe.filter((t) => fenster.has(t)).length / Math.max(1, tage));
+  });
+
+  const regionen = basis.regionen.map((r) => {
+    const liste = anteile[r.key];
+    if (liste.length === 0) return { ...r, ladung: 0, zustand: "leer" };
+    const ladung = liste.reduce((s, x) => s + x, 0) / liste.length;
+    return { ...r, ladung, zustand: ladung > 0 ? "aktiv" : "offen" };
+  });
+  const genutzt = regionen.filter((r) => r.zustand !== "leer");
+  const gesamtLadung = genutzt.length ? genutzt.reduce((s, r) => s + r.ladung, 0) / genutzt.length : 0;
+  return { regionen, verbindungen: basis.verbindungen, gesamtLadung, aktiv: regionen.filter((r) => r.zustand === "aktiv").length, genutzt: genutzt.length };
+}

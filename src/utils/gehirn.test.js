@@ -29,3 +29,26 @@ describe("berechneGehirn", () => {
     expect(g.gesamtLadung).toBeCloseTo(1 / 7);
   });
 });
+
+describe("berechneGehirnZeitraum", () => {
+  it("lädt Regionen aus den Balken des Zeitraums und ergänzt Schlaf über die Tage", async () => {
+    const { berechneGehirnZeitraum } = await import("./gehirn");
+    const g = berechneGehirnZeitraum({
+      widgets: [
+        { kategorie: "supplement", aktiv: true, dailyCount: 1, dailyTotal: 2 },
+        { kategorie: "hydration", aktiv: true, dailyCount: 2500, dailyTotal: 2500 },
+        { kategorie: "training", aktiv: true, dailyCount: 0, dailyTotal: 1 },
+        { kategorie: "tageslicht", aktiv: false, dailyCount: 0, dailyTotal: 1 },
+      ],
+      kategorien: [{ key: "schlaf", tageListe: ["2026-09-23", "2026-09-20"], streak: 1 }],
+      tage: 7,
+      heute,
+    });
+    const r = Object.fromEntries(g.regionen.map((x) => [x.key, x]));
+    expect(r.energie.ladung).toBeCloseTo(0.75);
+    expect(r.bewegung).toMatchObject({ zustand: "offen", ladung: 0 });
+    expect(r.rhythmus.zustand).toBe("leer");
+    expect(r.erholung.ladung).toBeCloseTo(2 / 7);
+    expect(g.genutzt).toBe(3);
+  });
+});
