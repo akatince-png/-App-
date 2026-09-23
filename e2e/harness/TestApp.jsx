@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { LanguageProvider } from "../../src/i18n/LanguageContext";
 import { AdminProvider } from "../../src/context/AdminContext";
 import { AuthContext } from "../../src/context/AuthContext";
@@ -31,12 +31,26 @@ function leseOverridesAusUrl() {
   const params = new URLSearchParams(window.location.search);
   const overrides = {};
   if (params.get("onboarding") === "1") overrides.onboardingComplete = false;
-  if (params.get("isAdmin") === "0") overrides.isAdmin = false;
+  if (params.get("isAdmin") === "0") {
+    overrides.isAdmin = false;
+    overrides.istAdminKonto = false;
+  }
   return overrides;
 }
 
 export default function TestApp() {
-  const appData = baueMockAppData(MOCK_USER_ID, leseOverridesAusUrl());
+  // Coachee-Ansicht eines Admin-Kontos (AnsichtUmschalter) als echter
+  // State, damit der Umschalter im Test wirklich umschaltet.
+  const [coacheeAnsicht, setCoacheeAnsicht] = useState(false);
+  const overrides = leseOverridesAusUrl();
+  const istAdminKonto = overrides.istAdminKonto ?? true;
+  const appData = baueMockAppData(MOCK_USER_ID, {
+    ...overrides,
+    istAdminKonto,
+    isAdmin: istAdminKonto && !coacheeAnsicht,
+    coacheeAnsicht,
+    setCoacheeAnsicht,
+  });
   return (
     <LanguageProvider>
       <AdminProvider>

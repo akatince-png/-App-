@@ -219,6 +219,14 @@ löschbar.
 
 ---
 
+### Nachtrag Teil 121 — Coachee-Ansicht für Admin-Konten
+
+- Wunsch: als Admin die App auch "ganz normal wie jede Coachee" nutzen. Entscheidung der Nutzerin: **Umschalter im Admin-Konto** (kein zweites Konto).
+- `useProfileData.js`: `istAdminKonto` = echtes `profiles.is_admin`; `isAdmin` ist jetzt die *Ansicht* (`istAdminKonto && !coacheeAnsicht`), daher greift die bestehende istAdminModus-Logik überall automatisch. `coacheeAnsicht` pro Gerät/Person in localStorage (`aka_coachee_ansicht_<userId>`). Datenbank-Rechte unverändert.
+- `ui/AnsichtUmschalter.jsx` unter "Mehr" (nur für Admin-Konten, auch in der Coachee-Ansicht sichtbar = Weg zurück). Beim Umschalten wird "Verwalten als" beendet.
+- Einschränkung: Admin-Quests "an alle" und Teams filtern `is_admin`-Profile weiterhin heraus — das eigene Konto bekommt dort also keine Coach-Quests/Teams.
+- e2e: `e2e/coachee-ansicht.spec.js`; Harness hält `coacheeAnsicht` als echten State.
+
 ### Nachtrag Teil 121 — Spiel-Ausbau (Wunsch "erweitere es soweit du kannst")
 
 - **Tages-Quests** (`utils/tagesQuests.js`, `ui/TagesQuestsKarte.jsx`): automatische Etappenziele aus dem eigenen Tag (erster Haken, Halbzeit, Morgen-Sprint bis 11 Uhr, Trinkziel) — ohne DB, für alle (auch Admin). Die Coach-Quests (`quests`-Tabelle) bleiben unverändert für Coachees.

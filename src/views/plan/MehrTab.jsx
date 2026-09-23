@@ -7,6 +7,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import VorlaufFeld from "../../ui/VorlaufFeld";
+import AnsichtUmschalter from "../../ui/AnsichtUmschalter";
 
 // Morgen-/Abendroutine und Workout-Flow sind keine der 8 Onboarding-
 // Kategorien (categorySteps.js — die haben je eigene Einrichtungs-Screens,
@@ -405,6 +406,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           <span style={{ color: textMuted, fontSize: 16 }}>›</span>
         </button>
       )}
+
+      <AnsichtUmschalter />
 
       {onOpenAdmin && (
         <button

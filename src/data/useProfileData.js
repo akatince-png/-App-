@@ -15,7 +15,41 @@ export function useProfileData(userId) {
   const [datenteilung, setDatenteilungState] = useState(false);
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const [onboardingModus, setOnboardingModusState] = useState("kurz");
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Admin-Konto vs. Coachee-Ansicht (Nutzerinnen-Wunsch 23.09.: "als Admin
+  // auch ganz normal wie jede Coachee die App benutzen"): `istAdminKonto` ist
+  // das echte Recht aus profiles.is_admin, `isAdmin` die Ansicht, nach der
+  // sich die ganze Oberfläche richtet. Mit eingeschalteter Coachee-Ansicht
+  // ist isAdmin false — alles (Home, KI, Pläne, Onboarding) verhält sich
+  // exakt wie bei einer Coachee, mit den eigenen Daten. Rein clientseitig,
+  // pro Gerät gemerkt; an den Datenbank-Rechten ändert sich nichts.
+  const [istAdminKonto, setIstAdminKonto] = useState(false);
+  const [coacheeAnsicht, setCoacheeAnsichtState] = useState(() => {
+    try {
+      return !!userId && localStorage.getItem(`aka_coachee_ansicht_${userId}`) === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      setCoacheeAnsichtState(!!userId && localStorage.getItem(`aka_coachee_ansicht_${userId}`) === "1");
+    } catch {
+      setCoacheeAnsichtState(false);
+    }
+  }, [userId]);
+  const isAdmin = istAdminKonto && !coacheeAnsicht;
+  const setCoacheeAnsicht = useCallback(
+    (an) => {
+      setCoacheeAnsichtState(!!an);
+      try {
+        if (an) localStorage.setItem(`aka_coachee_ansicht_${userId}`, "1");
+        else localStorage.removeItem(`aka_coachee_ansicht_${userId}`);
+      } catch {
+        // ohne localStorage gilt die Ansicht nur bis zum Neuladen
+      }
+    },
+    [userId]
+  );
   const [aktiveMesswerte, setAktiveMesswerte] = useState(DEFAULT_AKTIVE);
   const [customMesswerte, setCustomMesswerte] = useState([]);
   const [categoryZiele, setCategoryZieleState] = useState({});
@@ -44,7 +78,7 @@ export function useProfileData(userId) {
         setDatenteilungState(!!profile.datenteilung);
         setOnboardingCompleteState(!!profile.onboarding_complete);
         setOnboardingModusState(profile.onboarding_modus === "lang" ? "lang" : "kurz");
-        setIsAdmin(!!profile.is_admin);
+        setIstAdminKonto(!!profile.is_admin);
         setAktiveMesswerte(profile.aktive_messwerte?.length ? profile.aktive_messwerte : DEFAULT_AKTIVE);
         setCategoryZieleState(profile.category_ziele || {});
         setErinnerungenState(profile.erinnerungen || {});
@@ -404,6 +438,9 @@ export function useProfileData(userId) {
     resetOnboarding,
     onboardingModus,
     isAdmin,
+    istAdminKonto,
+    coacheeAnsicht,
+    setCoacheeAnsicht,
     aktiveMesswerte,
     toggleMesswert,
     customMesswerte,
