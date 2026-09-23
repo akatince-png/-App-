@@ -221,7 +221,7 @@ löschbar.
 
 ### Nachtrag Teil 121 — Gehirn, 800 Denksport-Aufgaben, Denksport-Seite
 
-- **„Dein Gehirn“ statt „Deine Welt“** (`utils/gehirn.js`, `ui/GehirnKarte.jsx`): Die Bereiche sind zu 6 Regionen zusammengefasst:
+- **„Dein Gehirn“ statt „Deine Welt“** (`utils/gehirn.js`, `ui/GehirnKarte.jsx`), gestaltet nach dem Logo: Gehirn von vorne, links Linienzeichnung, rechts Punktewolke, die sich mit der Wochenladung zur ganzen Hälfte sammelt; der offene Logo-Ring zeigt den Wochenfortschritt; Regionen = große Punkte plus Legende mit Ladebalken. Die Bereiche sind zu 6 Regionen zusammengefasst:
   - Fokus & Planung (Gewohnheiten, Routinen, Denkpause)
   - Bewegung
   - Energie (Ernährung, Hydration, Supplemente, Medikamente)

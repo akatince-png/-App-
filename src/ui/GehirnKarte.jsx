@@ -5,56 +5,67 @@ import { KATEGORIEN } from "../utils/errungenschaften";
 const KATEGORIE_LABEL = new Map(KATEGORIEN.map((k) => [k.key, k.label]));
 
 // "Dein Gehirn" auf Home (ersetzt "Deine Welt" mit den Pflanzen, 23.09.,
-// Logik: utils/gehirn.js). Seitenansicht eines Gehirns, aufgeteilt in sechs
-// Regionen, die mit den aktiven Tagen der letzten Woche aufleuchten; laufende
-// Serien verbinden Regionen als leuchtende Nervenbahnen. Antippen einer
-// Region erklärt, warum sie dem ADHS-Gehirn hilft. Die Grafik ist bewusst
+// Logik: utils/gehirn.js). Antippen einer Region (großer Punkt oder
+// Legende) erklärt, warum sie dem ADHS-Gehirn hilft. Die Grafik ist bewusst
 // selbst gezeichnet (SVG) und lässt sich später gegen eine gestaltete
 // Illustration (z. B. aus Canva) tauschen, ohne die Logik anzufassen.
 
-const GROSSHIRN =
-  "M 72 158 C 38 150 22 112 34 82 C 44 52 76 30 116 24 C 150 16 190 16 222 28 C 258 40 284 66 290 100 C 296 132 280 158 252 166 C 236 171 220 169 206 166 C 188 174 162 178 136 174 C 112 178 88 170 72 158 Z";
-const KLEINHIRN = "M 206 168 C 214 188 238 200 262 196 C 285 192 296 176 289 160 C 280 168 266 172 252 170 C 236 172 220 171 206 168 Z";
-const HIRNSTAMM = "M 196 170 C 200 186 203 202 205 222 C 210 228 218 228 223 222 C 222 204 222 190 226 176 Z";
-
-// Regionen als Polygone, die an der Großhirn-Kontur zugeschnitten werden.
-const FLAECHEN = {
-  fokus: "0,0 128,0 118,98 0,126",
-  bewegung: "128,0 176,0 168,102 118,98",
-  energie: "176,0 320,0 320,78 236,108 168,102",
-  rhythmus: "320,78 320,250 262,250 236,108",
-  ruhe: "0,126 118,98 168,102 236,108 262,250 0,250",
-};
-const PUNKT = {
-  fokus: [76, 94],
-  bewegung: [145, 56],
-  energie: [222, 62],
-  rhythmus: [266, 122],
-  ruhe: [152, 142],
-  erholung: [252, 184],
-};
+// Gestaltung nach dem App-Logo (Nutzerinnen-Wunsch 23.09.): Gehirn von
+// vorne, die linke Hälfte als Linienzeichnung, die rechte Hälfte aus
+// Punkten, umschlossen von einem offenen Ring (Türkis → Blau). Die Idee
+// "vom halben zum ganzen Gehirn": Je stärker die Woche aufgeladen ist,
+// desto mehr ziehen sich die verstreuten Punkte zur rechten Hälfte
+// zusammen — bei 100 % steht ein ganzes Gehirn. Der Ring zeigt denselben
+// Wochenfortschritt. Die sechs Regionen sind die großen Punkte.
+const TUERKIS = "#5CC3A8";
+const BLAU = "#4274BC";
+const HAELFTE =
+  "M 150 78 C 142 68 124 66 116 76 C 104 70 88 78 88 92 C 74 96 68 112 76 124 C 64 134 64 152 76 160 C 68 172 72 190 88 194 C 90 208 104 218 120 214 C 128 224 144 226 150 218 Z";
 const WINDUNGEN = [
-  "M 50 100 C 66 86 84 102 100 86",
-  "M 78 56 C 96 66 110 48 128 58",
-  "M 60 128 C 78 118 92 134 112 124",
-  "M 150 32 C 160 58 150 78 162 96",
-  "M 186 40 C 202 60 226 48 242 66",
-  "M 196 92 C 214 80 232 98 256 88",
-  "M 248 116 C 262 104 274 126 286 114",
-  "M 96 150 C 120 138 140 158 166 146",
-  "M 176 150 C 196 138 216 156 236 146",
+  "M 124 96 C 130 104 128 112 120 116",
+  "M 100 118 C 110 116 116 122 116 130",
+  "M 132 136 C 124 140 122 148 128 154",
+  "M 96 164 C 106 160 114 166 112 176",
+  "M 128 180 C 136 184 138 192 132 200",
 ];
+const STRICHE = [86, 102, 120, 138, 156, 174, 192, 208];
+const RING = "M 240.5 59.5 A 128 128 0 1 0 240.5 240.5";
+const PUNKT = {
+  fokus: [174, 100],
+  bewegung: [210, 110],
+  energie: [188, 140],
+  rhythmus: [219, 160],
+  ruhe: [176, 180],
+  erholung: [207, 202],
+};
+
+// Feste, reproduzierbare Punktewolke: Zielpunkte in der rechten Hälfte,
+// Startpunkte weiter rechts verstreut (wie im Logo, das nach rechts
+// "zerfließt").
+const PARTIKEL = (() => {
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const liste = [];
+  while (liste.length < 64) {
+    const tx = 156 + rnd() * 66;
+    const ty = 72 + rnd() * 152;
+    const nx = (tx - 180) / 44;
+    const ny = (ty - 148) / 78;
+    if (nx * nx + ny * ny > 1) continue;
+    liste.push({
+      tx,
+      ty,
+      sx: Math.min(292, tx + 40 + rnd() * 80),
+      sy: Math.max(18, Math.min(282, ty + (rnd() - 0.5) * 90)),
+      r: 1.6 + rnd() * 2,
+      farbe: rnd() > 0.5 ? TUERKIS : BLAU,
+    });
+  }
+  return liste;
+})();
 
 function bahn([x1, y1], [x2, y2]) {
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2 - 18;
-  return `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
-}
-
-function deckkraft(r) {
-  if (r.zustand === "leer") return 0.05;
-  if (r.zustand === "ruht") return 0.26;
-  return 0.38 + 0.62 * r.ladung;
+  return `M ${x1} ${y1} Q ${(x1 + x2) / 2 + 14} ${(y1 + y2) / 2} ${x2} ${y2}`;
 }
 
 export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) {
@@ -63,26 +74,8 @@ export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) 
   const auswahl = gehirn.regionen.find((r) => r.key === gewaehlt) || null;
   const prozent = Math.round(gehirn.gesamtLadung * 100);
 
-  const region = (r) => {
-    const props = {
-      // Ungenutzte Regionen neutral statt in ihrer Farbe — sonst wirkt eine
-      // große Fläche (z. B. "Ruhe") schon "aktiv", obwohl nichts passiert ist.
-      fill: r.zustand === "leer" ? "#C8CEF0" : r.farbe,
-      fillOpacity: deckkraft(r),
-      className: r.zustand === "aktiv" ? "mp-gehirn-aktiv" : r.zustand === "ruht" ? "mp-gehirn-ruht" : undefined,
-      style: { cursor: "pointer", transition: "fill-opacity 0.6s ease" },
-      onClick: () => setGewaehlt((g) => (g === r.key ? null : r.key)),
-    };
-    if (r.key === "erholung") {
-      return (
-        <g key={r.key} {...props}>
-          <path d={KLEINHIRN} />
-          <path d={HIRNSTAMM} />
-        </g>
-      );
-    }
-    return <polygon key={r.key} points={FLAECHEN[r.key]} clipPath="url(#mp-grosshirn)" {...props} />;
-  };
+  const t = gehirn.gesamtLadung; // 0..1 — wie "ganz" das Gehirn schon ist
+  const waehle = (key) => setGewaehlt((g) => (g === key ? null : key));
 
   return (
     <div
@@ -109,16 +102,19 @@ export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) 
       <div style={{ fontSize: 12.5, opacity: 0.8, marginTop: 4 }}>
         {gehirn.genutzt === 0
           ? "Noch alles ruhig — hake heute etwas ab, dann leuchtet die erste Region auf."
-          : `Diese Woche zu ${prozent} % aufgeladen · ${gehirn.aktiv} von ${gehirn.genutzt} Bereichen aktiv`}
+          : prozent >= 100
+            ? "Diese Woche zu 100 % aufgeladen — dein Gehirn ist ganz! 🎉"
+            : `Diese Woche zu ${prozent} % aufgeladen · je mehr du erledigst, desto ganzer wird dein Gehirn`}
       </div>
 
-      <svg viewBox="0 12 320 222" role="img" aria-label={`Dein Gehirn, diese Woche zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 420, display: "block", margin: "6px auto 0" }}>
+      <svg viewBox="0 0 300 300" role="img" aria-label={`Dein Gehirn, diese Woche zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 340, display: "block", margin: "4px auto 0" }}>
         <defs>
-          <clipPath id="mp-grosshirn">
-            <path d={GROSSHIRN} />
-          </clipPath>
-          <filter id="mp-gehirn-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
+          <linearGradient id="mp-gehirn-verlauf" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={TUERKIS} />
+            <stop offset="100%" stopColor={BLAU} />
+          </linearGradient>
+          <filter id="mp-gehirn-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -126,63 +122,127 @@ export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) 
           </filter>
         </defs>
 
-        {/* Grundform */}
-        <path d={GROSSHIRN} fill="#20264D" />
-        <path d={KLEINHIRN} fill="#20264D" />
-        <path d={HIRNSTAMM} fill="#20264D" />
+        {/* Ring wie im Logo = Wochenfortschritt */}
+        <path d={RING} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="9" strokeLinecap="round" />
+        <path
+          d={RING}
+          fill="none"
+          stroke="url(#mp-gehirn-verlauf)"
+          strokeWidth="9"
+          strokeLinecap="round"
+          pathLength="100"
+          strokeDasharray={`${Math.max(0.5, t * 100)} 100`}
+          style={{ transition: "stroke-dasharray 1s ease-out" }}
+          filter="url(#mp-gehirn-glow)"
+        />
 
-        {/* Regionen (leuchten mit Ladung) */}
-        <g filter="url(#mp-gehirn-glow)">{gehirn.regionen.map(region)}</g>
-
-        {/* Windungen + Regionsgrenzen als feine Linien */}
-        <g clipPath="url(#mp-grosshirn)" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="2" strokeLinecap="round" style={{ pointerEvents: "none" }}>
+        {/* Linke Hälfte: Linienzeichnung wie im Logo */}
+        <path d={HAELFTE} fill="rgba(92,195,168,0.08)" stroke="url(#mp-gehirn-verlauf)" strokeWidth="5" strokeLinejoin="round" />
+        <g fill="none" stroke="url(#mp-gehirn-verlauf)" strokeWidth="4.5" strokeLinecap="round">
           {WINDUNGEN.map((d) => (
             <path key={d} d={d} />
           ))}
         </g>
-        <g fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="1.5" style={{ pointerEvents: "none" }}>
-          <path d="M 222 180 C 240 186 262 186 282 176" />
-          <path d="M 216 172 C 236 178 262 178 286 166" />
-        </g>
-        <path d={GROSSHIRN} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" style={{ pointerEvents: "none" }} />
 
-        {/* Nervenbahnen: leuchten, wenn beide Regionen eine Serie haben */}
-        <g fill="none" strokeLinecap="round" style={{ pointerEvents: "none" }}>
-          {gehirn.verbindungen.map((v) => (
-            <path
-              key={`${v.a}-${v.b}`}
-              d={bahn(PUNKT[v.a], PUNKT[v.b])}
-              stroke={v.aktiv ? "#FFFFFF" : "rgba(255,255,255,0.14)"}
-              strokeWidth={v.aktiv ? 2.2 : 1.2}
-              strokeDasharray={v.aktiv ? "6 7" : "2 6"}
-              className={v.aktiv ? "mp-gehirn-bahn" : undefined}
-              opacity={v.aktiv ? 0.85 : 1}
+        {/* Striche an der Mittellinie (Logo-Motiv) */}
+        <g stroke={TUERKIS} strokeWidth="4" strokeLinecap="round" opacity="0.8">
+          {STRICHE.map((y, i) => (
+            <line key={y} x1="158" y1={y} x2={i % 2 ? 170 : 164} y2={y} />
+          ))}
+        </g>
+
+        {/* Rechte Hälfte: Umriss erscheint, je ganzer das Gehirn wird */}
+        <path d={HAELFTE} transform="translate(300 0) scale(-1 1)" fill="none" stroke="url(#mp-gehirn-verlauf)" strokeWidth="4" strokeDasharray={t >= 1 ? "none" : "2 7"} opacity={0.15 + 0.85 * t} style={{ transition: "opacity 1s" }} />
+
+        {/* Punktewolke: sammelt sich mit der Wochenladung zur rechten Hälfte */}
+        <g>
+          {PARTIKEL.map((p, i) => (
+            <circle
+              key={i}
+              cx={p.sx + (p.tx - p.sx) * t}
+              cy={p.sy + (p.ty - p.sy) * t}
+              r={p.r}
+              fill={p.farbe}
+              opacity={0.3 + 0.6 * t}
+              style={{ transition: "cx 1.2s ease-out, cy 1.2s ease-out, opacity 1.2s" }}
             />
           ))}
         </g>
 
-        {/* Regions-Symbole (antippbar) */}
+        {/* Nervenbahnen zwischen Regionen mit laufender Serie */}
+        <g fill="none" strokeLinecap="round" style={{ pointerEvents: "none" }}>
+          {gehirn.verbindungen
+            .filter((v) => v.aktiv)
+            .map((v) => (
+              <path key={`${v.a}-${v.b}`} d={bahn(PUNKT[v.a], PUNKT[v.b])} stroke="#FFFFFF" strokeWidth="2" strokeDasharray="5 6" className="mp-gehirn-bahn" opacity="0.8" />
+            ))}
+        </g>
+
+        {/* Regionen = die großen Punkte */}
         {gehirn.regionen.map((r) => {
           const [x, y] = PUNKT[r.key];
           const an = gewaehlt === r.key;
+          const radius = r.zustand === "aktiv" ? 9 + 4 * r.ladung : 9;
           return (
             <g
               key={r.key}
               role="button"
               tabIndex={0}
               aria-label={`${r.label}: ${r.zustand === "aktiv" ? `an ${r.tageWoche} von 7 Tagen aktiv` : r.zustand === "ruht" ? "ruht gerade" : "noch nicht genutzt"}`}
-              onClick={() => setGewaehlt((g) => (g === r.key ? null : r.key))}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setGewaehlt((g) => (g === r.key ? null : r.key))}
+              onClick={() => waehle(r.key)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && waehle(r.key)}
               style={{ cursor: "pointer", outline: "none" }}
             >
-              <circle cx={x} cy={y} r={an ? 17 : 14} fill={r.zustand === "leer" ? "rgba(255,255,255,0.1)" : r.farbe} stroke="#fff" strokeOpacity={an ? 1 : 0.5} strokeWidth={an ? 2.5 : 1.2} />
-              <text x={x} y={y + 5} textAnchor="middle" fontSize="14" style={{ pointerEvents: "none" }}>
+              <circle
+                cx={x}
+                cy={y}
+                r={radius + (an ? 3 : 0)}
+                fill={r.zustand === "leer" ? "#1B2146" : r.farbe}
+                fillOpacity={r.zustand === "ruht" ? 0.45 : 1}
+                stroke={an ? "#fff" : r.zustand === "leer" ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)"}
+                strokeWidth={an ? 2.5 : 1.2}
+                strokeDasharray={r.zustand === "leer" ? "3 3" : undefined}
+                filter={r.zustand === "aktiv" ? "url(#mp-gehirn-glow)" : undefined}
+                className={r.zustand === "aktiv" ? "mp-gehirn-aktiv" : r.zustand === "ruht" ? "mp-gehirn-ruht" : undefined}
+                style={{ transition: "r 0.6s" }}
+              />
+              <text x={x} y={y + 3.5} textAnchor="middle" fontSize="10" style={{ pointerEvents: "none" }}>
                 {r.zustand === "ruht" ? "💤" : r.emoji}
               </text>
             </g>
           );
         })}
       </svg>
+
+      {/* Legende: welche Region wofür steht, mit Ladebalken */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginTop: 4 }}>
+        {gehirn.regionen.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => waehle(r.key)}
+            className="mp-tap"
+            style={{
+              border: gewaehlt === r.key ? `1.5px solid ${r.farbe}` : "1.5px solid transparent",
+              background: "rgba(255,255,255,0.07)",
+              borderRadius: 12,
+              padding: "7px 6px",
+              color: "#fff",
+              textAlign: "left",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              opacity: r.zustand === "leer" ? 0.55 : 1,
+            }}
+          >
+            <div style={{ fontSize: 10.5, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {r.emoji} {r.label}
+            </div>
+            <div style={{ height: 4, borderRadius: 99, background: "rgba(255,255,255,0.15)", marginTop: 5, overflow: "hidden" }}>
+              <div style={{ width: `${Math.round(r.ladung * 100)}%`, height: "100%", background: r.farbe, borderRadius: 99, transition: "width 0.6s" }} />
+            </div>
+          </button>
+        ))}
+      </div>
 
       {auswahl ? (
         <div style={{ marginTop: 8, padding: 12, borderRadius: 16, background: "rgba(255,255,255,0.08)", borderLeft: `4px solid ${auswahl.farbe}` }}>
@@ -210,7 +270,7 @@ export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) 
           )}
         </div>
       ) : (
-        gehirn.genutzt > 0 && <div style={{ fontSize: 11.5, opacity: 0.65, textAlign: "center", marginTop: 4 }}>Tippe auf eine Region, um zu sehen, was sie für dich tut.</div>
+        gehirn.genutzt > 0 && <div style={{ fontSize: 11.5, opacity: 0.65, textAlign: "center", marginTop: 8 }}>Tippe auf eine Region, um zu sehen, was sie für dich tut.</div>
       )}
     </div>
   );
