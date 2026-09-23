@@ -10,6 +10,18 @@ import { KATEGORIEN, WIDGET_ZU_ORDEN_KATEGORIE } from "./errungenschaften";
 // Erfolge exakt denselben Tag als Streak-Tag.
 const ZEITRAUM_TAGE = { woche: 7, monat: 30 };
 
+// Ganze Kalendertage zwischen dem Protokollstart ("YYYY-MM-DD") und heute,
+// nach ÖRTLICHEM Datum. Bug-Fix (Dauertest 24.09.): vorher
+// `heute - new Date("2026-09-23")` — das parst als UTC-Mitternacht, kurz
+// nach Mitternacht (MESZ) am zweiten Tag ergab das 0 statt 1 Tag, und die
+// Wochenansicht ignorierte den gestrigen Tag komplett.
+export function kalendertageSeit(startIso, heute = new Date()) {
+  const [j, m, t] = String(startIso).slice(0, 10).split("-").map(Number);
+  const start = Date.UTC(j, m - 1, t);
+  const jetzt = Date.UTC(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  return Math.round((jetzt - start) / 86400000);
+}
+
 // Bildschirmzeit hat (anders als alle anderen Home-Widgets) keinen Eintrag
 // in KATEGORIEN — bewusst kein Teil des Punkte-/Streak-Systems, weil es ein
 // Limit ("nicht mehr als") statt eines Mindestziels ist. Für Woche/Monat/
@@ -43,9 +55,7 @@ function zaehleErledigteTage(kat, quellen, tageImZeitraum, heute, tageSeitStart)
 export function widgetsFuerZeitraum(zeitraum, miniWidgetData, quellen, hauptprotokollStartdatum, heute = new Date()) {
   if (zeitraum === "tag") return miniWidgetData;
 
-  const tageSeitStart = hauptprotokollStartdatum
-    ? Math.max(1, Math.floor((heute - new Date(hauptprotokollStartdatum)) / (24 * 60 * 60 * 1000)) + 1)
-    : null;
+  const tageSeitStart = hauptprotokollStartdatum ? Math.max(1, kalendertageSeit(hauptprotokollStartdatum, heute) + 1) : null;
   const tageImZeitraum = zeitraum === "gesamt" ? tageSeitStart ?? ZEITRAUM_TAGE.monat : ZEITRAUM_TAGE[zeitraum];
 
   return miniWidgetData.map((w) => {
@@ -61,6 +71,5 @@ export function widgetsFuerZeitraum(zeitraum, miniWidgetData, quellen, hauptprot
 // geht") — sonst wäre "Gesamt" nur eine Dopplung von "Monat".
 export function gesamtVerfuegbar(hauptprotokollStartdatum, heute = new Date()) {
   if (!hauptprotokollStartdatum) return false;
-  const tage = Math.floor((heute - new Date(hauptprotokollStartdatum)) / (24 * 60 * 60 * 1000));
-  return tage > 31;
+  return kalendertageSeit(hauptprotokollStartdatum, heute) > 31;
 }

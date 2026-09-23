@@ -74,3 +74,12 @@ describe("gesamtVerfuegbar", () => {
     expect(gesamtVerfuegbar("2026-08-01", HEUTE)).toBe(true); // 46 Tage
   });
 });
+
+describe("kalendertageSeit", () => {
+  it("zählt nach örtlichem Datum — auch kurz nach Mitternacht am zweiten Tag", async () => {
+    const { kalendertageSeit } = await import("./zeitraumFortschritt");
+    expect(kalendertageSeit("2026-09-23", new Date(2026, 8, 24, 0, 30))).toBe(1);
+    expect(kalendertageSeit("2026-09-23", new Date(2026, 8, 23, 23, 59))).toBe(0);
+    expect(kalendertageSeit("2026-09-01", new Date(2026, 9, 3, 12))).toBe(32);
+  });
+});
