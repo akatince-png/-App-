@@ -3,6 +3,7 @@ import { Shell, Card, PrimaryButton, TextInput, TextArea, Label, Pill } from "..
 import ViewHeader from "../../ui/ViewHeader";
 import { accentDark, accentSoft, cardBorder, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
+import { istNetzwerkFehler, verstaendlicheFehlermeldung } from "../../utils/netzwerkFehler";
 import { useAuth } from "../../context/AuthContext";
 import { coachNachrichtSenden } from "../../data/useCoacheeNachrichten";
 import { edgeFunctionFehlertext } from "../../utils/edgeFunctionFehler";
@@ -49,9 +50,15 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   const ladeProbanden = async () => {
     setLadend(true);
     setFehler(null);
-    const { data, error } = await supabase.rpc("admin_liste_probanden");
+    let { data, error } = await supabase.rpc("admin_liste_probanden");
+    // Kurzer Verbindungsabbruch (z. B. LTE-Wechsel am Handy): einmal still
+    // nachladen, bevor eine Fehlermeldung erscheint.
+    if (error && istNetzwerkFehler(error.message)) {
+      await new Promise((r) => setTimeout(r, 1500));
+      ({ data, error } = await supabase.rpc("admin_liste_probanden"));
+    }
     if (error) {
-      setFehler(error.message);
+      setFehler(verstaendlicheFehlermeldung(error.message));
     } else {
       setProbanden(data || []);
     }
@@ -231,7 +238,19 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
       )}
 
       {ladend && <div style={{ fontSize: 13, color: textMuted, marginTop: 10 }}>Lädt…</div>}
-      {fehler && <div style={{ fontSize: 13, color: danger, marginTop: 10 }}>{fehler}</div>}
+      {fehler && (
+        <div style={{ fontSize: 13, color: danger, marginTop: 10 }}>
+          {fehler}{" "}
+          <button
+            type="button"
+            onClick={ladeProbanden}
+            className="mp-tap"
+            style={{ border: "none", background: "transparent", color: danger, fontWeight: 800, textDecoration: "underline", cursor: "pointer", padding: 0, fontSize: 13 }}
+          >
+            Erneut laden
+          </button>
+        </div>
+      )}
 
       {!ladend && !fehler && gefiltert.length === 0 && (
         <div style={{ fontSize: 13, color: textMuted, marginTop: 10 }}>Keine Konten gefunden.</div>
