@@ -15,6 +15,10 @@ import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import SpielstandKarte from "../ui/SpielstandKarte";
+import WeltKarte from "../ui/WeltKarte";
+import TagesQuestsKarte from "../ui/TagesQuestsKarte";
+import { useSpielFeiern } from "../ui/useSpielFeiern";
+import { baueTagesQuests } from "../utils/tagesQuests";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -636,7 +640,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
       schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten]
   );
-  const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak } = useErrungenschaften(userId, errungenschaftenQuellen);
+  const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
+  useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
+  const tagesQuests = useMemo(() => baueTagesQuests({ items: heuteItems, hydrationHeuteMl, hydrationZielMl }), [heuteItems, hydrationHeuteMl, hydrationZielMl]);
 
   // Zeitraum-Auswahl fürs Tagesfortschritt-Balkendiagramm (16.09.,
   // Nutzerinnen-Vorgabe): "die Möglichkeit, zwischen Wochen- und
@@ -842,6 +848,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </Card>
         )}
       </div>
+
+      {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Deine Welt"
+          direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
+      {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} />}
+      {!isEmergencyMode && <WeltKarte kategorien={ordenKategorien} onOpenErfolge={() => onOpenView("erfolge")} />}
 
       {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
           Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,

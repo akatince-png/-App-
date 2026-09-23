@@ -219,6 +219,14 @@ löschbar.
 
 ---
 
+### Nachtrag Teil 121 — Spiel-Ausbau (Wunsch "erweitere es soweit du kannst")
+
+- **Tages-Quests** (`utils/tagesQuests.js`, `ui/TagesQuestsKarte.jsx`): automatische Etappenziele aus dem eigenen Tag (erster Haken, Halbzeit, Morgen-Sprint bis 11 Uhr, Trinkziel) — ohne DB, für alle (auch Admin). Die Coach-Quests (`quests`-Tabelle) bleiben unverändert für Coachees.
+- **Deine Welt** (`utils/welt.js`, `ui/WeltKarte.jsx`): jeder Bereich mit Punkten = Pflanze, die mit erledigten Tagen wächst (🌰→🌱→🌿→🪴→🌳→🌸 bei 0/1/3/7/14/30). Ohne aktuelle Serie schläft sie (💤), welkt aber nie.
+- **Level-Up- und Abzeichen-Feier** (`ui/useSpielFeiern.js`): höchstes Level pro Person in localStorage (`aka_level_<userId>`), erstes Mal nur merken; neue Abzeichen aus `neueBadgeKeys` → große Feier.
+- **Belohnungsfenster mit Warteschlange**: eine große Feier wird nicht mehr vom nächsten Fenster überschrieben.
+- Beide Karten stehen auf Home direkt unter "Als Nächstes" und sind im Notfallmodus ausgeblendet.
+
 ## 🔴 Update 16.09.2026 (Teil 120) — Migration 0087 (Denkpause) nachträglich idempotent gemacht
 
 **Nutzerinnen-Report:** beim Ausführen von `0087_denkpause.sql` meldete

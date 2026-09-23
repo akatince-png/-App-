@@ -53,14 +53,34 @@ export default function Belohnungsfenster() {
   const timeoutRef = useRef(null);
   const zaehlerRef = useRef(0);
 
+  // Warteschlange (Spiel-Ausbau 23.09.): Level-Up, neues Abzeichen und
+  // "Tag geschafft" können im selben Moment fällig werden — eine große Feier
+  // wird nicht mehr vom nächsten Fenster überschrieben, sondern alles danach
+  // Kommende wartet, bis sie durch ist.
+  const warteschlangeRef = useRef([]);
+  const zeigtGrossRef = useRef(false);
+
   useEffect(() => {
-    const unhoeren = aufBelohnungHoeren((payload) => {
+    const zeige = (payload) => {
       zaehlerRef.current += 1;
       const gross = !!payload.gross;
+      zeigtGrossRef.current = gross;
       setEintrag({ ...payload, id: zaehlerRef.current, konfetti: baueKonfetti(gross ? 22 : 12, gross ? 90 : 52) });
       vibriere(gross ? [30, 60, 30, 60, 60] : 25);
       clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => setEintrag(null), gross ? 4200 : 2600);
+      timeoutRef.current = setTimeout(() => {
+        zeigtGrossRef.current = false;
+        const naechster = warteschlangeRef.current.shift();
+        if (naechster) zeige(naechster);
+        else setEintrag(null);
+      }, gross ? 4200 : 2600);
+    };
+    const unhoeren = aufBelohnungHoeren((payload) => {
+      if (zeigtGrossRef.current) {
+        if (warteschlangeRef.current.length < 4) warteschlangeRef.current.push(payload);
+        return;
+      }
+      zeige(payload);
     });
     return () => {
       unhoeren();
