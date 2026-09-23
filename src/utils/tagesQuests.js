@@ -12,7 +12,7 @@ export function baueTagesQuests({ items = [], hydrationHeuteMl = 0, hydrationZie
   const quests = [];
 
   if (gesamt > 0) {
-    quests.push({ key: "erster", titel: "Der erste Haken", icon: "✅", aktuell: Math.min(erledigt, 1), ziel: 1 });
+    quests.push({ key: "erster", titel: "Der erste Haken", icon: "👆", aktuell: Math.min(erledigt, 1), ziel: 1 });
     const halb = Math.ceil(gesamt / 2);
     if (gesamt >= 2) quests.push({ key: "halbzeit", titel: "Halbzeit", icon: "🌓", aktuell: Math.min(erledigt, halb), ziel: halb });
     const morgen = abhakbar.filter((i) => i.hour && i.hour < "11");

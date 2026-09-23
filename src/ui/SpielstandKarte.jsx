@@ -1,5 +1,5 @@
 import React from "react";
-import { hexZuRgba, success, verdunkeln } from "./theme";
+import { hexZuRgba, logoBlau, logoTuerkis, logoVerlauf, nachtSchatten, nachtVerlauf } from "./theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { levelAusPunkten, levelFortschritt } from "../utils/level";
 
@@ -21,14 +21,20 @@ function TagesRing({ erledigt, gesamt }) {
   const fertig = gesamt > 0 && erledigt >= gesamt;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", filter: fertig ? `drop-shadow(0 0 8px ${hexZuRgba(GOLD, 0.8)})` : "none" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth={stroke} />
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", filter: `drop-shadow(0 0 ${fertig ? 10 : 5}px ${hexZuRgba(logoTuerkis, fertig ? 0.9 : 0.5)})` }}>
+        <defs>
+          <linearGradient id="mp-tagesring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={logoTuerkis} />
+            <stop offset="100%" stopColor={logoBlau} />
+          </linearGradient>
+        </defs>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={GOLD}
+          stroke="url(#mp-tagesring)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={umfang}
@@ -53,7 +59,7 @@ function Chip({ children }) {
         gap: 4,
         padding: "5px 10px",
         borderRadius: 999,
-        background: "rgba(255,255,255,0.16)",
+        background: "rgba(255,255,255,0.1)",
         color: "#fff",
         fontSize: 12.5,
         fontWeight: 800,
@@ -85,8 +91,8 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
         padding: 18,
         marginBottom: 16,
         color: "#fff",
-        background: `linear-gradient(145deg, ${success}, ${verdunkeln(success, 28)})`,
-        boxShadow: `0 14px 30px ${hexZuRgba(success, 0.3)}`,
+        background: nachtVerlauf,
+        boxShadow: nachtSchatten,
         fontFamily: "inherit",
       }}
     >
@@ -109,8 +115,8 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <div style={{ height: 8, borderRadius: 99, background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
-          <div style={{ width: `${Math.round(fortschritt * 100)}%`, height: "100%", borderRadius: 99, background: GOLD, transition: "width 0.6s ease-out" }} />
+        <div style={{ height: 8, borderRadius: 99, background: "rgba(255,255,255,0.12)", overflow: "hidden" }}>
+          <div style={{ width: `${Math.round(fortschritt * 100)}%`, height: "100%", borderRadius: 99, background: logoVerlauf, transition: "width 0.6s ease-out" }} />
         </div>
         <div style={{ fontSize: 11.5, fontWeight: 700, opacity: 0.85, marginTop: 6 }}>
           Noch {nochBisLevel} {nochBisLevel === 1 ? "Punkt" : "Punkte"} bis Level {lvl.level + 1} · 1 Punkt je erledigtem Eintrag

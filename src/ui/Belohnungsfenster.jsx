@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
-import { accentDark, shadow, success } from "./theme";
+import { accentDark, logoVerlauf, nachtVerlauf, shadow, success } from "./theme";
 import { aufBelohnungHoeren } from "../utils/belohnungBus";
 import { KATEGORIE_META } from "../utils/dayItems";
 
@@ -121,7 +121,7 @@ export default function Belohnungsfenster() {
       ))}
       <div
         className="mp-belohnung-puls"
-        style={{ width: kreis, height: kreis, borderRadius: "50%", background: success, display: "flex", alignItems: "center", justifyContent: "center" }}
+        style={{ width: kreis, height: kreis, borderRadius: "50%", background: gross ? logoVerlauf : success, display: "flex", alignItems: "center", justifyContent: "center" }}
       >
         <Icon name={eintrag.icon || "trophy"} size={iconGroesse} color="#fff" />
       </div>
@@ -153,7 +153,8 @@ export default function Belohnungsfenster() {
           style={{
             width: "100%",
             maxWidth: 340,
-            background: "#fff",
+            background: nachtVerlauf,
+            color: "#fff",
             borderRadius: 28,
             padding: "34px 24px 22px",
             textAlign: "center",
@@ -165,10 +166,10 @@ export default function Belohnungsfenster() {
           }}
         >
           {symbol(84, 40)}
-          <div style={{ fontSize: 22, fontWeight: 900, color: "#15181A", marginTop: 20, lineHeight: 1.25 }}>{eintrag.text}</div>
-          {eintrag.untertitel && <div style={{ fontSize: 14, color: "#6B7178", marginTop: 8, lineHeight: 1.45 }}>{eintrag.untertitel}</div>}
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginTop: 20, lineHeight: 1.25 }}>{eintrag.text}</div>
+          {eintrag.untertitel && <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", marginTop: 8, lineHeight: 1.45 }}>{eintrag.untertitel}</div>}
           {punkteText && (
-            <div style={{ marginTop: 14, padding: "7px 16px", borderRadius: 999, background: `${success}1A`, color: success, fontSize: 16, fontWeight: 900 }}>
+            <div style={{ marginTop: 14, padding: "7px 16px", borderRadius: 999, background: "rgba(92,195,168,0.18)", color: "#8FE3CC", fontSize: 16, fontWeight: 900 }}>
               ⚡ {punkteText}
             </div>
           )}
@@ -183,7 +184,7 @@ export default function Belohnungsfenster() {
               border: "none",
               borderRadius: 16,
               padding: "15px 18px",
-              background: success,
+              background: logoVerlauf,
               color: "#fff",
               fontSize: 16,
               fontWeight: 800,

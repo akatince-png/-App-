@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { berechneGehirn } from "../utils/gehirn";
+import { logoBlau, logoTuerkis, nachtSchatten, nachtVerlauf } from "./theme";
 import { KATEGORIEN } from "../utils/errungenschaften";
 
 const KATEGORIE_LABEL = new Map(KATEGORIEN.map((k) => [k.key, k.label]));
@@ -17,8 +18,8 @@ const KATEGORIE_LABEL = new Map(KATEGORIEN.map((k) => [k.key, k.label]));
 // desto mehr ziehen sich die verstreuten Punkte zur rechten Hälfte
 // zusammen — bei 100 % steht ein ganzes Gehirn. Der Ring zeigt denselben
 // Wochenfortschritt. Die sechs Regionen sind die großen Punkte.
-const TUERKIS = "#5CC3A8";
-const BLAU = "#4274BC";
+const TUERKIS = logoTuerkis;
+const BLAU = logoBlau;
 const HAELFTE =
   "M 150 78 C 142 68 124 66 116 76 C 104 70 88 78 88 92 C 74 96 68 112 76 124 C 64 134 64 152 76 160 C 68 172 72 190 88 194 C 90 208 104 218 120 214 C 128 224 144 226 150 218 Z";
 const WINDUNGEN = [
@@ -84,8 +85,8 @@ export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) 
         borderRadius: 24,
         padding: 16,
         color: "#fff",
-        background: "radial-gradient(120% 90% at 30% 20%, #2C3470 0%, #171B3A 60%, #10132B 100%)",
-        boxShadow: "0 14px 30px rgba(16, 19, 43, 0.35)",
+        background: nachtVerlauf,
+        boxShadow: nachtSchatten,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>

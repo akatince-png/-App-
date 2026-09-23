@@ -79,3 +79,13 @@ export function verdunkeln(hex, prozent) {
   const mix = (kanal) => Math.round(kanal * (1 - prozent / 100));
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
+
+// Nachtblau-Markenwelt (23.09., Nutzerinnen-Wunsch "mehr in das dunkle
+// Design"): gemeinsame Farben der Highlight-Elemente — Spielstand-Karte,
+// "Dein Gehirn", große Feier-Karte —, abgeleitet aus dem Logo (Türkis →
+// Blau auf dunklem Grund).
+export const nachtVerlauf = "radial-gradient(120% 90% at 30% 20%, #2C3470 0%, #171B3A 60%, #10132B 100%)";
+export const nachtSchatten = "0 14px 30px rgba(16, 19, 43, 0.35)";
+export const logoTuerkis = "#5CC3A8";
+export const logoBlau = "#4274BC";
+export const logoVerlauf = `linear-gradient(90deg, ${logoTuerkis}, ${logoBlau})`;
