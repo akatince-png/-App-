@@ -96,12 +96,16 @@ export function useProtocolData(userId) {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      // App-Start (Dauertest 23.09.): Peptide gleich mit einbetten statt als
+      // zweite, nacheinander laufende Abfrage — die Startseite wartet auf
+      // diesen Ladevorgang, jede eingesparte Runde zählt.
       let { data: active } = await supabase
         .from("protocols")
-        .select("*")
+        .select("*, protocol_peptide(*)")
         .eq("user_id", userId)
         .eq("status", "active")
         .order("created_at", { ascending: false })
+        .order("created_at", { referencedTable: "protocol_peptide", ascending: true })
         .limit(1)
         .maybeSingle();
 
@@ -143,11 +147,11 @@ export function useProtocolData(userId) {
         }
       }
 
-      const { data: peptideRows } = await supabase
-        .from("protocol_peptide")
-        .select("*")
-        .eq("protocol_id", active.id)
-        .order("created_at");
+      // Frisch angelegtes/nachgeladenes Protokoll hat keine eingebetteten
+      // Peptide — nur dann (selten) separat nachfragen.
+      const peptideRows = Array.isArray(active.protocol_peptide)
+        ? active.protocol_peptide
+        : (await supabase.from("protocol_peptide").select("*").eq("protocol_id", active.id).order("created_at")).data;
 
       if (cancelled) return;
 
