@@ -15,6 +15,14 @@ test("Aka ist auf jeder Seite genau einmal da", async ({ page }) => {
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
 
+test("Aka begrüßt passend zur Seite", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html#/supplemente");
+  await page.getByRole("button", { name: "Aka fragen" }).click();
+  await expect(page.getByText("Hi, ich bin Aka! Welches Supplement möchtest du hinzufügen?")).toBeVisible();
+  expect(fehler.filter((f) => !f.includes("fetch") && !/Mikrofon|microphone|NotAllowed|NotFound/i.test(f))).toEqual([]);
+});
+
 test("Coachees sehen Aka auf keiner Seite", async ({ page }) => {
   for (const seite of ["home", "supplemente", "mehr"]) {
     await page.goto(`/e2e/harness/index.html?isAdmin=0#/${seite}`);

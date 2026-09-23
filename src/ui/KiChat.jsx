@@ -337,7 +337,10 @@ export default function KiChat({
     setOffen(true);
     if (bereich && !verlaufGeladenRef.current) {
       verlaufGeladenRef.current = true;
-      const gespeichert = await coachVerlaufLaden(bereich);
+      const geladen = await coachVerlaufLaden(bereich);
+      // Robust gegen unerwartete Antworten (z. B. im e2e-Harness), damit
+      // ein Verlaufsproblem nie den ganzen Chat zum Absturz bringt.
+      const gespeichert = Array.isArray(geladen) ? geladen : [];
       if (gespeichert.length) setVerlauf(gespeichert);
       altVerlaufBisRef.current = gespeichert.length;
     }
