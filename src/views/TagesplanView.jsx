@@ -198,7 +198,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       return items.map((item) => {
         if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedbackRef.current(item.raw, item.key, "hormon") };
         if (item.kategorie === "supplement") {
-          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
+          // Log-Schlüssel wie in buildDayItems(): ursprünglich geplante Uhrzeit,
+          // nicht eine per Einzeltag-Ausnahme verschobene Anzeige-Uhrzeit —
+          // sonst wurde der Haken gespeichert, aber nie als erledigt angezeigt.
+          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.originalUhrzeit ?? item.uhrzeit };
           return { ...item, doseRef, onConfirm: () => openFeedbackRef.current(doseRef, item.key, "supplement") };
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };

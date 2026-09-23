@@ -137,6 +137,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     routineDurchlaeufe,
     routineSchrittErledigt,
     confirmAlleTageszeit,
+    toggleSupplementErledigt,
+    toggleHormonErledigt,
+    toggleMahlzeitErledigt,
+    toggleGewohnheitErledigt,
     hydrationHeuteMl,
     hydrationZielMl,
     hydrationHinzufuegen,
@@ -350,6 +354,24 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         });
   const angezeigteItems = [...routineAlsNaechstesItems, ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel)];
 
+  // Ein-Tipp-Erledigen direkt auf Home (UX-Review 23.09.): bisher führte
+  // jeder Punkt unter "Als Nächstes" (außer Supplement-Bündeln) erst in den
+  // Tagesplan — auch im Notfallmodus. Für alles, was sich ohne weitere
+  // Angaben abhaken lässt, reicht jetzt ein Tipp; Training und Routinen
+  // öffnen weiterhin ihren eigenen Ablauf. Log-Schlüssel wie in
+  // buildDayItems(): immer die ursprünglich geplante Uhrzeit.
+  const direktErledigbar = (item) =>
+    !item.done &&
+    ((item.kategorie === "supplement" && item.raw?.id) || (item.kategorie === "hormon" && item.raw?.name) || (item.kategorie === "mahlzeit" && item.refId) || (item.kategorie === "gewohnheit" && item.raw?.id));
+  const direktErledigen = (item) => {
+    const zeit = item.originalUhrzeit ?? item.uhrzeit;
+    if (item.kategorie === "supplement") return toggleSupplementErledigt(tagStr, item.raw.id, zeit);
+    if (item.kategorie === "hormon") return toggleHormonErledigt(tagStr, item.raw.name, zeit);
+    if (item.kategorie === "mahlzeit") return toggleMahlzeitErledigt(tagStr, item.refId, item.logZeit ?? zeit);
+    if (item.kategorie === "gewohnheit") return toggleGewohnheitErledigt(tagStr, item.raw.id);
+    return undefined;
+  };
+
   // Konvertiere Items ins QuickTaskList-Format
   const quickTasksFormatted = angezeigteItems.map((item) => ({
     key: item.key,
@@ -360,6 +382,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     onToggle: () => {
       if (item.bundleIds) {
         confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+      } else if (direktErledigbar(item)) {
+        direktErledigen(item);
       } else {
         onOpenView("tagesplan");
       }
@@ -833,6 +857,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                         gap: 10,
                         padding: istErste ? "15px 12px" : "12px 12px",
                         borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
+                        // "Jetzt dran"-Karte: der oberste Punkt hebt sich
+                        // in seiner Bereichsfarbe ab (eine Sache zur Zeit).
+                        ...(istErste && k.bg ? { background: k.bg, borderRadius: 14, borderBottom: "none", marginBottom: arr.length > 1 ? 4 : 0 } : {}),
                       }}
                     >
                       <button
@@ -857,6 +884,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                       >
                         <div style={{ width: istErste ? 10 : 8, height: istErste ? 10 : 8, borderRadius: 5, background: k.dot, flexShrink: 0 }} />
                         <div style={{ minWidth: 0 }}>
+                          {istErste && (
+                            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.8, color: k.text || textMuted, marginBottom: 2 }}>JETZT DRAN</div>
+                          )}
                           <div style={{ fontSize: istErste ? 16 : 14, fontWeight: 700 }}>
                             {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: istErste ? 13 : 12 }}>· {tLabel(item.uhrzeit)}</span>}
                             <ZusatzEtikett name={zusatzEtikett(item)} />
@@ -884,6 +914,23 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                           }}
                         >
                           {t("home.list.confirmAll")}
+                        </button>
+                      ) : direktErledigbar(item) ? (
+                        <button
+                          type="button"
+                          className="mp-tap"
+                          aria-label={`${item.name} erledigt`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            direktErledigen(item);
+                          }}
+                          style={
+                            istErste
+                              ? { flexShrink: 0, padding: "10px 14px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer" }
+                              : { flexShrink: 0, width: 34, height: 34, borderRadius: "50%", border: `2px solid ${k.dot}`, background: "#fff", color: k.dot, fontSize: 15, fontWeight: 800, cursor: "pointer" }
+                          }
+                        >
+                          {istErste ? "✓ Erledigt" : "✓"}
                         </button>
                       ) : (
                         <button
