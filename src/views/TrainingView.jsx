@@ -189,7 +189,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
         onFertig={(id, felder) => {
           trainingAbschliessen(id, felder);
           if (rechtzeitigGestartetRef.current[id]) {
-            feuereBelohnung({ text: "Training abgeschlossen", icon: "dumbbell", punkte: 1 });
+            feuereBelohnung({ text: "Training geschafft!", untertitel: "Dein Körper sagt danke. 💪", icon: "dumbbell", punkte: 1, gross: true });
           }
           delete rechtzeitigGestartetRef.current[id];
         }}

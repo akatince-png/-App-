@@ -83,7 +83,7 @@ export function useHydrationData(userId) {
       // die Belohnung feiert stattdessen das erstmalige Erreichen des
       // Tagesziels (nicht jeden einzelnen Schluck-Tap).
       if (hydrationZielMl > 0 && bisher < hydrationZielMl && neueMenge >= hydrationZielMl) {
-        feuereBelohnung({ text: "Trinkziel für heute erreicht", icon: "droplet", punkte: 1 });
+        feuereBelohnung({ text: "Trinkziel erreicht!", untertitel: "Heute gut versorgt. 💧", icon: "droplet", punkte: 1, gross: true });
       }
       return { ok: true };
     },

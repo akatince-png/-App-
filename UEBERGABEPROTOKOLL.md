@@ -219,6 +219,13 @@ löschbar.
 
 ---
 
+### Nachtrag Teil 121 — Belohnungsfenster bleibt stehen
+
+- Wunsch der Nutzerin: Das Belohnungsfenster war zu kurz offen, der Belohnungseffekt ging verloren; sie möchte es selbst wegdrücken.
+- `ui/Belohnungsfenster.jsx`: `gross: true` erscheint jetzt als Feier-Karte in der Mitte (abgedunkelter Hintergrund, großes Symbol, Konfetti, „⚡ +1 Punkt“, Knopf „Juhu, weiter! 🎉“). Sie bleibt, bis weggetippt wird. Kleine +1-Meldungen stehen 5 s (vorher 2,6 s) und schließen per Tipp. Die Warteschlange hält alles an, bis eine große Feier weggetippt ist.
+- Als große Momente markiert: Routine abgeschlossen (`RoutineAblauf`), Training abgeschlossen, Trinkziel erreicht, dazu wie bisher Tag geschafft, Level-Up und neues Abzeichen.
+- Tests: `src/ui/Belohnungsfenster.test.jsx`.
+
 ### Nachtrag Teil 121 — Coachee-Ansicht für Admin-Konten
 
 - Wunsch: als Admin die App auch "ganz normal wie jede Coachee" nutzen. Entscheidung der Nutzerin: **Umschalter im Admin-Konto** (kein zweites Konto).

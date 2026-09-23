@@ -317,6 +317,26 @@ input[type="time"]::-webkit-date-and-time-value {
       transform: translate(-50%, 0);
     }
   }
+  /* Große Feier-Karte (bleibt, bis weggetippt): Hintergrund blendet ein,
+     Karte "ploppt" leicht über 100 % auf. */
+  @keyframes belohnungHintergrund {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes belohnungKarte {
+    from {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 /* ADHS-Coach-Orb: animierte Kreis-Grafik statt statischem Icon als Trigger für
