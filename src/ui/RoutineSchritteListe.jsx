@@ -2,8 +2,9 @@ import React from "react";
 import { Card } from "./primitives";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
+import { ROUTINE_META } from "../utils/dayItems";
 
-const ROUTINE_FARBE = { morgen: "#E08A3E", abend: "#4E6690" };
+const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 
 // Eigenständige, klar lesbare Anzeige der Routine-Schritte (Nutzerinnen-
 // Vorgabe, 16.09.: "nicht in dieser kleinen Listenform oberhalb, sondern

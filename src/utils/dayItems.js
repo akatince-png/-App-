@@ -29,20 +29,35 @@ export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 // damit sich Farbe UND Symbol app-weit konsistent mit der jeweiligen
 // Kategorie verknüpfen (Nutzerinnen-Vorgabe, 13.09.: kleine Symbole unter
 // den Tagesfortschritt-Balken als zusätzlicher "Anker" neben der Farbe).
+// Farbsystem (überarbeitet 23.09., Nutzerinnen-Wunsch: "alle Bereiche in
+// ihren eigenen Farben kenntlich machen, damit es einprägsam für den Kopf
+// ist") — jeder Bereich hat einen klar eigenen Farbton:
+// Training rot · Morgenroutine orange · Tageslicht gelb · Ernährung grün ·
+// Gewohnheiten türkis · Atemübungen cyan · Hydration blau · Abendroutine
+// nachtblau · Schlaf indigo · Medikamente violett · Workflow magenta ·
+// Supplemente bernstein · Bildschirmzeit grau.
 export const KATEGORIE_META = {
-  hormon: { bg: "#EDDFF6", text: "#64338E", dot: "#8436C2", label: "Medikament", icon: "cross" },
-  supplement: { bg: "#F5EBD8", text: "#865E16", dot: "#C17F1F", label: "Supplement", icon: "capsule" },
-  mahlzeit: { bg: "#F5E3D8", text: "#904724", dot: "#D76629", label: "Mahlzeit", icon: "utensils" },
-  training: { bg: "#F7E4E0", text: "#A23026", dot: "#E22C1B", label: "Training", icon: "dumbbell" },
-  gewohnheit: { bg: "#DCF3F1", text: "#1F605B", dot: "#24948E", label: "Gewohnheit", icon: "target" },
-  workflow: { bg: "#F5DFEE", text: "#89336C", dot: "#BF328C", label: "Workflow" },
-  hydration: { bg: "#E0EFF7", text: "#246787", dot: "#2990C5", label: "Hydration", icon: "droplet" },
-  tageslicht: { bg: "#F7EEDF", text: "#866316", dot: "#E8A60B", label: "Tageslicht", icon: "sun" },
-  schlaf: { bg: "#E2E4F7", text: "#33377D", dot: "#3940B3", label: "Schlaf", icon: "moon" },
-  atemuebung: { bg: "#DEF3EA", text: "#1F6B47", dot: "#2E9C64", label: "Atemübung", icon: "wind" },
+  hormon: { bg: "#F1E3FA", text: "#5E2A8A", dot: "#8436C2", label: "Medikament", icon: "cross" },
+  supplement: { bg: "#F5EBD8", text: "#7A4F12", dot: "#B7791F", label: "Supplement", icon: "capsule" },
+  mahlzeit: { bg: "#E2F2DF", text: "#255E22", dot: "#3E9B3A", label: "Mahlzeit", icon: "utensils" },
+  training: { bg: "#FBE4E1", text: "#9E2319", dot: "#E0352B", label: "Training", icon: "dumbbell" },
+  gewohnheit: { bg: "#D9F3F0", text: "#13615C", dot: "#1FA39A", label: "Gewohnheit", icon: "target" },
+  workflow: { bg: "#F8E0EE", text: "#86285F", dot: "#C43A8E", label: "Workflow" },
+  hydration: { bg: "#E0EAFA", text: "#1B4686", dot: "#2D6FD6", label: "Hydration", icon: "droplet" },
+  tageslicht: { bg: "#FBF3D2", text: "#7D6206", dot: "#E8B90C", label: "Tageslicht", icon: "sun" },
+  schlaf: { bg: "#E6E6FA", text: "#34348F", dot: "#5B5BD6", label: "Schlaf", icon: "moon" },
+  atemuebung: { bg: "#D9F2F8", text: "#0B6378", dot: "#12A5C6", label: "Atemübung", icon: "wind" },
   bildschirmzeit: { bg: "#E7EAEF", text: "#414F63", dot: "#5B6B84", label: "Bildschirmzeit", icon: "smartphone" },
   notfallmodus: { bg: "#F7E4E0", text: "#A23026", dot: "#D12121", label: "Notfallmodus" },
   zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
+};
+
+// Morgen-/Abendroutine haben bewusst KEINEN KATEGORIE_META-Eintrag (sonst
+// tauchen sie als tote Einträge in der Wochenübersicht-Legende auf) — ihre
+// Farben stehen trotzdem zentral hier statt an sieben Stellen einzeln.
+export const ROUTINE_META = {
+  morgenroutine: { bg: "#FDEBD6", text: "#9A4F08", dot: "#F08A24", label: "Morgenroutine", icon: "sunrise" },
+  abendroutine: { bg: "#E2E4F3", text: "#1F255E", dot: "#2B3480", label: "Abendroutine", icon: "moon" },
 };
 
 // Farbrotation für Projekte (14.08., Nutzerin-Vorgabe: "sollen dann

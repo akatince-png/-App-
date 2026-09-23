@@ -4,7 +4,7 @@ import ViewHeader from "../ui/ViewHeader";
 import TimeWheelField from "../ui/TimeWheelField";
 import { cardBorder, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
-import { buildDayItems } from "../utils/dayItems";
+import { buildDayItems, ROUTINE_META } from "../utils/dayItems";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
@@ -22,7 +22,7 @@ const ROUTINE_EMOJI = { morgen: "🌅", abend: "🌙" };
 // buildDayItems() nie Tagesplan-Punkte mit dieser Kategorie erzeugt (die
 // Routine ist eine Sammlung frei benannter Schritte, kein Tracker-Item).
 // Gleiches Muster wie WOCHENUEBERSICHT_FARBE in PlaeneView.jsx.
-const ROUTINE_FARBE = { morgen: "#E08A3E", abend: "#4E6690" };
+const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 
 function minutenSeitMitternacht(zeit) {
   if (!zeit) return null;

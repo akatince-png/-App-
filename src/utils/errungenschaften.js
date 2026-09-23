@@ -1,5 +1,5 @@
 import { toLocalISODate, zaehleTageStreak } from "./dates";
-import { KATEGORIE_META } from "./dayItems";
+import { KATEGORIE_META, ROUTINE_META } from "./dayItems";
 import { aufhellen } from "../ui/theme";
 
 // Punkte-/Abzeichen-System (Nutzerin-Vorgabe, 11.09.): 1 Punkt pro
@@ -53,7 +53,7 @@ export const KATEGORIEN = [
     // Kein KATEGORIE_META-Eintrag für Morgen-/Abendroutine (siehe Kommentar
     // dort) — gleiche Farbe wie ROUTINE_FARBE in HomeView.jsx/
     // EIGENE_TAB_FARBE in PlaeneView.jsx.
-    grad: gradAus("#E08A3E"),
+    grad: gradAus(ROUTINE_META.morgenroutine.dot),
     holeTage: (q) =>
       [...new Set((q.routineDurchlaeufe || []).filter((d) => d.routine === "morgen" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)))],
   },
@@ -61,7 +61,7 @@ export const KATEGORIEN = [
     key: "abendroutine",
     label: "Abendroutine",
     icon: "moon",
-    grad: gradAus("#4E6690"),
+    grad: gradAus(ROUTINE_META.abendroutine.dot),
     holeTage: (q) =>
       [...new Set((q.routineDurchlaeufe || []).filter((d) => d.routine === "abend" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)))],
   },

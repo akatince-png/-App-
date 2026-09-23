@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { accent, accentDark, accentSoft } from "./theme";
-import { KATEGORIE_META } from "../utils/dayItems";
+import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
 
 const BereichColorContext = createContext(null);
 
@@ -15,7 +15,7 @@ const STANDARD = { accent, accentDark, accentSoft };
 // einzelnen Button-Aufruf manuell einfärben zu müssen.
 export function BereichColorProvider({ bereich, children }) {
   const value = useMemo(() => {
-    const meta = bereich && KATEGORIE_META[bereich];
+    const meta = bereich && (KATEGORIE_META[bereich] || ROUTINE_META[bereich]);
     return meta ? { accent: meta.dot, accentDark: meta.text, accentSoft: meta.bg } : STANDARD;
   }, [bereich]);
   return <BereichColorContext.Provider value={value}>{children}</BereichColorContext.Provider>;

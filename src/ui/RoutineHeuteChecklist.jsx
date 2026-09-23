@@ -3,8 +3,9 @@ import { Card, StatusBadge } from "./primitives";
 import { cardBorder, textMuted } from "./theme";
 import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
+import { ROUTINE_META } from "../utils/dayItems";
 
-const ROUTINE_FARBE = { morgen: "#E08A3E", abend: "#4E6690" };
+const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 
 // Direkte Tages-Checkliste für Morgen-/Abendroutine (12.09.,

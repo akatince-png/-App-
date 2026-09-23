@@ -6,12 +6,13 @@ import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, accentDark, cardBorder, danger, hexZuRgba, textMuted, verdunkeln } from "../ui/theme";
+import { accent, accentDark, cardBorder, danger, textMuted, verdunkeln } from "../ui/theme";
 import Icon from "../ui/Icon";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { statusText } from "../utils/motivation";
-import { buildDayItems, KATEGORIE_META as KATEGORIE } from "../utils/dayItems";
+import { buildDayItems, KATEGORIE_META as KATEGORIE, ROUTINE_META } from "../utils/dayItems";
+import { BereichColorProvider } from "../ui/BereichColorContext";
 import { useAppData } from "../context/AppDataContext";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
@@ -289,7 +290,9 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   // zwischen der normalen Tagesansicht und den aufgeklappten Morgen-/
   // Abendroutine-Abschnitten, damit beide exakt dieselbe Zeilen-Darstellung
   // (inkl. Bestätigen/Bearbeiten/Feedback) nutzen.
-  function renderZeitbloecke(bucketsListe) {
+  // `inRoutine`: innerhalb der farbigen Routine-Kästen ohne zusätzliche weiße
+  // Karte, sonst wird es dort doppelt umrahmt und zu eng.
+  function renderZeitbloecke(bucketsListe, { inRoutine = false } = {}) {
     return bucketsListe.map(([hour, entries]) => {
       const istJetzt = hour === jetztHour;
       const offeneSupplemente = entries.filter((e) => e.kategorie === "supplement" && !e.done);
@@ -320,7 +323,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
               </button>
             )}
           </div>
-          <Card style={{ marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
+          <Card style={inRoutine ? { marginBottom: 12, padding: 0, background: "transparent", border: "none", boxShadow: "none" } : { marginBottom: 16, border: istJetzt ? `1.5px solid ${accent}` : undefined }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {entries.map((item) => {
                 const k = KATEGORIE[item.kategorie];
@@ -337,7 +340,9 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                         gap: 10,
                         padding: "10px 12px",
                         borderRadius: 16,
-                        border: `1.5px solid ${erledigt ? "transparent" : hexZuRgba(kFarbe, 0.35)}`,
+                        // Kasten-Stil wie auf den Bereichsseiten (23.09.): kräftiger
+                        // Rand in der Bereichsfarbe, zarte Bereichsfläche innen.
+                        border: `2px solid ${kFarbe}`,
                         background: erledigt ? verdunkeln(kFarbe, 8) : k.bg,
                       }}
                     >
@@ -560,20 +565,21 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           )}
 
           <div className="mp-tagesplan-routinen-grid">
-          <Card style={{ marginBottom: 16 }}>
+          <BereichColorProvider bereich="morgenroutine">
+          <Card akzent style={{ marginBottom: 16 }}>
             <button
               className="mp-tap"
               onClick={() => setMorgenOffen((o) => !o)}
               style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
             >
-              <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌅 Morgenroutine</div>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: ROUTINE_META.morgenroutine.text, whiteSpace: "nowrap" }}>🌅 Morgenroutine</div>
               <div style={{ fontSize: 11.5, color: textMuted }}>
                 {morgenItems.length > 0 ? routineZusammenfassung(morgenItems) : "Noch nichts geplant"} {morgenOffen ? "▲" : "▼"}
               </div>
             </button>
             {morgenOffen && (
               <div style={{ marginTop: 12 }}>
-                {morgenItems.length > 0 && renderZeitbloecke(bucketsFor(morgenItems))}
+                {morgenItems.length > 0 && renderZeitbloecke(bucketsFor(morgenItems), { inRoutine: true })}
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <div style={{ flex: 1 }}>
                     <PrimaryButton onClick={() => setAblaufRoutine("morgen")}>▶️ Morgenroutine starten</PrimaryButton>
@@ -604,21 +610,23 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
               </div>
             )}
           </Card>
+          </BereichColorProvider>
 
-          <Card style={{ marginBottom: 16 }}>
+          <BereichColorProvider bereich="abendroutine">
+          <Card akzent style={{ marginBottom: 16 }}>
             <button
               className="mp-tap"
               onClick={() => setAbendOffen((o) => !o)}
               style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
             >
-              <div style={{ fontSize: 14.5, fontWeight: 800 }}>🌙 Abendroutine</div>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: ROUTINE_META.abendroutine.text, whiteSpace: "nowrap" }}>🌙 Abendroutine</div>
               <div style={{ fontSize: 11.5, color: textMuted }}>
                 {abendItems.length > 0 ? routineZusammenfassung(abendItems) : "Noch nichts geplant"} {abendOffen ? "▲" : "▼"}
               </div>
             </button>
             {abendOffen && (
               <div style={{ marginTop: 12 }}>
-                {abendItems.length > 0 && renderZeitbloecke(bucketsFor(abendItems))}
+                {abendItems.length > 0 && renderZeitbloecke(bucketsFor(abendItems), { inRoutine: true })}
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <div style={{ flex: 1 }}>
                     <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine starten</PrimaryButton>
@@ -649,6 +657,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
               </div>
             )}
           </Card>
+          </BereichColorProvider>
           </div>
 
           {zeigeUebergangsDenkpause && (

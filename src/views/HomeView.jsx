@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Shell, Card } from "../ui/primitives";
+import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
@@ -7,8 +7,8 @@ import { useErrungenschaften } from "../data/useErrungenschaften";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
-import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
-import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
+import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMuted } from "../ui/theme";
+import { buildDayItems, KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
@@ -85,8 +85,8 @@ const ORDNER = [
 // PlaeneView.jsx/RoutineTabView.jsx: sonst tauchen sie als tote Einträge in
 // der Wochenübersicht-Legende auf) — dieselben Farben hier lokal dupliziert,
 // gleiches Muster wie in den beiden anderen Dateien.
-const ROUTINE_FARBE = { morgenroutine: "#E08A3E", abendroutine: "#4E6690" };
-const ROUTINE_HINTERGRUND = { morgenroutine: "#FBEADA", abendroutine: "#E7EBF3" };
+const ROUTINE_FARBE = { morgenroutine: ROUTINE_META.morgenroutine.dot, abendroutine: ROUTINE_META.abendroutine.dot };
+const ROUTINE_HINTERGRUND = { morgenroutine: ROUTINE_META.morgenroutine.bg, abendroutine: ROUTINE_META.abendroutine.bg };
 // Gleiche Icon-Namen wie anderswo in der App für dieselbe Routine (siehe
 // z. B. constants.js FUNKTIONEN, useRoutinen.js-Belohnung) — Morgen- und
 // Abendroutine stecken nicht in KATEGORIE_META (siehe Kommentar dort),
@@ -96,7 +96,7 @@ const ROUTINE_ICON = { morgenroutine: "sunrise", abendroutine: "moon" };
 // Rolle wie KATEGORIE_META[...].text gegenüber .dot, für die "Weitere
 // Pläne"-Kacheln unten, die jetzt vollflächig eingefärbt sind statt nur
 // einen kleinen Punkt zu zeigen.
-const ROUTINE_TEXT = { morgenroutine: "#8A4A1E", abendroutine: "#2C3E5C" };
+const ROUTINE_TEXT = { morgenroutine: ROUTINE_META.morgenroutine.text, abendroutine: ROUTINE_META.abendroutine.text };
 
 
 export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll }) {
@@ -726,12 +726,15 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </div>
         </div>
         {angezeigteItems.length > 0 && (
-          <Card style={{ padding: 8 }}>
+          // Kasten-Stil (23.09.): jeder Punkt als eigener Kasten mit
+          // kräftigem Rand in seiner Bereichsfarbe — wie im Tagesplan und
+          // auf den Bereichsseiten, damit sich Farbe = Bereich einprägt.
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {isEmergencyMode ? (
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
-              angezeigteItems.slice(0, 4).map((item, i, arr) => {
-                const k = KATEGORIE_META[item.kategorie] || { dot: ROUTINE_FARBE[item.kategorie] || "#999" };
+              angezeigteItems.slice(0, 4).map((item, i) => {
+                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
                 // Morgen-/Abendroutine öffnen HIER eine Checkliste mit den
                 // echten Schritten statt wegzunavigieren (12.09., Nutzerin-
                 // Vorgabe) — "routine" ist der Schlüssel, den useRoutinen.js
@@ -750,11 +753,13 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                         alignItems: "center",
                         justifyContent: "space-between",
                         gap: 10,
-                        padding: istErste ? "15px 12px" : "12px 12px",
-                        borderBottom: i < arr.length - 1 ? `1px solid ${cardBorder}` : "none",
-                        // "Jetzt dran"-Karte: der oberste Punkt hebt sich
-                        // in seiner Bereichsfarbe ab (eine Sache zur Zeit).
-                        ...(istErste && k.bg ? { background: k.bg, borderRadius: 14, borderBottom: "none", marginBottom: arr.length > 1 ? 4 : 0 } : {}),
+                        padding: istErste ? "15px 14px" : "11px 14px",
+                        borderRadius: 16,
+                        border: `2px solid ${k.dot}`,
+                        background: k.bg,
+                        // "Jetzt dran": der oberste Punkt etwas größer und
+                        // mit leichtem Schein in seiner Farbe.
+                        boxShadow: istErste ? `0 6px 16px ${hexZuRgba(k.dot, 0.22)}` : "none",
                       }}
                     >
                       <button
@@ -849,7 +854,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                 );
               })
             )}
-          </Card>
+          </div>
         )}
       </div>
 

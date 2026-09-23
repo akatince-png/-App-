@@ -4,7 +4,7 @@ import ViewHeader from "../../ui/ViewHeader";
 import { ZusatzprotokolleKarte } from "../../ui/Zusatzprotokolle";
 import { cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
-import { KATEGORIE_META } from "../../utils/dayItems";
+import { KATEGORIE_META, ROUTINE_META } from "../../utils/dayItems";
 import Icon from "../../ui/Icon";
 import SchlafView from "../SchlafView";
 import HydrationView from "../HydrationView";
@@ -65,8 +65,8 @@ const TAB_ZU_KATEGORIE = {
 // nie Tagesplan-Punkte mit dieser Kategorie erzeugt.
 const EIGENE_TAB_FARBE = {
   wochenuebersicht: "#64748B",
-  morgenroutine: "#E08A3E",
-  abendroutine: "#4E6690",
+  morgenroutine: ROUTINE_META.morgenroutine.dot,
+  abendroutine: ROUTINE_META.abendroutine.dot,
 };
 
 // Eigene, kleine Liste statt eines einzelnen Knopfes (Nutzerinnen-Vorgabe,
