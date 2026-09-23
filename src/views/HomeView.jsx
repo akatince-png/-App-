@@ -14,6 +14,7 @@ import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
+import SpielstandKarte from "../ui/SpielstandKarte";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -635,7 +636,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
       schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten]
   );
-  const { kategorien: ordenKategorien, verdiente: ordenVerdiente } = useErrungenschaften(userId, errungenschaftenQuellen);
+  const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak } = useErrungenschaften(userId, errungenschaftenQuellen);
 
   // Zeitraum-Auswahl fürs Tagesfortschritt-Balkendiagramm (16.09.,
   // Nutzerinnen-Vorgabe): "die Möglichkeit, zwischen Wochen- und
@@ -664,145 +665,26 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
 
   return (
     <Shell>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <Logo size={52} />
-          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 19, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
-        </div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: textMuted, marginBottom: 4 }}>
-          {userName ? `${gruss}, ${userName}` : gruss}
-        </div>
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.3 }}>
-          {getCoachName()} ist einsatzbereit. Was verwalten wir heute?
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <Logo size={44} />
+        <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
       </div>
 
-      {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
-          Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,
-          wenn ich was trinke, direkt auf den Knopf drücken" bzw. im akuten
-          Moment sofort Hilfe holen. Bewusst ganz oben, unabhängig vom
-          Notfallmodus (der jetzt weiter unten seine eigene Zeile hat) und
-          ohne erst durch Direktzugriff/Als Nächstes suchen zu müssen. */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-        <button
-          type="button"
-          className="mp-tap"
-          onClick={() => onOpenView("hydration")}
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "14px 14px",
-            borderRadius: 18,
-            border: "none",
-            background: KATEGORIE_META.hydration.bg,
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              background: KATEGORIE_META.hydration.dot,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Icon name="droplet" size={22} color="#fff" />
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Hydration eintragen</div>
-            <div style={{ fontSize: 11, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
-          </div>
-        </button>
-        <div style={{ flex: 1 }}>
-          <AkutModusTrigger onClick={() => setAkutOffen(true)} />
-        </div>
-      </div>
+      {/* Spielstand ganz oben (UX-Umbau 23.09., Nutzerinnen-Wunsch "mehr
+          Spielcharakter"): Tagesring + Serie + Punkte + Level in einer
+          Karte, ersetzt die bisherige reine Text-Begrüßung. */}
+      <SpielstandKarte
+        gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
+        statusZeile={statusText(erledigtCount, displayItems.length, lang)}
+        erledigt={erledigtCount}
+        gesamt={displayItems.length}
+        punkte={gesamtPunkte}
+        serie={globalerStreak}
+        onOpenErfolge={() => onOpenView("erfolge")}
+      />
 
-      {akutOffen && (
-        <AkutModusPanel
-          onClose={() => setAkutOffen(false)}
-          onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
-          coachName={getCoachName()}
-          zeigeCoachOption={!istAdminModus}
-          akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
-        />
-      )}
-
-      {/* Notfallmodus-Umschalter: eigene volle Zeile (13.09., Nutzerin-
-          Vorgabe) — vorher schmal neben dem Akutmodus-Knopf, der jetzt
-          stattdessen oben neben Hydration sitzt (beides häufigere
-          Schnellaktionen). Der Umschalter selbst wird seltener gebraucht,
-          bekommt deshalb wieder seine volle, ausführlichere Darstellung
-          statt der schmalen `compact`-Variante — Design wird bei
-          Gelegenheit noch weiter überarbeitet. */}
-      <div style={{ marginBottom: 18 }}>
-        <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
-      </div>
-
-      {/* Emergency Mode Info Banner */}
-      {isEmergencyMode && (
-        <div
-          style={{
-            padding: "12px 14px",
-            marginBottom: "14px",
-            background: "rgba(217, 119, 6, 0.08)",
-            border: "1px solid rgba(217, 119, 6, 0.3)",
-            borderRadius: "10px",
-            fontSize: "12px",
-            color: "#D97706",
-            lineHeight: "1.5",
-            fontWeight: "500",
-          }}
-        >
-          💛 <strong>Heute nur Basics:</strong> Medikamente + Wasser. Alles andere ist Bonus. Kein Druck!
-        </div>
-      )}
-
-      {/* Tagesfortschritt zuerst — die Startseite ist ein Tagesassistent, kein
-          Menü. Balkendiagramm statt Ring (12.09., Nutzerinnen-Vorgabe): ein
-          Balken je Lebensbereich statt einer einzelnen Ring-Zahl, zeigt auf
-          einen Blick, wo es heute hakt. Der frühere zweite Ring ("Routinen")
-          ist weg — Gewohnheiten/Morgen-/Abendroutine stecken jetzt gleich-
-          berechtigt mit allen anderen Bereichen im Direktzugriff unten. */}
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 4 }}>{t("home.tagesfortschritt")}</div>
-        {/* Bug-Fix: statusText() gibt teils ganze Sätze zurück (z. B. "Nur
-            noch zwei Aufgaben bis zum Tagesziel."), keine kurze Zahl — in
-            einer Zeile nebeneinander mit dem Label lief das ineinander.
-            Jetzt eigene Zeile darunter.
-            Zweiter Bug-Fix: erledigtCount zählt schon im Notfallmodus nur
-            die essenziellen Kategorien (aus displayItems), total kam bisher
-            trotzdem aus dem ungefilterten heuteItems.length — zeigte im
-            Notfallmodus einen irreführend niedrigen Bruch (z. B. "2 von 9"
-            statt "2 von 3"), obwohl der Rest laut Notfallmodus bewusst
-            Bonus ist. Jetzt beide aus derselben (ggf. gefilterten) Liste. */}
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>{statusText(erledigtCount, displayItems.length, lang)}</div>
-        {/* Zeitraum-Wahl fürs Balkendiagramm darunter (16.09., Nutzerinnen-
-            Vorgabe) — bewusst über dem Diagramm, direkt als Steuerung dafür
-            lesbar, statt irgendwo sonst auf der Seite. */}
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 4, marginLeft: -4 }}>
-          <Pill label="Tag" selected={zeitraum === "tag"} onClick={() => setZeitraum("tag")} />
-          <Pill label="Woche" selected={zeitraum === "woche"} onClick={() => setZeitraum("woche")} />
-          <Pill label="Monat" selected={zeitraum === "monat"} onClick={() => setZeitraum("monat")} />
-          {zeigeGesamtOption && <Pill label="Gesamt" selected={zeitraum === "gesamt"} onClick={() => setZeitraum("gesamt")} />}
-        </div>
-        {/* Ab Tablet-Breite (siehe .mp-tagesfortschritt-grid in index.css)
-            rechts daneben die Orden-Vorschau statt des sonst ungenutzten
-            Leerraums — auf dem Handy bleibt es unverändert nur das
-            Balkendiagramm, das dort ohnehin schon die volle Breite nutzt. */}
-        <div className="mp-tagesfortschritt-grid">
-          <TagesfortschrittBalken widgets={zeitraumWidgets} />
-          <TagesfortschrittOrden widgets={miniWidgetData} kategorien={ordenKategorien} verdiente={ordenVerdiente} onClick={() => onOpenView("archiv")} />
-        </div>
-      </Card>
-
+      {/* "Jetzt dran"/Als Nächstes direkt unter dem Spielstand (23.09.) —
+          eine Sache zur Zeit, vor allen Zusatz-Kacheln. */}
       {/* Als Nächstes/Tagesplan direkt unter dem Tagesfortschritt (12.09.,
           Nutzerinnen-Vorgabe), statt weiter unten — "Tagesplan" ist hier nur
           noch der Link zur vollen Ansicht, kein eigener großer Button mehr.
@@ -960,6 +842,134 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </Card>
         )}
       </div>
+
+      {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
+          Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,
+          wenn ich was trinke, direkt auf den Knopf drücken" bzw. im akuten
+          Moment sofort Hilfe holen. Bewusst ganz oben, unabhängig vom
+          Notfallmodus (der jetzt weiter unten seine eigene Zeile hat) und
+          ohne erst durch Direktzugriff/Als Nächstes suchen zu müssen. */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => onOpenView("hydration")}
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "14px 14px",
+            borderRadius: 18,
+            border: "none",
+            background: KATEGORIE_META.hydration.bg,
+            cursor: "pointer",
+            textAlign: "left",
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              background: KATEGORIE_META.hydration.dot,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="droplet" size={22} color="#fff" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Hydration eintragen</div>
+            <div style={{ fontSize: 11, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
+          </div>
+        </button>
+        <div style={{ flex: 1 }}>
+          <AkutModusTrigger onClick={() => setAkutOffen(true)} />
+        </div>
+      </div>
+
+      {akutOffen && (
+        <AkutModusPanel
+          onClose={() => setAkutOffen(false)}
+          onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
+          coachName={getCoachName()}
+          zeigeCoachOption={!istAdminModus}
+          akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
+        />
+      )}
+
+      {/* Notfallmodus-Umschalter: eigene volle Zeile (13.09., Nutzerin-
+          Vorgabe) — vorher schmal neben dem Akutmodus-Knopf, der jetzt
+          stattdessen oben neben Hydration sitzt (beides häufigere
+          Schnellaktionen). Der Umschalter selbst wird seltener gebraucht,
+          bekommt deshalb wieder seine volle, ausführlichere Darstellung
+          statt der schmalen `compact`-Variante — Design wird bei
+          Gelegenheit noch weiter überarbeitet. */}
+      <div style={{ marginBottom: 18 }}>
+        <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
+      </div>
+
+      {/* Emergency Mode Info Banner */}
+      {isEmergencyMode && (
+        <div
+          style={{
+            padding: "12px 14px",
+            marginBottom: "14px",
+            background: "rgba(217, 119, 6, 0.08)",
+            border: "1px solid rgba(217, 119, 6, 0.3)",
+            borderRadius: "10px",
+            fontSize: "12px",
+            color: "#D97706",
+            lineHeight: "1.5",
+            fontWeight: "500",
+          }}
+        >
+          💛 <strong>Heute nur Basics:</strong> Medikamente + Wasser. Alles andere ist Bonus. Kein Druck!
+        </div>
+      )}
+
+      {/* Tagesfortschritt zuerst — die Startseite ist ein Tagesassistent, kein
+          Menü. Balkendiagramm statt Ring (12.09., Nutzerinnen-Vorgabe): ein
+          Balken je Lebensbereich statt einer einzelnen Ring-Zahl, zeigt auf
+          einen Blick, wo es heute hakt. Der frühere zweite Ring ("Routinen")
+          ist weg — Gewohnheiten/Morgen-/Abendroutine stecken jetzt gleich-
+          berechtigt mit allen anderen Bereichen im Direktzugriff unten. */}
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 4 }}>{t("home.tagesfortschritt")}</div>
+        {/* Bug-Fix: statusText() gibt teils ganze Sätze zurück (z. B. "Nur
+            noch zwei Aufgaben bis zum Tagesziel."), keine kurze Zahl — in
+            einer Zeile nebeneinander mit dem Label lief das ineinander.
+            Jetzt eigene Zeile darunter.
+            Zweiter Bug-Fix: erledigtCount zählt schon im Notfallmodus nur
+            die essenziellen Kategorien (aus displayItems), total kam bisher
+            trotzdem aus dem ungefilterten heuteItems.length — zeigte im
+            Notfallmodus einen irreführend niedrigen Bruch (z. B. "2 von 9"
+            statt "2 von 3"), obwohl der Rest laut Notfallmodus bewusst
+            Bonus ist. Jetzt beide aus derselben (ggf. gefilterten) Liste. */}
+        {/* Status-Satz steht seit dem Spielstand-Umbau (23.09.) oben in der
+            SpielstandKarte — hier nur noch Abstand zur Zeitraum-Wahl. */}
+        <div style={{ marginBottom: 10 }} />
+        {/* Zeitraum-Wahl fürs Balkendiagramm darunter (16.09., Nutzerinnen-
+            Vorgabe) — bewusst über dem Diagramm, direkt als Steuerung dafür
+            lesbar, statt irgendwo sonst auf der Seite. */}
+        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 4, marginLeft: -4 }}>
+          <Pill label="Tag" selected={zeitraum === "tag"} onClick={() => setZeitraum("tag")} />
+          <Pill label="Woche" selected={zeitraum === "woche"} onClick={() => setZeitraum("woche")} />
+          <Pill label="Monat" selected={zeitraum === "monat"} onClick={() => setZeitraum("monat")} />
+          {zeigeGesamtOption && <Pill label="Gesamt" selected={zeitraum === "gesamt"} onClick={() => setZeitraum("gesamt")} />}
+        </div>
+        {/* Ab Tablet-Breite (siehe .mp-tagesfortschritt-grid in index.css)
+            rechts daneben die Orden-Vorschau statt des sonst ungenutzten
+            Leerraums — auf dem Handy bleibt es unverändert nur das
+            Balkendiagramm, das dort ohnehin schon die volle Breite nutzt. */}
+        <div className="mp-tagesfortschritt-grid">
+          <TagesfortschrittBalken widgets={zeitraumWidgets} />
+          <TagesfortschrittOrden widgets={miniWidgetData} kategorien={ordenKategorien} verdiente={ordenVerdiente} onClick={() => onOpenView("archiv")} />
+        </div>
+      </Card>
 
       {/* Quests/Rangliste/Team/Coach-Nachricht: bewusst HIER statt ganz oben
           (App-Bauplan-Punkt, "Startseite entschlacken") — standen vorher

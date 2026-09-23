@@ -9,6 +9,7 @@ import HomeView from "./views/HomeView";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
 import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
+import GlobalerAka from "./ui/GlobalerAka";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
@@ -29,7 +30,6 @@ import { viewAusHash, hashFuerView } from "./utils/routing";
 const AdminDashboardView = lazy(() => import("./views/admin/AdminDashboardView"));
 const AdminWissenView = lazy(() => import("./views/admin/AdminWissenView"));
 const AdminFormulareView = lazy(() => import("./views/admin/AdminFormulareView"));
-const AdminUebungsBilderView = lazy(() => import("./views/admin/AdminUebungsBilderView"));
 const AdminCoachUebersichtView = lazy(() => import("./views/admin/AdminCoachUebersichtView"));
 const AdminQuestsView = lazy(() => import("./views/admin/AdminQuestsView"));
 const AdminTeamsView = lazy(() => import("./views/admin/AdminTeamsView"));
@@ -51,7 +51,11 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
 const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "mehr", "zusatzprotokoll"];
-const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebungsbilder", "admin-uebersicht", "admin-quests", "admin-teams"];
+// Seiten, die bereits einen eigenen, fachlich zugeschnittenen Aka (KiChat)
+// mitbringen — alle anderen bekommen den universellen GlobalerAka (siehe
+// ui/GlobalerAka.jsx), damit Aka auf jeder Seite erreichbar ist.
+const VIEWS_MIT_EIGENEM_AKA = new Set(["home", "tagesplan", "routinen", "form", ...PLAENE_VIEW_IDS.filter((id) => id !== "bildschirmzeit")]);
+const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
 // von einem geteilten Link nach einem App-Update) soll nie auf einen
@@ -385,7 +389,6 @@ export default function AuthenticatedApp() {
         onVerwalteAls={verwalteAls}
         onOpenWissen={() => setView("admin-wissen")}
         onOpenFormulare={() => setView("admin-formulare")}
-        onOpenUebungsBilder={() => setView("admin-uebungsbilder")}
         onOpenUebersicht={() => setView("admin-uebersicht")}
         onOpenQuests={() => setView("admin-quests")}
         onOpenTeams={() => setView("admin-teams")}
@@ -395,8 +398,6 @@ export default function AuthenticatedApp() {
     screen = <AdminWissenView onHome={() => setView("admin")} />;
   } else if (view === "admin-formulare") {
     screen = <AdminFormulareView onHome={() => setView("admin")} />;
-  } else if (view === "admin-uebungsbilder") {
-    screen = <AdminUebungsBilderView onHome={() => setView("admin")} />;
   } else if (view === "admin-uebersicht") {
     screen = <AdminCoachUebersichtView onHome={() => setView("admin")} onVerwalteAls={verwalteAls} />;
   } else if (view === "admin-quests") {
@@ -476,6 +477,7 @@ export default function AuthenticatedApp() {
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
           <ErrorBoundary onReset={() => setView("home")}>
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
+            {!VIEWS_MIT_EIGENEM_AKA.has(view) && <GlobalerAka />}
           </ErrorBoundary>
         </div>
       </div>

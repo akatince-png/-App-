@@ -32,8 +32,15 @@ const ADMIN_UNTERANSICHTEN = [
   "Teams verwalten",
   "Wissens-Basis verwalten",
   "Coaching-Vorlagen",
-  "Übungsbilder verwalten",
 ];
+
+// Übungsbilder-Verwaltung auf Wunsch der Nutzerin entfernt (23.09.) — die
+// Bilder sollen später in einer eigenen Sitzung automatisiert entstehen,
+// nicht per Hand hochgeladen werden.
+test("Admin-Dashboard zeigt keinen Übungsbilder-Upload mehr", async ({ page }) => {
+  await expect(page.getByRole("button", { name: "Coaching-Vorlagen", exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Übungsbilder verwalten", exact: false })).toHaveCount(0);
+});
 
 for (const label of ADMIN_UNTERANSICHTEN) {
   test(`Admin-Unteransicht "${label}" rendert ohne Konsolenfehler`, async ({ page }) => {

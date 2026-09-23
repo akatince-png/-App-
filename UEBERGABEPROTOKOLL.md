@@ -195,6 +195,24 @@ origin main` und prüfen, ob der Zweig auf dem aktuellen `main` steht —
   wandern ins Hauptprotokoll). Übersicht in „Alle Pläne" (nur Admin-/
   Verwalten-als-Modus), 🧪-Etikett im Tagesplan/auf Home.
 
+**Nachtrag (gleicher Tag, Nutzerinnen-Feedback "noch kein Spiellevel"):**
+- Home oben: neue `ui/SpielstandKarte.jsx` (Tagesring, 🔥 globale Serie, ⚡
+  Punkte aus `useErrungenschaften`, Level + Balken aus `utils/level.js`,
+  Stufen = PUNKTE_SCHWELLEN), antippbar → Erfolge. "Als Nächstes"/"Jetzt
+  dran" direkt darunter, Hydration/Akut/Notfallmodus/Diagramm danach.
+- Aka auf jeder Seite: `ui/GlobalerAka.jsx` (universeller Coach) wird in
+  `AuthenticatedApp.jsx` auf allen Views gerendert, die keinen eigenen
+  KiChat haben (`VIEWS_MIT_EIGENEM_AKA`).
+- "Übungsbilder verwalten" (Admin) entfernt — Bilder sollen später in
+  einer eigenen Sitzung automatisiert entstehen. Tabelle `uebungs_bilder`
+  + Bucket + Anzeige im Live-Workout bleiben unverändert.
+- Admin-Dashboard: Verbindungsabbruch ("Load failed") wird einmal still
+  nachgeladen, sonst verständliche Meldung + "Erneut laden"
+  (`utils/netzwerkFehler.js`).
+- Onboarding: "Nein, ich mach's selbst" unterdrückt Akas Auto-Popup für
+  die Sitzung (sessionStorage `kiAutoStartUnterdrueckt`), doppelter
+  Zurück-Knopf entfernt, Begrüßung im Verwalten-Modus mit Coachee-Namen.
+
 **Test-User:** `ux-test-claude@example.com` wurde für den Durchlauf angelegt
 und danach wieder gelöscht (siehe Chat) — falls noch vorhanden, gefahrlos
 löschbar.
