@@ -198,6 +198,9 @@ export function berechneErrungenschaften(quellen) {
       // Anzahl verschiedener Tage mit mindestens einem Eintrag (für "Deine
       // Welt": Pflanzen wachsen mit Tagen, nicht mit Einträgen).
       tage: tageSet.size,
+      // Die Tage selbst (ISO "YYYY-MM-DD") — für die Gehirn-Karte, die
+      // mehrere Kategorien zu Regionen zusammenfasst (utils/gehirn.js).
+      tageListe: [...tageSet],
       streak: berechneStreak(tageSet),
     };
   });

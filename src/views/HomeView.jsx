@@ -15,7 +15,7 @@ import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import SpielstandKarte from "../ui/SpielstandKarte";
-import WeltKarte from "../ui/WeltKarte";
+import GehirnKarte from "../ui/GehirnKarte";
 import TagesQuestsKarte from "../ui/TagesQuestsKarte";
 import { useSpielFeiern } from "../ui/useSpielFeiern";
 import { baueTagesQuests } from "../utils/tagesQuests";
@@ -843,10 +843,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         )}
       </div>
 
-      {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Deine Welt"
+      {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} />}
-      {!isEmergencyMode && <WeltKarte kategorien={ordenKategorien} onOpenErfolge={() => onOpenView("erfolge")} />}
+      {!isEmergencyMode && <GehirnKarte kategorien={ordenKategorien} onOpenErfolge={() => onOpenView("erfolge")} />}
 
       {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
           Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,

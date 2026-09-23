@@ -317,6 +317,40 @@ input[type="time"]::-webkit-date-and-time-value {
       transform: translate(-50%, 0);
     }
   }
+  /* "Dein Gehirn" (GehirnKarte.jsx): aktive Regionen pulsieren leicht,
+     ruhende atmen langsam, aktive Nervenbahnen "fließen". */
+  .mp-gehirn-aktiv {
+    animation: gehirnPuls 2.8s ease-in-out infinite;
+  }
+  .mp-gehirn-ruht {
+    animation: gehirnAtmen 6s ease-in-out infinite;
+  }
+  .mp-gehirn-bahn {
+    animation: gehirnBahn 1.6s linear infinite;
+  }
+  @keyframes gehirnPuls {
+    0%,
+    100% {
+      filter: brightness(1);
+    }
+    50% {
+      filter: brightness(1.25);
+    }
+  }
+  @keyframes gehirnAtmen {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.65;
+    }
+  }
+  @keyframes gehirnBahn {
+    to {
+      stroke-dashoffset: -26;
+    }
+  }
   /* Große Feier-Karte (bleibt, bis weggetippt): Hintergrund blendet ein,
      Karte "ploppt" leicht über 100 % auf. */
   @keyframes belohnungHintergrund {
