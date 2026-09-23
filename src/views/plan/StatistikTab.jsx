@@ -6,8 +6,17 @@ import { PIE_COLORS } from "../../constants";
 import { keyOf, sameDay } from "../../utils/dates";
 import { useAppData } from "../../context/AppDataContext";
 
+const LEER = {};
+
 export default function StatistikTab() {
-  const { plan, erledigt, feedback, gewichtsEintraege, aktiveMesswerte, combinedMesswertDefs, schlafEintraege } = useAppData();
+  const appData = useAppData();
+  const { plan = [], gewichtsEintraege = [], aktiveMesswerte, combinedMesswertDefs, schlafEintraege } = appData;
+  // Bug-Fix (Dauertest 23.09.): `erledigt`/`feedback` gibt es im App-Kontext
+  // seit dem Umbau auf Medikamente nicht mehr (heißen jetzt hormonErledigt/
+  // hormonFeedback) — Object.values(undefined) ließ die ganze Statistik-
+  // Ansicht bei JEDEM Konto abstürzen.
+  const erledigt = appData.erledigt || appData.hormonErledigt || LEER;
+  const feedback = appData.feedback || appData.hormonFeedback || LEER;
 
   const today = new Date();
   const statusOf = (dose) => {
@@ -29,7 +38,7 @@ export default function StatistikTab() {
     const counts = {};
     let keine = 0;
     Object.values(feedback).forEach((fb) => {
-      if (!fb.staerke || fb.staerke === "Keine" || fb.nebenwirkungen.length === 0) {
+      if (!fb || !fb.staerke || fb.staerke === "Keine" || !fb.nebenwirkungen?.length) {
         keine += 1;
       } else {
         fb.nebenwirkungen.forEach((n) => {
