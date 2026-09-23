@@ -8,6 +8,7 @@ import { useT } from "../../i18n/translate";
 import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import VorlaufFeld from "../../ui/VorlaufFeld";
 import AnsichtUmschalter from "../../ui/AnsichtUmschalter";
+import AppTempoKarte from "../../ui/AppTempoKarte";
 
 // Morgen-/Abendroutine und Workout-Flow sind keine der 8 Onboarding-
 // Kategorien (categorySteps.js — die haben je eigene Einrichtungs-Screens,
@@ -853,6 +854,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         </button>
         {resetMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetMsg}</div>}
       </Card>
+
+      <AppTempoKarte />
 
       {/* Gefahrenzone (12.09., Nutzerin-Vorgabe: "Ich muss doch alles auf
           Null setzen können und neue Protokolle starten können, kann ich

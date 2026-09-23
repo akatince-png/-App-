@@ -16,6 +16,7 @@ import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
 import { viewAusHash, hashFuerView } from "./utils/routing";
+import { meldeAppBereit } from "./utils/startzeit";
 
 // Code-Splitting (App-Bauplan-Punkt): vorher landeten ALLE Bildschirme —
 // Admin-Bereich, Onboarding-Fragebogen, jede einzelne Kategorie-Ansicht —
@@ -261,6 +262,11 @@ export default function AuthenticatedApp() {
     wochenprotokollSnapshotErzeugen(protocolId, 1, baueWochenprotokollDaten(appData));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, onboardingComplete, protocolId, startdatum, wochenprotokollSnapshots]);
+
+  // App-Tempo auf dem echten Gerät messen (utils/startzeit.js).
+  useEffect(() => {
+    if (!loading && view !== null) meldeAppBereit();
+  }, [loading, view]);
 
   if (loading || view === null) {
     return <LoadingScreen />;

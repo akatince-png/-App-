@@ -130,6 +130,8 @@ try {
     await page.getByRole("button", { name: /^Spielstand:/ }).first().waitFor({ timeout: 20000 });
   }
   schritt(`Angemeldet (${bericht.loginSekunden} s)`);
+  // In-App-Messung (utils/startzeit.js) zum Vergleich mit der Skript-Messung.
+  bericht.appTempo = await page.evaluate(() => JSON.parse(localStorage.getItem("aka_startzeiten") || "[]")[0] || null).catch(() => null);
   await warte(2000);
   bericht.spielstandVorher = await spielstand();
   await foto("01-home-vorher");

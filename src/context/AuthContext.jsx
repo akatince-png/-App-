@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { markiereAnmeldung } from "../utils/startzeit";
 
 const AuthContext = createContext(null);
 
@@ -63,7 +64,10 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
+  const signIn = (email, password) => {
+    markiereAnmeldung();
+    return supabase.auth.signInWithPassword({ email, password });
+  };
 
   const signOut = () => supabase.auth.signOut();
 
