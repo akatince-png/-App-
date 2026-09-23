@@ -462,9 +462,17 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
         console.error(error);
         setHormonErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
         setHormonFeedback((prev) => ({ ...prev, [k]: vorherFeedback }));
+        return;
+      }
+      // Tagesplan-"Bestätigen" läuft seit dem Ein-Tipp-Umbau (23.09.) über
+      // diese Funktion — ohne diese Zeile blieb das Belohnungsfenster dort
+      // stumm (es feuerte bisher nur über toggleHormonErledigt, also nur auf
+      // der Startseite). Gleiche Bedingungen wie dort.
+      if (!vorherErledigt && istRechtzeitig(dose.uhrzeit, belohnungPufferMin)) {
+        feuereBelohnung({ text: `„${dose.name}" genommen`, icon: "cross", punkte: 1 });
       }
     },
-    [userId, hormonErledigt, hormonFeedback]
+    [userId, hormonErledigt, hormonFeedback, belohnungPufferMin]
   );
 
   const hormonPlan = useMemo(

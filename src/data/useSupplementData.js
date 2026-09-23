@@ -255,9 +255,16 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
         console.error(error);
         setSupplementErledigt((prev) => ({ ...prev, [k]: vorherErledigt }));
         setSupplementErledigtAt((prev) => ({ ...prev, [k]: vorherErledigtAt }));
+        return;
+      }
+      // Siehe skipHormonFeedback: Tagesplan-"Bestätigen" läuft hierüber und
+      // löste bisher nie das Belohnungsfenster aus.
+      if (!vorherErledigt && istRechtzeitig(dose.zeit, belohnungPufferMin)) {
+        const supplementName = supplemente.find((s) => s.id === dose.id)?.name || "Supplement";
+        feuereBelohnung({ text: `„${supplementName}" genommen`, icon: "capsule", punkte: 1 });
       }
     },
-    [userId, supplementErledigt, supplementErledigtAt]
+    [userId, supplementErledigt, supplementErledigtAt, belohnungPufferMin, supplemente]
   );
 
   // Bestätigt alle noch offenen Supplemente einer Tageszeit an einem Tag auf einmal

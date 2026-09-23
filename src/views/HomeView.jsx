@@ -11,6 +11,7 @@ import { widgetsFuerZeitraum, gesamtVerfuegbar } from "../utils/zeitraumFortschr
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
+import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -299,6 +300,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       zeitbloecke,
     ]
   );
+
+  useTagGeschafftFeier(heuteItems);
 
   // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
   // Kategorie heißt intern "hormon" (siehe KATEGORIE_META, label "Medikament"),

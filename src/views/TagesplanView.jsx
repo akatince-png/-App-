@@ -1,15 +1,12 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Shell, Card, Label, Pill, PrimaryButton, TextArea } from "../ui/primitives";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { Shell, Card, PrimaryButton } from "../ui/primitives";
+import SchnellFeedback from "../ui/SchnellFeedback";
+import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, accentDark, accentSoft, cardBorder, danger, hexZuRgba, textMuted, verdunkeln } from "../ui/theme";
+import { accent, accentDark, cardBorder, danger, hexZuRgba, textMuted, verdunkeln } from "../ui/theme";
 import Icon from "../ui/Icon";
-import {
-  NEBENWIRKUNGEN_OPTIONEN,
-  VERTRAEGLICHKEIT_OPTIONEN,
-  WIRKUNG_OPTIONEN,
-  WOCHENTAGE,
-} from "../constants";
+import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE } from "../utils/dayItems";
@@ -26,70 +23,6 @@ import DenkpauseNudge from "../ui/DenkpauseNudge";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
-}
-
-// Bug-Fix (13.09., Nutzerin-Vorgabe "Medikamente nicht mehr von Peptiden/
-// Hormonen unterscheiden"): eine eigene "peptid"-Feedback-Kategorie
-// (inkl. Stärke-Auswahl + Einstichstellen-Foto) existierte hier zwar
-// noch im Code, war aber technisch tot — buildDayItems() vergibt seit
-// Migration 0042 nur noch die Kategorie "hormon" (siehe deren
-// Kommentar), nie "peptid". Komplett entfernt statt weiter mitgeschleppt.
-const FEEDBACK_HEADER = {
-  hormon: "Wie war die Einnahme?",
-  supplement: "Wie war's?",
-};
-
-function FeedbackPanel({ kategorie, draftFeedback, setDraftFeedback, toggleDraftNebenwirkung, onSkip, onSave }) {
-  return (
-    <div style={{ marginTop: 14, padding: 16, borderRadius: 16, background: accentSoft, border: `1px solid ${cardBorder}` }}>
-      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{FEEDBACK_HEADER[kategorie]}</div>
-
-      {kategorie === "hormon" && (
-        <>
-          <Label>Verträglichkeit</Label>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {VERTRAEGLICHKEIT_OPTIONEN.map((v) => (
-              <Pill key={v} label={v} selected={draftFeedback.vertraeglichkeit === v} onClick={() => setDraftFeedback((p) => ({ ...p, vertraeglichkeit: v }))} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {(kategorie === "hormon" || kategorie === "supplement") && (
-        <>
-          <Label>Wirkung bemerkt?</Label>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {WIRKUNG_OPTIONEN.map((w) => (
-              <Pill key={w} label={w} selected={draftFeedback.wirkung === w} onClick={() => setDraftFeedback((p) => ({ ...p, wirkung: w }))} />
-            ))}
-          </div>
-        </>
-      )}
-
-      <Label>Welche Nebenwirkungen hattest du?</Label>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {NEBENWIRKUNGEN_OPTIONEN.map((n) => (
-          <Pill key={n} label={n} selected={draftFeedback.nebenwirkungen.includes(n)} onClick={() => toggleDraftNebenwirkung(n)} />
-        ))}
-      </div>
-
-      <Label>Notizen (optional)</Label>
-      <TextArea value={draftFeedback.notizen} onChange={(v) => setDraftFeedback((p) => ({ ...p, notizen: v }))} placeholder="Hier kannst du alles aufschreiben..." />
-
-      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-        <div style={{ flex: 1 }}>
-          <PrimaryButton onClick={onSkip} variant="ghost">
-            Überspringen
-          </PrimaryButton>
-        </div>
-        <div style={{ flex: 1 }}>
-          <PrimaryButton onClick={onSave} variant="success">
-            Speichern
-          </PrimaryButton>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // Bug-Fix ("Zustände gehen beim View-Wechsel verloren"): `selectedDate`
@@ -156,38 +89,28 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const [feedbackKategorie, setFeedbackKategorie] = useState(null);
   const [trainingFehler, setTrainingFehler] = useState(null);
   const [trainingVorschau, setTrainingVorschau] = useState(null);
-  const [draftFeedback, setDraftFeedback] = useState({
-    nebenwirkungen: [],
-    staerke: "Keine",
-    vertraeglichkeit: "Gut",
-    wirkung: "Ja",
-    notizen: "",
-    fotoPreview: null,
-    fotoFile: null,
-  });
+  // Ein-Tipp-Abhaken (UX-Review 23.09.): "Bestätigen" hakt sofort ab (inkl.
+  // Belohnungsfenster, siehe skip*Feedback in den Daten-Hooks) und öffnet
+  // danach nur noch die optionale Kurz-Rückmeldung (ui/SchnellFeedback.jsx).
   const openFeedback = (dose, key, kategorie) => {
+    if (kategorie === "hormon") skipHormonFeedback(dose);
+    else if (kategorie === "supplement") skipSupplementFeedback(dose);
     setFeedbackOpen(key);
     setFeedbackKategorie(kategorie);
-    // Positive Standardwerte vorausgewählt statt leer — der häufigste Fall
-    // (alles in Ordnung) ist damit mit einem Tap auf "Speichern" erledigt.
-    setDraftFeedback({ nebenwirkungen: [], staerke: "Keine", vertraeglichkeit: "Gut", wirkung: "Ja", notizen: "", fotoPreview: null, fotoFile: null });
   };
-  const toggleDraftNebenwirkung = (n) =>
-    setDraftFeedback((prev) => ({
-      ...prev,
-      nebenwirkungen: prev.nebenwirkungen.includes(n) ? prev.nebenwirkungen.filter((x) => x !== n) : [...prev.nebenwirkungen, n],
-    }));
-  const handleSaveFeedback = (dose) => {
-    if (feedbackKategorie === "hormon") saveHormonFeedback(dose, draftFeedback);
-    else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, draftFeedback);
+  // itemsForDate (useCallback) soll nicht bei jedem Render neu entstehen —
+  // über die Ref ruft es trotzdem immer die aktuelle openFeedback-Version
+  // (mit frischen skip*Feedback-Closures) auf.
+  const openFeedbackRef = useRef(openFeedback);
+  openFeedbackRef.current = openFeedback;
+  const feedbackSchliessen = () => {
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
   };
-  const handleSkipFeedback = (dose) => {
-    if (feedbackKategorie === "hormon") skipHormonFeedback(dose);
-    else if (feedbackKategorie === "supplement") skipSupplementFeedback(dose);
-    setFeedbackOpen(null);
-    setFeedbackKategorie(null);
+  const handleSaveFeedback = (dose, entwurf) => {
+    if (feedbackKategorie === "hormon") saveHormonFeedback(dose, entwurf);
+    else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, entwurf);
+    feedbackSchliessen();
   };
 
   const today = new Date();
@@ -270,10 +193,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         ausnahmenNachSchluessel,
       });
       return items.map((item) => {
-        if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedback(item.raw, item.key, "hormon") };
+        if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedbackRef.current(item.raw, item.key, "hormon") };
         if (item.kategorie === "supplement") {
           const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.uhrzeit };
-          return { ...item, doseRef, onConfirm: () => openFeedback(doseRef, item.key, "supplement") };
+          return { ...item, doseRef, onConfirm: () => openFeedbackRef.current(doseRef, item.key, "supplement") };
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
         if (item.kategorie === "gewohnheit") return { ...item, onConfirm: () => toggleGewohnheitErledigt(tagStr, item.raw.id) };
@@ -308,6 +231,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
+  useTagGeschafftFeier(tagesItems, sameDay(selectedDate, today));
 
   // Performance-Fix (12.09.): itemsForDate(d) lief in der Wochenansicht
   // bisher direkt im Render-Body für alle 7 Tage — bei jedem Render neu,
@@ -494,13 +418,11 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                     </div>
 
                     {["hormon", "supplement"].includes(item.kategorie) && isOpen && (
-                      <FeedbackPanel
+                      <SchnellFeedback
                         kategorie={item.kategorie}
-                        draftFeedback={draftFeedback}
-                        setDraftFeedback={setDraftFeedback}
-                        toggleDraftNebenwirkung={toggleDraftNebenwirkung}
-                        onSkip={() => handleSkipFeedback(item.doseRef)}
-                        onSave={() => handleSaveFeedback(item.doseRef)}
+                        istInjektion={item.kategorie === "hormon" && item.raw?.einnahmeart === "Injektion"}
+                        onSpeichern={(entwurf) => handleSaveFeedback(item.doseRef, entwurf)}
+                        onSchliessen={feedbackSchliessen}
                       />
                     )}
                   </div>

@@ -396,3 +396,47 @@ input[type="time"]::-webkit-date-and-time-value {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Belohnungsfenster-Konfetti (UX-Review 23.09.: "Belohnungs-Moment") —
+   kleine Farbschnipsel fliegen vom Häkchen-Kreis weg. Standardmäßig
+   unsichtbar; nur wer keine reduzierte Bewegung eingestellt hat, sieht die
+   Animation (dann bleibt es beim ruhigen Einblenden des Fensters). */
+.mp-konfetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mp-konfetti {
+    animation: belohnungKonfetti 0.95s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+  .mp-belohnung-puls {
+    animation: belohnungPuls 0.5s ease-out;
+  }
+  @keyframes belohnungKonfetti {
+    0% {
+      opacity: 1;
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot));
+    }
+  }
+  @keyframes belohnungPuls {
+    0% {
+      transform: scale(0.6);
+    }
+    60% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
