@@ -13,6 +13,7 @@
 // Pin eines TLS-Proxys, nur in der Cloud-Umgebung nötig), AKA_TAG
 // (YYYY-MM-DD, sonst heute in Europe/Berlin).
 import { chromium } from "@playwright/test";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -63,7 +64,21 @@ const befund = (s) => {
   console.log("⚠", s);
 };
 
-const args = process.env.AKA_SPKI ? [`--ignore-certificate-errors-spki-list=${process.env.AKA_SPKI}`] : [];
+// In der Claude-Cloud-Umgebung läuft HTTPS über einen TLS-Proxy, dessen CA
+// Chromium nicht kennt. Ohne AKA_SPKI wird der SPKI-Pin automatisch aus den
+// "Proxy CA"-Zertifikaten des CA-Bundles berechnet (lokal: kein Bundle →
+// keine Sonderbehandlung).
+function proxySpkiPins() {
+  const bundle = process.env.AKA_CA_BUNDLE || "/root/.ccr/ca-bundle.crt";
+  if (!fs.existsSync(bundle)) return [];
+  const pems = fs.readFileSync(bundle, "utf8").match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g) || [];
+  return pems
+    .map((pem) => new crypto.X509Certificate(pem))
+    .filter((c) => /Proxy CA/i.test(c.subject))
+    .map((c) => crypto.createHash("sha256").update(c.publicKey.export({ type: "spki", format: "der" })).digest("base64"));
+}
+const pins = process.env.AKA_SPKI ? [process.env.AKA_SPKI] : proxySpkiPins();
+const args = pins.length ? [`--ignore-certificate-errors-spki-list=${pins.join(",")}`] : [];
 const browser = await chromium.launch({ executablePath: process.env.AKA_CHROMIUM || "/opt/pw-browsers/chromium", args });
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 },

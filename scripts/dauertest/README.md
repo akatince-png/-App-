@@ -33,9 +33,9 @@ where email = 'claude.dauertest@example.com';
 
 1. `git fetch origin main` und auf den Stand von `main` wechseln, dann `npm ci`, falls nötig.
 2. Neues Zufallspasswort setzen (siehe oben).
-3. Durchlauf starten (in der Cloud-Umgebung mit dem SPKI-Pin des Proxys):
+3. Durchlauf starten (der TLS-Proxy-Pin der Cloud-Umgebung wird automatisch aus /root/.ccr/ca-bundle.crt berechnet):
    ```bash
-   AKA_TEST_PW='<passwort>' AKA_SPKI='<spki>' node scripts/dauertest/tageslauf.mjs
+   AKA_TEST_PW='<passwort>' node scripts/dauertest/tageslauf.mjs
    ```
    Ergebnis: `dauertest-out/<datum>/bericht.json` plus Fotos (von git ignoriert).
    Das Skript
