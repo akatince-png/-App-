@@ -13,6 +13,7 @@ import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import { toLocalISODate } from "../utils/dates";
+import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
 // ist Indigo, passend zu den bunten Home-Mini-Widgets.
@@ -146,9 +147,9 @@ export default function SchlafView({ onHome, embedded = false }) {
         </div>
       </Card>
 
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+      <KiHinweis>
         Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Assistent trägt den Eintrag für dich ein.
-      </div>
+      </KiHinweis>
       <KiChat
         bereich="schlaf"
         systemPrompt="Du hilfst dabei, einen Schlaf-Eintrag für die letzte Nacht zu erfassen. Frag nach Schlafdauer, Schlafqualität, ob durchgeschlafen und erholt aufgewacht wurde, bevor ihr fertig seid — Träume und Bemerkungen sind optional. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

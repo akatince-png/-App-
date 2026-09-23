@@ -27,6 +27,26 @@ export default function AkutModusGlobal({ sichtbar }) {
 
   useEscapeSchliesst(() => setOffen(false), offen);
 
+  // Dauertest 23.09.: der schwebende Knopf verdeckte beim Scrollen Inhalte
+  // (z. B. Supplement-Namen). Beim Scrollen wird er kurz fast durchsichtig
+  // und kommt ~0,8 s nach dem Scroll-Ende zurück — bleibt aber jederzeit
+  // antippbar.
+  const [scrollt, setScrollt] = useState(false);
+  useEffect(() => {
+    if (!sichtbar) return undefined;
+    let timer;
+    const beimScrollen = () => {
+      setScrollt(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setScrollt(false), 800);
+    };
+    window.addEventListener("scroll", beimScrollen, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", beimScrollen);
+      clearTimeout(timer);
+    };
+  }, [sichtbar]);
+
   // Bug-Fix (Nachkontrolle): dieser Knopf lebt außerhalb des
   // `key={view}`-Remounts in AuthenticatedApp.jsx (bleibt beim
   // Bildschirmwechsel bestehen, wechselt nur seine Sichtbarkeit) — anders
@@ -54,17 +74,19 @@ export default function AkutModusGlobal({ sichtbar }) {
           className="mp-tap"
           style={{
             position: "fixed",
-            bottom: "calc(22px + env(safe-area-inset-bottom, 0px))",
-            left: 20,
-            width: 56,
-            height: 56,
+            bottom: "calc(18px + env(safe-area-inset-bottom, 0px))",
+            left: 16,
+            width: 48,
+            height: 48,
             borderRadius: "50%",
             border: "none",
             background: "linear-gradient(135deg, #F59E0B, #FBBF24)",
             boxShadow: "0 8px 20px rgba(245, 158, 11, 0.35)",
-            fontSize: 24,
+            fontSize: 21,
             cursor: "pointer",
             zIndex: 40,
+            opacity: scrollt ? 0.25 : 1,
+            transition: "opacity 0.25s ease",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

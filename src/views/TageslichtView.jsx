@@ -12,6 +12,7 @@ import { getCoachName } from "../utils/coachStorage";
 import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
+import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -105,9 +106,9 @@ export default function TageslichtView({ onHome, embedded = false }) {
 
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}
 
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+      <KiHinweis>
         Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Assistent schlägt ein Tagesziel vor.
-      </div>
+      </KiHinweis>
       <KiChat
         bereich="tageslicht"
         systemPrompt="Du hilfst dabei, ein tägliches Tageslicht-/Freiluft-Ziel (in Minuten) für eine bestehende App einzurichten. Frag nach, wie viel Zeit die Person aktuell draußen verbringt (z. B. Bürojob vs. viel unterwegs) und was realistisch machbar wäre, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

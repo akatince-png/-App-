@@ -14,6 +14,7 @@ import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
+import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
 // ist Blau, passend zu den bunten Home-Mini-Widgets.
@@ -127,9 +128,9 @@ export default function HydrationView({ onHome, embedded = false }) {
         <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{hydrationError}</div>
       )}
 
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+      <KiHinweis>
         Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Assistent schlägt Ziel und Zeiten vor.
-      </div>
+      </KiHinweis>
       <KiChat
         bereich="hydration"
         systemPrompt="Du hilfst dabei, ein tägliches Trinkziel und passende Erinnerungszeiten für eine bestehende App einzurichten. Frag nach, wie viel die Person aktuell trinkt und wann sie erinnert werden möchte, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

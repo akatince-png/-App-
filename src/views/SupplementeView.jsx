@@ -12,6 +12,7 @@ import ViewHeader from "../ui/ViewHeader";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
@@ -312,9 +313,9 @@ function SupplementeSection() {
 
   return (
     <>
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+      <KiHinweis>
         Sag, welches Supplement du nehmen willst und wann — der Assistent fragt bei Bedarf nach.
-      </div>
+      </KiHinweis>
       <KiChat
         bereich="supplemente"
         systemPrompt="Du hilfst dabei, ein neues Supplement für eine bestehende App einzurichten. Frag nach, zu welcher(n) Tageszeit(en) (Morgens/Mittags/Abends) es genommen werden soll und ob es einen Hinweis gibt (z. B. zur Mahlzeit, nüchtern, vor/nach dem Training), falls das noch fehlt. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."

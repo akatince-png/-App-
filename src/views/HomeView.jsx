@@ -360,7 +360,17 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             done: false,
           };
         });
-  const angezeigteItems = [...routineAlsNaechstesItems, ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel)];
+  // Routinen nach Tageszeit einsortieren (Bug-Fix Dauertest 23.09.): bisher
+  // standen sie immer ganz oben — eine abends noch offene Morgenroutine war
+  // dann "JETZT DRAN". Jetzt nur vorne, wenn ihre Tageszeit gerade ist
+  // (Morgenroutine bis 12 Uhr, Abendroutine ab 17 Uhr), sonst hinten.
+  const stundeJetzt = today.getHours();
+  const routineIstJetzt = (item) => (item.kategorie === "morgenroutine" ? stundeJetzt < 12 : stundeJetzt >= 17);
+  const angezeigteItems = [
+    ...routineAlsNaechstesItems.filter(routineIstJetzt),
+    ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel),
+    ...routineAlsNaechstesItems.filter((item) => !routineIstJetzt(item)),
+  ];
 
   // Ein-Tipp-Erledigen direkt auf Home (UX-Review 23.09.): bisher führte
   // jeder Punkt unter "Als Nächstes" (außer Supplement-Bündeln) erst in den

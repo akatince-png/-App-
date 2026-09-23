@@ -167,7 +167,11 @@ export function useProtocolData(userId) {
       setEinnahmeartState(nextEinnahmeart);
       setDosierungState(nextDosierung);
 
-      await loadArchived();
+      // Login-Tempo (Dauertest 23.09.): archivierte Protokolle braucht erst
+      // das Archiv, nicht die Startseite — nicht mehr darauf warten, bevor
+      // die App aus dem Ladebildschirm kommt (war die dritte von drei
+      // nacheinander laufenden Abfragen, die den Start aufgehalten haben).
+      loadArchived();
       setLoading(false);
     })();
     return () => {

@@ -38,6 +38,10 @@ function planInhaltText(kategorie, ziel) {
 export default function OnboardingCompletionView({ eingerichteteBereiche, onDone, onBack }) {
   const { t, tLabel } = useT();
   const { categoryZiele } = useAppData();
+  // Bug-Fix Dauertest 23.09.: Coachees (Kurz-Onboarding) richten im
+  // Onboarding keine Bereiche ein — statt "deine Pläne sind eingerichtet"
+  // mit leerer Liste ein ehrlicher Startklar-Text.
+  const leer = !eingerichteteBereiche?.length;
   return (
     <Shell>
       <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={t("onboarding.completion.los")} />
@@ -59,72 +63,76 @@ export default function OnboardingCompletionView({ eingerichteteBereiche, onDone
           🎉
         </div>
         <div style={{ fontSize: 20, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>
-          {t("onboarding.completion.title")}
+          {t(leer ? "onboarding.completion.leer.title" : "onboarding.completion.title")}
         </div>
         <div style={{ fontSize: 14, color: textMuted, textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>
-          {t("onboarding.completion.subtitle")}
+          {t(leer ? "onboarding.completion.leer.subtitle" : "onboarding.completion.subtitle")}
         </div>
       </div>
 
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>{t("onboarding.completion.eingerichtet")}</div>
-        {eingerichteteBereiche.map((b) => {
-          const ziel = categoryZiele?.[b.key];
-          const fragen = ISTZUSTAND_FRAGEN[b.key];
-          const beantwortet = fragen?.filter((f) => (ziel?.istZustand?.[f.key] || "").trim());
-          const dauer = zieldauerText(ziel);
-          const inhalt = planInhaltText(b.key, ziel);
-          const hatDetail = (beantwortet && beantwortet.length > 0) || dauer || inhalt;
-          return (
-            <div key={b.label} style={{ padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 8,
-                    background: accentSoft,
-                    color: accentDark,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 14,
-                    flexShrink: 0,
-                  }}
-                >
-                  ✓
+      {!leer && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 10 }}>{t("onboarding.completion.eingerichtet")}</div>
+          {eingerichteteBereiche.map((b) => {
+            const ziel = categoryZiele?.[b.key];
+            const fragen = ISTZUSTAND_FRAGEN[b.key];
+            const beantwortet = fragen?.filter((f) => (ziel?.istZustand?.[f.key] || "").trim());
+            const dauer = zieldauerText(ziel);
+            const inhalt = planInhaltText(b.key, ziel);
+            const hatDetail = (beantwortet && beantwortet.length > 0) || dauer || inhalt;
+            return (
+              <div key={b.label} style={{ padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 8,
+                      background: accentSoft,
+                      color: accentDark,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 14,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ✓
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>
+                    {b.icon} {tLabel(b.label)}
+                  </div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>
-                  {b.icon} {tLabel(b.label)}
-                </div>
+                {hatDetail && (
+                  <div style={{ marginTop: 8, marginLeft: 36, fontSize: 12.5, color: textMuted, lineHeight: 1.6 }}>
+                    {beantwortet?.map((f) => (
+                      <div key={f.key}>
+                        <span style={{ fontWeight: 700, color: accentDark }}>{tLabel(f.frage)}</span> {ziel.istZustand[f.key]}
+                      </div>
+                    ))}
+                    {dauer && (
+                      <div>
+                        <span style={{ fontWeight: 700, color: accentDark }}>{tLabel("Ziel:")}</span> {dauer}
+                      </div>
+                    )}
+                    {inhalt && (
+                      <div>
+                        <span style={{ fontWeight: 700, color: accentDark }}>{tLabel("Plan:")}</span> {inhalt}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              {hatDetail && (
-                <div style={{ marginTop: 8, marginLeft: 36, fontSize: 12.5, color: textMuted, lineHeight: 1.6 }}>
-                  {beantwortet?.map((f) => (
-                    <div key={f.key}>
-                      <span style={{ fontWeight: 700, color: accentDark }}>{tLabel(f.frage)}</span> {ziel.istZustand[f.key]}
-                    </div>
-                  ))}
-                  {dauer && (
-                    <div>
-                      <span style={{ fontWeight: 700, color: accentDark }}>{tLabel("Ziel:")}</span> {dauer}
-                    </div>
-                  )}
-                  {inhalt && (
-                    <div>
-                      <span style={{ fontWeight: 700, color: accentDark }}>{tLabel("Plan:")}</span> {inhalt}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </Card>
+            );
+          })}
+        </Card>
+      )}
 
-      <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 16, lineHeight: 1.5 }}>
-        {t("onboarding.completion.rest")}
-      </div>
+      {!leer && (
+        <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 16, lineHeight: 1.5 }}>
+          {t("onboarding.completion.rest")}
+        </div>
+      )}
 
       <Card>
         <PrimaryButton onClick={onDone} variant="success">
