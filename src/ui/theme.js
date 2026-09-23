@@ -22,13 +22,17 @@
 export const bg = "#FFFFFF";
 export const card = "#FFFFFF";
 export const cardBorder = "#EAEAE5";
-export const accent = "#24948E"; // Türkis — Marken-Akzent (= KATEGORIE_META.gewohnheit.dot)
-export const accentDark = "#1F605B"; // = KATEGORIE_META.gewohnheit.text
-export const accentSoft = "#DCF3F1"; // = KATEGORIE_META.gewohnheit.bg
+// Seit 23.09. (Nutzerinnen-Wunsch "alle Bereiche, die einheitlich grün waren,
+// sollen in diesem Nachtblau sein"): die generische App-Farbe ist Nachtblau
+// aus dem Logo-/Gehirn-Design statt Türkis/Grün. Die Bereichsfarben aus
+// KATEGORIE_META (z. B. Gewohnheiten-Türkis, Supplemente-Orange) bleiben.
+export const accent = "#3B4BA8"; // Nachtblau (mittel) — Marken-Akzent
+export const accentDark = "#1B2150"; // Nachtblau (tief)
+export const accentSoft = "#E7E9F7"; // Nachtblau (zart)
 export const blue = "#4A6FA5"; // "geplant" / sekundäre Infos
 export const blueSoft = "#EAF0F8";
-export const success = "#0E7C66"; // Eigenständiges Grün, nur noch für "erledigt"/Erfolg
-export const successSoft = "#E6F3EF";
+export const success = "#2F3E96"; // "erledigt"/Erfolg — Nachtblau statt Grün (23.09.)
+export const successSoft = "#E7E9F7";
 export const danger = "#C24545";
 // Bewusst eigenständig von `danger` (App-Bauplan-Punkt, ADHS-Perspektive):
 // ein rotes "Alarm"-Rot für nicht bestätigte/verspätete Einträge wirkt wie

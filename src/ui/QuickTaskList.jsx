@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { cardBorder } from "./theme";
+import { accent, cardBorder, success } from "./theme";
 import { playSuccess } from "../utils/beep";
 
 /**
@@ -81,8 +81,8 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
               height: 28,
               minWidth: 28,
               borderRadius: 8,
-              border: `2px solid ${item.done ? "#10B981" : "#D1D5DB"}`,
-              background: item.done ? "linear-gradient(135deg, #10B981, #059669)" : "transparent",
+              border: `2px solid ${item.done ? success : "#D1D5DB"}`,
+              background: item.done ? `linear-gradient(135deg, ${accent}, ${success})` : "transparent",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

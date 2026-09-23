@@ -1,6 +1,6 @@
 import React from "react";
 import { Shell, Card, PrimaryButton } from "../../ui/primitives";
-import { accent, blue, textMuted } from "../../ui/theme";
+import { accent, blue, hexZuRgba, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useT } from "../../i18n/translate";
 import { useAppData } from "../../context/AppDataContext";
@@ -38,7 +38,7 @@ export default function OnboardingQuickWinView({ onDone, onBack }) {
             justifyContent: "center",
             fontSize: 28,
             marginBottom: 18,
-            boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
+            boxShadow: `0 8px 20px ${hexZuRgba(accent, 0.25)}`,
           }}
         >
           ✓

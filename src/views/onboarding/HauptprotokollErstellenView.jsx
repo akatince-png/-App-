@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../../ui/primitives";
-import { accent, accentDark, blue, cardBorder, danger, textMuted } from "../../ui/theme";
+import { accent, accentDark, blue, cardBorder, danger, hexZuRgba, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
@@ -94,7 +94,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
               justifyContent: "center",
               fontSize: 28,
               marginBottom: 16,
-              boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
+              boxShadow: `0 8px 20px ${hexZuRgba(accent, 0.25)}`,
             }}
           >
             📋
@@ -171,7 +171,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
             justifyContent: "center",
             fontSize: 28,
             marginBottom: 16,
-            boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
+            boxShadow: `0 8px 20px ${hexZuRgba(accent, 0.25)}`,
           }}
         >
           📋

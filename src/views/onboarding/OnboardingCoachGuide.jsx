@@ -235,7 +235,7 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
               padding: 0,
               cursor: orbKlickbar ? "pointer" : "default",
               opacity: orbKlickbar ? 1 : 0.4,
-              boxShadow: orbKlickbar ? "0 10px 26px rgba(14, 124, 102, 0.4)" : "none",
+              boxShadow: orbKlickbar ? "0 10px 26px rgba(27, 33, 80, 0.4)" : "none",
               transition: "opacity 150ms ease",
             }}
           >

@@ -21,42 +21,55 @@ import Icon from "./Icon";
 const KATEGORIE_LABEL = new Map(KATEGORIEN.map((k) => [k.key, k.label]));
 const ZEITRAUM_TEXT = { tag: "Heute", woche: "Diese Woche", monat: "Diesen Monat", gesamt: "Seit Protokollstart" };
 
-// Großhirn mit gewölbtem Rand (lauter kleine Bögen = "wolkig").
+// Klassische Gehirn-Seitenansicht (Nutzerinnen-Wunsch 23.09.: "mehr nach
+// Gehirn, nicht nach Wolke"): Stirnlappen vorne links, Scheitel oben,
+// Hinterhaupt hinten, Schläfenlappen unten mit Schläfenpol, getrennt durch
+// die Seitenfurche; darunter hinten Kleinhirn und Hirnstamm.
 const GROSSHIRN =
-  "M 70 150 A 26 26 0 0 1 58 108 A 26 26 0 0 1 86 70 A 26 26 0 0 1 128 50 A 26 26 0 0 1 172 44 A 26 26 0 0 1 214 54 A 26 26 0 0 1 250 80 A 24 24 0 0 1 270 118 A 22 22 0 0 1 256 156 A 20 20 0 0 1 220 166 A 22 22 0 0 1 184 174 A 22 22 0 0 1 146 176 A 22 22 0 0 1 108 170 A 22 22 0 0 1 70 150 Z";
-const KLEINHIRN = "M 212 168 C 212 186 230 200 252 200 C 276 200 292 184 288 164 C 276 172 244 174 212 168 Z";
-const HIRNSTAMM = "M 188 172 C 192 186 194 198 194 212 C 198 219 208 219 212 212 C 212 198 214 186 220 174 Z";
+  "M 58 120 C 50 88 70 58 104 46 C 140 32 196 34 230 52 C 262 68 280 98 276 130 C 274 148 262 160 244 162 C 228 164 214 160 204 156 C 196 170 180 182 160 184 C 132 186 110 176 100 160 C 94 150 96 140 104 134 C 96 136 84 138 74 136 C 62 134 58 128 58 120 Z";
+const KLEINHIRN = "M 204 158 C 206 176 222 190 244 190 C 266 190 280 176 276 158 C 266 164 250 166 236 164 C 224 164 212 162 204 158 Z";
+const HIRNSTAMM = "M 188 176 C 191 190 193 200 194 212 C 197 218 205 218 208 212 C 208 200 209 190 212 178 Z";
 
-// Regionen als Flächen, an der Großhirn-Kontur zugeschnitten.
+// Regionen als Flächen, an der Kontur zugeschnitten. Grenzen folgen grob
+// der Seitenfurche (unten: Schläfenlappen) und der Zentralfurche.
 const FLAECHEN = {
-  fokus: "0,0 118,0 108,104 0,132",
-  bewegung: "118,0 170,0 162,104 108,104",
-  energie: "170,0 320,0 320,86 236,112 162,104",
-  rhythmus: "320,86 320,240 262,240 236,112",
-  ruhe: "0,132 108,104 162,104 236,112 262,240 0,240",
+  fokus: "0,0 138,0 146,121 104,134 0,150",
+  bewegung: "138,0 170,0 172,116 146,121",
+  energie: "170,0 320,0 320,70 248,104 196,112 172,116",
+  rhythmus: "320,70 320,240 250,240 248,104",
+  ruhe: "0,150 104,134 146,121 172,116 196,112 248,104 250,240 0,240",
 };
 const PUNKT = {
-  fokus: [82, 106],
-  bewegung: [138, 74],
-  energie: [204, 82],
-  rhythmus: [248, 128],
-  ruhe: [150, 146],
-  erholung: [250, 184],
+  fokus: [88, 96],
+  bewegung: [156, 62],
+  energie: [212, 78],
+  rhythmus: [260, 128],
+  ruhe: [150, 154],
+  erholung: [242, 178],
 };
-// Windungen im Logo-Stil (geschwungene Linien mit runden Enden).
+// Furchen und Windungen im Logo-Linienstil.
+const SEITENFURCHE = "M 104 134 C 130 124 160 118 196 112 C 214 110 232 108 248 104";
+const ZENTRALFURCHE = "M 150 38 C 144 56 156 72 148 90 C 142 102 148 112 146 121";
 const WINDUNGEN = [
-  "M 72 118 C 74 104 88 98 98 104",
-  "M 96 72 C 110 70 118 80 114 92",
-  "M 124 118 C 118 106 124 96 136 96",
-  "M 150 58 C 160 66 158 80 148 86",
-  "M 178 70 C 190 64 202 72 200 84",
-  "M 176 118 C 188 110 204 116 206 128",
-  "M 226 88 C 238 84 248 94 244 106",
-  "M 110 150 C 118 140 132 140 138 150",
-  "M 178 150 C 186 140 202 142 206 152",
-  "M 224 136 C 232 128 246 132 248 142",
-  // seitliche Furche zwischen Stirn-/Scheitel- und Schläfenbereich
-  "M 102 132 C 130 120 162 118 198 126",
+  "M 68 104 C 78 94 88 106 98 98 C 108 90 116 100 126 92",
+  "M 80 74 C 92 66 100 78 112 70 C 122 64 128 74 136 68",
+  "M 72 126 C 82 120 92 126 100 122",
+  "M 110 48 C 116 58 126 54 130 62",
+  "M 176 50 C 186 60 198 50 208 60 C 218 70 230 62 240 72",
+  "M 172 88 C 184 80 194 94 206 86 C 218 78 228 92 242 86",
+  "M 250 96 C 258 106 252 118 262 126 C 268 132 266 142 258 148",
+  "M 116 158 C 128 150 138 164 150 156 C 162 148 172 162 188 154",
+  "M 128 174 C 140 168 150 178 164 172",
+  "M 64 88 C 72 80 80 90 88 84",
+  "M 96 56 C 104 64 114 58 120 66",
+  "M 118 84 C 126 94 136 86 140 96",
+  "M 84 116 C 94 110 104 118 114 112 C 124 106 132 114 140 108",
+  "M 168 66 C 176 74 186 70 192 78",
+  "M 210 100 C 220 94 232 100 240 96",
+  "M 244 58 C 252 66 262 70 266 82",
+  "M 108 146 C 118 140 126 148 136 144",
+  "M 180 134 C 188 142 198 138 204 146",
+  "M 262 104 C 270 110 270 118 266 124",
 ];
 
 function bahn([x1, y1], [x2, y2]) {
@@ -128,7 +141,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         <div style={{ width: `${prozent}%`, height: "100%", borderRadius: 99, background: logoVerlauf, transition: "width 0.8s ease-out" }} />
       </div>
 
-      <svg viewBox="20 30 285 205" role="img" aria-label={`Dein Gehirn, ${ZEITRAUM_TEXT[zeitraum] || "heute"} zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 420, display: "block", margin: "8px auto 0" }}>
+      <svg viewBox="40 24 250 200" role="img" aria-label={`Dein Gehirn, ${ZEITRAUM_TEXT[zeitraum] || "heute"} zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 420, display: "block", margin: "8px auto 0" }}>
         <defs>
           <clipPath id="mp-grosshirn">
             <path d={GROSSHIRN} />
@@ -170,7 +183,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
               {liste.map((r) => (
                 <polygon
                   key={r.key}
-                  points={r.key === "erholung" ? "180,150 300,150 300,240 180,240" : FLAECHEN[r.key]}
+                  points={r.key === "erholung" ? "170,150 300,150 300,240 170,240" : FLAECHEN[r.key]}
                   fill={r.zustand === "leer" ? "#C8CEF0" : r.farbe}
                   fillOpacity={gewaehlt && gewaehlt !== r.key ? deckkraft(r) * 0.45 : deckkraft(r)}
                   className={r.zustand === "aktiv" ? "mp-gehirn-aktiv" : undefined}
@@ -187,14 +200,16 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           <path d={HIRNSTAMM} strokeWidth="3.5" />
           <path d={KLEINHIRN} strokeWidth="3.5" />
           <path d={GROSSHIRN} strokeWidth="4" />
-          <g strokeWidth="3.5" opacity="0.85">
+          <path d={SEITENFURCHE} strokeWidth="3.5" />
+          <path d={ZENTRALFURCHE} strokeWidth="3" opacity="0.85" />
+          <g strokeWidth="3" opacity="0.8">
             {WINDUNGEN.map((d) => (
               <path key={d} d={d} />
             ))}
           </g>
           <g strokeWidth="2.5" opacity="0.6">
-            <path d="M 222 182 C 240 188 262 188 282 178" />
-            <path d="M 232 192 C 246 196 262 196 276 190" />
+            <path d="M 212 170 C 230 176 254 176 272 166" />
+            <path d="M 220 180 C 236 184 254 184 268 178" />
           </g>
         </g>
 

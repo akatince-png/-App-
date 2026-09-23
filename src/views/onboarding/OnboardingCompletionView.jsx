@@ -1,6 +1,6 @@
 import React from "react";
 import { Shell, Card, PrimaryButton } from "../../ui/primitives";
-import { accent, accentDark, accentSoft, blue, cardBorder, textMuted } from "../../ui/theme";
+import { accent, accentDark, accentSoft, blue, cardBorder, hexZuRgba, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useT } from "../../i18n/translate";
 import { useAppData } from "../../context/AppDataContext";
@@ -57,7 +57,7 @@ export default function OnboardingCompletionView({ eingerichteteBereiche, onDone
             justifyContent: "center",
             fontSize: 32,
             marginBottom: 20,
-            boxShadow: "0 8px 20px rgba(15, 184, 163, 0.25)",
+            boxShadow: `0 8px 20px ${hexZuRgba(accent, 0.25)}`,
           }}
         >
           🎉

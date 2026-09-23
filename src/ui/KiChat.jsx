@@ -448,7 +448,7 @@ export default function KiChat({
           border: "none",
           padding: 0,
           cursor: "pointer",
-          boxShadow: "0 10px 26px rgba(14, 124, 102, 0.4)",
+          boxShadow: "0 10px 26px rgba(27, 33, 80, 0.4)",
           zIndex: 40,
         }}
       >
