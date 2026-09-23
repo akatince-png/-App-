@@ -623,7 +623,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[d.getDay()]}</div>
+                <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[(d.getDay() + 6) % 7]}</div>
                 <div style={{ fontSize: 14, fontWeight: 800 }}>{d.getDate()}</div>
               </button>
             );

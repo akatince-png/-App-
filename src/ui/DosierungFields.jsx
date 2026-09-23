@@ -3,6 +3,7 @@ import { Label, Pill, TextInput } from "./primitives";
 import { danger, textMuted } from "./theme";
 import { INTERVALL_TYPEN, WOCHENTAGE } from "../constants";
 import TimeWheelField from "./TimeWheelField";
+import { MENGE_EINHEITEN, mengeMitEinheit, mengeOhneEinheit } from "../utils/mengeEinheit";
 
 /**
  * Wiederverwendbare Dosierungs-Felder: Menge, Intervall (fest/individuell/
@@ -38,6 +39,16 @@ export default function DosierungFields({ value, onChange, showMenge = true, men
         <>
           <Label>Menge</Label>
           <TextInput placeholder={mengePlaceholder} value={v.menge || ""} onChange={(val) => onChange("menge", val)} />
+          {mengeOhneEinheit(v.menge) && (
+            <div style={{ marginTop: 6 }}>
+              <div style={{ fontSize: 12, color: danger, fontWeight: 600, marginBottom: 6 }}>Welche Einheit? {v.menge.trim()} … </div>
+              <div style={{ display: "flex", flexWrap: "wrap" }}>
+                {MENGE_EINHEITEN.map((e) => (
+                  <Pill key={e} label={e} selected={false} onClick={() => onChange("menge", mengeMitEinheit(v.menge, e))} />
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
 

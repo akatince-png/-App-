@@ -3,6 +3,7 @@ import { PrimaryButton } from "./primitives";
 import DosierungFields from "./DosierungFields";
 import CannabisFelder from "./CannabisFelder";
 import GrundEingabe from "./GrundEingabe";
+import { mengeOhneEinheit } from "../utils/mengeEinheit";
 import { cardBorder } from "./theme";
 
 // Geteiltes Inline-Bearbeiten-Panel für Peptid- und Medikamenten-Dosierung —
@@ -27,6 +28,7 @@ export default function DosisBearbeitenPanel({ dosierung, onSpeichern }) {
       <GrundEingabe grund={grund} onChange={setGrund} />
       <div style={{ marginTop: 10 }}>
         <PrimaryButton
+          disabled={mengeOhneEinheit(entwurf.menge)}
           onClick={() => {
             onSpeichern(entwurf, grund);
             setGrund("");

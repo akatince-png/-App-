@@ -227,6 +227,10 @@ export default function AuthenticatedApp() {
 
   useEffect(() => {
     if (view === null) return;
+    // Jede neue Ansicht beginnt oben — vorher blieb die Scroll-Position der
+    // vorigen Seite stehen (z. B. von weit unten auf Home ins Archiv), und
+    // man landete mitten in der neuen Seite ohne Überschrift.
+    window.scrollTo(0, 0);
     if (skipNaechstenPushRef.current) {
       skipNaechstenPushRef.current = false;
       return;

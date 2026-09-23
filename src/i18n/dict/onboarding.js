@@ -92,7 +92,7 @@ export const onboarding = {
     "onboarding.peptide.foto.label": "Foto des Präparats (optional) — hilft, Hersteller/Charge auseinanderzuhalten",
     "onboarding.error.peptid": "Bitte mindestens ein Peptid wählen.",
     "onboarding.error.intervall": "Bitte das Intervall für {{peptid}} vollständig ausfüllen.",
-    "onboarding.error.dosierung": "Bitte das Intervall vollständig ausfüllen.",
+    "onboarding.error.dosierung": "Bitte die Einheit der Menge (z. B. mg) und das Intervall vollständig angeben.",
     "onboarding.supplemente.menge.placeholder": "z. B. 5000 IE, 2 Kapseln",
   },
   en: {
@@ -188,7 +188,7 @@ export const onboarding = {
     "onboarding.peptide.foto.label": "Photo of the preparation (optional) — helps tell manufacturers/batches apart",
     "onboarding.error.peptid": "Please choose at least one peptide.",
     "onboarding.error.intervall": "Please complete the interval for {{peptid}}.",
-    "onboarding.error.dosierung": "Please complete the interval.",
+    "onboarding.error.dosierung": "Please add a unit to the amount (e.g. mg) and complete the interval.",
     "onboarding.supplemente.menge.placeholder": "e.g. 5000 IU, 2 capsules",
   },
   tr: {
@@ -284,7 +284,7 @@ export const onboarding = {
     "onboarding.peptide.foto.label": "Hazırlamanın fotoğrafı (isteğe bağlı) — üretici/lot ayırt etmeye yardımcı",
     "onboarding.error.peptid": "Lütfen en az bir peptid seçin.",
     "onboarding.error.intervall": "Lütfen {{peptid}} için aralığı tamamen doldurun.",
-    "onboarding.error.dosierung": "Lütfen aralığı tamamen doldurun.",
+    "onboarding.error.dosierung": "Lütfen miktarın birimini (örn. mg) ve aralığı eksiksiz girin.",
     "onboarding.supplemente.menge.placeholder": "örn. 5000 IU, 2 kapsül",
   },
 };

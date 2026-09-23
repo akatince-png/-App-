@@ -4,6 +4,7 @@ import ViewHeader from "../../ui/ViewHeader";
 import ProgressRing from "../../ui/ProgressRing";
 import { accentDark, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
+import { toLocalISODate } from "../../utils/dates";
 import { CoacheeNachrichtenPanel } from "./AdminDashboardView";
 
 // Grafische Gesamtübersicht über ALLE Coachees gleichzeitig (15.08.,
@@ -49,7 +50,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       ]);
       const vorSiebenTagen = new Date();
       vorSiebenTagen.setDate(vorSiebenTagen.getDate() - 7);
-      const vorSiebenTagenStr = vorSiebenTagen.toISOString().slice(0, 10);
+      const vorSiebenTagenStr = toLocalISODate(vorSiebenTagen);
       const byUser = {};
       for (const id of ids) byUser[id] = { wochenplan: [], letztesTraining: null, letzte7Tage: 0 };
       for (const w of wochenplan || []) {

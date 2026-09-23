@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextArea, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import DosierungFields from "../ui/DosierungFields";
+import { mengeOhneEinheit } from "../utils/mengeEinheit";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import CannabisFelder from "../ui/CannabisFelder";
 import { SignedPhoto } from "../ui/SignedPhoto";
@@ -310,7 +311,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
 
         {medikamentError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{medikamentError}</div>}
         <div style={{ marginTop: 10 }}>
-          <PrimaryButton onClick={submit} disabled={speichertGerade || !neuesMedikament.name.trim() || !intervallGueltig(neuesMedikament)}>
+          <PrimaryButton onClick={submit} disabled={speichertGerade || !neuesMedikament.name.trim() || !intervallGueltig(neuesMedikament) || mengeOhneEinheit(neuesMedikament.menge)}>
             + Zum Protokoll hinzufügen
           </PrimaryButton>
         </div>

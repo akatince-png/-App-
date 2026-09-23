@@ -6,6 +6,7 @@ import ZeitErinnerungenCard from "../../ui/ZeitErinnerungenCard";
 import WochenplanEditor from "../../ui/WochenplanEditor";
 import TimeWheelField from "../../ui/TimeWheelField";
 import DosierungFields from "../../ui/DosierungFields";
+import { mengeOhneEinheit } from "../../utils/mengeEinheit";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "../../constants";
@@ -128,6 +129,7 @@ function anwendenDosierungsFeld(prev, feld, val) {
 // Zusatzangaben (alle X Tage / Zyklus / feste Wochentage) sind erst
 // vollständig, wenn diese Angaben auch ausgefüllt sind.
 function dosierungVollstaendig(d) {
+  if (mengeOhneEinheit(d?.menge)) return false;
   const typ = d?.intervallTyp || "fixed";
   if (typ === "custom") return !!d.customDays;
   if (typ === "cycle") return !!d.onDays && !!d.offDays;
