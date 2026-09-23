@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 import { useShallowStableValue } from "../useShallowStableValue";
 import { useProfileData } from "../../data/useProfileData";
 import { useProtocolData } from "../../data/useProtocolData";
@@ -27,7 +27,28 @@ export function CoreDataProvider({ userId, children }) {
   const protocolData = useProtocolData(userId);
   const hauptprotokollData = useHauptprotokollData(userId);
   const hauptprotokollId = hauptprotokollData.aktivesHauptprotokoll?.id || null;
-  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, hauptprotokollId, profileData.belohnungPufferMin);
+  // Zusatzprotokolle (Migration 0093): solange ein Zusatzprotokoll als
+  // "Eintrags-Ziel" gewählt ist (Banner "Du fügst gerade Einträge zu … hinzu",
+  // siehe ui/ZusatzprotokollBanner.jsx), landen NEU angelegte Supplemente/
+  // Medikamente/Mahlzeiten/Gewohnheiten dort statt im Hauptprotokoll. Ist das
+  // gewählte Zusatzprotokoll nicht (mehr) aktiv, gilt automatisch wieder das
+  // Hauptprotokoll.
+  const [eintragsZielId, setEintragsZielId] = useState(null);
+  const eintragsProtokollId = hauptprotokollData.zusatzprotokolle.some((z) => z.id === eintragsZielId) ? eintragsZielId : hauptprotokollId;
+  const hormoneData = useHormoneData(userId, protocolData.startdatum, protocolData.dauer, eintragsProtokollId, profileData.belohnungPufferMin);
+
+  // Medikamente beendeter Zusatzprotokolle aus Liste und Dosisplan nehmen
+  // (Verlauf/Logs bleiben unberührt).
+  const ausgeblendet = hauptprotokollData.ausgeblendeteProtokollIds;
+  const { sichtbareHormone, sichtbarerHormonPlan } = useMemo(() => {
+    if (ausgeblendet.length === 0) return { sichtbareHormone: hormoneData.hormone, sichtbarerHormonPlan: hormoneData.hormonPlan };
+    const ids = new Set(ausgeblendet);
+    const versteckt = new Set(hormoneData.hormone.filter((n) => ids.has(hormoneData.hormonDosierung[n]?.hauptprotokollId)));
+    return {
+      sichtbareHormone: hormoneData.hormone.filter((n) => !versteckt.has(n)),
+      sichtbarerHormonPlan: hormoneData.hormonPlan.filter((d) => !versteckt.has(d.name)),
+    };
+  }, [ausgeblendet, hormoneData.hormone, hormoneData.hormonPlan, hormoneData.hormonDosierung]);
 
   const value = useShallowStableValue({
     userId,
@@ -35,7 +56,7 @@ export function CoreDataProvider({ userId, children }) {
     ...protocolData,
     // Bewusst nur diese Teilmenge, nicht `...hormoneData` (unverändert
     // übernommen aus dem früheren AppDataContext.jsx).
-    hormone: hormoneData.hormone,
+    hormone: sichtbareHormone,
     hormonDosierung: hormoneData.hormonDosierung,
     hormonHinzufuegen: hormoneData.hormonHinzufuegen,
     hormonEntfernen: hormoneData.hormonEntfernen,
@@ -49,7 +70,7 @@ export function CoreDataProvider({ userId, children }) {
     hormonFeedback: hormoneData.hormonFeedback,
     saveHormonFeedback: hormoneData.saveHormonFeedback,
     skipHormonFeedback: hormoneData.skipHormonFeedback,
-    hormonPlan: hormoneData.hormonPlan,
+    hormonPlan: sichtbarerHormonPlan,
     // Muss nach den Spreads gesetzt werden, da profileData/protocolData
     // jeweils ein eigenes `loading`-Feld mitbringen (unverändert
     // übernommene Begründung aus dem früheren AppDataContext.jsx).
@@ -59,6 +80,9 @@ export function CoreDataProvider({ userId, children }) {
     // falls künftiger Code sie direkt braucht statt sie erneut abzuleiten.
     hauptprotokollId,
     hauptprotokollData,
+    eintragsZielId: eintragsProtokollId !== hauptprotokollId ? eintragsProtokollId : null,
+    setEintragsZielId,
+    eintragsProtokollId,
   });
 
   return <CoreDataContext.Provider value={value}>{children}</CoreDataContext.Provider>;

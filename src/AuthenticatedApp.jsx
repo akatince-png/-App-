@@ -8,6 +8,7 @@ import { useAdmin } from "./context/AdminContext";
 import HomeView from "./views/HomeView";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
+import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
@@ -41,6 +42,7 @@ const GewohnheitenView = lazy(() => import("./views/GewohnheitenView"));
 const AtemuebungenView = lazy(() => import("./views/AtemuebungenView"));
 const OnboardingFlow = lazy(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazy(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
+const ZusatzprotokollErstellenView = lazy(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch", "profil", "blutzucker", "community"];
@@ -48,7 +50,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "mehr"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebungsbilder", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -115,8 +117,16 @@ export default function AuthenticatedApp() {
     userId,
     spotifyVerbindungNeuLaden,
     setSpotifyVerbindungFehler,
+    setEintragsZielId,
   } = appData;
+  const istAdminModus = proband !== null || isAdmin;
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
+  // Zusatzprotokoll als Eintrags-Ziel wählen und direkt zu den Plänen, wo
+  // Supplemente/Medikamente/Mahlzeiten/Gewohnheiten angelegt werden.
+  const zusatzEintraegeHinzufuegen = (id) => {
+    setEintragsZielId(id);
+    setView("supplemente");
+  };
   // Trägt die Trainings-ID, wenn der Tagesplan direkt ins Live-Workout
   // springen soll — wird von TrainingView nach dem Öffnen zurückgesetzt.
   const [offenesTrainingId, setOffenesTrainingId] = useState(null);
@@ -279,7 +289,15 @@ export default function AuthenticatedApp() {
   let screen;
 
   if (view === "neuesProtokollBestaetigen") {
-    screen = <NeuesProtokollBestaetigenView onBestaetigt={neuesProtokoll} onAbbrechen={() => setView("home")} />;
+    screen = (
+      <NeuesProtokollBestaetigenView
+        onBestaetigt={neuesProtokoll}
+        onParallel={() => setView("zusatzprotokoll")}
+        onAbbrechen={() => setView("home")}
+      />
+    );
+  } else if (view === "zusatzprotokoll") {
+    screen = <ZusatzprotokollErstellenView onErstellt={(z) => zusatzEintraegeHinzufuegen(z.id)} onAbbrechen={() => setView("home")} />;
   } else if (view === "form") {
     screen = !onboardingComplete ? (
       // onCancel=signOut: ohne abgeschlossenes Onboarding gibt es noch keine
@@ -339,6 +357,9 @@ export default function AuthenticatedApp() {
         onWochenuebersichtModusChange={setWochenuebersichtModus}
         wochenuebersichtMonat={wochenuebersichtMonat}
         onWochenuebersichtMonatChange={setWochenuebersichtMonat}
+        zeigeZusatzprotokolle={istAdminModus}
+        onZusatzprotokollNeu={() => setView("zusatzprotokoll")}
+        onZusatzEintraegeHinzufuegen={zusatzEintraegeHinzufuegen}
       />
     );
   } else if (ARCHIV_VIEW_IDS.includes(view)) {
@@ -451,6 +472,7 @@ export default function AuthenticatedApp() {
             Wrapper hier remountet dabei automatisch neu, das Auffangnetz
             setzt sich also von selbst zurück, ohne dass die App komplett neu
             geladen werden muss. */}
+        {view !== "form" && <ZusatzprotokollBanner />}
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
           <ErrorBoundary onReset={() => setView("home")}>
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>

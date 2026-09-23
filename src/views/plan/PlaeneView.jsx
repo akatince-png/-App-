@@ -1,6 +1,7 @@
 import React from "react";
 import { Shell, Card } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
+import { ZusatzprotokolleKarte } from "../../ui/Zusatzprotokolle";
 import { cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
 import { KATEGORIE_META } from "../../utils/dayItems";
@@ -136,6 +137,10 @@ export default function PlaeneView({
   onWochenuebersichtModusChange,
   wochenuebersichtMonat,
   onWochenuebersichtMonatChange,
+  // Zusatzprotokolle (23.09.) — Übersicht nur im Admin-/Verwalten-als-Modus.
+  zeigeZusatzprotokolle = false,
+  onZusatzprotokollNeu,
+  onZusatzEintraegeHinzufuegen,
 }) {
   const Aktiv = VIEWS[planeTab] || VIEWS.schlaf;
 
@@ -150,6 +155,8 @@ export default function PlaeneView({
           Jeder Bereich bekommt jetzt eine eigene Karte mit Rahmen/Schatten
           und mehr Luft dazwischen, damit die Trennung auch ohne die
           Überschrift zu lesen sofort sichtbar ist. */}
+
+      {zeigeZusatzprotokolle && <ZusatzprotokolleKarte onNeu={onZusatzprotokollNeu} onEintraegeHinzufuegen={onZusatzEintraegeHinzufuegen} />}
 
       {/* Routinen bewusst VOR den 9 Reitern (Nutzerinnen-Vorgabe, 29.07.:
           Priorität) — nicht nachträglich angehängt. */}

@@ -37,6 +37,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
         zielTage: r.ziel_tage ?? null,
         menge: r.menge || "",
         akutFavorit: !!r.akut_favorit,
+        hauptprotokollId: r.hauptprotokoll_id || null,
       }))
     );
     const nextErledigt = {};
@@ -69,7 +70,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
       }
       setGewohnheiten((prev) => [
         ...prev,
-        { id: data.id, name: data.name, icon: data.icon, uhrzeit: data.uhrzeit?.slice(0, 5) || "", zielTage: data.ziel_tage ?? null, menge: data.menge || "" },
+        { id: data.id, name: data.name, icon: data.icon, uhrzeit: data.uhrzeit?.slice(0, 5) || "", zielTage: data.ziel_tage ?? null, menge: data.menge || "", hauptprotokollId: data.hauptprotokoll_id || null },
       ]);
       return { ok: true, id: data.id };
     },

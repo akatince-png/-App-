@@ -8,6 +8,8 @@ import { toLocalISODate } from "../utils/dates";
 // Immer nur ein Hauptprotokoll ist "active" — ein neu angelegtes archiviert
 // automatisch das vorherige (gleiches Prinzip wie das bisherige
 // Peptid-Protokoll-Archivieren beim "Neues Protokoll"-Knopf).
+const istHaupt = (h) => (h.art || "haupt") === "haupt";
+
 export function useHauptprotokollData(userId) {
   const [hauptprotokolle, setHauptprotokolle] = useState([]);
   const [teilprotokolle, setTeilprotokolle] = useState([]);
@@ -34,7 +36,18 @@ export function useHauptprotokollData(userId) {
     };
   }, [load]);
 
-  const aktivesHauptprotokoll = useMemo(() => hauptprotokolle.find((h) => h.status === "active") || null, [hauptprotokolle]);
+  // Seit Migration 0093 gibt es neben dem einen Hauptprotokoll ("art" =
+  // "haupt", wie bisher) beliebig viele parallel laufende Zusatzprotokolle
+  // ("zusatz", z. B. Experimente). Ältere Zeilen ohne art-Spalte zählen als
+  // Hauptprotokoll.
+  const aktivesHauptprotokoll = useMemo(() => hauptprotokolle.find((h) => h.status === "active" && istHaupt(h)) || null, [hauptprotokolle]);
+  const zusatzprotokolle = useMemo(() => hauptprotokolle.filter((h) => h.status === "active" && !istHaupt(h)), [hauptprotokolle]);
+  // Einträge beendeter (nicht übernommener) Zusatzprotokolle verschwinden aus
+  // Tagesplan/Listen — siehe Filter in CoreDataContext/TrackingDataContext.
+  const ausgeblendeteProtokollIds = useMemo(
+    () => hauptprotokolle.filter((h) => !istHaupt(h) && h.status === "archived" && h.abschluss !== "uebernommen").map((h) => h.id),
+    [hauptprotokolle]
+  );
 
   const hauptprotokollErstellen = useCallback(
     async ({ name, beschreibung, startdatum }) => {
@@ -43,7 +56,7 @@ export function useHauptprotokollData(userId) {
 
       // Vorheriges aktives Hauptprotokoll archivieren, bevor das neue entsteht
       // — immer nur eines aktiv, analog zum bisherigen Peptid-Archivieren.
-      const bisherAktiv = hauptprotokolle.find((h) => h.status === "active");
+      const bisherAktiv = hauptprotokolle.find((h) => h.status === "active" && istHaupt(h));
       if (bisherAktiv) {
         await supabase.from("hauptprotokolle").update({ status: "archived", archiviert_am: new Date().toISOString() }).eq("id", bisherAktiv.id);
       }
@@ -124,10 +137,78 @@ export function useHauptprotokollData(userId) {
     return { ok: true };
   }, []);
 
+  // Parallel zum Hauptprotokoll — archiviert nichts.
+  const zusatzprotokollErstellen = useCallback(
+    async ({ name, beschreibung, startdatum, geplantesEnde }) => {
+      const trimmedName = (name || "").trim();
+      if (!trimmedName) return { ok: false, error: "Bitte einen Namen eingeben." };
+      const { data, error } = await supabase
+        .from("hauptprotokolle")
+        .insert({
+          user_id: userId,
+          name: trimmedName,
+          beschreibung: beschreibung || "",
+          startdatum: startdatum || toLocalISODate(new Date()),
+          geplantes_ende: geplantesEnde || null,
+          art: "zusatz",
+        })
+        .select()
+        .single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+      }
+      setHauptprotokolle((prev) => [data, ...prev]);
+      return { ok: true, zusatzprotokoll: data };
+    },
+    [userId]
+  );
+
+  // Zusatzprotokoll abschließen. uebernehmen = true: alle seine Einträge
+  // (Supplemente, Medikamente, Mahlzeiten, Gewohnheiten) wandern ins aktive
+  // Hauptprotokoll und laufen dort weiter; sonst verschwinden sie aus dem
+  // Tagesplan (Verlauf/Logs bleiben unangetastet).
+  const zusatzprotokollAbschliessen = useCallback(
+    async (id, { uebernehmen = false } = {}) => {
+      if (uebernehmen) {
+        const zielId = aktivesHauptprotokoll?.id;
+        if (!zielId) return { ok: false, error: "Kein aktives Hauptprotokoll zum Übernehmen." };
+        const ergebnisse = await Promise.all(
+          ["supplements", "hormones", "meals", "routines"].map((tabelle) =>
+            supabase.from(tabelle).update({ hauptprotokoll_id: zielId }).eq("user_id", userId).eq("hauptprotokoll_id", id)
+          )
+        );
+        const fehler = ergebnisse.find((r) => r.error)?.error;
+        if (fehler) {
+          console.error(fehler);
+          return { ok: false, error: `Übernehmen fehlgeschlagen: ${fehler.message}` };
+        }
+      }
+      const abschluss = uebernehmen ? "uebernommen" : "beendet";
+      const archiviertAm = new Date().toISOString();
+      const { error } = await supabase
+        .from("hauptprotokolle")
+        .update({ status: "archived", archiviert_am: archiviertAm, abschluss })
+        .eq("id", id)
+        .eq("art", "zusatz");
+      if (error) {
+        console.error(error);
+        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+      }
+      setHauptprotokolle((prev) => prev.map((h) => (h.id === id ? { ...h, status: "archived", archiviert_am: archiviertAm, abschluss } : h)));
+      return { ok: true };
+    },
+    [userId, aktivesHauptprotokoll]
+  );
+
   return {
     hauptprotokolle,
     teilprotokolle,
     aktivesHauptprotokoll,
+    zusatzprotokolle,
+    ausgeblendeteProtokollIds,
+    zusatzprotokollErstellen,
+    zusatzprotokollAbschliessen,
     hauptprotokollErstellen,
     teilprotokollSpeichern,
     hauptprotokollLoeschen,

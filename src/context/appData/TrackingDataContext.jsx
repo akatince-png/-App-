@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { useShallowStableValue } from "../useShallowStableValue";
 import { useCoreData } from "./CoreDataContext";
 import { useSupplementData } from "../../data/useSupplementData";
@@ -30,12 +30,26 @@ const TrackingDataContext = createContext(null);
 // buchstäblich allem anderen in einem einzigen ~150-Felder-Objekt
 // neu bewertet zu werden.
 export function TrackingDataProvider({ children }) {
-  const { userId, hauptprotokollId, belohnungPufferMin } = useCoreData();
+  const { userId, eintragsProtokollId, belohnungPufferMin, hauptprotokollData } = useCoreData();
 
-  const supplementData = useSupplementData(userId, hauptprotokollId, belohnungPufferMin);
+  // Neue Einträge landen im gerade gewählten Eintrags-Ziel (Haupt- oder
+  // Zusatzprotokoll, siehe CoreDataContext).
+  const supplementData = useSupplementData(userId, eintragsProtokollId, belohnungPufferMin);
   const drinkData = useDrinkRecipes(userId);
-  const mealData = useMealData(userId, hauptprotokollId, belohnungPufferMin);
-  const gewohnheitenData = useGewohnheitenData(userId, hauptprotokollId);
+  const mealData = useMealData(userId, eintragsProtokollId, belohnungPufferMin);
+  const gewohnheitenData = useGewohnheitenData(userId, eintragsProtokollId);
+
+  // Einträge beendeter Zusatzprotokolle ausblenden (Verlauf bleibt).
+  const ausgeblendet = hauptprotokollData.ausgeblendeteProtokollIds;
+  const sichtbar = useMemo(() => {
+    const ids = new Set(ausgeblendet);
+    const filter = (liste) => (ids.size === 0 ? liste : liste.filter((e) => !ids.has(e.hauptprotokollId)));
+    return {
+      supplemente: filter(supplementData.supplemente),
+      mahlzeiten: filter(mealData.mahlzeiten),
+      gewohnheiten: filter(gewohnheitenData.gewohnheiten),
+    };
+  }, [ausgeblendet, supplementData.supplemente, mealData.mahlzeiten, gewohnheitenData.gewohnheiten]);
   const atemuebungenData = useAtemuebungenData(userId);
   const hydrationData = useHydrationData(userId);
   const tageslichtData = useTageslichtData(userId);
@@ -62,6 +76,9 @@ export function TrackingDataProvider({ children }) {
     ...checkinData,
     ...sleepData,
     ...biomarkerData,
+    supplemente: sichtbar.supplemente,
+    mahlzeiten: sichtbar.mahlzeiten,
+    gewohnheiten: sichtbar.gewohnheiten,
   });
 
   return <TrackingDataContext.Provider value={value}>{children}</TrackingDataContext.Provider>;

@@ -42,6 +42,7 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
           tageszeiten: m.tageszeiten || [],
           hinweis: m.hinweis || "",
           fotoPath: m.foto_path || null,
+          hauptprotokollId: m.hauptprotokoll_id || null,
           zutaten: (ingredients || [])
             .filter((i) => i.meal_id === m.id)
             .map((i) => ({ id: i.id, name: i.name, menge: i.menge || "", mengeGramm: i.menge_gramm ?? "", kcalPro100g: i.kcal_pro_100g ?? "" })),
@@ -110,6 +111,7 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
           tageszeiten: meal.tageszeiten,
           hinweis: meal.hinweis,
           fotoPath: meal.foto_path || null,
+          hauptprotokollId: meal.hauptprotokoll_id || null,
           zutaten: insertedZutaten.map((z) => ({ id: z.id, name: z.name, menge: z.menge, mengeGramm: z.menge_gramm ?? "", kcalPro100g: z.kcal_pro_100g ?? "" })),
         },
       ]);

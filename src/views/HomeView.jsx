@@ -12,6 +12,8 @@ import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, shadow, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META } from "../utils/dayItems";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
+import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
+import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
@@ -302,6 +304,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   );
 
   useTagGeschafftFeier(heuteItems);
+  const zusatzEtikett = useZusatzEtikett();
 
   // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
   // Kategorie heißt intern "hormon" (siehe KATEGORIE_META, label "Medikament"),
@@ -856,6 +859,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: istErste ? 16 : 14, fontWeight: 700 }}>
                             {item.name} {item.uhrzeit && <span style={{ fontWeight: 600, color: textMuted, fontSize: istErste ? 13 : 12 }}>· {tLabel(item.uhrzeit)}</span>}
+                            <ZusatzEtikett name={zusatzEtikett(item)} />
                           </div>
                           {item.detail && <div style={{ fontSize: istErste ? 12.5 : 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                         </div>

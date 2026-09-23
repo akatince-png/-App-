@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import SchnellFeedback from "../ui/SchnellFeedback";
+import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
+import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
@@ -101,6 +103,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   // itemsForDate (useCallback) soll nicht bei jedem Render neu entstehen —
   // über die Ref ruft es trotzdem immer die aktuelle openFeedback-Version
   // (mit frischen skip*Feedback-Closures) auf.
+  const zusatzEtikett = useZusatzEtikett();
   const openFeedbackRef = useRef(openFeedback);
   openFeedbackRef.current = openFeedback;
   const feedbackSchliessen = () => {
@@ -362,7 +365,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                           )}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 14.5, fontWeight: 700, color: erledigt ? "#fff" : undefined }}>{item.name}</div>
+                          <div style={{ fontSize: 14.5, fontWeight: 700, color: erledigt ? "#fff" : undefined }}>
+                            {item.name}
+                            <ZusatzEtikett name={zusatzEtikett(item)} />
+                          </div>
                           <div style={{ fontSize: 12, marginTop: 1, color: erledigt ? "rgba(255, 255, 255, 0.85)" : textMuted }}>
                             {item.uhrzeit ? `${item.uhrzeit} · ` : ""}
                             {k.label}

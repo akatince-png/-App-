@@ -24,7 +24,7 @@ function wochenSeit(datumStr) {
 // Zeigt bewusst nur Kennzahlen, die ohne zusätzliche Datenbankabfragen
 // schon vorliegen (aktivesHauptprotokoll, teilprotokolle) — keine neue
 // Statistik-Funktion nur für diesen einen Screen.
-export default function NeuesProtokollBestaetigenView({ onBestaetigt, onAbbrechen }) {
+export default function NeuesProtokollBestaetigenView({ onBestaetigt, onParallel, onAbbrechen }) {
   const { aktivesHauptprotokoll, teilprotokolle } = useAppData();
   const [laedt, setLaedt] = useState(false);
   const automatischWeiterRef = useRef(false);
@@ -55,9 +55,29 @@ export default function NeuesProtokollBestaetigenView({ onBestaetigt, onAbbreche
       <div style={{ marginBottom: 24, paddingTop: 20 }}>
         <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Neues Protokoll beginnen?</div>
         <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.5 }}>
-          Dein aktuelles Protokoll wird dabei archiviert. Du kannst es danach jederzeit unter Archiv → Protokolle
-          nachlesen, aber nicht mehr weiterführen.
+          Du kannst ein zweites Protokoll parallel laufen lassen — oder das aktuelle abschließen und neu beginnen.
         </div>
+      </div>
+
+      {/* Paralleles Zusatzprotokoll (Nutzerinnen-Wunsch 23.09.): bisher gab
+          es hier nur "archivieren und neu beginnen". Bewusst als erste,
+          hervorgehobene Option — sie ist die folgenlose. */}
+      {onParallel && (
+        <Card style={{ marginBottom: 14, border: "1px solid #6D4FC2" }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>🧪 Parallel starten</div>
+          <div style={{ fontSize: 12.5, color: textMuted, lineHeight: 1.5, marginBottom: 12 }}>
+            Ein Zusatzprotokoll (z. B. ein Experiment) läuft neben „{aktivesHauptprotokoll.name}" — dort ändert sich nichts.
+          </div>
+          <PrimaryButton onClick={onParallel} disabled={laedt}>
+            Zusatzprotokoll parallel starten
+          </PrimaryButton>
+        </Card>
+      )}
+
+      <div style={{ fontSize: 13, fontWeight: 800, margin: "4px 0 8px" }}>Oder: Hauptprotokoll ersetzen</div>
+      <div style={{ fontSize: 12.5, color: textMuted, lineHeight: 1.5, marginBottom: 10 }}>
+        Dein aktuelles Hauptprotokoll wird dabei archiviert. Du kannst es danach jederzeit unter Archiv → Protokolle nachlesen, aber nicht
+        mehr weiterführen.
       </div>
 
       <Card style={{ marginBottom: 20 }}>
@@ -74,7 +94,7 @@ export default function NeuesProtokollBestaetigenView({ onBestaetigt, onAbbreche
       </Card>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <PrimaryButton onClick={bestaetigen} disabled={laedt}>
+        <PrimaryButton onClick={bestaetigen} disabled={laedt} variant={onParallel ? "ghost" : "accent"}>
           {laedt ? "Einen Moment…" : "Ja, archivieren und neu beginnen"}
         </PrimaryButton>
         <button

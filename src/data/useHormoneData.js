@@ -9,6 +9,7 @@ import { feuereBelohnung } from "../utils/belohnungBus";
 function rowToHormonDosierung(row) {
   return {
     id: row.id,
+    hauptprotokollId: row.hauptprotokoll_id || null,
     menge: row.menge || "",
     kategorie: row.kategorie || "Hormone",
     einnahmeart: row.einnahmeart || "Injektion",
@@ -149,6 +150,7 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
         ...prev,
         [name]: {
           id: data.id,
+          hauptprotokollId: data.hauptprotokoll_id || null,
           menge: neuesHormon.menge,
           kategorie: neuesHormon.kategorie || "Hormone",
           einnahmeart: neuesHormon.einnahmeart || "Injektion",

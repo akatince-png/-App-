@@ -25,6 +25,9 @@ function rowToSupplement(r) {
     uhrzeiten: r.uhrzeiten || [],
     eigenerStart: r.eigener_start || "",
     fotoPath: r.foto_path || null,
+    // Zugehöriges (Haupt- oder Zusatz-)Protokoll — für das 🧪-Etikett und
+    // das Ausblenden beendeter Zusatzprotokolle (siehe useZusatzprotokolle).
+    hauptprotokollId: r.hauptprotokoll_id || null,
   };
 }
 
