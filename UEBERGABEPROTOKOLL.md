@@ -126,6 +126,81 @@ längst gibt — jetzt diese Kurzübersicht:
 
 ---
 
+## ✅ Update 23.09.2026 (Teil 121) — Direkter Supabase-Zugriff, UX-Review als Test-User, parallele Zusatzprotokolle
+
+**Wichtigste Änderung für jede künftige Sitzung: Es gibt jetzt direkten
+Supabase-Zugriff.** Die Nutzerin hat den Supabase-Connector auf claude.ai
+verbunden und den Netzwerkzugang der Cloud-Umgebung auf „Full" gestellt.
+Damit kann eine Sitzung (sofern der Connector in ihr aktiv ist) selbst
+SQL ausführen, Migrationen einspielen (`apply_migration`), Tabellen/
+Policies prüfen und die Security-Advisors abfragen — und die App lokal mit
+`npm run dev` gegen das echte Projekt starten und im Browser durchklicken
+(Chromium braucht dafür `--ignore-certificate-errors-spki-list=<SPKI des
+Proxy-CA>`, siehe `/root/.ccr/README.md`). Der alte Hinweis „keine
+Supabase-Verbindung, Nutzerin muss alles selbst deployen" gilt nur noch,
+wenn der Connector in einer Sitzung fehlt. Produktive DB-Änderungen und
+Pushes nach `main` trotzdem vorher mit der Nutzerin abstimmen.
+
+**Achtung Verwechslung (passiert in dieser Sitzung):** Der automatisch
+angelegte Arbeitszweig einer neuen Sitzung kann auf einem uralten Commit
+basieren (hier 486 Commits hinter `main`). Vor jeder Arbeit `git fetch
+origin main` und prüfen, ob der Zweig auf dem aktuellen `main` steht —
+`main` ist IMMER die maßgebliche, live laufende Version.
+
+**Datenbank-Abgleich (alle Migrationen gegen die echte DB):**
+- `0063_trainingsplaene_ordner_und_ziel.sql` war entgegen der Doku NIE
+  eingespielt (`training_programme` fehlte → 404 bei jedem App-Start) —
+  jetzt eingespielt.
+- `0091_admin_zugriff_fehlende_tabellen.sql` (eingespielt): 17 Tabellen
+  hatten keine „admin voller Zugriff"-Policy → im „Verwalten als"-Modus
+  konnten Routinen, Bildschirmzeit, Workflows, Atemübungen, Tagesplan-
+  Ausnahmen, Trainingsordner u. a. für Coachees nicht gespeichert werden.
+  Von der Nutzerin ausdrücklich für alle 17 freigegeben (inkl. Akutmodus-
+  Log, Denkpause, Fragebögen, Lexikon).
+- `0092_rangliste_team_filter_und_anon_sperre.sql` (eingespielt):
+  `0085` hatte den Team-Filter von `quest_rangliste()` überschrieben —
+  jede Person, sogar ohne Login, sah Vornamen + Quest-Zahlen aller
+  Coachees. Team-Filter + Ausblenden kombiniert, `anon` darf
+  `quest_rangliste`/`admin_liste_probanden`/`gleiches_team` nicht mehr
+  aufrufen.
+- `0093_zusatzprotokolle.sql` (eingespielt): siehe unten.
+- Offen (nur Warnungen der Supabase-Advisors, nicht behoben):
+  „Leaked Password Protection" im Auth-Dashboard aktivieren;
+  `set_updated_at` ohne festen `search_path`.
+
+**App-Änderungen (alle live auf `main`):**
+- Vertrauen: Datenschutz-Texte auf „Mehr" korrigiert (kein „Ende-zu-Ende"/
+  „DSGVO konform" mehr, sondern verschlüsselte Übertragung/Speicherung +
+  Server in Frankfurt); Dosierungen ohne Einheit („250") lassen sich nicht
+  mehr speichern (`utils/mengeEinheit.js`, Einheiten-Chips in
+  `DosierungFields.jsx`); Wochentags-Leiste im Tagesplan war um einen Tag
+  verschoben; jede neue Ansicht startet oben (Scroll-Reset in
+  `AuthenticatedApp.jsx`).
+- Ein-Tipp-Abhaken: „Bestätigen" im Tagesplan hakt sofort ab, danach nur
+  optionale Ein-Tipp-Rückmeldung (`ui/SchnellFeedback.jsx`, Details
+  weiterhin erreichbar, keine vorausgewählten Werte mehr). Bug: dieser Weg
+  löste nie das Belohnungsfenster aus (jetzt in `skip*Feedback`).
+- Belohnungs-Moment: Konfetti + Vibration im `Belohnungsfenster.jsx`,
+  große Feier „Tagesplan geschafft!" (`ui/useTagGeschafftFeier.js`).
+- Home: „Jetzt dran"-Karte (oberster Punkt in Bereichsfarbe mit
+  „✓ Erledigt") und runde Haken für alle direkt abhakbaren Punkte unter
+  „Als Nächstes", auch im Notfallmodus.
+- **Parallele Zusatzprotokolle** (Nutzerinnen-Wunsch): `hauptprotokolle.art`
+  = `haupt` (wie bisher, eines aktiv) | `zusatz` (beliebig viele parallel).
+  „Neues Protokoll" fragt „parallel starten" vs. „Hauptprotokoll ersetzen".
+  Während ein Zusatzprotokoll das Eintrags-Ziel ist (violettes Band oben,
+  `CoreDataContext.eintragsZielId`), landen neue Supplemente/Medikamente/
+  Mahlzeiten/Gewohnheiten dort. Abschließen: „beendet" (Einträge
+  verschwinden aus dem Tagesplan, Logs bleiben) oder „übernommen" (Einträge
+  wandern ins Hauptprotokoll). Übersicht in „Alle Pläne" (nur Admin-/
+  Verwalten-als-Modus), 🧪-Etikett im Tagesplan/auf Home.
+
+**Test-User:** `ux-test-claude@example.com` wurde für den Durchlauf angelegt
+und danach wieder gelöscht (siehe Chat) — falls noch vorhanden, gefahrlos
+löschbar.
+
+---
+
 ## 🔴 Update 16.09.2026 (Teil 120) — Migration 0087 (Denkpause) nachträglich idempotent gemacht
 
 **Nutzerinnen-Report:** beim Ausführen von `0087_denkpause.sql` meldete

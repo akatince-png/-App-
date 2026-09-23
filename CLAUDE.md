@@ -27,10 +27,14 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   "Acker"/"Ecker" = "Aka" — der App-interne KI-Coach-Name). Bei unklaren
   Nachrichten lieber kurz nachfragen als auf eine Vermutung eine größere
   Änderung bauen.
-- **Diese Umgebung hat keinen Supabase-/Vercel-Zugriff.** Änderungen an
-  Edge Functions oder Migrationen landen im Code, müssen aber von der
-  Nutzerin selbst über das Supabase-Dashboard deployt werden — Code
-  bereitstellen und Schritt-für-Schritt anleiten.
+- **Supabase-Zugriff (seit 23.09.2026):** Ist der Supabase-Connector in
+  der Sitzung aktiv (`mcp__Supabase__*`-Tools), kann direkt gegen das
+  echte Projekt geprüft und migriert werden — Details in
+  `UEBERGABEPROTOKOLL.md`, Teil 121. Produktive DB-Änderungen vorher mit
+  der Nutzerin abstimmen. Ohne Connector gilt weiter: Migrationen/Edge
+  Functions landen im Code, die Nutzerin spielt sie selbst ein.
+- **Vor jeder Arbeit `git fetch origin main`:** Der Sitzungs-Arbeitszweig
+  kann auf einem uralten Stand basieren — `main` ist immer maßgeblich.
 - **Git-Workflow:** auf dem Feature-Branch arbeiten (siehe
   `UEBERGABEPROTOKOLL.md`, Abschnitt 8, für den genauen Namen), nicht
   direkt auf `main`, danach fetch + fast-forward-merge + push nach
