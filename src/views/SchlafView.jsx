@@ -7,13 +7,9 @@ import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
 import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
 import { toLocalISODate } from "../utils/dates";
-import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
 // ist Indigo, passend zu den bunten Home-Mini-Widgets.
@@ -45,25 +41,6 @@ export default function SchlafView({ onHome, embedded = false }) {
     }
     setNeuerSchlafEintrag(LEERER_EINTRAG);
     setDetailsOffen(false);
-  };
-
-  // Übergabe an <KiChat onUebernehmen>: legt den im Gespräch besprochenen
-  // Schlaf-Eintrag über denselben Weg an wie das manuelle Formular oben.
-  const handleSchlafUebernehmen = async (verlauf) => {
-    const s = await AIService.schlafAusChat({ verlauf, coachName: getCoachName() });
-    const eintrag = {
-      ...LEERER_EINTRAG,
-      stunden: String(s.stunden),
-      schlafqualitaet: s.schlafqualitaet || "",
-      einschlafzeit: s.einschlafzeit || "",
-      durchgeschlafen: s.durchgeschlafen ?? null,
-      erholt: s.erholt ?? null,
-      traeume: s.traeume || "",
-      bemerkungen: s.bemerkungen || "",
-    };
-    const result = await schlafHinzufuegen(eintrag);
-    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    return eintrag;
   };
 
   const content = (
@@ -146,22 +123,6 @@ export default function SchlafView({ onHome, embedded = false }) {
           <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
         </div>
       </Card>
-
-      <KiHinweis>
-        Sag z. B. "ich hab 7 Stunden geschlafen, gut geschlafen, aber schlecht erholt aufgewacht" — der Assistent trägt den Eintrag für dich ein.
-      </KiHinweis>
-      <KiChat
-        bereich="schlaf"
-        systemPrompt="Du hilfst dabei, einen Schlaf-Eintrag für die letzte Nacht zu erfassen. Frag nach Schlafdauer, Schlafqualität, ob durchgeschlafen und erholt aufgewacht wurde, bevor ihr fertig seid — Träume und Bemerkungen sind optional. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Wie hast du geschlafen?`}
-        onUebernehmen={handleSchlafUebernehmen}
-        uebernehmenLabel="Eintragen"
-        renderErgebnis={(r) => (
-          <div style={{ padding: 12, borderRadius: 12, background: "#EAF3F8", fontSize: 12.5, lineHeight: 1.6 }}>
-            Schlaf-Eintrag mit {r.stunden} h gespeichert{r.schlafqualitaet ? ` (${r.schlafqualitaet})` : ""}.
-          </div>
-        )}
-      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>
       <Card style={{ marginBottom: 14 }}>

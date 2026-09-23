@@ -183,10 +183,11 @@ export const AIService = {
         "gewohnheit (neue Gewohnheit/Routine), supplement (neues Supplement),",
         "medikament (neues Medikament/Hormon), hydration (Trinkziel/-erinnerungen),",
         "tageslicht (Tageslicht-/Freiluft-Ziel), training (Trainingsplan), ernaehrung (Rezepte/Mahlzeiten),",
-        "schlaf (Schlaf-Eintrag für die letzte Nacht), workflow (neues Arbeits-/Pause-Intervall-Preset).",
+        "schlaf (Schlaf-Eintrag für die letzte Nacht), workflow (neues Arbeits-/Pause-Intervall-Preset),",
+        "morgenroutine bzw. abendroutine (feste Schritt-Kette für die Morgen- bzw. Abendroutine).",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));

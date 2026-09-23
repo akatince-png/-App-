@@ -9,7 +9,7 @@ import HomeView from "./views/HomeView";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
 import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
-import GlobalerAka from "./ui/GlobalerAka";
+import Aka from "./ui/Aka";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
@@ -51,10 +51,6 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
 const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "mehr", "zusatzprotokoll"];
-// Seiten, die bereits einen eigenen, fachlich zugeschnittenen Aka (KiChat)
-// mitbringen — alle anderen bekommen den universellen GlobalerAka (siehe
-// ui/GlobalerAka.jsx), damit Aka auf jeder Seite erreichbar ist.
-const VIEWS_MIT_EIGENEM_AKA = new Set(["home", "tagesplan", "routinen", "form", ...PLAENE_VIEW_IDS.filter((id) => id !== "bildschirmzeit")]);
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -477,7 +473,9 @@ export default function AuthenticatedApp() {
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
           <ErrorBoundary onReset={() => setView("home")}>
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
-            {!VIEWS_MIT_EIGENEM_AKA.has(view) && <GlobalerAka />}
+            {/* Aka — ein Assistent, zentral für jede Seite (ui/Aka.jsx). Das
+                Onboarding ("form") hat seine eigene geführte KI-Einrichtung. */}
+            {view !== "form" && <Aka view={view} />}
           </ErrorBoundary>
         </div>
       </div>

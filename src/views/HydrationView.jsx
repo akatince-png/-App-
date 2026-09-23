@@ -8,13 +8,9 @@ import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { DURSTGEFUEHL_OPTIONEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import NumberWheelField from "../ui/NumberWheelField";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
-import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Hydration
 // ist Blau, passend zu den bunten Home-Mini-Widgets.
@@ -48,8 +44,6 @@ export default function HydrationView({ onHome, embedded = false }) {
     hydrationZielZuruecksetzen,
     hydrationCheckinSpeichern,
     aenderungVermerken,
-    erinnerungen,
-    setErinnerung,
   } = useAppData();
   const {
     zielEntwurf,
@@ -89,25 +83,6 @@ export default function HydrationView({ onHome, embedded = false }) {
     if (!result?.ok) setHydrationError(result?.error || "Speichern fehlgeschlagen. Bitte nochmal versuchen.");
   };
 
-  // Übergabe an <KiChat onUebernehmen>: setzt ein evtl. besprochenes neues
-  // Tagesziel und hängt neue Erinnerungszeiten an bestehende an (nichts wird
-  // dabei entfernt) — über denselben Weg wie ZeitErinnerungenCard.
-  const handleHydrationUebernehmen = async (verlauf) => {
-    const { zielMl, zeiten } = await AIService.hydrationAusChat({ verlauf, coachName: getCoachName() });
-    if (zielMl) {
-      const result = await hydrationZielSetzen(zielMl);
-      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    }
-    if (zeiten.length > 0) {
-      const bestehende = Array.isArray(erinnerungen?.hydration?.zeiten) ? erinnerungen.hydration.zeiten : [];
-      const neue = zeiten.map((z) => ({ zeit: z.zeit, menge: z.menge, startDatum: "" }));
-      const kombiniert = [...bestehende, ...neue].sort((a, b) => a.zeit.localeCompare(b.zeit));
-      const result = await setErinnerung("hydration", { aktiv: true, zeiten: kombiniert });
-      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    }
-    return { zielMl, zeiten };
-  };
-
   const content = (
     <>
       {!embedded && (
@@ -127,23 +102,6 @@ export default function HydrationView({ onHome, embedded = false }) {
       {hydrationError && (
         <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{hydrationError}</div>
       )}
-
-      <KiHinweis>
-        Sag z. B. "ich trinke aktuell zu wenig, erinnere mich morgens, mittags und abends an je 300ml" — der Assistent schlägt Ziel und Zeiten vor.
-      </KiHinweis>
-      <KiChat
-        bereich="hydration"
-        systemPrompt="Du hilfst dabei, ein tägliches Trinkziel und passende Erinnerungszeiten für eine bestehende App einzurichten. Frag nach, wie viel die Person aktuell trinkt und wann sie erinnert werden möchte, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Wie viel trinkst du aktuell am Tag, und wann möchtest du an Wasser erinnert werden?`}
-        onUebernehmen={handleHydrationUebernehmen}
-        uebernehmenLabel="Übernehmen"
-        renderErgebnis={(r) => (
-          <div style={{ padding: 12, borderRadius: 12, background: "#EAF3F8", fontSize: 12.5, lineHeight: 1.6 }}>
-            {r.zielMl ? `Tagesziel auf ${r.zielMl} ml gesetzt. ` : ""}
-            {r.zeiten.length > 0 ? `${r.zeiten.length} neue Erinnerungszeit${r.zeiten.length === 1 ? "" : "en"} hinzugefügt.` : ""}
-          </div>
-        )}
-      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Schnell hinzufügen</div>
       <Card akzent style={{ marginBottom: 14 }}>

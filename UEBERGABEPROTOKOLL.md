@@ -219,6 +219,20 @@ löschbar.
 
 ---
 
+### Nachtrag Teil 121 — Aka: ein Assistent für die ganze App
+
+- Wunsch der Nutzerin: Aka auf allen Seiten „über den gleichen Code, die gleiche Systematik“, als wäre es von Anfang an so gebaut worden.
+- **Vorher:** 12 Bereichsseiten hatten je einen eigenen `<KiChat>` mit kopierter Speicher-Logik (…Uebernehmen-Handler je Seite). Home, Tagesplan und Wochenübersicht nutzten den universellen Coach, alle übrigen Seiten den `GlobalerAka`.
+- **Jetzt:** `ui/Aka.jsx` wird genau einmal zentral in `AuthenticatedApp.jsx` gemountet, für jede Ansicht außer dem Onboarding (`form`, das hat seine eigene geführte KI).
+  - Die Aktionen laufen überall über `useUniversellerCoach()`, jetzt auch mit Morgen-/Abendroutine-Schritten (`bereichErkennen` kennt `morgenroutine`/`abendroutine`).
+  - Die Bestätigung nach „Übernehmen“ zeigt `ui/AkaErgebnis.jsx`.
+- Die Seite bestimmt nur den Fokus (`AKA_SEITEN`): Fokus-Satz im Prompt (die Inhalte der früheren Bereichs-Prompts), Begrüßung und Verlaufs-Schlüssel `bereich`.
+  - Die Schlüssel sind dieselben wie früher, damit Verläufe und bereichsbezogene Admin-Hinweise erhalten bleiben.
+  - Seiten ohne eigenen Fokus teilen sich `home`.
+  - Ausnahme: Der alte separate Workflow-Chatverlauf (`workflow`) wird nicht mehr angezeigt; auf der Gewohnheiten-Seite läuft Aka unter `gewohnheiten`.
+- Entfernt: `GlobalerAka.jsx`, `KiHinweis.jsx`, alle seitenbezogenen KiChat-Blöcke, Handler und Hinweistexte (~500 Zeilen). Die manuellen Formulare sind unverändert (Leitprinzip).
+- e2e: `e2e/aka.spec.js` prüft genau einen Aka-Knopf auf jeder Seite und keinen für Coachees.
+
 ### Nachtrag Teil 121 — Belohnungsfenster bleibt stehen
 
 - Wunsch der Nutzerin: Das Belohnungsfenster war zu kurz offen, der Belohnungseffekt ging verloren; sie möchte es selbst wegdrücken.

@@ -5,9 +5,6 @@ import GrundEingabe from "../ui/GrundEingabe";
 import TimeWheelField from "../ui/TimeWheelField";
 import { cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { toLocalISODate, verspaetungText } from "../utils/dates";
 import RoutineAblauf from "../ui/RoutineAblauf";
@@ -21,7 +18,7 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
-const { text: accentDark, bg: accentSoft } = KATEGORIE_META.gewohnheit;
+const { text: accentDark } = KATEGORIE_META.gewohnheit;
 
 const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭"];
 
@@ -161,9 +158,6 @@ export default function GewohnheitenView({ onHome }) {
     supplemente,
     hormone,
     trainingWochenplan,
-    workflowPresetHinzufuegen,
-    workflowPresetAendern,
-    workflowPlanHinzufuegen,
     quests,
     questFortschrittSpeichern,
     spotifyAnlaesse,
@@ -209,61 +203,6 @@ export default function GewohnheitenView({ onHome }) {
       detail: timeDetail,
     });
     setNeu(LEERE_GEWOHNHEIT);
-  };
-
-  // Übergabe an <KiChat onUebernehmen>: lässt die KI aus dem Gespräch die
-  // fertige Gewohnheit extrahieren und legt sie über denselben Weg an wie
-  // das manuelle Formular unten.
-  const handleGewohnheitUebernehmen = async (verlauf) => {
-    const g = await AIService.gewohnheitAusChat({ verlauf, coachName: getCoachName() });
-    const result = await gewohnheitHinzufuegen({
-      name: g.name,
-      icon: g.icon || "🌱",
-      menge: g.menge || "",
-      uhrzeit: g.uhrzeit || "",
-      urzeitVon: g.urzeitVon || "",
-      urzeitBis: g.urzeitBis || "",
-      zielTage: g.zielTage ?? null,
-    });
-    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    aenderungVermerken({
-      kategorie: "gewohnheit",
-      itemName: g.name,
-      aktion: "hinzugefügt",
-      detail: g.uhrzeit ? `Uhrzeit: ${g.uhrzeit}` : g.urzeitVon ? `Zeitfenster: ${g.urzeitVon}–${g.urzeitBis}` : "",
-    });
-    return g;
-  };
-
-  // Übergabe an <KiChat onUebernehmen> fürs Workflow-Preset (16.08.,
-  // Nutzerin-Vorgabe: "wenn ich beschließe, einen Workflow... zu
-  // übernehmen, soll die KI den Eintrag machen") — legt das Preset über
-  // useWorkflowData an (Standardwerte 25/5/100 wie im manuellen Formular)
-  // und ordnet bei Bedarf gleich noch Wochentag(e)/Uhrzeit zu.
-  const handleWorkflowUebernehmen = async (verlauf) => {
-    const w = await AIService.workflowAusChat({ verlauf, coachName: getCoachName() });
-    const presetResult = await workflowPresetHinzufuegen(w.name);
-    if (!presetResult?.ok) throw new Error(presetResult?.error || "Speichern fehlgeschlagen.");
-    const arbeitMin = w.arbeitMin || 25;
-    const pauseMin = w.pauseMin || 5;
-    const gesamtMin = w.gesamtMin || 100;
-    await workflowPresetAendern(presetResult.preset.id, { arbeitMin: String(arbeitMin), pauseMin: String(pauseMin), gesamtMin: String(gesamtMin) });
-    if (w.uhrzeit || w.wochentage?.length) {
-      await workflowPlanHinzufuegen({
-        presetId: presetResult.preset.id,
-        wochentage: w.wochentage || [],
-        uhrzeit: w.uhrzeit || "",
-        gueltigVon: w.gueltigVon || "",
-        gueltigBis: w.gueltigBis || "",
-      });
-    }
-    aenderungVermerken({
-      kategorie: "workflow",
-      itemName: w.name,
-      aktion: "hinzugefügt",
-      detail: `${arbeitMin} Min. Arbeit / ${pauseMin} Min. Pause${w.uhrzeit ? ` · ${w.uhrzeit} Uhr` : ""}`,
-    });
-    return { ...w, arbeitMin, pauseMin, gesamtMin };
   };
 
   const handleEntfernen = (g) => {
@@ -407,23 +346,6 @@ export default function GewohnheitenView({ onHome }) {
         </Card>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <KiChat
-          bereich="workflow"
-          systemPrompt="Du hilfst dabei, ein neues Workflow-Preset (Arbeits-/Pause-Intervalltimer, Pomodoro-artig) für eine bestehende App einzurichten. Frag nach, was noch fehlt (Name, Arbeitsintervall in Minuten, Pausenintervall in Minuten, Gesamtdauer der Session, optional feste Wochentage/Uhrzeit für einen Zeitplan), bevor ihr fertig seid — ein fester Zeitplan ist optional, ohne ihn erscheint das Preset einfach ohne feste Zuordnung. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-          einleitung={`Hi, ich bin ${getCoachName()}! Welchen Workflow möchtest du dir einrichten?`}
-          onUebernehmen={handleWorkflowUebernehmen}
-          uebernehmenLabel="Workflow anlegen"
-          renderErgebnis={(w) => (
-            <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-              "{w.name}" wurde angelegt · {w.arbeitMin} Min. Arbeit / {w.pauseMin} Min. Pause
-              {w.uhrzeit ? ` · ${w.uhrzeit} Uhr` : ""}
-              {w.wochentage?.length ? ` · ${w.wochentage.join(", ")}` : ""}
-            </div>
-          )}
-        />
-      </div>
-
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🔔 Erinnerungen</div>
       <Card style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
         <KategorieErinnerung kategorie="morgenroutine" label="🌅 Morgenroutine" />
@@ -431,22 +353,6 @@ export default function GewohnheitenView({ onHome }) {
         <KategorieErinnerung kategorie="workflow" label="🔁 Workflow" mitTagen />
         <KategorieErinnerung kategorie="gewohnheiten" label="🌱 Gewohnheiten (alle, siehe unten)" />
       </Card>
-
-      <div style={{ marginBottom: 16 }}>
-        <KiChat
-          bereich="gewohnheiten"
-          systemPrompt="Du hilfst dabei, eine neue Gewohnheit/Routine für eine bestehende App einzurichten. Frag nach, was noch fehlt (z. B. Uhrzeit oder Zeitfenster, Umfang/Menge, ob es ein Zieltage-Ende geben soll oder offen fortlaufend sein soll), bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-          einleitung={`Hi, ich bin ${getCoachName()}! Welche Gewohnheit möchtest du dir aufbauen?`}
-          onUebernehmen={handleGewohnheitUebernehmen}
-          uebernehmenLabel="Gewohnheit anlegen"
-          renderErgebnis={(g) => (
-            <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-              "{g.name}" wurde angelegt{g.uhrzeit ? ` · ${g.uhrzeit} Uhr` : g.urzeitVon ? ` · ${g.urzeitVon}–${g.urzeitBis} Uhr` : ""}
-              {g.menge ? ` · ${g.menge}` : ""}
-            </div>
-          )}
-        />
-      </div>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Gewohnheit (manuell)</div>
       <Card style={{ marginBottom: 16 }}>

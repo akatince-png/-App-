@@ -7,17 +7,13 @@ import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import CannabisFelder from "../ui/CannabisFelder";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import AutocompleteInput from "../ui/AutocompleteInput";
-import { accentSoft, blueSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, PEPTIDE_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
-import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Medikamente
 // sind Lila, passend zu den bunten Home-Mini-Widgets.
@@ -180,30 +176,6 @@ export default function MedikamenteView({ onHome, embedded = false }) {
     }
   };
 
-  // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
-  // Medikament über denselben Weg an wie das manuelle Formular unten.
-  const handleMedikamentUebernehmen = async (verlauf) => {
-    const m = await AIService.medikamentAusChat({ verlauf, coachName: getCoachName() });
-    const payload = {
-      name: m.name,
-      menge: m.menge || "",
-      kategorie: m.kategorie || "Sonstige",
-      einnahmeart: m.einnahmeart || "Tablette (oral)",
-      intervallTyp: m.intervallTyp || "fixed",
-      intervallDays: m.intervallDays || 1,
-      customDays: m.customDays || "",
-      onDays: m.onDays || "",
-      offDays: m.offDays || "",
-      weekdays: m.weekdays || [],
-      eigenerStart: m.eigenerStart || "",
-      uhrzeiten: m.uhrzeiten?.length ? m.uhrzeiten : ["20:00"],
-    };
-    const result = await hormonHinzufuegen(payload);
-    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    aenderungVermerken({ kategorie: "hormon", itemName: m.name, aktion: "hinzugefügt", detail: `${payload.kategorie} · ${payload.menge || "–"}` });
-    return payload;
-  };
-
   const handleFoto = (name, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -261,23 +233,6 @@ export default function MedikamenteView({ onHome, embedded = false }) {
       <Card style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 16 }}>
         <KategorieErinnerung kategorie="medikamente" label="🔔 Erinnerungen Medikamente" />
       </Card>
-
-      <KiHinweis>
-        Sag, welches Medikament du hinzufügen willst — der Assistent fragt Dosierung, Einnahmeart und Rhythmus ab.
-      </KiHinweis>
-      <KiChat
-        bereich="medikamente"
-        systemPrompt="Du hilfst dabei, ein neues Medikament für eine bestehende App einzurichten. Frag nach, was noch fehlt: Dosierung/Menge, Einnahmeart (Injektion, Tablette, Kapsel, Pulver, Tropfen, Nasenspray, oder bei Cannabis: Blüte zum Rauchen, Blüte zum Verdampfen, Esswaren), Kategorie, und der Rhythmus (z. B. täglich, alle X Tage, bestimmte Wochentage, oder Zyklus wie 'X Tage nehmen, Y Tage Pause') sowie die Uhrzeit(en). Bei Cannabis reicht Kategorie/Einnahmeart/Menge/Rhythmus über den Chat — THC-/CBD-Gehalt und Konsum-Details (Tabak, Filter, Temperatur, Tropfenzahl) trägt die Nutzerin danach manuell im Formular nach. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Welches Medikament möchtest du hinzufügen?`}
-        onUebernehmen={handleMedikamentUebernehmen}
-        uebernehmenLabel="Medikament anlegen"
-        renderErgebnis={(m) => (
-          <div style={{ padding: 12, borderRadius: 12, background: blueSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-            "{m.name}" wurde angelegt · {m.kategorie}
-            {m.menge ? ` · ${m.menge}` : ""}
-          </div>
-        )}
-      />
 
       <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen (manuell)</div>

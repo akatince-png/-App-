@@ -11,14 +11,11 @@ import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../u
 import { TAGESZEIT_STUNDE, KATEGORIE_META } from "../utils/dayItems";
 import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Ernährung
 // ist Terrakotta, passend zu den bunten Home-Mini-Widgets.
-const { dot: accent, text: accentDark, bg: accentSoft } = KATEGORIE_META.mahlzeit;
+const { dot: accent, text: accentDark } = KATEGORIE_META.mahlzeit;
 
 const LEERE_MAHLZEIT = { name: "", uhrzeit: "", wochentage: [], hinweis: "", zutaten: [{ name: "", menge: "", mengeGramm: "", kcalPro100g: "" }] };
 
@@ -352,30 +349,6 @@ export default function NutritionView({ onHome, embedded = false }) {
   const kalorienZielProzent =
     kalorienIst && kalorienZiel ? Math.round(((Number(kalorienZiel) - kalorienIst) / kalorienIst) * 100) : null;
 
-  const aktuellesKfa = gewichtsEintraege?.length ? gewichtsEintraege[gewichtsEintraege.length - 1].kfa : undefined;
-
-  // Übergabe an <KiChat onUebernehmen>: nimmt den Gesprächsstand (der Coach
-  // kennt dabei schon dein KFA/Gewicht/Kalorienziel aus der Einleitung),
-  // lässt daraus die finalen Rezepte extrahieren und legt sie über denselben
-  // Weg an wie das manuelle Formular (noch keinem Wochentag zugewiesen).
-  const handleErnaehrungsplanUebernehmen = async (verlauf) => {
-    const rezepte = await AIService.ernaehrungsplanAusChat({ verlauf, coachName: getCoachName() });
-    // Parallel statt nacheinander — jedes Rezept ist eine unabhängige
-    // Mahlzeit, ein Roundtrip-Paar pro Rezept gleichzeitig statt sequentiell.
-    const ergebnisse = await Promise.all(
-      rezepte.map((rezept) =>
-        mahlzeitHinzufuegen({
-          name: rezept.name,
-          hinweis: "KI-Vorschlag",
-          zutaten: (rezept.zutaten || []).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: "", kcalPro100g: "" })),
-        })
-      )
-    );
-    const fehlgeschlagen = ergebnisse.find((r) => !r?.ok);
-    if (fehlgeschlagen) throw new Error(fehlgeschlagen.error || "Speichern fehlgeschlagen.");
-    return rezepte;
-  };
-
   const zeitGruppen = Array.from(new Set(tagesEintraege.map(zeitVon)));
 
   const content = (
@@ -409,28 +382,6 @@ export default function NutritionView({ onHome, embedded = false }) {
           </div>
         </Card>
       )}
-
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-        Sag, worauf du Lust hast oder was du erreichen willst, frag nach, lass Vorschläge anpassen. Wenn ihr euch einig seid, auf „Rezepte übernehmen" tippen — legt sie als neue Mahlzeiten an (Wochentag danach noch selbst zuweisen).
-      </div>
-      <KiChat
-        bereich="ernaehrung"
-        systemPrompt={`Du bist ein erfahrener, geduldiger Ernährungscoach für eine bestehende App. Bekannte Profildaten dieser Person: KFA ${aktuellesKfa ?? "unbekannt"}%, Gewicht ${aktuellesGewicht ?? "unbekannt"} kg, Kalorienziel ${kalorienZiel || kalorienIst || "unbekannt"} kcal/Tag. Hilf, passende Rezepte zu finden — frag nach Vorlieben/Abneigungen, Unverträglichkeiten oder Zeitaufwand, wenn relevant. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.`}
-        einleitung={`Hi, ich bin ${getCoachName()}! Worauf hast du Lust, oder was für Ziele hast du bei der Ernährung?`}
-        onUebernehmen={handleErnaehrungsplanUebernehmen}
-        uebernehmenLabel="Rezepte übernehmen"
-        renderErgebnis={(rezepte) => (
-          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-            {rezepte.length} Rezept{rezepte.length === 1 ? "" : "e"} als Mahlzeiten angelegt:
-            {rezepte.map((r, i) => (
-              <div key={i}>
-                · {r.name}
-                {r.naehrwerte?.kalorien ? ` (${r.naehrwerte.kalorien} kcal)` : ""}
-              </div>
-            ))}
-          </div>
-        )}
-      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
       <Card akzent style={{ marginBottom: 14 }}>

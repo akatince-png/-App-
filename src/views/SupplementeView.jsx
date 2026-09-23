@@ -5,14 +5,10 @@ import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
 import { HINWEISE, NEBENWIRKUNGEN_OPTIONEN, TAGESZEITEN, WIRKUNG_OPTIONEN, WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import ViewHeader from "../ui/ViewHeader";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
-import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
@@ -242,36 +238,6 @@ function SupplementeSection() {
     }
   };
 
-  // Übergabe an <KiChat onUebernehmen>: legt das im Gespräch besprochene
-  // Supplement über denselben Weg an wie das manuelle Formular unten — plus
-  // Menge/Rhythmus, falls besprochen (dieselbe Dosierungs-Struktur wie bei
-  // Medikamenten/Peptiden, die supplementHinzufuegen() ebenfalls annimmt).
-  const handleSupplementUebernehmen = async (verlauf) => {
-    const s = await AIService.supplementAusChat({ verlauf, coachName: getCoachName() });
-    const result = await supplementHinzufuegen({
-      name: s.name,
-      tageszeiten: s.tageszeiten,
-      hinweis: s.hinweis || "",
-      menge: s.menge || "",
-      intervallTyp: s.intervallTyp || "fixed",
-      intervallDays: s.intervallDays || 1,
-      customDays: s.customDays || "",
-      onDays: s.onDays || "",
-      offDays: s.offDays || "",
-      weekdays: s.weekdays || [],
-      eigenerStart: s.eigenerStart || "",
-      uhrzeiten: s.uhrzeiten || [],
-    });
-    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    aenderungVermerken({
-      kategorie: "supplement",
-      itemName: s.name,
-      aktion: "hinzugefügt",
-      detail: [s.tageszeiten.join(", "), s.menge].filter(Boolean).join(" · "),
-    });
-    return s;
-  };
-
   const handleAendern = (s, entwurf, grund) => {
     const aenderungen = [];
     if (entwurf.name !== s.name) aenderungen.push(`Name: ${s.name} → ${entwurf.name}`);
@@ -313,22 +279,6 @@ function SupplementeSection() {
 
   return (
     <>
-      <KiHinweis>
-        Sag, welches Supplement du nehmen willst und wann — der Assistent fragt bei Bedarf nach.
-      </KiHinweis>
-      <KiChat
-        bereich="supplemente"
-        systemPrompt="Du hilfst dabei, ein neues Supplement für eine bestehende App einzurichten. Frag nach, zu welcher(n) Tageszeit(en) (Morgens/Mittags/Abends) es genommen werden soll und ob es einen Hinweis gibt (z. B. zur Mahlzeit, nüchtern, vor/nach dem Training), falls das noch fehlt. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Welches Supplement möchtest du hinzufügen?`}
-        onUebernehmen={handleSupplementUebernehmen}
-        uebernehmenLabel="Supplement anlegen"
-        renderErgebnis={(s) => (
-          <div style={{ padding: 12, borderRadius: 12, background: "#F6EFE1", fontSize: 12.5, lineHeight: 1.6 }}>
-            "{s.name}" wurde angelegt · {s.tageszeiten.join(", ")}
-            {s.hinweis ? ` · ${s.hinweis}` : ""}
-          </div>
-        )}
-      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neues Supplement (manuell)</div>
       <Card akzent style={{ marginBottom: 14 }}>

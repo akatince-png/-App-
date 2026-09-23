@@ -13,11 +13,8 @@ import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import TrainingVorschau from "../ui/TrainingVorschau";
 import LiveWorkout from "../ui/LiveWorkout";
 import TrainingFeedbackPanel from "../ui/TrainingFeedbackPanel";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
 import { getIntervallMusikEinstellung, saveIntervallMusikEinstellung, INTERVALL_FADE_SEK } from "../utils/intervallMusikStorage";
 import { useIntervallMusikSync } from "../data/useIntervallMusikSync";
-import KiChat from "../ui/KiChat";
 import {
   TRAININGSARTEN,
   KRAFTUEBUNGEN,
@@ -35,7 +32,7 @@ import { feuereBelohnung } from "../utils/belohnungBus";
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe (siehe
 // KATEGORIE_META in dayItems.js) — Training ist Rot, passend zu den bunten
 // Home-Mini-Widgets.
-const { text: accentDark, bg: accentSoft } = KATEGORIE_META.training;
+const { text: accentDark } = KATEGORIE_META.training;
 
 function leererEintrag() {
   return {
@@ -280,22 +277,6 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     wochenplanEntfernen(id);
   };
 
-  // Übergabe an <KiChat onUebernehmen>: nimmt den kompletten Gesprächsstand,
-  // lässt die KI daraus den finalen Plan als JSON zusammenfassen und trägt
-  // jede Einheit über denselben Weg ein wie eine manuell im
-  // WochenplanEditor hinzugefügte Einheit.
-  const handleTrainingsplanUebernehmen = async (verlauf) => {
-    const einheiten = await AIService.trainingsplanAusChat({ verlauf, coachName: getCoachName() });
-    // Nacheinander statt Promise.all, damit die Änderungsprotokoll-Einträge
-    // (aenderungVermerken in handleWochenplanHinzufuegen) in derselben
-    // Reihenfolge wie die KI-Antwort entstehen.
-    for (const einheit of einheiten) {
-      const result = await handleWochenplanHinzufuegen(einheit);
-      if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    }
-    return einheiten;
-  };
-
   const handleTrainingEntfernen = (e) => {
     aenderungVermerken({
       kategorie: "training",
@@ -482,29 +463,6 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
             wochenplanEntfernen={handleWochenplanEntfernen}
             titel={null}
             zeigeListe={false}
-          />
-
-          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10, marginTop: 14 }}>
-            Erzähl frei, was du trainieren willst, frag nach, lass Vorschläge anpassen — dein Assistent merkt sich das Gespräch. Wenn ihr euch einig seid, auf „Plan übernehmen" tippen.
-          </div>
-          <KiChat
-            bereich="training"
-            systemPrompt="Du bist ein erfahrener, geduldiger Trainingscoach für eine bestehende App. Hilf der Person, einen zu ihr passenden Trainingsplan zu entwickeln — frag nach, wenn wichtige Angaben fehlen (z. B. Erfahrung, verfügbare Tage, Ziele), mach konkrete Vorschläge, geh auf Wünsche und Korrekturen ein. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-            einleitung={`Hi, ich bin ${getCoachName()}! Erzähl mir, wie dein Training aussehen soll — z. B. Erfahrungslevel, wie viele Tage pro Woche du Zeit hast, und worauf du Lust hast (Kraft, Cardio, Bodyweight, ...).`}
-            onUebernehmen={handleTrainingsplanUebernehmen}
-            uebernehmenLabel="Plan übernehmen"
-            renderErgebnis={(einheiten) => (
-              <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                {einheiten.length} Einheit{einheiten.length === 1 ? "" : "en"} in den Wochenplan übernommen:
-                {einheiten.map((e, i) => (
-                  <div key={i}>
-                    · {e.wochentag}: {e.name ? `${e.name} · ` : ""}
-                    {(e.arten || []).join(" + ")}
-                    {e.uebungenListe?.length ? ` (${e.uebungenListe.map((u) => u.name).join(", ")})` : ""}
-                  </div>
-                ))}
-              </div>
-            )}
           />
         </>
       )}

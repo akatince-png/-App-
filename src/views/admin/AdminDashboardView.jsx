@@ -8,9 +8,9 @@ import { useAuth } from "../../context/AuthContext";
 import { coachNachrichtSenden } from "../../data/useCoacheeNachrichten";
 import { edgeFunctionFehlertext } from "../../utils/edgeFunctionFehler";
 
-// Bereiche, in denen KiChat.jsx tatsächlich mit bereich="..." aufgerufen
-// wird (siehe grep über src/views) — muss exakt übereinstimmen, sonst
-// landet ein Hinweis nie im richtigen Chat. "Allgemein" (bereich: null)
+// Verlaufs-Schlüssel, unter denen Aka je nach Seite läuft (AKA_SEITEN in
+// ui/Aka.jsx) — muss dazu passen, sonst landet ein Hinweis nie im
+// richtigen Chat. "Allgemein" (bereich: null)
 // gilt bereichsübergreifend, inkl. des Home-Assistenten.
 const BEREICH_OPTIONEN = [
   { value: "", label: "Allgemein" },

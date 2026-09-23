@@ -9,9 +9,6 @@ import { exportElementAsPdf } from "../utils/pdfExport";
 import { describeInterval, activeDoseDays } from "../utils/schedule";
 import { addDays, fmtDate, parseLocalISODate, sameDay, toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
-import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import TagesEintragBearbeiten from "../ui/TagesEintragBearbeiten";
 
 const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
@@ -48,7 +45,6 @@ export default function WochenuebersichtView({
   // setPlaneTab durchgereicht.
   onNavigateKategorie,
 }) {
-  const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const appData = useAppData();
   const {
     peptide = [],
@@ -419,13 +415,6 @@ export default function WochenuebersichtView({
         <ViewHeader title="🗓️ Wochenübersicht" onHome={onHome} />
       )}
 
-      <KiChat
-        systemPrompt="Du bist ein hilfsbereiter Assistent für eine App zur Selbstverwaltung von Gesundheitsprotokollen. Beantworte Fragen zur Wochenübersicht der Person. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein neues Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, neue Rezepte, ein Schlaf-Eintrag für die letzte Nacht, ein neues Workflow-Preset), frag von dir aus alle dafür nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — antworte dabei immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was zu deiner Woche, oder ich helf dir direkt bei jedem Bereich der App weiter.`}
-        pruefeBereitschaft={handleBereitschaftPruefen}
-        onUebernehmen={handleUniverselleUebernahme}
-        uebernehmenLabels={BEREICH_LABELS}
-      />
 
       <div style={{ display: "flex", gap: 5, marginBottom: 14, overflowX: "auto" }}>
         {wochentage.map((d, i) => {

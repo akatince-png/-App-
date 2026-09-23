@@ -16,15 +16,14 @@ export const BEREICH_LABELS = {
   ernaehrung: "Rezepte übernehmen",
   schlaf: "Eintragen",
   workflow: "Workflow anlegen",
+  morgenroutine: "Schritte anlegen",
+  abendroutine: "Schritte anlegen",
 };
 
-// Geteilte Logik des universellen Coaches (anders als die Bereichs-Chats
-// kennt er nicht von vornherein, worum es geht — erkennt den Bereich erst
-// aus dem Gespräch und routet dann zur selben Extraktions-/Speicherfunktion
-// wie der jeweilige Bereichs-Chat). Ursprünglich nur in HomeView.jsx, jetzt
-// als Hook extrahiert, damit auch andere bereichsübergreifende Screens
-// (Tagesplan, Wochenübersicht) denselben universellen Coach anbieten
-// können, ohne die Routing-Logik zu duplizieren.
+// Die eine Aktions-Logik von Aka (seit 23.09. der einzige Weg — es gibt
+// keine eigenen Bereichs-Chats mehr, siehe ui/Aka.jsx): erkennt den Bereich
+// aus dem Gespräch und routet zur passenden Extraktions-/Speicherfunktion.
+// Dadurch kann Aka auf jeder Seite in jeden Bereich eintragen.
 export function useUniversellerCoach() {
   const {
     gewohnheitHinzufuegen,
@@ -41,6 +40,7 @@ export function useUniversellerCoach() {
     workflowPresetHinzufuegen,
     workflowPresetAendern,
     workflowPlanHinzufuegen,
+    routineSchrittHinzufuegen,
   } = useAppData();
 
   // Übergabe an <KiChat pruefeBereitschaft>: läuft im Hintergrund nach
@@ -210,6 +210,16 @@ export function useUniversellerCoach() {
           detail: `${arbeitMin} Min. Arbeit / ${pauseMin} Min. Pause${w.uhrzeit ? ` · ${w.uhrzeit} Uhr` : ""}`,
         });
         return { bereich: "workflow", daten: { ...w, arbeitMin, pauseMin, gesamtMin } };
+      }
+      case "morgenroutine":
+      case "abendroutine": {
+        const routine = erkannterBereich === "morgenroutine" ? "morgen" : "abend";
+        const schritte = await AIService.routineAusChat({ verlauf, coachName });
+        for (const schritt of schritte) {
+          const result = await routineSchrittHinzufuegen(routine, schritt.name, schritt.dauerMin || 5);
+          if (result && !result.ok) throw new Error(result.error || "Speichern fehlgeschlagen.");
+        }
+        return { bereich: erkannterBereich, daten: schritte };
       }
       default:
         return { bereich: null };

@@ -31,23 +31,9 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import TagebuchModal from "../ui/TagebuchModal";
-import { useUniversellerCoach, BEREICH_LABELS } from "../data/useUniversellerCoach";
 
-// Basis-Rollenbeschreibung des Home-Coaches. Die "Background Brain"-Inhalte
-// (Wissens-Basis aus src/wissen/ + Trackingdaten-Zusammenfassung) werden
-// nicht hier, sondern zentral in KiChat.jsx an JEDE Coach-Anfrage in allen
-// Bereichen angehängt (nicht nur Home) — siehe dort.
-const HOME_SYSTEM_PROMPT_BASIS =
-  "Du bist ein hilfsbereiter Assistent für eine App zur Selbstverwaltung von Gesundheitsprotokollen (Peptide, Hormone, Supplemente, Training, Schlaf, Ernährung, Hydration, Tageslicht, Gewohnheiten). Beantworte Fragen zu den Plänen der Person allgemein und motivierend. Nutze die weiter unten mitgegebene Zusammenfassung der Trackingdaten, um Zusammenhänge zwischen den Bereichen zu erkennen und anzusprechen, wenn es hilfreich ist (z. B. sinkende Trinkmenge und schlechtere Trainingswerte) — dräng das aber nicht in jede Antwort, nur wenn es zur Frage passt. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein neues Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, neue Rezepte, ein Schlaf-Eintrag für die letzte Nacht, ein neues Workflow-Preset), frag von dir aus alle dafür nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — antworte dabei immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.";
-
-// Fasst mehrere Supplemente derselben Tageszeit ("Morgens-Supplemente")
-// bzw. mehrere Trainingseinheiten desselben Tages ("Trainingseinheit") zu
-// einer Zeile zusammen — Einzeleinträge bleiben unverändert, sobald nur
-// ein Eintrag der jeweiligen Gruppe angehört.
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
   const supplementSlots = {};
@@ -176,8 +162,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // NachrichtAnCoachCard unten) — dieselbe istAdminModus-Logik wie in
   // KiChat.jsx/OnboardingFlow.jsx/AuthenticatedApp.jsx.
   const istAdminModus = proband !== null || isAdmin;
-
-  const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
 
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
@@ -1001,7 +985,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           — das gilt auch für die Reihenfolge: Aufgaben zuerst, Motivations-/
           Team-Bausteine danach. Bleiben vollständig erhalten, nur weiter
           unten statt im Weg. */}
-      {!istAdminModus ? (
+      {!istAdminModus && (
         <>
           <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
           <RanglisteKarte />
@@ -1014,99 +998,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           />
           <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
         </>
-      ) : (
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
-          Frag alles rund um deine Pläne, oder lass eine neue Gewohnheit anlegen.
-        </div>
-        <KiChat
-          bereich="home"
-          systemPrompt={HOME_SYSTEM_PROMPT_BASIS}
-          einleitung={`Hi, ich bin ${getCoachName()}! Frag mich was — ich kann dir auch direkt bei jedem Bereich der App helfen, z. B. eine neue Gewohnheit anlegen, ein Supplement hinzufügen oder einen Trainingsplan aufstellen.`}
-          pruefeBereitschaft={handleBereitschaftPruefen}
-          onUebernehmen={handleUniverselleUebernahme}
-          uebernehmenLabels={BEREICH_LABELS}
-          renderErgebnis={(ergebnis) => {
-            if (!ergebnis?.bereich) {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  Ich konnte noch nichts Konkretes zum Übernehmen finden — magst du genauer sagen, worum es gehen soll?
-                </div>
-              );
-            }
-            const { bereich, daten } = ergebnis;
-            if (bereich === "gewohnheit") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt{daten.uhrzeit ? ` · ${daten.uhrzeit} Uhr` : daten.urzeitVon ? ` · ${daten.urzeitVon}–${daten.urzeitBis} Uhr` : ""}
-                  {daten.menge ? ` · ${daten.menge}` : ""}
-                </div>
-              );
-            }
-            if (bereich === "supplement") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt · {daten.tageszeiten.join(", ")}
-                  {daten.hinweis ? ` · ${daten.hinweis}` : ""}
-                </div>
-              );
-            }
-            if (bereich === "medikament") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt · {daten.kategorie}
-                  {daten.menge ? ` · ${daten.menge}` : ""}
-                </div>
-              );
-            }
-            if (bereich === "hydration") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  {daten.zielMl ? `Tagesziel auf ${daten.zielMl} ml gesetzt. ` : ""}
-                  {daten.zeiten.length > 0 ? `${daten.zeiten.length} neue Erinnerungszeit${daten.zeiten.length === 1 ? "" : "en"} hinzugefügt.` : ""}
-                </div>
-              );
-            }
-            if (bereich === "tageslicht") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  Tagesziel auf {daten.zielMinuten} Minuten gesetzt.
-                </div>
-              );
-            }
-            if (bereich === "training") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  {daten.length} Einheit{daten.length === 1 ? "" : "en"} in den Wochenplan übernommen.
-                </div>
-              );
-            }
-            if (bereich === "ernaehrung") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  {daten.length} Rezept{daten.length === 1 ? "" : "e"} als Mahlzeiten angelegt.
-                </div>
-              );
-            }
-            if (bereich === "schlaf") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  Schlaf-Eintrag mit {daten.stunden} h gespeichert{daten.schlafqualitaet ? ` (${daten.schlafqualitaet})` : ""}.
-                </div>
-              );
-            }
-            if (bereich === "workflow") {
-              return (
-                <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
-                  "{daten.name}" wurde angelegt · {daten.arbeitMin} Min. Arbeit / {daten.pauseMin} Min. Pause
-                  {daten.uhrzeit ? ` · ${daten.uhrzeit} Uhr` : ""}
-                </div>
-              );
-            }
-            return null;
-          }}
-        />
-      </div>
       )}
 
       {/* Direktzugriff: nur die aktiven Pläne (schon eingerichtet, echte

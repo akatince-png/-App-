@@ -7,12 +7,8 @@ import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
 import NumberWheelField from "../ui/NumberWheelField";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
-import { AIService } from "../services/aiService";
-import { getCoachName } from "../utils/coachStorage";
-import KiChat from "../ui/KiChat";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
-import KiHinweis from "../ui/KiHinweis";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -79,15 +75,6 @@ export default function TageslichtView({ onHome, embedded = false }) {
     defaultZiel: 30,
   });
 
-  // Übergabe an <KiChat onUebernehmen>: setzt das im Gespräch besprochene
-  // neue Tagesziel über denselben Weg wie das manuelle Formular unten.
-  const handleTageslichtUebernehmen = async (verlauf) => {
-    const { zielMinuten } = await AIService.tageslichtAusChat({ verlauf, coachName: getCoachName() });
-    const result = await tageslichtZielSetzen(zielMinuten);
-    if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
-    return { zielMinuten };
-  };
-
   const content = (
     <>
       {!embedded && (
@@ -105,22 +92,6 @@ export default function TageslichtView({ onHome, embedded = false }) {
       </Card>
 
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}
-
-      <KiHinweis>
-        Erzähl, wie viel Zeit du aktuell draußen verbringst und was realistisch wäre — der Assistent schlägt ein Tagesziel vor.
-      </KiHinweis>
-      <KiChat
-        bereich="tageslicht"
-        systemPrompt="Du hilfst dabei, ein tägliches Tageslicht-/Freiluft-Ziel (in Minuten) für eine bestehende App einzurichten. Frag nach, wie viel Zeit die Person aktuell draußen verbringt (z. B. Bürojob vs. viel unterwegs) und was realistisch machbar wäre, bevor ihr fertig seid. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
-        einleitung={`Hi, ich bin ${getCoachName()}! Wie viel Zeit verbringst du aktuell so am Tag draußen im Tageslicht?`}
-        onUebernehmen={handleTageslichtUebernehmen}
-        uebernehmenLabel="Ziel übernehmen"
-        renderErgebnis={(r) => (
-          <div style={{ padding: 12, borderRadius: 12, background: "#FDF3E3", fontSize: 12.5, lineHeight: 1.6 }}>
-            Tagesziel auf {r.zielMinuten} Minuten gesetzt.
-          </div>
-        )}
-      />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Schnell hinzufügen</div>
       <Card akzent style={{ marginBottom: 14 }}>
