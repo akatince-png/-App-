@@ -25,3 +25,16 @@ describe("Denkpausen-Katalog", () => {
     }
   });
 });
+
+describe("denksportRunde", () => {
+  it("liefert 5 verschiedene Aufgaben der gewählten Kategorie und wiederholt sie nicht sofort", async () => {
+    const { denksportRunde } = await import("./denkpausen");
+    const r1 = denksportRunde("raetsel");
+    const r2 = denksportRunde("raetsel");
+    expect(r1).toHaveLength(5);
+    expect(new Set(r1.map((a) => a.frage)).size).toBe(5);
+    expect(r1.every((a) => a.kategorie === "raetsel")).toBe(true);
+    expect(r2.some((a) => r1.map((x) => x.frage).includes(a.frage))).toBe(false);
+    expect(new Set(denksportRunde("gemischt", 20).map((a) => a.kategorie)).size).toBeGreaterThan(1);
+  });
+});

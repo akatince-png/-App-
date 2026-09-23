@@ -57,7 +57,7 @@ function deckkraft(r) {
   return 0.38 + 0.62 * r.ladung;
 }
 
-export default function GehirnKarte({ kategorien, onOpenErfolge }) {
+export default function GehirnKarte({ kategorien, onOpenErfolge, onDenksport }) {
   const gehirn = useMemo(() => berechneGehirn(kategorien), [kategorien]);
   const [gewaehlt, setGewaehlt] = useState(null);
   const auswahl = gehirn.regionen.find((r) => r.key === gewaehlt) || null;
@@ -198,6 +198,16 @@ export default function GehirnKarte({ kategorien, onOpenErfolge }) {
           </div>
           <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 6, opacity: 0.9 }}>{auswahl.text}</div>
           <div style={{ fontSize: 11, marginTop: 6, opacity: 0.65 }}>Dazu zählt: {auswahl.kategorien.map((k) => KATEGORIE_LABEL.get(k) || k).join(", ")}</div>
+          {auswahl.key === "fokus" && onDenksport && (
+            <button
+              type="button"
+              onClick={onDenksport}
+              className="mp-tap"
+              style={{ marginTop: 10, border: "none", borderRadius: 12, padding: "9px 14px", background: auswahl.farbe, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              🧩 Jetzt Denksport machen
+            </button>
+          )}
         </div>
       ) : (
         gehirn.genutzt > 0 && <div style={{ fontSize: 11.5, opacity: 0.65, textAlign: "center", marginTop: 4 }}>Tippe auf eine Region, um zu sehen, was sie für dich tut.</div>

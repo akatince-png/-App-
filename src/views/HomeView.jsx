@@ -846,7 +846,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} />}
-      {!isEmergencyMode && <GehirnKarte kategorien={ordenKategorien} onOpenErfolge={() => onOpenView("erfolge")} />}
+      {!isEmergencyMode && <GehirnKarte kategorien={ordenKategorien} onOpenErfolge={() => onOpenView("erfolge")} onDenksport={() => onOpenView("denksport")} />}
 
       {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
           Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,
@@ -1118,6 +1118,25 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </div>
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Tagebuch</div>
           <div style={{ fontSize: 10.5, color: textMuted }}>Frei schreiben</div>
+        </button>
+        {/* Denksport nach Wunsch (23.09.): 800 Aufgaben in 4 Kategorien. */}
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => onOpenView("denksport")}
+          style={{
+            textAlign: "left",
+            borderRadius: 18,
+            padding: "14px 10px",
+            cursor: "pointer",
+            background: "#fff",
+            boxShadow: shadow,
+            border: `1px solid ${cardBorder}`,
+          }}
+        >
+          <div style={{ marginBottom: 8, fontSize: 20, lineHeight: "22px" }}>🧩</div>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Denksport</div>
+          <div style={{ fontSize: 10.5, color: textMuted }}>Rätsel & Quiz</div>
         </button>
         {/* "Neues Protokoll" (13.09., Nutzerin-Vorgabe): ersetzt den
             früheren schwebenden runden "+"-Knopf oben rechts (Fab.jsx) —

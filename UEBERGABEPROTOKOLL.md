@@ -219,6 +219,23 @@ löschbar.
 
 ---
 
+### Nachtrag Teil 121 — Gehirn, 800 Denksport-Aufgaben, Denksport-Seite
+
+- **„Dein Gehirn“ statt „Deine Welt“** (`utils/gehirn.js`, `ui/GehirnKarte.jsx`): Die Bereiche sind zu 6 Regionen zusammengefasst:
+  - Fokus & Planung (Gewohnheiten, Routinen, Denkpause)
+  - Bewegung
+  - Energie (Ernährung, Hydration, Supplemente, Medikamente)
+  - Licht & Rhythmus
+  - Ruhe & Gefühl (Atemübungen)
+  - Erholung (Schlaf)
+
+  Jede Region lädt sich mit den aktiven Tagen der letzten 7 Tage auf. Laufende Serien leuchten als Nervenbahnen zwischen benachbarten Regionen. Pausierte Regionen „ruhen“ (💤), nie genutzte bleiben neutral. Antippen erklärt die Region; bei Fokus gibt es einen Knopf zum Denksport. Die Grafik ist ein selbst gezeichnetes SVG, später gegen eine Canva-Illustration tauschbar. `berechneErrungenschaften` liefert dafür je Kategorie zusätzlich `tage`/`tageListe`.
+- **Denksport-Katalog 200 je Kategorie** (`src/data/denkpausen*2.js`, zusammengeführt in `denkpausen.js`):
+  - Mathe per Generator, unabhängig nachgerechnet.
+  - Wortspiele, Rätsel und Wissen von Hand geschrieben und auf Eindeutigkeit durchgesehen.
+  - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
+- **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
+
 ### Nachtrag Teil 121 — Aka: ein Assistent für die ganze App
 
 - Wunsch der Nutzerin: Aka auf allen Seiten „über den gleichen Code, die gleiche Systematik“, als wäre es von Anfang an so gebaut worden.

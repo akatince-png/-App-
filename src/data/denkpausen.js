@@ -38,3 +38,20 @@ export function zufaelligeDenkpauseAufgabe() {
   zuletztGezeigt = [aufgabe.frage, ...zuletztGezeigt].slice(0, 30);
   return aufgabe;
 }
+
+// Denksport-Seite (DenksportView.jsx, 23.09.): eine Runde aus `anzahl`
+// verschiedenen Aufgaben einer Kategorie (oder "gemischt"), möglichst ohne
+// die zuletzt gesehenen zu wiederholen.
+let zuletztInRunden = [];
+
+export function denksportRunde(kategorieId, anzahl = 5) {
+  const quelle = kategorieId === "gemischt" ? ALLE_AUFGABEN : ALLE_AUFGABEN.filter((a) => a.kategorie === kategorieId);
+  const frisch = quelle.filter((a) => !zuletztInRunden.includes(a.frage));
+  const pool = frisch.length >= anzahl ? [...frisch] : [...quelle];
+  const runde = [];
+  while (runde.length < anzahl && pool.length > 0) {
+    runde.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  zuletztInRunden = [...runde.map((a) => a.frage), ...zuletztInRunden].slice(0, 150);
+  return runde;
+}
