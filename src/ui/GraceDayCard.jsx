@@ -22,7 +22,9 @@ export default function GraceDayCard({ weeklyStats }) {
   const completionRate = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
 
   const nachricht =
-    completionRate >= 80
+    totalDays === 0
+      ? "🌱 Deine erste Woche läuft — ab morgen siehst du hier deinen Rückblick."
+      : completionRate >= 80
       ? "🚀 Fantastisch! Eine sehr starke Woche."
       : completionRate >= 50
         ? "💪 Sehr gut! 50%+ bedeutet: du machst das richtig."
@@ -30,7 +32,7 @@ export default function GraceDayCard({ weeklyStats }) {
           ? "🌱 Du machst kleine Fortschritte. Das zählt."
           : "💛 Kein Drama. Jeder Tag ist ein neuer Versuch.";
 
-  const nachrichtFarbe = completionRate >= 50 ? success : completionRate >= 30 ? warn : textMuted;
+  const nachrichtFarbe = totalDays === 0 ? success : completionRate >= 50 ? success : completionRate >= 30 ? warn : textMuted;
 
   return (
     <Card style={{ marginBottom: 14 }}>

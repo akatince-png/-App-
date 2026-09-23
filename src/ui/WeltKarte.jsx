@@ -40,7 +40,7 @@ export default function WeltKarte({ kategorien, onOpenErfolge }) {
               return (
                 <div
                   key={p.key}
-                  title={`${p.label}: ${p.stufe.name}, ${p.punkte} Tage${p.stufe.naechste ? ` · noch ${p.stufe.nochTage} bis ${p.stufe.naechste.name}` : ""}`}
+                  title={`${p.label}: ${p.stufe.name}, ${p.tage ?? p.punkte} Tage${p.stufe.naechste ? ` · noch ${p.stufe.nochTage} bis ${p.stufe.naechste.name}` : ""}`}
                   style={{
                     flex: "0 0 auto",
                     width: 74,
@@ -55,7 +55,7 @@ export default function WeltKarte({ kategorien, onOpenErfolge }) {
                   {p.wartet && <span style={{ position: "absolute", top: 3, right: 6, fontSize: 11 }}>💤</span>}
                   <div style={{ fontSize: 16 + p.stufe.index * 3, lineHeight: "36px", height: 36 }}>{p.stufe.symbol}</div>
                   <div style={{ fontSize: 10.5, fontWeight: 800, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.label}</div>
-                  <div style={{ fontSize: 10, color: textMuted, marginTop: 1 }}>{p.streak > 0 ? `🔥 ${p.streak}` : `${p.punkte} Tage`}</div>
+                  <div style={{ fontSize: 10, color: textMuted, marginTop: 1 }}>{p.streak > 0 ? `🔥 ${p.streak}` : `${p.tage ?? p.punkte} ${(p.tage ?? p.punkte) === 1 ? "Tag" : "Tage"}`}</div>
                 </div>
               );
             })}

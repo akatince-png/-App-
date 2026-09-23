@@ -113,7 +113,7 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
           <div style={{ width: `${Math.round(fortschritt * 100)}%`, height: "100%", borderRadius: 99, background: GOLD, transition: "width 0.6s ease-out" }} />
         </div>
         <div style={{ fontSize: 11.5, fontWeight: 700, opacity: 0.85, marginTop: 6 }}>
-          Noch {nochBisLevel} {nochBisLevel === 1 ? "Punkt" : "Punkte"} bis Level {lvl.level + 1} · 1 Punkt je Bereich und Tag
+          Noch {nochBisLevel} {nochBisLevel === 1 ? "Punkt" : "Punkte"} bis Level {lvl.level + 1} · 1 Punkt je erledigtem Eintrag
         </div>
       </div>
     </button>

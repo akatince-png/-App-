@@ -55,7 +55,7 @@ export const KATEGORIEN = [
     // EIGENE_TAB_FARBE in PlaeneView.jsx.
     grad: gradAus("#E08A3E"),
     holeTage: (q) =>
-      (q.routineDurchlaeufe || []).filter((d) => d.routine === "morgen" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)),
+      [...new Set((q.routineDurchlaeufe || []).filter((d) => d.routine === "morgen" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)))],
   },
   {
     key: "abendroutine",
@@ -63,7 +63,7 @@ export const KATEGORIEN = [
     icon: "moon",
     grad: gradAus("#4E6690"),
     holeTage: (q) =>
-      (q.routineDurchlaeufe || []).filter((d) => d.routine === "abend" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)),
+      [...new Set((q.routineDurchlaeufe || []).filter((d) => d.routine === "abend" && d.abgeschlossenUm).map((d) => normalisiereDatum(d.datum)))],
   },
   {
     key: "schlaf",
@@ -195,6 +195,9 @@ export function berechneErrungenschaften(quellen) {
       icon: kat.icon,
       grad: kat.grad,
       punkte: tage.length,
+      // Anzahl verschiedener Tage mit mindestens einem Eintrag (für "Deine
+      // Welt": Pflanzen wachsen mit Tagen, nicht mit Einträgen).
+      tage: tageSet.size,
       streak: berechneStreak(tageSet),
     };
   });

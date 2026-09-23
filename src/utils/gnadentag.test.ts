@@ -36,4 +36,11 @@ describe("berechneWochenStats", () => {
     berechneWochenStats({}, new Date(2026, 0, 15));
     expect(buildDayItems).toHaveBeenCalledTimes(7);
   });
+
+  it("zählt Tage vor dem Protokollstart nicht mit (neues Konto hat keine Schein-Pausen)", () => {
+    buildDayItemsMock.mockReturnValue([{ kategorie: "supplement", name: "Vitamin D", done: false }]);
+    const heute = new Date(2026, 0, 15);
+    expect(berechneWochenStats({ aktivesHauptprotokoll: { startdatum: "2026-01-15" } }, heute)).toEqual({ completedDays: 0, pauseDays: 0, totalDays: 0 });
+    expect(berechneWochenStats({ startdatum: "2026-01-13" }, heute)).toEqual({ completedDays: 0, pauseDays: 2, totalDays: 2 });
+  });
 });

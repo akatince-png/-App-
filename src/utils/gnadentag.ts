@@ -1,4 +1,4 @@
-import { addDays } from "./dates";
+import { addDays, toLocalISODate } from "./dates";
 import { buildDayItems } from "./dayItems";
 
 // Gnadentag-/Anti-Scham-Statistik für den Wochenrückblick (GraceDayCard.jsx)
@@ -37,9 +37,16 @@ export interface WochenStats {
 export function berechneWochenStats(appData: Record<string, unknown>, heute: Date = new Date()): WochenStats {
   let completedDays = 0;
   let pauseDays = 0;
+  let totalDays = 0;
+  // Bug-Fix Dauertest 23.09.: Tage VOR dem Protokollstart zählen nicht —
+  // sonst hatte ein neues Konto am ersten Tag schon "7 Pausen".
+  const hauptprotokoll = appData.aktivesHauptprotokoll as { startdatum?: string } | null | undefined;
+  const start = (hauptprotokoll?.startdatum || (appData.startdatum as string | undefined) || "").slice(0, 10);
 
   for (let i = 1; i <= TAGE_ZURUECK; i++) {
     const tag = addDays(heute, -i);
+    if (start && toLocalISODate(tag) < start) continue;
+    totalDays += 1;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const items = buildDayItems(tag, appData as any);
     if (items.length === 0) {
@@ -51,5 +58,5 @@ export function berechneWochenStats(appData: Record<string, unknown>, heute: Dat
     else pauseDays += 1;
   }
 
-  return { completedDays, pauseDays, totalDays: TAGE_ZURUECK };
+  return { completedDays, pauseDays, totalDays };
 }

@@ -27,6 +27,6 @@ export function pflanzenStufe(punkte) {
 export function weltPflanzen(kategorien) {
   return (kategorien || [])
     .filter((k) => k.punkte > 0)
-    .map((k) => ({ ...k, stufe: pflanzenStufe(k.punkte), wartet: k.streak === 0 }))
-    .sort((a, b) => b.punkte - a.punkte);
+    .map((k) => ({ ...k, stufe: pflanzenStufe(k.tage ?? k.punkte), wartet: k.streak === 0 }))
+    .sort((a, b) => (b.tage ?? b.punkte) - (a.tage ?? a.punkte));
 }

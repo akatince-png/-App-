@@ -1,6 +1,7 @@
 import React from "react";
 import { bg, card, cardBorder, accent, accentDark, danger, textMain, textMuted, shadow } from "./theme";
 import { meldeAbsturz } from "../services/errorMonitoring";
+import { istNachladeFehler, einmalNeuLaden } from "../utils/nachladeFehler";
 
 // Auffangnetz gegen Abstürze (14.09., Nutzerinnen-Vorgabe aus dem
 // App-Bauplan): ohne das zeigt React bei einem Fehler irgendwo im
@@ -24,6 +25,9 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(fehler, info) {
+    // Nachlade-Fehler (neue App-Version veröffentlicht, Verbindung kurz weg):
+    // einmal neu laden statt den Absturz-Bildschirm stehen zu lassen.
+    if (istNachladeFehler(fehler) && einmalNeuLaden()) return;
     // eslint-disable-next-line no-console
     console.error("Auffangnetz hat einen Absturz aufgefangen:", fehler, info?.componentStack);
     meldeAbsturz(fehler, info?.componentStack);

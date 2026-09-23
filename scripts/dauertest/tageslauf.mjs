@@ -36,6 +36,9 @@ fs.mkdirSync(OUT, { recursive: true });
 // Pflanzen nur schlafen), an anderen Tagen wird ab und zu ein einzelner
 // Punkt ausgelassen (wie im echten Leben).
 const PAUSENTAG = tagIndex % 7 === 5;
+// Wiederholung nach einem abgebrochenen Lauf: nichts abhaken/eintragen,
+// nur anmelden und alle Ansichten prüfen (keine doppelten Testdaten).
+const NUR_ANSICHTEN = process.env.AKA_NUR_ANSICHTEN === "1";
 const auslassen = (name) => {
   let h = tagIndex * 31;
   for (const c of name) h = (h * 33 + c.charCodeAt(0)) % 1000003;
@@ -131,6 +134,7 @@ try {
   bericht.spielstandVorher = await spielstand();
   await foto("01-home-vorher");
 
+  if (!NUR_ANSICHTEN) {
   // 2) Tagesplan abhaken (außer am Pausentag)
   await geheZu("tagesplan");
   for (const gruppe of ["🌅 Morgenroutine", "🌙 Abendroutine"]) {
@@ -210,6 +214,9 @@ try {
   }
   schritt(`Hydration: ${schlucke}× 200 ml eingetragen`);
   await foto("06-hydration");
+  } else {
+    schritt("Nur Ansichten (Wiederholungslauf, keine Aktionen)");
+  }
   await geheZu("home");
   await warte(1500);
   bericht.spielstandNachher = await spielstand();
