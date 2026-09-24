@@ -5,8 +5,8 @@ import { accentDark, accentSoft, cardBorder, danger, success, successSoft, textM
 import { supabase } from "../../lib/supabaseClient";
 import { istNetzwerkFehler, verstaendlicheFehlermeldung } from "../../utils/netzwerkFehler";
 import { useAuth } from "../../context/AuthContext";
-import { coachNachrichtSenden } from "../../data/useCoacheeNachrichten";
 import { edgeFunctionFehlertext } from "../../utils/edgeFunctionFehler";
+import { CoachChatFenster } from "./AdminCoachUebersichtView";
 
 // Verlaufs-Schlüssel, unter denen Aka je nach Seite läuft (AKA_SEITEN in
 // ui/Aka.jsx) — muss dazu passen, sonst landet ein Hinweis nie im
@@ -41,7 +41,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   const [formOffen, setFormOffen] = useState(false);
   const [einladenOffen, setEinladenOffen] = useState(false);
   const [notizFuer, setNotizFuer] = useState(null); // proband.id | null
-  const [nachrichtenFuer, setNachrichtenFuer] = useState(null); // proband.id | null
+  const [nachrichtenFuer, setNachrichtenFuer] = useState(null); // proband | null (Chat offen)
   const [testAnlegenLaeuft, setTestAnlegenLaeuft] = useState(false);
   const [testFehler, setTestFehler] = useState(null);
   const [testKonto, setTestKonto] = useState(null); // { vorname, email, passwort } | null
@@ -306,19 +306,24 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
               >
                 Verwalten
               </button>
+              {/* "Hinweis" läuft über Aka — Coachees haben kein Aka (24.09.,
+                  Admin-Livetest), deshalb nur bei Admin-Konten. Für Coachees
+                  ist der Chat der Weg. */}
+              {p.is_admin && (
+                <button
+                  onClick={() => setNotizFuer((v) => (v === p.id ? null : p.id))}
+                  className="mp-tap"
+                  style={{ padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                >
+                  {notizFuer === p.id ? "Schließen" : "Hinweis"}
+                </button>
+              )}
               <button
-                onClick={() => setNotizFuer((v) => (v === p.id ? null : p.id))}
-                className="mp-tap"
-                style={{ padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
-              >
-                {notizFuer === p.id ? "Schließen" : "Hinweis"}
-              </button>
-              <button
-                onClick={() => setNachrichtenFuer((v) => (v === p.id ? null : p.id))}
+                onClick={() => setNachrichtenFuer(p)}
                 className="mp-tap"
                 style={{ position: "relative", padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
               >
-                {nachrichtenFuer === p.id ? "Schließen" : "Nachrichten"}
+                💬 Chat
                 {p.ungelesene_nachrichten > 0 && (
                   <span
                     style={{
@@ -345,10 +350,19 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
             </div>
           </div>
           {notizFuer === p.id && <AdminNotizPanel proband={p} adminId={user?.id} />}
-          {nachrichtenFuer === p.id && <CoacheeNachrichtenPanel proband={p} />}
+
         </Card>
       ))}
       </div>
+      {nachrichtenFuer && (
+        <CoachChatFenster
+          proband={nachrichtenFuer}
+          onZurueck={() => {
+            setNachrichtenFuer(null);
+            ladeProbanden();
+          }}
+        />
+      )}
     </Shell>
   );
 }
@@ -471,104 +485,6 @@ function AdminNotizPanel({ proband, adminId }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-// Nachrichten EINER Person lesen UND senden (13.08., erweitert 15.08. um
-// die Senden-Richtung) — läuft in beide Richtungen über coachee_nachrichten
-// (0045/0065), OHNE den Umweg über den KI-Assistenten (der für Coachees
-// ausgeblendet ist, siehe KiChat.jsx) — die Coachee sieht Coach-Nachrichten
-// stattdessen direkt auf ihrer Startseite (HomeView.jsx, NachrichtAnCoachCard).
-export function CoacheeNachrichtenPanel({ proband }) {
-  const [nachrichten, setNachrichten] = useState([]);
-  const [ladend, setLadend] = useState(true);
-  const [text, setText] = useState("");
-  const [sendenLaeuft, setSendenLaeuft] = useState(false);
-  const [fehler, setFehler] = useState(null);
-
-  const laden = async () => {
-    setLadend(true);
-    const { data, error } = await supabase
-      .from("coachee_nachrichten")
-      .select("id, text, gelesen, erstellt_am, absender")
-      .eq("user_id", proband.id)
-      .order("erstellt_am", { ascending: false });
-    if (!error) setNachrichten(data || []);
-    setLadend(false);
-  };
-
-  useEffect(() => {
-    laden();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proband.id]);
-
-  const alsGelesenMarkieren = async (id) => {
-    setNachrichten((prev) => prev.map((n) => (n.id === id ? { ...n, gelesen: true } : n)));
-    const { error } = await supabase.from("coachee_nachrichten").update({ gelesen: true }).eq("id", id);
-    if (error) console.error(error);
-  };
-
-  const senden = async () => {
-    setFehler(null);
-    setSendenLaeuft(true);
-    const result = await coachNachrichtSenden(proband.id, text);
-    setSendenLaeuft(false);
-    if (!result?.ok) {
-      setFehler(result?.error || "Senden fehlgeschlagen.");
-      return;
-    }
-    setText("");
-    laden();
-  };
-
-  return (
-    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${cardBorder}` }}>
-      <TextArea value={text} onChange={setText} placeholder={`Nachricht an ${proband.vorname || proband.email} …`} />
-      <div style={{ marginTop: 8 }}>
-        <PrimaryButton onClick={senden} disabled={sendenLaeuft || !text.trim()}>
-          {sendenLaeuft ? "Sendet…" : "Senden"}
-        </PrimaryButton>
-      </div>
-      {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
-      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 6 }}>
-        Kommt direkt auf ihrer Startseite an, kein Umweg über den Chat.
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        {ladend && <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>}
-        {!ladend && nachrichten.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Noch keine Nachrichten.</div>}
-        {nachrichten.map((n) => (
-          <div
-            key={n.id}
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: 8,
-              padding: "10px 0",
-              borderBottom: `1px solid ${cardBorder}`,
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 11, color: textMuted, marginBottom: 3 }}>
-                {n.absender === "coach" ? "Du" : proband.vorname || "Coachee"} · {new Date(n.erstellt_am).toLocaleString("de-DE")}
-                {n.absender !== "coach" && ` · ${n.gelesen ? "gelesen" : "neu"}`}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: n.absender !== "coach" && !n.gelesen ? 700 : 400 }}>{n.text}</div>
-            </div>
-            {n.absender !== "coach" && !n.gelesen && (
-              <button
-                onClick={() => alsGelesenMarkieren(n.id)}
-                className="mp-tap"
-                style={{ flexShrink: 0, border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "4px 6px" }}
-              >
-                Gelesen
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

@@ -165,6 +165,25 @@ try {
   await foto("01-home-vorher");
 
   if (!NUR_ANSICHTEN) {
+  // 1b) Coach-Chat (seit 24.09.): Hinweis "Dein Coach hat geschrieben" oben
+  //     auf der Startseite → Chat öffnen, mit einer Schnellantwort antworten
+  //     (mit demselben Fleiß wie beim Abhaken).
+  const coachHinweis = page.getByRole("button", { name: /Dein Coach hat geschrieben/ }).first();
+  if (await coachHinweis.isVisible().catch(() => false)) {
+    await coachHinweis.click();
+    await warte(2500);
+    const chat = page.getByRole("dialog", { name: /Chat: Dein Coach/ });
+    await foto("01b-coach-chat");
+    if (!auslassen("coach-antwort")) {
+      await chat.getByRole("button", { name: "Danke!" }).click().catch(() => befund("Schnellantwort im Coach-Chat nicht gefunden"));
+      await warte(1500);
+      schritt("Coach-Chat: Nachricht gelesen und mit „Danke!“ geantwortet");
+    } else schritt("Coach-Chat: Nachricht gelesen, bewusst (noch) nicht geantwortet");
+    await chat.getByRole("button", { name: "Zurück" }).click().catch(() => {});
+    await warte(1500);
+    if (await page.getByRole("button", { name: /Dein Coach hat geschrieben/ }).isVisible().catch(() => false)) befund("Hinweis „Dein Coach hat geschrieben“ bleibt nach dem Lesen stehen");
+  }
+
   // 2) Tagesplan abhaken (außer am Pausentag)
   await geheZu("tagesplan");
   for (const gruppe of ["🌅 Morgenroutine", "🌙 Abendroutine"]) {

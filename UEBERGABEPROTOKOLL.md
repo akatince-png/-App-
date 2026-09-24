@@ -37,6 +37,25 @@ Geprüft wird der ganze Coach-Alltag: Ergebnisse regelmäßig durchsehen, Korrek
 - Täglicher Admin-Livetest `scripts/dauertest/adminlauf.mjs` (Routine 19:15 UTC) spielt diesen Alltag nach.
 - **WhatsApp (Idee, nicht umgesetzt):** Gesundheitsdaten (Medikamente, Schlaf usw.) gehören nach DSGVO zu den besonders geschützten Daten. Empfehlung: Inhalte bleiben in der App; WhatsApp höchstens als Anstoß („Du hast eine neue Nachricht von deinem Coach“) ohne Gesundheitsdaten, über die offizielle WhatsApp-Business-API mit Einwilligung. Bei vielen Coachees skaliert die Übersicht in der App besser als einzelne Chats.
 
+### Coach-Chat + Coach-Übersicht (24.09. nachts, Vorschauen freigegeben)
+- **Chat im WhatsApp-Stil** (`ui/ChatFenster.jsx`, `data/coachChat.js`) für beide Seiten:
+  - Aufbau: Sprechblasen, Tages-Trenner, ✓ zugestellt / blaue ✓✓ gelesen, Schnellantworten, Diktieren (`useDiktat`), Enter sendet.
+  - Neue Nachrichten kommen alle 8 s per Abfrage, solange der Chat offen ist, und bei Rückkehr in die App. Kein Supabase-Realtime.
+  - Datenhaltung weiter in `coachee_nachrichten` (absender coach/coachee); `gelesen` = vom Empfänger gelesen.
+  - Coachees markieren über die RPC `coach_nachrichten_gelesen()` (Migration 0102), weil sie keine Update-Policy haben.
+- **Coachee:**
+  - Hinweis „Dein Coach hat geschrieben“ ganz oben auf der Startseite (solange ungelesen).
+  - Karte „Chat mit deinem Coach“ ersetzt `NachrichtAnCoachCard`, die entfernt ist.
+  - Eigene Ansicht `#/coach-chat` (`views/CoachChatView.jsx`).
+- **Coach-Übersicht neu** (`AdminCoachUebersichtView.jsx`):
+  - Oben „Heute für dich“ (brauchen dich / neue Nachrichten / laufen gut), Filter Alle / Brauchen dich / je Team.
+  - Eine Zeile pro Coachee mit Ampel, Admins ausgeblendet. Sortierung aus `utils/coachAufmerksamkeit.js`: ungelesen → am längsten ruhig → Rest nach 7-Tage-Punkten.
+  - Antippen zeigt die 7-Tage-Kästchen (`aktive_tage_7`), „💬 Chat“, „✏️ Einträge korrigieren“ (= Verwalten) und Training.
+  - Im Admin-Dashboard öffnet „💬 Chat“ dasselbe Fenster. „Hinweis“ (läuft über Aka) gibt es nur noch bei Admin-Konten.
+- **Push:** Edge Function `send-team-push` (v4, deployt) kennt `art: "coach"` (nur Admins, öffnet `#/coach-chat`) und `art: "an-coach"` (an alle Admin-Konten). Ausgelöst von Chat, Akut-Fenster (`coacheeNachrichtSenden`) und `coachNachrichtSenden` (Teams/Quests).
+- **Tests:** `e2e/coach-chat.spec.js` (3 Tests), Unit-Tests `coachAufmerksamkeit`/`coachChat`. Dauertest: `adminlauf.mjs` schreibt Jonas über den Chat; `tageslauf.mjs` antwortet mit „Danke!“, wenn der Hinweis oben steht (mit Fleiß-Faktor).
+- **Beobachten:** `e2e/denksport.spec.js` „Admin-Konto spielt frei eine Runde“ schlug einmal in vier Komplettläufen fehl (danach 9/9 grün). Ursache noch unklar.
+
 ### Offen / ausstehend
 - **Team-Vergleich:** läuft bis 24.10.2026. Dann `docs/dauertest/team-vergleich.md` schreiben (Fairness der Punkte bei unterschiedlich vielen Bereichen) und die Nutzerin fragen, ob es weitergeht.
 - **Alte Git-Zweige aufräumen:** Das muss die Nutzerin auf GitHub selbst machen, die Sitzung darf keine fremden Zweige löschen (403). Seit dem Zusammenführen am 24.09. (siehe unten) sind alle sieben alten Zweige erledigt und löschbar:

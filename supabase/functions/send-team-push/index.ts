@@ -9,6 +9,8 @@
 // werden kann. Die Nachricht selbst steht schon in team_nachrichten (RLS-
 // geschützt beim Insert durch den Client, siehe useTeamData.js) — diese
 // Funktion kümmert sich NUR um den Push-Teil.
+// Seit 24.09. auch für den Coach-Chat (coachee_nachrichten): art "coach"
+// (Admin → Person, öffnet #/coach-chat) und "an-coach" (Person → Admins).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
@@ -52,8 +54,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { empfaengerId, text } = await req.json();
-    if (!empfaengerId) {
+    // art (24.09., Coach-Chat): "team" (Standard, Team-Kolleg:innen),
+    // "coach" (Admin schreibt einer Person), "an-coach" (Person schreibt
+    // ihrem Coach → an alle Admin-Konten).
+    const { empfaengerId, text, art = "team" } = await req.json();
+    if (art !== "an-coach" && !empfaengerId) {
       return new Response(JSON.stringify({ error: "Keine Zielperson angegeben." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -62,29 +67,54 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Serverseitige Team-Prüfung — die RLS-Policy beim Insert der Nachricht
-    // selbst hat das zwar schon geprüft, aber diese Funktion läuft mit dem
-    // Service-Role-Key (umgeht RLS komplett), deshalb hier zusätzlich
-    // explizit gegenchecken, bevor überhaupt push_subscriptions gelesen wird.
-    const { data: gleichesTeam, error: teamError } = await admin.rpc("gleiches_team", {
-      a: user.id,
-      b: empfaengerId,
-    });
-    if (teamError) throw teamError;
-    if (!gleichesTeam) {
-      return new Response(JSON.stringify({ error: "Nur an Team-Kolleg:innen möglich." }), {
-        status: 403,
+    // Serverseitige Prüfung je Art, bevor überhaupt push_subscriptions
+    // gelesen werden (Service-Role-Key umgeht RLS): "coach" nur für Admins,
+    // "team" nur im selben Team; "an-coach" geht immer an die Admin-Konten.
+    const { data: absenderProfil } = await admin.from("profiles").select("vorname, is_admin").eq("id", user.id).maybeSingle();
+    let empfaenger: string[] = [];
+    let titel = "";
+    let ziel = "/";
+    if (art === "coach") {
+      if (!absenderProfil?.is_admin) {
+        return new Response(JSON.stringify({ error: "Nur für Coaches." }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      empfaenger = [empfaengerId];
+      titel = "💬 Dein Coach";
+      ziel = "/#/coach-chat";
+    } else if (art === "an-coach") {
+      const { data: admins, error: adminsError } = await admin.from("profiles").select("id").eq("is_admin", true);
+      if (adminsError) throw adminsError;
+      empfaenger = (admins || []).map((a) => a.id).filter((id) => id !== user.id);
+      titel = `💬 ${absenderProfil?.vorname || "Eine Person"}`;
+      ziel = "/#/admin-uebersicht";
+    } else {
+      const { data: gleichesTeam, error: teamError } = await admin.rpc("gleiches_team", {
+        a: user.id,
+        b: empfaengerId,
+      });
+      if (teamError) throw teamError;
+      if (!gleichesTeam) {
+        return new Response(JSON.stringify({ error: "Nur an Team-Kolleg:innen möglich." }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      empfaenger = [empfaengerId];
+      titel = `💬 ${absenderProfil?.vorname || "Ein Team-Mitglied"}`;
+    }
+    if (empfaenger.length === 0) {
+      return new Response(JSON.stringify({ ok: true, versendet: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: absenderProfil } = await admin.from("profiles").select("vorname").eq("id", user.id).maybeSingle();
-    const absenderName = absenderProfil?.vorname || "Ein Team-Mitglied";
-
     const { data: subs, error: subsError } = await admin
       .from("push_subscriptions")
       .select("endpoint, p256dh, auth_key")
-      .eq("user_id", empfaengerId);
+      .in("user_id", empfaenger);
     if (subsError) throw subsError;
     if (!subs || subs.length === 0) {
       // Kein technischer Fehler — die Zielperson hat einfach keine
@@ -95,10 +125,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const kurz = text && text.length > 120 ? `${text.slice(0, 117)}…` : text;
     const payload = JSON.stringify({
-      title: `💬 ${absenderName}`,
-      body: text || "hat dir eine Nachricht geschickt.",
-      url: "/",
+      title: titel,
+      body: kurz || "hat dir eine Nachricht geschickt.",
+      url: ziel,
     });
 
     let versendet = 0;

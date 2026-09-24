@@ -17,22 +17,21 @@ function rowToNachricht(r) {
 export function useCoacheeNachrichten(userId) {
   const [nachrichten, setNachrichten] = useState([]);
 
-  useEffect(() => {
+  // Neu laden (24.09.): die Startseite frischt beim Öffnen auf, damit der
+  // Hinweis "Dein Coach hat geschrieben" nach dem Lesen im Chat verschwindet.
+  const laden = useCallback(async () => {
     if (!userId) return;
-    let cancelled = false;
-    supabase
+    const { data, error } = await supabase
       .from("coachee_nachrichten")
       .select("id, text, gelesen, erstellt_am, absender")
       .eq("user_id", userId)
-      .order("erstellt_am", { ascending: false })
-      .then(({ data, error }) => {
-        if (cancelled || error) return;
-        setNachrichten((data || []).map(rowToNachricht));
-      });
-    return () => {
-      cancelled = true;
-    };
+      .order("erstellt_am", { ascending: false });
+    if (!error) setNachrichten((data || []).map(rowToNachricht));
   }, [userId]);
+
+  useEffect(() => {
+    laden();
+  }, [laden]);
 
   const nachrichtSenden = useCallback(
     async (text) => {
@@ -48,12 +47,16 @@ export function useCoacheeNachrichten(userId) {
       }
       const neu = rowToNachricht(data);
       setNachrichten((prev) => [neu, ...prev]);
+      // Push an den Coach (24.09., Coach-Chat) — z. B. aus dem Akut-Fenster.
+      supabase.functions
+        .invoke("send-team-push", { body: { art: "an-coach", text: text.trim() } })
+        .then(({ error: pushFehler }) => pushFehler && console.warn("Push nicht verschickt:", pushFehler.message));
       return { ok: true, nachricht: neu };
     },
     [userId]
   );
 
-  return { coacheeNachrichten: nachrichten, coacheeNachrichtSenden: nachrichtSenden };
+  return { coacheeNachrichten: nachrichten, coacheeNachrichtSenden: nachrichtSenden, coacheeNachrichtenNeuLaden: laden };
 }
 
 // Eigenständige Funktion statt Teil des Hooks oben: die Admin schreibt für
@@ -71,5 +74,10 @@ export async function coachNachrichtSenden(coacheeUserId, text) {
     console.error(error);
     return { ok: false, error: error.message };
   }
+  // Push an die Person (24.09., Coach-Chat) — auch bei Nachrichten aus der
+  // Team-Ansicht oder den Quests.
+  supabase.functions
+    .invoke("send-team-push", { body: { art: "coach", empfaengerId: coacheeUserId, text: text.trim() } })
+    .then(({ error: pushFehler }) => pushFehler && console.warn("Push nicht verschickt:", pushFehler.message));
   return { ok: true, nachricht: rowToNachricht(data) };
 }

@@ -43,6 +43,10 @@ function leseOverridesAusUrl() {
       { id: "e2e-mira", vorname: "Mira", profilbild_pfad: null },
     ];
   }
+  // ?coachnachricht=1: ungelesene Nachricht vom Coach (Coach-Chat, 24.09.).
+  if (params.get("coachnachricht") === "1") {
+    overrides.coacheeNachrichten = [{ id: "n9", text: "Hi, wie läuft deine Woche?", gelesen: false, absender: "coach", erstelltAm: new Date().toISOString() }];
+  }
   // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).

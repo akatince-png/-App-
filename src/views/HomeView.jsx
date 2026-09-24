@@ -10,7 +10,6 @@ import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
-import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMain, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META } from "../utils/dayItems";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
@@ -157,6 +156,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     isAdmin,
     coacheeNachrichten,
     coacheeNachrichtSenden,
+    coacheeNachrichtenNeuLaden,
     quests,
     questFortschrittSpeichern,
     team,
@@ -169,12 +169,15 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // (Gruppen-Quest-Karte), siehe TeamView.
   useEffect(() => {
     gruppenprotokolleNeuLaden?.();
+    // Coach-Chat (24.09.): nach dem Lesen im Chat soll der Hinweis oben weg sein.
+    coacheeNachrichtenNeuLaden?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const ungeleseneCoachNachrichten = (coacheeNachrichten || []).filter((n) => n.absender === "coach" && !n.gelesen);
   const { proband } = useAdmin();
   // Coach-verwaltetes Modell (13.08.): Coachees sehen hier statt des
   // KI-Assistenten eine einfache Nachricht-an-den-Coach-Karte (siehe
-  // NachrichtAnCoachCard unten) — dieselbe istAdminModus-Logik wie in
+  // Chat-Karte unten) — dieselbe istAdminModus-Logik wie in
   // KiChat.jsx/OnboardingFlow.jsx/AuthenticatedApp.jsx.
   const istAdminModus = proband !== null || isAdmin;
 
@@ -962,6 +965,26 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
       </div>
 
+      {/* Coach-Chat (24.09., Nutzerinnen-Freigabe der Vorschau): ungelesene
+          Nachricht vom Coach steht ganz oben, antippen öffnet den Chat.
+          Vorher lag sie bei ~78 % der Seitenhöhe unter dem Eingabefeld. */}
+      {!istAdminModus && ungeleseneCoachNachrichten.length > 0 && (
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => onOpenView("coach-chat")}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#FFF6E0", border: "2px solid #F2C94C", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+        >
+          <span style={{ width: 40, height: 40, borderRadius: 99, background: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🧑‍🏫</span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontWeight: 900, fontSize: 14 }}>Dein Coach hat geschrieben</span>
+            <span style={{ display: "block", fontSize: 13, color: "#4A5170", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              „{ungeleseneCoachNachrichten[0].text}“
+            </span>
+          </span>
+          <span style={{ background: "#E0352B", color: "#fff", borderRadius: 99, fontSize: 11, fontWeight: 800, padding: "3px 8px", flexShrink: 0 }}>{ungeleseneCoachNachrichten.length}</span>
+        </button>
+      )}
       {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
           (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
           Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
@@ -1115,7 +1138,19 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             onGelesen={teamNachrichtGelesen}
             onOpenTeam={() => onOpenView("team")}
           />
-          <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
+          <button
+            type="button"
+            className="mp-tap"
+            onClick={() => onOpenView("coach-chat")}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 24, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "#fff", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+          >
+            <span style={{ fontSize: 24 }}>💬</span>
+            <span style={{ flex: 1 }}>
+              <span style={{ display: "block", fontSize: 14.5, fontWeight: 800 }}>Chat mit deinem Coach</span>
+              <span style={{ display: "block", fontSize: 12, color: textMuted }}>jederzeit hier, auch ohne neue Nachricht</span>
+            </span>
+            <span style={{ fontSize: 18, color: textMuted }}>›</span>
+          </button>
         </>
       )}
 

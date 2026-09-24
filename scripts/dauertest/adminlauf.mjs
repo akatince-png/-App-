@@ -84,18 +84,26 @@ for (const n of TEST_COACHEES) {
   coach.beobachtungen.push(`${n}: ${i < 0 ? 'NICHT in der Übersicht' : ueText.slice(i, i + 160).replace(/\s+/g, ' ')}`);
 }
 if (!/heute|zuletzt|ruhig|Punkte/i.test(ueText)) coach.beobachtungen.push('Übersicht zeigt keinen Tagesstand/keine letzte Aktivität je Person – wer Hilfe braucht, ist nicht auf einen Blick erkennbar.');
-// 2) Nachricht an Jonas (ruhigste Testperson) über "💬 Nachricht"
-const karteVon = (name) => p.locator(`xpath=//div[normalize-space(text())='${name}']/ancestor::div[.//button[normalize-space()='Verwalten']][1]`);
-const jonasKarte = karteVon('Jonas Dauertest');
-if (await jonasKarte.count()) {
-  await jonasKarte.first().getByRole('button', { name: /Nachricht/ }).click(); await w(1200);
-  const feld = p.getByPlaceholder(/Nachricht an Jonas/);
-  await feld.fill(`Hi Jonas, wie läuft deine Woche? Melde dich gern kurz. (Dauertest ${new Date().toISOString().slice(0, 10)})`);
-  await p.getByRole('button', { name: 'Senden', exact: true }).first().click(); await w(2500);
-  await foto('41-nachricht-gesendet');
-  coach.taps.nachrichtSchreiben = 3; // Coach-Übersicht, 💬 Nachricht, Senden (+ Tippen)
-  if (!(await txt()).includes('wie läuft deine Woche')) befund('Coach-Nachricht nach dem Senden nicht sichtbar');
-} else befund('Jonas-Karte in der Coach-Übersicht nicht gefunden');
+// 2) Nachricht an Jonas (ruhigste Testperson) über den Chat (seit 24.09.
+//    WhatsApp-Stil): Zeile antippen → "💬 Chat" → schreiben → Senden.
+const jonasZeile = p.locator('button[aria-expanded]').filter({ hasText: 'Jonas Dauertest' }).first();
+if (await jonasZeile.count()) {
+  await jonasZeile.click(); await w(800);
+  await p.getByRole('button', { name: /💬 Chat/ }).first().click(); await w(2500);
+  const chat = p.getByRole('dialog', { name: /Chat: Jonas/ });
+  const text = `Hi Jonas, wie läuft deine Woche? Melde dich gern kurz. (Dauertest ${new Date().toISOString().slice(0, 10)})`;
+  await chat.getByRole('textbox').fill(text);
+  await chat.getByRole('button', { name: 'Senden' }).click(); await w(2500);
+  await foto('41-chat-coach');
+  coach.taps.nachrichtSchreiben = 4; // Coach-Übersicht, Zeile, 💬 Chat, Senden (+ Tippen)
+  if (!(await chat.innerText()).includes('wie läuft deine Woche')) befund('Coach-Nachricht nach dem Senden nicht im Chat sichtbar');
+  const antworten = await chat.locator('[data-chat-nachricht="fremde"]').count();
+  coach.beobachtungen.push(`Chat mit Jonas: ${antworten} Nachricht(en) von Jonas im Verlauf`);
+  await chat.getByRole('button', { name: 'Zurück' }).click(); await w(1500);
+} else befund('Jonas-Zeile in der Coach-Übersicht nicht gefunden');
+const zeilen = await p.locator('button[aria-expanded]').allInnerTexts();
+if (zeilen.some((z) => /Claude Admin-Test/.test(z))) befund('Admin-Konto erscheint in der Coach-Übersicht');
+coach.beobachtungen.push(`Reihenfolge: ${zeilen.map((z) => z.split('\n')[0]).join(' → ')}`);
 // 3) Korrektur: bei Mia einen Wasser-Eintrag ändern und wieder zurücksetzen
 await geh('admin');
 const btnV = p.getByRole('button', { name: 'Verwalten', exact: true });
