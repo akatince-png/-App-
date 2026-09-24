@@ -53,7 +53,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -363,6 +363,8 @@ export default function AuthenticatedApp() {
     screen = <AtemuebungenView onHome={() => setView("home")} />;
   } else if (view === "denksport") {
     screen = <DenksportView onHome={() => setView("home")} />;
+  } else if (view === "tagesraetsel") {
+    screen = <DenksportView onHome={() => setView("home")} tagesraetselStart />;
   } else if (PLAENE_VIEW_IDS.includes(view)) {
     screen = (
       <PlaeneView

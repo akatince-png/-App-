@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { success, textMain, textMuted, cardBorder } from "../ui/theme";
 import { DENKPAUSEN_KATEGORIEN, denksportRunde } from "../data/denkpausen";
 import { useAppData } from "../context/AppDataContext";
 import { feuereBelohnung } from "../utils/belohnungBus";
+import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
+import { TAGESRAETSEL_META } from "../utils/dayItems";
 
 // Denksport nach Wunsch (Nutzerinnen-Wunsch 23.09.): die Aufgaben aus dem
 // Denkpausen-Katalog (je 200 Mathe, Wortspiele, Rätsel, Allgemeinwissen)
@@ -31,21 +33,37 @@ function ergebnisText(richtig) {
   return "Kein Ding — Mitmachen zählt, dein Kopf ist jetzt wach. 💛";
 }
 
-export default function DenksportView({ onHome }) {
-  const { denkpauseErgebnisVermerken } = useAppData();
+// Tagesrätsel (24.09.): oben auf der Seite die feste Tagesaufgabe (5
+// gemischte Fragen, siehe utils/tagesraetsel.js). Aus der Tages-Quest bzw.
+// "Als Nächstes" (View "tagesraetsel") startet die Runde direkt.
+export default function DenksportView({ onHome, tagesraetselStart = false }) {
+  const { denkpauseErgebnisVermerken, denkpauseErgebnisse } = useAppData();
+  const raetselHeute = tagesraetselHeute(denkpauseErgebnisse);
+  const raetselOffen = Math.max(0, TAGESRAETSEL_ZIEL - raetselHeute);
+  const [istTagesraetsel, setIstTagesraetsel] = useState(false);
   const [kategorie, setKategorie] = useState(null);
   const [runde, setRunde] = useState([]);
   const [index, setIndex] = useState(0);
   const [gewaehlt, setGewaehlt] = useState(null);
   const [ergebnisse, setErgebnisse] = useState([]);
 
-  const starten = (id) => {
+  const starten = (id, anzahl = RUNDE, tagesraetsel = false) => {
+    setIstTagesraetsel(tagesraetsel);
     setKategorie(id);
-    setRunde(denksportRunde(id, RUNDE));
+    setRunde(denksportRunde(id, anzahl));
     setIndex(0);
     setGewaehlt(null);
     setErgebnisse([]);
   };
+
+  const tagesraetselStarten = () => starten("gemischt", raetselOffen || RUNDE, raetselOffen > 0);
+  const autoGestartet = useRef(false);
+  useEffect(() => {
+    if (!tagesraetselStart || autoGestartet.current) return;
+    autoGestartet.current = true;
+    if (raetselOffen > 0) starten("gemischt", raetselOffen, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tagesraetselStart]);
 
   const aufgabe = runde[index];
   const fertig = kategorie && ergebnisse.length === runde.length && runde.length > 0 && gewaehlt === null;
@@ -66,8 +84,8 @@ export default function DenksportView({ onHome }) {
     } else {
       const anzahl = neu.filter(Boolean).length;
       feuereBelohnung({
-        text: `Runde geschafft: ${anzahl} von ${runde.length} richtig!`,
-        untertitel: ergebnisText(anzahl),
+        text: istTagesraetsel ? "Tagesrätsel geschafft! 🧩" : `Runde geschafft: ${anzahl} von ${runde.length} richtig!`,
+        untertitel: istTagesraetsel ? `${anzahl} von ${runde.length} richtig — dazu ein Bonuspunkt für heute.` : ergebnisText(anzahl),
         icon: "trophy",
         gross: true,
       });
@@ -82,6 +100,8 @@ export default function DenksportView({ onHome }) {
         <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 16 }}>
           Kurz das Gehirn aufwecken: {RUNDE} Fragen, kein Zeitdruck. Jede richtige Antwort bringt einen Punkt und lädt die Region „Fokus & Planung“ in deinem Gehirn auf.
         </div>
+        <TagesraetselKarte heute={raetselHeute} onStart={tagesraetselStarten} />
+        <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, margin: "18px 0 10px" }}>Freies Training</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {KARTEN.map((k) => (
             <button
@@ -131,11 +151,17 @@ export default function DenksportView({ onHome }) {
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button type="button" className="mp-tap" onClick={() => starten(kategorie)} style={knopf(success, "#fff")}>
-            Noch eine Runde {LABEL[kategorie]}
-          </button>
+          {istTagesraetsel ? (
+            <button type="button" className="mp-tap" onClick={onHome} style={knopf(success, "#fff")}>
+              Zurück zur Startseite
+            </button>
+          ) : (
+            <button type="button" className="mp-tap" onClick={() => starten(kategorie)} style={knopf(success, "#fff")}>
+              Noch eine Runde {LABEL[kategorie]}
+            </button>
+          )}
           <button type="button" className="mp-tap" onClick={() => setKategorie(null)} style={knopf("#fff", textMain, true)}>
-            Andere Kategorie
+            {istTagesraetsel ? "Zur Denksport-Übersicht" : "Andere Kategorie"}
           </button>
         </div>
       </Shell>
@@ -146,7 +172,7 @@ export default function DenksportView({ onHome }) {
   const ausgewertet = gewaehlt !== null;
   return (
     <Shell>
-      <ViewHeader title={`${KARTEN.find((k) => k.id === kategorie)?.emoji || "🧩"} ${LABEL[kategorie]}`} onHome={() => setKategorie(null)} homeTitle="Zurück" />
+      <ViewHeader title={istTagesraetsel ? "🧩 Tagesrätsel" : `${KARTEN.find((k) => k.id === kategorie)?.emoji || "🧩"} ${LABEL[kategorie]}`} onHome={() => setKategorie(null)} homeTitle="Zurück" />
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }} aria-label={`Frage ${index + 1} von ${runde.length}`}>
         {runde.map((_, i) => (
           <span
@@ -206,6 +232,35 @@ export default function DenksportView({ onHome }) {
         </div>
       )}
     </Shell>
+  );
+}
+
+function TagesraetselKarte({ heute, onStart }) {
+  const f = TAGESRAETSEL_META;
+  const geschafft = heute >= TAGESRAETSEL_ZIEL;
+  const anteil = Math.min(1, heute / TAGESRAETSEL_ZIEL);
+  return (
+    <div style={{ borderRadius: 20, border: `2px solid ${f.dot}`, background: geschafft ? f.dot : f.bg, color: geschafft ? "#fff" : f.text, padding: "14px 16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+        <div style={{ fontSize: 16, fontWeight: 900 }}>{geschafft ? "✓ Tagesrätsel geschafft" : "🧩 Tagesrätsel"}</div>
+        <div style={{ fontSize: 13, fontWeight: 800 }}>
+          {Math.min(heute, TAGESRAETSEL_ZIEL)}/{TAGESRAETSEL_ZIEL}
+        </div>
+      </div>
+      <div style={{ fontSize: 12.5, marginTop: 4, lineHeight: 1.45, opacity: 0.9 }}>
+        {geschafft
+          ? "Super, für heute erledigt! Morgen warten 5 neue Fragen."
+          : `Deine Tagesaufgabe: ${TAGESRAETSEL_ZIEL} gemischte Fragen. Geschafft gibt's einen Bonuspunkt, jede richtige Antwort zählt extra.`}
+      </div>
+      <div style={{ height: 7, borderRadius: 99, background: geschafft ? "rgba(255,255,255,0.3)" : "rgba(228,100,63,0.18)", marginTop: 10, overflow: "hidden" }}>
+        <div style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", borderRadius: 99, background: geschafft ? "#fff" : f.dot }} />
+      </div>
+      {!geschafft && (
+        <button type="button" className="mp-tap" onClick={onStart} style={{ ...knopf(f.dot, "#fff"), marginTop: 12 }}>
+          {heute > 0 ? "Weiter lösen" : "Jetzt lösen"}
+        </button>
+      )}
+    </div>
   );
 }
 

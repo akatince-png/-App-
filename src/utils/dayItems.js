@@ -55,6 +55,10 @@ export const KATEGORIE_META = {
 // Morgen-/Abendroutine haben bewusst KEINEN KATEGORIE_META-Eintrag (sonst
 // tauchen sie als tote Einträge in der Wochenübersicht-Legende auf) — ihre
 // Farben stehen trotzdem zentral hier statt an sieben Stellen einzeln.
+// Tagesrätsel (24.09.): feste Tagesaufgabe aus dem Denksport — eigene
+// Farbe wie die "Gemischt"-Kachel der Denksport-Seite.
+export const TAGESRAETSEL_META = { bg: "#FCE6DE", text: "#9C3417", dot: "#E4643F", label: "Tagesrätsel", icon: "trophy" };
+
 export const ROUTINE_META = {
   morgenroutine: { bg: "#FDEBD6", text: "#9A4F08", dot: "#F08A24", label: "Morgenroutine", icon: "sunrise" },
   abendroutine: { bg: "#E2E4F3", text: "#1F255E", dot: "#2B3480", label: "Abendroutine", icon: "moon" },

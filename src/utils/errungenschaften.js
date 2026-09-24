@@ -1,6 +1,7 @@
 import { toLocalISODate, zaehleTageStreak } from "./dates";
 import { KATEGORIE_META, ROUTINE_META } from "./dayItems";
 import { aufhellen } from "../ui/theme";
+import { tageMitTagesraetsel } from "./tagesraetsel";
 
 // Punkte-/Abzeichen-System (Nutzerin-Vorgabe, 11.09.): 1 Punkt pro
 // erledigtem Eintrag, Streaks pro Kategorie + ein globaler Streak über
@@ -159,6 +160,16 @@ export const KATEGORIEN = [
     icon: "book",
     grad: gradAus("#C0447E"),
     holeTage: (q) => (q.denkpauseErgebnisse || []).filter((e) => e.richtig).map((e) => normalisiereDatum(e.erstelltAm)),
+  },
+  {
+    // Tagesrätsel (24.09., Nutzerinnen-Wunsch): 5 Fragen am Tag als feste
+    // Tagesaufgabe — jeder geschaffte Tag ist ein Bonuspunkt, zusätzlich zu
+    // den Punkten für richtige Antworten oben, mit eigener Serie/Abzeichen.
+    key: "tagesraetsel",
+    label: "Tagesrätsel",
+    icon: "trophy",
+    grad: gradAus("#E4643F"),
+    holeTage: (q) => tageMitTagesraetsel(q.denkpauseErgebnisse),
   },
 ];
 

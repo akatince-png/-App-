@@ -5,11 +5,12 @@ import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { useErrungenschaften } from "../data/useErrungenschaften";
 import { useTagesphase } from "../utils/useTagesphase";
+import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
 import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMuted } from "../ui/theme";
-import { buildDayItems, KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
+import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META } from "../utils/dayItems";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
@@ -125,6 +126,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     ausnahmenNachSchluessel,
     routineSchritte,
     routineDurchlaeufe,
+    denkpauseErgebnisse,
     routineEinstellungen,
     routineSchrittErledigt,
     confirmAlleTageszeit,
@@ -350,9 +352,29 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // (Morgenroutine bis 12 Uhr, Abendroutine ab 17 Uhr), sonst hinten.
   const stundeJetzt = today.getHours();
   const routineIstJetzt = (item) => (item.kategorie === "morgenroutine" ? stundeJetzt < 12 : stundeJetzt >= 17);
+  // Tagesrätsel (24.09., Nutzerinnen-Wunsch): 5 gemischte Denksport-Fragen
+  // als feste Tagesaufgabe — steht unter "Als Nächstes", bis sie geschafft
+  // ist, und zählt im Tagesring mit. Nicht im Notfallmodus.
+  const raetselHeute = tagesraetselHeute(denkpauseErgebnisse, today);
+  const raetselGeschafft = raetselHeute >= TAGESRAETSEL_ZIEL;
+  const raetselItems =
+    isEmergencyMode || raetselGeschafft
+      ? []
+      : [
+          {
+            key: "tagesraetsel",
+            name: "🧩 Tagesrätsel",
+            kategorie: "tagesraetsel",
+            viewId: "tagesraetsel",
+            detail: raetselHeute > 0 ? `${raetselHeute} von ${TAGESRAETSEL_ZIEL} Fragen gelöst` : `${TAGESRAETSEL_ZIEL} kurze Fragen, gemischt`,
+            uhrzeit: "",
+            done: false,
+          },
+        ];
   const angezeigteItems = [
     ...routineAlsNaechstesItems.filter(routineIstJetzt),
     ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel),
+    ...raetselItems,
     ...routineAlsNaechstesItems.filter((item) => !routineIstJetzt(item)),
   ];
 
@@ -636,7 +658,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
-  const tagesQuests = useMemo(() => baueTagesQuests({ items: heuteItems, hydrationHeuteMl, hydrationZielMl }), [heuteItems, hydrationHeuteMl, hydrationZielMl]);
+  const tagesQuests = useMemo(
+    () => baueTagesQuests({ items: heuteItems, hydrationHeuteMl, hydrationZielMl, raetselHeute, raetselZiel: TAGESRAETSEL_ZIEL }),
+    [heuteItems, hydrationHeuteMl, hydrationZielMl, raetselHeute]
+  );
+  const raetselZaehlt = !isEmergencyMode && raetselGeschafft ? 1 : 0;
 
   // Zeitraum-Auswahl fürs Tagesfortschritt-Balkendiagramm (16.09.,
   // Nutzerinnen-Vorgabe): "die Möglichkeit, zwischen Wochen- und
@@ -691,9 +717,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           Karte, ersetzt die bisherige reine Text-Begrüßung. */}
       <SpielstandKarte
         gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
-        statusZeile={statusText(erledigtCount, displayItems.length, lang)}
-        erledigt={erledigtCount}
-        gesamt={displayItems.length}
+        statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
+        erledigt={erledigtCount + raetselZaehlt}
+        gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
         punkte={gesamtPunkte}
         serie={globalerStreak}
         onOpenErfolge={() => onOpenView("erfolge")}
@@ -740,7 +766,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
               angezeigteItems.slice(0, 4).map((item, i) => {
-                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
                 // Morgen-/Abendroutine öffnen HIER eine Checkliste mit den
                 // echten Schritten statt wegzunavigieren (12.09., Nutzerin-
                 // Vorgabe) — "routine" ist der Schlüssel, den useRoutinen.js
@@ -866,7 +892,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
-      {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} />}
+      {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
       {/* Gehirn + Tagesfortschritt in einer Karte (23.09.) — auch im
           Notfallmodus, wie vorher das Tagesfortschritt-Diagramm. */}
       <GehirnKarte

@@ -5,7 +5,7 @@
 // (ADHS: kurze Belohnungsschleifen).
 const NICHT_ABHAKBAR = ["zeitblock", "workflow"];
 
-export function baueTagesQuests({ items = [], hydrationHeuteMl = 0, hydrationZielMl = 0 }) {
+export function baueTagesQuests({ items = [], hydrationHeuteMl = 0, hydrationZielMl = 0, raetselHeute = null, raetselZiel = 5 }) {
   const abhakbar = items.filter((i) => !NICHT_ABHAKBAR.includes(i.kategorie));
   const erledigt = abhakbar.filter((i) => i.done).length;
   const gesamt = abhakbar.length;
@@ -22,6 +22,10 @@ export function baueTagesQuests({ items = [], hydrationHeuteMl = 0, hydrationZie
   }
   if (hydrationZielMl > 0) {
     quests.push({ key: "trinken", titel: "Trinkziel", icon: "💧", aktuell: Math.min(hydrationHeuteMl, hydrationZielMl), ziel: hydrationZielMl, einheit: "ml" });
+  }
+  // Tagesrätsel (24.09.): 5 Denksport-Fragen am Tag als feste Aufgabe.
+  if (raetselHeute !== null) {
+    quests.push({ key: "raetsel", titel: "Tagesrätsel", icon: "🧩", aktuell: Math.min(raetselHeute, raetselZiel), ziel: raetselZiel, einheit: "Fragen", viewId: "tagesraetsel" });
   }
   return quests.map((q) => ({ ...q, geschafft: q.aktuell >= q.ziel }));
 }
