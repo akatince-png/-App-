@@ -54,6 +54,8 @@ Geprüft wird der ganze Coach-Alltag: Ergebnisse regelmäßig durchsehen, Korrek
   - Im Admin-Dashboard öffnet „💬 Chat“ dasselbe Fenster. „Hinweis“ (läuft über Aka) gibt es nur noch bei Admin-Konten.
 - **Push:** Edge Function `send-team-push` (v4, deployt) kennt `art: "coach"` (nur Admins, öffnet `#/coach-chat`) und `art: "an-coach"` (an alle Admin-Konten). Ausgelöst von Chat, Akut-Fenster (`coacheeNachrichtSenden`) und `coachNachrichtSenden` (Teams/Quests).
 - **Tests:** `e2e/coach-chat.spec.js` (3 Tests), Unit-Tests `coachAufmerksamkeit`/`coachChat`. Dauertest: `adminlauf.mjs` schreibt Jonas über den Chat; `tageslauf.mjs` antwortet mit „Danke!“, wenn der Hinweis oben steht (mit Fleiß-Faktor).
+- **Chatliste (24.09., Nutzerinnen-Wunsch):** Reiter „💬 Chats“ in der Coach-Übersicht wie die WhatsApp-Startseite. Pro Person die letzte Nachricht („Du: …“ mit ✓/✓✓), Uhrzeit bzw. Gestern/Wochentag/Datum, grüne Zahl für ungelesene; neueste Unterhaltung oben (`chatListe`, `chatZeitKurz` in `data/coachChat.js`). Pro Person gibt es genau einen durchgehenden Verlauf.
+- **Push von Testkonten bleibt an (Entscheidung der Nutzerin, 24.09.):** Antworten der Testpersonen im täglichen Lauf lösen bewusst eine echte Push an die Admin-Geräte aus, als Lebenszeichen.
 - **Beobachten:** `e2e/denksport.spec.js` „Admin-Konto spielt frei eine Runde“ schlug einmal in vier Komplettläufen fehl (danach 9/9 grün). Ursache noch unklar.
 
 ### Offen / ausstehend

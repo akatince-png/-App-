@@ -91,7 +91,7 @@ test("Coach-Übersicht: wer dich braucht steht oben, Zeile öffnet Chat mit Vorl
   await page.getByRole("button", { name: "Brauchen dich" }).click();
   await expect(zeilen).toHaveCount(2);
   await zeilen.nth(1).click();
-  await page.getByRole("button", { name: /💬 Chat/ }).click();
+  await page.getByRole("button", { name: /^💬 Chat( \(\d+ neu\))?$/ }).click();
   const chat = page.getByRole("dialog", { name: "Chat: Jonas" });
   await expect(chat.locator('[data-chat-nachricht="fremde"]')).toContainText("anrufen");
   await chat.getByRole("button", { name: "Wie läuft's bei dir?" }).click();
@@ -99,5 +99,30 @@ test("Coach-Übersicht: wer dich braucht steht oben, Zeile öffnet Chat mit Vorl
   expect(gesendet.nachrichten[0]).toMatchObject({ absender: "coach", user_id: "p-jonas" });
   await expect.poll(() => gesendet.push.length).toBe(1);
   expect(gesendet.push[0]).toMatchObject({ art: "coach", empfaengerId: "p-jonas" });
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});
+
+test("Coach: Reiter 'Chats' listet Unterhaltungen nach zuletzt geschrieben, antippen öffnet den Verlauf", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.route("**/rest/v1/rpc/admin_liste_probanden*", (r) => r.fulfill({ json: PERSONEN }));
+  await page.route("**/rest/v1/teams*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/training_*", (r) => r.fulfill({ json: [] }));
+  const alle = [
+    { id: "1", user_id: "p-mia", text: "Stark gemacht!", absender: "coach", gelesen: true, erstellt_am: iso(600) },
+    { id: "2", user_id: "p-lea", text: "Kann ich später anfangen?", absender: "coachee", gelesen: false, erstellt_am: iso(5) },
+  ];
+  await page.route("**/rest/v1/coachee_nachrichten*", (r) => {
+    if (r.request().method() !== "GET") return r.fulfill({ status: 204, body: "" });
+    const url = r.request().url();
+    return r.fulfill({ json: url.includes("user_id=eq.p-lea") ? [alle[1]] : url.includes("user_id=eq.") ? [] : alle });
+  });
+  await page.goto("/e2e/harness/index.html#/admin-uebersicht");
+  await page.getByRole("button", { name: /💬 Chats/ }).click();
+  const eintraege = page.getByRole("button", { name: /^Chat mit / });
+  await expect(eintraege).toHaveCount(2);
+  await expect(eintraege.nth(0)).toContainText("Kann ich später anfangen?");
+  await expect(eintraege.nth(1)).toContainText("Du: Stark gemacht!");
+  await eintraege.nth(0).click();
+  await expect(page.getByRole("dialog", { name: "Chat: Lea" }).locator('[data-chat-nachricht="fremde"]')).toContainText("später anfangen");
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });

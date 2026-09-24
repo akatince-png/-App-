@@ -89,7 +89,7 @@ if (!/heute|zuletzt|ruhig|Punkte/i.test(ueText)) coach.beobachtungen.push('Über
 const jonasZeile = p.locator('button[aria-expanded]').filter({ hasText: 'Jonas Dauertest' }).first();
 if (await jonasZeile.count()) {
   await jonasZeile.click(); await w(800);
-  await p.getByRole('button', { name: /💬 Chat/ }).first().click(); await w(2500);
+  await p.getByRole('button', { name: /^💬 Chat( \(\d+ neu\))?$/ }).first().click(); await w(2500);
   const chat = p.getByRole('dialog', { name: /Chat: Jonas/ });
   const text = `Hi Jonas, wie läuft deine Woche? Melde dich gern kurz. (Dauertest ${new Date().toISOString().slice(0, 10)})`;
   await chat.getByRole('textbox').fill(text);

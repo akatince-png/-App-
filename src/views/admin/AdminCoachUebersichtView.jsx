@@ -6,7 +6,7 @@ import ChatFenster from "../../ui/ChatFenster";
 import { accentDark, cardBorder, danger, nachtSchatten, nachtVerlauf, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { toLocalISODate } from "../../utils/dates";
-import { useCoachChat } from "../../data/coachChat";
+import { chatListe, chatZeitKurz, useCoachChat } from "../../data/coachChat";
 import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZahlen } from "../../utils/coachAufmerksamkeit";
 
 // Grafische Gesamtübersicht über ALLE Coachees gleichzeitig (15.08.,
@@ -29,6 +29,19 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
   const [offenFuer, setOffenFuer] = useState(null);
   const [trainingFuer, setTrainingFuer] = useState(null);
   const [chatFuer, setChatFuer] = useState(null);
+  const [reiter, setReiter] = useState("uebersicht");
+  const [chatZeilen, setChatZeilen] = useState([]);
+
+  // Chatliste (24.09., WhatsApp-Startseite): die letzten Nachrichten aller
+  // Coachees; die Liste daraus baut chatListe().
+  const chatsLaden = async () => {
+    const { data, error } = await supabase
+      .from("coachee_nachrichten")
+      .select("id, user_id, text, absender, gelesen, erstellt_am")
+      .order("erstellt_am", { ascending: false })
+      .limit(1000);
+    if (!error) setChatZeilen(data || []);
+  };
 
   const probandenLaden = async () => {
     const { data, error } = await supabase.rpc("admin_liste_probanden");
@@ -44,7 +57,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
   useEffect(() => {
     (async () => {
       setLadend(true);
-      const [data, { data: teamListe }] = await Promise.all([probandenLaden(), supabase.from("teams").select("id, name").order("name")]);
+      const [data, { data: teamListe }] = await Promise.all([probandenLaden(), supabase.from("teams").select("id, name").order("name"), chatsLaden()]);
       setTeams(teamListe || []);
       setLadend(false);
       if (!data) return;
@@ -113,6 +126,28 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
         </div>
       </div>
 
+      <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+        {[
+          ["uebersicht", "👥 Übersicht"],
+          ["chats", `💬 Chats${zahlen.neueNachrichten > 0 ? ` (${zahlen.neueNachrichten})` : ""}`],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className="mp-tap"
+            aria-pressed={reiter === id}
+            onClick={() => setReiter(id)}
+            style={{ flex: 1, border: "none", borderRadius: 12, padding: "10px 12px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: reiter === id ? accentDark : "#EEF0F5", color: reiter === id ? "#fff" : textMain }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {reiter === "chats" ? (
+        <ChatListe eintraege={chatListe(sortiert, chatZeilen)} teamName={teamName} onOeffnen={(p) => setChatFuer(p)} />
+      ) : (
+      <>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
         {[["alle", "Alle"], ["braucht", "Brauchen dich"], ...teamFilter.map((t) => [t.id, t.name])].map(([id, label]) => (
           <button
@@ -155,6 +190,8 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       <div style={{ fontSize: 11.5, color: textMuted, lineHeight: 1.5, marginTop: 10 }}>
         Oben steht, wer dich braucht: seit 2 oder mehr Tagen ruhig, Onboarding offen oder eine ungelesene Nachricht. Neue Zugänge anlegen geht weiter im Admin-Dashboard.
       </div>
+      </>
+      )}
 
       {chatFuer && (
         <CoachChatFenster
@@ -163,10 +200,55 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
           onZurueck={() => {
             setChatFuer(null);
             probandenLaden();
+            chatsLaden();
           }}
         />
       )}
     </Shell>
+  );
+}
+
+// Chatliste wie die WhatsApp-Startseite (24.09.): pro Person die letzte
+// Nachricht mit Uhrzeit, ungelesene als Zahl, neueste Unterhaltung oben.
+function ChatListe({ eintraege, teamName, onOeffnen }) {
+  if (eintraege.length === 0) {
+    return <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.5 }}>Noch keine Chats. Einen neuen startest du in der Übersicht: Person antippen → „💬 Chat“.</div>;
+  }
+  return (
+    <div>
+      {eintraege.map(({ proband: p, letzte, ungelesen }) => (
+        <button
+          key={p.id}
+          type="button"
+          className="mp-tap"
+          aria-label={`Chat mit ${p.vorname || p.email}`}
+          onClick={() => onOeffnen(p)}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", border: "none", borderBottom: `1px solid ${cardBorder}`, background: "transparent", cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: textMain }}
+        >
+          <Profilbild pfad={p.profilbild_pfad} name={p.vorname || p.email} size={44} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontWeight: 800, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {p.vorname || p.email}
+                {teamName(p.team_id) && <span style={{ fontWeight: 600, fontSize: 12, color: textMuted }}> · {teamName(p.team_id)}</span>}
+              </span>
+              <span style={{ fontSize: 11.5, color: ungelesen > 0 ? "#1E8E5A" : textMuted, fontWeight: ungelesen > 0 ? 800 : 500, flexShrink: 0 }}>{chatZeitKurz(letzte.erstelltAm)}</span>
+            </span>
+            <span style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 2 }}>
+              <span style={{ fontSize: 13, color: textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: ungelesen > 0 ? 700 : 400 }}>
+                {letzte.absender === "coach" ? (
+                  <span style={{ color: letzte.gelesen ? "#2D6FD6" : textMuted }}>{letzte.gelesen ? "✓✓ " : "✓ "}</span>
+                ) : null}
+                {letzte.absender === "coach" ? "Du: " : ""}
+                {letzte.text}
+              </span>
+              {ungelesen > 0 && <span style={{ background: "#1E8E5A", color: "#fff", borderRadius: 99, fontSize: 11, fontWeight: 800, padding: "2px 7px", flexShrink: 0 }}>{ungelesen}</span>}
+            </span>
+          </span>
+        </button>
+      ))}
+      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 10 }}>Neuen Chat starten: in der Übersicht Person antippen → „💬 Chat“.</div>
+    </div>
   );
 }
 

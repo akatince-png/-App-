@@ -106,3 +106,33 @@ export function useCoachChat(coacheeId, rolle) {
 
   return { nachrichten, fehler, senden, neuLaden: laden };
 }
+
+// Chatliste für den Coach (24.09., WhatsApp-Startseite): pro Person die
+// letzte Nachricht, ungelesene eingehende, sortiert nach "zuletzt
+// geschrieben". `zeilen` = coachee_nachrichten beliebiger Personen
+// (neueste zuerst oder ungeordnet), `probanden` aus admin_liste_probanden.
+export function chatListe(probanden, zeilen) {
+  const proPerson = new Map();
+  for (const r of zeilen || []) {
+    const n = zeileZuNachricht(r);
+    const eintrag = proPerson.get(r.user_id) || { letzte: null, ungelesen: 0 };
+    if (!eintrag.letzte || n.erstelltAm > eintrag.letzte.erstelltAm) eintrag.letzte = n;
+    if (n.absender === "coachee" && !n.gelesen) eintrag.ungelesen++;
+    proPerson.set(r.user_id, eintrag);
+  }
+  return (probanden || [])
+    .filter((p) => !p.is_admin && proPerson.has(p.id))
+    .map((p) => ({ proband: p, ...proPerson.get(p.id) }))
+    .sort((a, b) => (a.letzte.erstelltAm < b.letzte.erstelltAm ? 1 : -1));
+}
+
+// "14:05" (heute) / "Gestern" / "Mo." (diese Woche) / "21.09."
+export function chatZeitKurz(iso, heute = new Date()) {
+  const d = new Date(iso);
+  const label = chatTagLabel(iso, heute);
+  if (label === "Heute") return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  if (label === "Gestern") return "Gestern";
+  const tage = (new Date(heute.getFullYear(), heute.getMonth(), heute.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000;
+  if (tage < 7) return d.toLocaleDateString("de-DE", { weekday: "short" });
+  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+}
