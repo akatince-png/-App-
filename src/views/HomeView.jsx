@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
@@ -133,6 +133,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     eigeneGruppenLogs,
     gruppenprotokolle,
     gruppenBausteinUmschalten,
+    gruppenprotokolleNeuLaden,
     routineEinstellungen,
     routineSchrittErledigt,
     confirmAlleTageszeit,
@@ -164,6 +165,12 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     teamNachrichtSenden,
     teamNachrichtGelesen,
   } = useAppData();
+  // Gruppenprotokoll-Stand beim Öffnen der Startseite auffrischen
+  // (Gruppen-Quest-Karte), siehe TeamView.
+  useEffect(() => {
+    gruppenprotokolleNeuLaden?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { proband } = useAdmin();
   // Coach-verwaltetes Modell (13.08.): Coachees sehen hier statt des
   // KI-Assistenten eine einfache Nachricht-an-den-Coach-Karte (siehe

@@ -366,17 +366,21 @@ try {
   // mit demselben Fleiß wie im Tagesplan, nicht am Pausentag.
   if (!PAUSENTAG) {
     let gruppe = 0;
+    let ausgelassen = 0;
     for (let i = 0; i < 4; i++) {
       const knopf = page.getByRole("button", { name: / erledigt$/ }).filter({ hasText: "Erledigt?" }).first();
       if (!(await knopf.isVisible().catch(() => false))) break;
       const label = (await knopf.getAttribute("aria-label").catch(() => "")) || "";
-      if (auslassen(`gruppe:${label}`)) break;
+      if (auslassen(`gruppe:${label}`)) {
+        ausgelassen++;
+        break;
+      }
       await knopf.click();
       await warte(1500);
       await feierWegtippen();
       gruppe++;
     }
-    if (gruppe) schritt(`Gruppenprotokoll: ${gruppe} Gruppen-Gewohnheit(en) abgehakt`);
+    if (gruppe || ausgelassen) schritt(`Gruppenprotokoll: ${gruppe} Gruppen-Gewohnheit(en) abgehakt, ${ausgelassen} bewusst ausgelassen`);
     await foto("06d2-gruppenprotokoll");
   }
   const motivieren = page.getByRole("button", { name: "💬 Motivieren" }).first();

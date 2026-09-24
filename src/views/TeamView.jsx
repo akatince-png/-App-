@@ -315,8 +315,14 @@ function TeamLiga() {
 
 export default function TeamView({ onHome }) {
   // userId aus den App-Daten (bei "Verwalten als" die verwaltete Person).
-  const { team, teamNachrichtSenden, gruppenprotokolle, gruppenBausteinUmschalten, userId } = useAppData();
+  const { team, teamNachrichtSenden, gruppenprotokolle, gruppenBausteinUmschalten, gruppenprotokolleNeuLaden, userId } = useAppData();
   const [reiter, setReiter] = useState(team ? "team" : "liga");
+  // Beim Öffnen frisch laden (Dauertest 24.09.: Routine/Tagesrätsel von
+  // heute fehlten im Gruppenprotokoll, weil nur beim App-Start geladen wurde).
+  useEffect(() => {
+    gruppenprotokolleNeuLaden?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <Shell>
       <ViewHeader title={team ? `👥 ${team.name}` : "👥 Teams"} onHome={onHome} />

@@ -133,8 +133,13 @@ export function useGruppenprotokolle(userId, teamId) {
   useEffect(() => {
     abgebrochen.current = false;
     load();
+    // Zurück in die App (Handy entsperrt, Tab gewechselt) → Stand auffrischen,
+    // die anderen im Team haken ja in der Zwischenzeit weiter ab.
+    const sichtbar = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", sichtbar);
     return () => {
       abgebrochen.current = true;
+      document.removeEventListener("visibilitychange", sichtbar);
     };
   }, [load]);
 
