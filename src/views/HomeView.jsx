@@ -25,7 +25,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
-import { AkutModusTrigger, AkutModusPanel } from "../ui/AkutModusKarte";
+import { AkutModusPanel } from "../ui/AkutModusKarte";
 import QuickTaskList from "../ui/QuickTaskList";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
@@ -905,56 +905,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         onOpenErfolge={() => onOpenView("erfolge")}
         onDenksport={() => onOpenView("denksport")}
         onOpenView={onOpenView}
+        onWasser={() => onOpenView("hydration")}
+        onAkut={() => setAkutOffen(true)}
         phase={phase}
       />
-
-      {/* Hydration- + Akutmodus-Knopf nebeneinander, gleich groß (13.09.,
-          Nutzerin-Vorgabe): beides häufig genutzte Schnellaktionen — "immer,
-          wenn ich was trinke, direkt auf den Knopf drücken" bzw. im akuten
-          Moment sofort Hilfe holen. Bewusst ganz oben, unabhängig vom
-          Notfallmodus (der jetzt weiter unten seine eigene Zeile hat) und
-          ohne erst durch Direktzugriff/Als Nächstes suchen zu müssen. */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-        <button
-          type="button"
-          className="mp-tap"
-          onClick={() => onOpenView("hydration")}
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "14px 14px",
-            borderRadius: 18,
-            border: "none",
-            background: KATEGORIE_META.hydration.bg,
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              background: KATEGORIE_META.hydration.dot,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Icon name="droplet" size={22} color="#fff" />
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Wasser eintragen</div>
-            <div style={{ fontSize: 11, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
-          </div>
-        </button>
-        <div style={{ flex: 1 }}>
-          <AkutModusTrigger onClick={() => setAkutOffen(true)} />
-        </div>
-      </div>
 
       {akutOffen && (
         <AkutModusPanel

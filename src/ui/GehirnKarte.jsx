@@ -183,7 +183,46 @@ function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, phase = "nacht" }) {
+// Schnellknöpfe im Gehirnfeld (24.09., Nutzerinnen-Wunsch): statt der
+// beiden großen Kacheln "Wasser eintragen" und "Grad nicht gut?" unter der
+// Karte ein großer Tropfen und ein runder gelber Knopf unten links im
+// Gehirnbild (dort ist unter dem Stirnlappen Platz) — gleiche Funktionen.
+function Schnellknoepfe({ onWasser, onAkut }) {
+  if (!onWasser && !onAkut) return null;
+  return (
+    <div style={{ position: "absolute", left: 2, bottom: 4, display: "flex", alignItems: "flex-end", gap: 10 }}>
+      {onWasser && (
+        <button type="button" className="mp-tap mp-tropfen" aria-label="Wasser eintragen" title="Wasser eintragen" onClick={onWasser} style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.35))" }}>
+          <svg width="54" height="66" viewBox="0 0 54 66" aria-hidden="true" style={{ display: "block" }}>
+            <defs>
+              <linearGradient id="mp-tropfen-verlauf" x1="0" y1="0" x2="0.4" y2="1">
+                <stop offset="0%" style={{ stopColor: "#8CC8FF" }} />
+                <stop offset="100%" style={{ stopColor: "#1F5FD0" }} />
+              </linearGradient>
+            </defs>
+            <path d="M27 3 C 27 3, 50 30, 50 43 A 23 23 0 0 1 4 43 C 4 30, 27 3, 27 3 Z" fill="url(#mp-tropfen-verlauf)" stroke="#fff" strokeWidth="3" />
+            <ellipse cx="18" cy="38" rx="4" ry="7" fill="rgba(255,255,255,0.45)" transform="rotate(20 18 38)" />
+            <path d="M27 36 v14 M20 43 h14" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
+      {onAkut && (
+        <button
+          type="button"
+          className="mp-tap"
+          aria-label="Grad nicht gut?"
+          title="Grad nicht gut?"
+          onClick={onAkut}
+          style={{ width: 46, height: 46, borderRadius: 99, border: "3px solid #fff", background: "linear-gradient(135deg, #F59E0B, #FBBF24)", fontSize: 22, cursor: "pointer", boxShadow: "0 6px 12px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+        >
+          💡
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, phase = "nacht" }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
@@ -211,6 +250,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         <div style={{ width: `${prozent}%`, height: "100%", borderRadius: 99, background: logoVerlauf, transition: "width 0.8s ease-out" }} />
       </div>
 
+      <div style={{ position: "relative" }}>
       <svg viewBox="40 24 250 200" role="img" aria-label={`Dein Gehirn, ${ZEITRAUM_TEXT[zeitraum] || "heute"} zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 420, display: "block", margin: "8px auto 0" }}>
         <defs>
           <clipPath id="mp-grosshirn">
@@ -323,6 +363,8 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           );
         })}
       </svg>
+      <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
+      </div>
 
       {/* Tagesfortschritt-Balken je Bereich — gleiche Zeitraum-Wahl wie oben */}
       <div style={{ marginTop: 6, padding: "12px 10px 8px", borderRadius: 16, background: "rgba(255,255,255,0.06)" }}>

@@ -213,6 +213,11 @@ body {
   .mp-card {
     transition: box-shadow 0.2s ease;
   }
+  /* Wasser-Tropfen im Gehirnfeld (24.09.): wippt leicht, damit er als
+     Knopf erkennbar ist. */
+  .mp-tropfen svg {
+    animation: mp-tropfen-wippen 2.6s ease-in-out infinite;
+  }
 }
 
 /* iOS Safari rendert den Inhalt von <input type="date"/time"> intern
@@ -525,4 +530,9 @@ input[type="time"]::-webkit-date-and-time-value {
       transform: scale(1);
     }
   }
+}
+
+@keyframes mp-tropfen-wippen {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
