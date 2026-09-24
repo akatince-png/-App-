@@ -16,16 +16,26 @@ Wochenübersicht und Wochenprotokolle.
 | Start | 23.09.2026, Protokoll „Dauertest ab 23.09.“ |
 | Eingerichtet | Vitamin D3 (morgens), Magnesium (abends), Gewohnheiten „10 Minuten Spaziergang“ (12:30) und „5 Minuten lesen“ (21:00), Morgenroutine (Wasser trinken, Zähne putzen, 5 Min. Bewegung), Abendroutine (Handy weglegen, Brain Dump) |
 
-### Zweites Konto „Mia Dauertest“ (seit 24.09.2026)
+### Team-Vergleich (24.09.–24.10.2026, Wunsch der Nutzerin)
 
-| | |
-|---|---|
-| E-Mail | `claude.dauertest2@example.com` |
-| User-ID | `4100a127-9593-4d8a-8920-d452e96ccb36` |
-| Rolle | Coachee, weiblich, Steckbrief: 32, Grafikdesignerin, ADHS seit 2 Jahren |
-| Eingerichtet | Medikinet adult 20 mg (08:00), Omega-3 (morgens), Eisen (abends), Gewohnheiten „15 Min. Yoga“ (18:00) und „Tagebuch schreiben“ (20:30), Morgenroutine (Fenster auf, Medikament, Frühstück), Abendroutine (Tee, Handy weg), Trinkziel 2000 ml |
+Zwei Test-Teams mit bewusst **unterschiedlichen Lebensbereichen und unterschiedlichem Fleiß**. Ziel: sehen, wie sich Punkte, Serien, Team-Wochenziel und Liga verhalten, wenn nicht alle dieselben Bereiche haben.
 
-Beide Konten bilden das **„Test-Team Dauertest“** und haben je zwei Team-Quests („3× Morgenroutine“, „Tagesrätsel an 3 Tagen“, gültig bis Sonntag). Neue Quests für die Folgewochen legt Claude beim Lauf per SQL an (`quests.proband_id` = Testkonto — nie `null`, sonst sehen alle echten Coachees sie).
+| Person | E-Mail | Team | Bereiche | Nicht dabei | Fleiß (`AKA_FLEISS`) | Pausentag-Versatz |
+|---|---|---|---|---|---|---|
+| Claude Dauertest | `claude.dauertest@example.com` | Sonne | Supplemente, Gewohnheiten, Morgen-/Abendroutine, Wasser | Medikamente, Training, Ernährung | 0.83 | 0 |
+| Mia Dauertest (w, 32, Grafikdesignerin) | `claude.dauertest2@example.com` | Sonne | Medikamente (Medikinet), Supplemente, Gewohnheiten (Yoga, Tagebuch), Routinen, Wasser (2 l) | Training, Ernährung | 0.90 | 2 |
+| Jonas Dauertest (m, 27, Student) | `claude.dauertest3@example.com` | Mond | Training (Mo/Mi/Fr Kraft, Sa Lauf), Ernährung (3 Mahlzeiten täglich), Wasser (3 l), Bildschirmzeit (120 Min.) | Medikamente, Supplemente, Routinen | 0.65 | 4 |
+| Lea Dauertest (w, 41, Buchhalterin, 2 Kinder) | `claude.dauertest4@example.com` | Mond | Medikamente (Elvanse), Morgenroutine, Tageslicht (30 Min.), Gewohnheit (Abendspaziergang) | Training, Supplemente, Ernährung | 0.95 | 6 |
+
+Alle vier haben je zwei Team-Quests pro Woche (Mo neu anlegen, `proband_id` = Testkonto, **nie `null`**).
+
+Aufruf je Person (Passwort vorher per SQL neu setzen):
+
+```bash
+AKA_TEST_EMAIL=<email> AKA_TEST_PW='<pw>' AKA_FLEISS=<fleiß> AKA_PAUSE_VERSATZ=<versatz> AKA_OUT=dauertest-out/<datum>-<name> node scripts/dauertest/tageslauf.mjs
+```
+
+Im Tagesbericht festhalten: Punkte je Person (Home = Team-Seite?), Team-Wochenziel, Liga-Ø beider Teams, Serien. **Am 24.10.** Abschluss-Vergleich schreiben (Verlauf je Team/Person, Auffälligkeiten: z. B. ob Personen mit mehr eingerichteten Bereichen automatisch mehr Punkte sammeln und die Liga dadurch verzerrt wird).
 
 **Nicht löschen.** Die Nutzerin sieht das Konto in ihrer Admin-Liste und
 kann es über „Verwalten als“ ansehen.

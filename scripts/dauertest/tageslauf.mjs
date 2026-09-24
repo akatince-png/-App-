@@ -35,14 +35,20 @@ fs.mkdirSync(OUT, { recursive: true });
 // Pausentag (nichts abhaken — prüft, dass nichts "bestraft" wird und
 // Pflanzen nur schlafen), an anderen Tagen wird ab und zu ein einzelner
 // Punkt ausgelassen (wie im echten Leben).
-const PAUSENTAG = tagIndex % 7 === 5;
+// Team-Vergleich (24.09.): jede Testperson hat ihren eigenen Fleiß
+// (AKA_FLEISS, Anteil erledigter fälliger Punkte, Standard ≈ 0.83) und
+// ihren eigenen Pausentag (AKA_PAUSE_VERSATZ, 0–6), damit sich die Teams
+// unterscheiden und nicht alle am selben Tag pausieren.
+const FLEISS = Number(process.env.AKA_FLEISS || "0.83");
+const PAUSE_VERSATZ = Number(process.env.AKA_PAUSE_VERSATZ || "0");
+const PAUSENTAG = (tagIndex + PAUSE_VERSATZ) % 7 === 5;
 // Wiederholung nach einem abgebrochenen Lauf: nichts abhaken/eintragen,
 // nur anmelden und alle Ansichten prüfen (keine doppelten Testdaten).
 const NUR_ANSICHTEN = process.env.AKA_NUR_ANSICHTEN === "1";
 const auslassen = (name) => {
   let h = tagIndex * 31;
-  for (const c of name) h = (h * 33 + c.charCodeAt(0)) % 1000003;
-  return h % 6 === 0;
+  for (const c of `${EMAIL}|${name}`) h = (h * 33 + c.charCodeAt(0)) % 1000003;
+  return h % 100 >= Math.round(FLEISS * 100);
 };
 const FEEDBACK = ["👍 Gespürt", "🤏 Ein bisschen", "➖ Nichts gemerkt"];
 
@@ -120,7 +126,7 @@ async function geheZu(view) {
   // Bereiche werden nachgeladen — über den Sandbox-Proxy manchmal langsam.
   // Bis zu 10 s warten, solange nur "Lädt..." zu sehen ist, statt die
   // Ansicht fälschlich als leer zu melden.
-  for (let i = 0; i < 10 && /^\s*Lädt\.{0,3}\s*$/.test(await text().catch(() => "")); i++) await warte(1000);
+  for (let i = 0; i < 12 && /Lädt(…|\.\.\.)/.test(await text().catch(() => "")); i++) await warte(1000);
   await feierWegtippen();
 }
 
@@ -128,7 +134,12 @@ try {
   // 1) Anmelden — inkl. Messung, ob die App nach dem Login hängen bleibt
   // (am 23.09. blieb sie nach dem ersten Login bei "Lädt..." stehen, bis
   // neu geladen wurde).
-  await page.goto(URL_BASIS);
+  // Startseite laden — bei einem kurzen Verbindungsfehler (502 über den
+  // Sandbox-Proxy) bis zu 3× neu versuchen.
+  for (let versuch = 0; versuch < 3; versuch++) {
+    await page.goto(URL_BASIS).catch(() => {});
+    if (await page.locator("input[type=email]").waitFor({ timeout: 15000 }).then(() => true).catch(() => false)) break;
+  }
   await page.locator("input[type=email]").fill(EMAIL);
   await page.locator("input[type=password]").fill(PW);
   const t0 = Date.now();
@@ -198,6 +209,42 @@ try {
       if (!geklickt) break;
     }
   }
+  // Training (seit 24.09.): fällige Trainings über "Training starten" im
+  // Live-Workout durchklicken (Knöpfe bis zum Ende/Speichern).
+  if (!PAUSENTAG) {
+    for (let t = 0; t < 2; t++) {
+      const start = page.getByRole("button", { name: "Training starten" }).first();
+      if (!(await start.isVisible().catch(() => false))) break;
+      const zeile = start.locator("xpath=ancestor::div[.//text()[contains(., ':')]][1]");
+      const zeilenText = (await zeile.innerText().catch(() => "")).replace(/\s+/g, " ");
+      const uhr = (zeilenText.match(/\b(\d{2}:\d{2})\b/) || [])[1] || "00:00";
+      if (uhr > jetzt || auslassen(`training${t}`)) {
+        ausgelassen.push("Training");
+        break;
+      }
+      await start.click();
+      await warte(1500);
+      const vorschauStart = page.getByRole("button", { name: /^(Training starten|Starten|Los geht's)$/ }).last();
+      if (await vorschauStart.isVisible().catch(() => false)) {
+        await vorschauStart.click();
+        await warte(1500);
+      }
+      let klicks = 0;
+      for (; klicks < 60; klicks++) {
+        await feierWegtippen();
+        // Knöpfe aus LiveWorkout.jsx/Timer.jsx: Satz fertig → Pause
+        // überspringen → Stimmt, weiter / Stimmt, Training beenden; bei
+        // Cardio (Stoppuhr) Start → Fertig.
+        const k = page.getByRole("button", { name: /^(Satz fertig|Pause überspringen|Stimmt, weiter|Stimmt, Training beenden|Start|Fertig|Workout starten)$/ }).first();
+        if (!(await k.isVisible().catch(() => false))) break;
+        await k.click();
+        await warte(700);
+      }
+      await foto(`03b-training-${t}`);
+      erledigt.push(`Training (${klicks} Klicks)`);
+      await geheZu("tagesplan");
+    }
+  }
   bericht.erledigt = erledigt;
   bericht.ausgelassen = ausgelassen;
   schritt(`Tagesplan: ${erledigt.length} erledigt, ${ausgelassen.length} bewusst ausgelassen${PAUSENTAG ? " (Pausentag)" : ""}`);
@@ -235,6 +282,21 @@ try {
   }
   schritt(`Hydration: ${schlucke}× 200 ml eingetragen`);
   await foto("06-hydration");
+
+  // 4b) Tageslicht (seit 24.09., nur wenn eingerichtet): Schnell-Knopf.
+  if (!PAUSENTAG) {
+    await geheZu("tageslicht");
+    const plus = page.getByRole("button", { name: /^\+\s?(10|15|20|30) ?Min/ }).first();
+    if (await plus.isVisible().catch(() => false)) {
+      const n = 1 + (tagIndex % 3);
+      for (let i = 0; i < n; i++) {
+        await plus.click();
+        await warte(900);
+        await feierWegtippen();
+      }
+      schritt(`Tageslicht: ${n}× Schnell-Knopf`);
+    }
+  }
 
   // 5) Tagesrätsel (seit 24.09.): 5 Fragen, jeweils die erste Antwort —
   //    mal richtig, mal falsch. Am Pausentag nicht.
