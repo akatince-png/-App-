@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "../../ui/primitives";
-import { accent, accentDark, textMuted } from "../../ui/theme";
+import { accent, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 
 export default function CommunityTab() {
@@ -13,7 +13,7 @@ export default function CommunityTab() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ maxWidth: 280 }}>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Daten anonym mit der Community teilen</div>
-            <div style={{ fontSize: 12, color: textMuted }}>Hilft, Trends zu Wirksamkeit &amp; Nebenwirkungen zu erkennen. Du bleibst 100% anonym.</div>
+            <div style={{ fontSize: 12, color: textMuted }}>Erlaubt, deine Daten später anonym (ohne Namen) für Community-Auswertungen zu nutzen. Aktuell wird noch nichts geteilt.</div>
           </div>
           <button
             onClick={toggleDatenteilung}
@@ -24,18 +24,16 @@ export default function CommunityTab() {
         </div>
       </Card>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Beispiel: BPC-157 zur Sehnenverletzung</div>
-      <Card style={{ marginBottom: 14, opacity: datenteilung ? 1 : 0.5 }}>
-        <div style={{ fontSize: 11, color: textMuted, marginBottom: 10 }}>Anonymisierte Daten von 124 Nutzer:innen</div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 13 }}>Verbesserung nach 4 Wochen</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: accentDark }}>72%</span>
+      {/* Bis 24.09. stand hier ein fest eingebautes Beispiel mit erfundenen
+          Zahlen ("BPC-157 … 124 Nutzer:innen, 72 %") — hätte wie echte
+          Ergebnisse gewirkt. Ersetzt durch einen ehrlichen Hinweis, bis es
+          echte, anonymisierte Auswertungen gibt. */}
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Community-Auswertungen</div>
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.5 }}>
+          🌱 Noch in Vorbereitung. Sobald genug Menschen ihre Daten anonym teilen, siehst du hier, was anderen geholfen hat, zum Beispiel
+          welche Routinen oder Gewohnheiten gut funktionieren.
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 13 }}>Nebenwirkungen (leicht/mittel)</span>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>18%</span>
-        </div>
-        {!datenteilung && <div style={{ fontSize: 11, color: textMuted, marginTop: 10 }}>Aktiviere die Datenteilung oben, um Community-Insights freizuschalten.</div>}
       </Card>
     </>
   );
