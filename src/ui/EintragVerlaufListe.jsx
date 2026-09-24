@@ -30,6 +30,12 @@ export default function EintragVerlaufListe({ eintraege, feld, einheit, min = 0,
     setBearbeiten(null);
   };
 
+  // "Do., 24.09." statt "2026-09-24" (Livecheck 24.09.).
+  const datumKurz = (iso) => {
+    const [j, m, t] = iso.split("-").map(Number);
+    return new Date(j, m - 1, t).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
+  };
+
   return (
     <Card>
       {eintraege
@@ -39,7 +45,7 @@ export default function EintragVerlaufListe({ eintraege, feld, einheit, min = 0,
         .map((e) => (
           <div key={e.datum} style={{ padding: "6px 0", borderBottom: `1px solid ${cardBorder}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-              <span style={{ color: textMuted }}>{e.datum}</span>
+              <span style={{ color: textMuted }}>{datumKurz(e.datum)}</span>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontWeight: 700 }}>
                   {e[feld]} {einheit}
@@ -59,16 +65,19 @@ export default function EintragVerlaufListe({ eintraege, feld, einheit, min = 0,
                 <div style={{ flex: 1 }}>
                   <NumberWheelField value={entwurf} onChange={setEntwurf} min={min} max={max} step={step} />
                 </div>
-                <div style={{ width: 90 }}>
-                  <PrimaryButton onClick={() => speichern(e.datum)}>Speichern</PrimaryButton>
+                <div style={{ width: 112, flexShrink: 0 }}>
+                  <PrimaryButton onClick={() => speichern(e.datum)} style={{ padding: "14px 10px" }}>
+                    Speichern
+                  </PrimaryButton>
                 </div>
                 <button
                   type="button"
                   onClick={() => loeschen(e.datum)}
-                  style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
+                  style={{ border: "none", background: "transparent", color: danger, fontSize: 18, cursor: "pointer", padding: "0 4px", flexShrink: 0, alignSelf: "center" }}
                   title="Eintrag löschen"
+                  aria-label="Eintrag löschen"
                 >
-                  ×
+                  🗑
                 </button>
               </div>
             )}

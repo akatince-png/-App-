@@ -109,13 +109,19 @@ function QuestZeile({ quest, onFortschritt }) {
           </PrimaryButton>
         </div>
       ) : !offen ? (
-        <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        // Untereinander statt nebeneinander (Livecheck 24.09.): in einer
+        // Zeile wurde das Zahlenfeld auf dem Handy zu einem leeren Streifen.
+        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
           {quest.typ === "anzahl" && (
-            <div style={{ flex: 1, display: "flex", gap: 6 }}>
-              <TextInput type="number" value={wert} onChange={setWert} placeholder="Bisher erreicht" />
-              <PrimaryButton variant="ghost" onClick={fortschrittSpeichern} disabled={speichern}>
-                Speichern
-              </PrimaryButton>
+            <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <TextInput type="number" value={wert} onChange={setWert} placeholder="Bisher erreicht" />
+              </div>
+              <div style={{ width: 120, flexShrink: 0 }}>
+                <PrimaryButton variant="ghost" onClick={fortschrittSpeichern} disabled={speichern}>
+                  Speichern
+                </PrimaryButton>
+              </div>
             </div>
           )}
           <PrimaryButton onClick={() => setOffen(true)}>Quest abschließen</PrimaryButton>
