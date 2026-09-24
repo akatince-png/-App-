@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { berechneGehirnZeitraum, WIDGET_REGION } from "../utils/gehirn";
 import { KATEGORIEN } from "../utils/errungenschaften";
-import { KATEGORIE_META } from "../utils/dayItems";
+import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
 import { logoBlau, logoTuerkis, logoVerlauf, nachtSchatten, nachtVerlauf } from "./theme";
 import Icon from "./Icon";
 
@@ -82,6 +82,72 @@ function deckkraft(r) {
   return 0.3 + 0.7 * r.ladung;
 }
 
+// Stimmung je Tagesphase (utils/tagesphase.js, Nutzerinnen-Wunsch 24.09.):
+// morgens Sonnenaufgang in den Morgenroutine-Farben, tagsüber Himmelblau,
+// ab Beginn der Abendroutine Nachthimmel mit Sternen und Mond.
+const STIMMUNG = {
+  morgen: {
+    hintergrund: "linear-gradient(165deg, #FFB866 0%, #F08A24 38%, #B24A16 78%, #6E2A10 100%)",
+    schatten: "0 14px 30px rgba(176, 74, 22, 0.35)",
+    linieVon: "#FFF1DC",
+    linieBis: "#FFD39A",
+    grund: "rgba(90, 30, 8, 0.35)",
+    hinweis: "☀️ Guten Morgen — deine Morgenroutine lädt dein Gehirn auf.",
+  },
+  tag: {
+    hintergrund: "linear-gradient(165deg, #6DB0F5 0%, #2D6FD6 45%, #1B3E8C 100%)",
+    schatten: "0 14px 30px rgba(27, 62, 140, 0.35)",
+    linieVon: "#FFFFFF",
+    linieBis: "#CFE4FF",
+    grund: "rgba(10, 30, 80, 0.35)",
+    hinweis: null,
+  },
+  nacht: {
+    hintergrund: nachtVerlauf,
+    schatten: nachtSchatten,
+    linieVon: logoTuerkis,
+    linieBis: logoBlau,
+    grund: "#1D2350",
+    hinweis: "🌙 Abendroutine — Zeit, langsam runterzufahren. Gleich geht's ins Bett.",
+  },
+};
+
+// Feste Sternpositionen (Prozent der Karte) für den Nachthimmel.
+const STERNE = [
+  [8, 6, 2, 0], [22, 12, 1.5, 0.8], [38, 5, 2, 1.6], [55, 10, 1.5, 0.4], [70, 4, 2.5, 1.2], [84, 13, 1.5, 2],
+  [93, 30, 2, 0.6], [5, 38, 1.5, 1.4], [90, 55, 1.5, 2.2], [12, 62, 2, 0.2], [48, 3, 1.5, 2.6], [76, 22, 1.5, 1.8],
+];
+
+function Deko({ phase }) {
+  if (phase === "nacht") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {STERNE.map(([x, y, r, verz], i) => (
+          <span
+            key={i}
+            className="mp-stern"
+            style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: 99, background: "#fff", animationDelay: `${verz}s`, boxShadow: "0 0 6px rgba(255,255,255,0.9)" }}
+          />
+        ))}
+        <span style={{ position: "absolute", right: 16, top: 150, fontSize: 28, filter: "drop-shadow(0 0 10px rgba(255,236,170,0.8))" }}>🌙</span>
+      </div>
+    );
+  }
+  if (phase === "morgen") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", borderRadius: 24 }}>
+        <span style={{ position: "absolute", right: -50, top: 120, width: 170, height: 170, borderRadius: 999, background: "radial-gradient(circle, rgba(255,240,190,0.9) 0%, rgba(255,200,110,0.5) 40%, rgba(255,160,60,0) 70%)" }} />
+      </div>
+    );
+  }
+  return (
+    <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", borderRadius: 24 }}>
+      <span style={{ position: "absolute", right: 12, top: 140, fontSize: 26, opacity: 0.9 }}>☁️</span>
+      <span style={{ position: "absolute", left: 14, top: 300, fontSize: 18, opacity: 0.6 }}>☁️</span>
+    </div>
+  );
+}
+
 function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
   const optionen = [
     ["tag", "Tag"],
@@ -117,7 +183,8 @@ function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, phase = "nacht" }) {
+  const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
   const auswahl = gehirn.regionen.find((r) => r.key === gewaehlt) || null;
@@ -126,12 +193,15 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
   const sichtbareBalken = (widgets || []).filter((w) => w.kategorie !== "notfallmodus");
 
   return (
-    <div style={{ marginBottom: 20, borderRadius: 24, padding: 16, color: "#fff", background: nachtVerlauf, boxShadow: nachtSchatten }}>
+    <div style={{ position: "relative", marginBottom: 20, borderRadius: 24, padding: 16, color: "#fff", background: stimmung.hintergrund, boxShadow: stimmung.schatten, transition: "background 1s" }}>
+      <Deko phase={phase} />
+      <div style={{ position: "relative" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <div style={{ fontSize: 15, fontWeight: 800 }}>🧠 Dein Gehirn</div>
         <Zeitraumwahl zeitraum={zeitraum} setZeitraum={setZeitraum} zeigeGesamt={zeigeGesamt} />
       </div>
 
+      {stimmung.hinweis && <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 8 }}>{stimmung.hinweis}</div>}
       <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 8 }}>
         {gehirn.genutzt === 0
           ? "Noch alles ruhig — hake etwas ab, dann leuchtet die erste Region auf."
@@ -147,8 +217,8 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             <path d={GROSSHIRN} />
           </clipPath>
           <linearGradient id="mp-gehirn-verlauf" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={logoTuerkis} />
-            <stop offset="100%" stopColor={logoBlau} />
+            <stop offset="0%" stopColor={stimmung.linieVon} />
+            <stop offset="100%" stopColor={stimmung.linieBis} />
           </linearGradient>
           <clipPath id="mp-kleinhirn">
             <path d={KLEINHIRN} />
@@ -168,9 +238,9 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         </defs>
 
         {/* Grundform (Hirnstamm hinten, Kleinhirn davor, Großhirn vorne) */}
-        <path d={HIRNSTAMM} fill="#1D2350" />
-        <path d={KLEINHIRN} fill="#1D2350" />
-        <path d={GROSSHIRN} fill="#1D2350" />
+        <path d={HIRNSTAMM} fill={stimmung.grund} />
+        <path d={KLEINHIRN} fill={stimmung.grund} />
+        <path d={GROSSHIRN} fill={stimmung.grund} />
 
         {/* Regionen leuchten mit ihrer Ladung — weich ineinander verlaufend,
             an der Hirnkontur zugeschnitten */}
@@ -287,7 +357,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 4, marginTop: 7 }}>
           {sichtbareBalken.map((w) => {
-            const icon = w.icon || KATEGORIE_META[w.kategorie]?.icon;
+            const icon = w.icon || KATEGORIE_META[w.kategorie]?.icon || ROUTINE_META[w.kategorie]?.icon;
             const gedimmt = gewaehlt && WIDGET_REGION[w.kategorie] !== gewaehlt;
             return (
               <div key={w.kategorie} style={{ flex: 1, maxWidth: 26, display: "flex", justifyContent: "center", opacity: gedimmt ? 0.3 : w.aktiv ? 0.9 : 0.4 }}>
@@ -334,6 +404,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -317,6 +317,21 @@ input[type="time"]::-webkit-date-and-time-value {
       transform: translate(-50%, 0);
     }
   }
+  /* Nachthimmel der Gehirn-Karte: Sterne funkeln versetzt. */
+  .mp-stern {
+    animation: sternFunkeln 3.2s ease-in-out infinite;
+  }
+  @keyframes sternFunkeln {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+  }
   /* "Dein Gehirn" (GehirnKarte.jsx): aktive Regionen pulsieren leicht,
      ruhende atmen langsam, aktive Nervenbahnen "fließen". */
   .mp-gehirn-aktiv {
