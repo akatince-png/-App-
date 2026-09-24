@@ -146,30 +146,21 @@ export const KATEGORIEN = [
     holeTage: (q) => (q.atemuebungLogs || []).map((l) => normalisiereDatum(l.erstelltAm)),
   },
   {
-    // Denkpause (16.09., Nutzerinnen-Vorgabe): kein eigener Lebensbereich
-    // in KATEGORIE_META (siehe dayItems.js) — bereichsübergreifend, nicht
-    // an ein <Shell bereich="…"> gebunden. Nur RICHTIG beantwortete
-    // Denkpausen zählen als Punkt, damit sich das "seine fehlenden Punkte
-    // aus anderen Bereichen einholen" auch wirklich wie Punkte verdienen
-    // anfühlt statt wie reine Teilnahme. Die separate Solved/Nicht-gelöst-
-    // Aufschlüsselung je Denkpause-Kategorie (Mathe/Wortspiele/Rätsel/
-    // Allgemeinwissen) läuft NICHT über dieses Punktesystem, sondern
-    // eigenständig in ErfolgeTab.jsx.
-    key: "denkpause",
-    label: "Denkpause",
-    icon: "book",
-    grad: gradAus("#C0447E"),
-    holeTage: (q) => (q.denkpauseErgebnisse || []).filter((e) => e.richtig).map((e) => normalisiereDatum(e.erstelltAm)),
-  },
-  {
     // Tagesrätsel (24.09., Nutzerinnen-Wunsch): 5 Fragen am Tag als feste
-    // Tagesaufgabe — jeder geschaffte Tag ist ein Bonuspunkt, zusätzlich zu
-    // den Punkten für richtige Antworten oben, mit eigener Serie/Abzeichen.
+    // Tagesaufgabe. Ersetzt die frühere eigene Kategorie "Denkpause" (die
+    // Nutzerin: "Denkpause ist überholt") — deren Punkte laufen jetzt hier:
+    // 1 Punkt je richtiger Antwort + 1 Bonuspunkt je geschafftem Tag.
+    // Serie und Abzeichen zählen nur geschaffte Tage (holeTage), die Punkte
+    // kommen aus holePunkte.
     key: "tagesraetsel",
     label: "Tagesrätsel",
     icon: "trophy",
     grad: gradAus("#E4643F"),
     holeTage: (q) => tageMitTagesraetsel(q.denkpauseErgebnisse),
+    holePunkte: (q) => [
+      ...(q.denkpauseErgebnisse || []).filter((e) => e.richtig).map((e) => normalisiereDatum(e.erstelltAm)),
+      ...tageMitTagesraetsel(q.denkpauseErgebnisse),
+    ],
   },
 ];
 
@@ -199,13 +190,16 @@ export function berechneErrungenschaften(quellen) {
     const tage = kat.holeTage(quellen).filter(Boolean);
     const tageSet = new Set(tage);
     tage.forEach((t) => alleTageGlobal.add(t));
-    gesamtPunkte += tage.length;
+    // Punkte = Einträge; eine Kategorie kann sie getrennt von den Tagen der
+    // Serie liefern (holePunkte, z. B. Tagesrätsel).
+    const punkte = kat.holePunkte ? kat.holePunkte(quellen).filter(Boolean).length : tage.length;
+    gesamtPunkte += punkte;
     return {
       key: kat.key,
       label: kat.label,
       icon: kat.icon,
       grad: kat.grad,
-      punkte: tage.length,
+      punkte,
       // Anzahl verschiedener Tage mit mindestens einem Eintrag (für "Deine
       // Welt": Pflanzen wachsen mit Tagen, nicht mit Einträgen).
       tage: tageSet.size,

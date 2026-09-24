@@ -207,11 +207,11 @@ export default function ErfolgeTab() {
         </Card>
       )}
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Denkpausen</div>
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Tagesrätsel — gelöst je Thema</div>
       <Card style={{ marginBottom: 14 }}>
         {denkpauseGesamt === 0 ? (
           <div style={{ fontSize: 13, color: textMuted }}>
-            Noch keine Denkpause gemacht — löst du eine, zählt jede richtige Antwort auch hier oben als Punkt mit.
+            Noch kein Tagesrätsel gelöst — jede richtige Antwort zählt oben als Punkt, jedes geschaffte Tagesrätsel bringt einen Bonuspunkt.
           </div>
         ) : (
           denkpauseStats

@@ -20,6 +20,23 @@ describe("berechneErrungenschaften", () => {
     expect(ergebnis.kategorien).toHaveLength(KATEGORIEN.length);
   });
 
+  it("Tagesrätsel: Punkte je richtiger Antwort + Bonus je geschafftem Tag, Serie nur geschaffte Tage; keine Denkpause-Kategorie mehr", () => {
+    const um = (tag, h) => new Date(`${tag}T${String(h).padStart(2, "0")}:00:00`).toISOString();
+    const denkpauseErgebnisse = [
+      // 22.09.: 5 Antworten, 3 richtig → 3 + 1 Bonus
+      ...[true, true, true, false, false].map((richtig, i) => ({ richtig, erstelltAm: um("2026-09-22", 8 + i) })),
+      // 23.09.: nur 2 Antworten, 1 richtig → 1, kein Bonus
+      { richtig: true, erstelltAm: um("2026-09-23", 9) },
+      { richtig: false, erstelltAm: um("2026-09-23", 10) },
+    ];
+    const ergebnis = berechneErrungenschaften({ denkpauseErgebnisse });
+    const k = ergebnis.kategorien.find((x) => x.key === "tagesraetsel");
+    expect(k.punkte).toBe(5);
+    expect(k.tage).toBe(1);
+    expect(ergebnis.gesamtPunkte).toBe(5);
+    expect(KATEGORIEN.some((x) => x.key === "denkpause")).toBe(false);
+  });
+
   it("zählt erledigte Supplement-Einträge als Punkte in der richtigen Kategorie", () => {
     const quellen = {
       supplementErledigt: {
