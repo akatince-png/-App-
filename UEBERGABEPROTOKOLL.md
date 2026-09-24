@@ -250,6 +250,22 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Farben: Bereichsfarben, Kasten-Stil, Tagesphasen (23./24.09.)
+
+- **Bereichsfarben** (`utils/dayItems.js`): jede Kategorie hat eine eigene, gut unterscheidbare Farbe (`KATEGORIE_META`, je `bg`/`text`/`dot`). Morgen-/Abendroutine stehen in `ROUTINE_META` (Orange/Indigo). `BereichColorContext` kennt beide.
+- **Kasten-Stil:** Tagesplan-Einträge, „Als Nächstes“ und Tages-Quests sind Kästen mit dicker Umrandung in der Bereichsfarbe (`dot`) und getönter Füllung (`bg`).
+- **Tagesphasen** (`utils/tagesphase.js`, Hook `utils/useTagesphase.js`, minütlich):
+  - `morgen` gilt bis zur erledigten Morgenroutine, höchstens bis 12:00 (ohne Morgenroutine bis 09:00).
+  - `nacht` gilt ab `abend.startZeit` (Standard 20:00), sobald heute die Abendroutine läuft, und vor 04:00.
+  - Sonst gilt `tag`.
+- **Die ganze App folgt der Phase:** Die Marken-Tokens in `ui/theme.js` (`accent`, `accentDark`, `accentSoft`, `success`, `successSoft`, `nachtVerlauf`, `nachtSchatten`) sind **CSS-Variablen** (`--mp-…`, Standard Nacht in `index.css`).
+  - `AuthenticatedApp` setzt sie über `setzeTagesphasenFarben(phase)` (Paletten in `TAGESPHASEN_FARBEN`).
+  - `hexZuRgba`, `aufhellen` und `verdunkeln` erkennen `var(...)` und nutzen `color-mix`.
+  - **Wichtig:** Tokens nicht mehr per String-Anhang abdunkeln (`${accent}22`), sondern über diese Helfer.
+  - In SVG Tokens über `style={{ fill/stroke }}` setzen, nicht als Attribut. Grund: Safari verträgt `var()` in Attributen nicht zuverlässig.
+  - Recharts bekommt Farben über `aufgeloesteFarbe()`.
+- Die Gehirn-Karte (`ui/GehirnKarte.jsx`) hat ihre eigene Stimmung je Phase: Sonne, Wolken, Sterne und Mond.
+
 ### Nachtrag Teil 121 — Aka: ein Assistent für die ganze App
 
 - Wunsch der Nutzerin: Aka auf allen Seiten „über den gleichen Code, die gleiche Systematik“, als wäre es von Anfang an so gebaut worden.
