@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, StatusBadge, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import Timer from "../ui/Timer";
@@ -23,7 +23,7 @@ import {
   CARDIO_MODI_STRECKE,
   CARDIO_MODI_SPRUNGSEIL,
 } from "../constants";
-import { KATEGORIE_META } from "../utils/dayItems";
+import { KATEGORIE_META, buildDayItems } from "../utils/dayItems";
 import { toLocalISODate } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
@@ -83,6 +83,7 @@ function verlaufKompakt(e) {
 export default function TrainingView({ onHome, initialSessionId, onConsumedInitialSession, embedded = false }) {
   const {
     trainingEintraege,
+    trainingNachDatum,
     trainingHinzufuegen,
     trainingEntfernen,
     trainingAbschliessen,
@@ -178,6 +179,19 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
     }
   }, [initialSessionId, onConsumedInitialSession]);
 
+  // Heute-Checkliste (17.09., Konsistenz-Check): Medikamente/Supplemente/
+  // Ernährung/Gewohnheiten/Routine zeigen alle "das steht heute laut Plan
+  // an, bitte bestätigen" direkt auf ihrer eigenen Seite — Training bisher
+  // nicht, nur Verlauf (schon erledigt) oder der Umweg über Tagesplan/Home.
+  // Gleiche Ableitung wie in TagesplanView.jsx (buildDayItems, kategorie
+  // "training"), nur auf "heute" statt ein wählbares Datum beschränkt. Vor
+  // dem frühen `if (liveSession) return` unten, da Hooks nicht bedingt
+  // aufgerufen werden dürfen (Rules of Hooks).
+  const heutigeTrainingsItems = useMemo(
+    () => buildDayItems(new Date(), { trainingEintraege, trainingNachDatum, trainingWochenplan }).filter((i) => i.kategorie === "training"),
+    [trainingEintraege, trainingNachDatum, trainingWochenplan]
+  );
+
   const liveSession = trainingEintraege.find((e) => e.id === liveSessionId);
   if (liveSession) {
     return (
@@ -194,6 +208,42 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       />
     );
   }
+
+  // Gegenstück zu starteTraining() in TagesplanView.jsx — hier ohne
+  // Navigation, da schon auf der Trainings-Seite: ein virtueller (nur aus
+  // dem Wochenplan abgeleiteter) Punkt wird erst zu einer echten Zeile,
+  // bevor das Live-Workout dafür öffnet.
+  const starteHeutigesTraining = async (item) => {
+    if (!item.raw.virtuell) {
+      setLiveSessionId(item.raw.id);
+      return;
+    }
+    setFehler(null);
+    const arten = item.raw.arten || [];
+    const art = arten.find((a) => a === "Krafttraining") || arten.find((a) => a === "Bodyweight") || arten[0] || "";
+    const warmupCooldown = [
+      item.raw.warmup?.aktiv ? `Warm-up${item.raw.warmup.dauerMin ? ` ${item.raw.warmup.dauerMin} Min.` : ""}` : "",
+      item.raw.cooldown?.aktiv ? `Cool-down${item.raw.cooldown.dauerMin ? ` ${item.raw.cooldown.dauerMin} Min.` : ""}` : "",
+    ].filter(Boolean);
+    const result = await trainingHinzufuegen({
+      datum: item.raw.datum,
+      uhrzeit: item.raw.uhrzeit || "",
+      art,
+      name: item.raw.name || "",
+      uebungen: item.raw.uebungenListe || [],
+      bemerkungen: warmupCooldown.join(" · "),
+      erledigt: false,
+      intervallArbeitSek: item.raw.intervallArbeitSek || "",
+      intervallPauseSek: item.raw.intervallPauseSek || "",
+      runden: item.raw.runden || "",
+    });
+    if (result?.ok) {
+      rechtzeitigGestartetRef.current[result.eintrag.id] = istRechtzeitig(item.raw.uhrzeit, belohnungPufferMin);
+      setLiveSessionId(result.eintrag.id);
+      return;
+    }
+    setFehler(result?.error || "Training konnte nicht gestartet werden.");
+  };
 
   const setFeld = (feld, wert) => setEintrag((p) => ({ ...p, [feld]: wert }));
 
@@ -372,6 +422,46 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
       )}
 
       {feedbackFuerId && <TrainingFeedbackPanel trainingId={feedbackFuerId} onDone={() => setFeedbackFuerId(null)} />}
+
+      {heutigeTrainingsItems.length > 0 && (
+        <>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Heute</div>
+          <Card style={{ marginBottom: 14 }}>
+            {heutigeTrainingsItems.map((item, i) => (
+              <div
+                key={item.key}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "8px 0",
+                  borderBottom: i < heutigeTrainingsItems.length - 1 ? `1px solid ${cardBorder}` : "none",
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+                    {item.uhrzeit ? `${item.uhrzeit} · ` : ""}
+                    {item.name}
+                  </div>
+                  {item.detail && <div style={{ fontSize: 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
+                </div>
+                {item.done ? (
+                  <StatusBadge status="erledigt" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => starteHeutigesTraining(item)}
+                    style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 10, border: "none", background: accentDark, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    Training starten
+                  </button>
+                )}
+              </div>
+            ))}
+          </Card>
+        </>
+      )}
 
       <Card style={{ marginBottom: 14 }}>
         <SpotifyAnlassPicker anlass="training" label="🎵 Playlist fürs Training" />

@@ -2,6 +2,7 @@ import React from "react";
 import { Card, StatusBadge } from "./primitives";
 import { cardBorder, textMuted } from "./theme";
 import { toLocalISODate } from "../utils/dates";
+import { routineTagesStatus } from "../utils/routineStatus";
 import { useAppData } from "../context/AppDataContext";
 import { ROUTINE_META } from "../utils/dayItems";
 
@@ -17,11 +18,32 @@ const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 // unabhängig vom geführten "Routine starten"-Ablauf (RoutineAblauf.jsx),
 // der für alle, die lieber Schritt für Schritt mit Timer durchgehen,
 // weiterhin unverändert verfügbar bleibt.
-export default function RoutineHeuteChecklist({ routine }) {
-  const { routineSchritte, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten } = useAppData();
-  const heute = toLocalISODate(new Date());
-  const schritte = routineSchritte.filter((s) => s.routine === routine).sort((a, b) => a.reihenfolge - b.reihenfolge);
+const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
+
+// `datum` optional (Standard: heute) — seit 17.09. (Nutzerin-Vorgabe "die
+// Einzelschritte einsehen können") wird dieselbe Komponente auch für
+// vergangene Tage aus Tagesplan/Wochenübersicht/Monatsansicht verwendet,
+// um "reinzugucken", was an einem Tag erledigt war. Ein bereits über den
+// geführten Ablauf abgeschlossener Tag zeigt dann alle Schritte als
+// erledigt an (siehe routineTagesStatus), auch ohne einzelne
+// `routine_schritt_logs`.
+export default function RoutineHeuteChecklist({ routine, datum }) {
+  const { routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken } =
+    useAppData();
+  const heute = datum || toLocalISODate(new Date());
+  const { schritte, schrittIstErledigt } = routineTagesStatus(routine, heute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
   const farbe = ROUTINE_FARBE[routine];
+
+  // Nutzerinnen-Vorgabe (17.09.): "Alle Veränderungen sollen immer im
+  // Tagesverlauf mit auftauchen" — nur beim Bestätigen protokolliert (nicht
+  // beim Rückgängigmachen), gleiches Muster wie GewohnheitenView.jsx. Diese
+  // Komponente zeigt den "Bestätigen"-Knopf ohnehin nur, solange der Schritt
+  // noch offen ist (siehe unten) — jeder Klick hier ist also immer ein
+  // echtes Bestätigen, nie ein Zurücknehmen.
+  const bestaetigen = (schritt) => {
+    routineSchrittErledigtUmschalten(schritt.id, heute);
+    aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: schritt.name, aktion: "erledigt", detail: "" });
+  };
 
   if (schritte.length === 0) {
     return (
@@ -37,7 +59,7 @@ export default function RoutineHeuteChecklist({ routine }) {
     <Card style={{ marginTop: 8 }}>
       {schritte.map((s, i) => {
         const zeit = routineSchrittZeit(s.id);
-        const done = !!routineSchrittErledigt[`${heute}__${s.id}`];
+        const done = schrittIstErledigt(s.id);
         return (
           <div
             key={s.id}
@@ -61,7 +83,7 @@ export default function RoutineHeuteChecklist({ routine }) {
             ) : (
               <button
                 type="button"
-                onClick={() => routineSchrittErledigtUmschalten(s.id, heute)}
+                onClick={() => bestaetigen(s)}
                 style={{
                   flexShrink: 0,
                   padding: "7px 16px",

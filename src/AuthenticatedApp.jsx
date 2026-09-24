@@ -92,6 +92,8 @@ const KATEGORIE_TO_VIEW = {
   workflow: "routinen",
   hydration: "hydration",
   mahlzeit: "ernaehrung",
+  training: "training",
+  zeitblock: "wochenuebersicht",
 };
 
 // Gleicher Ladebildschirm wie in App.jsx (dort für den Login-/Auth-Ladezustand,

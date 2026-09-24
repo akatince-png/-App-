@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, CheckRow, Label, Pill, PrimaryButton, TextArea, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { SimpleLineChart } from "../ui/charts";
 import { cardBorder, danger, textMuted } from "../ui/theme";
-import { SCHLAFQUALITAET_OPTIONEN } from "../constants";
+import { SCHLAFQUALITAET_OPTIONEN, WOCHENTAGE } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import TimeWheelField from "../ui/TimeWheelField";
 import ZeitErinnerungenCard from "../ui/ZeitErinnerungenCard";
 import { KATEGORIE_META } from "../utils/dayItems";
 import SpotifyAnlassPicker from "../ui/SpotifyAnlassPicker";
+import SchlafplanCard, { neuerSchlafblock } from "../ui/SchlafplanCard";
+import ItemVerlauf from "../ui/ItemVerlauf";
 import { toLocalISODate } from "../utils/dates";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Schlaf
@@ -27,10 +29,82 @@ const LEERER_EINTRAG = {
 };
 
 export default function SchlafView({ onHome, embedded = false }) {
-  const { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage } = useAppData();
+  const { schlafEintraege, schlafHinzufuegen, schlafEintragLoeschen, schlafDurchschnitt7Tage, categoryZiele, setCategoryZiel, aenderungVermerken } =
+    useAppData();
   const [neuerSchlafEintrag, setNeuerSchlafEintrag] = useState(LEERER_EINTRAG);
   const [detailsOffen, setDetailsOffen] = useState(false);
   const [schlafError, setSchlafError] = useState(null);
+
+  // Schlafplan-Editor (Bettzeit/Aufwachzeit je Wochentag) — bis 17.09. nur
+  // über RoutineTabView.jsx (Abend-Reiter) oder das Onboarding erreichbar
+  // (Nutzerinnen-Report: "wer 'Schlaf' direkt öffnet, kann den Schlafplan
+  // gar nicht bearbeiten"). Gleiches Muster wie dort: `categoryZiele.schlaf`
+  // ist die gemeinsame Quelle, sofortiges Speichern über setCategoryZiel
+  // statt eines eigenen "Weiter"-Knopfs wie im Onboarding.
+  const [schlafIntervallTyp, setSchlafIntervallTyp] = useState("weekdays");
+  const [schlafBloecke, setSchlafBloecke] = useState([neuerSchlafblock([...WOCHENTAGE])]);
+  const [schlafIstZustand, setSchlafIstZustand] = useState("");
+  const schlafIstZustandGespeichertRef = useRef("");
+
+  useEffect(() => {
+    const gespeicherteBloecke = categoryZiele?.schlaf?.bloecke;
+    if (gespeicherteBloecke?.length) {
+      setSchlafIntervallTyp(
+        gespeicherteBloecke.length === 1 && gespeicherteBloecke[0].wochentage.length === WOCHENTAGE.length ? "fixed" : "weekdays"
+      );
+      setSchlafBloecke(gespeicherteBloecke.map((b) => ({ ...neuerSchlafblock(b.wochentage), ...b })));
+    }
+    const geladenerIstZustand = categoryZiele?.schlaf?.istZustand?.aktuell || "";
+    setSchlafIstZustand(geladenerIstZustand);
+    schlafIstZustandGespeichertRef.current = geladenerIstZustand;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const beschreibeSchlafbloecke = (bloecke) => bloecke.map((b) => `${b.wochentage.join(",") || "–"} ${b.bettzeit}–${b.aufwachzeit}`).join("; ");
+
+  const speichereSchlafplan = (typ, bloecke, istZustandText) => {
+    const effektiveBloecke = typ === "fixed" ? [{ ...bloecke[0], wochentage: [...WOCHENTAGE] }] : bloecke;
+    setCategoryZiel("schlaf", {
+      bloecke: effektiveBloecke.map(({ wochentage, bettzeit, aufwachzeit }) => ({ wochentage, bettzeit, aufwachzeit })),
+      istZustand: { aktuell: istZustandText },
+    });
+    schlafIstZustandGespeichertRef.current = istZustandText;
+  };
+  const handleSchlafIntervallTyp = (typ) => {
+    const vorherText = schlafIntervallTyp === "fixed" ? "Täglich" : "Bestimmte Wochentage";
+    const nachherText = typ === "fixed" ? "Täglich" : "Bestimmte Wochentage";
+    setSchlafIntervallTyp(typ);
+    speichereSchlafplan(typ, schlafBloecke, schlafIstZustand);
+    if (typ !== schlafIntervallTyp) {
+      aenderungVermerken({ kategorie: "schlaf", itemName: "Schlafplan", aktion: "geändert", detail: `Intervall: ${vorherText} → ${nachherText}` });
+    }
+  };
+  const handleSchlafBloecke = (neueBloecke) => {
+    const vorherDetail = beschreibeSchlafbloecke(schlafBloecke);
+    setSchlafBloecke(neueBloecke);
+    speichereSchlafplan(schlafIntervallTyp, neueBloecke, schlafIstZustand);
+    aenderungVermerken({ kategorie: "schlaf", itemName: "Schlafplan", aktion: "geändert", detail: `${vorherDetail} → ${beschreibeSchlafbloecke(neueBloecke)}` });
+  };
+  const handleSchlafIstZustand = (text) => {
+    // Bewusst KEINE sofortige Speicherung/Protokollierung hier, siehe
+    // RoutineTabView.jsx für dieselbe Begründung — Debounce-Effekt unten.
+    setSchlafIstZustand(text);
+  };
+  useEffect(() => {
+    if (schlafIstZustand === schlafIstZustandGespeichertRef.current) return;
+    const timeout = setTimeout(() => {
+      const vorher = schlafIstZustandGespeichertRef.current;
+      speichereSchlafplan(schlafIntervallTyp, schlafBloecke, schlafIstZustand);
+      aenderungVermerken({
+        kategorie: "schlaf",
+        itemName: "Schlafplan",
+        aktion: "geändert",
+        detail: `Aktueller Schlaf: ${vorher || "–"} → ${schlafIstZustand || "–"}`,
+      });
+    }, 800);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schlafIstZustand, schlafIntervallTyp, schlafBloecke]);
 
   const submit = async () => {
     setSchlafError(null);
@@ -41,6 +115,33 @@ export default function SchlafView({ onHome, embedded = false }) {
     }
     setNeuerSchlafEintrag(LEERER_EINTRAG);
     setDetailsOffen(false);
+  };
+
+  // Bearbeiten eines vergangenen Eintrags (17.09., Konsistenz-Check) —
+  // schlafHinzufuegen() upsert't schon länger pro Datum, es fehlte nur der
+  // Weg, einen bestehenden Tag zurück ins Formular zu laden. Löschen war
+  // bisher gar nicht möglich.
+  const istBearbeitung = schlafEintraege.some((e) => e.datum === neuerSchlafEintrag.datum);
+  const bearbeiten = (e) => {
+    setNeuerSchlafEintrag({
+      datum: e.datum,
+      stunden: String(e.stunden ?? ""),
+      schlafqualitaet: e.schlafqualitaet || "",
+      einschlafzeit: e.einschlafzeit || "",
+      durchgeschlafen: e.durchgeschlafen ?? null,
+      erholt: e.erholt ?? null,
+      traeume: e.traeume || "",
+      bemerkungen: e.bemerkungen || "",
+    });
+    setDetailsOffen(true);
+  };
+  const loeschen = async (datum) => {
+    if (!window.confirm("Diesen Schlaf-Eintrag wirklich löschen?")) return;
+    await schlafEintragLoeschen(datum);
+    if (neuerSchlafEintrag.datum === datum) {
+      setNeuerSchlafEintrag(LEERER_EINTRAG);
+      setDetailsOffen(false);
+    }
   };
 
   const content = (
@@ -119,10 +220,37 @@ export default function SchlafView({ onHome, embedded = false }) {
         )}
 
         {schlafError && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{schlafError}</div>}
-        <div style={{ marginTop: 12 }}>
-          <PrimaryButton onClick={submit}>Eintrag hinzufügen</PrimaryButton>
+        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <PrimaryButton onClick={submit}>{istBearbeitung ? "Eintrag ändern" : "Eintrag hinzufügen"}</PrimaryButton>
+          </div>
+          {istBearbeitung && (
+            <button
+              type="button"
+              onClick={() => {
+                setNeuerSchlafEintrag(LEERER_EINTRAG);
+                setDetailsOffen(false);
+              }}
+              style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+            >
+              Abbrechen
+            </button>
+          )}
         </div>
       </Card>
+
+      <SchlafplanCard
+        intervallTyp={schlafIntervallTyp}
+        onIntervallTypChange={handleSchlafIntervallTyp}
+        bloecke={schlafBloecke}
+        onBloeckeChange={handleSchlafBloecke}
+        istZustand={schlafIstZustand}
+        onIstZustandChange={handleSchlafIstZustand}
+        zeigeErinnerung={false}
+      />
+      <div style={{ marginTop: -10, marginBottom: 14 }}>
+        <ItemVerlauf kategorie="schlaf" itemName="Schlafplan" />
+      </div>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Erinnerung</div>
       <Card style={{ marginBottom: 14 }}>
@@ -160,9 +288,27 @@ export default function SchlafView({ onHome, embedded = false }) {
               .reverse()
               .slice(0, 10)
               .map((e, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}>
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 13 }}>
                   <span style={{ color: textMuted }}>{e.datum}</span>
-                  <span style={{ fontWeight: 700 }}>{e.stunden} h</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontWeight: 700 }}>{e.stunden} h</span>
+                    <button
+                      type="button"
+                      onClick={() => bearbeiten(e)}
+                      title="Bearbeiten"
+                      style={{ border: "none", background: "transparent", color: textMuted, fontSize: 13, cursor: "pointer", padding: "0 2px" }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => loeschen(e.datum)}
+                      title="Löschen"
+                      style={{ border: "none", background: "transparent", color: danger, fontSize: 16, cursor: "pointer", padding: "0 4px" }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
           </Card>

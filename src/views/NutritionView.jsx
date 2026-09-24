@@ -12,6 +12,7 @@ import { TAGESZEIT_STUNDE, KATEGORIE_META } from "../utils/dayItems";
 import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Ernährung
 // ist Terrakotta, passend zu den bunten Home-Mini-Widgets.
@@ -202,6 +203,7 @@ function MahlzeitZeile({ m, istLetzte, wochenplanEintraege, onAendern, onEntfern
           </div>
         </div>
       )}
+      <ItemVerlauf kategorie="mahlzeit" itemName={m.name} />
     </div>
   );
 }

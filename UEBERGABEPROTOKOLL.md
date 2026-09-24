@@ -33,12 +33,34 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
 
 ### Offen / ausstehend
 - **Team-Vergleich:** läuft bis 24.10.2026. Dann `docs/dauertest/team-vergleich.md` schreiben (Fairness der Punkte bei unterschiedlich vielen Bereichen) und die Nutzerin fragen, ob es weitergeht.
-- **Alte Git-Zweige aufräumen:** Das muss die Nutzerin auf GitHub selbst machen, die Sitzung darf keine fremden Zweige löschen (403).
-  - Sicher löschbar, weil vollständig in main: `claude/app-uebergabeprotokoll-rhgp8a`, `claude/app-uebergabeprotokoll-improvements-03r3b3`, `claude/google-cloud-tts-api-key-yc49xp`.
-  - **Nicht ungeprüft löschen:** `claude/repo-identification-0e9uvj` (22 Commits vom 17.09. mit Bug-Fixes aus „Teil 128/129“, die nicht in main sind), `claude/supabase-data-access-a0c231` und `-v2` (Constraint-/Biomarker-Fixes, package-lock), `claude/claude-md-docs-pxv4bm` (Fragebögen/Lexikon vom 15.08.).
-  - Die Datenbank enthält Teile davon schon (`fragebogen_antworten`, `lexikon_eintraege`, `notizen`-Spalten). Vor dem Löschen prüfen, ob die Bug-Fixes in main nachgezogen werden sollen.
+- **Alte Git-Zweige aufräumen:** Das muss die Nutzerin auf GitHub selbst machen, die Sitzung darf keine fremden Zweige löschen (403). Seit dem Zusammenführen am 24.09. (siehe unten) sind alle sieben alten Zweige erledigt und löschbar:
+  - `claude/app-uebergabeprotokoll-rhgp8a`, `claude/app-uebergabeprotokoll-improvements-03r3b3`, `claude/google-cloud-tts-api-key-yc49xp`
+  - `claude/repo-identification-0e9uvj` (zusammengeführt)
+  - `claude/supabase-data-access-a0c231-v2` (Constraint-Fix war schon live, Datei liegt jetzt als `0091_aenderungsprotokoll_aktion_check.sql` im Repo; der package-lock-Neubau wurde bewusst nicht übernommen)
+  - `claude/supabase-data-access-a0c231` und `claude/claude-md-docs-pxv4bm`: August-Stand von Fragebögen/Lexikon, von main längst anders weiterentwickelt. Die Datenbank-Teile sind live. Übernommen wurde nur der Card-Fix (onClick/className durchreichen); der Protokoll-Race-Fix und die Biomarker-Constraint waren schon da.
 - **Canva-Anbindung:** noch nicht begonnen, Wunsch der Nutzerin.
 - **Bekannt, kein Fehler:** Chromium merkt sich fehlgeschlagene Modul-Importe; dort greift statt der Wiederholung das einmalige Neuladen.
+
+### Zusammengeführt am 24.09.: Arbeitsstand vom 17.09. („Teil 122–129“)
+Der Zweig `claude/repo-identification-0e9uvj` (22 Commits, parallel entstanden und nie in main) ist per Merge übernommen. Neu in main sind:
+- **Schlaf und Routinen:** Schlafplan-Karte auf der Schlaf-Seite, bei den Routinen und auf den Gewohnheiten-Seiten; „Verlauf“ je Eintrag (`ItemVerlauf`).
+- **Einträge:** Einzeleinträge bei Schlaf, Wasser, Tageslicht und Bildschirmzeit bearbeiten und löschen. Optionale Notiz nach dem Bestätigen von Mahlzeiten und Gewohnheiten.
+- **Einzelne Seiten:**
+  - Supplemente: Formular für Dosierintervalle.
+  - Training: Heute-Checkliste.
+  - „Version festhalten“ auch für Routinen und Projekte.
+- **Behobene Fehler:**
+  - Mehrere Protokoll-Aktionen waren nirgends sichtbar (Guard-Test `aktionSichtbarkeit.test.js`).
+  - Notiz ging beim Entabhaken verloren.
+  - Schnelles Umschalten zweier Einstellungen verlor eine davon (`useProfileData`).
+  - Das Onboarding meldete Erfolg trotz Speicherfehler.
+- **Bewusst NICHT übernommen:** die alten Einzel-Chats je Seite (main hat seitdem den zentralen Aka), die alte Onboarding-Struktur und die Routine-Checkliste im Tagesplan (main hat eigene Routinen-Karten).
+- **Neu eingebaut statt übernommen:**
+  - Onboarding: Die Phase und die gewählten Start-Bereiche überleben ein Neuladen (localStorage `onboardingPhaseFortschritt`).
+  - Tagesplan: Bestätigen schreibt „erledigt“ ins Protokoll, die Rückmeldung danach als eigene „geändert“-Zeile.
+- **Datenbank:** Die Migrationen des Zweigs (`0091_aenderungsprotokoll_routine_schlaf`, `0092_aenderungsprotokoll_projekt`, `0093_notizen_mahlzeit_gewohnheit`) waren seit 17.09. live; es gibt deshalb doppelte Nummern 0091–0093. Neu ist `0100_aenderungsprotokoll_einzeltag_aktionen` (live): „geändert/entfällt (nur dieser Tag)“ wurde vorher lautlos abgelehnt.
+- **Test-Harness:** `gesamtTage`/`aktuelleSerie` liefern jetzt Zahlen; die Routinen-Seite stürzte im Harness ab, live nie.
+- **Beobachtung, nicht behoben:** Das Ein-Tipp-Abhaken auf der Startseite schreibt keinen Protokoll-Eintrag. `aenderungsprotokoll` hat live nur 4 Zeilen, das Tagesprotokoll ist also bisher sehr lückenhaft. Kandidat für die nächste Runde.
 
 ### Später (bewusst verschoben)
 - **Schutz vor geleakten Passwörtern** („Prevent use of leaked passwords“, Supabase → Authentication → Attack Protection): im Gratis-Tarif ausgegraut. Nutzerin am 24.09.: „machen wir irgendwann“. Einschalten, sobald das Projekt auf den Pro-Tarif wechselt; danach mit einem bekannten Leak-Passwort testen (z. B. am Admin-Testkonto, danach Passwort per SQL neu setzen). Bis dahin meldet der Supabase-Linter `auth_leaked_password_protection` – erwartet.

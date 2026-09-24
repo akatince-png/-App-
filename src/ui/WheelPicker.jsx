@@ -44,29 +44,53 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 54, 
     el.scrollTo({ top: index * itemHeight, behavior: "instant" });
   }, [index, itemHeight]);
 
-  const handleScroll = () => {
-    if (settleTimer.current) clearTimeout(settleTimer.current);
-    settleTimer.current = setTimeout(() => {
-      // Ein Tap hat onChange bereits mit dem korrekten Wert aufgerufen —
-      // das Scroll-Snapping, das der Tap selbst über scrollTo auslöst, darf
-      // diesen Wert nicht mit einem (durch Snap-Verhalten abweichenden)
-      // Scroll-Endpunkt überschreiben.
-      if (justClickedRef.current) {
-        justClickedRef.current = false;
-        return;
-      }
-      const el = scrollRef.current;
-      if (!el) return;
-      const nextIndex = Math.round(el.scrollTop / itemHeight);
-      const clamped = Math.min(values.length - 1, Math.max(0, nextIndex));
-      lastKnownIndexRef.current = clamped;
+  // Bug-Fix ("Picker hakt beim Scrollen"): der feste 120ms-Debounce-Timer
+  // feuerte öfter noch WÄHREND der Browser sein eigenes CSS-Scroll-Snapping
+  // (scrollSnapType) zu Ende animierte — die dadurch ausgelöste zusätzliche
+  // `scrollTo({behavior:"smooth"})` lief der noch laufenden nativen
+  // Snap-Animation entgegen, was sich als kurzes Stocken/Ruckeln anfühlte.
+  // Das native `scrollend`-Event (breit unterstützt: Chrome/Edge/Firefox,
+  // Safari ab 17.4) feuert erst, wenn wirklich nichts mehr in Bewegung ist
+  // — dort reicht ein reines Auslesen der Endposition, ohne der bereits
+  // korrekt eingerasteten Snap-Animation selbst noch hinterherzuscrollen.
+  // Der Debounce-Timer bleibt als Fallback für ältere Safari-Versionen ohne
+  // `scrollend`.
+  const scrollEndUnterstuetzt = typeof window !== "undefined" && "onscrollend" in window;
+
+  const werteUebernehmen = (erzwingeSnap) => {
+    // Ein Tap hat onChange bereits mit dem korrekten Wert aufgerufen —
+    // das Scroll-Snapping, das der Tap selbst über scrollTo auslöst, darf
+    // diesen Wert nicht mit einem (durch Snap-Verhalten abweichenden)
+    // Scroll-Endpunkt überschreiben.
+    if (justClickedRef.current) {
+      justClickedRef.current = false;
+      return;
+    }
+    const el = scrollRef.current;
+    if (!el) return;
+    const nextIndex = Math.round(el.scrollTop / itemHeight);
+    const clamped = Math.min(values.length - 1, Math.max(0, nextIndex));
+    lastKnownIndexRef.current = clamped;
+    // Nur noch korrigierend nachscrollen, wenn die native Snap-Rundung
+    // tatsächlich daneben liegt (z. B. Browser ohne `scrollend`, wo wir
+    // etwas früher/später als der exakte Snap-Punkt messen) — sitzt die
+    // Position schon exakt richtig, entfällt die zusätzliche Animation.
+    if (erzwingeSnap && el.scrollTop !== clamped * itemHeight) {
       el.scrollTo({ top: clamped * itemHeight, behavior: "smooth" });
-      if (values[clamped] !== value) {
-        onChange(values[clamped]);
-        hapticTick();
-      }
-    }, 120);
+    }
+    if (values[clamped] !== value) {
+      onChange(values[clamped]);
+      hapticTick();
+    }
   };
+
+  const handleScroll = () => {
+    if (scrollEndUnterstuetzt) return; // übernimmt onScrollEndCapture unten
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => werteUebernehmen(true), 180);
+  };
+
+  const handleScrollEnd = () => werteUebernehmen(true);
 
   return (
     <div style={{ position: "relative", height }}>
@@ -85,6 +109,7 @@ export default function WheelPicker({ values, value, onChange, itemHeight = 54, 
       <div
         ref={scrollRef}
         onScroll={handleScroll}
+        onScrollEnd={handleScrollEnd}
         className="mp-wheel"
         style={{
           height,

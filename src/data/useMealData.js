@@ -22,6 +22,11 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
   // denselben veralteten State liest und dadurch einen Toggle-Tap verliert.
   const pendingErledigtRef = useRef({});
   const [mahlzeitErledigtAt, setMahlzeitErledigtAt] = useState({});
+  // Leichte, optionale Notiz pro Tages-Eintrag (17.09., Konsistenz-Check) —
+  // bewusst kein volles Verträglichkeits-/Nebenwirkungs-Formular wie bei
+  // Medikamenten/Supplementen (passt inhaltlich nicht zu Mahlzeiten), aber
+  // wenigstens ein Freitext-Feld, siehe Migration 0093.
+  const [mahlzeitNotizen, setMahlzeitNotizen] = useState({});
   const [mealWochenplan, setMealWochenplan] = useState([]);
 
   useEffect(() => {
@@ -50,13 +55,16 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
       );
       const nextErledigt = {};
       const nextErledigtAt = {};
+      const nextNotizen = {};
       (logs || []).forEach((row) => {
         const k = `${row.log_date}__${row.meal_id}__${row.tageszeit}`;
         nextErledigt[k] = row.erledigt;
         nextErledigtAt[k] = row.erledigt_at || null;
+        if (row.notizen) nextNotizen[k] = row.notizen;
       });
       setMahlzeitErledigt(nextErledigt);
       setMahlzeitErledigtAt(nextErledigtAt);
+      setMahlzeitNotizen(nextNotizen);
       setMealWochenplan((wochenplan || []).map(rowToWochenplan));
     })();
     return () => {
@@ -267,6 +275,30 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
     [mahlzeitErledigt, mahlzeitErledigtAt, userId, belohnungPufferMin, mahlzeiten]
   );
 
+  // Speichert/ändert die optionale Notiz zu einem bereits bestätigten
+  // Tages-Eintrag (17.09., Konsistenz-Check) — bewusst nur für bereits
+  // erledigte Einträge gedacht (siehe TagesplanView.jsx: das Notiz-Symbol
+  // erscheint erst nach dem Bestätigen), `erledigt` bleibt deshalb einfach
+  // auf dem aktuellen Wert stehen statt hier neu gesetzt zu werden.
+  const mahlzeitNotizSpeichern = useCallback(
+    async (datum, id, zeit, text) => {
+      const k = `${datum}__${id}__${zeit}`;
+      const vorher = mahlzeitNotizen[k];
+      setMahlzeitNotizen((prev) => ({ ...prev, [k]: text }));
+      const { error } = await supabase.from("meal_logs").upsert(
+        { user_id: userId, meal_id: id, log_date: datum, tageszeit: zeit, erledigt: mahlzeitErledigt[k] ?? true, notizen: text || null },
+        { onConflict: "meal_id,log_date,tageszeit" }
+      );
+      if (error) {
+        console.error(error);
+        setMahlzeitNotizen((prev) => ({ ...prev, [k]: vorher }));
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
+    },
+    [userId, mahlzeitErledigt, mahlzeitNotizen]
+  );
+
   // Weist eine Mahlzeit einem Wochentag zu — bewusst ein einfacher Insert
   // statt Upsert-auf-Einzelplatz wie beim Training-Wochenplan: mehrere
   // Mahlzeiten am selben Tag (auch mit derselben Tageszeit-Kennung) sind
@@ -320,6 +352,8 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
     mahlzeitErledigt,
     mahlzeitErledigtAt,
     toggleMahlzeitErledigt,
+    mahlzeitNotizen,
+    mahlzeitNotizSpeichern,
     mealWochenplan,
     wochenplanMahlzeitSetzen,
     wochenplanMahlzeitEntfernen,

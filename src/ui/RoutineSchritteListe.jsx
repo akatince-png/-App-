@@ -3,8 +3,10 @@ import { Card } from "./primitives";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { ROUTINE_META } from "../utils/dayItems";
+import ItemVerlauf from "./ItemVerlauf";
 
 const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
+const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
 
 // Eigenständige, klar lesbare Anzeige der Routine-Schritte (Nutzerinnen-
 // Vorgabe, 16.09.: "nicht in dieser kleinen Listenform oberhalb, sondern
@@ -17,7 +19,7 @@ const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_M
 // errechnete Uhrzeit je Schritt — dieselbe Herleitung wie in
 // RoutineHeuteChecklist.jsx (routineSchrittZeit), hier nur zusätzlich mit
 // Auf/Ab-Pfeilen und Löschen fürs Bearbeiten.
-export default function RoutineSchritteListe({ routine, schritte, onEntfernen, onVerschieben }) {
+export default function RoutineSchritteListe({ routine, schritte, onEntfernen, onVerschieben, zeigeVerlauf = true }) {
   const { routineSchrittZeit } = useAppData();
   const sortiert = [...schritte].sort((a, b) => a.reihenfolge - b.reihenfolge);
   const farbe = ROUTINE_FARBE[routine] || accentDark;
@@ -69,6 +71,7 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
                 {s.name}
               </div>
               <div style={{ fontSize: 13, color: textMuted, marginTop: 1 }}>{s.dauerMin} Min.</div>
+              {zeigeVerlauf && <ItemVerlauf kategorie={ROUTINE_KATEGORIE[routine]} itemName={s.name} />}
             </div>
             <button
               type="button"

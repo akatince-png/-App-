@@ -1,62 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Shell, PrimaryButton, Card, Label, Pill, TextArea, Stepper } from "../../ui/primitives";
-import { cardBorder, textMuted, accentSoft, accentDark, danger } from "../../ui/theme";
+import { Shell, PrimaryButton, Card, Label, Stepper } from "../../ui/primitives";
+import { cardBorder, textMuted, accentSoft } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import RoutineSchritteEditor from "../../ui/RoutineSchritteEditor";
 import RoutineSchritteListe from "../../ui/RoutineSchritteListe";
 import TimeWheelField from "../../ui/TimeWheelField";
 import KategorieErinnerung from "../../ui/KategorieErinnerung";
-import ZeitErinnerungenCard from "../../ui/ZeitErinnerungenCard";
+import SchlafplanCard, { neuerSchlafblock } from "../../ui/SchlafplanCard";
+import KiChat from "../../ui/KiChat";
+import { AIService } from "../../services/aiService";
+import { getCoachName } from "../../utils/coachStorage";
 import { WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";
 import { ISTZUSTAND_FRAGEN } from "./OnboardingCategoriesView";
 import { PROTOKOLL_SCHRITTE_GESAMT } from "./categorySteps";
-
-const neuerSchlafblock = (wochentage) => ({
-  id: Math.random().toString(36).slice(2),
-  wochentage,
-  bettzeit: "22:30",
-  aufwachzeit: "06:30",
-});
-
-function berechneSchlafstunden(bett, auf) {
-  if (!bett || !auf) return "–";
-  const [bh, bm] = bett.split(":").map(Number);
-  const [ah, am] = auf.split(":").map(Number);
-  let minuten = ah * 60 + am - (bh * 60 + bm);
-  if (minuten <= 0) minuten += 24 * 60;
-  return Math.round((minuten / 60) * 10) / 10;
-}
-
-function toggleInArray(arr, val) {
-  return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
-}
-
-function AddZeile({ label, onClick, disabled }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: "100%",
-        padding: "8px",
-        borderRadius: 10,
-        border: "1px dashed #C7D8D2",
-        background: "transparent",
-        color: disabled ? textMuted : accentDark,
-        fontSize: 12,
-        fontWeight: 700,
-        cursor: disabled ? "not-allowed" : "pointer",
-        marginBottom: 6,
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
 
 // Morgen-/Abendroutine bewusst direkt nach Ziel/Profil/Laborwerte und VOR
 // den 9 Kategorie-Plänen (Schlaf, Peptide, Supplemente, ...) — Nutzerinnen-
@@ -111,34 +69,30 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel, forts
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const tageBelegtVonAnderen = (idx) => schlafBloecke.filter((_, i) => i !== idx).flatMap((b) => b.wochentage);
-  const verfuegbareTage = (idx) => WOCHENTAGE.filter((tag) => !tageBelegtVonAnderen(idx).includes(tag));
-  const toggleBlockTag = (idx, tag) => {
-    setSchlafBloecke((prev) => prev.map((b, i) => (i === idx ? { ...b, wochentage: toggleInArray(b.wochentage, tag) } : b)));
-  };
-  const blockAlleUmschalten = (idx) => {
-    const verfuegbar = verfuegbareTage(idx);
-    setSchlafBloecke((prev) =>
-      prev.map((b, i) => {
-        if (i !== idx) return b;
-        const vollstaendig = verfuegbar.length > 0 && verfuegbar.every((t) => b.wochentage.includes(t));
-        return { ...b, wochentage: vollstaendig ? [] : [...verfuegbar] };
-      })
-    );
-  };
+  // Einzelnes Feld eines Blocks setzen — auch von handleRoutineUebernehmen
+  // (Aka-Übernahme von Bettzeit/Aufwachzeit) genutzt, deshalb als
+  // eigenständige Funktion statt inline in onBloeckeChange.
   const setBlockFeld = (idx, feld, val) => {
     setSchlafBloecke((prev) => prev.map((b, i) => (i === idx ? { ...b, [feld]: val } : b)));
   };
-  const schlafblockHinzufuegen = () => {
-    const belegt = schlafBloecke.flatMap((b) => b.wochentage);
-    const frei = WOCHENTAGE.filter((t) => !belegt.includes(t));
-    if (frei.length === 0) return;
-    setSchlafBloecke((prev) => [...prev, neuerSchlafblock(frei)]);
+
+  // Bug-Fix (Nutzerinnen-Report, 16.09.: "bei Morgenroutine, Abendroutine
+  // und Schlaf kann ich Aka nicht einsetzen, ich habe keinen Button") —
+  // diese Seite hatte bisher gar keine KiChat-Einbindung, obwohl die dafür
+  // nötige Extraktion (AIService.morgenAbendroutineAusChat) existiert und an
+  // anderer Stelle (RoutineTabView.jsx: routineAusChat) längst produktiv
+  // läuft. EIN gemeinsamer Chat für alle drei Karten (statt drei einzelner)
+  // — der schwebende Aka-Knopf ist `position: fixed` und würde bei mehreren
+  // gleichzeitig eingebetteten KiChat-Instanzen exakt übereinander liegen.
+  const handleRoutineUebernehmen = async (verlauf) => {
+    const coachName = getCoachName();
+    const r = await AIService.morgenAbendroutineAusChat({ verlauf, coachName });
+    r.morgenSchritte.forEach((s) => routineSchrittHinzufuegen("morgen", s.name, s.dauerMin || 5));
+    r.abendSchritte.forEach((s) => routineSchrittHinzufuegen("abend", s.name, s.dauerMin || 5));
+    if (r.bettzeit) setBlockFeld(0, "bettzeit", r.bettzeit);
+    if (r.aufwachzeit) setBlockFeld(0, "aufwachzeit", r.aufwachzeit);
+    return r;
   };
-  const schlafblockEntfernen = (idx) => {
-    setSchlafBloecke((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
-  };
-  const alleTageVergeben = WOCHENTAGE.every((t) => schlafBloecke.some((b) => b.wochentage.includes(t)));
 
   const weiter = async () => {
     setSchlafError(null);
@@ -197,6 +151,22 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel, forts
         welche Schritte für dich zu einem guten Start bzw. Abschluss des Tages gehören — kannst du jederzeit später anpassen.
       </div>
 
+      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
+        Sag {getCoachName()}, was zu deiner Morgen-/Abendroutine und deinem Schlaf gehört — er füllt die Felder unten für dich aus.
+      </div>
+      <KiChat
+        bereich="morgenAbendroutine"
+        systemPrompt="Du hilfst dabei, Morgenroutine, Abendroutine und Schlafplan für eine bestehende App aufzubauen. Frag nach, was die Person sowieso schon jeden Morgen/Abend macht (kein Neuanfang von null), in welcher Reihenfolge, wie lange jeder Schritt ungefähr dauert, und wann sie normalerweise ins Bett geht bzw. aufwacht. Antworte auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code."
+        einleitung={`Hi, ich bin ${getCoachName()}! Lass uns deine Morgen- und Abendroutine sowie deinen Schlafrhythmus aufbauen — was gehört für dich dazu?`}
+        onUebernehmen={handleRoutineUebernehmen}
+        uebernehmenLabel="Übernehmen"
+        renderErgebnis={() => (
+          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>
+            Felder ausgefüllt — bitte kurz prüfen und unten speichern.
+          </div>
+        )}
+      />
+
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌅 Morgenroutine</div>
         <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
@@ -217,7 +187,7 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel, forts
         </div>
       </Card>
 
-      <RoutineSchritteListe routine="morgen" schritte={morgenSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+      <RoutineSchritteListe routine="morgen" schritte={morgenSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} zeigeVerlauf={false} />
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>🌙 Abendroutine</div>
@@ -239,88 +209,19 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel, forts
         </div>
       </Card>
 
-      <RoutineSchritteListe routine="abend" schritte={abendSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} />
+      <RoutineSchritteListe routine="abend" schritte={abendSchritte} onEntfernen={routineSchrittEntfernen} onVerschieben={routineSchrittVerschieben} zeigeVerlauf={false} />
 
-      <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>😴 Schlafplan</div>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-          Wann gehst du normalerweise ins Bett, wann willst du aufwachen? Schließt direkt an deine Abendroutine an.
-        </div>
-        <Label>{tLabel("Intervall")}</Label>
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 16 }}>
-          <Pill label={tLabel("Täglich")} selected={schlafIntervallTyp === "fixed"} onClick={() => setSchlafIntervallTyp("fixed")} />
-          <Pill
-            label={tLabel("Bestimmte Wochentage")}
-            selected={schlafIntervallTyp === "weekdays"}
-            onClick={() => setSchlafIntervallTyp("weekdays")}
-          />
-        </div>
-        {schlafIntervallTyp === "fixed" ? (
-          <div style={{ padding: "12px", borderRadius: 12, background: accentSoft, marginBottom: 14 }}>
-            <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
-            <TimeWheelField value={schlafBloecke[0]?.bettzeit || "22:30"} onChange={(v) => setBlockFeld(0, "bettzeit", v)} />
-            <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
-            <TimeWheelField value={schlafBloecke[0]?.aufwachzeit || "06:30"} onChange={(v) => setBlockFeld(0, "aufwachzeit", v)} />
-            <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
-              {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(schlafBloecke[0]?.bettzeit, schlafBloecke[0]?.aufwachzeit) })}
-            </div>
-          </div>
-        ) : (
-          <>
-            {schlafBloecke.map((block, idx) => (
-              <div
-                key={block.id}
-                style={{
-                  marginBottom: idx < schlafBloecke.length - 1 ? 20 : 0,
-                  paddingBottom: idx < schlafBloecke.length - 1 ? 16 : 0,
-                  borderBottom: idx < schlafBloecke.length - 1 ? `1px solid ${cardBorder}` : "none",
-                }}
-              >
-                <Label>{t("onboarding.schlaf.tage.label")}</Label>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
-                  <Pill
-                    label={t("onboarding.schlaf.alle")}
-                    selected={verfuegbareTage(idx).length > 0 && verfuegbareTage(idx).every((t2) => block.wochentage.includes(t2))}
-                    onClick={() => blockAlleUmschalten(idx)}
-                  />
-                  {verfuegbareTage(idx).map((tag) => (
-                    <Pill key={tag} label={tag} selected={block.wochentage.includes(tag)} onClick={() => toggleBlockTag(idx, tag)} />
-                  ))}
-                </div>
-                <Label>{t("onboarding.schlaf.bettzeit.label")}</Label>
-                <TimeWheelField value={block.bettzeit} onChange={(v) => setBlockFeld(idx, "bettzeit", v)} />
-                <Label>{t("onboarding.schlaf.aufwachzeit.label")}</Label>
-                <TimeWheelField value={block.aufwachzeit} onChange={(v) => setBlockFeld(idx, "aufwachzeit", v)} />
-                <div style={{ fontSize: 12, color: textMuted, marginTop: 8 }}>
-                  {t("onboarding.schlaf.ziel", { stunden: berechneSchlafstunden(block.bettzeit, block.aufwachzeit) })}
-                </div>
-                {schlafBloecke.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => schlafblockEntfernen(idx)}
-                    style={{ marginTop: 8, border: "none", background: "transparent", color: danger, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 0 }}
-                  >
-                    {t("onboarding.schlaf.block.entfernen")}
-                  </button>
-                )}
-              </div>
-            ))}
-            <div style={{ marginTop: 12 }}>
-              <AddZeile label={t("onboarding.schlaf.block.hinzufuegen")} onClick={schlafblockHinzufuegen} disabled={alleTageVergeben} />
-            </div>
-          </>
-        )}
-        <div style={{ marginTop: 16 }}>
-          <Label>{ISTZUSTAND_FRAGEN.schlaf[0].frage}</Label>
-          <TextArea value={schlafIstZustand} onChange={setSchlafIstZustand} placeholder={ISTZUSTAND_FRAGEN.schlaf[0].placeholder} diktierbar />
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <ZeitErinnerungenCard kategorie="schlaf" labelKey="onboarding.hydration.erinnerungszeiten.label" zeitStandard="22:00" />
-        </div>
-        {schlafError && (
-          <div style={{ marginTop: 12, fontSize: 12.5, color: danger, fontWeight: 600 }}>{schlafError}</div>
-        )}
-      </Card>
+      <SchlafplanCard
+        intervallTyp={schlafIntervallTyp}
+        onIntervallTypChange={setSchlafIntervallTyp}
+        bloecke={schlafBloecke}
+        onBloeckeChange={setSchlafBloecke}
+        istZustand={schlafIstZustand}
+        onIstZustandChange={setSchlafIstZustand}
+        istZustandFrage={ISTZUSTAND_FRAGEN.schlaf[0].frage}
+        istZustandPlaceholder={ISTZUSTAND_FRAGEN.schlaf[0].placeholder}
+        fehler={schlafError}
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
         <PrimaryButton onClick={weiter} disabled={schlafSaving}>

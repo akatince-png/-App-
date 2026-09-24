@@ -476,15 +476,22 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       // nicht "auf 0 setzen" — sonst würde reines Durchklicken das
       // bestehende Ziel überschreiben.
       const neuesZiel = hydrationMl.trim() === "" ? hydrationZielMl : Math.max(0, Number(hydrationMl) || 0);
-      await hydrationZielSetzen(neuesZiel);
+      // Bug-Fix (17.09., "Testlauf"-Nachkontrolle): hydrationZielSetzen()/
+      // tageslichtZielSetzen()/bildschirmzeitZielSetzen() geben wie überall
+      // sonst {ok, error} zurück — hier wurde das bisher verworfen, `result`
+      // blieb auf dem Anfangswert {ok: true} stehen, egal ob der Schreib-
+      // vorgang tatsächlich geklappt hat. Bei einem Fehlschlag (Netzwerk)
+      // sprang der Onboarding-Flow trotzdem sofort zum nächsten Schritt,
+      // ohne dass das Ziel je gespeichert wurde und ohne jede Fehlermeldung.
+      result = await hydrationZielSetzen(neuesZiel);
       setCategoryZiel("hydration", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "tageslicht") {
       const neuesZiel = tageslichtMinuten.trim() === "" ? tageslichtZielMinuten : Math.max(0, Number(tageslichtMinuten) || 0);
-      await tageslichtZielSetzen(neuesZiel);
+      result = await tageslichtZielSetzen(neuesZiel);
       setCategoryZiel("tageslicht", { modus: ziel.modus, wochen: ziel.wochen });
     } else if (step.key === "bildschirmzeit") {
       const neuesLimit = bildschirmzeitMinuten.trim() === "" ? bildschirmzeitZielMinuten : Math.max(0, Number(bildschirmzeitMinuten) || 0);
-      await bildschirmzeitZielSetzen(neuesLimit);
+      result = await bildschirmzeitZielSetzen(neuesLimit);
       setCategoryZiel("bildschirmzeit", { modus: ziel.modus, wochen: ziel.wochen, istZustand });
     } else if (step.key === "training") {
       // Der Wochenplan selbst wird schon beim Antippen der Pillen direkt
@@ -657,7 +664,12 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         const h = await AIService.hydrationAusChat({ verlauf, coachName });
         if (h.zielMl) {
           setHydrationMl(String(h.zielMl));
-          await hydrationZielSetzen(Math.max(0, Number(h.zielMl) || 0));
+          // Bug-Fix (17.09., "Testlauf"-Nachkontrolle): siehe
+          // speichernUndWeiter() oben — dieselbe Lücke gab es auch hier im
+          // Coach-Übernahme-Pfad, das Ergebnis von hydrationZielSetzen()
+          // wurde bisher verworfen, ein Fehlschlag also nie gemeldet.
+          const result = await hydrationZielSetzen(Math.max(0, Number(h.zielMl) || 0));
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
         }
         if (h.istZustandMenge) setIstZustandFeld("menge", h.istZustandMenge);
         if (h.istZustandGetraenke) setIstZustandFeld("getraenke", h.istZustandGetraenke);
@@ -666,13 +678,19 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       case "tageslicht": {
         const tl = await AIService.tageslichtAusChat({ verlauf, coachName });
         setTageslichtMinuten(String(tl.zielMinuten));
-        if (tl.zielMinuten) await tageslichtZielSetzen(Math.max(0, Number(tl.zielMinuten) || 0));
+        if (tl.zielMinuten) {
+          const result = await tageslichtZielSetzen(Math.max(0, Number(tl.zielMinuten) || 0));
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        }
         return tl;
       }
       case "bildschirmzeit": {
         const bz = await AIService.bildschirmzeitAusChat({ verlauf, coachName });
         setBildschirmzeitMinuten(String(bz.zielMinuten));
-        if (bz.zielMinuten) await bildschirmzeitZielSetzen(Math.max(0, Number(bz.zielMinuten) || 0));
+        if (bz.zielMinuten) {
+          const result = await bildschirmzeitZielSetzen(Math.max(0, Number(bz.zielMinuten) || 0));
+          if (!result?.ok) throw new Error(result?.error || t("onboarding.error.speichern"));
+        }
         if (bz.istZustandUeblich) setIstZustandFeld("ueblich", bz.istZustandUeblich);
         if (bz.istZustandTaetigkeit) setIstZustandFeld("taetigkeit", bz.istZustandTaetigkeit);
         if (bz.istZustandReduzieren) setIstZustandFeld("reduzieren", bz.istZustandReduzieren);
@@ -794,16 +812,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
             {tLabel("Alles überspringen")}
           </div>
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", flexShrink: 0 }}
-              title={tLabel("Abbrechen")}
-            >
-              ⌂
-            </button>
-          )}
         </div>
       </div>
       {nurSchritte ? <Stepper step={index + bereichOffset} total={SCHRITTE.length + bereichOffset} /> : <Stepper step={index + PROTOKOLL_SCHRITT_OFFSET} total={PROTOKOLL_SCHRITTE_GESAMT} />}
@@ -839,6 +847,32 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             <PrimaryButton variant="ghost" onClick={() => weiter(false)}>
               {tLabel("Später einrichten")}
             </PrimaryButton>
+            {/* Bug-Fix (Nutzerinnen-Report, 16.09.: "keine Symmetrie ... unten
+                haben die zum Beispiel noch das Abbrechen"): Laborwerte/
+                Routinen zeigen "Abbrechen" schon länger als eigenen Knopf
+                unter den Haupt-Aktionen (siehe OnboardingLaborwerteView.jsx/
+                OnboardingRoutinenView.jsx) — hier saß er bisher nur als
+                kleiner Icon-Knopf (⌂) oben rechts neben "Alles überspringen".
+                Jetzt derselbe Knopf am selben Ort wie überall sonst im
+                Onboarding. */}
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: `1px solid ${cardBorder}`,
+                  background: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 150ms ease-out",
+                }}
+              >
+                {tLabel("Abbrechen")}
+              </button>
+            )}
           </div>
         </Card>
       )}
@@ -848,6 +882,14 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
             Sag {getCoachName()}, was du hier einrichten möchtest — er füllt die Felder für dich aus.
           </div>
+          {/* Bug-Fix (Nutzerinnen-Report, 16.09.: "bei Hydration ploppt das
+              Fenster gleich komplett auf"): `autoStart` öffnete den Chat hier
+              unaufgefordert, sobald "Jetzt einrichten" getippt wurde — anders
+              als bei Laborwerte (siehe OnboardingLaborwerteView.jsx, Teil 111,
+              genau dort schon als Bug behoben) und der neuen Routinen-Karte
+              (siehe OnboardingRoutinenView.jsx) zeigt Aka jetzt überall
+              einheitlich nur den schwebenden Orb-Knopf — ein Tap öffnet den
+              Chat, statt dass er sich von selbst aufdrängt. */}
           <KiChat
             key={step.key}
             systemPrompt={KATEGORIE_COACH_PROMPTS[step.key]}
@@ -857,7 +899,6 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
             onUebernehmen={onUebernehmenKategorie}
             uebernehmenLabel="Übernehmen"
             renderErgebnis={renderKategorieErgebnis}
-            autoStart
           />
         <Card>
           {ISTZUSTAND_FRAGEN[step.key] && (
@@ -1199,6 +1240,24 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   {tLabel("Doch überspringen")}
                 </PrimaryButton>
               </>
+            )}
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: `1px solid ${cardBorder}`,
+                  background: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 150ms ease-out",
+                }}
+              >
+                {tLabel("Abbrechen")}
+              </button>
             )}
           </div>
         </Card>

@@ -21,6 +21,40 @@ const AKTION_ANZEIGE = {
   ausgefallen: "Nicht geschafft",
 };
 
+// Siehe Kommentar bei aenderungGruppen weiter unten — nur echte
+// Tagesereignisse gehören in den Tagesverlauf, keine Struktur-Änderungen.
+//
+// Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+// angezeigt?" — bei genauerem Hinsehen fielen GLEICH DREI Aktion-Werte
+// durchs Raster, nicht nur einer): jede Stelle im Code, die
+// aenderungVermerken() aufruft, MUSS ihren `aktion`-Wert entweder hier
+// oder in ItemVerlauf.jsx (VERLAUF_AKTIONEN) eintragen — sonst landet der
+// Eintrag zwar in der DB, taucht aber NIRGENDS in der Oberfläche auf.
+// Betroffen waren: TagesEintragBearbeiten.jsx ("geändert (nur dieser
+// Tag)"/"entfällt (nur dieser Tag)", seit dessen Bau), HomeView.jsx
+// ("aktiviert"/"beendet" beim Notfallmodus — dessen eigener Kommentar dort
+// sagt ausdrücklich "damit im Protokoll sichtbar ist, wie lange ein
+// Notfalltag gedauert hat", wurde aber nie umgesetzt) und MehrTab.jsx
+// ("aktiviert"/"deaktiviert" beim Ein-/Ausschalten eines Bausteins). Alle
+// fünf sind Tages-EREIGNISSE (keine dauerhafte Struktur-Änderung einer
+// wiederkehrenden Regel), deshalb hier und nicht in ItemVerlauf.jsx.
+export const TAGESVERLAUF_AKTIONEN = [
+  "erledigt",
+  "ausgefallen",
+  "Ausnahme zurückgenommen",
+  "geändert (nur dieser Tag)",
+  "entfällt (nur dieser Tag)",
+  "aktiviert",
+  "deaktiviert",
+  "beendet",
+  // Notiz-Funktion für Mahlzeiten/Gewohnheiten (Konsistenz-Check, Punkt 3)
+  // — beim ersten Bau selbst noch ohne aenderungVermerken()-Aufruf,
+  // derselbe Bug wie oben, nur in eigenem Code statt in altem.
+  "Notiz hinzugefügt",
+  "Notiz geändert",
+  "Notiz entfernt",
+];
+
 function datumLabel(datumStr) {
   const [y, m, d] = datumStr.split("-");
   const datum = new Date(`${datumStr}T12:00:00`);
@@ -150,6 +184,9 @@ const KATEGORIE_LABEL = {
   gewohnheiten: "Gewohnheiten",
   supplemente: "Supplemente",
   medikamente: "Medikamente",
+  morgenroutine: "Morgenroutine",
+  abendroutine: "Abendroutine",
+  projekt: "Projekte & Zeitblöcke",
 };
 
 // Generischer Snapshot-Renderer statt eigener Formatierung je Kategorie
@@ -261,22 +298,39 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [alleTrainings]);
 
+  // Nutzerinnen-Vorgabe (17.09.): "Die Veränderung selber ... soll
+  // lediglich im Protokoll einsehbar sein, nicht im Tagesverlauf ... Der
+  // Tagesverlauf soll immer den aktuellsten Stand der Dinge nach
+  // entsprechenden Zeit- und Datumrahmen anzeigen." Strukturelle
+  // Änderungen (Dosis/Zeitrahmen geändert, Schritt hinzugefügt/entfernt,
+  // Version festgehalten) laufen seitdem NICHT mehr hier ein, sondern über
+  // die neue <ItemVerlauf> direkt am jeweiligen Eintrag (siehe
+  // MedikamenteView.jsx & Co.) — dieselbe Datenquelle (protokollEintraege),
+  // nur anders gefiltert. Hier bleiben ausschließlich tatsächliche
+  // Tagesereignisse: "erledigt" (Einnahme/Schritt bestätigt), "ausgefallen"
+  // (nicht rechtzeitig bestätigt, siehe ausgefallenSweep.js), "Ausnahme
+  // zurückgenommen" (Einzeltag-Ausnahme aufgehoben).
+  const tagesverlaufEintraege = useMemo(
+    () => protokollEintraege.filter((e) => TAGESVERLAUF_AKTIONEN.includes(e.aktion)),
+    [protokollEintraege]
+  );
+
   const aenderungGruppen = useMemo(() => {
     const map = new Map();
-    protokollEintraege.forEach((e) => {
+    tagesverlaufEintraege.forEach((e) => {
       const datum = e.erstelltAm.slice(0, 10);
       if (!map.has(datum)) map.set(datum, []);
       map.get(datum).push(e);
     });
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
-  }, [protokollEintraege]);
+  }, [tagesverlaufEintraege]);
 
   // Mehrfachauswahl (12.09., Nutzerin-Vorgabe: "in diesen Bereichen [den
   // Protokollen] möchte ich auch die Möglichkeit haben, mehrere Sachen
   // gleichzeitig zu löschen") — eine Auswahl je Bereich, unabhängig von der
   // Datums-Gruppierung darüber (Auswahl kann Einträge aus mehreren Tagen
   // gleichzeitig umfassen).
-  const aenderungAuswahl = useMehrfachauswahl(protokollEintraege, (e) => e.id);
+  const aenderungAuswahl = useMehrfachauswahl(tagesverlaufEintraege, (e) => e.id);
   const versionAuswahl = useMehrfachauswahl(versionen, (v) => v.id);
   const trainingAuswahl = useMehrfachauswahl(alleTrainings, (e) => e.id);
 
@@ -360,7 +414,7 @@ export default function ProtokollLogView({ onHome, embedded = false }) {
       {aenderungGruppen.length === 0 ? (
         <Card style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 13, color: textMuted, textAlign: "center" }}>
-            Noch nichts protokolliert — sobald du eine Einnahme bestätigst oder etwas an einem aktiven Plan anpasst, erscheint es hier, inklusive Verspätung gegenüber der geplanten Uhrzeit.
+            Noch nichts protokolliert — sobald du eine Einnahme oder einen Schritt bestätigst, erscheint es hier, inklusive Verspätung gegenüber der geplanten Uhrzeit. Änderungen an den Plänen selbst (Dosis, Zeiten, ...) findest du direkt beim jeweiligen Eintrag unter „🕐 Verlauf".
           </div>
         </Card>
       ) : (

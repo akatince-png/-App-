@@ -14,6 +14,7 @@ import { fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/date
 import { useAppData } from "../context/AppDataContext";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import ItemVerlauf from "../ui/ItemVerlauf";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Medikamente
 // sind Lila, passend zu den bunten Home-Mini-Widgets.
@@ -444,6 +445,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
                         {dosisEditOffen === h && (
                           <DosisBearbeitenPanel dosierung={hormonDosierung[h]} onSpeichern={(entwurf, grund) => handleDosisSpeichern(h, entwurf, grund)} />
                         )}
+                        <ItemVerlauf kategorie="hormon" itemName={h} />
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

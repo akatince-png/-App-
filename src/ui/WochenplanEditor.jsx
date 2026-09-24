@@ -7,6 +7,7 @@ import VorlaufFeld from "./VorlaufFeld";
 import { accent, accentDark, accentSoft, card, cardBorder, danger, textMain, textMuted } from "./theme";
 import { ALLE_UEBUNGEN, TRAININGSARTEN, WOCHENTAGE } from "../constants";
 import { useT } from "../i18n/translate";
+import ItemVerlauf from "./ItemVerlauf";
 
 export const WOCHENTAGE_VOLL = { Mo: "Montag", Di: "Dienstag", Mi: "Mittwoch", Do: "Donnerstag", Fr: "Freitag", Sa: "Samstag", So: "Sonntag" };
 
@@ -559,6 +560,9 @@ export default function WochenplanEditor({
                     </div>
                   );
                 })}
+                <div style={{ padding: "6px 14px 10px" }}>
+                  <ItemVerlauf kategorie="training" itemName={WOCHENTAGE_VOLL[tag]} />
+                </div>
               </Card>
             ))}
           </div>

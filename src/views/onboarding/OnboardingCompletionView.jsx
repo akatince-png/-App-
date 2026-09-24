@@ -143,7 +143,7 @@ export default function OnboardingCompletionView({ eingerichteteBereiche, onDone
               <span>
                 {b.icon} {b.label}
               </span>
-              <span>{b.aktion}</span>
+              <span>{b.knopf}</span>
             </div>
           ))}
           <div style={{ fontSize: 12.5, color: textMuted, lineHeight: 1.5 }}>

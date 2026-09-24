@@ -70,5 +70,23 @@ export function useSleepData(userId) {
     return Math.round((summe / letzte7.length) * 10) / 10;
   }, [schlafEintraege]);
 
-  return { schlafEintraege, schlafHinzufuegen, schlafDurchschnitt7Tage };
+  // Löschen eines einzelnen Tages-Eintrags (17.09., Konsistenz-Check) —
+  // Bearbeiten ging schon vorher über erneutes schlafHinzufuegen() mit
+  // demselben Datum (Upsert), nur Löschen fehlte.
+  const schlafEintragLoeschen = useCallback(
+    async (datum) => {
+      const vorher = schlafEintraege.find((e) => e.datum === datum);
+      setSchlafEintraege((prev) => prev.filter((e) => e.datum !== datum));
+      const { error } = await supabase.from("sleep_entries").delete().eq("user_id", userId).eq("datum", datum);
+      if (error) {
+        console.error(error);
+        if (vorher) setSchlafEintraege((prev) => [...prev, vorher].sort((a, b) => a.datum.localeCompare(b.datum)));
+        return { ok: false, error: `Löschen fehlgeschlagen: ${error.message}` };
+      }
+      return { ok: true };
+    },
+    [userId, schlafEintraege]
+  );
+
+  return { schlafEintraege, schlafHinzufuegen, schlafEintragLoeschen, schlafDurchschnitt7Tage };
 }

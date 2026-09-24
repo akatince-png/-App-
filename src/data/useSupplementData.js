@@ -31,7 +31,12 @@ function rowToSupplement(r) {
   };
 }
 
-function supplementToRow(neu) {
+// Exportiert (17.09., Konsistenz-Check): SupplementeView.jsx braucht dieselbe
+// camelCase->Spalten-Umwandlung jetzt auch für das neue Dosierintervall-
+// Bearbeiten-Panel (siehe DosierungFields.jsx) — ohne diese Umwandlung
+// würde ein direktes supplementAendern(id, entwurf) Spalten wie
+// "intervallTyp" statt "intervall_mode" an Supabase schicken und scheitern.
+export function supplementToRow(neu) {
   return {
     menge: neu.menge || "",
     intervall_mode: neu.intervallTyp || "fixed",

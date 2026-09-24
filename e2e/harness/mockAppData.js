@@ -104,6 +104,10 @@ function explizit(userId, overrides) {
     eigeneGruppenLogs: [],
     // Punkte teilen (24.09.): Startzustand aus, wie bei echten Konten.
     ranglisteSichtbar: false,
+    // Zähler je Gewohnheit (Gewohnheiten-Seite) liefern Zahlen, keine
+    // {ok}-Antwort wie die übrigen Aktions-Funktionen.
+    gesamtTage: () => 0,
+    aktuelleSerie: () => 0,
     // Ein voll eingerichtetes Testkonto (Standard-Harness-Zustand) hätte in
     // echt immer ein aktives Hauptprotokoll — ohne diesen Mock würde die
     // generische siehtAusWieId()-Heuristik `null` liefern und z. B.

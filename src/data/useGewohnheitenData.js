@@ -9,6 +9,11 @@ import { zaehleTageStreak } from "../utils/dates";
 export function useGewohnheitenData(userId, hauptprotokollId) {
   const [gewohnheiten, setGewohnheiten] = useState([]);
   const [gewohnheitErledigt, setGewohnheitErledigt] = useState({});
+  // Leichte, optionale Notiz pro Tages-Eintrag (17.09., Konsistenz-Check) —
+  // siehe useMealData.js für dieselbe Begründung/Migration (0093). Lebt nur,
+  // solange die Gewohnheit für diesen Tag als erledigt markiert ist — der
+  // `routine_logs`-Eintrag selbst existiert nur dann (siehe toggle unten).
+  const [gewohnheitNotizen, setGewohnheitNotizen] = useState({});
   // Bug-Fix: schnelles Doppeltippen auf denselben Abhaken-Button (bei ADHS
   // keine Seltenheit) las bisher beide Male denselben, noch nicht
   // aktualisierten State — der zweite Tap (gedacht als "rückgängig machen")
@@ -41,10 +46,14 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
       }))
     );
     const nextErledigt = {};
+    const nextNotizen = {};
     (logs || []).forEach((row) => {
-      nextErledigt[`${row.log_date}__${row.routine_id}`] = true;
+      const k = `${row.log_date}__${row.routine_id}`;
+      nextErledigt[k] = true;
+      if (row.notizen) nextNotizen[k] = row.notizen;
     });
     setGewohnheitErledigt(nextErledigt);
+    setGewohnheitNotizen(nextNotizen);
   }, [userId]);
 
   useEffect(() => {
@@ -147,15 +156,54 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
           setGewohnheitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
         }
       } else {
+        // Bug-Fix (17.09., "Testlauf"-Nachkontrolle): das Entfernen des
+        // Häkchens löscht die gesamte routine_logs-Zeile (inkl. einer evtl.
+        // gespeicherten Notiz, siehe gewohnheitNotizSpeichern oben) — der
+        // lokale gewohnheitNotizen-Stand wurde das bisher NICHT nachgezogen,
+        // sodass die Notiz-Markierung in TagesplanView.jsx bis zum nächsten
+        // Neuladen fälschlich weiter anzeigte, obwohl der Text bereits aus
+        // der DB verschwunden war (beim erneuten Abhaken wäre er dauerhaft
+        // weg gewesen, ohne dass die Anzeige das je verraten hätte).
+        const vorherigeNotiz = gewohnheitNotizen[k];
+        setGewohnheitNotizen((prev) => {
+          if (!(k in prev)) return prev;
+          const next = { ...prev };
+          delete next[k];
+          return next;
+        });
         const { error } = await supabase.from("routine_logs").delete().eq("routine_id", gewohnheitId).eq("log_date", datum);
         if (error) {
           console.error(error);
           pendingErledigtRef.current[k] = aktuellerWert;
           setGewohnheitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
+          if (vorherigeNotiz !== undefined) setGewohnheitNotizen((prev) => ({ ...prev, [k]: vorherigeNotiz }));
         }
       }
     },
-    [gewohnheitErledigt, userId]
+    [gewohnheitErledigt, userId, gewohnheitNotizen]
+  );
+
+  // Speichert/ändert die optionale Notiz zu einem bereits bestätigten
+  // Tages-Eintrag (17.09., Konsistenz-Check) — nur möglich, solange der
+  // Tag als erledigt markiert ist (siehe Kommentar oben zu
+  // gewohnheitNotizen), das Notiz-Symbol erscheint in TagesplanView.jsx
+  // deshalb erst nach dem Bestätigen.
+  const gewohnheitNotizSpeichern = useCallback(
+    async (datum, gewohnheitId, text) => {
+      const k = `${datum}__${gewohnheitId}`;
+      const vorher = gewohnheitNotizen[k];
+      setGewohnheitNotizen((prev) => ({ ...prev, [k]: text }));
+      const { error } = await supabase
+        .from("routine_logs")
+        .upsert({ user_id: userId, routine_id: gewohnheitId, log_date: datum, notizen: text || null }, { onConflict: "routine_id,log_date" });
+      if (error) {
+        console.error(error);
+        setGewohnheitNotizen((prev) => ({ ...prev, [k]: vorher }));
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
+    },
+    [userId, gewohnheitNotizen]
   );
 
   // Gesamtzahl bisher erledigter Tage — unabhängig von einem eventuellen Ziel.
@@ -180,6 +228,8 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
     gewohnheitZielAktualisieren,
     gewohnheitAkutFavoritUmschalten,
     toggleGewohnheitErledigt,
+    gewohnheitNotizen,
+    gewohnheitNotizSpeichern,
     gesamtTage,
     aktuelleSerie,
   };

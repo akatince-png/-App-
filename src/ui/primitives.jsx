@@ -65,12 +65,15 @@ export function Stepper({ step, total }) {
 // E: Getönt + Rahmen" ausgewählt) — für das jeweils eine Aktionsfeld pro
 // Kategorie-Screen (z. B. "Und, wie hast du geschlafen?", "Schnell
 // hinzufügen"), nicht für jede Karte auf der Seite.
-export const Card = React.forwardRef(function Card({ children, style, akzent }, ref) {
+// onClick/className werden durchgereicht (Bug-Fix vom 17.09., nachgezogen
+// am 24.09.): vorher verschluckte Card beides lautlos.
+export const Card = React.forwardRef(function Card({ children, style, akzent, className, onClick }, ref) {
   const { accent: bereichAccent, accentSoft: bereichAccentSoft } = useBereichColor();
   return (
     <div
       ref={ref}
-      className="mp-card"
+      className={className ? `mp-card ${className}` : "mp-card"}
+      onClick={onClick}
       style={{
         background: akzent ? bereichAccentSoft : card,
         border: akzent ? `2px solid ${bereichAccent}` : `1px solid ${cardBorder}`,

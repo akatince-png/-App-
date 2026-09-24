@@ -4,7 +4,7 @@ import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { cardBorder, textMain, textMuted, danger, accentDark, accentSoft } from "./theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
-import { fmtDate } from "../utils/dates";
+import { fmtDate, verspaetungText } from "../utils/dates";
 
 // Kategorie -> Ziel-Reiter in PlaeneView.jsx (für den "dauerhaft ändern"-
 // Knopf, siehe AuthenticatedApp.jsx KATEGORIE_TO_VIEW für dasselbe Muster
@@ -15,24 +15,38 @@ const KATEGORIE_ZU_VIEW = {
   mahlzeit: "ernaehrung",
   gewohnheit: "routinen",
   workflow: "routinen",
+  training: "training",
+  zeitblock: "wochenuebersicht",
 };
 
 // Kategorien, die eine Einzeltag-Ausnahme kennen (siehe Migration 0080 /
-// dayItems.js) — Training/Zeitblöcke haben schon eigene Tages-Zeilen und
-// werden gar nicht erst mit dieser Karte geöffnet.
+// dayItems.js) — Training/Zeitblöcke haben schon eigene Tages-Zeilen
+// (Training) bzw. gar kein "erledigt"-Konzept (Zeitblock) und bekommen
+// deshalb nicht die Erledigt-/Ausnahme-Bedienung unten, wohl aber (seit
+// 17.09., Nutzerinnen-Vorgabe: "alle Tagespunkte sollen einsehbar sein,
+// ohne großen Umweg über die Protokolle") dieselbe Karte rein zum Ansehen,
+// was hinter dem Punkt steckt.
 const AUSNAHME_KATEGORIEN = new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow"]);
 
-// Bottom-Sheet zum Bearbeiten eines einzelnen Tagesplan-Eintrags direkt aus
-// der Wochen-/Monatsübersicht heraus (Nutzerin-Vorgabe, 12.09.) — erspart
-// den Umweg über die jeweilige Kategorie-Ansicht für die zwei häufigsten
-// Fälle: abhaken/entabhaken (sofort, eindeutig pro Tag) und "heute mal
-// anders" (Uhrzeit/Name/Detail nur für diesen einen Tag, oder der Tag
-// entfällt ganz — beides als Ausnahme gespeichert, nicht als dauerhafte
-// Änderung der wiederkehrenden Regel). Echte dauerhafte Änderungen (die
-// dann ab sofort für die ganze Restlaufzeit gelten) laufen weiterhin über
-// die volle, bereits vorhandene Bearbeiten-Oberfläche der jeweiligen
-// Kategorie — der Knopf unten navigiert dorthin, statt die Formulare hier
-// zu duplizieren.
+// Bottom-Sheet zum Ansehen/Bearbeiten eines einzelnen Tagesplan-Eintrags
+// direkt aus der Wochen-/Monatsübersicht heraus (Nutzerin-Vorgabe, 12.09.)
+// — erspart den Umweg über die jeweilige Kategorie-Ansicht für die zwei
+// häufigsten Fälle: abhaken/entabhaken (sofort, eindeutig pro Tag) und
+// "heute mal anders" (Uhrzeit/Name/Detail nur für diesen einen Tag, oder
+// der Tag entfällt ganz — beides als Ausnahme gespeichert, nicht als
+// dauerhafte Änderung der wiederkehrenden Regel). Echte dauerhafte
+// Änderungen (die dann ab sofort für die ganze Restlaufzeit gelten) laufen
+// weiterhin über die volle, bereits vorhandene Bearbeiten-Oberfläche der
+// jeweiligen Kategorie — der Knopf unten navigiert dorthin, statt die
+// Formulare hier zu duplizieren.
+//
+// Seit 17.09. (Nutzerinnen-Vorgabe) öffnet sich diese Karte für JEDEN
+// Tagespunkt, nicht mehr nur die fünf Ausnahme-fähigen Kategorien — bei
+// Training/Zeitblock zeigt sie dann nur noch Name/Uhrzeit/Detail plus
+// (falls es ein Ziel dafür gibt) den "Dauerhaft ändern"-Knopf, ohne die
+// Erledigt-/Ausnahme-Bedienung, die für diese zwei konzeptionell nicht
+// passt (Training hat eigene Live-/Protokoll-Wege, Zeitblock kennt gar
+// kein "erledigt").
 export default function TagesEintragBearbeiten({ item, datum, onNavigateKategorie, onClose }) {
   const {
     toggleSupplementErledigt,
@@ -62,11 +76,25 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
     // Bewusst über item.raw / originalUhrzeit statt der evtl. per Ausnahme
     // überschriebenen Anzeigefelder — der Log-Eintrag richtet sich immer
     // nach der ECHTEN geplanten Uhrzeit/Name, siehe dayItems.js.
+    const warErledigt = !!item.done;
     if (item.kategorie === "hormon") await toggleHormonErledigt(datum, item.raw.name, item.raw.uhrzeit);
     else if (item.kategorie === "supplement") await toggleSupplementErledigt(datum, item.raw.id, item.originalUhrzeit);
     else if (item.kategorie === "mahlzeit") await toggleMahlzeitErledigt(datum, item.raw.id, item.logZeit ?? item.originalUhrzeit);
     else if (item.kategorie === "gewohnheit") await toggleGewohnheitErledigt(datum, item.raw.id);
     else if (item.kategorie === "training") return; // hat eigene Bearbeiten-Wege, keine Ausnahmen-Karte
+    // Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+    // angezeigt?"): das Abhaken über diese Karte (Wochen-/Monatsübersicht)
+    // rief bisher kein aenderungVermerken() auf, nur beim Zurücknehmen
+    // (nicht beim Abhaken selbst) protokolliert — wie in GewohnheitenView.jsx
+    // handleToggleHeute().
+    if (!warErledigt) {
+      aenderungVermerken({
+        kategorie: item.kategorie,
+        itemName: item.raw.name,
+        aktion: "erledigt",
+        detail: verspaetungText(item.logZeit ?? item.originalUhrzeit) || "",
+      });
+    }
   };
 
   const heuteAndersSpeichern = async () => {
@@ -214,27 +242,32 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
                 )}
               </div>
             )}
-
-            <button
-              type="button"
-              onClick={dauerhaftBearbeiten}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                border: "none",
-                borderTop: `1px solid ${cardBorder}`,
-                background: "transparent",
-                padding: "12px 0 4px",
-                marginTop: 8,
-                fontSize: 12.5,
-                fontWeight: 700,
-                color: textMuted,
-                cursor: "pointer",
-              }}
-            >
-              Dauerhaft ändern (ab jetzt, für die ganze Restlaufzeit) →
-            </button>
           </>
+        )}
+
+        {/* Unabhängig von kannAusnahme (siehe Kommentar oben): auch
+            Training zeigt diesen Knopf, obwohl es keine Erledigt-/
+            Ausnahme-Bedienung oben hat. */}
+        {KATEGORIE_ZU_VIEW[item.kategorie] && (
+          <button
+            type="button"
+            onClick={dauerhaftBearbeiten}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              border: "none",
+              borderTop: `1px solid ${cardBorder}`,
+              background: "transparent",
+              padding: "12px 0 4px",
+              marginTop: 8,
+              fontSize: 12.5,
+              fontWeight: 700,
+              color: textMuted,
+              cursor: "pointer",
+            }}
+          >
+            {kannAusnahme ? "Dauerhaft ändern (ab jetzt, für die ganze Restlaufzeit) →" : "Zum Protokoll →"}
+          </button>
         )}
       </div>
     </div>

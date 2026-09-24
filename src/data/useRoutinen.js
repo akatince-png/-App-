@@ -206,10 +206,28 @@ export function useRoutinen(userId, belohnungPufferMin) {
   // bei ADHS, "muss irgendwann getrackt/nachvollziehbar sein").
   const durchlaufSpeichern = useCallback(
     async ({ routine, schritte: schritteProtokoll, gestartetUm }) => {
+      const heute = toLocalISODate(new Date());
+      // Bug-Fix (Nutzerinnen-Report, 17.09.: "Zusammenhänge" bei Morgen-/
+      // Abendroutine nicht in Ordnung): dieselbe Routine ließ sich am selben
+      // Tag zweifach als Durchlauf speichern — einmal automatisch übers
+      // Abhaken ALLER Schritte in der Home-Checkliste (toggleSchrittErledigt
+      // unten prüft das zwar selbst schon per `schonDurchlauf`), einmal über
+      // den geführten Ablauf (RoutineAblauf.jsx), der beim Abschluss bisher
+      // UNGEPRÜFT nochmal speicherte. `errungenschaften.js` zählt jede Zeile
+      // aus `routineDurchlaeufe` als eigenen Punkt (`tage.length`, keine
+      // Datums-Entdopplung) — zwei Zeilen für denselben Tag verdoppelten so
+      // fälschlich die Morgen-/Abendroutine-Punkte (Streak blieb korrekt, da
+      // dort über ein Set gezählt wird). Zentraler Schutz hier statt an
+      // jeder Aufrufstelle einzeln, damit JEDER Weg (Checkliste, geführter
+      // Ablauf, künftige weitere Wege) automatisch geschützt ist.
+      const bereitsHeute = durchlaeufe.find((d) => d.routine === routine && d.datum === heute);
+      if (bereitsHeute) {
+        return { ok: true, durchlauf: bereitsHeute };
+      }
       const row = {
         user_id: userId,
         routine,
-        datum: toLocalISODate(new Date()),
+        datum: heute,
         schritte: schritteProtokoll,
         gestartet_um: gestartetUm,
         abgeschlossen_um: new Date().toISOString(),
@@ -223,7 +241,7 @@ export function useRoutinen(userId, belohnungPufferMin) {
       setDurchlaeufe((prev) => [neu, ...prev]);
       return { ok: true, durchlauf: neu };
     },
-    [userId]
+    [userId, durchlaeufe]
   );
 
   // Bestätigt/entfernt EINEN Schritt für einen Tag, unabhängig vom

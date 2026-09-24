@@ -1,18 +1,19 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Shell, Card, PrimaryButton } from "../ui/primitives";
+import { Shell, Card, Label, PrimaryButton, TextArea } from "../ui/primitives";
 import SchnellFeedback from "../ui/SchnellFeedback";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, accentDark, cardBorder, danger, textMuted, verdunkeln } from "../ui/theme";
+import { accent, accentDark, accentSoft, cardBorder, danger, textMuted, verdunkeln } from "../ui/theme";
 import Icon from "../ui/Icon";
 import { WOCHENTAGE } from "../constants";
-import { addDays, fmtDate, sameDay, toLocalISODate } from "../utils/dates";
+import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE, ROUTINE_META } from "../utils/dayItems";
 import { BereichColorProvider } from "../ui/BereichColorContext";
+import { routineTagesStatus } from "../utils/routineStatus";
 import { useAppData } from "../context/AppDataContext";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
@@ -47,6 +48,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     mahlzeiten,
     mahlzeitErledigt,
     toggleMahlzeitErledigt,
+    mahlzeitNotizen,
+    mahlzeitNotizSpeichern,
     mealWochenplan,
     trainingEintraege,
     trainingNachDatum,
@@ -56,11 +59,15 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     gewohnheiten,
     gewohnheitErledigt,
     toggleGewohnheitErledigt,
+    gewohnheitNotizen,
+    gewohnheitNotizSpeichern,
     workflowPlaene,
     workflowPresets,
     projekte,
     zeitbloecke,
     routineSchritte,
+    routineDurchlaeufe,
+    routineSchrittErledigt,
     routineSchrittHinzufuegen,
     routineSchrittEntfernen,
     routineSchrittVerschieben,
@@ -68,6 +75,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     quests,
     questFortschrittSpeichern,
     ausnahmenNachSchluessel,
+    aenderungVermerken,
   } = useAppData();
 
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
@@ -94,6 +102,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const openFeedback = (dose, key, kategorie) => {
     if (kategorie === "hormon") skipHormonFeedback(dose);
     else if (kategorie === "supplement") skipSupplementFeedback(dose);
+    if (dose?.name) aenderungVermerken({ kategorie, itemName: dose.name, aktion: "erledigt", detail: verspaetungText(dose.zeit ?? dose.uhrzeit) || "" });
     setFeedbackOpen(key);
     setFeedbackKategorie(kategorie);
   };
@@ -107,10 +116,67 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
   };
+  // Tagesprotokoll (Bug-Fix vom 17.09., nachgezogen am 24.09.): Bestätigen
+  // über den Tagesplan protokolliert jetzt wie die Kategorie-Seiten.
+  // "erledigt" beim Abhaken (openFeedback), die optionale Rückmeldung danach
+  // als eigene Zeile.
+  const rueckmeldungText = (feedback, kategorie) => {
+    const teile = [];
+    if (kategorie === "hormon" && feedback?.vertraeglichkeit) teile.push(`Verträglichkeit: ${feedback.vertraeglichkeit}`);
+    if (feedback?.wirkung) teile.push(`Wirkung: ${feedback.wirkung}`);
+    if ((feedback?.nebenwirkungen || []).length > 0) teile.push(`Nebenwirkungen: ${feedback.nebenwirkungen.join(", ")}`);
+    if (feedback?.notizen) teile.push(feedback.notizen);
+    return teile.join(" · ");
+  };
   const handleSaveFeedback = (dose, entwurf) => {
     if (feedbackKategorie === "hormon") saveHormonFeedback(dose, entwurf);
     else if (feedbackKategorie === "supplement") saveSupplementFeedback(dose, entwurf);
+    const text = rueckmeldungText(entwurf, feedbackKategorie);
+    if (text && dose?.name) aenderungVermerken({ kategorie: feedbackKategorie, itemName: dose.name, aktion: "geändert", detail: `Rückmeldung: ${text}` });
     feedbackSchliessen();
+  };
+
+  // Leichte, optionale Notiz für Mahlzeiten/Gewohnheiten (17.09.,
+  // Konsistenz-Check) — bewusst kein Zwischenschritt wie bei Medikamenten/
+  // Supplementen (siehe FeedbackPanel oben): Bestätigen bleibt sofort,
+  // dieses Symbol erscheint erst DANACH und ist rein optional. `notizOffen`
+  // hält je item.key, ob die kleine Notiz-Box aufgeklappt ist; `notizEntwurf`
+  // den gerade bearbeiteten Text, bis er gespeichert wird.
+  const [notizOffen, setNotizOffen] = useState({});
+  const [notizEntwurf, setNotizEntwurf] = useState({});
+  const notizKategorien = ["mahlzeit", "gewohnheit"];
+  const notizSchluessel = (item) => {
+    const tagStr = toLocalISODate(selectedDate);
+    if (item.kategorie === "mahlzeit") return `${tagStr}__${item.raw.id}__${item.logZeit ?? item.uhrzeit}`;
+    return `${tagStr}__${item.raw.id}`;
+  };
+  const notizOeffnen = (item) => {
+    const schluessel = notizSchluessel(item);
+    const bestehend = item.kategorie === "mahlzeit" ? mahlzeitNotizen[schluessel] : gewohnheitNotizen[schluessel];
+    setNotizEntwurf((prev) => ({ ...prev, [item.key]: bestehend || "" }));
+    setNotizOffen((prev) => ({ ...prev, [item.key]: true }));
+  };
+  const notizSpeichern = (item) => {
+    const text = notizEntwurf[item.key] ?? "";
+    const tagStr = toLocalISODate(selectedDate);
+    const schluessel = notizSchluessel(item);
+    const vorher = (item.kategorie === "mahlzeit" ? mahlzeitNotizen[schluessel] : gewohnheitNotizen[schluessel]) || "";
+    if (item.kategorie === "mahlzeit") mahlzeitNotizSpeichern(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit, text);
+    else gewohnheitNotizSpeichern(tagStr, item.raw.id, text);
+    // Bug-Fix (17.09., Nutzerinnen-Nachfrage "wird das im Tagesprotokoll
+    // angezeigt?"): die Notiz-Funktion (Konsistenz-Check, Punkt 3) rief
+    // bisher gar kein aenderungVermerken() auf — sie war dadurch selbst
+    // ein Fall genau des Bugs, den die Nachfrage aufgedeckt hat (siehe
+    // ProtokollLogView.jsx TAGESVERLAUF_AKTIONEN).
+    if (text.trim() !== vorher.trim()) {
+      aenderungVermerken({
+        kategorie: item.kategorie,
+        itemName: item.name,
+        aktion: !vorher.trim() ? "Notiz hinzugefügt" : !text.trim() ? "Notiz entfernt" : "Notiz geändert",
+        detail: text || "",
+      });
+    }
+    setNotizOffen((prev) => ({ ...prev, [item.key]: false }));
   };
 
   const today = new Date();
@@ -198,13 +264,28 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           // Log-Schlüssel wie in buildDayItems(): ursprünglich geplante Uhrzeit,
           // nicht eine per Einzeltag-Ausnahme verschobene Anzeige-Uhrzeit —
           // sonst wurde der Haken gespeichert, aber nie als erledigt angezeigt.
-          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.originalUhrzeit ?? item.uhrzeit };
+          const doseRef = { datum: tagStr, id: item.raw.id, zeit: item.originalUhrzeit ?? item.uhrzeit, name: item.raw.name };
           return { ...item, doseRef, onConfirm: () => openFeedbackRef.current(doseRef, item.key, "supplement") };
         }
         if (item.kategorie === "training") return { ...item, onConfirm: () => starteTraining(item) };
-        if (item.kategorie === "gewohnheit") return { ...item, onConfirm: () => toggleGewohnheitErledigt(tagStr, item.raw.id) };
+        if (item.kategorie === "gewohnheit")
+          return {
+            ...item,
+            onConfirm: () => {
+              const warErledigt = item.done;
+              toggleGewohnheitErledigt(tagStr, item.raw.id);
+              if (!warErledigt) aenderungVermerken({ kategorie: "gewohnheit", itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.uhrzeit) || "" });
+            },
+          };
         if (item.kategorie === "zeitblock") return item;
-        return { ...item, onConfirm: () => toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit) };
+        return {
+          ...item,
+          onConfirm: () => {
+            const warErledigt = item.done;
+            toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit);
+            if (!warErledigt) aenderungVermerken({ kategorie: "mahlzeit", itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.logZeit ?? item.uhrzeit) || "" });
+          },
+        };
       });
     },
     [
@@ -230,6 +311,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       zeitbloecke,
       ausnahmenNachSchluessel,
       starteTraining,
+      aenderungVermerken,
     ]
   );
 
@@ -261,10 +343,21 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const restItems = useMemo(() => tagesItems.filter((i) => !i.hour || (i.hour >= "11" && i.hour < "18")), [tagesItems]);
   const restBuckets = useMemo(() => bucketsFor(restItems), [restItems, bucketsFor]);
 
-  function routineZusammenfassung(items) {
-    const kategorien = [...new Set(items.map((i) => KATEGORIE[i.kategorie]?.label).filter(Boolean))];
-    return `${items.length} Schritt${items.length === 1 ? "" : "e"}${kategorien.length ? ` · ${kategorien.join(", ")}` : ""}`;
-  }
+  // Tages-Status der ECHTEN Routine-Schritte (Nutzerin-Vorgabe, 17.09.: "die
+  // ganze Routine pro Tag sehen") — nicht zu verwechseln mit morgenItems/
+  // abendItems oben, die alle sonstigen Kategorie-Punkte im selben
+  // Zeitfenster gruppieren (z. B. ein Supplement um 7 Uhr), aber selbst
+  // KEINE Routine-Schritte sind (buildDayItems() liefert die nie, siehe
+  // dayItems.js).
+  const selectedDateStr = useMemo(() => toLocalISODate(selectedDate), [selectedDate]);
+  const morgenRoutineStatus = useMemo(
+    () => routineTagesStatus("morgen", selectedDateStr, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt }),
+    [selectedDateStr, routineSchritte, routineDurchlaeufe, routineSchrittErledigt]
+  );
+  const abendRoutineStatus = useMemo(
+    () => routineTagesStatus("abend", selectedDateStr, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt }),
+    [selectedDateStr, routineSchritte, routineDurchlaeufe, routineSchrittErledigt]
+  );
 
   // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick
   // erkennbar, ohne die ganze Liste durchgehen zu müssen. Nur relevant, wenn
@@ -383,7 +476,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                        {item.kategorie !== "training" && item.kategorie !== "zeitblock" && onEditItem && (
+                        {item.kategorie !== "training" && onEditItem && (
                           <button
                             className="mp-tap"
                             onClick={() => onEditItem(item.kategorie, item.refId)}
@@ -399,6 +492,28 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                             }}
                           >
                             ✏️
+                          </button>
+                        )}
+                        {notizKategorien.includes(item.kategorie) && erledigt && (
+                          <button
+                            className="mp-tap"
+                            onClick={() => notizOeffnen(item)}
+                            title="Notiz"
+                            style={{
+                              position: "relative",
+                              width: 32,
+                              height: 32,
+                              borderRadius: 10,
+                              border: "none",
+                              background: "rgba(255, 255, 255, 0.28)",
+                              fontSize: 13,
+                              cursor: "pointer",
+                            }}
+                          >
+                            📝
+                            {(item.kategorie === "mahlzeit" ? mahlzeitNotizen[notizSchluessel(item)] : gewohnheitNotizen[notizSchluessel(item)]) && (
+                              <div style={{ position: "absolute", top: 2, right: 2, width: 7, height: 7, borderRadius: 4, background: kFarbe, border: "1px solid #fff" }} />
+                            )}
                           </button>
                         )}
                         {item.kategorie === "zeitblock" || item.kategorie === "workflow" ? null : erledigt ? (
@@ -434,6 +549,29 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                         onSpeichern={(entwurf) => handleSaveFeedback(item.doseRef, entwurf)}
                         onSchliessen={feedbackSchliessen}
                       />
+                    )}
+
+                    {notizKategorien.includes(item.kategorie) && notizOffen[item.key] && (
+                      <div style={{ marginTop: 8, padding: 12, borderRadius: 14, background: accentSoft, border: `1px solid ${cardBorder}` }}>
+                        <Label>Notiz (optional)</Label>
+                        <TextArea
+                          value={notizEntwurf[item.key] ?? ""}
+                          onChange={(v) => setNotizEntwurf((prev) => ({ ...prev, [item.key]: v }))}
+                          placeholder="z. B. wie's geschmeckt/vertragen wurde oder wie es gelaufen ist..."
+                        />
+                        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                          <div style={{ flex: 1 }}>
+                            <PrimaryButton onClick={() => setNotizOffen((prev) => ({ ...prev, [item.key]: false }))} variant="ghost">
+                              Abbrechen
+                            </PrimaryButton>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <PrimaryButton onClick={() => notizSpeichern(item)} variant="success">
+                              Speichern
+                            </PrimaryButton>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );
@@ -574,7 +712,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             >
               <div style={{ fontSize: 14.5, fontWeight: 800, color: ROUTINE_META.morgenroutine.text, whiteSpace: "nowrap" }}>🌅 Morgenroutine</div>
               <div style={{ fontSize: 11.5, color: textMuted }}>
-                {morgenItems.length > 0 ? routineZusammenfassung(morgenItems) : "Noch nichts geplant"} {morgenOffen ? "▲" : "▼"}
+                {morgenRoutineStatus.anzahlGesamt > 0
+                  ? `${morgenRoutineStatus.anzahlErledigt}/${morgenRoutineStatus.anzahlGesamt} Schritte`
+                  : "Noch keine Schritte eingerichtet"}{" "}
+                {morgenOffen ? "▲" : "▼"}
               </div>
             </button>
             {morgenOffen && (
@@ -621,7 +762,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             >
               <div style={{ fontSize: 14.5, fontWeight: 800, color: ROUTINE_META.abendroutine.text, whiteSpace: "nowrap" }}>🌙 Abendroutine</div>
               <div style={{ fontSize: 11.5, color: textMuted }}>
-                {abendItems.length > 0 ? routineZusammenfassung(abendItems) : "Noch nichts geplant"} {abendOffen ? "▲" : "▼"}
+                {abendRoutineStatus.anzahlGesamt > 0
+                  ? `${abendRoutineStatus.anzahlErledigt}/${abendRoutineStatus.anzahlGesamt} Schritte`
+                  : "Noch keine Schritte eingerichtet"}{" "}
+                {abendOffen ? "▲" : "▼"}
               </div>
             </button>
             {abendOffen && (
