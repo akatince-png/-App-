@@ -1,5 +1,5 @@
 import React, { useId } from "react";
-import { accent, textMain } from "./theme";
+import { accent, hexZuRgba, textMain, verdunkeln } from "./theme";
 
 // Verdunkelt eine Hex-Farbe für den zweiten Gradient-Stop, statt für jede
 // Ring-Farbe eine eigene "Dark"-Variante im Theme pflegen zu müssen.
@@ -22,7 +22,7 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
   const circumference = 2 * Math.PI * r;
   const cx = size / 2;
   const cy = size / 2;
-  const dark = darken(color);
+  const dark = color.startsWith("var(") ? verdunkeln(color, 32) : darken(color);
   const gradientId = useId();
   const glowId = useId();
 
@@ -35,8 +35,8 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0, overflow: "visible" }}>
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={color} />
-          <stop offset="100%" stopColor={dark} />
+          <stop offset="0%" style={{ stopColor: color }} />
+          <stop offset="100%" style={{ stopColor: dark }} />
         </linearGradient>
         <filter id={glowId} x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation={stroke * 0.45} result="blur" />
@@ -46,7 +46,7 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
           </feMerge>
         </filter>
       </defs>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={`${color}22`} strokeWidth={stroke} />
+      <circle cx={cx} cy={cy} r={r} fill="none" style={{ stroke: color.startsWith("var(") ? hexZuRgba(color, 0.13) : `${color}22` }} strokeWidth={stroke} />
       {pct > 0 && (
         <circle
           cx={cx}
@@ -63,7 +63,7 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
           style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1)" }}
         />
       )}
-      {pct > 0 && <circle cx={dotX} cy={dotY} r={stroke * 0.65} fill={dark} className="mp-ring-dot" />}
+      {pct > 0 && <circle cx={dotX} cy={dotY} r={stroke * 0.65} style={{ fill: dark }} className="mp-ring-dot" />}
       <text x="50%" y="53%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.24} fontWeight="800" fill={textMain}>
         {total > 0 ? `${Math.round(pct * 100)}%` : "—"}
       </text>

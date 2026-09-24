@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { berechneGehirnZeitraum, WIDGET_REGION } from "../utils/gehirn";
 import { KATEGORIEN } from "../utils/errungenschaften";
 import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
-import { logoBlau, logoTuerkis, logoVerlauf, nachtSchatten, nachtVerlauf } from "./theme";
+import { logoBlau, logoTuerkis, logoVerlauf, nachtVerlaufFest } from "./theme";
 import Icon from "./Icon";
 
 // "Dein Gehirn" + Tagesfortschritt in EINER Karte (Nutzerinnen-Wunsch
@@ -103,8 +103,8 @@ const STIMMUNG = {
     hinweis: null,
   },
   nacht: {
-    hintergrund: nachtVerlauf,
-    schatten: nachtSchatten,
+    hintergrund: nachtVerlaufFest,
+    schatten: "0 14px 30px rgba(16, 19, 43, 0.35)",
     linieVon: logoTuerkis,
     linieBis: logoBlau,
     grund: "#1D2350",

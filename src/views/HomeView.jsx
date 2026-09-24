@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { useErrungenschaften } from "../data/useErrungenschaften";
-import { tagesphase } from "../utils/tagesphase";
+import { useTagesphase } from "../utils/useTagesphase";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
@@ -654,12 +654,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   const effektiverZeitraum = zeitraum === "gesamt" && !zeigeGesamtOption ? "monat" : zeitraum;
   // Tagesphase für die Stimmung der Gehirn-Karte (Morgen/Tag/Nacht, 24.09.)
   // — minütlich neu geprüft, damit sie bei offener App von selbst wechselt.
-  const [uhr, setUhr] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setUhr(new Date()), 60000);
-    return () => clearInterval(id);
-  }, []);
-  const phase = tagesphase({ jetzt: uhr, routineDurchlaeufe, routineSchritte, routineEinstellungen });
+  const phase = useTagesphase({ routineDurchlaeufe, routineSchritte, routineEinstellungen });
 
   // Länge des gewählten Zeitraums in Tagen — für die Gehirn-Ladung der
   // Bereiche ohne eigenen Balken (Schlaf, Atemübungen, Denkpause).

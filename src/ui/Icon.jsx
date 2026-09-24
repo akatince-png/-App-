@@ -156,11 +156,11 @@ export default function Icon({ name, size = 20, color = "currentColor", strokeWi
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      stroke={color}
+      stroke="currentColor"
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
-      style={{ display: "block", flexShrink: 0 }}
+      style={{ display: "block", flexShrink: 0, color }}
     >
       {content}
     </svg>

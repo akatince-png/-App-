@@ -1,6 +1,6 @@
 import React from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { cardBorder, textMuted } from "./theme";
+import { aufgeloesteFarbe, cardBorder, textMuted } from "./theme";
 
 export function SimpleLineChart({ data, dataKey, stroke, height = 130 }) {
   return (
@@ -11,7 +11,7 @@ export function SimpleLineChart({ data, dataKey, stroke, height = 130 }) {
           <XAxis dataKey="datum" tick={{ fontSize: 10, fill: textMuted }} tickFormatter={(d) => d.slice(5)} />
           <YAxis tick={{ fontSize: 10, fill: textMuted }} domain={["auto", "auto"]} />
           <Tooltip />
-          <Line type="monotone" dataKey={dataKey} stroke={stroke} strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey={dataKey} stroke={aufgeloesteFarbe(stroke)} strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>

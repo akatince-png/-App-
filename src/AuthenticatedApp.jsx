@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Shell } from "./ui/primitives";
-import { textMuted } from "./ui/theme";
+import { setzeTagesphasenFarben, textMuted } from "./ui/theme";
+import { useTagesphase } from "./utils/useTagesphase";
 import { useT } from "./i18n/translate";
 import { useAppData } from "./context/AppDataContext";
 import { useAuth } from "./context/AuthContext";
@@ -122,6 +123,16 @@ export default function AuthenticatedApp() {
     setEintragsZielId,
   } = appData;
   const istAdminModus = proband !== null || isAdmin;
+  // App-Farbe folgt der Tagesphase (24.09.): morgens Orange (bis die
+  // Morgenroutine erledigt ist), tagsüber Blau, ab der Abendroutine Nachtblau.
+  const tagesphaseJetzt = useTagesphase({
+    routineDurchlaeufe: appData.routineDurchlaeufe,
+    routineSchritte: appData.routineSchritte,
+    routineEinstellungen: appData.routineEinstellungen,
+  });
+  useEffect(() => {
+    setzeTagesphasenFarben(tagesphaseJetzt);
+  }, [tagesphaseJetzt]);
   const [view, setView] = useState(null); // null = noch nicht entschieden, dann 'home' | 'form' | 'plan' | 'lexikon' | ...
   // Zusatzprotokoll als Eintrags-Ziel wählen und direkt zu den Plänen, wo
   // Supplemente/Medikamente/Mahlzeiten/Gewohnheiten angelegt werden.

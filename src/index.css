@@ -1,3 +1,15 @@
+:root {
+  /* App-Farben je Tagesphase (ui/theme.js, setzeTagesphasenFarben) —
+     Standard: Nacht (Nachtblau). */
+  --mp-accent: #3B4BA8;
+  --mp-accent-dark: #1B2150;
+  --mp-accent-soft: #E7E9F7;
+  --mp-success: #2F3E96;
+  --mp-success-soft: #E7E9F7;
+  --mp-highlight: radial-gradient(120% 90% at 30% 20%, #2C3470 0%, #171B3A 60%, #10132B 100%);
+  --mp-highlight-schatten: 0 14px 30px rgba(16, 19, 43, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }

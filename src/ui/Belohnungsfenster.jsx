@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
-import { accentDark, logoVerlauf, nachtVerlauf, shadow, success } from "./theme";
+import { accentDark, hexZuRgba, logoVerlauf, nachtVerlauf, shadow, success } from "./theme";
 import { aufBelohnungHoeren } from "../utils/belohnungBus";
 import { KATEGORIE_META } from "../utils/dayItems";
 
@@ -219,7 +219,7 @@ export default function Belohnungsfenster() {
         borderRadius: 16,
         background: "#fff",
         boxShadow: shadow,
-        border: `1px solid ${accentDark}22`,
+        border: `1px solid ${hexZuRgba(accentDark, 0.13)}`,
         maxWidth: "calc(100vw - 32px)",
         animation: "belohnungEinblenden 0.35s ease-out",
         cursor: "pointer",

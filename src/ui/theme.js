@@ -26,13 +26,18 @@ export const cardBorder = "#EAEAE5";
 // sollen in diesem Nachtblau sein"): die generische App-Farbe ist Nachtblau
 // aus dem Logo-/Gehirn-Design statt Türkis/Grün. Die Bereichsfarben aus
 // KATEGORIE_META (z. B. Gewohnheiten-Türkis, Supplemente-Orange) bleiben.
-export const accent = "#3B4BA8"; // Nachtblau (mittel) — Marken-Akzent
-export const accentDark = "#1B2150"; // Nachtblau (tief)
-export const accentSoft = "#E7E9F7"; // Nachtblau (zart)
+// Seit 24.09. wechselt die App-Farbe mit der Tagesphase (Nutzerinnen-Wunsch:
+// "die gesamte App soll diese Veränderung mitmachen"): morgens Orange,
+// tagsüber Blau, ab der Abendroutine Nachtblau. Die Werte sind deshalb
+// CSS-Variablen (gesetzt über setzeTagesphasenFarben(), Standard = Nacht
+// in index.css); die Hilfsfunktionen unten verstehen sie (color-mix).
+export const accent = "var(--mp-accent)"; // Marken-Akzent (je Tagesphase)
+export const accentDark = "var(--mp-accent-dark)";
+export const accentSoft = "var(--mp-accent-soft)";
 export const blue = "#4A6FA5"; // "geplant" / sekundäre Infos
 export const blueSoft = "#EAF0F8";
-export const success = "#2F3E96"; // "erledigt"/Erfolg — Nachtblau statt Grün (23.09.)
-export const successSoft = "#E7E9F7";
+export const success = "var(--mp-success)"; // "erledigt"/Erfolg (je Tagesphase)
+export const successSoft = "var(--mp-success-soft)";
 export const danger = "#C24545";
 // Bewusst eigenständig von `danger` (App-Bauplan-Punkt, ADHS-Perspektive):
 // ein rotes "Alarm"-Rot für nicht bestätigte/verspätete Einträge wirkt wie
@@ -63,12 +68,16 @@ function hexZuRgb(hex) {
   return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
 
+const istVariable = (farbe) => typeof farbe === "string" && farbe.startsWith("var(");
+
 export function hexZuRgba(hex, alpha) {
+  if (istVariable(hex)) return `color-mix(in srgb, ${hex} ${Math.round(alpha * 100)}%, transparent)`;
   const { r, g, b } = hexZuRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export function aufhellen(hex, prozent) {
+  if (istVariable(hex)) return `color-mix(in srgb, ${hex}, white ${prozent}%)`;
   const { r, g, b } = hexZuRgb(hex);
   const mix = (kanal) => Math.round(kanal + (255 - kanal) * (prozent / 100));
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
@@ -79,6 +88,7 @@ export function aufhellen(hex, prozent) {
 // dunkelt die Bereichsfarbe leicht ab, damit weißer Text auf hellen Tönen
 // wie Tageslicht-Gelb noch lesbar bleibt.
 export function verdunkeln(hex, prozent) {
+  if (istVariable(hex)) return `color-mix(in srgb, ${hex}, black ${prozent}%)`;
   const { r, g, b } = hexZuRgb(hex);
   const mix = (kanal) => Math.round(kanal * (1 - prozent / 100));
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
@@ -88,8 +98,64 @@ export function verdunkeln(hex, prozent) {
 // Design"): gemeinsame Farben der Highlight-Elemente — Spielstand-Karte,
 // "Dein Gehirn", große Feier-Karte —, abgeleitet aus dem Logo (Türkis →
 // Blau auf dunklem Grund).
-export const nachtVerlauf = "radial-gradient(120% 90% at 30% 20%, #2C3470 0%, #171B3A 60%, #10132B 100%)";
-export const nachtSchatten = "0 14px 30px rgba(16, 19, 43, 0.35)";
+export const nachtVerlaufFest = "radial-gradient(120% 90% at 30% 20%, #2C3470 0%, #171B3A 60%, #10132B 100%)";
+// Hintergrund der Highlight-Karten — wechselt mit der Tagesphase.
+export const nachtVerlauf = "var(--mp-highlight)";
+export const nachtSchatten = "var(--mp-highlight-schatten)";
 export const logoTuerkis = "#5CC3A8";
 export const logoBlau = "#4274BC";
 export const logoVerlauf = `linear-gradient(90deg, ${logoTuerkis}, ${logoBlau})`;
+
+// Farbwelten je Tagesphase (siehe utils/tagesphase.js). Hintergründe
+// identisch mit der Gehirn-Karte, damit alles zusammen wechselt.
+export const TAGESPHASEN_FARBEN = {
+  morgen: {
+    accent: "#D96A12",
+    accentDark: "#8A3B0A",
+    accentSoft: "#FDEBD6",
+    success: "#C45E10",
+    successSoft: "#FDEBD6",
+    highlight: "linear-gradient(165deg, #FFB866 0%, #F08A24 38%, #B24A16 78%, #6E2A10 100%)",
+    highlightSchatten: "0 14px 30px rgba(176, 74, 22, 0.35)",
+  },
+  tag: {
+    accent: "#2A62C9",
+    accentDark: "#163A80",
+    accentSoft: "#E2EBFA",
+    success: "#2358B8",
+    successSoft: "#E2EBFA",
+    highlight: "linear-gradient(165deg, #6DB0F5 0%, #2D6FD6 45%, #1B3E8C 100%)",
+    highlightSchatten: "0 14px 30px rgba(27, 62, 140, 0.35)",
+  },
+  nacht: {
+    accent: "#3B4BA8",
+    accentDark: "#1B2150",
+    accentSoft: "#E7E9F7",
+    success: "#2F3E96",
+    successSoft: "#E7E9F7",
+    highlight: nachtVerlaufFest,
+    highlightSchatten: "0 14px 30px rgba(16, 19, 43, 0.35)",
+  },
+};
+
+export function setzeTagesphasenFarben(phase) {
+  const f = TAGESPHASEN_FARBEN[phase] || TAGESPHASEN_FARBEN.nacht;
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  if (!root) return;
+  root.style.setProperty("--mp-accent", f.accent);
+  root.style.setProperty("--mp-accent-dark", f.accentDark);
+  root.style.setProperty("--mp-accent-soft", f.accentSoft);
+  root.style.setProperty("--mp-success", f.success);
+  root.style.setProperty("--mp-success-soft", f.successSoft);
+  root.style.setProperty("--mp-highlight", f.highlight);
+  root.style.setProperty("--mp-highlight-schatten", f.highlightSchatten);
+  root.dataset.tagesphase = phase;
+}
+
+// Für Bibliotheken, die Farben als SVG-Attribut setzen (z. B. recharts):
+// löst eine CSS-Variable in den aktuellen Farbwert auf.
+export function aufgeloesteFarbe(farbe) {
+  const m = typeof farbe === "string" && farbe.match(/^var\((--[\w-]+)\)$/);
+  if (!m || typeof document === "undefined") return farbe;
+  return getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim() || farbe;
+}
