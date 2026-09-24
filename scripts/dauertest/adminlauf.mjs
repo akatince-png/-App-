@@ -70,6 +70,6 @@ await foto('32-zurueck');
 // Aufräumen: Probe-Team wieder löschen (über die Oberfläche = gleich mitgetestet)
 await geh('admin-teams');
 const loeschen = p.locator(`xpath=//div[normalize-space(text())='${T}']/ancestor::div[.//button[normalize-space()='Team löschen']][1]//button[normalize-space()='Team löschen']`);
-if (await loeschen.count()) { await loeschen.first().click(); await w(3000); if ((await txt()).includes(T)) befund('Probe-Team ließ sich nicht löschen'); } else befund('Team-löschen-Knopf nicht gefunden');
+if (await loeschen.first().waitFor({ timeout: 15000 }).then(() => true).catch(() => false)) { await loeschen.first().click(); await w(3000); if ((await txt()).includes(T)) befund('Probe-Team ließ sich nicht löschen'); } else befund('Team-löschen-Knopf nicht gefunden');
 fs.writeFileSync(`${OUT}/befunde.json`, JSON.stringify(log,null,1));
 console.log('FERTIG', log.length); await b.close();
