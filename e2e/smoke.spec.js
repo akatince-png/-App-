@@ -112,3 +112,18 @@ test("Home: gelber Akut-Knopf öffnet die Hilfe ohne Absturz", async ({ page }) 
   await expect(page.getByText("💡 Was hilft mir jetzt?")).toBeInViewport();
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
+
+// Neustart-Optionen (24.09.): "Fortschritt auf Null" zusätzlich zu
+// "Alles löschen", beide erst nach Eintippen des Bestätigungsworts aktiv.
+test("Mehr: beide Neustart-Knöpfe sind da und erst nach Bestätigungswort aktiv", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html#/mehr");
+  const fortschritt = page.getByRole("button", { name: "Fortschritt auf Null setzen" });
+  const alles = page.getByRole("button", { name: "Wirklich alles zurücksetzen" });
+  await expect(fortschritt).toBeDisabled();
+  await expect(alles).toBeDisabled();
+  await page.getByPlaceholder("NEU STARTEN").fill("neu starten");
+  await expect(fortschritt).toBeEnabled();
+  await expect(alles).toBeDisabled();
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});

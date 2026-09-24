@@ -64,6 +64,14 @@ const RESET_TABELLEN = [
   "hauptprotokolle",
   "routine_schritte",
   "routine_einstellungen",
+  // Lücken geschlossen (24.09.): Quest-Fortschritt, Routine-Zuordnungen
+  // und eigene Atemübungen blieben beim kompletten Reset bisher stehen.
+  "quest_fortschritt",
+  "routine_hormon_items",
+  "routine_meal_items",
+  "routine_peptide_items",
+  "routine_supplement_items",
+  "atemuebungen",
   "routines",
   "hydration_settings",
   "tageslicht_settings",
@@ -78,7 +86,74 @@ const RESET_TABELLEN = [
   "drink_recipes",
 ];
 
+// "Nur Fortschritt auf Null" (24.09., Nutzerinnen-Wunsch: "von Null an neu
+// anfangen", ohne alles neu einrichten zu müssen): löscht alles, woraus
+// Punkte, Level, Serien, Abzeichen, Gehirn und Verläufe berechnet werden —
+// die Einrichtung (Medikamente, Supplemente, Mahlzeiten, Routinen,
+// Gewohnheiten, Trainingspläne, Ziele, Protokolle) bleibt. Bewusst NICHT
+// gelöscht: Blutwerte-Archiv (medizinische Werte), Änderungsprotokoll/
+// Baustein-Versionen (Historie der Einrichtung), Nachrichten, Tagebuch.
+// Trainings: nur Einträge bis heute (künftig geplante bleiben).
+// Hinweis RLS: quest_fortschritt und wochenprotokoll_snapshots darf laut
+// Datenbank-Regeln nur ein Admin löschen — bei Coachees bleiben sie still
+// stehen (gewollt: Quest-Fortschritt/Wochenprotokolle sind auch Daten des
+// Coaches).
+const FORTSCHRITT_TABELLEN = [
+  "hormone_logs",
+  "supplement_logs",
+  "meal_logs",
+  "peptide_logs",
+  "routine_schritt_logs",
+  "routine_durchlaeufe",
+  "routine_logs",
+  "hydration_logs",
+  "tageslicht_logs",
+  "bildschirmzeit_logs",
+  "sleep_entries",
+  "checkins",
+  "atemuebung_logs",
+  "denkpause_ergebnisse",
+  "akutmodus_log",
+  "drink_logs",
+  "wochenprotokoll_snapshots",
+  "quest_fortschritt",
+  "errungenschaften",
+];
+
+function heuteIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function useKompletterReset(userId) {
+  const fortschrittZuruecksetzen = useCallback(async () => {
+    const fehlgeschlagen = [];
+    for (const tabelle of FORTSCHRITT_TABELLEN) {
+      const { error } = await supabase.from(tabelle).delete().eq("user_id", userId);
+      if (error) {
+        console.error(tabelle, error);
+        fehlgeschlagen.push(tabelle);
+      }
+    }
+    const heute = heuteIso();
+    const { error: trainingFehler } = await supabase.from("training_sessions").delete().eq("user_id", userId).lte("datum", heute);
+    if (trainingFehler) {
+      console.error(trainingFehler);
+      fehlgeschlagen.push("training_sessions");
+    }
+    // Laufende Protokolle beginnen heute neu — sonst zählen Wochen-/
+    // Monatsansicht die leeren Tage seit dem alten Start als Pausen.
+    const { error: startFehler } = await supabase.from("hauptprotokolle").update({ startdatum: heute }).eq("user_id", userId).eq("status", "active");
+    if (startFehler) {
+      console.error(startFehler);
+      fehlgeschlagen.push("hauptprotokolle (Startdatum)");
+    }
+    if (fehlgeschlagen.length > 0) {
+      return { ok: false, error: `Nicht alles konnte zurückgesetzt werden: ${fehlgeschlagen.join(", ")}` };
+    }
+    return { ok: true };
+  }, [userId]);
+
   const allesZuruecksetzen = useCallback(async () => {
     const fehlgeschlagen = [];
     for (const tabelle of RESET_TABELLEN) {
@@ -105,5 +180,5 @@ export function useKompletterReset(userId) {
     return { ok: true };
   }, [userId]);
 
-  return { allesZuruecksetzen };
+  return { allesZuruecksetzen, fortschrittZuruecksetzen };
 }

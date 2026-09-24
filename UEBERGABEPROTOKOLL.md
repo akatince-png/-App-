@@ -250,6 +250,17 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Neustart: „Fortschritt auf Null“ und Lücken im Komplett-Reset (24.09.)
+
+- Die Nutzerin will vor dem echten Protokoll „von Null an neu anfangen“. Sie hat entschieden, beide Wege anzubieten.
+- **Mehr → Gefahrenzone** hat jetzt zwei Karten:
+  - **„Fortschritt auf Null“:** Bestätigungswort „NEU STARTEN“, Funktion `fortschrittZuruecksetzen` in `useKompletterReset.js`.
+    - Löscht alle Abhak-Logs und Verläufe, Errungenschaften, Denksport-Ergebnisse, Quest-Fortschritt und Wochen-Snapshots sowie Trainings bis heute.
+    - Setzt das `startdatum` aktiver Protokolle auf heute.
+    - Die Einrichtung bleibt erhalten, ebenso Blutwerte, Änderungsprotokoll, Nachrichten und Tagebuch.
+  - **„Alles löschen“:** wie bisher mit „ALLES LÖSCHEN“. Neu mit gelöscht werden `quest_fortschritt`, die `routine_*_items` und `atemuebungen`.
+- **RLS:** `quest_fortschritt` und `wochenprotokoll_snapshots` dürfen nur Admins löschen. Bei Coachees bleiben diese Zeilen still stehen; das ist gewollt.
+
 ### Nachtrag Teil 121 — Home: eine Karte ganz oben, Schnellknöpfe im Gehirn (24.09.)
 
 - **Eine Karte oben:** Ganz oben steht eine einzige Karte (`GehirnKarte` mit Prop `kopf`). Darin sitzt der Spielstand (`SpielstandKarte eingebettet`) mit Begrüßung, Level, Tagesring, Serie, Punkten und Level-Balken. Darunter folgt, durch eine Linie getrennt, „Dein Gehirn“. „Als Nächstes“ und die Tages-Quests kommen danach.

@@ -29,7 +29,7 @@
 // hinzugekommene Funktionen).
 const BEKANNTE_FUNKTIONEN = new Set([
   "addCustomMesswert", "addCustomPreparat", "addPeptidRow", "aenderungEntfernen", "aenderungVermerken",
-  "allesZuruecksetzen", "atemuebungAbschliessen", "atemuebungEntfernen", "atemuebungHinzufuegen",
+  "allesZuruecksetzen", "fortschrittZuruecksetzen", "atemuebungAbschliessen", "atemuebungEntfernen", "atemuebungHinzufuegen",
   "ausnahmeEntfernen", "ausnahmeSetzen", "blutwertEntfernen", "coachNachrichtSpeichern", "coachVerlaufLaden",
   "coachWissenEntfernen", "coachWissenHinzufuegen", "completeOnboarding", "confirmAlleTageszeit",
   "durchlaufSpeichern", "gewichtEntfernen", "gewichtHinzufuegen", "gewohnheitAkutFavoritUmschalten",

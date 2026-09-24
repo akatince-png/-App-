@@ -202,6 +202,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const {
     resetOnboarding,
     allesZuruecksetzen,
+    fortschrittZuruecksetzen,
     pushUnterstuetzt,
     pushAktiv,
     pushLadend,
@@ -244,6 +245,11 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const [resetAllesLaedt, setResetAllesLaedt] = useState(false);
   const [resetAllesMsg, setResetAllesMsg] = useState(null);
   const RESET_ALLES_WORT = "ALLES LÖSCHEN";
+  // "Nur Fortschritt auf Null" (24.09.) — eigenes Bestätigungswort.
+  const [resetFortschrittEntwurf, setResetFortschrittEntwurf] = useState("");
+  const [resetFortschrittLaedt, setResetFortschrittLaedt] = useState(false);
+  const [resetFortschrittMsg, setResetFortschrittMsg] = useState(null);
+  const RESET_FORTSCHRITT_WORT = "NEU STARTEN";
   // Ohne sofortige sichtbare Reaktion tippt man bei der vollen Weiterleitung
   // zu Spotify (die ein paar Sekunden dauern kann) leicht nochmal — dann
   // startet ein zweiter Anmelde-Durchlauf parallel, dessen Code beim
@@ -283,6 +289,19 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
     // und Medikamente serverseitig zurück — ein voller Reload lädt die App
     // komplett neu und landet dadurch direkt wieder im Willkommens-Flow,
     // statt dass der Nutzer sich extra ab- und wieder anmelden muss.
+    window.location.reload();
+  };
+
+  const handleFortschrittZuruecksetzen = async () => {
+    if (resetFortschrittEntwurf.trim().toUpperCase() !== RESET_FORTSCHRITT_WORT) return;
+    setResetFortschrittMsg(null);
+    setResetFortschrittLaedt(true);
+    const result = await fortschrittZuruecksetzen();
+    setResetFortschrittLaedt(false);
+    if (!result?.ok) {
+      setResetFortschrittMsg(result?.error || "Zurücksetzen fehlgeschlagen.");
+      return;
+    }
     window.location.reload();
   };
 
@@ -864,7 +883,39 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           Seite und visuell abgesetzt (roter Rahmen), damit es nicht wie
           eine normale Einstellung aussieht. */}
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, marginTop: 20, color: danger }}>⚠️ Gefahrenzone</div>
+      <Card style={{ border: `1px solid ${danger}`, marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>🔄 Fortschritt auf Null — Einrichtung bleibt</div>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
+          Löscht unwiderruflich deine Punkte, dein Level, alle Serien und Abzeichen und alle Abhak-Einträge und Verläufe (was du
+          genommen, getrunken, geschlafen, trainiert hast …). Deine eingerichteten Medikamente, Supplemente, Mahlzeiten, Routinen,
+          Gewohnheiten, Trainingspläne und Ziele bleiben. Blutwerte und Tagebuch bleiben auch. Dein laufendes Protokoll beginnt heute neu.
+        </div>
+        <Label>Tippe „{RESET_FORTSCHRITT_WORT}", um zu bestätigen</Label>
+        <TextInput value={resetFortschrittEntwurf} onChange={setResetFortschrittEntwurf} placeholder={RESET_FORTSCHRITT_WORT} />
+        <div style={{ marginTop: 10 }}>
+          <button
+            onClick={handleFortschrittZuruecksetzen}
+            disabled={resetFortschrittEntwurf.trim().toUpperCase() !== RESET_FORTSCHRITT_WORT || resetFortschrittLaedt}
+            style={{
+              width: "100%",
+              padding: "13px 16px",
+              borderRadius: 12,
+              border: "none",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: resetFortschrittEntwurf.trim().toUpperCase() === RESET_FORTSCHRITT_WORT && !resetFortschrittLaedt ? "pointer" : "not-allowed",
+              background: danger,
+              color: "#fff",
+              opacity: resetFortschrittEntwurf.trim().toUpperCase() === RESET_FORTSCHRITT_WORT && !resetFortschrittLaedt ? 1 : 0.5,
+            }}
+          >
+            {resetFortschrittLaedt ? "Wird zurückgesetzt…" : "Fortschritt auf Null setzen"}
+          </button>
+        </div>
+        {resetFortschrittMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetFortschrittMsg}</div>}
+      </Card>
       <Card style={{ border: `1px solid ${danger}` }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>🗑️ Alles löschen — komplett neu einrichten</div>
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
           Löscht ALLE deine Protokoll-Daten unwiderruflich — Medikamente, Supplemente, Training, Routinen, Ernährung,
           Wasser, Tageslicht, Schlaf, Check-ins, Blutwerte und alle zugehörigen Protokolle/Verläufe. Dein Konto
