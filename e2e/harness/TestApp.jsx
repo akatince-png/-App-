@@ -35,6 +35,14 @@ function leseOverridesAusUrl() {
     overrides.isAdmin = false;
     overrides.istAdminKonto = false;
   }
+  // ?team=1: Mitglied in einem Beispiel-Team (Team-Seite, 24.09.).
+  if (params.get("team") === "1") {
+    overrides.team = { id: "e2e-team-1", name: "Team Sonnenaufgang" };
+    overrides.teamKollegen = [
+      { id: "e2e-lena", vorname: "Lena", profilbild_pfad: null },
+      { id: "e2e-mira", vorname: "Mira", profilbild_pfad: null },
+    ];
+  }
   // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
   // Supplement, Gewohnheit) für Design-Vorschauen.
   if (params.get("beispiel") === "1") {

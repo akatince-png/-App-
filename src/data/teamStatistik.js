@@ -1,0 +1,113 @@
+import { supabase } from "../lib/supabaseClient";
+import { toLocalISODate, zaehleTageStreak } from "../utils/dates";
+
+// Team-Seite, Team-Liga und Coach-Ansicht (24.09., Nutzerinnen-Freigabe der
+// Vorschau). Die Zahlen kommen aus Server-Funktionen (Migration
+// 0095_team_statistik.sql), die nur Summen herausgeben — keine Einträge.
+
+// Wochenziel pro Person (Team-Seite: Ziel = Mitglieder × dieser Wert, im
+// Monat entsprechend mehr). Bewusst erreichbar gewählt: ~7 Punkte am Tag.
+export const WOCHENZIEL_PRO_PERSON = 50;
+
+// Zeitraum-Grenzen: Woche = Montag bis Sonntag der aktuellen Woche.
+export function zeitraumGrenzen(art, heute = new Date()) {
+  const d = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  if (art === "monat") {
+    const von = new Date(d.getFullYear(), d.getMonth(), 1);
+    const bis = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    return { von: toLocalISODate(von), bis: toLocalISODate(bis), tage: bis.getDate() };
+  }
+  if (art === "gesamt") return { von: "2000-01-01", bis: toLocalISODate(d), tage: null };
+  const wochentag = (d.getDay() + 6) % 7; // Montag = 0
+  const von = new Date(d);
+  von.setDate(d.getDate() - wochentag);
+  const bis = new Date(von);
+  bis.setDate(von.getDate() + 6);
+  return { von: toLocalISODate(von), bis: toLocalISODate(bis), tage: 7 };
+}
+
+export function serieAusTagen(tage) {
+  const set = new Set(tage || []);
+  return zaehleTageStreak((tag) => set.has(tag));
+}
+
+// Tage seit der letzten Aktivität (null = noch nie aktiv).
+export function tageRuhig(letzteAktivitaet, heute = new Date()) {
+  if (!letzteAktivitaet) return null;
+  const [j, m, t] = letzteAktivitaet.split("-").map(Number);
+  const letzte = new Date(j, m - 1, t);
+  const h = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  return Math.round((h - letzte) / 86400000);
+}
+
+export async function teamMitgliederLaden(von, bis) {
+  const { data, error } = await supabase.rpc("team_mitglieder_statistik", { p_von: von, p_bis: bis });
+  if (error) {
+    console.error(error);
+    return { ok: false, error: error.message };
+  }
+  return {
+    ok: true,
+    mitglieder: (data || []).map((r) => ({
+      userId: r.user_id,
+      vorname: r.vorname,
+      profilbildPfad: r.profilbild_pfad,
+      teamId: r.team_id,
+      privat: !!r.privat,
+      punkteZeitraum: r.punkte_zeitraum,
+      punkteGesamt: r.punkte_gesamt,
+      aktiveTage: r.aktive_tage || [],
+      letzteAktivitaet: r.letzte_aktivitaet,
+    })),
+  };
+}
+
+export async function teamLigaLaden(von, bis) {
+  const { data, error } = await supabase.rpc("team_liga", { p_von: von, p_bis: bis });
+  if (error) {
+    console.error(error);
+    return { ok: false, error: error.message };
+  }
+  return {
+    ok: true,
+    teams: (data || []).map((r) => ({
+      teamId: r.team_id,
+      name: r.team_name,
+      mitglieder: r.mitglieder,
+      schnitt: Number(r.schnitt) || 0,
+      schnittVorher: Number(r.schnitt_vorher) || 0,
+      aktiveTageSchnitt: Number(r.aktive_tage_schnitt) || 0,
+      raetselTage: r.raetsel_tage || 0,
+      initialen: r.initialen || [],
+      istMeinTeam: !!r.ist_mein_team,
+    })),
+  };
+}
+
+export async function teamNeuigkeitenLaden(tage = 3) {
+  const { data, error } = await supabase.rpc("team_neuigkeiten", { p_tage: tage });
+  if (error) {
+    console.error(error);
+    return { ok: false, error: error.message };
+  }
+  return {
+    ok: true,
+    neuigkeiten: (data || []).map((r) => ({ userId: r.user_id, vorname: r.vorname, profilbildPfad: r.profilbild_pfad, art: r.art, zeitpunkt: r.zeitpunkt })),
+  };
+}
+
+// Wochen-Highlights der Liga — nur Team-Ebene.
+export function ligaHighlights(teams, mitVorzeitraum = true) {
+  const liste = [];
+  if (!teams || teams.length < 2) return liste;
+  if (mitVorzeitraum) {
+    const sprung = [...teams].sort((a, b) => b.schnitt - b.schnittVorher - (a.schnitt - a.schnittVorher))[0];
+    const plus = Math.round((sprung.schnitt - sprung.schnittVorher) * 10) / 10;
+    if (plus > 0) liste.push({ icon: "🚀", text: "Größter Sprung", wert: `${sprung.name} +${plus} Ø` });
+  }
+  const aktiv = [...teams].sort((a, b) => b.aktiveTageSchnitt - a.aktiveTageSchnitt)[0];
+  if (aktiv.aktiveTageSchnitt > 0) liste.push({ icon: "🔥", text: "Am regelmäßigsten dabei", wert: `${aktiv.name} (Ø ${aktiv.aktiveTageSchnitt} Tage)` });
+  const raetsel = [...teams].sort((a, b) => b.raetselTage - a.raetselTage)[0];
+  if (raetsel.raetselTage > 0) liste.push({ icon: "🧩", text: "Tagesrätsel-Profis", wert: raetsel.name });
+  return liste;
+}

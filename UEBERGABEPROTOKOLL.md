@@ -250,6 +250,26 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Team-Seite, Team-Liga, Coach-Ansicht (24.09.)
+
+- Die Nutzerin hat die Vorschau freigegeben: „bau alle drei Seiten“.
+- **Migration `0095_team_statistik.sql`** (auf Prod eingespielt, plus `0095b` gegen doppelte Neuigkeiten):
+  - `_punkte_ereignisse(user)`: intern, nicht aufrufbar für `authenticated`. Zählt wie `errungenschaften.js`: 1 Punkt je erledigtem Eintrag, erreichtem Wasser-/Tageslicht-Tagesziel, abgeschlossener Routine pro Tag und richtiger Tagesrätsel-Antwort, dazu der Tagesrätsel-Bonus. Datum der Zeitstempel in der Zeitzone der Person.
+  - `team_mitglieder_statistik(von, bis)`: für Admins alle Personen in Teams, sonst nur das eigene Team. Personen mit `rangliste_sichtbar = false` erscheinen für andere als `privat` ohne Zahlen.
+  - `team_liga(von, bis)`: nur Team-Summen (Ø pro Person, Vorzeitraum, aktive Tage, Tagesrätsel-Tage) und Anfangsbuchstaben.
+  - `team_neuigkeiten(tage)`: Routine geschafft, Training, Tagesrätsel; ohne Privat-Personen und ohne Gesundheitsdetails.
+- **App:**
+  - `data/teamStatistik.js` (+ Test): Zeiträume Mo–So, Monat, gesamt; `WOCHENZIEL_PRO_PERSON = 50`; Highlights nur auf Team-Ebene.
+  - `views/TeamView.jsx` (View `team`, Reiter „Mein Team“ / „🏆 Team-Liga“):
+    - gemeinsames Wochenziel; Privat-Personen zählen nicht ins Ziel
+    - Mitglieder mit Profilbild, Serie, Level und Punkten
+    - „💬 Motivieren“ für alle, die seit 2 oder mehr Tagen ruhig sind (nutzt `teamNachrichtSenden` inklusive Push)
+    - Team-Neuigkeiten
+  - Erreichbar über „Team-Seite ›“ in der Team-Karte auf Home; für Admins über „🏆 Team-Liga ansehen“ in Admin → Teams.
+  - **Coach-Ansicht** in `AdminTeamsView.jsx` (`TeamWoche`): Balken der Wochenpunkte pro Person mit Profilbild und Warnhinweisen „seit X Tagen nichts abgehakt“. Direkt daneben „Nachricht schreiben“ über `coachNachrichtSenden`.
+- e2e: `e2e/team.spec.js` mockt die RPCs. Das Harness kennt jetzt `?team=1`; im Mock ist `team` standardmäßig `null`.
+- **Stand 24.09.:** Es gibt 1 Team („Aka“) ohne Mitglieder. Die Seiten füllen sich erst, wenn Coachees Teams zugeordnet werden.
+
 ### Nachtrag Teil 121 — Kürzeres Erst-Onboarding (24.09.)
 
 - Die Nutzerin hat die Vorschau freigegeben. Vorher waren es 20 Bildschirme (selbst beim Überspringen), jetzt 5 plus die 1–3 gewählten Bereiche.

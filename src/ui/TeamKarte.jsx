@@ -9,7 +9,7 @@ import Profilbild from "./Profilbild";
 // sich untereinander auch Motivation gibt und ... Push Nachrichten senden
 // kann, wenn man sieht, dass jemand grade nicht so viel Erfolg hat".
 // Nur sichtbar, wenn die Admin diese Person einem Team zugeordnet hat.
-export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSenden, onGelesen }) {
+export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSenden, onGelesen, onOpenTeam }) {
   const { user } = useAuth();
   const [zielId, setZielId] = useState(teamKollegen[0]?.id || null);
   const [text, setText] = useState("");
@@ -35,8 +35,18 @@ export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSende
 
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>
-        👥 {team.name} — gib deinen Team-Kolleg:innen einen Motivationsschub.
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <div style={{ fontSize: 11.5, color: textMuted }}>👥 {team.name} — gib deinen Team-Kolleg:innen einen Motivationsschub.</div>
+        {onOpenTeam && (
+          <button
+            type="button"
+            className="mp-tap"
+            onClick={onOpenTeam}
+            style={{ border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 800, cursor: "pointer", padding: "2px 0", whiteSpace: "nowrap", fontFamily: "inherit" }}
+          >
+            Team-Seite ›
+          </button>
+        )}
       </div>
       <Card>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>

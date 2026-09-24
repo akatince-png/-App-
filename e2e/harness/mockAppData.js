@@ -98,6 +98,8 @@ function explizit(userId, overrides) {
     // Profilbild (24.09.): einzelner Pfad oder keiner — der Array-Fallback
     // wäre truthy und würde als Storage-Pfad benutzt.
     profilbildPfad: null,
+    // Team (24.09.): standardmäßig keins — der Array-Fallback wäre truthy.
+    team: null,
     // Ein voll eingerichtetes Testkonto (Standard-Harness-Zustand) hätte in
     // echt immer ein aktives Hauptprotokoll — ohne diesen Mock würde die
     // generische siehtAusWieId()-Heuristik `null` liefern und z. B.

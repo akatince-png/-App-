@@ -43,6 +43,7 @@ const MehrView = lazy(() => import("./views/plan/MehrView"));
 const GewohnheitenView = lazy(() => import("./views/GewohnheitenView"));
 const AtemuebungenView = lazy(() => import("./views/AtemuebungenView"));
 const DenksportView = lazy(() => import("./views/DenksportView"));
+const TeamView = lazy(() => import("./views/TeamView"));
 const OnboardingFlow = lazy(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazy(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
 const ZusatzprotokollErstellenView = lazy(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
@@ -53,7 +54,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -363,6 +364,8 @@ export default function AuthenticatedApp() {
     screen = <AtemuebungenView onHome={() => setView("home")} />;
   } else if (view === "denksport") {
     screen = <DenksportView onHome={() => setView("home")} />;
+  } else if (view === "team") {
+    screen = <TeamView onHome={() => setView("home")} />;
   } else if (view === "tagesraetsel") {
     screen = <DenksportView onHome={() => setView("home")} tagesraetselStart />;
   } else if (PLAENE_VIEW_IDS.includes(view)) {
@@ -421,7 +424,7 @@ export default function AuthenticatedApp() {
   } else if (view === "admin-quests") {
     screen = <AdminQuestsView onHome={() => setView("admin")} />;
   } else if (view === "admin-teams") {
-    screen = <AdminTeamsView onHome={() => setView("admin")} />;
+    screen = <AdminTeamsView onHome={() => setView("admin")} onOpenLiga={() => setView("team")} />;
   } else {
     screen = (
       <HomeView

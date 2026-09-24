@@ -1023,6 +1023,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             teamNachrichten={teamNachrichten}
             onSenden={teamNachrichtSenden}
             onGelesen={teamNachrichtGelesen}
+            onOpenTeam={() => onOpenView("team")}
           />
           <NachrichtAnCoachCard nachrichten={coacheeNachrichten} onSenden={coacheeNachrichtSenden} />
         </>
