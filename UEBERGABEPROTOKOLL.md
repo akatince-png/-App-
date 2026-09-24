@@ -250,6 +250,22 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Gruppenprotokolle (24.09.)
+
+- Die Nutzerin hat die Vorschau freigegeben. Ein Team führt **zusätzlich** zu den eigenen Protokollen ein gemeinsames Protokoll. Anlegen und Beenden darf nur der Admin (Coach). Nebenbei geklärt: „Neues Protokoll“ im Modus „Verwalten als“ legt das Protokoll bereits für die verwaltete Coachee an, weil `userId` dann die Proband-ID ist.
+- **Migration `0096_gruppenprotokolle.sql`** (auf Prod eingespielt):
+  - Tabellen `gruppenprotokolle`, `gruppen_bausteine`, `gruppen_baustein_logs` und `gruppen_quests`
+  - RLS: Admin alles, Team-Mitglieder lesen über `ist_im_gruppenprotokoll()`, Logs nur für sich selbst anlegen und löschen
+  - `gruppenprotokoll_status(gp, von, bis)` liefert, wer an welchem Tag welchen Baustein geschafft hat. Die Arten `morgenroutine`, `abendroutine`, `trinkziel`, `tageslicht` und `tagesraetsel` zählen automatisch aus den vorhandenen Daten, `eigen` über die Logs.
+  - `_punkte_ereignisse` zählt `gruppen_baustein_logs` jetzt mit.
+- **App:**
+  - `data/gruppenprotokoll.js` (+ Test): Hook `useGruppenprotokolle` im PlatformDataContext, `gruppenBausteinUmschalten`, Admin-Funktionen, Helfer `questFortschritt` und `werHatHeute`. **Achtung:** Der Fortschritt heißt `gp.stand`, `gp.status` bleibt active/archived.
+  - `ui/GruppenprotokollKarte.jsx` sitzt oben auf der Team-Seite: Tag x von y, Gruppen-Quests mit eigenem Beitrag, „Heute“ je Baustein mit Profilbildern, Abhaken eigener Gruppen-Gewohnheiten, „Die letzten Tage“. Ist eine Quest geschafft, gibt es eine große Feier und das Abzeichen `gruppenquest_<id>`.
+  - Home: offene eigene Gruppen-Gewohnheiten stehen unter „Als Nächstes“ (Kategorie `gruppe`, direkt abhakbar), dazu die Karte „Gruppen-Quest“.
+  - Neue Punkte-Kategorie `gruppe` in `errungenschaften.js`.
+  - `ui/GruppenprotokollAdmin.jsx` in Admin → Teams je Team: Formular (Name, Ziel, Zeitraum, Bausteine, eine Quest), laufende Protokolle mit „Stand“ und „Beenden“.
+- **Dauertest:** Das Skript hakt auf der Team-Seite eigene Gruppen-Gewohnheiten ab (mit Fleiß-Faktor). e2e: `e2e/gruppenprotokoll.spec.js`; das Harness kennt `?gruppe=1`.
+
 ### Nachtrag Teil 121 — Team-Seite, Team-Liga, Coach-Ansicht (24.09.)
 
 - Die Nutzerin hat die Vorschau freigegeben: „bau alle drei Seiten“.

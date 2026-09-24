@@ -17,6 +17,7 @@ import { useWorkflowData } from "../../data/useWorkflowData";
 import { useBausteinVersionen } from "../../data/useBausteinVersionen";
 import { useQuestData } from "../../data/useQuestData";
 import { useTeamData } from "../../data/useTeamData";
+import { useGruppenprotokolle } from "../../data/gruppenprotokoll";
 import { useTagesplanAusnahmen } from "../../data/useTagesplanAusnahmen";
 import { useKompletterReset } from "../../data/useKompletterReset";
 
@@ -49,6 +50,8 @@ export function PlatformDataProvider({ children }) {
   const bausteinVersionenData = useBausteinVersionen(userId);
   const questData = useQuestData(userId);
   const teamData = useTeamData(userId);
+  // Gruppenprotokolle des eigenen Teams (24.09., data/gruppenprotokoll.js).
+  const gruppenData = useGruppenprotokolle(userId, teamData.team?.id || null);
   const tagesplanAusnahmenData = useTagesplanAusnahmen(userId);
   const kompletterResetData = useKompletterReset(userId);
 
@@ -74,6 +77,7 @@ export function PlatformDataProvider({ children }) {
     ...bausteinVersionenData,
     ...questData,
     ...teamData,
+    ...gruppenData,
     ...tagesplanAusnahmenData,
     ...kompletterResetData,
   });

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Shell, TextArea, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import Profilbild from "../ui/Profilbild";
+import GruppenprotokollKarte from "../ui/GruppenprotokollKarte";
 import { accentDark, accentSoft, cardBorder, danger, hexZuRgba, logoVerlauf, nachtSchatten, nachtVerlauf, textMain, textMuted } from "../ui/theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { levelAusPunkten } from "../utils/level";
@@ -312,7 +313,8 @@ function TeamLiga() {
 }
 
 export default function TeamView({ onHome }) {
-  const { team, teamNachrichtSenden } = useAppData();
+  // userId aus den App-Daten (bei "Verwalten als" die verwaltete Person).
+  const { team, teamNachrichtSenden, gruppenprotokolle, gruppenBausteinUmschalten, userId } = useAppData();
   const [reiter, setReiter] = useState(team ? "team" : "liga");
   return (
     <Shell>
@@ -327,7 +329,13 @@ export default function TeamView({ onHome }) {
       />
       {reiter === "team" ? (
         team ? (
-          <MeinTeam team={team} onMotivieren={teamNachrichtSenden} />
+          <>
+            {/* Gruppenprotokolle des Teams (24.09.) ganz oben. */}
+            {(gruppenprotokolle || []).map((gp) => (
+              <GruppenprotokollKarte key={gp.id} gp={gp} userId={userId} onUmschalten={gruppenBausteinUmschalten} />
+            ))}
+            <MeinTeam team={team} onMotivieren={teamNachrichtSenden} />
+          </>
         ) : (
           <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5 }}>Du bist noch keinem Team zugeordnet. Dein Coach kann dich einem Team zuordnen – dann siehst du hier dein Team.</div>
         )

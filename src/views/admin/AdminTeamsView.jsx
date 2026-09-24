@@ -5,6 +5,7 @@ import { cardBorder, danger, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { adminTeamErstellen, adminTeamLoeschen, adminTeamMitgliedZuordnen, adminTeamsListe } from "../../data/useTeamData";
 import Profilbild from "../../ui/Profilbild";
+import GruppenprotokollAdmin from "../../ui/GruppenprotokollAdmin";
 import { teamMitgliederLaden, tageRuhig, zeitraumGrenzen } from "../../data/teamStatistik";
 import { coachNachrichtSenden } from "../../data/useCoacheeNachrichten";
 
@@ -239,6 +240,7 @@ export default function AdminTeamsView({ onHome, onOpenLiga }) {
                   <Pill key={c.id} label={c.vorname || c.email} onClick={() => mitgliedZuordnen(c.id, team.id)} />
                 ))}
             </div>
+            <GruppenprotokollAdmin teamId={team.id} />
           </Card>
         );
       })}

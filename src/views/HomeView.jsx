@@ -7,6 +7,7 @@ import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { useErrungenschaften } from "../data/useErrungenschaften";
 import { useTagesphase } from "../utils/useTagesphase";
 import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
+import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
@@ -129,6 +130,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     routineSchritte,
     routineDurchlaeufe,
     denkpauseErgebnisse,
+    eigeneGruppenLogs,
+    gruppenprotokolle,
+    gruppenBausteinUmschalten,
     routineEinstellungen,
     routineSchrittErledigt,
     confirmAlleTageszeit,
@@ -373,9 +377,31 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             done: false,
           },
         ];
+  // Gruppenprotokoll (24.09.): eigene Gruppen-Gewohnheiten des Teams, die
+  // heute noch offen sind — mit Team-Kennzeichen und wer schon dran war.
+  const gruppenItems = isEmergencyMode
+    ? []
+    : (gruppenprotokolle || []).flatMap((gp) =>
+        gp.bausteine
+          .filter((b) => b.art === "eigen" && !(eigeneGruppenLogs || []).some((l) => l.bausteinId === b.id && l.datum === tagStr))
+          .map((b) => {
+            const wer = werHatHeute(gp.stand, b.id, tagStr);
+            return {
+              key: `gruppe-${b.id}`,
+              name: `${b.icon || "🌱"} ${b.name}`,
+              kategorie: "gruppe",
+              viewId: "team",
+              detail: `👥 ${gp.name}${wer.length ? ` · ${wer.length} von ${gp.stand.mitglieder.length} schon ✓` : ""}`,
+              uhrzeit: "",
+              done: false,
+              bausteinId: b.id,
+            };
+          })
+      );
   const angezeigteItems = [
     ...routineAlsNaechstesItems.filter(routineIstJetzt),
     ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel),
+    ...gruppenItems,
     ...raetselItems,
     ...routineAlsNaechstesItems.filter((item) => !routineIstJetzt(item)),
   ];
@@ -388,9 +414,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // buildDayItems(): immer die ursprünglich geplante Uhrzeit.
   const direktErledigbar = (item) =>
     !item.done &&
-    ((item.kategorie === "supplement" && item.raw?.id) || (item.kategorie === "hormon" && item.raw?.name) || (item.kategorie === "mahlzeit" && item.refId) || (item.kategorie === "gewohnheit" && item.raw?.id));
+    (item.kategorie === "gruppe" ||
+      (item.kategorie === "supplement" && item.raw?.id) || (item.kategorie === "hormon" && item.raw?.name) || (item.kategorie === "mahlzeit" && item.refId) || (item.kategorie === "gewohnheit" && item.raw?.id));
   const direktErledigen = (item) => {
     const zeit = item.originalUhrzeit ?? item.uhrzeit;
+    if (item.kategorie === "gruppe") return gruppenBausteinUmschalten(item.bausteinId, tagStr);
     if (item.kategorie === "supplement") return toggleSupplementErledigt(tagStr, item.raw.id, zeit);
     if (item.kategorie === "hormon") return toggleHormonErledigt(tagStr, item.raw.name, zeit);
     if (item.kategorie === "mahlzeit") return toggleMahlzeitErledigt(tagStr, item.refId, item.logZeit ?? zeit);
@@ -658,9 +686,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       // Home zählte Tagesrätsel-/Denkpause-Punkte nie mit, Erfolge-Reiter
       // und Team-Seite schon (unterschiedliche Punktestände).
       denkpauseErgebnisse,
+      eigeneGruppenLogs,
     }),
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
-      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse]
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, eigeneGruppenLogs]
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
@@ -749,7 +778,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
               angezeigteItems.slice(0, max).map((item, i) => {
-                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : item.kategorie === "gruppe" ? KATEGORIE_META.gewohnheit : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
                 // Morgen-/Abendroutine öffnen HIER eine Checkliste mit den
                 // echten Schritten statt wegzunavigieren (12.09., Nutzerin-
                 // Vorgabe) — "routine" ist der Schlüssel, den useRoutinen.js
@@ -890,7 +919,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>Danach:</span>
           {naechsteChips.map((item) => {
-            const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+            const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : item.kategorie === "gruppe" ? KATEGORIE_META.gewohnheit : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
             return (
               <button
                 key={item.key}
@@ -951,6 +980,31 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
+      {/* Gruppen-Quests des Teams (24.09.) — kompakt, Tippen führt zur Team-Seite. */}
+      {!isEmergencyMode &&
+        (gruppenprotokolle || []).flatMap((gp) =>
+          gp.quests.map((q) => {
+            const f = questFortschritt(q, gp.stand, userId);
+            return (
+              <button
+                key={q.id}
+                type="button"
+                className="mp-tap"
+                onClick={() => onOpenView("team")}
+                style={{ width: "100%", textAlign: "left", marginBottom: 14, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "#fff", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                <div style={{ fontSize: 14.5, fontWeight: 800 }}>🎯 Gruppen-Quest {f.geschafft ? "🏅" : ""}</div>
+                <div style={{ fontSize: 13, marginTop: 2 }}>{q.titel}</div>
+                <div style={{ height: 8, borderRadius: 99, background: "#EEF0F5", marginTop: 8, overflow: "hidden" }}>
+                  <div style={{ width: `${Math.min(100, Math.round((f.gesamt / f.ziel) * 100))}%`, height: "100%", borderRadius: 99, background: TAGESRAETSEL_META.dot }} />
+                </div>
+                <div style={{ fontSize: 12, color: textMuted, marginTop: 6 }}>
+                  {Math.min(f.gesamt, f.ziel)} / {f.ziel} – dein Beitrag: {f.eigen} · 👥 {gp.name}
+                </div>
+              </button>
+            );
+          })
+        )}
       {/* Akut-Hilfe als Fenster über dem Bildschirm (24.09.): der 💡-Knopf
           sitzt jetzt oben im Gehirnfeld — inline weiter unten wäre das
           Panel nach dem Tippen gar nicht zu sehen. Aufbau wie in

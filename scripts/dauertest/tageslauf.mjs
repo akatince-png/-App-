@@ -362,6 +362,23 @@ try {
   const teamText = await text();
   if (!/Wochenziel als Team/.test(teamText)) befund("Team-Seite: kein Wochenziel sichtbar — Konto nicht im Team oder Laden fehlgeschlagen (Foto 06d).");
   bericht.teamText = teamText.slice(0, 800);
+  // Gruppenprotokoll (seit 24.09.): eigene Gruppen-Gewohnheiten abhaken —
+  // mit demselben Fleiß wie im Tagesplan, nicht am Pausentag.
+  if (!PAUSENTAG) {
+    let gruppe = 0;
+    for (let i = 0; i < 4; i++) {
+      const knopf = page.getByRole("button", { name: / erledigt$/ }).filter({ hasText: "Erledigt?" }).first();
+      if (!(await knopf.isVisible().catch(() => false))) break;
+      const label = (await knopf.getAttribute("aria-label").catch(() => "")) || "";
+      if (auslassen(`gruppe:${label}`)) break;
+      await knopf.click();
+      await warte(1500);
+      await feierWegtippen();
+      gruppe++;
+    }
+    if (gruppe) schritt(`Gruppenprotokoll: ${gruppe} Gruppen-Gewohnheit(en) abgehakt`);
+    await foto("06d2-gruppenprotokoll");
+  }
   const motivieren = page.getByRole("button", { name: "💬 Motivieren" }).first();
   if (await motivieren.isVisible().catch(() => false)) {
     await motivieren.click();

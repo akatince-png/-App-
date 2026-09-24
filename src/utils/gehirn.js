@@ -118,7 +118,7 @@ export const WIDGET_REGION = {
   tageslicht: "rhythmus",
 };
 // Bereiche ohne eigenen Balken: zählen über ihre erledigten Tage im Zeitraum.
-const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", tagesraetsel: "fokus" };
+const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", tagesraetsel: "fokus", gruppe: "fokus" };
 
 // widgets: Balken-Daten des gewählten Zeitraums (dailyCount/dailyTotal je
 // Bereich, siehe utils/zeitraumFortschritt.js); tage: Länge des Zeitraums.

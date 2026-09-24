@@ -43,6 +43,37 @@ function leseOverridesAusUrl() {
       { id: "e2e-mira", vorname: "Mira", profilbild_pfad: null },
     ];
   }
+  // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).
+  if (params.get("gruppe") === "1") {
+    const heute = new Date();
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const tag = (n) => iso(new Date(heute.getFullYear(), heute.getMonth(), heute.getDate() - n));
+    const erledigt = new Set([`e2e-lena|gb1|${tag(0)}`, `e2e-lena|gb1|${tag(1)}`, `e2e-test-user|gb1|${tag(1)}`, `e2e-lena|gb2|${tag(0)}`]);
+    overrides.gruppenprotokolle = [
+      {
+        id: "gp1",
+        team_id: "e2e-team-1",
+        name: "21 Tage Morgenroutine",
+        ziel: "Jeden Morgen gut in den Tag starten",
+        startdatum: tag(3),
+        enddatum: iso(new Date(heute.getFullYear(), heute.getMonth(), heute.getDate() + 17)),
+        status: "active",
+        bausteine: [
+          { id: "gb1", art: "morgenroutine", name: "Morgenroutine abschließen", icon: "🌅", reihenfolge: 0 },
+          { id: "gb2", art: "eigen", name: "10 Min. frische Luft", icon: "🌱", reihenfolge: 1 },
+        ],
+        quests: [{ id: "gq1", titel: "Gemeinsam 10× Morgenroutine", baustein_id: "gb1", ziel_anzahl: 10, belohnung: "Pizza-Abend" }],
+        stand: {
+          mitglieder: [
+            { userId: "e2e-test-user", vorname: "Aka", profilbildPfad: null, privat: false },
+            { userId: "e2e-lena", vorname: "Lena", profilbildPfad: null, privat: false },
+          ],
+          erledigt,
+        },
+      },
+    ];
+    overrides.eigeneGruppenLogs = [];
+  }
   // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
   // Supplement, Gewohnheit) für Design-Vorschauen.
   if (params.get("beispiel") === "1") {

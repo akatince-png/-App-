@@ -40,6 +40,7 @@ export default function ErfolgeTab() {
     tageslichtEintraege,
     tageslichtZielMinuten,
     denkpauseErgebnisse,
+    eigeneGruppenLogs,
   } = appData;
 
   const quellen = useMemo(
@@ -57,6 +58,7 @@ export default function ErfolgeTab() {
       tageslichtEintraege,
       tageslichtZielMinuten,
       denkpauseErgebnisse,
+      eigeneGruppenLogs,
     }),
     [
       supplementErledigt,
@@ -72,6 +74,7 @@ export default function ErfolgeTab() {
       tageslichtEintraege,
       tageslichtZielMinuten,
       denkpauseErgebnisse,
+      eigeneGruppenLogs,
     ]
   );
 

@@ -29,7 +29,7 @@
 // hinzugekommene Funktionen).
 const BEKANNTE_FUNKTIONEN = new Set([
   "addCustomMesswert", "addCustomPreparat", "addPeptidRow", "aenderungEntfernen", "aenderungVermerken",
-  "allesZuruecksetzen", "fortschrittZuruecksetzen", "atemuebungAbschliessen", "atemuebungEntfernen", "atemuebungHinzufuegen",
+  "allesZuruecksetzen", "gruppenBausteinUmschalten", "gruppenprotokolleNeuLaden", "fortschrittZuruecksetzen", "atemuebungAbschliessen", "atemuebungEntfernen", "atemuebungHinzufuegen",
   "ausnahmeEntfernen", "ausnahmeSetzen", "blutwertEntfernen", "coachNachrichtSpeichern", "coachVerlaufLaden",
   "coachWissenEntfernen", "coachWissenHinzufuegen", "completeOnboarding", "confirmAlleTageszeit",
   "durchlaufSpeichern", "gewichtEntfernen", "gewichtHinzufuegen", "gewohnheitAkutFavoritUmschalten",
@@ -100,6 +100,8 @@ function explizit(userId, overrides) {
     profilbildPfad: null,
     // Team (24.09.): standardmäßig keins — der Array-Fallback wäre truthy.
     team: null,
+    gruppenprotokolle: [],
+    eigeneGruppenLogs: [],
     // Ein voll eingerichtetes Testkonto (Standard-Harness-Zustand) hätte in
     // echt immer ein aktives Hauptprotokoll — ohne diesen Mock würde die
     // generische siehtAusWieId()-Heuristik `null` liefern und z. B.

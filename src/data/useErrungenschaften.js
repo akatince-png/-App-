@@ -35,6 +35,7 @@ export function useErrungenschaften(userId, quellen) {
       quellen.tageslichtEintraege,
       quellen.tageslichtZielMinuten,
       quellen.denkpauseErgebnisse,
+      quellen.eigeneGruppenLogs,
     ]
   );
 

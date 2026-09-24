@@ -162,6 +162,16 @@ export const KATEGORIEN = [
       ...tageMitTagesraetsel(q.denkpauseErgebnisse),
     ],
   },
+  {
+    // Gruppenprotokoll (24.09.): eigene Gruppen-Gewohnheiten des Teams —
+    // 1 Punkt je Tag und Baustein, wie jeder andere erledigte Eintrag
+    // (gleich gezählt wie in _punkte_ereignisse auf dem Server).
+    key: "gruppe",
+    label: "Gruppenprotokoll",
+    icon: "target",
+    grad: gradAus(KATEGORIE_META.gewohnheit.dot),
+    holeTage: (q) => (q.eigeneGruppenLogs || []).map((l) => normalisiereDatum(l.datum)),
+  },
 ];
 
 // Streak-Meilensteine gelten pro Kategorie UND global.
@@ -231,6 +241,7 @@ export function berechneErrungenschaften(quellen) {
 // Menschenlesbare Beschriftung für einen Badge-Key — für die Abzeichen-
 // Galerie und "nächstes Abzeichen"-Hinweise.
 export function badgeLabel(badgeKey) {
+  if (badgeKey.startsWith("gruppenquest_")) return "🏅 Gruppen-Quest geschafft (Team-Abzeichen)";
   if (badgeKey.startsWith("global_streak_")) {
     return `${badgeKey.replace("global_streak_", "")} Tage am Stück (gesamt)`;
   }
@@ -249,6 +260,7 @@ export function badgeLabel(badgeKey) {
 // — für die "Alle Abzeichen"-Übersicht (Nutzerin-Vorgabe, 12.09.: "wenn man
 // draufklickt, soll eine Beschreibung kommen, was man erfüllen muss").
 export function badgeBeschreibung(badgeKey) {
+  if (badgeKey.startsWith("gruppenquest_")) return "Dein Team hat im Gruppenprotokoll gemeinsam eine Gruppen-Quest geschafft.";
   if (badgeKey.startsWith("global_streak_")) {
     const tage = badgeKey.replace("global_streak_", "");
     return `${tage} Tage in Folge, an denen in irgendeiner Kategorie mindestens ein Eintrag erledigt wurde.`;
