@@ -101,6 +101,7 @@ function MotivierenFeld({ name, onSenden, onFertig }) {
 // ichId: bei "Verwalten als" die verwaltete Person, sonst das eigene Konto.
 function MeinTeam({ team, onMotivieren, ichId }) {
   const [mitglieder, setMitglieder] = useState(null);
+  const [teamSumme, setTeamSumme] = useState(null);
   const [neuigkeiten, setNeuigkeiten] = useState([]);
   const [fehler, setFehler] = useState(null);
   const [motiviereId, setMotiviereId] = useState(null);
@@ -109,11 +110,15 @@ function MeinTeam({ team, onMotivieren, ichId }) {
   useEffect(() => {
     let ab = false;
     const { von, bis } = zeitraumGrenzen("woche");
-    Promise.all([teamMitgliederLaden(von, bis), teamNeuigkeitenLaden(3, ichId)]).then(([m, n]) => {
+    Promise.all([teamMitgliederLaden(von, bis), teamNeuigkeitenLaden(3, ichId), teamLigaLaden(von, bis)]).then(([m, n, l]) => {
       if (ab) return;
       if (!m.ok) return setFehler("Die Team-Daten konnten gerade nicht geladen werden.");
       setMitglieder(m.mitglieder.filter((x) => x.teamId === team.id));
       if (n.ok) setNeuigkeiten(n.neuigkeiten);
+      // Team-Ergebnis immer vollständig (24.09.): Summe und Personenzahl aus
+      // der Team-Rangliste — dort zählen auch Personen, die nicht teilen.
+      const meins = l.ok ? l.teams.find((t) => t.teamId === team.id) : null;
+      if (meins) setTeamSumme({ punkte: meins.summe, personen: meins.mitglieder });
     });
     return () => {
       ab = true;
@@ -123,9 +128,11 @@ function MeinTeam({ team, onMotivieren, ichId }) {
   if (fehler) return <div style={{ fontSize: 13, color: textMuted }}>{fehler}</div>;
   if (!mitglieder) return <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>;
 
-  const summe = mitglieder.reduce((s, m) => s + (m.punkteZeitraum || 0), 0);
-  // Privat-Personen zählen nicht mit (ihre Punkte sind nicht sichtbar).
-  const ziel = Math.max(1, mitglieder.filter((m) => !m.privat).length) * WOCHENZIEL_PRO_PERSON;
+  // Wochenziel für das ganze Team, auch mit Personen, die nicht teilen
+  // (Summen verraten keine Einzelwerte). Rückfall, falls die Team-Rangliste
+  // nicht lädt: nur die sichtbaren Personen.
+  const summe = teamSumme ? teamSumme.punkte : mitglieder.reduce((s, m) => s + (m.punkteZeitraum || 0), 0);
+  const ziel = Math.max(1, teamSumme ? teamSumme.personen : mitglieder.filter((m) => !m.privat).length) * WOCHENZIEL_PRO_PERSON;
   const anteil = Math.min(1, summe / ziel);
   const rest = Math.max(0, ziel - summe);
   const sortiert = [...mitglieder].sort((a, b) => (b.punkteZeitraum ?? -1) - (a.punkteZeitraum ?? -1));
@@ -216,7 +223,7 @@ function MeinTeam({ team, onMotivieren, ichId }) {
         </>
       )}
       <div style={{ fontSize: 11.5, color: textMuted, lineHeight: 1.45, marginTop: 12 }}>
-        Sichtbar sind nur Punkte, Serie und Level – keine Medikamente, keine Gesundheitsdaten. Wer nicht verglichen werden will, kann das unter Mehr ausschalten und erscheint dann als „🙈 privat“.
+        Sichtbar sind nur Punkte, Serie und Level – keine Medikamente, keine Gesundheitsdaten. Einzelwerte zeigt nur, wer unter Mehr → Rangliste „Meine Punkte teilen“ eingeschaltet hat; alle anderen erscheinen als „🙈 privat“. Das Wochenziel zählt immer das ganze Team.
       </div>
     </>
   );

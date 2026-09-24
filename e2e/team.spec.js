@@ -41,8 +41,10 @@ test("Team-Seite: Wochenziel, Mitglieder, Motivieren für Stille, privat, Neuigk
   await mocks(page);
   await page.goto("/e2e/harness/index.html?team=1#/team");
   await expect(page.getByText("Wochenziel als Team")).toBeVisible();
-  // 3 sichtbare Personen × 50 = 150 (Privat zählt nicht), 72 Punkte zusammen.
-  await expect(page.getByText("/ 150 Punkte")).toBeVisible();
+  // Wochenziel fürs ganze Team (auch wer nicht teilt): 4 Personen × 50 = 200,
+  // Summe aus der Team-Rangliste (96).
+  await expect(page.getByText("/ 200 Punkte")).toBeVisible();
+  await expect(page.getByText(/^96\s*\/ 200 Punkte$/)).toBeVisible();
   await expect(page.getByText("Du", { exact: true })).toBeVisible();
   await expect(page.getByText("seit 3 Tagen ruhig")).toBeVisible();
   await expect(page.getByText("🙈 privat", { exact: true })).toBeVisible();
