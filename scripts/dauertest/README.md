@@ -50,6 +50,8 @@ where email = 'claude.dauertest@example.com';
 
 (Falls `extensions.crypt` nicht existiert, das Schema weglassen: `crypt(...)` / `gen_salt(...)`.)
 
+**Hinweis:** Seit 24.09. ist die öffentliche Registrierung gesperrt. Neue Testkonten nur noch über die Edge Function `admin-create-proband` anlegen (angemeldet als Admin-Testkonto).
+
 ## Admin-Testkonto (seit 24.09.2026, Nutzerinnen-Wunsch)
 
 `claude.admintest@example.com` („Claude Admin-Test“) ist ein Admin-Konto ohne Team, damit auch der Admin-Bereich live getestet wird. Die Rangliste ist ausgeblendet, damit es nirgends mitgezählt wird. **Nicht löschen.**
