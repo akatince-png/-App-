@@ -250,6 +250,14 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Home: eine Karte ganz oben, Schnellknöpfe im Gehirn (24.09.)
+
+- **Eine Karte oben:** Ganz oben steht eine einzige Karte (`GehirnKarte` mit Prop `kopf`). Darin sitzt der Spielstand (`SpielstandKarte eingebettet`) mit Begrüßung, Level, Tagesring, Serie, Punkten und Level-Balken. Darunter folgt, durch eine Linie getrennt, „Dein Gehirn“. „Als Nächstes“ und die Tages-Quests kommen danach.
+- **Schnellknöpfe im Gehirnbild:** Die Kacheln „Wasser eintragen“ und „Grad nicht gut?“ unter dem Gehirn sind entfernt. Stattdessen sitzen unten links im Gehirnbild zwei Knöpfe (`Schnellknoepfe` in `GehirnKarte.jsx`):
+  - ein großer, leicht wippender Wasser-Tropfen (`.mp-tropfen`), der die Wasser-Seite öffnet;
+  - ein runder gelber 💡-Knopf, der das Akutmodus-Panel öffnet.
+- **Aka-Knopf:** Der Aka-Orb bleibt wie gehabt fest unten mittig (`KiChat.jsx`, Portal). Auf ganzseitigen Screenshots erscheint er mitten auf der Seite; das ist kein Fehler.
+
 ### Nachtrag Teil 121 — Tagesrätsel statt freiem Denksport (24.09.)
 
 - **Wunsch der Nutzerin:** jeden Tag 5 gemischte Fragen als Pflichtaufgabe, wie das Trinkziel, mit Belohnung im Punktesystem.
