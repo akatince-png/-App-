@@ -1082,6 +1082,21 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         <>
           <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
           <RanglisteKarte />
+          {/* Rangliste (24.09.): Personen, die teilen, und Teams — für alle
+              Coachees erreichbar, auch ohne Team. */}
+          <button
+            type="button"
+            className="mp-tap"
+            onClick={() => onOpenView("team")}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 20, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "#fff", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            <span style={{ fontSize: 24 }}>🏆</span>
+            <span style={{ flex: 1 }}>
+              <span style={{ display: "block", fontSize: 14.5, fontWeight: 800 }}>Rangliste</span>
+              <span style={{ display: "block", fontSize: 12, color: textMuted }}>Personen und Teams nach Punkten</span>
+            </span>
+            <span style={{ fontSize: 18, color: textMuted }}>›</span>
+          </button>
           <TeamKarte
             team={team}
             teamKollegen={teamKollegen}

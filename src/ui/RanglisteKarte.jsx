@@ -3,7 +3,6 @@ import { Card } from "./primitives";
 import { accentDark, accentSoft, cardBorder, textMain, textMuted } from "./theme";
 import { questRanglisteLaden } from "../data/useQuestData";
 import { useAuth } from "../context/AuthContext";
-import { useAppData } from "../context/AppDataContext";
 import { useCachedQuery } from "../lib/useCachedQuery";
 import Profilbild from "./Profilbild";
 
@@ -20,10 +19,9 @@ const MEDAILLEN = ["🥇", "🥈", "🥉"];
 // Wettbewerb optional (App-Bauplan-Punkt, ADHS-Perspektive): Vergleich mit
 // anderen motiviert manche, wirkt bei anderen demotivierend oder beschämend
 // (Rejection Sensitive Dysphoria). `quest_rangliste()` (0085) lässt daher
-// Coachees mit `rangliste_sichtbar = false` in den Daten selbst schon weg —
-// hier zusätzlich für die eigene Karte auf der Startseite: `erzwingeSichtbar`
-// blendet diese Prüfung für die Admin-Verwaltungsansicht aus, die die
-// Rangliste unabhängig von der eigenen Präferenz braucht.
+// Coachees mit `rangliste_sichtbar = false` in den Daten selbst schon weg.
+// Seit 24.09. (Nutzerinnen-Entscheidung) dürfen alle die Rangliste ansehen,
+// auch wer selbst nicht teilt — daher keine eigene Sichtbarkeitsprüfung mehr.
 //
 // Zentrale Datenschicht mit Caching (App-Bauplan-Punkt, siehe
 // lib/queryCache.js): AuthenticatedApp.jsx mountet den aktiven Bildschirm
@@ -33,9 +31,8 @@ const MEDAILLEN = ["🥇", "🥈", "🥉"];
 // useCachedQuery() statt eines eigenen useEffect+useState-Paars: derselbe
 // Cache-Key "quest-rangliste" wird sowohl hier als auch in
 // AdminQuestsView.jsx verwendet, beide teilen sich dieselben Daten.
-export default function RanglisteKarte({ erzwingeSichtbar = false }) {
+export default function RanglisteKarte() {
   const { user } = useAuth();
-  const { ranglisteSichtbar } = useAppData();
   const { data: rangliste, error: fehler } = useCachedQuery(
     "quest-rangliste",
     async () => {
@@ -46,7 +43,6 @@ export default function RanglisteKarte({ erzwingeSichtbar = false }) {
     { ttlMs: 30000 }
   );
 
-  if (!erzwingeSichtbar && ranglisteSichtbar === false) return null;
   if (fehler || (rangliste && rangliste.length === 0)) return null;
 
   return (

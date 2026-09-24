@@ -108,7 +108,7 @@ export default function AdminQuestsView({ onHome }) {
 
       {fehler && <div style={{ fontSize: 13, color: danger, marginBottom: 14 }}>{fehler}</div>}
 
-      <RanglisteKarte erzwingeSichtbar />
+      <RanglisteKarte />
 
       <div style={{ marginBottom: 14 }}>
         <PrimaryButton onClick={() => setFormOffen((v) => !v)}>{formOffen ? "Abbrechen" : "+ Neue Quest anlegen"}</PrimaryButton>

@@ -266,6 +266,14 @@ löschbar.
   - `ui/GruppenprotokollAdmin.jsx` in Admin → Teams je Team: Formular (Name, Ziel, Zeitraum, Bausteine, eine Quest), laufende Protokolle mit „Stand“ und „Beenden“.
 - **Dauertest:** Das Skript hakt auf der Team-Seite eigene Gruppen-Gewohnheiten ab (mit Fleiß-Faktor). e2e: `e2e/gruppenprotokoll.spec.js`; das Harness kennt `?gruppe=1`.
 - **Bugsuche 24.09. (Nachmittag):** Live-Check mit Mia/Lea: 24 Ansichten fehlerfrei, Abhaken auf der Team-Seite funktioniert. Behoben: (1) Nach dem Enddatum liefen Gruppenprotokolle bisher einfach weiter. Jetzt `istAbgelaufen`: Der Stand bleibt auf dem Enddatum stehen, die Karte zeigt „abgeschlossen“, Abhaken und Home-Einträge entfallen, und im Admin steht „Zeit um – kann beendet werden“. (2) Der Team-Feed zeigt jetzt den Tag („heute“, „gestern“ usw., `tagLabel`). Vorher wirkte eine Routine von gestern, als wäre sie heute geschafft.
+- **Rangliste + Teilen-Freigabe (24.09. abends, Vorschau freigegeben):**
+  - Unter Mehr → Rangliste der Schalter „Meine Punkte mit anderen teilen“ (`profiles.rangliste_sichtbar`). **Startzustand jetzt aus.** Migration `0098_rangliste_personen.sql` (auf Prod) hat alle bestehenden Konten auf aus gesetzt, außer den vier Dauertest-Konten.
+  - Team-Seite, Reiter „🏆 Rangliste“ mit „👤 Personen“ und „👥 Teams“ sowie Woche/Monat/Gesamt.
+    - **Personen:** `rangliste_personen()`, alle Coachees über alle Teams, nur wer teilt; Admin-Konten nur, wenn sie teilen. Nicht-Teilende werden nur gezählt. Ansehen dürfen alle; wer nicht teilt, sieht „Jetzt freischalten“.
+    - **Teams:** immer sichtbar, Ø pro Person plus Gesamtpunkte (`team_liga.punkte_summe`). „euer Team“ kommt aus dem App-Kontext und stimmt deshalb auch bei „Verwalten als“.
+  - Coachees ohne Team landen direkt in der Rangliste; auf der Startseite gibt es dafür die Karte „🏆 Rangliste“.
+  - Die Quest-Rangliste auf der Startseite ist jetzt auch für Nicht-Teilende sichtbar.
+  - Folge: Wer nicht teilt, erscheint auf der Team-Seite des eigenen Teams als „🙈 privat“. Team-Wochenziel und Summen zählen alle mit.
 - **Dauertest 24.09. abends:** Gruppenprotokolle wurden nur beim App-Start geladen, dadurch zeigte die Team-Seite veraltete Stände. Jetzt laden sie neu beim Öffnen von Team-Seite und Startseite (`gruppenprotokolleNeuLaden`) und bei `visibilitychange`. Bericht: `docs/dauertest/2026-09-24.md`.
 - **Admin-Livetest 24.09. (Abend):** Neues Admin-Testkonto `claude.admintest@example.com`, Skript `scripts/dauertest/adminlauf.mjs` (siehe `scripts/dauertest/README.md`). Behoben:
   1. **„Verwalten als“ auf der Team-Seite:** Die Seite rechnete mit dem Admin-Konto statt mit der verwalteten Person. Folgen: kein „Du“, „Motivieren“ bei sich selbst, leerer Feed. `MeinTeam` bekommt jetzt `ichId` = `userId` aus `useAppData`. Migration `0097_team_neuigkeiten_verwalten.sql` (auf Prod eingespielt) ergänzt `team_neuigkeiten(p_tage, p_fuer)`; `p_fuer` wirkt nur für Admins.

@@ -483,14 +483,20 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
       <Card style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ maxWidth: 280 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Quest-Rangliste zeigen</div>
-            <div style={{ fontSize: 12, color: textMuted }}>
-              Vergleich mit anderen Coachees ein- oder ausblenden. Ausgeschaltet siehst du die Rangliste selbst nicht
-              mehr und tauchst dort auch bei niemand anderem mehr auf.
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Meine Punkte mit anderen teilen</div>
+            {/* Teilen-Freigabe (24.09.): Startzustand aus, jede Person schaltet
+                selbst frei. Ansehen der Ranglisten geht immer. */}
+            <div style={{ fontSize: 12, color: ranglisteSichtbar ? accentDark : textMuted, fontWeight: ranglisteSichtbar ? 700 : 400 }}>
+              {ranglisteSichtbar
+                ? "✓ Du bist in der Rangliste sichtbar – mit Vorname, Bild, Team und Punkten."
+                : "Eingeschaltet erscheinst du mit Vorname, Bild und Punkten in der Rangliste aller Coachees. Ausgeschaltet bist du dort unsichtbar – ansehen kannst du die Rangliste trotzdem. Team-Ergebnisse werden immer gezeigt."}
             </div>
           </div>
           <button
             onClick={toggleRanglisteSichtbar}
+            role="switch"
+            aria-checked={!!ranglisteSichtbar}
+            aria-label="Meine Punkte mit anderen teilen"
             style={{
               width: 46,
               height: 26,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ligaHighlights, tagLabel, tageRuhig, zeitraumGrenzen } from "./teamStatistik";
+import { ligaHighlights, ranglisteAufbereiten, tagLabel, tageRuhig, zeitraumGrenzen } from "./teamStatistik";
 
 describe("teamStatistik", () => {
   it("Woche läuft von Montag bis Sonntag", () => {
@@ -29,5 +29,19 @@ describe("tagLabel", () => {
     expect(tagLabel("2026-09-23", heute)).toBe("gestern");
     expect(tagLabel("2026-09-22", heute)).toBe("vorgestern");
     expect(tagLabel("2026-09-01", heute)).toBe("am 01.09.");
+  });
+});
+
+describe("ranglisteAufbereiten", () => {
+  it("nur Teilende, nach Punkten absteigend, Nicht-Teilende gezählt", () => {
+    const r = ranglisteAufbereiten([
+      { user_id: "a", teilt: true, vorname: "Mia", punkte: 5 },
+      { user_id: "b", teilt: false, vorname: null, punkte: null },
+      { user_id: "c", teilt: true, vorname: "Lea", punkte: 9 },
+      { user_id: "d", teilt: true, vorname: "Anna", punkte: 5 },
+    ]);
+    expect(r.personen.map((p) => p.vorname)).toEqual(["Lea", "Anna", "Mia"]);
+    expect(r.nichtTeilend).toBe(1);
+    expect(ranglisteAufbereiten(null)).toEqual({ personen: [], nichtTeilend: 0 });
   });
 });

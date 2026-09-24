@@ -12,6 +12,7 @@ import {
   ligaHighlights,
   serieAusTagen,
   tageRuhig,
+  ranglistePersonenLaden,
   teamLigaLaden,
   teamMitgliederLaden,
   tagLabel,
@@ -22,8 +23,9 @@ import {
 // Team-Seite (24.09., Nutzerinnen-Freigabe der Vorschau): "Mein Team" mit
 // gemeinsamem Wochenziel (Zusammenhalt statt Wettkampf gegeneinander),
 // Mitgliedern mit Profilbild, Serie, Level, Wochenpunkten, "Motivieren" für
-// Stille und Team-Neuigkeiten — plus "Team-Liga" (Teams im Vergleich, fair
-// nach Ø Punkten pro Person, keine Einzel-Reihung). Sichtbar sind nur
+// Stille und Team-Neuigkeiten — plus "Rangliste" (seit 24.09. abends):
+// Personen (nur wer teilt, über alle Teams) und Teams (immer sichtbar, fair
+// nach Ø Punkten pro Person, dazu die Gesamtpunkte). Sichtbar sind nur
 // Punkte/Serie/Level, nie Medikamente oder Gesundheitsdaten; wer die
 // Rangliste ausgeblendet hat, erscheint als "privat".
 const GOLD = KATEGORIE_META.tageslicht;
@@ -220,8 +222,7 @@ function MeinTeam({ team, onMotivieren, ichId }) {
   );
 }
 
-function TeamLiga() {
-  const [zeitraum, setZeitraum] = useState("woche");
+function TeamLiga({ zeitraum, meinTeamId }) {
   const [teams, setTeams] = useState(null);
   const [fehler, setFehler] = useState(null);
 
@@ -234,27 +235,19 @@ function TeamLiga() {
       if (!r.ok) return setFehler("Die Team-Liga konnte gerade nicht geladen werden.");
       setFehler(null);
       // Teams ohne Mitglieder (z. B. frisch angelegt) nicht in der Liga zeigen.
-      setTeams(r.teams.filter((t) => t.mitglieder > 0));
+      // "euer Team" über den App-Kontext (stimmt auch bei "Verwalten als").
+      setTeams(r.teams.filter((t) => t.mitglieder > 0).map((t) => ({ ...t, istMeinTeam: meinTeamId ? t.teamId === meinTeamId : t.istMeinTeam })));
     });
     return () => {
       ab = true;
     };
-  }, [zeitraum]);
+  }, [zeitraum, meinTeamId]);
 
   const max = Math.max(1, ...(teams || []).map((t) => t.schnitt));
   const highlights = ligaHighlights(teams, zeitraum !== "gesamt");
 
   return (
     <>
-      <Reiter
-        wert={zeitraum}
-        setWert={setZeitraum}
-        optionen={[
-          ["woche", "Woche"],
-          ["monat", "Monat"],
-          ["gesamt", "Gesamt"],
-        ]}
-      />
       {fehler && <div style={{ fontSize: 13, color: textMuted }}>{fehler}</div>}
       {!fehler && !teams && <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>}
       {teams && teams.length === 0 && <div style={{ fontSize: 13, color: textMuted }}>Noch keine Teams angelegt.</div>}
@@ -288,11 +281,17 @@ function TeamLiga() {
                   </span>
                 ))}
               </div>
+              <div style={{ fontSize: 12, color: textMuted, marginTop: 3 }}>
+                {t.mitglieder} {t.mitglieder === 1 ? "Person" : "Personen"} · {t.summe} Punkte gesamt
+              </div>
               <div style={{ height: 8, borderRadius: 99, background: "#EEF0F5", overflow: "hidden", marginTop: 5 }}>
                 <div style={{ width: `${Math.round((t.schnitt / max) * 100)}%`, height: "100%", borderRadius: 99, background: i === 0 ? GOLD.dot : farbe }} />
               </div>
             </div>
-            <b style={{ fontSize: 15, whiteSpace: "nowrap" }}>{t.schnitt} Ø</b>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <b style={{ fontSize: 17, whiteSpace: "nowrap" }}>{String(t.schnitt).replace(".", ",")}</b>
+              <div style={{ fontSize: 11, color: textMuted }}>Ø pro Person</div>
+            </div>
           </div>
         );
       })}
@@ -307,16 +306,129 @@ function TeamLiga() {
         </>
       )}
       <div style={{ fontSize: 11.5, color: textMuted, lineHeight: 1.45, marginTop: 12 }}>
-        Gezählt wird der Durchschnitt pro Person – so haben kleine und große Teams dieselbe Chance. Einzelne Personen werden hier nicht gereiht. Jeden Montag beginnt eine neue Woche.
+        Gewertet wird der Durchschnitt pro Person – so haben kleine und große Teams dieselbe Chance; die Gesamtpunkte stehen daneben. Team-Ergebnisse sind immer sichtbar, einzelne Personen werden hier nicht gezeigt. Jeden Montag beginnt eine neue Woche.
       </div>
+    </>
+  );
+}
+
+// Personen-Rangliste (24.09., Nutzerinnen-Freigabe der Vorschau): alle
+// Coachees, die ihre Punkte teilen, über alle Teams hinweg. Ansehen dürfen
+// alle; wer selbst nicht teilt, fehlt in der Liste und bekommt einen Hinweis
+// zum Freischalten (Einstellung auch unter Mehr → Rangliste).
+function PersonenRangliste({ zeitraum, ichId, teilt, onFreischalten }) {
+  const [daten, setDaten] = useState(null);
+  const [fehler, setFehler] = useState(null);
+
+  useEffect(() => {
+    let ab = false;
+    setDaten(null);
+    const { von, bis } = zeitraumGrenzen(zeitraum);
+    ranglistePersonenLaden(von, bis).then((r) => {
+      if (ab) return;
+      if (!r.ok) return setFehler("Die Rangliste konnte gerade nicht geladen werden.");
+      setFehler(null);
+      setDaten(r);
+    });
+    return () => {
+      ab = true;
+    };
+  }, [zeitraum, teilt]);
+
+  if (fehler) return <div style={{ fontSize: 13, color: textMuted }}>{fehler}</div>;
+  if (!daten) return <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>;
+  const { personen, nichtTeilend } = daten;
+  return (
+    <>
+      {personen.length === 0 && <div style={{ fontSize: 13, color: textMuted, marginBottom: 10 }}>Noch teilt niemand seine Punkte.</div>}
+      {personen.map((p, i) => {
+        const ich = p.userId === ichId;
+        const serie = serieAusTagen(p.aktiveTage);
+        return (
+          <div
+            key={p.userId}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              borderRadius: 16,
+              padding: "10px 12px",
+              marginBottom: 8,
+              border: ich ? `2px solid ${accentDark}` : i === 0 ? `2px solid ${GOLD.dot}` : "1.5px solid #E3E6EE",
+              background: ich ? accentSoft : i === 0 ? GOLD.bg : "#fff",
+            }}
+          >
+            <span style={{ fontSize: MEDAILLEN[i] ? 22 : 15, width: 26, textAlign: "center", fontWeight: 800, color: textMuted }}>{MEDAILLEN[i] || i + 1}</span>
+            <Profilbild pfad={p.profilbildPfad} name={p.vorname} size={38} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: 14.5 }}>{ich ? "Du" : p.vorname || "—"}</div>
+              <div style={{ fontSize: 12, color: textMuted }}>
+                {p.teamName || "ohne Team"} · 🔥 {serie} {serie === 1 ? "Tag" : "Tage"}
+              </div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <b style={{ fontSize: 18 }}>{p.punkte}</b>
+              <div style={{ fontSize: 11, color: textMuted }}>Punkte</div>
+            </div>
+          </div>
+        );
+      })}
+      {nichtTeilend > 0 && (
+        <div style={{ fontSize: 12, color: textMuted, margin: "4px 0 10px" }}>
+          {nichtTeilend === 1 ? "1 weitere Person teilt ihre Punkte nicht." : `${nichtTeilend} weitere Personen teilen ihre Punkte nicht.`}
+        </div>
+      )}
+      {!teilt && onFreischalten && (
+        <div style={{ borderRadius: 16, padding: "12px 14px", background: GOLD.bg, border: `1.5px solid ${GOLD.dot}`, fontSize: 13, marginBottom: 10 }}>
+          Du teilst deine Punkte noch nicht – du siehst die Rangliste, stehst aber selbst nicht drin.{" "}
+          <button type="button" onClick={onFreischalten} style={{ border: "none", background: "none", padding: 0, color: accentDark, fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+            Jetzt freischalten ›
+          </button>
+        </div>
+      )}
+      <div style={{ fontSize: 11.5, color: textMuted, lineHeight: 1.45, marginTop: 8 }}>
+        Sichtbar sind nur Vorname, Bild, Team und Punkte – keine Medikamente, keine Gesundheitsdaten. Teilen kannst du jederzeit unter Mehr → Rangliste ein- oder ausschalten.
+      </div>
+    </>
+  );
+}
+
+function Rangliste({ ichId, meinTeamId, teilt, onFreischalten }) {
+  const [art, setArt] = useState("personen");
+  const [zeitraum, setZeitraum] = useState("woche");
+  return (
+    <>
+      <Reiter
+        wert={art}
+        setWert={setArt}
+        optionen={[
+          ["personen", "👤 Personen"],
+          ["teams", "👥 Teams"],
+        ]}
+      />
+      <Reiter
+        wert={zeitraum}
+        setWert={setZeitraum}
+        optionen={[
+          ["woche", "Woche"],
+          ["monat", "Monat"],
+          ["gesamt", "Gesamt"],
+        ]}
+      />
+      {art === "personen" ? (
+        <PersonenRangliste zeitraum={zeitraum} ichId={ichId} teilt={teilt} onFreischalten={onFreischalten} />
+      ) : (
+        <TeamLiga zeitraum={zeitraum} meinTeamId={meinTeamId} />
+      )}
     </>
   );
 }
 
 export default function TeamView({ onHome }) {
   // userId aus den App-Daten (bei "Verwalten als" die verwaltete Person).
-  const { team, teamNachrichtSenden, gruppenprotokolle, gruppenBausteinUmschalten, gruppenprotokolleNeuLaden, userId } = useAppData();
-  const [reiter, setReiter] = useState(team ? "team" : "liga");
+  const { team, teamNachrichtSenden, gruppenprotokolle, gruppenBausteinUmschalten, gruppenprotokolleNeuLaden, userId, ranglisteSichtbar, toggleRanglisteSichtbar } =
+    useAppData();
+  const [reiter, setReiter] = useState(team ? "team" : "rangliste");
   // Beim Öffnen frisch laden (Dauertest 24.09.: Routine/Tagesrätsel von
   // heute fehlten im Gruppenprotokoll, weil nur beim App-Start geladen wurde).
   useEffect(() => {
@@ -325,13 +437,13 @@ export default function TeamView({ onHome }) {
   }, []);
   return (
     <Shell>
-      <ViewHeader title={team ? `👥 ${team.name}` : "👥 Teams"} onHome={onHome} />
+      <ViewHeader title={team ? `👥 ${team.name}` : "🏆 Rangliste"} onHome={onHome} />
       <Reiter
         wert={reiter}
         setWert={setReiter}
         optionen={[
           ["team", "Mein Team"],
-          ["liga", "🏆 Team-Liga"],
+          ["rangliste", "🏆 Rangliste"],
         ]}
       />
       {reiter === "team" ? (
@@ -347,7 +459,7 @@ export default function TeamView({ onHome }) {
           <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5 }}>Du bist noch keinem Team zugeordnet. Dein Coach kann dich einem Team zuordnen – dann siehst du hier dein Team.</div>
         )
       ) : (
-        <TeamLiga />
+        <Rangliste ichId={userId} meinTeamId={team?.id || null} teilt={!!ranglisteSichtbar} onFreischalten={toggleRanglisteSichtbar} />
       )}
     </Shell>
   );

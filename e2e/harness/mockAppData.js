@@ -102,6 +102,8 @@ function explizit(userId, overrides) {
     team: null,
     gruppenprotokolle: [],
     eigeneGruppenLogs: [],
+    // Punkte teilen (24.09.): Startzustand aus, wie bei echten Konten.
+    ranglisteSichtbar: false,
     // Ein voll eingerichtetes Testkonto (Standard-Harness-Zustand) hätte in
     // echt immer ein aktives Hauptprotokoll — ohne diesen Mock würde die
     // generische siehtAusWieId()-Heuristik `null` liefern und z. B.

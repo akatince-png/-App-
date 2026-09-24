@@ -355,7 +355,7 @@ try {
   schritt(`Quests: ${angenommen} angenommen, Fortschritt ${questWert} bei ${felder.length} eingetragen, ${abgeschlossen} abgeschlossen`);
 
   // 7) Team (seit 24.09.): Team-Seite ansehen, wer seit 2+ Tagen ruhig ist,
-  //    bekommt eine Motivationsnachricht; dann die Team-Liga.
+  //    bekommt eine Motivationsnachricht; dann die Rangliste (Personen, Teams).
   await geheZu("team");
   await warte(1500);
   await foto("06d-team");
@@ -392,7 +392,10 @@ try {
     await warte(1500);
     schritt("Team: Motivationsnachricht an ein ruhiges Mitglied geschickt");
   }
-  await page.getByRole("button", { name: "🏆 Team-Liga" }).click().catch(() => {});
+  await page.getByRole("button", { name: "🏆 Rangliste" }).click().catch(() => {});
+  await warte(1500);
+  await foto("06e1-rangliste-personen");
+  await page.getByRole("button", { name: "👥 Teams" }).click().catch(() => {});
   await warte(1500);
   await foto("06e-team-liga");
   } else {

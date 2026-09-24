@@ -56,7 +56,7 @@ export function useProfileData(userId) {
   const [erinnerungen, setErinnerungenState] = useState({});
   const [steckbrief, setSteckbriefState] = useState({});
   const [belohnungPufferMin, setBelohnungPufferMinState] = useState(10);
-  const [ranglisteSichtbar, setRanglisteSichtbarState] = useState(true);
+  const [ranglisteSichtbar, setRanglisteSichtbarState] = useState(false);
   // Profilbild (24.09., siehe data/profilbild.js): Pfad im privaten Bucket.
   const [profilbildPfad, setProfilbildPfad] = useState(null);
 
@@ -86,7 +86,7 @@ export function useProfileData(userId) {
         setErinnerungenState(profile.erinnerungen || {});
         setSteckbriefState(profile.steckbrief || {});
         setBelohnungPufferMinState(profile.belohnung_puffer_min ?? 10);
-        setRanglisteSichtbarState(profile.rangliste_sichtbar ?? true);
+        setRanglisteSichtbarState(profile.rangliste_sichtbar ?? false);
         setProfilbildPfad(profile.profilbild_pfad || null);
 
         // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und

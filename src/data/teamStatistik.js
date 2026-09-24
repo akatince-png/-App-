@@ -80,8 +80,29 @@ export async function teamLigaLaden(von, bis) {
       raetselTage: r.raetsel_tage || 0,
       initialen: r.initialen || [],
       istMeinTeam: !!r.ist_mein_team,
+      summe: r.punkte_summe || 0,
     })),
   };
+}
+
+// Personen-Rangliste über alle Coachees (0098): nur wer teilt, mit Namen und
+// Punkten, absteigend sortiert; dazu die Zahl der Personen, die nicht teilen.
+export async function ranglistePersonenLaden(von, bis) {
+  const { data, error } = await supabase.rpc("rangliste_personen", { p_von: von, p_bis: bis });
+  if (error) {
+    console.error(error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, ...ranglisteAufbereiten(data) };
+}
+
+export function ranglisteAufbereiten(zeilen) {
+  const alle = zeilen || [];
+  const personen = alle
+    .filter((r) => r.teilt)
+    .map((r) => ({ userId: r.user_id, vorname: r.vorname, profilbildPfad: r.profilbild_pfad, teamName: r.team_name, punkte: r.punkte || 0, aktiveTage: r.aktive_tage || [] }))
+    .sort((a, b) => b.punkte - a.punkte || String(a.vorname || "").localeCompare(String(b.vorname || ""), "de"));
+  return { personen, nichtTeilend: alle.length - personen.length };
 }
 
 // fuer: bei "Verwalten als" die verwaltete Person (wirkt nur für Admins).

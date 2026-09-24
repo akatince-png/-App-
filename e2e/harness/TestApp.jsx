@@ -43,6 +43,8 @@ function leseOverridesAusUrl() {
       { id: "e2e-mira", vorname: "Mira", profilbild_pfad: null },
     ];
   }
+  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
+  if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).
   if (params.get("gruppe") === "1") {
     const heute = new Date();
