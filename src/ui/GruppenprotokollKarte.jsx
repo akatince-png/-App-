@@ -86,7 +86,7 @@ export default function GruppenprotokollKarte({ gp, userId, onUmschalten, darfAb
       <div style={{ borderRadius: 22, padding: 16, color: "#fff", background: nachtVerlauf, boxShadow: nachtSchatten }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 9px", borderRadius: 99, background: "rgba(255,255,255,0.18)" }}>📋 Gruppenprotokoll</span>
-          <span style={{ fontSize: 12, opacity: 0.85 }}>{gesamt ? `Tag ${Math.min(tag, gesamt)} von ${gesamt}` : `Tag ${tag}`}</span>
+          <span style={{ fontSize: 12, opacity: 0.85 }}>{gp.abgelaufen ? `abgeschlossen · ${gesamt} Tage` : gesamt ? `Tag ${Math.min(tag, gesamt)} von ${gesamt}` : `Tag ${tag}`}</span>
         </div>
         <div style={{ fontSize: 19, fontWeight: 900, marginTop: 10 }}>{gp.name}</div>
         {gp.ziel && <div style={{ fontSize: 12.5, opacity: 0.85 }}>{gp.ziel}</div>}
@@ -128,7 +128,7 @@ export default function GruppenprotokollKarte({ gp, userId, onUmschalten, darfAb
                 <div style={{ fontSize: 11.5, color: k.text, opacity: 0.8 }}>{b.art === "eigen" ? "noch niemand" : AUTO_HINWEIS[b.art]}</div>
               )}
             </div>
-            {b.art === "eigen" && darfAbhaken && userId ? (
+            {b.art === "eigen" && darfAbhaken && userId && !gp.abgelaufen ? (
               <button
                 type="button"
                 className="mp-tap"

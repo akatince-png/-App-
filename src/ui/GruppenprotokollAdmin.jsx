@@ -11,6 +11,7 @@ import {
   adminGruppenprotokollAnlegen,
   adminGruppenprotokollBeenden,
   adminGruppenprotokolleListe,
+  istAbgelaufen,
   statusAufbereiten,
   tagImProtokoll,
 } from "../data/gruppenprotokoll";
@@ -169,8 +170,8 @@ export default function GruppenprotokollAdmin({ teamId }) {
     const heute = toLocalISODate(new Date());
     const mitStatus = await Promise.all(
       r.gruppenprotokolle.map(async (g) => {
-        const { data } = g.status === "active" ? await supabase.rpc("gruppenprotokoll_status", { p_gp: g.id, p_von: g.startdatum, p_bis: heute }) : { data: [] };
-        return { ...g, bausteine: [...(g.gruppen_bausteine || [])].sort((a, b) => a.reihenfolge - b.reihenfolge), quests: g.gruppen_quests || [], stand: statusAufbereiten(data) };
+        const { data } = g.status === "active" ? await supabase.rpc("gruppenprotokoll_status", { p_gp: g.id, p_von: g.startdatum, p_bis: istAbgelaufen(g, heute) ? g.enddatum : heute }) : { data: [] };
+        return { ...g, abgelaufen: istAbgelaufen(g, heute), bausteine: [...(g.gruppen_bausteine || [])].sort((a, b) => a.reihenfolge - b.reihenfolge), quests: g.gruppen_quests || [], stand: statusAufbereiten(data) };
       })
     );
     setListe(mitStatus);
@@ -204,7 +205,7 @@ export default function GruppenprotokollAdmin({ teamId }) {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 14 }}>{g.name}</div>
                 <div style={{ fontSize: 12, color: textMuted }}>
-                  {gesamt ? `Tag ${Math.min(tag, gesamt)} von ${gesamt}` : `Tag ${tag}`} · {g.bausteine.length} Bausteine · {g.quests.length} Quest{g.quests.length === 1 ? "" : "s"}
+                  {g.abgelaufen ? `Zeit um (${gesamt} Tage) – kann beendet werden` : gesamt ? `Tag ${Math.min(tag, gesamt)} von ${gesamt}` : `Tag ${tag}`} · {g.bausteine.length} Bausteine · {g.quests.length} Quest{g.quests.length === 1 ? "" : "s"}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>

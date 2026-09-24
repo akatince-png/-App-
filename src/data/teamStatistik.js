@@ -92,8 +92,20 @@ export async function teamNeuigkeitenLaden(tage = 3) {
   }
   return {
     ok: true,
-    neuigkeiten: (data || []).map((r) => ({ userId: r.user_id, vorname: r.vorname, profilbildPfad: r.profilbild_pfad, art: r.art, zeitpunkt: r.zeitpunkt })),
+    neuigkeiten: (data || []).map((r) => ({ userId: r.user_id, vorname: r.vorname, profilbildPfad: r.profilbild_pfad, art: r.art, tag: r.tag, zeitpunkt: r.zeitpunkt })),
   };
+}
+
+// "heute" / "gestern" / "vorgestern" / "am 21.09." für den Team-Feed —
+// sonst wirkt eine Routine von gestern wie heute geschafft.
+export function tagLabel(tag, heute = new Date()) {
+  if (!tag) return "";
+  const [j, m, t] = tag.split("-").map(Number);
+  const diff = Math.round((new Date(heute.getFullYear(), heute.getMonth(), heute.getDate()) - new Date(j, m - 1, t)) / 86400000);
+  if (diff <= 0) return "heute";
+  if (diff === 1) return "gestern";
+  if (diff === 2) return "vorgestern";
+  return `am ${String(t).padStart(2, "0")}.${String(m).padStart(2, "0")}.`;
 }
 
 // Wochen-Highlights der Liga — nur Team-Ebene.

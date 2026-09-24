@@ -61,6 +61,12 @@ export function statusAufbereiten(zeilen) {
   return { mitglieder: [...mitglieder.values()], erledigt };
 }
 
+// Enddatum überschritten, aber vom Coach noch nicht beendet: bleibt auf der
+// Team-Seite als "abgeschlossen" sichtbar, aber nicht mehr zum Abhaken.
+export function istAbgelaufen(gp, heute = toLocalISODate(new Date())) {
+  return !!gp.enddatum && gp.enddatum < heute;
+}
+
 export function werHatHeute(status, bausteinId, datum) {
   return status.mitglieder.filter((m) => status.erledigt.has(`${m.userId}|${bausteinId}|${datum}`));
 }
@@ -107,13 +113,15 @@ export function useGruppenprotokolle(userId, teamId) {
       supabase.from("gruppen_bausteine").select("*").in("gruppenprotokoll_id", ids).order("reihenfolge"),
       supabase.from("gruppen_quests").select("*").in("gruppenprotokoll_id", ids).order("erstellt_am"),
       supabase.from("gruppen_baustein_logs").select("baustein_id, datum").eq("user_id", userId),
-      ...gps.map((g) => supabase.rpc("gruppenprotokoll_status", { p_gp: g.id, p_von: g.startdatum, p_bis: heute })),
+      // Nach dem Enddatum zählt nichts mehr dazu (Quest-Stand bleibt stehen).
+      ...gps.map((g) => supabase.rpc("gruppenprotokoll_status", { p_gp: g.id, p_von: g.startdatum, p_bis: g.enddatum && g.enddatum < heute ? g.enddatum : heute })),
     ]);
     if (abgebrochen.current) return;
     setEigeneGruppenLogs((logs || []).map((l) => ({ bausteinId: l.baustein_id, datum: l.datum })));
     setGruppenprotokolle(
       gps.map((g, i) => ({
         ...g,
+        abgelaufen: istAbgelaufen(g, heute),
         bausteine: (bausteine || []).filter((b) => b.gruppenprotokoll_id === g.id),
         quests: (quests || []).filter((q) => q.gruppenprotokoll_id === g.id),
         // "stand" = wer hat wann was geschafft ("status" bleibt active/archived)

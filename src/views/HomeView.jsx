@@ -381,7 +381,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // heute noch offen sind — mit Team-Kennzeichen und wer schon dran war.
   const gruppenItems = isEmergencyMode
     ? []
-    : (gruppenprotokolle || []).flatMap((gp) =>
+    : (gruppenprotokolle || []).filter((gp) => !gp.abgelaufen).flatMap((gp) =>
         gp.bausteine
           .filter((b) => b.art === "eigen" && !(eigeneGruppenLogs || []).some((l) => l.bausteinId === b.id && l.datum === tagStr))
           .map((b) => {
@@ -982,7 +982,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
       {/* Gruppen-Quests des Teams (24.09.) — kompakt, Tippen führt zur Team-Seite. */}
       {!isEmergencyMode &&
-        (gruppenprotokolle || []).flatMap((gp) =>
+        (gruppenprotokolle || []).filter((gp) => !gp.abgelaufen).flatMap((gp) =>
           gp.quests.map((q) => {
             const f = questFortschritt(q, gp.stand, userId);
             return (

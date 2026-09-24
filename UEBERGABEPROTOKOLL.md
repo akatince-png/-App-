@@ -265,6 +265,7 @@ löschbar.
   - Neue Punkte-Kategorie `gruppe` in `errungenschaften.js`.
   - `ui/GruppenprotokollAdmin.jsx` in Admin → Teams je Team: Formular (Name, Ziel, Zeitraum, Bausteine, eine Quest), laufende Protokolle mit „Stand“ und „Beenden“.
 - **Dauertest:** Das Skript hakt auf der Team-Seite eigene Gruppen-Gewohnheiten ab (mit Fleiß-Faktor). e2e: `e2e/gruppenprotokoll.spec.js`; das Harness kennt `?gruppe=1`.
+- **Bugsuche 24.09. (Nachmittag):** Live-Check mit Mia/Lea: 24 Ansichten fehlerfrei, Abhaken auf der Team-Seite funktioniert. Behoben: (1) Nach dem Enddatum liefen Gruppenprotokolle bisher einfach weiter. Jetzt `istAbgelaufen`: Der Stand bleibt auf dem Enddatum stehen, die Karte zeigt „abgeschlossen“, Abhaken und Home-Einträge entfallen, und im Admin steht „Zeit um – kann beendet werden“. (2) Der Team-Feed zeigt jetzt den Tag („heute“, „gestern“ usw., `tagLabel`). Vorher wirkte eine Routine von gestern, als wäre sie heute geschafft.
 
 ### Nachtrag Teil 121 — Team-Seite, Team-Liga, Coach-Ansicht (24.09.)
 

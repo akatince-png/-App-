@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enddatumAus, questFortschritt, statusAufbereiten, tagImProtokoll, werHatHeute } from "./gruppenprotokoll";
+import { enddatumAus, istAbgelaufen, questFortschritt, statusAufbereiten, tagImProtokoll, werHatHeute } from "./gruppenprotokoll";
 
 const zeilen = [
   { user_id: "a", vorname: "Mia", profilbild_pfad: null, privat: false, baustein_id: "b1", datum: "2026-09-24" },
@@ -26,5 +26,13 @@ describe("gruppenprotokoll", () => {
     expect(enddatumAus("2026-09-24", 21)).toBe("2026-10-14");
     expect(enddatumAus("2026-09-24", null)).toBe(null);
     expect(tagImProtokoll({ startdatum: "2026-09-24", enddatum: "2026-10-14" }, "2026-10-02")).toEqual({ tag: 9, gesamt: 21 });
+  });
+});
+
+describe("istAbgelaufen", () => {
+  it("erst nach dem Enddatum, nie bei offenem Ende", () => {
+    expect(istAbgelaufen({ enddatum: "2026-10-14" }, "2026-10-14")).toBe(false);
+    expect(istAbgelaufen({ enddatum: "2026-10-14" }, "2026-10-15")).toBe(true);
+    expect(istAbgelaufen({ enddatum: null }, "2030-01-01")).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ligaHighlights, tageRuhig, zeitraumGrenzen } from "./teamStatistik";
+import { ligaHighlights, tagLabel, tageRuhig, zeitraumGrenzen } from "./teamStatistik";
 
 describe("teamStatistik", () => {
   it("Woche läuft von Montag bis Sonntag", () => {
@@ -19,5 +19,15 @@ describe("teamStatistik", () => {
       { name: "B", schnitt: 70, schnittVorher: 65, aktiveTageSchnitt: 6, raetselTage: 3 },
     ];
     expect(ligaHighlights(teams).map((h) => h.wert)).toEqual(["A +20 Ø", "B (Ø 6 Tage)", "B"]);
+  });
+});
+
+describe("tagLabel", () => {
+  it("heute, gestern, vorgestern, sonst Datum", () => {
+    const heute = new Date(2026, 8, 24, 15);
+    expect(tagLabel("2026-09-24", heute)).toBe("heute");
+    expect(tagLabel("2026-09-23", heute)).toBe("gestern");
+    expect(tagLabel("2026-09-22", heute)).toBe("vorgestern");
+    expect(tagLabel("2026-09-01", heute)).toBe("am 01.09.");
   });
 });

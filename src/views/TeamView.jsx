@@ -15,6 +15,7 @@ import {
   tageRuhig,
   teamLigaLaden,
   teamMitgliederLaden,
+  tagLabel,
   teamNeuigkeitenLaden,
   zeitraumGrenzen,
 } from "../data/teamStatistik";
@@ -207,6 +208,7 @@ function MeinTeam({ team, onMotivieren }) {
               <span>
                 <b>{n.userId === user?.id ? "Du" : n.vorname}</b>{" "}
                 {n.userId === user?.id ? (NEUIGKEIT_TEXT[n.art] || "war aktiv ✨").replace(/^hat /, "hast ").replace(/^war /, "warst ") : NEUIGKEIT_TEXT[n.art] || "war aktiv ✨"}
+                {n.tag && <span style={{ color: textMuted }}> · {tagLabel(n.tag)}</span>}
               </span>
             </div>
           ))}
