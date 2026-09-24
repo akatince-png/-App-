@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Shell } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { success, textMain, textMuted, cardBorder } from "../ui/theme";
-import { DENKPAUSEN_KATEGORIEN, denksportRunde } from "../data/denkpausen";
+import { denksportRunde } from "../data/denkpausen";
 import { useAppData } from "../context/AppDataContext";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
@@ -17,14 +17,6 @@ import { TAGESRAETSEL_META } from "../utils/dayItems";
 // Ergebnisse werden wie bei den Denkpausen gespeichert (richtige Antworten
 // zählen als Punkte, siehe utils/errungenschaften.js).
 const RUNDE = 5;
-const KARTEN = [
-  { id: "mathe", emoji: "🔢", farbe: "#4F6BD8", text: "Kopfrechnen, Uhrzeiten, Zahlenreihen" },
-  { id: "wortspiele", emoji: "🔤", farbe: "#D9822B", text: "Teekesselchen, Redewendungen, Wortketten" },
-  { id: "raetsel", emoji: "🧩", farbe: "#7C5CE0", text: "Logik, Denkfallen, Knobeleien" },
-  { id: "wissen", emoji: "🌍", farbe: "#1FA39A", text: "Geografie, Natur, Körper, Geschichte" },
-  { id: "gemischt", emoji: "🎲", farbe: "#E4643F", text: "Von allem etwas" },
-];
-const LABEL = { ...Object.fromEntries(DENKPAUSEN_KATEGORIEN.map((k) => [k.id, k.label])), gemischt: "Gemischt" };
 
 function ergebnisText(richtig) {
   if (richtig === RUNDE) return "Alles richtig — dein Kopf ist hellwach! 🚀";
@@ -33,7 +25,10 @@ function ergebnisText(richtig) {
   return "Kein Ding — Mitmachen zählt, dein Kopf ist jetzt wach. 💛";
 }
 
-// Tagesrätsel (24.09.): oben auf der Seite die feste Tagesaufgabe (5
+// Tagesrätsel (24.09.): Die Seite zeigt nur noch die feste Tagesaufgabe
+// (Nutzerinnen-Entscheidung 24.09., "Variante 3": freies Training mit
+// Kategorie-Auswahl ausgeblendet, weil der Fragenvorrat sonst zu schnell
+// verbraucht ist) (5
 // gemischte Fragen, siehe utils/tagesraetsel.js). Aus der Tages-Quest bzw.
 // "Als Nächstes" (View "tagesraetsel") startet die Runde direkt.
 export default function DenksportView({ onHome, tagesraetselStart = false }) {
@@ -56,7 +51,7 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
     setErgebnisse([]);
   };
 
-  const tagesraetselStarten = () => starten("gemischt", raetselOffen || RUNDE, raetselOffen > 0);
+  const tagesraetselStarten = () => starten("gemischt", raetselOffen || RUNDE, true);
   const autoGestartet = useRef(false);
   useEffect(() => {
     if (!tagesraetselStart || autoGestartet.current) return;
@@ -98,36 +93,9 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
       <Shell>
         <ViewHeader title="🧩 Denksport" onHome={onHome} />
         <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 16 }}>
-          Kurz das Gehirn aufwecken: {RUNDE} Fragen, kein Zeitdruck. Jede richtige Antwort bringt einen Punkt und lädt die Region „Fokus & Planung“ in deinem Gehirn auf.
+          Kurz das Gehirn aufwecken: jeden Tag {TAGESRAETSEL_ZIEL} gemischte Fragen, kein Zeitdruck. Jede richtige Antwort bringt einen Punkt und lädt die Region „Fokus & Planung“ in deinem Gehirn auf.
         </div>
         <TagesraetselKarte heute={raetselHeute} onStart={tagesraetselStarten} />
-        <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, margin: "18px 0 10px" }}>Freies Training</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {KARTEN.map((k) => (
-            <button
-              key={k.id}
-              type="button"
-              className="mp-tap"
-              onClick={() => starten(k.id)}
-              style={{
-                gridColumn: k.id === "gemischt" ? "1 / -1" : undefined,
-                textAlign: "left",
-                border: "none",
-                borderRadius: 20,
-                padding: "16px 14px",
-                background: `linear-gradient(145deg, ${k.farbe}, ${k.farbe}CC)`,
-                color: "#fff",
-                cursor: "pointer",
-                boxShadow: `0 8px 18px ${k.farbe}40`,
-                fontFamily: "inherit",
-              }}
-            >
-              <div style={{ fontSize: 26 }}>{k.emoji}</div>
-              <div style={{ fontSize: 15.5, fontWeight: 800, marginTop: 6 }}>{LABEL[k.id]}</div>
-              <div style={{ fontSize: 11.5, opacity: 0.9, marginTop: 2, lineHeight: 1.35 }}>{k.text}</div>
-            </button>
-          ))}
-        </div>
       </Shell>
     );
   }
@@ -151,17 +119,8 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {istTagesraetsel ? (
-            <button type="button" className="mp-tap" onClick={onHome} style={knopf(success, "#fff")}>
-              Zurück zur Startseite
-            </button>
-          ) : (
-            <button type="button" className="mp-tap" onClick={() => starten(kategorie)} style={knopf(success, "#fff")}>
-              Noch eine Runde {LABEL[kategorie]}
-            </button>
-          )}
-          <button type="button" className="mp-tap" onClick={() => setKategorie(null)} style={knopf("#fff", textMain, true)}>
-            {istTagesraetsel ? "Zur Denksport-Übersicht" : "Andere Kategorie"}
+          <button type="button" className="mp-tap" onClick={onHome} style={knopf(success, "#fff")}>
+            Zurück zur Startseite
           </button>
         </div>
       </Shell>
@@ -172,7 +131,7 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
   const ausgewertet = gewaehlt !== null;
   return (
     <Shell>
-      <ViewHeader title={istTagesraetsel ? "🧩 Tagesrätsel" : `${KARTEN.find((k) => k.id === kategorie)?.emoji || "🧩"} ${LABEL[kategorie]}`} onHome={() => setKategorie(null)} homeTitle="Zurück" />
+      <ViewHeader title="🧩 Tagesrätsel" onHome={() => setKategorie(null)} homeTitle="Zurück" />
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }} aria-label={`Frage ${index + 1} von ${runde.length}`}>
         {runde.map((_, i) => (
           <span

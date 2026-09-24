@@ -250,6 +250,22 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Tagesrätsel statt freiem Denksport (24.09.)
+
+- **Wunsch der Nutzerin:** jeden Tag 5 gemischte Fragen als Pflichtaufgabe, wie das Trinkziel, mit Belohnung im Punktesystem.
+- **Freies Training ausgeblendet:** Die Nutzerin hat sich für „Variante 3“ entschieden, weil der Fragenvorrat sonst zu schnell aufgebraucht ist. `views/DenksportView.jsx` zeigt deshalb nur noch die Tagesrätsel-Karte, die Kategorie-Auswahl gibt es nicht mehr.
+- **Logik** (`utils/tagesraetsel.js`, Ziel `TAGESRAETSEL_ZIEL = 5`):
+  - Gezählt wird jede heute beantwortete Frage in `denkpause_ergebnisse`, egal ob richtig oder falsch. Auch Antworten aus der Denkpause zählen mit.
+  - Ab 5 Antworten gilt der Tag als geschafft.
+- **Auf der Startseite:**
+  - Tages-Quest „Tagesrätsel x/5 Fragen“ (`utils/tagesQuests.js`, antippbar über `viewId`).
+  - Ein Pseudo-Punkt unter „Als Nächstes“, bis das Tagesrätsel geschafft ist.
+  - Es zählt im Tagesring als +1 mit.
+  - Farbe: `TAGESRAETSEL_META` in `dayItems.js`.
+- **Direktstart:** View `tagesraetsel` (`#/tagesraetsel`) startet die Runde sofort mit den noch offenen Fragen.
+- **Punkte:** Jede richtige Antwort bringt weiterhin einen Punkt (Kategorie `denkpause`). Dazu kommt die neue Kategorie `tagesraetsel` in `errungenschaften.js`: ein Bonuspunkt je geschafftem Tag, mit eigener Serie und eigenen Abzeichen. Im Gehirn gehört sie zur Region „Fokus“.
+- e2e: `e2e/denksport.spec.js`.
+
 ### Nachtrag Teil 121 — Farben: Bereichsfarben, Kasten-Stil, Tagesphasen (23./24.09.)
 
 - **Bereichsfarben** (`utils/dayItems.js`): jede Kategorie hat eine eigene, gut unterscheidbare Farbe (`KATEGORIE_META`, je `bg`/`text`/`dot`). Morgen-/Abendroutine stehen in `ROUTINE_META` (Orange/Indigo). `BereichColorContext` kennt beide.
