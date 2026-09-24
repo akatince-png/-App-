@@ -222,7 +222,7 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, phase = "nacht" }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, phase = "nacht" }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
@@ -235,6 +235,14 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
     <div style={{ position: "relative", marginBottom: 20, borderRadius: 24, padding: 16, color: "#fff", background: stimmung.hintergrund, boxShadow: stimmung.schatten, transition: "background 1s" }}>
       <Deko phase={phase} />
       <div style={{ position: "relative" }}>
+      {/* Spielstand oben in derselben Karte (24.09.), durch eine feine Linie
+          vom Gehirn-Teil getrennt. */}
+      {kopf && (
+        <>
+          {kopf}
+          <div style={{ height: 1, background: "rgba(255,255,255,0.18)", margin: "14px 0" }} />
+        </>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <div style={{ fontSize: 15, fontWeight: 800 }}>🧠 Dein Gehirn</div>
         <Zeitraumwahl zeitraum={zeitraum} setZeitraum={setZeitraum} zeigeGesamt={zeigeGesamt} />

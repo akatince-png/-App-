@@ -71,7 +71,10 @@ function Chip({ children }) {
   );
 }
 
-export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, punkte, serie, onOpenErfolge }) {
+// eingebettet (24.09., Nutzerinnen-Wunsch): Spielstand und Gehirn in EINER
+// Karte ganz oben — dann ohne eigenen Hintergrund, die Gehirn-Karte liefert
+// ihn (siehe GehirnKarte `kopf`).
+export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, punkte, serie, onOpenErfolge, eingebettet = false }) {
   const lvl = levelAusPunkten(punkte);
   const fortschritt = levelFortschritt(lvl);
   const nochBisLevel = Math.max(0, lvl.ziel - lvl.punkte);
@@ -88,11 +91,11 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
         border: "none",
         cursor: "pointer",
         borderRadius: 24,
-        padding: 18,
-        marginBottom: 16,
+        padding: eingebettet ? 2 : 18,
+        marginBottom: eingebettet ? 0 : 16,
         color: "#fff",
-        background: nachtVerlauf,
-        boxShadow: nachtSchatten,
+        background: eingebettet ? "transparent" : nachtVerlauf,
+        boxShadow: eingebettet ? "none" : nachtSchatten,
         fontFamily: "inherit",
       }}
     >

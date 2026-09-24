@@ -712,17 +712,35 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
       </div>
 
-      {/* Spielstand ganz oben (UX-Umbau 23.09., Nutzerinnen-Wunsch "mehr
-          Spielcharakter"): Tagesring + Serie + Punkte + Level in einer
-          Karte, ersetzt die bisherige reine Text-Begrüßung. */}
-      <SpielstandKarte
-        gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
-        statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
-        erledigt={erledigtCount + raetselZaehlt}
-        gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
-        punkte={gesamtPunkte}
-        serie={globalerStreak}
+      {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
+          (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
+          Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
+          Akut-Knopf. Als Nächstes und Quests folgen darunter. */}
+      <GehirnKarte
+        kategorien={ordenKategorien}
+        widgets={zeitraumWidgets}
+        zeitraum={effektiverZeitraum}
+        setZeitraum={setZeitraum}
+        tage={zeitraumTage}
+        zeigeGesamt={zeigeGesamtOption}
         onOpenErfolge={() => onOpenView("erfolge")}
+        onDenksport={() => onOpenView("denksport")}
+        onOpenView={onOpenView}
+        onWasser={() => onOpenView("hydration")}
+        onAkut={() => setAkutOffen(true)}
+        phase={phase}
+        kopf={
+          <SpielstandKarte
+            eingebettet
+            gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
+            statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
+            erledigt={erledigtCount + raetselZaehlt}
+            gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
+            punkte={gesamtPunkte}
+            serie={globalerStreak}
+            onOpenErfolge={() => onOpenView("erfolge")}
+          />
+        }
       />
 
       {/* "Jetzt dran"/Als Nächstes direkt unter dem Spielstand (23.09.) —
@@ -893,23 +911,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
-      {/* Gehirn + Tagesfortschritt in einer Karte (23.09.) — auch im
-          Notfallmodus, wie vorher das Tagesfortschritt-Diagramm. */}
-      <GehirnKarte
-        kategorien={ordenKategorien}
-        widgets={zeitraumWidgets}
-        zeitraum={effektiverZeitraum}
-        setZeitraum={setZeitraum}
-        tage={zeitraumTage}
-        zeigeGesamt={zeigeGesamtOption}
-        onOpenErfolge={() => onOpenView("erfolge")}
-        onDenksport={() => onOpenView("denksport")}
-        onOpenView={onOpenView}
-        onWasser={() => onOpenView("hydration")}
-        onAkut={() => setAkutOffen(true)}
-        phase={phase}
-      />
-
       {akutOffen && (
         <AkutModusPanel
           onClose={() => setAkutOffen(false)}
