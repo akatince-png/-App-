@@ -4,7 +4,7 @@ Dieser Text fasst zusammen, warum die ersten Minuten nach dem Aufwachen
 bei ADHS ein eigenes, gut erforschtes Thema sind (Schlaftrunkenheit,
 Cortisol-Aufwachreaktion, Entscheidungsermüdung), welche Ansätze dafür
 wissenschaftlich untersucht sind, und wie sich das coaching-praktisch
-umsetzen lässt. Baut auf dem Schlaf-, Tageslicht-, Hydrations- und
+umsetzen lässt. Baut auf dem Schlaf-, Tageslicht-, Wasser- und
 Gewohnheits-Wissen dieser App auf, die in den ersten Tagesminuten
 buchstäblich zusammenlaufen. Dient als Hintergrundwissen für
 Coaching-Gespräche — keine medizinische Beratung.

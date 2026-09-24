@@ -581,7 +581,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     // damit fälschlich weiterhin als aktiv. 0 zählt jetzt ebenfalls als
     // "nicht konfiguriert", genau wie der Standardwert.
     widgets.push({
-      name: tLabel("Hydration"),
+      name: tLabel("Wasser"),
       kategorie: "hydration",
       viewId: "hydration",
       aktiv: hydrationHeuteMl > 0 || (hydrationZielMl > 0 && hydrationZielMl !== 2500),
@@ -947,7 +947,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             <Icon name="droplet" size={22} color="#fff" />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Hydration eintragen</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: KATEGORIE_META.hydration.text }}>Wasser eintragen</div>
             <div style={{ fontSize: 11, color: KATEGORIE_META.hydration.text, opacity: 0.8 }}>Getrunken? Direkt hier eintragen.</div>
           </div>
         </button>

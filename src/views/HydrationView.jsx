@@ -68,7 +68,7 @@ export default function HydrationView({ onHome, embedded = false }) {
     kategorie: "hydration",
     itemName: "Trinkziel",
     einheit: "ml",
-    kachelName: "Hydration",
+    kachelName: "Wasser",
     defaultZiel: 2500,
   });
 
@@ -86,7 +86,7 @@ export default function HydrationView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && (
-        <ViewHeader title="💧 Hydration" onHome={onHome} />
+        <ViewHeader title="💧 Wasser" onHome={onHome} />
       )}
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>

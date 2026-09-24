@@ -325,7 +325,7 @@ export const AIService = {
     const data = await ausChatZusammenfassen(
       coachName,
       [
-        "Du bist ein Assistent für eine bestehende App, der beim Einrichten des Trink-/Hydrationsziels und passender Erinnerungszeiten hilft.",
+        "Du bist ein Assistent für eine bestehende App, der beim Einrichten des Trinkziels und passender Erinnerungszeiten hilft.",
         "Fasse das vorangegangene Gespräch jetzt zusammen.",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",

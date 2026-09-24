@@ -75,7 +75,7 @@ export const KATEGORIEN = [
   },
   {
     key: "hydration",
-    label: "Hydration",
+    label: "Wasser",
     icon: "droplet",
     grad: gradAus(KATEGORIE_META.hydration.dot),
     holeTage: (q) =>

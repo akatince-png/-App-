@@ -21,7 +21,7 @@
 // auf der Morgen-/Abendroutine-Seite (OnboardingRoutinenView.jsx), eine
 // Onboarding-Seite weniger.
 export const CATEGORY_STEPS = [
-  { key: "hydration", icon: "💧", label: "Hydrationsplan" },
+  { key: "hydration", icon: "💧", label: "Wasserplan" },
   { key: "tageslicht", icon: "☀️", label: "Tageslichtplan" },
   { key: "bildschirmzeit", icon: "📱", label: "Bildschirmzeitplan" },
   { key: "ernaehrung", icon: "🍽️", label: "Ernährungsplan" },

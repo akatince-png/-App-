@@ -46,7 +46,7 @@ const KATEGORIE_TABS = [
   { id: "supplemente", label: "Supplemente" },
   { id: "medikamente", label: "Medikamente" },
   { id: "gewohnheiten", label: "Gewohnheiten" },
-  { id: "hydration", label: "Hydration" },
+  { id: "hydration", label: "Wasser" },
 ];
 
 // Vorgeschlagene Dauer je Kategorie — die Trainings-/Gewohnheiten-/etc.-

@@ -301,6 +301,7 @@ export const LABELS = {
     // --- PLAENE_TABS / CATEGORY_STEPS / KATEGORIE_META (dayItems.js) ---
     "Schlaf": "Sleep",
     "Hydration": "Hydration",
+    "Wasser": "Water",
     "Ernährung": "Nutrition",
     "Training": "Training",
     "Medikamente": "Medications",
@@ -311,6 +312,7 @@ export const LABELS = {
     // --- CATEGORY_STEPS (Onboarding/Hauptprotokoll) — Labels enden auf "-Plan" ---
     "Schlafplan": "Sleep plan",
     "Hydrationsplan": "Hydration plan",
+    "Wasserplan": "Water plan",
     "Ernährungsplan": "Nutrition plan",
     "Trainingsplan": "Training plan",
     "Gewohnheitenplan": "Habit plan",
@@ -644,6 +646,7 @@ export const LABELS = {
     // --- PLAENE_TABS / CATEGORY_STEPS / KATEGORIE_META (dayItems.js) ---
     "Schlaf": "Uyku",
     "Hydration": "Hidrasyon",
+    "Wasser": "Su",
     "Ernährung": "Beslenme",
     "Training": "Antrenman",
     "Medikamente": "İlaçlar",
@@ -654,6 +657,7 @@ export const LABELS = {
     // --- CATEGORY_STEPS (Onboarding/Hauptprotokoll) — Labels enden auf "-Plan" ---
     "Schlafplan": "Uyku planı",
     "Hydrationsplan": "Hidrasyon planı",
+    "Wasserplan": "Su planı",
     "Ernährungsplan": "Beslenme planı",
     "Trainingsplan": "Antrenman planı",
     "Gewohnheitenplan": "Alışkanlık planı",

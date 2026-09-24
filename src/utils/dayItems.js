@@ -43,7 +43,7 @@ export const KATEGORIE_META = {
   training: { bg: "#FBE4E1", text: "#9E2319", dot: "#E0352B", label: "Training", icon: "dumbbell" },
   gewohnheit: { bg: "#D9F3F0", text: "#13615C", dot: "#1FA39A", label: "Gewohnheit", icon: "target" },
   workflow: { bg: "#F8E0EE", text: "#86285F", dot: "#C43A8E", label: "Workflow" },
-  hydration: { bg: "#E0EAFA", text: "#1B4686", dot: "#2D6FD6", label: "Hydration", icon: "droplet" },
+  hydration: { bg: "#E0EAFA", text: "#1B4686", dot: "#2D6FD6", label: "Wasser", icon: "droplet" },
   tageslicht: { bg: "#FBF3D2", text: "#7D6206", dot: "#E8B90C", label: "Tageslicht", icon: "sun" },
   schlaf: { bg: "#E6E6FA", text: "#34348F", dot: "#5B5BD6", label: "Schlaf", icon: "moon" },
   atemuebung: { bg: "#D9F2F8", text: "#0B6378", dot: "#12A5C6", label: "Atemübung", icon: "wind" },

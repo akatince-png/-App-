@@ -16,7 +16,7 @@ const BEREICH_OPTIONEN = [
   { value: "", label: "Allgemein" },
   { value: "training", label: "Training" },
   { value: "ernaehrung", label: "Ernährung" },
-  { value: "hydration", label: "Hydration" },
+  { value: "hydration", label: "Wasser" },
   { value: "tageslicht", label: "Tageslicht" },
   { value: "schlaf", label: "Schlaf" },
   { value: "supplemente", label: "Supplemente" },

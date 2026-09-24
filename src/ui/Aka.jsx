@@ -74,7 +74,7 @@ const AKA_SEITEN = {
   },
   hydration: {
     bereich: "hydration",
-    fokus: "Die Person ist gerade bei Hydration. Für ein Trinkziel: frag, wie viel sie aktuell trinkt und wann sie erinnert werden möchte.",
+    fokus: "Die Person ist gerade im Bereich Wasser (Trinken). Für ein Trinkziel: frag, wie viel sie aktuell trinkt und wann sie erinnert werden möchte.",
     begruessung: "Wie viel trinkst du aktuell am Tag, und wann möchtest du an Wasser erinnert werden?",
   },
   tageslicht: {
@@ -104,7 +104,7 @@ const AKA_SEITEN = {
 };
 
 const GRUNDPROMPT =
-  "Du bist der Assistent einer App zur Selbstverwaltung von Gesundheits- und ADHS-Routinen (Supplemente, Medikamente, Training, Schlaf, Ernährung, Hydration, Tageslicht, Gewohnheiten, Morgen-/Abendroutine, Workflows). Beantworte Fragen zu jedem Bereich. Nutze die mitgegebene Zusammenfassung der Trackingdaten, um Zusammenhänge zwischen den Bereichen anzusprechen, wenn es zur Frage passt. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, Rezepte, ein Schlaf-Eintrag für die letzte Nacht, ein Workflow-Preset, Schritte für die Morgen-/Abendroutine), frag von dir aus alle nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — egal, auf welcher Seite die Person gerade ist. Antworte immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.";
+  "Du bist der Assistent einer App zur Selbstverwaltung von Gesundheits- und ADHS-Routinen (Supplemente, Medikamente, Training, Schlaf, Ernährung, Wasser/Trinken, Tageslicht, Gewohnheiten, Morgen-/Abendroutine, Workflows). Beantworte Fragen zu jedem Bereich. Nutze die mitgegebene Zusammenfassung der Trackingdaten, um Zusammenhänge zwischen den Bereichen anzusprechen, wenn es zur Frage passt. Wenn sich aus dem Gespräch ergibt, dass etwas Konkretes eingerichtet werden könnte (z. B. eine neue Gewohnheit, ein Supplement/Medikament, ein Trink- oder Tageslichtziel, ein Trainingsplan, Rezepte, ein Schlaf-Eintrag für die letzte Nacht, ein Workflow-Preset, Schritte für die Morgen-/Abendroutine), frag von dir aus alle nötigen Details ab und biete am Ende aktiv an, das jetzt einzurichten — egal, auf welcher Seite die Person gerade ist. Antworte immer auf Deutsch, in normalem Fließtext, keine Aufzählungen von JSON oder Code.";
 
 function akaSeite(view) {
   return AKA_SEITEN[view] || ALLGEMEIN;

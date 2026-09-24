@@ -8,7 +8,7 @@ const PLAENE_LABELS = [
   "Morgen",
   "Abend",
   "Schlaf",
-  "Hydration",
+  "Wasser",
   "Tageslicht",
   "Bildschirmzeit",
   "Ernährung",

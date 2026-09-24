@@ -151,7 +151,7 @@ export function trackingZusammenfassung(appData, { tageZurueck = STANDARD_TAGE_Z
     const werte = hydrationLogs.map((e) => e.mengeMl || 0);
     const trend = trendRichtung(werte);
     abschnitte.push(
-      `Hydration: Ø ${rund(schnitt(werte), 0)} ml/Tag über ${hydrationLogs.length} geloggte Tage` +
+      `Wasser (Trinken): Ø ${rund(schnitt(werte), 0)} ml/Tag über ${hydrationLogs.length} geloggte Tage` +
         (appData.hydrationZielMl ? ` (Ziel: ${appData.hydrationZielMl} ml)` : "") +
         (trend ? `, Trend: ${trend}` : "") +
         "."

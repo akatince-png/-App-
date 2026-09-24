@@ -474,7 +474,7 @@ export const F_PLUM = ["#9B85B8", "#786198"];
 // zusätzlich zu den aufklappbaren Karten im Tagesplan, nicht statt derer.
 export const PLAENE_TABS = [
   { id: "tageslicht", label: "Tageslicht", icon: "sun", grad: F_WARM },
-  { id: "hydration", label: "Hydration", icon: "droplet", grad: F_EMERALD },
+  { id: "hydration", label: "Wasser", icon: "droplet", grad: F_EMERALD },
   { id: "schlaf", label: "Schlaf", icon: "moon", grad: F_PLUM },
   { id: "bildschirmzeit", label: "Bildschirmzeit", icon: "smartphone", grad: F_SLATE },
   { id: "ernaehrung", label: "Ernährung", icon: "utensils", grad: F_WARM },

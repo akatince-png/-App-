@@ -152,7 +152,7 @@ export const FORMULARE = [
         ],
       },
       {
-        titel: "Protokoll 2: Hydration",
+        titel: "Protokoll 2: Wasser",
         felder: [
           { key: "hydration", typ: "raster", spalten: ["Aspekt", "Status (1-5)", "Was läuft?", "Was fehlt?"], zeilen: ["Trinkmenge/Tag", "Trinkroutine", "Koffein-Konsum", "Koffein-Timing"] },
           { key: "hydrationNotizen", label: "Notizen", typ: "textarea" },
@@ -267,7 +267,7 @@ export const FORMULARE = [
       {
         titel: "AKA-App-Integration",
         felder: [
-          { key: "protokolle", label: "Welche Protokolle in der App werden angepasst?", typ: "checkboxGroup", optionen: ["Schlaf", "Hydration", "Tageslicht", "Ernährung", "Training", "Gewohnheiten", "Supplemente", "Medikamente"] },
+          { key: "protokolle", label: "Welche Protokolle in der App werden angepasst?", typ: "checkboxGroup", optionen: ["Schlaf", "Wasser", "Tageslicht", "Ernährung", "Training", "Gewohnheiten", "Supplemente", "Medikamente"] },
           { key: "akaEingesetzt", label: "Wird Aka (KI) eingesetzt?", typ: "radio", optionen: ["Ja", "Nein"] },
           { key: "akaWofuer", label: "Wenn ja, wofür?", typ: "text" },
         ],

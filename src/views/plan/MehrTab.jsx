@@ -48,7 +48,7 @@ import { spotifyAutorisierenUrl, spotifyPlaylistUriNormalisieren } from "../../s
 // angelegt, siehe OnboardingCategoriesView.jsx).
 const BAUSTEINE_KATEGORIEN = [
   { kategorie: "schlaf", label: "Schlaf" },
-  { kategorie: "hydration", label: "Hydration" },
+  { kategorie: "hydration", label: "Wasser" },
   { kategorie: "tageslicht", label: "Tageslicht" },
   { kategorie: "bildschirmzeit", label: "Bildschirmzeit" },
   { kategorie: "ernaehrung", label: "Ernährung" },
@@ -867,7 +867,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
       <Card style={{ border: `1px solid ${danger}` }}>
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>
           Löscht ALLE deine Protokoll-Daten unwiderruflich — Medikamente, Supplemente, Training, Routinen, Ernährung,
-          Hydration, Tageslicht, Schlaf, Check-ins, Blutwerte und alle zugehörigen Protokolle/Verläufe. Dein Konto
+          Wasser, Tageslicht, Schlaf, Check-ins, Blutwerte und alle zugehörigen Protokolle/Verläufe. Dein Konto
           bleibt erhalten, du landest danach wieder im Einrichtungs-Assistenten und kannst komplett neu starten.
         </div>
         <Label>Tippe „{RESET_ALLES_WORT}", um zu bestätigen</Label>

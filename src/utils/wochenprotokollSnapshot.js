@@ -93,7 +93,7 @@ export function baueWochenprotokollDaten(appData) {
 
   const routinenZiele = [
     ersterSchlafblock && { icon: "😴", label: "Schlaf", ziel: `${ersterSchlafblock.bettzeit}–${ersterSchlafblock.aufwachzeit || "?"}` },
-    hydrationZielMl && { icon: "💧", label: "Hydration", ziel: `Ø ${hydrationZielMl} ml/Tag` },
+    hydrationZielMl && { icon: "💧", label: "Wasser", ziel: `Ø ${hydrationZielMl} ml/Tag` },
     categoryZiele?.training?.proWoche && { icon: "🏋️", label: "Training", ziel: `${categoryZiele.training.proWoche}× pro Woche` },
   ].filter(Boolean);
 

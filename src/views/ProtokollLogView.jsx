@@ -143,7 +143,7 @@ function AenderungKarte({ e, ausgewaehlt, onUmschalten, onLoeschen }) {
 
 const KATEGORIE_LABEL = {
   schlaf: "Schlaf",
-  hydration: "Hydration",
+  hydration: "Wasser",
   tageslicht: "Tageslicht",
   ernaehrung: "Ernährung",
   training: "Training",

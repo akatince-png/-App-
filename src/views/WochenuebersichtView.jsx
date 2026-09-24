@@ -893,7 +893,7 @@ export default function WochenuebersichtView({
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 4, background: KATEGORIE_META.hydration.dot, flexShrink: 0 }} />
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Hydration</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Wasser</div>
                 </div>
                 <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
                   Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
@@ -1065,7 +1065,7 @@ export default function WochenuebersichtView({
           ))}
           {kumulativeCompliance.hydrationTage.length > 0 && (
             <div style={{ fontSize: 12, marginBottom: 2 }}>
-              Hydration: Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
+              Wasser: Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
             </div>
           )}
           {kumulativeCompliance.tageslichtTage.length > 0 && (
