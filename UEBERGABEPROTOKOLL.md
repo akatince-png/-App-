@@ -253,7 +253,7 @@ löschbar.
 ### Nachtrag Teil 121 — Tagesrätsel statt freiem Denksport (24.09.)
 
 - **Wunsch der Nutzerin:** jeden Tag 5 gemischte Fragen als Pflichtaufgabe, wie das Trinkziel, mit Belohnung im Punktesystem.
-- **Freies Training ausgeblendet:** Die Nutzerin hat sich für „Variante 3“ entschieden, weil der Fragenvorrat sonst zu schnell aufgebraucht ist. `views/DenksportView.jsx` zeigt deshalb nur noch die Tagesrätsel-Karte, die Kategorie-Auswahl gibt es nicht mehr.
+- **Freies Training nur für das Admin-Konto:** Die Nutzerin hat sich für „Variante 3“ entschieden, weil der Fragenvorrat sonst zu schnell aufgebraucht ist. Nachtrag von ihr: „Nur für mich der freie Bereich“. In `views/DenksportView.jsx` sehen daher alle die Tagesrätsel-Karte, die Kategorie-Auswahl („Freies Training“) nur bei `istAdminKonto`, auch in deren Coachee-Ansicht.
 - **Logik** (`utils/tagesraetsel.js`, Ziel `TAGESRAETSEL_ZIEL = 5`):
   - Gezählt wird jede heute beantwortete Frage in `denkpause_ergebnisse`, egal ob richtig oder falsch. Auch Antworten aus der Denkpause zählen mit.
   - Ab 5 Antworten gilt der Tag als geschafft.
