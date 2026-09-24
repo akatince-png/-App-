@@ -403,13 +403,17 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             {offeneSupplemente.length > 1 && (
               <button
                 className="mp-tap"
-                onClick={() =>
+                onClick={() => {
+                  // Tagesprotokoll wie beim einzelnen Bestätigen (24.09.).
+                  offeneSupplemente.forEach((e) =>
+                    aenderungVermerken({ kategorie: "supplement", itemName: e.raw?.name ?? e.name, aktion: "erledigt", detail: verspaetungText(e.uhrzeit) || "" })
+                  );
                   confirmAlleTageszeit(
                     toLocalISODate(selectedDate),
                     offeneSupplemente[0].uhrzeit,
                     offeneSupplemente.map((e) => e.refId)
-                  )
-                }
+                  );
+                }}
                 style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Alle bestätigen

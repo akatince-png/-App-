@@ -206,7 +206,12 @@ export function baueMockAppData(userId, overrides) {
         // dieselbe Funktion genauso und wäre ebenso betroffen gewesen.
         wert = () => "";
       } else if (siehtAusWieFunktion(key)) {
-        wert = (..._args) => Promise.resolve(baueErfolgsErgebnis());
+        // Aufrufe mitschreiben (24.09.), damit Tests prüfen können, ob z. B.
+        // aenderungVermerken() beim Abhaken wirklich aufgerufen wird.
+        wert = (...args) => {
+          if (typeof window !== "undefined") (window.__mockAufrufe ||= []).push({ name: key, args });
+          return Promise.resolve(baueErfolgsErgebnis());
+        };
       } else if (siehtAusWieId(key)) {
         // Bug-Fix (beim ersten Testlauf gefunden): ein generischer
         // Array-/Objekt-Fallback ist zwar leer, aber TRUTHY — jede

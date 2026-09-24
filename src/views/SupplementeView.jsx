@@ -434,7 +434,13 @@ function SupplementeSection() {
                   <div style={{ fontSize: 14, fontWeight: 800 }}>{zeit}</div>
                   {offeneIds.length > 1 && (
                     <button
-                      onClick={() => confirmAlleTageszeit(tagStr, zeit, items.map((s) => s.id))}
+                      onClick={() => {
+                        // Tagesprotokoll wie beim einzelnen Bestätigen (24.09.).
+                        items
+                          .filter((s) => offeneIds.includes(s.id))
+                          .forEach((s) => aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "erledigt", detail: verspaetungText(zeit) || "" }));
+                        confirmAlleTageszeit(tagStr, zeit, items.map((s) => s.id));
+                      }}
                       style={{ border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                     >
                       Alle bestätigen

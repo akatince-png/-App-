@@ -22,7 +22,7 @@ import TagesQuestsKarte from "../ui/TagesQuestsKarte";
 import { useSpielFeiern } from "../ui/useSpielFeiern";
 import { baueTagesQuests } from "../utils/tagesQuests";
 import { statusText } from "../utils/motivation";
-import { toLocalISODate, addDays, sameDay } from "../utils/dates";
+import { toLocalISODate, addDays, sameDay, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
@@ -423,14 +423,24 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     !item.done &&
     (item.kategorie === "gruppe" ||
       (item.kategorie === "supplement" && item.raw?.id) || (item.kategorie === "hormon" && item.raw?.name) || (item.kategorie === "mahlzeit" && item.refId) || (item.kategorie === "gewohnheit" && item.raw?.id));
+  // Tagesprotokoll (24.09.): Abhaken auf der Startseite landet wie im
+  // Tagesplan und auf den Kategorie-Seiten als "erledigt" im Protokoll.
+  const protokolliereErledigt = (kategorie, name, zeit) => {
+    if (name) aenderungVermerken({ kategorie, itemName: name, aktion: "erledigt", detail: verspaetungText(zeit) || "" });
+  };
   const direktErledigen = (item) => {
     const zeit = item.originalUhrzeit ?? item.uhrzeit;
     if (item.kategorie === "gruppe") return gruppenBausteinUmschalten(item.bausteinId, tagStr);
+    if (["supplement", "hormon", "mahlzeit", "gewohnheit"].includes(item.kategorie)) protokolliereErledigt(item.kategorie, item.raw?.name, item.logZeit ?? zeit);
     if (item.kategorie === "supplement") return toggleSupplementErledigt(tagStr, item.raw.id, zeit);
     if (item.kategorie === "hormon") return toggleHormonErledigt(tagStr, item.raw.name, zeit);
     if (item.kategorie === "mahlzeit") return toggleMahlzeitErledigt(tagStr, item.refId, item.logZeit ?? zeit);
     if (item.kategorie === "gewohnheit") return toggleGewohnheitErledigt(tagStr, item.raw.id);
     return undefined;
+  };
+  const buendelErledigen = (item) => {
+    (supplemente || []).filter((sp) => item.bundleIds.includes(sp.id)).forEach((sp) => protokolliereErledigt("supplement", sp.name, item.uhrzeit));
+    return confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
   };
 
   // Konvertiere Items ins QuickTaskList-Format
@@ -442,7 +452,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     kategorie: item.kategorie,
     onToggle: () => {
       if (item.bundleIds) {
-        confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+        buendelErledigen(item);
       } else if (direktErledigbar(item)) {
         direktErledigen(item);
       } else {
@@ -850,7 +860,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                           className="mp-tap"
                           onClick={(e) => {
                             e.stopPropagation();
-                            confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
+                            buendelErledigen(item);
                           }}
                           style={{
                             flexShrink: 0,
