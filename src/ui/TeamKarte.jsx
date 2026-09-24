@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, TextArea, PrimaryButton } from "./primitives";
 import { accentDark, accentSoft, cardBorder, textMain, textMuted, danger } from "./theme";
 import { useAuth } from "../context/AuthContext";
+import Profilbild from "./Profilbild";
 
 // Team-Kolleg:innen + Motivationsnachrichten untereinander (siehe
 // 0073_teams.sql, useTeamData.js) — Nutzerinnen-Vorgabe 16.08.: "dass man
@@ -49,12 +50,16 @@ export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSende
                 background: zielId === k.id ? accentSoft : "#fff",
                 color: zielId === k.id ? accentDark : textMain,
                 borderRadius: 999,
-                padding: "6px 12px",
+                padding: "4px 12px 4px 4px",
                 fontSize: 12.5,
                 fontWeight: 700,
                 cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
               }}
             >
+              <Profilbild pfad={k.profilbild_pfad} name={k.vorname} size={26} />
               {k.vorname || "—"}
             </button>
           ))}

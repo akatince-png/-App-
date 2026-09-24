@@ -5,6 +5,7 @@ import { questRanglisteLaden } from "../data/useQuestData";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import { useCachedQuery } from "../lib/useCachedQuery";
+import Profilbild from "./Profilbild";
 
 const MEDAILLEN = ["🥇", "🥈", "🥉"];
 
@@ -75,6 +76,7 @@ export default function RanglisteKarte({ erzwingeSichtbar = false }) {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                   <span style={{ fontSize: 14, width: 22, textAlign: "center", flexShrink: 0 }}>{MEDAILLEN[i] || i + 1}</span>
+                  <Profilbild pfad={r.profilbildPfad} name={r.vorname} size={28} />
                   <span style={{ fontSize: 13.5, fontWeight: istIch ? 800 : 700, color: istIch ? accentDark : textMain }}>
                     {r.vorname || "—"}
                     {istIch ? " (du)" : ""}

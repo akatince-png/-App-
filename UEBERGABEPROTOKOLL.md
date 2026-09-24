@@ -250,6 +250,23 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Profilbilder und Team-Kolleg:innen-Fix (24.09.)
+
+- **Migration `0094_profilbilder.sql`** (schon auf Prod eingespielt, zusammen mit `0094b`):
+  - neue Spalte `profiles.profilbild_pfad`
+  - privater Bucket `profilbilder` (max. 2 MB, jpeg/png/webp), Dateien unter `<user_id>/profil-<zeit>.jpg`
+  - Storage-RLS: Schreiben nur im eigenen Ordner; Lesen für die Person selbst, Admins und das eigene Team (`gleiches_team`)
+  - `quest_rangliste()` und `admin_liste_probanden()` liefern zusätzlich `profilbild_pfad` (Funktionen per drop/create neu angelegt, Grants wie in 0092)
+- **Bug-Fix Teams:** `useTeamData.js` las die Team-Kolleg:innen bisher direkt aus `profiles`. Das erlaubt RLS für Coachees nur für die eigene Zeile, die Team-Karte blieb deshalb für alle Coachees leer. Neu gibt die Funktion `team_kollegen()` (security definer) Vorname und Profilbild aus demselben Team zurück.
+- **App:**
+  - `data/profilbild.js`: schneidet das Bild vor dem Upload quadratisch zu und verkleinert es auf 512 px; zeigt es über signierte URLs an (Cache 55 Min.).
+  - `ui/Profilbild.jsx`: rundes Bild oder, ohne Foto, der Anfangsbuchstabe.
+  - `ui/ProfilbildKarte.jsx`: oben in Archiv → Profil, mit Hinweis, wer das Foto sieht.
+  - Bilder erscheinen in der Rangliste, in der Team-Karte und in der Admin-Teamverwaltung.
+- **Offen / aufgefallen:**
+  - `CommunityTab.jsx` zeigt ein fest eingebautes Beispiel („BPC-157 … 124 Nutzer:innen, 72 %“). Das sind keine echten Daten. Sollte entfernt oder klar als Beispiel markiert werden, bevor echte Nutzer:innen die App sehen.
+  - Eine Team-gegen-Team-Wertung oder eine Punkte-Rangliste gibt es noch nicht; die Rangliste zählt nur abgeschlossene Quests je Person.
+
 ### Nachtrag Teil 121 — Neustart: „Fortschritt auf Null“ und Lücken im Komplett-Reset (24.09.)
 
 - Die Nutzerin will vor dem echten Protokoll „von Null an neu anfangen“. Sie hat entschieden, beide Wege anzubieten.

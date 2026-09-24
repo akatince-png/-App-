@@ -95,6 +95,9 @@ function explizit(userId, overrides) {
     onboardingComplete: true,
     isAdmin: true,
     belohnungPufferMin: 10,
+    // Profilbild (24.09.): einzelner Pfad oder keiner — der Array-Fallback
+    // wäre truthy und würde als Storage-Pfad benutzt.
+    profilbildPfad: null,
     // Ein voll eingerichtetes Testkonto (Standard-Harness-Zustand) hätte in
     // echt immer ein aktives Hauptprotokoll — ohne diesen Mock würde die
     // generische siehtAusWieId()-Heuristik `null` liefern und z. B.

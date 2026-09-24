@@ -192,6 +192,7 @@ export async function questRanglisteLaden() {
       vorname: r.vorname,
       questsErledigt: Number(r.quests_erledigt) || 0,
       questsAngenommen: Number(r.quests_angenommen) || 0,
+      profilbildPfad: r.profilbild_pfad || null,
     })),
   };
 }

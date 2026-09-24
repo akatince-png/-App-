@@ -13,7 +13,7 @@ function rowZuNachricht(r) {
 // Hook, sondern über die admin*-Funktionen unten (analog useQuestData.js).
 export function useTeamData(userId) {
   const [team, setTeam] = useState(null); // { id, name } | null
-  const [teamKollegen, setTeamKollegen] = useState([]); // [{id, vorname}]
+  const [teamKollegen, setTeamKollegen] = useState([]); // [{id, vorname, profilbild_pfad}]
   const [teamNachrichten, setTeamNachrichten] = useState([]);
   // Bug-Fix (13.09., Teil 60): siehe useAtemuebungenData.js — load() hatte
   // keinen cancelled-Guard.
@@ -32,7 +32,11 @@ export function useTeamData(userId) {
     }
     const [{ data: teamRow }, { data: kollegenRows }, { data: nachrichtenRows }] = await Promise.all([
       supabase.from("teams").select("id, name").eq("id", teamId).maybeSingle(),
-      supabase.from("profiles").select("id, vorname").eq("team_id", teamId).neq("id", userId),
+      // Bug-Fix 24.09.: profiles ist per RLS nur für die eigene Zeile
+      // lesbar — die direkte Abfrage lieferte Coachees nie ihre Team-
+      // Kolleg:innen. team_kollegen() (0094) gibt Vorname + Profilbild
+      // von Personen im selben Team heraus.
+      supabase.rpc("team_kollegen"),
       supabase
         .from("team_nachrichten")
         .select("*")

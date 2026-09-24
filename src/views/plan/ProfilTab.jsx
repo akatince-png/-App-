@@ -5,12 +5,14 @@ import { useAppData } from "../../context/AppDataContext";
 import PersoenlicheDatenCard from "../../ui/PersoenlicheDatenCard";
 import WoechentlicheCheckinsCard from "../../ui/WoechentlicheCheckinsCard";
 import LaborwerteCard from "../../ui/LaborwerteCard";
+import ProfilbildKarte from "../../ui/ProfilbildKarte";
 
 export default function ProfilTab() {
   const { aktiveMesswerte, combinedMesswertDefs, gewichtsEintraege, schlafDurchschnitt7Tage } = useAppData();
 
   return (
     <>
+      <ProfilbildKarte />
       <PersoenlicheDatenCard />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Diese Woche im Überblick</div>

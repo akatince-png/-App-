@@ -4,6 +4,7 @@ import ViewHeader from "../../ui/ViewHeader";
 import { cardBorder, danger, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { adminTeamErstellen, adminTeamLoeschen, adminTeamMitgliedZuordnen, adminTeamsListe } from "../../data/useTeamData";
+import Profilbild from "../../ui/Profilbild";
 
 // Team-Verwaltung — Nutzerinnen-Vorgabe 16.08.: "dass sich Coachees
 // untereinander oder von mir in Teams zusammengesetzt werden und dann nur
@@ -118,7 +119,10 @@ export default function AdminTeamsView({ onHome }) {
                     key={m.id}
                     style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: `1px solid ${cardBorder}`, fontSize: 13 }}
                   >
-                    <span>{m.vorname || m.email}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <Profilbild pfad={m.profilbild_pfad} name={m.vorname || m.email} size={28} />
+                      {m.vorname || m.email}
+                    </span>
                     <button
                       type="button"
                       onClick={() => mitgliedZuordnen(m.id, null)}

@@ -57,6 +57,8 @@ export function useProfileData(userId) {
   const [steckbrief, setSteckbriefState] = useState({});
   const [belohnungPufferMin, setBelohnungPufferMinState] = useState(10);
   const [ranglisteSichtbar, setRanglisteSichtbarState] = useState(true);
+  // Profilbild (24.09., siehe data/profilbild.js): Pfad im privaten Bucket.
+  const [profilbildPfad, setProfilbildPfad] = useState(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -85,6 +87,7 @@ export function useProfileData(userId) {
         setSteckbriefState(profile.steckbrief || {});
         setBelohnungPufferMinState(profile.belohnung_puffer_min ?? 10);
         setRanglisteSichtbarState(profile.rangliste_sichtbar ?? true);
+        setProfilbildPfad(profile.profilbild_pfad || null);
 
         // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und
         // muss wissen, in welcher Zeitzone eine eingetragene Uhrzeit
@@ -457,5 +460,7 @@ export function useProfileData(userId) {
     setBelohnungPufferMin,
     ranglisteSichtbar,
     toggleRanglisteSichtbar,
+    profilbildPfad,
+    setProfilbildPfad,
   };
 }

@@ -132,3 +132,14 @@ test("Mehr: beide Neustart-Knöpfe sind da und erst nach Bestätigungswort aktiv
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
+
+// Profilbild (24.09.): Karte im Profil mit Hinweis, wer das Foto sieht.
+test("Profil: Profilbild-Karte mit Hinweis und Foto-Knopf", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html#/profil");
+  await expect(page.getByText("Profilbild", { exact: true })).toBeVisible();
+  await expect(page.getByText("die Mitglieder deines Teams", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "📷 Foto hinzufügen" })).toBeVisible();
+  await expect(page.getByLabel("Profilbild auswählen")).toBeAttached();
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});
