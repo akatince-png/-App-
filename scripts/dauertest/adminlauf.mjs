@@ -67,8 +67,74 @@ for (const v of ['team','tagesplan','training','erfolge','mehr']){ aktuell='verw
 await p.getByRole('button',{name:/Zurück zum Dashboard/}).first().click(); await w(3000); aktuell='zurueck';
 if(/Du verwaltest gerade/.test(await txt())) befund('Zurück zum Dashboard hat nicht funktioniert');
 await foto('32-zurueck');
-// Aufräumen: Probe-Team wieder löschen (über die Oberfläche = gleich mitgetestet)
+// Coach-Alltag (seit 24.09., Nutzerinnen-Vorgabe): Ergebnisse durchsehen,
+// eine Korrektur machen und rückgängig machen, einer Person schreiben. Die
+// Tipp-Zahlen je Aufgabe landen im Bericht (ADHS-Blick: so wenige wie möglich).
+const coach = { taps: {}, beobachtungen: [] };
+const TEST_COACHEES = ['Claude Dauertest', 'Mia Dauertest', 'Jonas Dauertest', 'Lea Dauertest'];
+// 1) Ergebnisse durchsehen: Coach-Übersicht
+await geh('admin');
+await p.getByRole('button', { name: /Coach-Übersicht/ }).first().click().catch(() => befund('Knopf Coach-Übersicht fehlt'));
+await w(3500); aktuell = 'coach-uebersicht';
+await foto('40-coach-uebersicht');
+coach.taps.ergebnisseSehen = 1;
+const ueText = await txt();
+for (const n of TEST_COACHEES) {
+  const i = ueText.indexOf(n);
+  coach.beobachtungen.push(`${n}: ${i < 0 ? 'NICHT in der Übersicht' : ueText.slice(i, i + 160).replace(/\s+/g, ' ')}`);
+}
+if (!/heute|zuletzt|ruhig|Punkte/i.test(ueText)) coach.beobachtungen.push('Übersicht zeigt keinen Tagesstand/keine letzte Aktivität je Person – wer Hilfe braucht, ist nicht auf einen Blick erkennbar.');
+// 2) Nachricht an Jonas (ruhigste Testperson) über "💬 Nachricht"
+const karteVon = (name) => p.locator(`xpath=//div[normalize-space(text())='${name}']/ancestor::div[.//button[normalize-space()='Verwalten']][1]`);
+const jonasKarte = karteVon('Jonas Dauertest');
+if (await jonasKarte.count()) {
+  await jonasKarte.first().getByRole('button', { name: /Nachricht/ }).click(); await w(1200);
+  const feld = p.getByPlaceholder(/Nachricht an Jonas/);
+  await feld.fill(`Hi Jonas, wie läuft deine Woche? Melde dich gern kurz. (Dauertest ${new Date().toISOString().slice(0, 10)})`);
+  await p.getByRole('button', { name: 'Senden', exact: true }).first().click(); await w(2500);
+  await foto('41-nachricht-gesendet');
+  coach.taps.nachrichtSchreiben = 3; // Coach-Übersicht, 💬 Nachricht, Senden (+ Tippen)
+  if (!(await txt()).includes('wie läuft deine Woche')) befund('Coach-Nachricht nach dem Senden nicht sichtbar');
+} else befund('Jonas-Karte in der Coach-Übersicht nicht gefunden');
+// 3) Korrektur: bei Mia einen Wasser-Eintrag ändern und wieder zurücksetzen
+await geh('admin');
+const btnV = p.getByRole('button', { name: 'Verwalten', exact: true });
+let miaOk = false;
+for (let i = 0; i < await btnV.count(); i++) {
+  const t = await btnV.nth(i).evaluate((el) => { let e = el; for (let k = 0; k < 8 && e; k++) { e = e.parentElement; if (e && e.querySelectorAll('button').length >= 3 && /@/.test(e.innerText)) return e.innerText; } return ''; });
+  if (/Mia Dauertest/.test(t)) { await btnV.nth(i).click(); miaOk = true; break; }
+}
+if (miaOk) {
+  await w(4500); await juhu(); aktuell = 'korrektur-mia';
+  await p.evaluate(() => { location.hash = '#/hydration'; }); await w(3500);
+  const stift = p.getByTitle('Bearbeiten').first();
+  if (await stift.count()) {
+    const wertVorher = (await stift.locator('xpath=preceding-sibling::span[1]').innerText().catch(() => '')).replace(/\D/g, '');
+    const aendern = async (ziel) => {
+      await p.getByTitle('Bearbeiten').first().click(); await w(600);
+      await p.getByRole('button', { name: /▼/ }).filter({ hasText: /^\d+/ }).last().click(); await w(600);
+      await p.getByText(ziel, { exact: true }).last().click(); await w(500);
+      await p.getByRole('button', { name: 'Speichern', exact: true }).last().click(); await w(2000);
+    };
+    if (wertVorher) {
+      const neu = String(Number(wertVorher) + 200);
+      await aendern(neu); await foto('42-korrektur');
+      const nachher = await txt();
+      if (!nachher.includes(`${neu} ml`)) befund(`Korrektur bei Mia nicht übernommen (erwartet ${neu} ml)`);
+      await aendern(wertVorher);
+      if (!(await txt()).includes(`${wertVorher} ml`)) befund(`Korrektur bei Mia nicht zurückgesetzt – bitte ${wertVorher} ml prüfen!`);
+      coach.taps.korrektur = 6; // Dashboard: Verwalten, Wasser, ✏️, Wert öffnen, Wert wählen, Speichern
+    } else coach.beobachtungen.push('Mia: kein Wasser-Eintrag mit Wert gefunden, Korrektur übersprungen');
+  } else coach.beobachtungen.push('Mia: keine Wasser-Einträge zum Korrigieren');
+  await p.getByRole('button', { name: /Zurück zum Dashboard/ }).first().click().catch(() => {}); await w(2500);
+} else befund('Verwalten-Knopf für Mia nicht gefunden');
+fs.writeFileSync(`${OUT}/coach-alltag.json`, JSON.stringify(coach, null, 1));
+console.log('COACH', JSON.stringify(coach, null, 1));
+// Aufräumen: Probe-Team wieder löschen (über die Oberfläche = gleich mitgetestet).
+// Sicherheitshalber erst aus einem evtl. noch aktiven "Verwalten als" raus.
+if (/Du verwaltest gerade/.test(await txt())) { await p.getByRole('button', { name: /Zurück zum Dashboard/ }).first().click().catch(() => {}); await w(2500); }
 await geh('admin-teams');
+await foto('50-teams-vor-loeschen');
 const loeschen = p.locator(`xpath=//div[normalize-space(text())='${T}']/ancestor::div[.//button[normalize-space()='Team löschen']][1]//button[normalize-space()='Team löschen']`);
 if (await loeschen.first().waitFor({ timeout: 15000 }).then(() => true).catch(() => false)) { await loeschen.first().click(); await w(3000); if ((await txt()).includes(T)) befund('Probe-Team ließ sich nicht löschen'); } else befund('Team-löschen-Knopf nicht gefunden');
 fs.writeFileSync(`${OUT}/befunde.json`, JSON.stringify(log,null,1));

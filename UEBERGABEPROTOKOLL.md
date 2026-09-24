@@ -31,6 +31,12 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - 168 Unit-Tests, 62 E2E-Tests.
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
+### Grundsatz: Admin/Coach-Abläufe mittesten (Nutzerin, 24.09.)
+Die Admin-Seite wird genauso getestet und verschlankt wie die Coachee-Seite.
+Geprüft wird der ganze Coach-Alltag: Ergebnisse regelmäßig durchsehen, Korrekturen vornehmen (über „Verwalten“), mit Coachees kommunizieren (heute Nachrichten und Hinweise in der App, später evtl. WhatsApp). Maßstab ist derselbe wie beim Abspecken des Onboardings: ADHS-tauglich, wenige Schritte, nichts Wichtiges versteckt. Das gilt auch für die Coachin selbst, die viele Personen gleichzeitig betreut.
+- Täglicher Admin-Livetest `scripts/dauertest/adminlauf.mjs` (Routine 19:15 UTC) spielt diesen Alltag nach.
+- **WhatsApp (Idee, nicht umgesetzt):** Gesundheitsdaten (Medikamente, Schlaf usw.) gehören nach DSGVO zu den besonders geschützten Daten. Empfehlung: Inhalte bleiben in der App; WhatsApp höchstens als Anstoß („Du hast eine neue Nachricht von deinem Coach“) ohne Gesundheitsdaten, über die offizielle WhatsApp-Business-API mit Einwilligung. Bei vielen Coachees skaliert die Übersicht in der App besser als einzelne Chats.
+
 ### Offen / ausstehend
 - **Team-Vergleich:** läuft bis 24.10.2026. Dann `docs/dauertest/team-vergleich.md` schreiben (Fairness der Punkte bei unterschiedlich vielen Bereichen) und die Nutzerin fragen, ob es weitergeht.
 - **Alte Git-Zweige aufräumen:** Das muss die Nutzerin auf GitHub selbst machen, die Sitzung darf keine fremden Zweige löschen (403). Seit dem Zusammenführen am 24.09. (siehe unten) sind alle sieben alten Zweige erledigt und löschbar:

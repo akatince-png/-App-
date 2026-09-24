@@ -22,6 +22,14 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
 - **Leitprinzip, nicht verhandelbar:** Jede Funktion muss sowohl manuell
   als auch per KI-Coach nutzbar sein — niemals ein manuelles Formular
   entfernen oder verstecken, nur weil es jetzt auch einen KI-Weg gibt.
+- **Admin/Coach-Seite gleichwertig testen und verschlanken (Nutzerinnen-
+  Vorgabe 24.09.):** Nicht nur Gruppen und Einzelpersonen, auch das
+  Admin-Konto und seine Abläufe regelmäßig live testen: Ergebnisse der
+  Coachees durchsehen, Korrekturen vornehmen, mit Coachees kommunizieren.
+  Dabei denselben Blick anlegen wie bei der Coachee-Seite: ADHS-tauglich,
+  wenige Schritte, abspecken und verfeinern. Kommunikation läuft heute in
+  der App; WhatsApp ist eine spätere Option (Datenschutz beachten), siehe
+  `UEBERGABEPROTOKOLL.md`, Abschnitt „Aktueller Stand“.
 - **Die Nutzerin ist nicht technisch versiert**, kommuniziert oft per
   Spracheingabe mit Transkriptionsfehlern (z. B. "Obama" = Ollama,
   "Acker"/"Ecker" = "Aka" — der App-interne KI-Coach-Name). Bei unklaren
