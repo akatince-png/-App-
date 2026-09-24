@@ -102,9 +102,22 @@ const foto = async (name) => page.screenshot({ path: path.join(OUT, `${name}.png
 const spielstand = async () =>
   (await page.getByRole("button", { name: /^Spielstand:/ }).first().getAttribute("aria-label").catch(() => null)) || null;
 
+// Große Feiern (Belohnungsfenster) bleiben bewusst stehen, bis man sie
+// wegtippt (Nutzerinnen-Wunsch 23.09.) — das Skript tippt sie weg, bevor es
+// weiterklickt, sonst verdecken sie die nächsten Knöpfe.
+async function feierWegtippen() {
+  for (let i = 0; i < 3; i++) {
+    const juhu = page.getByRole("button", { name: /Juhu, weiter/ }).first();
+    if (!(await juhu.isVisible().catch(() => false))) return;
+    await juhu.click().catch(() => {});
+    await warte(600);
+  }
+}
+
 async function geheZu(view) {
   await page.goto(`${URL_BASIS}/#/${view}`);
   await warte(2500);
+  await feierWegtippen();
 }
 
 try {
@@ -201,6 +214,7 @@ try {
         await weiter.click();
         await warte(900);
       }
+      await feierWegtippen();
       await foto("05-routine-ende");
       schritt(`Morgenroutine: ${klicks} Klicks im Ablauf`);
       if (klicks === 0) befund("Morgenroutine-Ablauf: kein Weiter/Erledigt-Knopf gefunden — Skript oder UI prüfen (Foto 04).");
@@ -213,9 +227,87 @@ try {
   for (let i = 0; i < schlucke; i++) {
     await page.getByRole("button", { name: /\+200 ml/ }).first().click();
     await warte(1200);
+    await feierWegtippen();
   }
   schritt(`Hydration: ${schlucke}× 200 ml eingetragen`);
   await foto("06-hydration");
+
+  // 5) Tagesrätsel (seit 24.09.): 5 Fragen, jeweils die erste Antwort —
+  //    mal richtig, mal falsch. Am Pausentag nicht.
+  if (!PAUSENTAG) {
+    await geheZu("tagesraetsel");
+    let fragen = 0;
+    for (; fragen < 5; fragen++) {
+      const antworten = page.getByRole("group", { name: "Antworten" }).getByRole("button");
+      if (!(await antworten.first().isVisible().catch(() => false))) break;
+      await antworten.nth((tagIndex + fragen) % 4).click();
+      await warte(600);
+      await page.getByRole("button", { name: /^(Weiter|Zur Auswertung)$/ }).click();
+      await warte(700);
+    }
+    const juhu = page.getByRole("button", { name: /Juhu, weiter/ });
+    if (await juhu.isVisible().catch(() => false)) await juhu.click();
+    await foto("06b-tagesraetsel");
+    schritt(`Tagesrätsel: ${fragen} Fragen beantwortet`);
+  }
+
+  // 6) Quests (Team-Quests vom Coach): annehmen, Fortschritt eintragen,
+  //    ab Ziel abschließen.
+  await geheZu("home");
+  await warte(1500);
+  let angenommen = 0;
+  for (let i = 0; i < 5; i++) {
+    const annehmen = page.getByRole("button", { name: "Quest annehmen" }).first();
+    if (!(await annehmen.isVisible().catch(() => false))) break;
+    await annehmen.click();
+    await warte(1200);
+    angenommen++;
+  }
+  const questWert = Math.min(3, 1 + (tagIndex % 3));
+  const felder = await page.getByPlaceholder("Bisher erreicht").all();
+  for (const feld of felder) {
+    await feld.fill(String(questWert));
+    await feld.locator("xpath=following::button[normalize-space()='Speichern'][1]").click().catch(() => {});
+    await warte(900);
+  }
+  let abgeschlossen = 0;
+  if (questWert >= 3) {
+    for (let i = 0; i < 5; i++) {
+      const knopf = page.getByRole("button", { name: "Quest abschließen" }).first();
+      if (!(await knopf.isVisible().catch(() => false))) break;
+      await knopf.click();
+      await warte(600);
+      const erreicht = page.getByPlaceholder(/^Erreicht/).first();
+      if (await erreicht.isVisible().catch(() => false)) await erreicht.fill(String(questWert));
+      await page.getByPlaceholder("Was hast du gemacht? (optional)").first().fill("Dauertest: automatisch abgeschlossen").catch(() => {});
+      await page.getByRole("button", { name: "Abschließen", exact: true }).first().click();
+      await warte(1500);
+      abgeschlossen++;
+    }
+  }
+  await foto("06c-quests");
+  schritt(`Quests: ${angenommen} angenommen, Fortschritt ${questWert} bei ${felder.length} eingetragen, ${abgeschlossen} abgeschlossen`);
+
+  // 7) Team (seit 24.09.): Team-Seite ansehen, wer seit 2+ Tagen ruhig ist,
+  //    bekommt eine Motivationsnachricht; dann die Team-Liga.
+  await geheZu("team");
+  await warte(1500);
+  await foto("06d-team");
+  const teamText = await text();
+  if (!/Wochenziel als Team/.test(teamText)) befund("Team-Seite: kein Wochenziel sichtbar — Konto nicht im Team oder Laden fehlgeschlagen (Foto 06d).");
+  bericht.teamText = teamText.slice(0, 800);
+  const motivieren = page.getByRole("button", { name: "💬 Motivieren" }).first();
+  if (await motivieren.isVisible().catch(() => false)) {
+    await motivieren.click();
+    await warte(500);
+    await page.getByRole("button", { name: "Du packst das! 💛" }).click();
+    await page.getByRole("button", { name: "Senden (mit Push)" }).first().click();
+    await warte(1500);
+    schritt("Team: Motivationsnachricht an ein ruhiges Mitglied geschickt");
+  }
+  await page.getByRole("button", { name: "🏆 Team-Liga" }).click().catch(() => {});
+  await warte(1500);
+  await foto("06e-team-liga");
   } else {
     schritt("Nur Ansichten (Wiederholungslauf, keine Aktionen)");
   }
@@ -225,11 +317,11 @@ try {
   await foto("07-home-nachher");
   bericht.homeText = (await text()).slice(0, 1500);
 
-  // 5) Alle Bereiche einmal öffnen (Absturz-/Leer-/Fehler-Check)
+  // 8) Alle Bereiche einmal öffnen (Absturz-/Leer-/Fehler-Check)
   const ansichten = [
     "tagesplan", "routinen", "atemuebungen", "tageslicht", "hydration", "schlaf", "bildschirmzeit", "ernaehrung", "training",
     "supplemente", "medikamente", "wochenuebersicht", "morgenroutine", "abendroutine", "verlauf", "archiv", "statistik",
-    "erfolge", "tagebuch", "profil", "mehr", "lexikon",
+    "erfolge", "tagebuch", "profil", "mehr", "lexikon", "team", "denksport",
   ];
   for (const v of ansichten) {
     const vorher = bericht.seitenFehler.length + bericht.konsolenFehler.length;

@@ -144,7 +144,7 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
     const anzahl = ergebnisse.filter(Boolean).length;
     return (
       <Shell>
-        <ViewHeader title="🧩 Denksport" onHome={onHome} />
+        <ViewHeader title={istTagesraetsel ? "🧩 Tagesrätsel" : "🧩 Denksport"} onHome={onHome} />
         <div style={{ textAlign: "center", padding: "24px 8px" }}>
           <div style={{ fontSize: 44 }}>{anzahl >= 3 ? "🏆" : "🌱"}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 8 }}>

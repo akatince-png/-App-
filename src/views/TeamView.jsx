@@ -204,7 +204,8 @@ function MeinTeam({ team, onMotivieren }) {
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 12, background: "#F5F6FA", marginBottom: 6, fontSize: 13 }}>
               <Profilbild pfad={n.profilbildPfad} name={n.vorname} size={26} />
               <span>
-                <b>{n.userId === user?.id ? "Du" : n.vorname}</b> {NEUIGKEIT_TEXT[n.art] || "war aktiv ✨"}
+                <b>{n.userId === user?.id ? "Du" : n.vorname}</b>{" "}
+                {n.userId === user?.id ? (NEUIGKEIT_TEXT[n.art] || "war aktiv ✨").replace(/^hat /, "hast ").replace(/^war /, "warst ") : NEUIGKEIT_TEXT[n.art] || "war aktiv ✨"}
               </span>
             </div>
           ))}
@@ -230,7 +231,8 @@ function TeamLiga() {
       if (ab) return;
       if (!r.ok) return setFehler("Die Team-Liga konnte gerade nicht geladen werden.");
       setFehler(null);
-      setTeams(r.teams);
+      // Teams ohne Mitglieder (z. B. frisch angelegt) nicht in der Liga zeigen.
+      setTeams(r.teams.filter((t) => t.mitglieder > 0));
     });
     return () => {
       ab = true;

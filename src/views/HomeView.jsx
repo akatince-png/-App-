@@ -654,9 +654,13 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     () => ({
       supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
       schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten,
+      // Bug-Fix 24.09. (Dauertest mit Team-Seite gefunden): fehlte hier —
+      // Home zählte Tagesrätsel-/Denkpause-Punkte nie mit, Erfolge-Reiter
+      // und Team-Seite schon (unterschiedliche Punktestände).
+      denkpauseErgebnisse,
     }),
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
-      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten]
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse]
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
