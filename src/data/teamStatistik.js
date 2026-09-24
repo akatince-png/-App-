@@ -131,16 +131,18 @@ export function tagLabel(tag, heute = new Date()) {
 }
 
 // Wochen-Highlights der Liga — nur Team-Ebene.
+const komma = (n) => String(n).replace(".", ",");
+
 export function ligaHighlights(teams, mitVorzeitraum = true) {
   const liste = [];
   if (!teams || teams.length < 2) return liste;
   if (mitVorzeitraum) {
     const sprung = [...teams].sort((a, b) => b.schnitt - b.schnittVorher - (a.schnitt - a.schnittVorher))[0];
     const plus = Math.round((sprung.schnitt - sprung.schnittVorher) * 10) / 10;
-    if (plus > 0) liste.push({ icon: "🚀", text: "Größter Sprung", wert: `${sprung.name} +${plus} Ø` });
+    if (plus > 0) liste.push({ icon: "🚀", text: "Größter Sprung", wert: `${sprung.name} +${komma(plus)} Ø` });
   }
   const aktiv = [...teams].sort((a, b) => b.aktiveTageSchnitt - a.aktiveTageSchnitt)[0];
-  if (aktiv.aktiveTageSchnitt > 0) liste.push({ icon: "🔥", text: "Am regelmäßigsten dabei", wert: `${aktiv.name} (Ø ${aktiv.aktiveTageSchnitt} Tage)` });
+  if (aktiv.aktiveTageSchnitt > 0) liste.push({ icon: "🔥", text: "Am regelmäßigsten dabei", wert: `${aktiv.name} (Ø ${komma(aktiv.aktiveTageSchnitt)} Tage)` });
   const raetsel = [...teams].sort((a, b) => b.raetselTage - a.raetselTage)[0];
   if (raetsel.raetselTage > 0) liste.push({ icon: "🧩", text: "Tagesrätsel-Profis", wert: raetsel.name });
   return liste;
