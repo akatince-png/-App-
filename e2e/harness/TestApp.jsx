@@ -35,6 +35,18 @@ function leseOverridesAusUrl() {
     overrides.isAdmin = false;
     overrides.istAdminKonto = false;
   }
+  // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
+  // Supplement, Gewohnheit) für Design-Vorschauen.
+  if (params.get("beispiel") === "1") {
+    overrides.hormonPlan = [{ date: new Date(), name: "Elvanse", uhrzeit: "08:00", menge: "30 mg" }];
+    overrides.supplemente = [{ id: "s1", name: "Vitamin D3", tageszeiten: ["morgens"], hinweis: "1 Kapsel zum Frühstück" }];
+    overrides.gewohnheiten = [{ id: "g1", name: "10 Minuten Spaziergang", uhrzeit: "12:30", wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true }];
+    overrides.routineSchritte = [
+      { id: "r1", routine: "morgen", reihenfolge: 1, name: "Wasser trinken", dauerMin: 1 },
+      { id: "r2", routine: "morgen", reihenfolge: 2, name: "Zähne putzen", dauerMin: 3 },
+      { id: "r3", routine: "abend", reihenfolge: 1, name: "Handy weglegen", dauerMin: 1 },
+    ];
+  }
   return overrides;
 }
 

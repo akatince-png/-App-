@@ -10,7 +10,7 @@ import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import NachrichtAnCoachCard from "../ui/NachrichtAnCoachCard";
-import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMain, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META } from "../utils/dayItems";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
@@ -707,52 +707,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   const direktzugriffWidgets = isEmergencyMode ? miniWidgetData.filter((w) => w.isEssential && w.aktiv) : miniWidgetData.filter((w) => w.aktiv);
   const weiterePlaeneWidgets = isEmergencyMode ? [] : miniWidgetData.filter((w) => !w.aktiv);
 
-  return (
-    <Shell>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <Logo size={44} />
-        <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
-      </div>
-
-      {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
-          (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
-          Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
-          Akut-Knopf. Als Nächstes und Quests folgen darunter. */}
-      <GehirnKarte
-        kategorien={ordenKategorien}
-        widgets={zeitraumWidgets}
-        zeitraum={effektiverZeitraum}
-        setZeitraum={setZeitraum}
-        tage={zeitraumTage}
-        zeigeGesamt={zeigeGesamtOption}
-        onOpenErfolge={() => onOpenView("erfolge")}
-        onDenksport={() => onOpenView("denksport")}
-        onOpenView={onOpenView}
-        onWasser={() => onOpenView("hydration")}
-        onAkut={() => setAkutOffen(true)}
-        phase={phase}
-        kopf={
-          <SpielstandKarte
-            eingebettet
-            gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
-            statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
-            erledigt={erledigtCount + raetselZaehlt}
-            gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
-            punkte={gesamtPunkte}
-            serie={globalerStreak}
-            onOpenErfolge={() => onOpenView("erfolge")}
-          />
-        }
-      />
-
-      {/* "Jetzt dran"/Als Nächstes direkt unter dem Spielstand (23.09.) —
-          eine Sache zur Zeit, vor allen Zusatz-Kacheln. */}
-      {/* Als Nächstes/Tagesplan direkt unter dem Tagesfortschritt (12.09.,
-          Nutzerinnen-Vorgabe), statt weiter unten — "Tagesplan" ist hier nur
-          noch der Link zur vollen Ansicht, kein eigener großer Button mehr.
-          Morgen-/Abendroutine tauchen hier jetzt mit auf, siehe
-          routineAlsNaechstesItems oben. */}
-      <div style={{ marginBottom: 20 }}>
+  // Als-Nächstes-Liste als Baustein (24.09.): wird je nach Home-Variante
+  // unter der großen Karte oder in ihr gezeigt (siehe homeVariante).
+  const renderAlsNaechstes = ({ max = 4, eingebettet = false } = {}) => (
+      <div style={{ marginBottom: eingebettet ? 0 : 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{t("home.alsNaechstes")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -785,7 +743,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             {isEmergencyMode ? (
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
-              angezeigteItems.slice(0, 4).map((item, i) => {
+              angezeigteItems.slice(0, max).map((item, i) => {
                 const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
                 // Morgen-/Abendroutine öffnen HIER eine Checkliste mit den
                 // echten Schritten statt wegzunavigieren (12.09., Nutzerin-
@@ -909,6 +867,119 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </div>
         )}
       </div>
+  );
+
+  // VORSCHAU (24.09.): Varianten, wie "Als Nächstes" in die große Karte
+  // wandert — wählbar über ?home=a|b|c, nur zum Vergleichen.
+  const homeVariante = (() => {
+    try {
+      return new URLSearchParams(window.location.search).get("home") || "";
+    } catch {
+      return "";
+    }
+  })();
+  const [kartenTab, setKartenTab] = useState("heute");
+  const weissesFeld = (kinder) => (
+    <div style={{ marginTop: 14, background: "#fff", color: textMain, borderRadius: 18, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}>{kinder}</div>
+  );
+  const naechsteChips = angezeigteItems.slice(1, 4);
+  const kartenMitte =
+    homeVariante === "a"
+      ? weissesFeld(renderAlsNaechstes({ max: 3, eingebettet: true }))
+      : homeVariante === "b"
+        ? weissesFeld(
+            <>
+              {renderAlsNaechstes({ max: 1, eingebettet: true })}
+              {naechsteChips.length > 0 && (
+                <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>Danach:</span>
+                  {naechsteChips.map((item) => {
+                    const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+                    return (
+                      <span key={item.key} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 9px", borderRadius: 99, background: k.bg, color: k.text, fontSize: 11.5, fontWeight: 700 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: k.dot }} />
+                        {item.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )
+        : homeVariante === "c"
+          ? (
+              <>
+                <div role="tablist" style={{ display: "flex", gap: 6, marginTop: 14, padding: 4, borderRadius: 14, background: "rgba(255,255,255,0.16)" }}>
+                  {[
+                    ["heute", "📋 Heute"],
+                    ["gehirn", "🧠 Gehirn"],
+                  ].map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={kartenTab === id}
+                      className="mp-tap"
+                      onClick={() => setKartenTab(id)}
+                      style={{ flex: 1, border: "none", borderRadius: 11, padding: "9px 0", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: kartenTab === id ? "#fff" : "transparent", color: kartenTab === id ? textMain : "#fff" }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {kartenTab === "heute" && weissesFeld(renderAlsNaechstes({ max: 4, eingebettet: true }))}
+              </>
+            )
+          : null;
+
+  return (
+    <Shell>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <Logo size={44} />
+        <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
+      </div>
+
+      {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
+          (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
+          Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
+          Akut-Knopf. Als Nächstes und Quests folgen darunter. */}
+      <GehirnKarte
+        kategorien={ordenKategorien}
+        widgets={zeitraumWidgets}
+        zeitraum={effektiverZeitraum}
+        setZeitraum={setZeitraum}
+        tage={zeitraumTage}
+        zeigeGesamt={zeigeGesamtOption}
+        onOpenErfolge={() => onOpenView("erfolge")}
+        onDenksport={() => onOpenView("denksport")}
+        onOpenView={onOpenView}
+        onWasser={() => onOpenView("hydration")}
+        onAkut={() => setAkutOffen(true)}
+        phase={phase}
+        mitte={kartenMitte}
+        nurKopf={homeVariante === "c" && kartenTab === "heute"}
+        kopf={
+          <SpielstandKarte
+            eingebettet
+            gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
+            statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
+            erledigt={erledigtCount + raetselZaehlt}
+            gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
+            punkte={gesamtPunkte}
+            serie={globalerStreak}
+            onOpenErfolge={() => onOpenView("erfolge")}
+          />
+        }
+      />
+
+      {/* "Jetzt dran"/Als Nächstes direkt unter dem Spielstand (23.09.) —
+          eine Sache zur Zeit, vor allen Zusatz-Kacheln. */}
+      {/* Als Nächstes/Tagesplan direkt unter dem Tagesfortschritt (12.09.,
+          Nutzerinnen-Vorgabe), statt weiter unten — "Tagesplan" ist hier nur
+          noch der Link zur vollen Ansicht, kein eigener großer Button mehr.
+          Morgen-/Abendroutine tauchen hier jetzt mit auf, siehe
+          routineAlsNaechstesItems oben. */}
+      {!kartenMitte && renderAlsNaechstes()}
 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
