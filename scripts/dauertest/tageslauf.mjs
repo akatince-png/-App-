@@ -117,6 +117,10 @@ async function feierWegtippen() {
 async function geheZu(view) {
   await page.goto(`${URL_BASIS}/#/${view}`);
   await warte(2500);
+  // Bereiche werden nachgeladen — über den Sandbox-Proxy manchmal langsam.
+  // Bis zu 10 s warten, solange nur "Lädt..." zu sehen ist, statt die
+  // Ansicht fälschlich als leer zu melden.
+  for (let i = 0; i < 10 && /^\s*Lädt\.{0,3}\s*$/.test(await text().catch(() => "")); i++) await warte(1000);
   await feierWegtippen();
 }
 

@@ -109,7 +109,7 @@ import { useAdmin } from "../../context/AdminContext";
 // läuft unverändert den bisherigen Weg.
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
   const { proband } = useAdmin();
-  const { isAdmin, onboardingModus, aktivesHauptprotokoll, hauptprotokollErstellen, verknuepfeMitHauptprotokoll, ziele } = useAppData();
+  const { isAdmin, onboardingModus, aktivesHauptprotokoll, hauptprotokollErstellen, hauptprotokollUmbenennen, verknuepfeMitHauptprotokoll, ziele } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
   const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
@@ -141,12 +141,18 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   // Legt im kurzen Weg das Hauptprotokoll automatisch an (bisher eigener
   // Bildschirm "Wie soll dein Protokoll heißen?"). Besteht schon eins
   // (z. B. erneutes Durchlaufen), bleibt es.
+  // Seit 24.09. (Fehlersuche): gleich nach der Willkommensseite angelegt,
+  // damit auch alles, was Aka im Begleit-Modus schon einträgt, am Protokoll
+  // hängt. Auf der Bereichswahl kann der Name noch geändert werden.
+  const [neuesProtokollId, setNeuesProtokollId] = useState(null);
   const protokollSicherstellen = async (name) => {
     if (aktivesHauptprotokoll) return;
     try {
       const result = await hauptprotokollErstellen({ name: name || "Mein Start", startdatum: toLocalISODate(new Date()) });
-      if (result?.ok && result.hauptprotokoll?.id) verknuepfeMitHauptprotokoll(result.hauptprotokoll.id);
-      else console.error(result?.error);
+      if (result?.ok && result.hauptprotokoll?.id) {
+        verknuepfeMitHauptprotokoll(result.hauptprotokoll.id);
+        setNeuesProtokollId(result.hauptprotokoll.id);
+      } else console.error(result?.error);
     } catch (err) {
       console.error(err);
     }
@@ -173,7 +179,15 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   let screen;
 
   if (phase === "welcome") {
-    screen = <WelcomeView onDone={() => setPhase("intro")} onCancel={onCancel} />;
+    screen = (
+      <WelcomeView
+        onDone={async () => {
+          await protokollSicherstellen("Mein Start");
+          setPhase("intro");
+        }}
+        onCancel={onCancel}
+      />
+    );
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
@@ -245,11 +259,13 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingBereicheView
         ziele={ziele}
-        zeigeProtokollName={!aktivesHauptprotokoll}
+        zeigeProtokollName={!!neuesProtokollId || !aktivesHauptprotokoll}
+        startName={aktivesHauptprotokoll?.name || "Mein Start"}
         onBack={() => setPhase("ziele")}
         onCancel={onCancel}
         onDone={async (keys, name) => {
-          await protokollSicherstellen(name);
+          if (!aktivesHauptprotokoll) await protokollSicherstellen(name);
+          else if (neuesProtokollId && name && name !== aktivesHauptprotokoll.name) await hauptprotokollUmbenennen(neuesProtokollId, name);
           setStartBereiche(keys);
           if (keys.includes("routinen")) return setPhase("routinen");
           setPhase(keys.length > 0 ? "categories" : "celebration");

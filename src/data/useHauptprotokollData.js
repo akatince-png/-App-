@@ -137,6 +137,20 @@ export function useHauptprotokollData(userId) {
     return { ok: true };
   }, []);
 
+  // Umbenennen (kürzeres Onboarding, 24.09.): das Protokoll wird dort schon
+  // nach der Willkommensseite als "Mein Start" angelegt und erst auf der
+  // Bereichswahl ggf. umbenannt.
+  const hauptprotokollUmbenennen = useCallback(async (id, name) => {
+    if (!id || !name?.trim()) return { ok: false, error: "Bitte einen Namen eingeben." };
+    const { error } = await supabase.from("hauptprotokolle").update({ name: name.trim() }).eq("id", id);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setHauptprotokolle((prev) => prev.map((h) => (h.id === id ? { ...h, name: name.trim() } : h)));
+    return { ok: true };
+  }, []);
+
   // Parallel zum Hauptprotokoll — archiviert nichts.
   const zusatzprotokollErstellen = useCallback(
     async ({ name, beschreibung, startdatum, geplantesEnde }) => {
@@ -212,5 +226,6 @@ export function useHauptprotokollData(userId) {
     hauptprotokollErstellen,
     teilprotokollSpeichern,
     hauptprotokollLoeschen,
+    hauptprotokollUmbenennen,
   };
 }

@@ -280,7 +280,7 @@ löschbar.
   4. `bereiche` (neu, `OnboardingBereicheView.jsx` + `startBereiche.js`):
      - höchstens 3 Bereiche wählbar;
      - 2 Vorschläge aus den Zielen sind vorausgewählt (`vorschlaegeAusZielen`, Standard: Routinen und Medikamente);
-     - das Hauptprotokoll „Mein Start“ wird hier automatisch mit heutigem Startdatum angelegt, der Name ist änderbar (`protokollSicherstellen`).
+     - das Hauptprotokoll „Mein Start“ wird gleich nach der Willkommensseite angelegt (damit auch Einträge aus dem Aka-Begleitmodus daran hängen); hier lässt sich der Name noch ändern (`hauptprotokollUmbenennen`).
   5. Die Routinen-Seite erscheint nur, wenn „Routinen & Schlaf“ gewählt wurde.
   6. `categories` mit `nurSchritte`: nur die gewählten Kategorien, ohne „Jetzt oder später?“-Gate, Zählung „Bereich x von n“.
   7. `celebration` mit `spaeter`: eine Liste „Später dazunehmen“ mit den übrigen Bereichen und „Profil & Laborwerte“.

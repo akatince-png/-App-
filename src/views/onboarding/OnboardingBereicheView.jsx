@@ -10,11 +10,11 @@ import { MAX_BEREICHE, START_BEREICHE, vorschlaegeAusZielen } from "./startBerei
 // abzufragen, wählt man hier 1–3 Bereiche zum Start. Nur diese werden
 // danach eingerichtet (mit denselben Formularen wie bisher); alle anderen
 // bleiben über "Weitere Pläne" auf der Startseite jederzeit erreichbar.
-export default function OnboardingBereicheView({ ziele, onDone, onBack, onCancel, zeigeProtokollName = true }) {
+export default function OnboardingBereicheView({ ziele, onDone, onBack, onCancel, zeigeProtokollName = true, startName = "Mein Start" }) {
   const { tLabel } = useT();
   const [vorschlaege] = useState(() => vorschlaegeAusZielen(ziele));
   const [gewaehlt, setGewaehlt] = useState(vorschlaege);
-  const [protokollName, setProtokollName] = useState("Mein Start");
+  const [protokollName, setProtokollName] = useState(startName);
   const [nameOffen, setNameOffen] = useState(false);
   const [laedt, setLaedt] = useState(false);
 

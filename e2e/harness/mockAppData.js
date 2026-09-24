@@ -34,7 +34,7 @@ const BEKANNTE_FUNKTIONEN = new Set([
   "coachWissenEntfernen", "coachWissenHinzufuegen", "completeOnboarding", "confirmAlleTageszeit",
   "durchlaufSpeichern", "gewichtEntfernen", "gewichtHinzufuegen", "gewohnheitAkutFavoritUmschalten",
   "gewohnheitEntfernen", "gewohnheitHinzufuegen", "gewohnheitZielAktualisieren", "handleBlutwertFoto",
-  "hauptprotokollErstellen", "hauptprotokollLoeschen", "hilfeAnfordern", "hormonEntfernen", "hormonHinzufuegen",
+  "hauptprotokollErstellen", "hauptprotokollLoeschen", "hauptprotokollUmbenennen", "hilfeAnfordern", "hormonEntfernen", "hormonHinzufuegen",
   "hydrationCheckinSpeichern", "hydrationHinzufuegen", "hydrationZielSetzen", "hydrationZielZuruecksetzen",
   "lexikonFragen", "lexikonSchnellFragen", "load", "loadArchived", "mahlzeitAendern", "mahlzeitEntfernen",
   "mahlzeitHinzufuegen", "nachrichtSenden", "programmEntfernen", "programmHinzufuegen", "projektEntfernen",
