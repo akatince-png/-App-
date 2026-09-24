@@ -1,5 +1,48 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🟢 AKTUELLER STAND 24.09.2026 (Nacht) — ZUERST LESEN
+
+Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
+„Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
+
+### Ausgeliefert (live auf main / Vercel, Migrationen auf Prod eingespielt)
+- **Design:** Die App-Farben wechseln mit der Tageszeit (Tagesphasen-Theme). „Hydration“ heißt überall „Wasser“.
+- **Startseite:** Spielstand und Gehirnkarte sind zusammengelegt, mit Wassertropfen und 💡 im Gehirnfeld. „Jetzt dran“ ist ein weißes Feld mit „Danach“-Chips. Neu ist die Karte „🏆 Rangliste“.
+- **Spiel:** Tagesrätsel mit 5 Fragen täglich und Bonuspunkt. Freies Training nur für Admins. Die Abzeichen-Kategorie Denkpause ist entfernt, die Punkte laufen über das Tagesrätsel.
+- **Zurücksetzen:** unter Mehr „Fortschritt auf Null“ und „Alles löschen“, beides mit Sicherheitsfrage.
+- **Profilbilder:** Bucket `profilbilder`, Migration 0094.
+- **Onboarding:** kurzer Weg (Willkommen → Name → Ziele → Bereiche → Routinen → Kategorien).
+- **Teams (0095):**
+  - Team-Seite mit Wochenziel (zählt immer das ganze Team), Mitgliedern, Motivieren und Feed mit „heute/gestern“.
+  - Coach-Ansicht unter Admin → Teams.
+- **Gruppenprotokolle (0096):**
+  - Der Coach legt je Team gemeinsame Bausteine und Gruppen-Quests an. Sie laufen nach dem Enddatum als „abgeschlossen“ aus.
+  - Der Stand lädt beim Öffnen der Team-Seite und der Startseite und bei der Rückkehr in die App neu.
+- **Rangliste (0098):**
+  - Teilen unter Mehr, Startzustand aus.
+  - Personen-Rangliste über alle Coachees (nur wer teilt; ansehen dürfen alle).
+  - Team-Rangliste immer sichtbar, mit Ø pro Person und Gesamtpunkten.
+- **„Verwalten als“:** Die Team-Seite nimmt die verwaltete Person (0097, `team_neuigkeiten.p_fuer`).
+- **Stabilität:** Nachlade-Fehler werden erst still wiederholt, danach lädt die App einmal neu (`lazyAnsicht`).
+- **Sicherheit:**
+  - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
+  - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
+- **Tests:**
+  - 168 Unit-Tests, 62 E2E-Tests.
+  - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
+
+### Offen / ausstehend
+- **Team-Vergleich:** läuft bis 24.10.2026. Dann `docs/dauertest/team-vergleich.md` schreiben (Fairness der Punkte bei unterschiedlich vielen Bereichen) und die Nutzerin fragen, ob es weitergeht.
+- **Alte Git-Zweige aufräumen:** Das muss die Nutzerin auf GitHub selbst machen, die Sitzung darf keine fremden Zweige löschen (403).
+  - Sicher löschbar, weil vollständig in main: `claude/app-uebergabeprotokoll-rhgp8a`, `claude/app-uebergabeprotokoll-improvements-03r3b3`, `claude/google-cloud-tts-api-key-yc49xp`.
+  - **Nicht ungeprüft löschen:** `claude/repo-identification-0e9uvj` (22 Commits vom 17.09. mit Bug-Fixes aus „Teil 128/129“, die nicht in main sind), `claude/supabase-data-access-a0c231` und `-v2` (Constraint-/Biomarker-Fixes, package-lock), `claude/claude-md-docs-pxv4bm` (Fragebögen/Lexikon vom 15.08.).
+  - Die Datenbank enthält Teile davon schon (`fragebogen_antworten`, `lexikon_eintraege`, `notizen`-Spalten). Vor dem Löschen prüfen, ob die Bug-Fixes in main nachgezogen werden sollen.
+- **Canva-Anbindung:** noch nicht begonnen, Wunsch der Nutzerin.
+- **Bekannt, kein Fehler:** Chromium merkt sich fehlgeschlagene Modul-Importe; dort greift statt der Wiederholung das einmalige Neuladen.
+
+### Später (bewusst verschoben)
+- **Schutz vor geleakten Passwörtern** („Prevent use of leaked passwords“, Supabase → Authentication → Attack Protection): im Gratis-Tarif ausgegraut. Nutzerin am 24.09.: „machen wir irgendwann“. Einschalten, sobald das Projekt auf den Pro-Tarif wechselt; danach mit einem bekannten Leak-Passwort testen (z. B. am Admin-Testkonto, danach Passwort per SQL neu setzen). Bis dahin meldet der Supabase-Linter `auth_leaked_password_protection` – erwartet.
+
 ## 🧭 STAND & LESE-REIHENFOLGE FÜR DEN NÄCHSTEN AGENTEN (14.09.2026, Abend — bitte ZUERST lesen)
 
 **An den nächsten Agenten:** Bitte dieses Dokument selbst vollständig
