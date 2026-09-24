@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import WelcomeView from "../WelcomeView";
 import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
 import OnboardingQuickWinView from "./OnboardingQuickWinView";
@@ -12,6 +12,10 @@ import OnboardingRoutinenView from "./OnboardingRoutinenView";
 import OnboardingCategoriesView from "./OnboardingCategoriesView";
 import OnboardingSteckbriefView from "./OnboardingSteckbriefView";
 import OnboardingCompletionView from "./OnboardingCompletionView";
+import OnboardingBereicheView from "./OnboardingBereicheView";
+import { START_BEREICHE } from "./startBereiche";
+import { KATEGORIE_META } from "../../utils/dayItems";
+import { toLocalISODate } from "../../utils/dates";
 import { useAppData } from "../../context/AppDataContext";
 import { useAdmin } from "../../context/AdminContext";
 
@@ -93,9 +97,19 @@ import { useAdmin } from "../../context/AdminContext";
 // bleibt an `istAdminModus` hängen, weil die Coach-geführte Variante dort
 // wirklich die Admin persönlich im Chat braucht, nicht nur einen längeren
 // Fragebogen.
+// KÜRZERES ERST-ONBOARDING (24.09., Nutzerinnen-Freigabe der Vorschau):
+// Willkommen (1 Seite) → Du & Aka (Name + Begleitungs-Wahl) → Ziel & Grund
+// → "Womit willst du starten?" (1–3 Bereiche, Protokoll "Mein Start" wird
+// dabei automatisch angelegt) → nur die gewählten Bereiche einrichten →
+// Startklar (mit "Später dazunehmen"). Statt 20 Bildschirmen ca. 5 + 1–3.
+// Nichts fällt weg: Protokollname/-start, Profil, Laborwerte und alle
+// übrigen Bereiche bleiben jederzeit erreichbar (Startseite "Weitere
+// Pläne", Archiv → Profil). Coachees im Kurz-Modus gehen nach Ziel & Grund
+// wie bisher zum Steckbrief. "Neues Protokoll" (startPhase="hauptprotokoll")
+// läuft unverändert den bisherigen Weg.
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
   const { proband } = useAdmin();
-  const { isAdmin, onboardingModus } = useAppData();
+  const { isAdmin, onboardingModus, aktivesHauptprotokoll, hauptprotokollErstellen, verknuepfeMitHauptprotokoll, ziele } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
   const [phase, setPhase] = useState(startPhase); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
@@ -118,12 +132,48 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   // Erst-Onboarding immer wahr, weil dort ohnehin jede Phase der Reihe
   // nach durchlaufen wird. "Ziel & Grund" selbst braucht kein eigenes
   // Flag mehr — die Phase wird bei istDirekterNeuStart jetzt IMMER gezeigt.
-  const [profilBesucht, setProfilBesucht] = useState(!istDirekterNeuStart);
+  const [profilBesucht, setProfilBesucht] = useState(false);
+  // Gewählte Start-Bereiche im kürzeren Erst-Onboarding (null = alter Weg).
+  const [startBereiche, setStartBereiche] = useState(null);
+  const kurzerWeg = !istDirekterNeuStart;
+  const gewaehlteKategorien = (startBereiche || []).filter((k) => k !== "routinen");
+
+  // Legt im kurzen Weg das Hauptprotokoll automatisch an (bisher eigener
+  // Bildschirm "Wie soll dein Protokoll heißen?"). Besteht schon eins
+  // (z. B. erneutes Durchlaufen), bleibt es.
+  const protokollSicherstellen = async (name) => {
+    if (aktivesHauptprotokoll) return;
+    try {
+      const result = await hauptprotokollErstellen({ name: name || "Mein Start", startdatum: toLocalISODate(new Date()) });
+      if (result?.ok && result.hauptprotokoll?.id) verknuepfeMitHauptprotokoll(result.hauptprotokoll.id);
+      else console.error(result?.error);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const spaeterListe = () => {
+    const liste = kurzerWeg && vollstaendigesOnboarding
+      ? START_BEREICHE.filter((b) => !(startBereiche || []).includes(b.key)).map((b) => ({ key: b.key, icon: b.icon, label: b.label, bg: b.meta.bg, text: b.meta.text, aktion: "+ einrichten" }))
+      : [];
+    if (kurzerWeg) liste.push({ key: "profil", icon: "📋", label: "Profil & Laborwerte", bg: KATEGORIE_META.bildschirmzeit.bg, text: KATEGORIE_META.bildschirmzeit.text, aktion: "+ ergänzen" });
+    return liste;
+  };
+
+  // Jede neue Seite beginnt oben (24.09.): lange Seiten wie "Ziel & Grund"
+  // ließen die nächste Seite sonst mitten im Inhalt starten.
+  useEffect(() => {
+    try {
+      window.scrollTo(0, 0);
+    } catch {
+      /* egal */
+    }
+  }, [phase]);
 
   let screen;
 
   if (phase === "welcome") {
-    screen = <WelcomeView onDone={() => setPhase("hauptprotokoll")} onCancel={onCancel} />;
+    screen = <WelcomeView onDone={() => setPhase("intro")} onCancel={onCancel} />;
   } else if (phase === "hauptprotokoll") {
     screen = (
       <HauptprotokollErstellenView
@@ -144,8 +194,8 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     // zu durchlaufen.
     screen = (
       <OnboardingIntroView
-        onDone={(opts) => setPhase(opts?.guided ? "laborwerte" : "ziele")}
-        onBack={() => setPhase("quickwin")}
+        onDone={(opts) => setPhase(opts?.guided ? (vollstaendigesOnboarding ? "bereiche" : "steckbrief") : "ziele")}
+        onBack={() => setPhase("welcome")}
         onCancel={onCancel}
         nurManuell={!istAdminModus}
       />
@@ -153,7 +203,12 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "ziele") {
     screen = (
       <OnboardingZieleView
-        onDone={() => setPhase(istDirekterNeuStart ? "werteAktualisieren" : "profil")}
+        onDone={async () => {
+          if (istDirekterNeuStart) return setPhase("werteAktualisieren");
+          if (vollstaendigesOnboarding) return setPhase("bereiche");
+          await protokollSicherstellen("Mein Start");
+          setPhase("steckbrief");
+        }}
         onBack={() => setPhase(istDirekterNeuStart ? "kiWahl" : "intro")}
         onCancel={onCancel}
       />
@@ -182,8 +237,23 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingSteckbriefView
         onDone={() => setPhase("celebration")}
-        onBack={() => setPhase(profilBesucht ? "profil" : "werteAktualisieren")}
+        onBack={() => setPhase(istDirekterNeuStart ? (profilBesucht ? "profil" : "werteAktualisieren") : "ziele")}
         onCancel={onCancel}
+      />
+    );
+  } else if (phase === "bereiche") {
+    screen = (
+      <OnboardingBereicheView
+        ziele={ziele}
+        zeigeProtokollName={!aktivesHauptprotokoll}
+        onBack={() => setPhase("ziele")}
+        onCancel={onCancel}
+        onDone={async (keys, name) => {
+          await protokollSicherstellen(name);
+          setStartBereiche(keys);
+          if (keys.includes("routinen")) return setPhase("routinen");
+          setPhase(keys.length > 0 ? "categories" : "celebration");
+        }}
       />
     );
   } else if (phase === "laborwerte") {
@@ -201,9 +271,11 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
           if (schlafBereich) {
             setEingerichteteBereiche((prev) => [...prev.filter((b) => b.key !== "schlaf"), schlafBereich]);
           }
+          if (startBereiche && gewaehlteKategorien.length === 0) return setPhase("celebration");
           setPhase("categories");
         }}
-        onBack={() => setPhase("laborwerte")}
+        onBack={() => setPhase(startBereiche ? "bereiche" : "laborwerte")}
+        fortschritt={startBereiche ? { aktuell: 1, gesamt: startBereiche.length } : null}
         onCancel={onCancel}
       />
     );
@@ -211,7 +283,9 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     screen = (
       <OnboardingCategoriesView
         onCancel={onCancel}
-        onBackToStart={() => setPhase("routinen")}
+        onBackToStart={() => setPhase(startBereiche ? (startBereiche.includes("routinen") ? "routinen" : "bereiche") : "routinen")}
+        nurSchritte={startBereiche ? gewaehlteKategorien : null}
+        bereichOffset={startBereiche?.includes("routinen") ? 1 : 0}
         onFinished={(bereiche) => {
           const neueSchluessel = bereiche.map((b) => b.key);
           setEingerichteteBereiche((prev) => [...prev.filter((b) => !neueSchluessel.includes(b.key)), ...bereiche]);
@@ -224,7 +298,13 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingCompletionView
         eingerichteteBereiche={eingerichteteBereiche}
         onDone={onDone}
-        onBack={() => setPhase(vollstaendigesOnboarding ? "categories" : "steckbrief")}
+        spaeter={kurzerWeg ? spaeterListe() : null}
+        onBack={() => {
+          if (!vollstaendigesOnboarding) return setPhase("steckbrief");
+          if (!startBereiche) return setPhase("categories");
+          if (gewaehlteKategorien.length > 0) return setPhase("categories");
+          setPhase(startBereiche.includes("routinen") ? "routinen" : "bereiche");
+        }}
       />
     );
   }

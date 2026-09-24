@@ -31,6 +31,17 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
   const [loading, setLoading] = useState(false);
   const coachName = getCoachName();
 
+  // Kürzeres Onboarding (24.09.): Name steht jetzt mit auf der Auswahl-
+  // Seite — wird hier für alle drei Wege gespeichert, falls ausgefüllt.
+  const nameSpeichern = () => {
+    if (!name.trim()) return;
+    try {
+      localStorage.setItem("user_name", name.trim());
+    } catch (e) {
+      console.warn("Konnte Namen nicht speichern:", e);
+    }
+  };
+
   const handleContinue = () => {
     if (!name.trim()) return;
     setLoading(true);
@@ -58,27 +69,28 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
     return (
       <Shell>
         <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} />
-        <div style={{ marginBottom: 32, paddingTop: 20 }}>
-          <Logo size={72} />
-        </div>
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Hey! 👋</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: textMuted, lineHeight: 1.5 }}>
-            Ich bin {coachName} — deine exekutive rechte Hand.
+        <div style={{ marginBottom: 18, paddingTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
+          <Logo size={52} />
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>Hey! 👋</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>Ich bin {coachName} — deine exekutive rechte Hand.</div>
           </div>
         </div>
+        <Card style={{ marginBottom: 14 }}>
+          <Label>Wie heißt du?</Label>
+          <TextInput type="text" value={name} onChange={setName} placeholder="z. B. Anton Kaufmann" diktierbar />
+          <div style={{ fontSize: 12, color: textMuted, marginTop: 6 }}>Damit ich dich mit deinem Namen begrüßen kann.</div>
+        </Card>
         <Card style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 14, marginBottom: 18 }}>
-            <CoachOrb zustand="ruhe" size={64} />
-            <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.5 }}>
-              Du musst deine Gesundheit und Routinen ab jetzt nicht mehr alleine im Kopf managen — ich übernehme die Logistik. Ich habe deine Protokolle, Tagesstrukturen und Rechner bereits griffbereit. Soll ich dich beim Einrichten begleiten, oder möchtest du das lieber allein machen?
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+            <CoachOrb zustand="ruhe" size={44} />
+            <div style={{ fontSize: 15.5, fontWeight: 800, lineHeight: 1.4 }}>Wie willst du einrichten?</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <PrimaryButton onClick={() => { saveKiAutoStartUnterdrueckt(false); setModus("begleitet-frei"); }}>Ja, ich erzähl einfach frei</PrimaryButton>
+            <PrimaryButton onClick={() => { nameSpeichern(); saveKiAutoStartUnterdrueckt(false); setModus("begleitet-frei"); }}>🗣️ Ich erzähl Aka einfach frei</PrimaryButton>
             <button
               type="button"
-              onClick={() => { saveKiAutoStartUnterdrueckt(false); setModus("begleitet-schritt"); }}
+              onClick={() => { nameSpeichern(); saveKiAutoStartUnterdrueckt(false); setModus("begleitet-schritt"); }}
               style={{
                 padding: "13px 16px",
                 borderRadius: 12,
@@ -90,12 +102,15 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
                 cursor: "pointer",
               }}
             >
-              Lieber Frage für Frage
+              💬 Aka fragt mich Schritt für Schritt
             </button>
             <button
               type="button"
               onClick={() => {
                 saveKiAutoStartUnterdrueckt(true);
+                // Name schon eingetragen → direkt weiter, sonst die
+                // bisherige Namens-Seite als Rückfall.
+                if (name.trim()) return handleContinue();
                 setModus("manuell");
               }}
               style={{
@@ -109,7 +124,7 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
                 cursor: "pointer",
               }}
             >
-              Nein, ich mach's selbst
+              🙋 Ich klick mich selbst durch
             </button>
             {onCancel && (
               <button

@@ -185,7 +185,12 @@ function AddZeile({ label, onClick, disabled }) {
 // mehrere Einträge nacheinander, statt nach dem ersten sofort zum nächsten
 // Bereich zu springen — "+ Hinzufügen" bleibt auf der Seite und sammelt eine
 // "bereits hinzugefügt"-Liste, "Weiter" schließt den Bereich bewusst ab.
-export default function OnboardingCategoriesView({ onFinished, onCancel, onBackToStart }) {
+// nurSchritte (kürzeres Onboarding, 24.09.): nur die vorher gewählten
+// Bereiche (siehe OnboardingBereicheView.jsx), ohne "Jetzt oder später?"-
+// Zwischenseite — die Wahl ist ja schon getroffen. Ohne nurSchritte (z. B.
+// "Neues Protokoll") läuft alles wie bisher durch alle Bereiche.
+export default function OnboardingCategoriesView({ onFinished, onCancel, onBackToStart, nurSchritte = null, bereichOffset = 0 }) {
+  const SCHRITTE = nurSchritte ? CATEGORY_STEPS.filter((s) => nurSchritte.includes(s.key)) : CATEGORY_STEPS;
   const {
     gewohnheitHinzufuegen,
     hydrationZielMl,
@@ -220,8 +225,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // frisch über "Neues Protokoll" angelegten Hauptprotokoll existieren noch
   // keine Zeilen, hier greift dann ganz normal Schritt 0.
   const [index, setIndex] = useState(() => {
-    const beantwortet = CATEGORY_STEPS.filter((s) => teilprotokolle.some((t2) => t2.hauptprotokoll_id === aktivesHauptprotokoll?.id && t2.kategorie === s.key)).length;
-    return Math.min(beantwortet, CATEGORY_STEPS.length - 1);
+    const beantwortet = SCHRITTE.filter((s) => teilprotokolle.some((t2) => t2.hauptprotokoll_id === aktivesHauptprotokoll?.id && t2.kategorie === s.key)).length;
+    return Math.max(0, Math.min(beantwortet, SCHRITTE.length - 1));
   });
   const [modus, setModus] = useState(null); // null | "jetzt"
   const [ziel, setZiel] = useState(ZIEL_LEER);
@@ -316,8 +321,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   const setSuppDosierungFeld = (feld, val) => setSuppDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
   const setMedDosierungFeld = (feld, val) => setMedDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
 
-  const step = CATEGORY_STEPS[index];
-  const istLetzter = index === CATEGORY_STEPS.length - 1;
+  const step = SCHRITTE[index];
+  const istLetzter = index === SCHRITTE.length - 1;
   const istMultiAdd = MULTI_ADD_KEYS.includes(step.key);
 
   // Bug-Fix (Nutzerinnen-Vorgabe, 11.09.): Beim (Wieder-)Betreten eines
@@ -618,7 +623,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
   // Hydration bekommt keine eigene "Jetzt einrichten?"-Gate-Seite mehr —
   // Tagesziel, Erinnerung und Uhrzeiten gehörten für den Nutzer erkennbar
   // zusammen und sollen nicht auf zwei Seiten aufgeteilt sein.
-  const effectiveModus = step.key === "hydration" ? "jetzt" : modus;
+  const effectiveModus = step.key === "hydration" || nurSchritte ? "jetzt" : modus;
 
   // Coach-Begleitung je Kategorie-Schritt (siehe UEBERGABEPROTOKOLL.md,
   // "Coach-Begleitung für Laborwerte + die 9 Kategorien-Schritte"): der
@@ -776,7 +781,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingTop: 8, paddingBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: textMuted }}>
-            {t("onboarding.categories.progress", { current: index + 1 + PROTOKOLL_SCHRITT_OFFSET, total: PROTOKOLL_SCHRITTE_GESAMT })}
+            {nurSchritte
+              ? `Bereich ${index + 1 + bereichOffset} von ${SCHRITTE.length + bereichOffset}`
+              : t("onboarding.categories.progress", { current: index + 1 + PROTOKOLL_SCHRITT_OFFSET, total: PROTOKOLL_SCHRITTE_GESAMT })}
           </div>
           {/* Zweiter "← Zurück"-Link hier entfernt (UX-Review 23.09.): die
               Navigationsleiste direkt darüber bietet denselben Weg schon —
@@ -799,11 +806,11 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
           )}
         </div>
       </div>
-      <Stepper step={index + PROTOKOLL_SCHRITT_OFFSET} total={PROTOKOLL_SCHRITTE_GESAMT} />
+      {nurSchritte ? <Stepper step={index + bereichOffset} total={SCHRITTE.length + bereichOffset} /> : <Stepper step={index + PROTOKOLL_SCHRITT_OFFSET} total={PROTOKOLL_SCHRITTE_GESAMT} />}
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
         <div style={{ fontSize: 28 }}>{step.icon}</div>
-        <div style={{ fontSize: 19, fontWeight: 800 }}>{t("onboarding.gate.title", { label: tLabel(step.label) })}</div>
+        <div style={{ fontSize: 19, fontWeight: 800 }}>{nurSchritte ? tLabel(step.label) : t("onboarding.gate.title", { label: tLabel(step.label) })}</div>
       </div>
 
       {effectiveModus === null && (

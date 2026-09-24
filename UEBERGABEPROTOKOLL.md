@@ -250,6 +250,26 @@ löschbar.
   - `denkpausen.test.js` prüft Anzahl, keine Dopplung und 4 verschiedene Antworten.
 - **Denksport-Seite** (`views/DenksportView.jsx`, View `denksport`): Kategorie wählen (auch „Gemischt“), Runde aus 5 Fragen (`denksportRunde`, ohne direkte Wiederholung), freundliche Auflösung ohne „falsch“-Rot, große Feier am Ende, Ergebnisse über `denkpauseErgebnisVermerken`. Erreichbar über die Kachel „🧩 Denksport“ auf Home und über die Fokus-Region im Gehirn. e2e: `e2e/denksport.spec.js`.
 
+### Nachtrag Teil 121 — Kürzeres Erst-Onboarding (24.09.)
+
+- Die Nutzerin hat die Vorschau freigegeben. Vorher waren es 20 Bildschirme (selbst beim Überspringen), jetzt 5 plus die 1–3 gewählten Bereiche.
+- **Neuer Ablauf** (`OnboardingFlow.jsx`, nur Erst-Onboarding):
+  1. `welcome`: eine Seite statt drei Folien; `WelcomeView` mit neuen Texten `welcome.kurz.*` (de/en/tr).
+  2. `intro`: Name und Begleitungs-Wahl auf einer Seite. Die Knöpfe heißen jetzt „🗣️ Ich erzähl Aka einfach frei“, „💬 Aka fragt mich Schritt für Schritt“ und „🙋 Ich klick mich selbst durch“.
+  3. `ziele`: die Ziele als Antipp-Pills statt einer Häkchen-Liste.
+  4. `bereiche` (neu, `OnboardingBereicheView.jsx` + `startBereiche.js`):
+     - höchstens 3 Bereiche wählbar;
+     - 2 Vorschläge aus den Zielen sind vorausgewählt (`vorschlaegeAusZielen`, Standard: Routinen und Medikamente);
+     - das Hauptprotokoll „Mein Start“ wird hier automatisch mit heutigem Startdatum angelegt, der Name ist änderbar (`protokollSicherstellen`).
+  5. Die Routinen-Seite erscheint nur, wenn „Routinen & Schlaf“ gewählt wurde.
+  6. `categories` mit `nurSchritte`: nur die gewählten Kategorien, ohne „Jetzt oder später?“-Gate, Zählung „Bereich x von n“.
+  7. `celebration` mit `spaeter`: eine Liste „Später dazunehmen“ mit den übrigen Bereichen und „Profil & Laborwerte“.
+- **Coachees im Kurz-Modus:** Willkommen → Name → Ziele → Steckbrief → Abschluss. Das Protokoll wird nach den Zielen automatisch angelegt.
+- **Weggefallen im Erst-Onboarding:** die Seiten Protokollname, Quick-Win, Profil und Laborwerte sowie die 8 Gate-Seiten. Alle Formulare bleiben erreichbar (Startseite „Weitere Pläne“, Archiv → Profil).
+- **„Neues Protokoll“** (`startPhase="hauptprotokoll"`) läuft unverändert den alten, vollständigen Weg.
+- Jede Onboarding-Seite scrollt jetzt beim Wechsel nach oben.
+- e2e: `e2e/onboarding.spec.js` ist neu geschrieben (voller Durchlauf, Bildschirmzeit, Coachee-Kurzweg). Unit-Test: `startBereiche.test.js`.
+
 ### Nachtrag Teil 121 — Profilbilder und Team-Kolleg:innen-Fix (24.09.)
 
 - **Migration `0094_profilbilder.sql`** (schon auf Prod eingespielt, zusammen mit `0094b`):

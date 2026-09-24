@@ -65,7 +65,7 @@ function AddZeile({ label, onClick, disabled }) {
 // Peptid-Idee herausgewachsen ist. Alle anderen Kategorien sind aus dieser
 // Sicht nur noch Zusatz-Bausteine, die sich später der Routine zuordnen
 // lassen — deshalb kommt die Routine-Einrichtung jetzt zuerst.
-export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
+export default function OnboardingRoutinenView({ onDone, onBack, onCancel, fortschritt = null }) {
   const { t, tLabel } = useT();
   const {
     routineSchritte,
@@ -179,9 +179,13 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel }) {
       <OnboardingNavArrows onBack={onBack} backLabel={tLabel("Zurück")} onForward={onDone} forwardLabel={tLabel("Überspringen")} />
 
       <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 10 }}>
-        {t("onboarding.categories.progress", { current: 2, total: PROTOKOLL_SCHRITTE_GESAMT })}
+        {fortschritt
+          ? `Bereich ${fortschritt.aktuell} von ${fortschritt.gesamt}`
+          : t("onboarding.categories.progress", { current: 2, total: PROTOKOLL_SCHRITTE_GESAMT })}
       </div>
-      <Stepper step={1} total={PROTOKOLL_SCHRITTE_GESAMT} />
+      {/* fortschritt (kürzeres Onboarding, 24.09.): Zählung nur über die
+          gewählten Start-Bereiche statt über alle 10 Schritte. */}
+      {fortschritt ? <Stepper step={fortschritt.aktuell - 1} total={fortschritt.gesamt} /> : <Stepper step={1} total={PROTOKOLL_SCHRITTE_GESAMT} />}
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <div style={{ fontSize: 28 }}>🌅🌙</div>

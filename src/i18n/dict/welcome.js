@@ -8,6 +8,11 @@
 // statt als ein dichter Block zu wirken.
 export const welcome = {
   de: {
+    "welcome.kurz.text": "Hi, ich bin Aka. 👋\nIch erinnere dich an Medikamente, Routinen, Trinken & Co. – alles an einem Ort, damit du nicht alles selbst im Kopf behalten musst.",
+    "welcome.kurz.titel": "In 3 Minuten startklar:",
+    "welcome.kurz.schritt1": "Kurz vorstellen",
+    "welcome.kurz.schritt2": "Was dir wichtig ist",
+    "welcome.kurz.schritt3": "1–3 Bereiche einrichten",
     "welcome.skip": "Überspringen",
     "welcome.slide1.titel": "Dein Kopf ist fürs Leben da – nicht zum Merken.",
     "welcome.slide1.text":
@@ -22,6 +27,11 @@ export const welcome = {
     "welcome.button.los": "Los geht's",
   },
   en: {
+    "welcome.kurz.text": "Hi, I'm Aka. 👋\nI remind you of medication, routines, drinking & more – all in one place, so you don't have to keep everything in your head.",
+    "welcome.kurz.titel": "Ready in 3 minutes:",
+    "welcome.kurz.schritt1": "Introduce yourself",
+    "welcome.kurz.schritt2": "What matters to you",
+    "welcome.kurz.schritt3": "Set up 1–3 areas",
     "welcome.skip": "Skip",
     "welcome.slide1.titel": "Your mind is for living — not for remembering.",
     "welcome.slide1.text":
@@ -36,6 +46,11 @@ export const welcome = {
     "welcome.button.los": "Let's go",
   },
   tr: {
+    "welcome.kurz.text": "Merhaba, ben Aka. 👋\nSana ilaçlarını, rutinlerini, su içmeyi ve daha fazlasını hatırlatırım – hepsi tek bir yerde, böylece her şeyi aklında tutmak zorunda kalmazsın.",
+    "welcome.kurz.titel": "3 dakikada hazırsın:",
+    "welcome.kurz.schritt1": "Kendini kısaca tanıt",
+    "welcome.kurz.schritt2": "Senin için önemli olan",
+    "welcome.kurz.schritt3": "1–3 alan kur",
     "welcome.skip": "Atla",
     "welcome.slide1.titel": "Zihnin hayat için var — ezberlemek için değil.",
     "welcome.slide1.text":

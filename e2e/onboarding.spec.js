@@ -34,10 +34,6 @@ function fakeSpeechRecognitionEinrichten() {
 
 test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon befüllen (Web-Speech-API, kein AIService-Aufruf)", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  // AIService-Aufrufe müssten (falls die Diktierfunktion fälschlich doch die
-  // KI anspräche) über Supabase Edge Functions laufen — schlägt jeder
-  // fetch-Versuch dorthin fehl, wäre das ein handfester Test-Fehlschlag
-  // statt eines stillen Fallbacks.
   let kiAufgerufen = false;
   await page.route("**/functions/v1/**", (route) => {
     kiAufgerufen = true;
@@ -46,13 +42,9 @@ test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon be
   await page.addInitScript(fakeSpeechRecognitionEinrichten);
   await page.goto("/e2e/harness/index.html?onboarding=1");
 
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Los geht's", exact: true }).click();
-  await page.getByPlaceholder("z. B. Sommer 2026").fill("E2E-Test-Protokoll");
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Weiter geht's" }).last().click();
-  await page.getByRole("button", { name: "Nein, ich mach's selbst" }).click();
+  // Kürzeres Onboarding (24.09.): eine Willkommensseite, danach steht das
+  // Namensfeld direkt auf der "Du & Aka"-Seite.
+  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
 
   const namensfeld = page.getByPlaceholder("z. B. Anton Kaufmann");
   await expect(namensfeld).toBeVisible();
@@ -60,13 +52,11 @@ test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon be
 
   await page.getByTitle("Diktieren (ohne KI)").click();
 
-  // Zwischenergebnis: kursiv/blass unterhalb des Felds sichtbar, noch NICHT
-  // im eigentlichen Feldwert (siehe DiktatVorschau in ui/primitives.jsx).
+  // Zwischenergebnis wird sichtbar angezeigt, aber noch NICHT ins Feld
+  // übernommen — erst das finale Ergebnis landet im Feld.
   await expect(page.getByText("Anton…")).toBeVisible();
   await expect(namensfeld).toHaveValue("");
 
-  // Endergebnis: landet im echten Feldwert, Zwischenvorschau verschwindet
-  // wieder (Aufnahme endet automatisch, siehe FakeSpeechRecognition oben).
   await expect(namensfeld).toHaveValue("Anton Diktiert");
   await expect(page.getByText("Anton…")).not.toBeVisible();
 
@@ -74,141 +64,78 @@ test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon be
   expect(fehler).toEqual([]);
 });
 
-// Kompletter Onboarding-Durchlauf, ein Screen nach dem anderen: Willkommen
-// (3 Folien) → Hauptprotokoll anlegen → Quick-Win-Zwischenscreen → Intro
-// (Name) → Ziele → Profil → Laborwerte → Routinen → Kategorien ("Alles
-// überspringen") → Abschluss → zurück auf Home. Nutzt ?onboarding=1 (siehe
-// e2e/harness/TestApp.jsx), um einen frischen, noch nicht eingerichteten
-// Account zu simulieren.
-//
-// Bewusste Grenze: befüllt nur die Felder, die zum Weiterkommen nötig sind
-// (Protokollname, Vorname) — testet NICHT jede einzelne der 9 Kategorien im
-// Detail mit echten Werten (Ziel/Grund, Messwerte, ...). Das wäre ein enorm
-// fragiles Unterfangen (bricht bei jeder Text-/Feld-Änderung) für einen
-// Nutzen, der über "stürzt nicht ab" kaum hinausgeht — echte inhaltliche
-// Prüfung je Kategorie passiert in den kategorie-spezifischen Tests
-// (plaene.spec.js) an bereits eingerichteten (gemockten) Daten.
+// Kürzeres Erst-Onboarding (24.09., Nutzerinnen-Freigabe): Willkommen →
+// Du & Aka → Ziel & Grund → "Womit willst du starten?" → nur die gewählten
+// Bereiche → Startklar mit "Später dazunehmen".
 test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1");
 
-  // Willkommen: 3 Folien, "Weiter" zweimal, dann "Los".
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Los geht's", exact: true }).click();
+  await expect(page.getByText("In 3 Minuten startklar:")).toBeVisible();
+  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
 
-  // Hauptprotokoll anlegen: Name ist Pflicht, Startdatum ist vorbelegt.
-  await expect(page.getByText("Wie soll dein Protokoll heißen?")).toBeVisible();
-  await page.getByPlaceholder("z. B. Sommer 2026").fill("E2E-Test-Protokoll");
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-
-  // Quick-Win-Zwischenscreen (App-Bauplan-Punkt): erste Bestätigung schon
-  // direkt nach dem ersten kleinen Schritt, bevor der lange Fragebogen-Teil
-  // losgeht. Zwei gleich beschriftete "Weiter geht's"-Knöpfe (Pfeil-
-  // Navigation oben, Haupt-Button unten) — .last() wie beim Abschluss-
-  // Screen weiter unten.
-  await expect(page.getByText("Erster Schritt geschafft!", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Weiter geht's" }).last().click();
-
-  // Intro: erst die 3-Wege-Frage ("begleitet" vs. "allein"), dann Name.
-  await expect(page.getByText("Ich bin", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Nein, ich mach's selbst" }).click();
   await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "🙋 Ich klick mich selbst durch" }).click();
 
-  // Ziele/Profil/Laborwerte/Routinen: je ein einfaches "Weiter", keine
-  // Pflichtfelder auf diesen vier Screens (siehe Kommentar oben). Jeder
-  // Schritt wird über seine eindeutige Überschrift bestätigt, bevor
-  // geklickt wird.
-  //
-  // Bug-Fix (16.09., Nutzerinnen-Report "die KI ploppt bei den
-  // Laborwerten immer automatisch auf"): Laborwerte bettete KiChat bisher
-  // mit `autoStart` ein — öffnete sich automatisch als Vollbild-Modal,
-  // sprach die Begrüßung vor und startete sogar automatisch das Mikrofon,
-  // ganz ohne Zutun. Jetzt wie überall sonst nur noch ein antippbarer,
-  // schwebender Orb (kein automatisches Öffnen mehr) — der defensive
-  // `isVisible()`-Check unten bleibt trotzdem stehen, für den Fall, dass
-  // irgendein Onboarding-Schritt künftig wieder ein Modal einblendet.
-  for (const titel of ["Ziel & Grund", "Dein Profil & Ausgangslage", "Deine Laborwerte", "Morgen- & Abendroutine"]) {
-    await expect(page.getByText(titel, { exact: true })).toBeVisible();
-    const schliessenKnopf = page.getByRole("button", { name: "Schließen" });
-    if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
-    if (titel === "Morgen- & Abendroutine") {
-      // Schlaf ist seit 16.09. auf derselben Seite mit eingerichtet (siehe
-      // OnboardingRoutinenView.jsx), statt eines eigenen Kategorie-Schritts.
-      await expect(page.getByText("😴 Schlafplan")).toBeVisible();
-    }
-    await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  }
+  await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Tagesstruktur aufbauen" }).click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
-  // Kategorien: erster Schritt ist jetzt Hydration (Schlaf ist seit 16.09.
-  // kein eigener Kategorie-Schritt mehr, siehe Morgen-/Abendroutine oben) —
-  // die hat KEINE Gate-Seite (effectiveModus fest auf "jetzt") und öffnet
-  // direkt das KiChat-Vollbild-Modal, das erst geschlossen werden muss, bevor
-  // "Alles überspringen" (ein <div onClick>, kein <button> — daher getByText
-  // statt getByRole("button")) den Rest der Kategorien überspringt.
-  const kategorienSchliessen = page.getByRole("button", { name: "Schließen" });
-  if (await kategorienSchliessen.isVisible().catch(() => false)) await kategorienSchliessen.click();
-  await page.getByText("Alles überspringen").click();
+  // Bereichswahl: zwei Vorschläge sind vorausgewählt (Routinen, Gewohnheiten
+  // passend zu "Tagesstruktur aufbauen"), maximal drei wählbar.
+  await expect(page.getByText("Womit willst du starten?")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Routinen & Schlaf/ })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: /Wasser/ }).click();
+  await expect(page.getByRole("button", { name: /Training/ })).toBeDisabled();
+  await expect(page.getByText("Mein Start", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "3 Bereiche einrichten" }).click();
 
-  // Abschluss-Screen → zurück auf Home.
-  await page.getByRole("button").last().click();
+  // Routinen & Schlaf (Bereich 1 von 3).
+  await expect(page.getByText("Morgen- & Abendroutine", { exact: true })).toBeVisible();
+  await expect(page.getByText("Bereich 1 von 3")).toBeVisible();
+  const schliessen1 = page.getByRole("button", { name: "Schließen" });
+  if (await schliessen1.isVisible().catch(() => false)) await schliessen1.click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
+
+  // Danach NUR die gewählten Kategorien, ohne "Jetzt oder später?"-Seite.
+  await expect(page.getByText("Bereich 2 von 3")).toBeVisible();
+  await expect(page.getByText("einrichten?", { exact: false })).toHaveCount(0);
+  const schliessen2 = page.getByRole("button", { name: "Schließen" });
+  if (await schliessen2.isVisible().catch(() => false)) await schliessen2.click();
+  await page.getByRole("button", { name: "Doch überspringen" }).first().click();
+  await expect(page.getByText("Bereich 3 von 3")).toBeVisible();
+  const schliessen3 = page.getByRole("button", { name: "Schließen" });
+  if (await schliessen3.isVisible().catch(() => false)) await schliessen3.click();
+  await page.getByRole("button", { name: "Doch überspringen" }).first().click();
+
+  // Startklar mit "Später dazunehmen".
+  await expect(page.getByText("Später dazunehmen – wann du willst:")).toBeVisible();
+  await page.getByRole("button", { name: "Los geht's" }).last().click();
   await expect(page.getByText("Tagebuch")).toBeVisible({ timeout: 10000 });
 
   expect(fehler).toEqual([]);
 });
 
-// Nutzerinnen-Vorgabe (15.09.): Bildschirmzeit muss auch als eigener
-// Kategorie-Schritt im Erst-Onboarding abgefragt werden (nicht nur über
-// "Mehr" nachträglich erreichbar) — mit den vier von ihr konkret genannten
-// Reflexionsfragen (üblicher Verbrauch, Haupttätigkeit, Reduzieren
-// vorstellbar, künftiges Limit). Fährt denselben Weg wie der komplette
-// Onboarding-Test oben bis zu den Kategorien, klickt dort Hydration/
-// Tageslicht bewusst weg (unterschiedliche Skip-Wege: Tageslicht hat noch
-// die "Jetzt/Später einrichten"-Gate-Seite, Hydration nicht — siehe
-// effectiveModus in OnboardingCategoriesView.jsx), um beim dritten Schritt
-// (Bildschirmzeit) anzukommen. Schlaf ist seit 16.09. kein eigener
-// Kategorie-Schritt mehr (siehe Morgen-/Abendroutine oben).
+// Nutzerinnen-Vorgabe (15.09.): Bildschirmzeit fragt die vier
+// Reflexionsfragen ab — im kürzeren Onboarding (24.09.) erreichbar, indem
+// man Bildschirmzeit als Start-Bereich wählt.
 test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttätigkeit, Reduzieren-Vorstellung und Limit ab", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1");
-
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Los geht's", exact: true }).click();
-  await page.getByPlaceholder("z. B. Sommer 2026").fill("E2E-Test-Protokoll");
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  await page.getByRole("button", { name: "Weiter geht's" }).last().click();
-  await page.getByRole("button", { name: "Nein, ich mach's selbst" }).click();
+  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
   await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
-  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "🙋 Ich klick mich selbst durch" }).click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
-  for (const titel of ["Ziel & Grund", "Dein Profil & Ausgangslage", "Deine Laborwerte", "Morgen- & Abendroutine"]) {
-    await expect(page.getByText(titel, { exact: true })).toBeVisible();
-    const schliessenKnopf = page.getByRole("button", { name: "Schließen" });
-    if (await schliessenKnopf.isVisible().catch(() => false)) await schliessenKnopf.click();
-    await page.getByRole("button", { name: "Weiter", exact: true }).click();
-  }
+  // Vorschläge abwählen, nur Bildschirmzeit wählen.
+  await page.getByRole("button", { name: /Routinen & Schlaf/ }).click();
+  await page.getByRole("button", { name: /Medikamente/ }).click();
+  await page.getByRole("button", { name: /Bildschirmzeit/ }).click();
+  await page.getByRole("button", { name: "1 Bereich einrichten" }).click();
 
-  // Hydration: KEINE Gate-Seite (effectiveModus fest auf "jetzt"), startet
-  // direkt im KiChat-Vollbild-Modal — erst schließen, dann überspringen.
-  const hydrationSchliessen = page.getByRole("button", { name: "Schließen" });
-  if (await hydrationSchliessen.isVisible().catch(() => false)) await hydrationSchliessen.click();
-  await page.getByRole("button", { name: "Doch überspringen" }).click();
+  const schliessen = page.getByRole("button", { name: "Schließen" });
+  if (await schliessen.isVisible().catch(() => false)) await schliessen.click();
 
-  // Tageslicht: wieder mit Gate-Seite.
-  await expect(page.getByText("Tageslichtplan einrichten?")).toBeVisible();
-  await page.getByRole("button", { name: "Später einrichten" }).click();
-
-  // Bildschirmzeit: Gate-Seite, dann "Jetzt einrichten".
-  await expect(page.getByText("Bildschirmzeitplan einrichten?")).toBeVisible();
-  await page.getByRole("button", { name: "Jetzt einrichten" }).click();
-
-  const bildschirmzeitSchliessen = page.getByRole("button", { name: "Schließen" });
-  if (await bildschirmzeitSchliessen.isVisible().catch(() => false)) await bildschirmzeitSchliessen.click();
-
-  // Die drei Ist-Zustand-Reflexionsfragen und das Limit-Feld müssen alle
-  // sichtbar sein — genau die Fragen aus der Nutzerinnen-Vorgabe.
   await expect(page.getByText("Wie viel Bildschirmzeit hast Du üblicherweise am Tag?", { exact: true })).toBeVisible();
   await expect(page.getByText("Was machst Du am meisten am Telefon?", { exact: true })).toBeVisible();
   await expect(page.getByText("Kannst Du Dir vorstellen, das zu reduzieren?", { exact: true })).toBeVisible();
@@ -217,10 +144,25 @@ test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttät
   await page.getByPlaceholder("z. B. 60").fill("45");
   await page.getByRole("button", { name: "Speichern & weiter", exact: true }).click();
 
-  // Danach kommt Ernährung — bestätigt, dass der neue Schritt sauber ins
-  // bestehende Karussell einreiht, statt es zu unterbrechen.
-  await expect(page.getByText("Ernährungsplan einrichten?")).toBeVisible();
+  // Einziger Bereich → danach direkt Startklar.
+  await expect(page.getByText("Später dazunehmen – wann du willst:")).toBeVisible();
 
+  expect(fehler).toEqual([]);
+});
+
+// Coachee im Kurz-Modus (24.09.): Willkommen → Name → Ziel & Grund →
+// Steckbrief → Startklar (Profil & Laborwerte als "später").
+test("Onboarding (Coachee, kurz): ohne Bereichswahl über den Steckbrief zum Abschluss", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html?onboarding=1&isAdmin=0");
+  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
+  await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Coachee");
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
+  await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
+  await expect(page.getByText("Womit willst du starten?")).toHaveCount(0);
+  const schliessen = page.getByRole("button", { name: "Schließen" });
+  if (await schliessen.isVisible().catch(() => false)) await schliessen.click();
   expect(fehler).toEqual([]);
 });
 

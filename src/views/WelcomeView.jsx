@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Shell, PrimaryButton } from "../ui/primitives";
-import { accent, cardBorder, textMain, textMuted } from "../ui/theme";
+import { cardBorder, textMain, textMuted } from "../ui/theme";
 import OnboardingNavArrows from "../ui/OnboardingNavArrows";
-import { KopfEntlastungIllustration, UebersichtIllustration, RuheIllustration } from "../ui/WelcomeIllustrations";
+import { KopfEntlastungIllustration } from "../ui/WelcomeIllustrations";
 import { useT } from "../i18n/translate";
 import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 
@@ -11,11 +11,11 @@ import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 // verkaufen, sondern das Gefühl transportieren "ich muss nicht mehr alles
 // selbst im Kopf behalten". Referenz: Apple/Headspace/Notion-Onboarding —
 // ruhig, viel Weißraum, eine Illustration statt Icon-Emoji, wenig Text.
-const SLIDES = [
-  { Illustration: KopfEntlastungIllustration, titelKey: "welcome.slide1.titel", textKey: "welcome.slide1.text" },
-  { Illustration: UebersichtIllustration, titelKey: "welcome.slide2.titel", textKey: "welcome.slide2.text" },
-  { Illustration: RuheIllustration, titelKey: "welcome.slide3.titel", textKey: "welcome.slide3.text" },
-];
+// Kürzeres Onboarding (24.09., Nutzerinnen-Freigabe): eine Willkommensseite
+// statt drei Folien — die Kernbotschaft der früheren Folien ist in einem Text
+// zusammengefasst, dazu der Hinweis "In 3 Minuten startklar" mit den drei
+// Schritten. Die alten Folien-Texte (welcome.slide*) bleiben im Wörterbuch.
+const SLIDES = [{ Illustration: KopfEntlastungIllustration, titelKey: "welcome.slide1.titel", textKey: "welcome.kurz.text" }];
 
 export default function WelcomeView({ onDone, onCancel }) {
   const { t, tLabel, lang } = useT();
@@ -87,27 +87,17 @@ export default function WelcomeView({ onDone, onCancel }) {
         <div style={{ fontSize: 15, color: textMuted, textAlign: "center", lineHeight: 1.7, maxWidth: 300, marginTop: 16, whiteSpace: "pre-wrap" }}>
           {t(slide.textKey)}
         </div>
-        {isLast && (
-          <div style={{ fontSize: 15, fontWeight: 700, color: textMain, textAlign: "center", lineHeight: 1.6, maxWidth: 280, marginTop: 22 }}>
-            {t("welcome.slide3.abschluss")}
-          </div>
-        )}
+        <div style={{ marginTop: 22, width: "100%", maxWidth: 320, background: "#F5F6FA", borderRadius: 18, padding: "14px 16px" }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: textMain, marginBottom: 6 }}>{t("welcome.kurz.titel")}</div>
+          {["welcome.kurz.schritt1", "welcome.kurz.schritt2", "welcome.kurz.schritt3"].map((key, i) => (
+            <div key={key} style={{ fontSize: 14, color: textMain, lineHeight: 1.9 }}>
+              {["①", "②", "③"][i]} {t(key)}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: 7, marginBottom: 28 }}>
-        {SLIDES.map((_, i) => (
-          <div
-            key={i}
-            style={{
-              width: i === index ? 22 : 7,
-              height: 7,
-              borderRadius: 4,
-              background: i === index ? accent : cardBorder,
-              transition: "all 0.25s ease",
-            }}
-          />
-        ))}
-      </div>
+      <div style={{ height: 20 }} />
 
       <PrimaryButton onClick={weiter}>{isLast ? t("welcome.button.los") : tLabel("Weiter")}</PrimaryButton>
 

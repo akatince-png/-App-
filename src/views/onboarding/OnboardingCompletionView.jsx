@@ -35,7 +35,11 @@ function planInhaltText(kategorie, ziel) {
 // ISTZUSTAND_FRAGEN) zeigt diese Seite zusätzlich im Detail: den erfragten
 // Ist-Zustand, die gewählte Zieldauer und — soweit schon in categoryZiele
 // vorhanden — was der Plan selbst beinhaltet.
-export default function OnboardingCompletionView({ eingerichteteBereiche, onDone, onBack }) {
+// spaeter (kürzeres Onboarding, 24.09.): was man bewusst noch nicht
+// eingerichtet hat — als farbige Liste "Später dazunehmen", damit klar ist,
+// dass nichts verloren ist. Eingerichtet wird es über "Weitere Pläne" auf
+// der Startseite bzw. Profil & Laborwerte unter Archiv → Profil.
+export default function OnboardingCompletionView({ eingerichteteBereiche, onDone, onBack, spaeter = null }) {
   const { t, tLabel } = useT();
   const { categoryZiele } = useAppData();
   // Bug-Fix Dauertest 23.09.: Coachees (Kurz-Onboarding) richten im
@@ -128,10 +132,30 @@ export default function OnboardingCompletionView({ eingerichteteBereiche, onDone
         </Card>
       )}
 
-      {!leer && (
-        <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 16, lineHeight: 1.5 }}>
-          {t("onboarding.completion.rest")}
+      {spaeter && spaeter.length > 0 ? (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Später dazunehmen – wann du willst:</div>
+          {spaeter.slice(0, 3).map((b) => (
+            <div
+              key={b.key}
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: 14, padding: "10px 12px", marginBottom: 8, fontWeight: 700, fontSize: 13.5, background: b.bg, color: b.text }}
+            >
+              <span>
+                {b.icon} {b.label}
+              </span>
+              <span>{b.aktion}</span>
+            </div>
+          ))}
+          <div style={{ fontSize: 12.5, color: textMuted, lineHeight: 1.5 }}>
+            {spaeter.length > 3 ? `… und ${spaeter.length - 3} weitere. ` : ""}Alles steht auf der Startseite unter „Weitere Pläne“, Profil & Laborwerte unter Archiv → Profil.
+          </div>
         </div>
+      ) : (
+        !leer && (
+          <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 16, lineHeight: 1.5 }}>
+            {t("onboarding.completion.rest")}
+          </div>
+        )
       )}
 
       <Card>

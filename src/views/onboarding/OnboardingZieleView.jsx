@@ -1,5 +1,5 @@
 import React from "react";
-import { Shell, Card, CheckRow, PrimaryButton } from "../../ui/primitives";
+import { Shell, Card, Pill, PrimaryButton } from "../../ui/primitives";
 import { cardBorder, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { ZIELE } from "../../constants";
@@ -26,9 +26,13 @@ export default function OnboardingZieleView({ onDone, onBack, onCancel }) {
 
       <Card>
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("onboarding.ziele.frage")}</div>
-        {ZIELE.map((z) => (
-          <CheckRow key={z} label={tLabel(z)} checked={ziele.includes(z)} onToggle={() => toggleZiel(z)} />
-        ))}
+        {/* Antipp-Kärtchen statt langer Häkchen-Liste (kürzeres Onboarding,
+            24.09.) — alles auf einen Blick, mehrere wählbar. */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {ZIELE.map((z) => (
+            <Pill key={z} label={tLabel(z)} selected={ziele.includes(z)} onClick={() => toggleZiel(z)} />
+          ))}
+        </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
           <PrimaryButton onClick={onDone}>{tLabel("Weiter")}</PrimaryButton>
