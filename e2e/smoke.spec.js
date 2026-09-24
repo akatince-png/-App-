@@ -101,3 +101,14 @@ test("Tagebuch-Modal öffnet und lässt sich per Escape schließen (Barrierefrei
   await page.keyboard.press("Escape");
   await expect(textarea).toBeHidden();
 });
+
+// Bug-Fix 24.09. (Nutzerinnen-Report): der gelbe 💡-Knopf im Gehirnfeld
+// ließ Home abstürzen (getCoachName war nicht importiert).
+test("Home: gelber Akut-Knopf öffnet die Hilfe ohne Absturz", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html");
+  await page.getByRole("button", { name: "Grad nicht gut?", exact: true }).click();
+  await expect(page.getByText("Puh, da ist etwas schiefgelaufen")).toHaveCount(0);
+  await expect(page.getByText("💡 Was hilft mir jetzt?")).toBeInViewport();
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
 import Icon from "../ui/Icon";
@@ -26,6 +27,7 @@ import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
 import ADHSModeToggle from "../ui/ADHSModeToggle";
 import { AkutModusPanel } from "../ui/AkutModusKarte";
+import { getCoachName } from "../utils/coachStorage";
 import QuickTaskList from "../ui/QuickTaskList";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
@@ -911,15 +913,31 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
-      {akutOffen && (
-        <AkutModusPanel
-          onClose={() => setAkutOffen(false)}
-          onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
-          coachName={getCoachName()}
-          zeigeCoachOption={!istAdminModus}
-          akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
-        />
-      )}
+      {/* Akut-Hilfe als Fenster über dem Bildschirm (24.09.): der 💡-Knopf
+          sitzt jetzt oben im Gehirnfeld — inline weiter unten wäre das
+          Panel nach dem Tippen gar nicht zu sehen. Aufbau wie in
+          AkutModusGlobal.jsx. */}
+      {akutOffen &&
+        createPortal(
+          <div
+            onClick={() => setAkutOffen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(21, 24, 26, 0.55)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "100%", maxWidth: 460, maxHeight: "88vh", overflowY: "auto", padding: "16px 16px calc(16px + env(safe-area-inset-bottom, 0px))" }}
+            >
+              <AkutModusPanel
+                onClose={() => setAkutOffen(false)}
+                onSendenAnCoach={!istAdminModus ? coacheeNachrichtSenden : undefined}
+                coachName={getCoachName()}
+                zeigeCoachOption={!istAdminModus}
+                akutUebungen={gewohnheiten.filter((g) => g.akutFavorit)}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Notfallmodus-Umschalter: eigene volle Zeile (13.09., Nutzerin-
           Vorgabe) — vorher schmal neben dem Akutmodus-Knopf, der jetzt

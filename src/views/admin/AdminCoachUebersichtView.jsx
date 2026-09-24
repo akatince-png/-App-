@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Shell, Card, PrimaryButton, TextInput } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
 import ProgressRing from "../../ui/ProgressRing";
-import { accentDark, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
+import { accentDark, cardBorder, danger, success, successSoft, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { toLocalISODate } from "../../utils/dates";
 import { CoacheeNachrichtenPanel } from "./AdminDashboardView";
