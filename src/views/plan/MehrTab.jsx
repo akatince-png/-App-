@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { Card, Label, Pill, TextInput } from "../../ui/primitives";
 import { accent, accentDark, accentSoft, cardBorder, danger, success, textMuted } from "../../ui/theme";
 import { useAuth } from "../../context/AuthContext";
@@ -250,6 +251,10 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
   const [resetFortschrittLaedt, setResetFortschrittLaedt] = useState(false);
   const [resetFortschrittMsg, setResetFortschrittMsg] = useState(null);
   const RESET_FORTSCHRITT_WORT = "NEU STARTEN";
+  // Zweite Sicherheitsstufe (24.09., Nutzerinnen-Wunsch "falls ich mal aus
+  // Versehen dagegen komme"): nach dem Knopf erst noch ein Fenster "Bist du
+  // sicher?" — "Abbrechen" ist dort der große, vorausgewählte Knopf.
+  const [resetBestaetigen, setResetBestaetigen] = useState(null); // null | "fortschritt" | "alles"
   // Ohne sofortige sichtbare Reaktion tippt man bei der vollen Weiterleitung
   // zu Spotify (die ein paar Sekunden dauern kann) leicht nochmal — dann
   // startet ein zweiter Anmelde-Durchlauf parallel, dessen Code beim
@@ -894,7 +899,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         <TextInput value={resetFortschrittEntwurf} onChange={setResetFortschrittEntwurf} placeholder={RESET_FORTSCHRITT_WORT} />
         <div style={{ marginTop: 10 }}>
           <button
-            onClick={handleFortschrittZuruecksetzen}
+            onClick={() => setResetBestaetigen("fortschritt")}
             disabled={resetFortschrittEntwurf.trim().toUpperCase() !== RESET_FORTSCHRITT_WORT || resetFortschrittLaedt}
             style={{
               width: "100%",
@@ -925,7 +930,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         <TextInput value={resetAllesEntwurf} onChange={setResetAllesEntwurf} placeholder={RESET_ALLES_WORT} />
         <div style={{ marginTop: 10 }}>
           <button
-            onClick={handleAllesZuruecksetzen}
+            onClick={() => setResetBestaetigen("alles")}
             disabled={resetAllesEntwurf.trim().toUpperCase() !== RESET_ALLES_WORT || resetAllesLaedt}
             style={{
               width: "100%",
@@ -945,6 +950,50 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         </div>
         {resetAllesMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetAllesMsg}</div>}
       </Card>
+
+      {resetBestaetigen &&
+        createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Wirklich zurücksetzen?"
+          onClick={() => setResetBestaetigen(null)}
+          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(21, 24, 26, 0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 400, background: "#fff", borderRadius: 22, padding: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
+            <div style={{ fontSize: 34, textAlign: "center" }}>⚠️</div>
+            <div style={{ fontSize: 18, fontWeight: 900, textAlign: "center", marginTop: 6 }}>Bist du dir sicher?</div>
+            <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, textAlign: "center", marginTop: 8 }}>
+              {resetBestaetigen === "fortschritt"
+                ? "Punkte, Level, Serien, Abzeichen und alle Abhak-Einträge und Verläufe werden endgültig gelöscht. Deine Einrichtung bleibt. Das lässt sich nicht rückgängig machen."
+                : "ALLE deine Protokoll-Daten und deine komplette Einrichtung werden endgültig gelöscht. Du startest danach wieder beim Einrichtungs-Assistenten. Das lässt sich nicht rückgängig machen."}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setResetBestaetigen(null)}
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 14, border: "none", fontSize: 15, fontWeight: 800, cursor: "pointer", background: accentDark, color: "#fff", fontFamily: "inherit" }}
+              >
+                Nein, abbrechen
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const art = resetBestaetigen;
+                  setResetBestaetigen(null);
+                  if (art === "fortschritt") handleFortschrittZuruecksetzen();
+                  else handleAllesZuruecksetzen();
+                }}
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 14, border: `1.5px solid ${danger}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "#fff", color: danger, fontFamily: "inherit" }}
+              >
+                {resetBestaetigen === "fortschritt" ? "Ja, Fortschritt endgültig löschen" : "Ja, alles endgültig löschen"}
+              </button>
+            </div>
+          </div>
+        </div>,
+          document.body
+        )}
     </>
   );
 }

@@ -258,6 +258,7 @@ löschbar.
     - Löscht alle Abhak-Logs und Verläufe, Errungenschaften, Denksport-Ergebnisse, Quest-Fortschritt und Wochen-Snapshots sowie Trainings bis heute.
     - Setzt das `startdatum` aktiver Protokolle auf heute.
     - Die Einrichtung bleibt erhalten, ebenso Blutwerte, Änderungsprotokoll, Nachrichten und Tagebuch.
+  - Beide Knöpfe öffnen danach zusätzlich ein Fenster „Bist du dir sicher?“ mit großem „Nein, abbrechen“ (Wunsch 24.09.)
   - **„Alles löschen“:** wie bisher mit „ALLES LÖSCHEN“. Neu mit gelöscht werden `quest_fortschritt`, die `routine_*_items` und `atemuebungen`.
 - **RLS:** `quest_fortschritt` und `wochenprotokoll_snapshots` dürfen nur Admins löschen. Bei Coachees bleiben diese Zeilen still stehen; das ist gewollt.
 

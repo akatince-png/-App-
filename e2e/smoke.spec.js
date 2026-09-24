@@ -125,5 +125,10 @@ test("Mehr: beide Neustart-Knöpfe sind da und erst nach Bestätigungswort aktiv
   await page.getByPlaceholder("NEU STARTEN").fill("neu starten");
   await expect(fortschritt).toBeEnabled();
   await expect(alles).toBeDisabled();
+  // zweite Sicherheitsstufe: erst ein "Bist du dir sicher?"-Fenster
+  await fortschritt.click();
+  await expect(page.getByRole("dialog", { name: "Wirklich zurücksetzen?" })).toBeVisible();
+  await page.getByRole("button", { name: "Nein, abbrechen" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
