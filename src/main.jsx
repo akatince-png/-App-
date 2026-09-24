@@ -3,16 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { initErrorMonitoring } from './services/errorMonitoring.js'
-import { einmalNeuLaden } from './utils/nachladeFehler.js'
 
 initErrorMonitoring()
 
-// Vite meldet hier, wenn ein Teil der App nicht nachgeladen werden konnte
-// (z. B. nach einer neuen Veröffentlichung) — dann einmal neu laden statt
-// abzustürzen, siehe utils/nachladeFehler.js.
-window.addEventListener('vite:preloadError', (event) => {
-  if (einmalNeuLaden()) event.preventDefault()
-})
+// Nachlade-Fehler (neue Veröffentlichung, Verbindung kurz weg) behandelt
+// seit 24.09. lazyAnsicht in AuthenticatedApp: erst still wiederholen, dann
+// über das Auffangnetz einmal neu laden. Der frühere Sofort-Neuladen hier
+// ("vite:preloadError" + preventDefault) ließ den Import mit `undefined`
+// enden → kurzer Absturz-Bildschirm vor dem Neuladen.
 
 // Registrierung ist Voraussetzung für Push-Benachrichtigungen (auch wenn die
 // App gerade geschlossen ist) — schadet nicht, wenn der Browser das nicht

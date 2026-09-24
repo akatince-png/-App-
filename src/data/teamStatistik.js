@@ -84,8 +84,9 @@ export async function teamLigaLaden(von, bis) {
   };
 }
 
-export async function teamNeuigkeitenLaden(tage = 3) {
-  const { data, error } = await supabase.rpc("team_neuigkeiten", { p_tage: tage });
+// fuer: bei "Verwalten als" die verwaltete Person (wirkt nur für Admins).
+export async function teamNeuigkeitenLaden(tage = 3, fuer = null) {
+  const { data, error } = await supabase.rpc("team_neuigkeiten", { p_tage: tage, p_fuer: fuer });
   if (error) {
     console.error(error);
     return { ok: false, error: error.message };

@@ -253,10 +253,12 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
         <Card key={p.id} style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: textMain, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {p.vorname || p.email}
+              {/* Name kürzt sich mit "…", das Admin-Schild bleibt ganz sichtbar
+                  (Livetest 24.09.: lange E-Mail als Name quetschte es weg). */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14.5, fontWeight: 800, color: textMain }}>
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.vorname || p.email}</span>
                 {p.is_admin && (
-                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: accentDark, background: accentSoft, padding: "2px 8px", borderRadius: 8 }}>
+                  <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: accentDark, background: accentSoft, padding: "2px 8px", borderRadius: 8 }}>
                     Admin
                   </span>
                 )}

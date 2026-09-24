@@ -18,6 +18,7 @@ import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochen
 import { spotifyCodeAustauschen } from "./services/spotify";
 import { viewAusHash, hashFuerView } from "./utils/routing";
 import { meldeAppBereit } from "./utils/startzeit";
+import { ladeMitWiederholung } from "./utils/nachladeFehler";
 
 // Code-Splitting (App-Bauplan-Punkt): vorher landeten ALLE Bildschirme —
 // Admin-Bereich, Onboarding-Fragebogen, jede einzelne Kategorie-Ansicht —
@@ -29,24 +30,27 @@ import { meldeAppBereit } from "./utils/startzeit";
 // HomeView bleibt bewusst ein normaler, eager Import: sie wird in praktisch
 // jeder Sitzung sofort nach dem Laden gebraucht, ein zusätzlicher
 // Netzwerk-Sprung würde dort nur schaden statt nutzen.
-const AdminDashboardView = lazy(() => import("./views/admin/AdminDashboardView"));
-const AdminWissenView = lazy(() => import("./views/admin/AdminWissenView"));
-const AdminFormulareView = lazy(() => import("./views/admin/AdminFormulareView"));
-const AdminCoachUebersichtView = lazy(() => import("./views/admin/AdminCoachUebersichtView"));
-const AdminQuestsView = lazy(() => import("./views/admin/AdminQuestsView"));
-const AdminTeamsView = lazy(() => import("./views/admin/AdminTeamsView"));
-const LexikonView = lazy(() => import("./views/LexikonView"));
-const TagesplanView = lazy(() => import("./views/TagesplanView"));
-const PlanView = lazy(() => import("./views/plan/PlanView"));
-const PlaeneView = lazy(() => import("./views/plan/PlaeneView"));
-const MehrView = lazy(() => import("./views/plan/MehrView"));
-const GewohnheitenView = lazy(() => import("./views/GewohnheitenView"));
-const AtemuebungenView = lazy(() => import("./views/AtemuebungenView"));
-const DenksportView = lazy(() => import("./views/DenksportView"));
-const TeamView = lazy(() => import("./views/TeamView"));
-const OnboardingFlow = lazy(() => import("./views/onboarding/OnboardingFlow"));
-const NeuesProtokollBestaetigenView = lazy(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
-const ZusatzprotokollErstellenView = lazy(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
+// lazyAnsicht (24.09.): wie lazy(), wiederholt aber kurze Ladefehler still
+// (utils/nachladeFehler.js).
+const lazyAnsicht = (importFn) => lazy(ladeMitWiederholung(importFn));
+const AdminDashboardView = lazyAnsicht(() => import("./views/admin/AdminDashboardView"));
+const AdminWissenView = lazyAnsicht(() => import("./views/admin/AdminWissenView"));
+const AdminFormulareView = lazyAnsicht(() => import("./views/admin/AdminFormulareView"));
+const AdminCoachUebersichtView = lazyAnsicht(() => import("./views/admin/AdminCoachUebersichtView"));
+const AdminQuestsView = lazyAnsicht(() => import("./views/admin/AdminQuestsView"));
+const AdminTeamsView = lazyAnsicht(() => import("./views/admin/AdminTeamsView"));
+const LexikonView = lazyAnsicht(() => import("./views/LexikonView"));
+const TagesplanView = lazyAnsicht(() => import("./views/TagesplanView"));
+const PlanView = lazyAnsicht(() => import("./views/plan/PlanView"));
+const PlaeneView = lazyAnsicht(() => import("./views/plan/PlaeneView"));
+const MehrView = lazyAnsicht(() => import("./views/plan/MehrView"));
+const GewohnheitenView = lazyAnsicht(() => import("./views/GewohnheitenView"));
+const AtemuebungenView = lazyAnsicht(() => import("./views/AtemuebungenView"));
+const DenksportView = lazyAnsicht(() => import("./views/DenksportView"));
+const TeamView = lazyAnsicht(() => import("./views/TeamView"));
+const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
+const NeuesProtokollBestaetigenView = lazyAnsicht(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
+const ZusatzprotokollErstellenView = lazyAnsicht(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
 
 const PLAENE_VIEW_IDS = PLAENE_TABS.map((t) => t.id);
 const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch", "profil", "blutzucker", "community"];

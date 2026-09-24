@@ -7,7 +7,6 @@ import { accentDark, accentSoft, cardBorder, danger, hexZuRgba, logoVerlauf, nac
 import { KATEGORIE_META } from "../utils/dayItems";
 import { levelAusPunkten } from "../utils/level";
 import { useAppData } from "../context/AppDataContext";
-import { useAuth } from "../context/AuthContext";
 import {
   WOCHENZIEL_PRO_PERSON,
   ligaHighlights,
@@ -97,8 +96,8 @@ function MotivierenFeld({ name, onSenden, onFertig }) {
   );
 }
 
-function MeinTeam({ team, onMotivieren }) {
-  const { user } = useAuth();
+// ichId: bei "Verwalten als" die verwaltete Person, sonst das eigene Konto.
+function MeinTeam({ team, onMotivieren, ichId }) {
   const [mitglieder, setMitglieder] = useState(null);
   const [neuigkeiten, setNeuigkeiten] = useState([]);
   const [fehler, setFehler] = useState(null);
@@ -108,7 +107,7 @@ function MeinTeam({ team, onMotivieren }) {
   useEffect(() => {
     let ab = false;
     const { von, bis } = zeitraumGrenzen("woche");
-    Promise.all([teamMitgliederLaden(von, bis), teamNeuigkeitenLaden(3)]).then(([m, n]) => {
+    Promise.all([teamMitgliederLaden(von, bis), teamNeuigkeitenLaden(3, ichId)]).then(([m, n]) => {
       if (ab) return;
       if (!m.ok) return setFehler("Die Team-Daten konnten gerade nicht geladen werden.");
       setMitglieder(m.mitglieder.filter((x) => x.teamId === team.id));
@@ -117,7 +116,7 @@ function MeinTeam({ team, onMotivieren }) {
     return () => {
       ab = true;
     };
-  }, [team.id]);
+  }, [team.id, ichId]);
 
   if (fehler) return <div style={{ fontSize: 13, color: textMuted }}>{fehler}</div>;
   if (!mitglieder) return <div style={{ fontSize: 13, color: textMuted }}>Lädt…</div>;
@@ -154,7 +153,7 @@ function MeinTeam({ team, onMotivieren }) {
       <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 8 }}>Mitglieder diese Woche</div>
       <div style={{ border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: "4px 12px", marginBottom: 18 }}>
         {sortiert.map((m, i) => {
-          const ich = m.userId === user?.id;
+          const ich = m.userId === ichId;
           const ruhig = ich || m.privat ? null : tageRuhig(m.letzteAktivitaet);
           const still = ruhig === null ? !ich && !m.privat && !m.letzteAktivitaet : ruhig >= 2;
           const serie = serieAusTagen(m.aktiveTage);
@@ -206,8 +205,8 @@ function MeinTeam({ team, onMotivieren }) {
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 12, background: "#F5F6FA", marginBottom: 6, fontSize: 13 }}>
               <Profilbild pfad={n.profilbildPfad} name={n.vorname} size={26} />
               <span>
-                <b>{n.userId === user?.id ? "Du" : n.vorname}</b>{" "}
-                {n.userId === user?.id ? (NEUIGKEIT_TEXT[n.art] || "war aktiv ✨").replace(/^hat /, "hast ").replace(/^war /, "warst ") : NEUIGKEIT_TEXT[n.art] || "war aktiv ✨"}
+                <b>{n.userId === ichId ? "Du" : n.vorname}</b>{" "}
+                {n.userId === ichId ? (NEUIGKEIT_TEXT[n.art] || "war aktiv ✨").replace(/^hat /, "hast ").replace(/^war /, "warst ") : NEUIGKEIT_TEXT[n.art] || "war aktiv ✨"}
                 {n.tag && <span style={{ color: textMuted }}> · {tagLabel(n.tag)}</span>}
               </span>
             </div>
@@ -336,7 +335,7 @@ export default function TeamView({ onHome }) {
             {(gruppenprotokolle || []).map((gp) => (
               <GruppenprotokollKarte key={gp.id} gp={gp} userId={userId} onUmschalten={gruppenBausteinUmschalten} />
             ))}
-            <MeinTeam team={team} onMotivieren={teamNachrichtSenden} />
+            <MeinTeam team={team} onMotivieren={teamNachrichtSenden} ichId={userId} />
           </>
         ) : (
           <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5 }}>Du bist noch keinem Team zugeordnet. Dein Coach kann dich einem Team zuordnen – dann siehst du hier dein Team.</div>

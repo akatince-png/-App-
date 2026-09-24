@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { istNachladeFehler, einmalNeuLaden } from "./nachladeFehler";
+import { istNachladeFehler, einmalNeuLaden, ladeMitWiederholung } from "./nachladeFehler";
 
 function speicher() {
   const m = new Map();
@@ -20,5 +20,20 @@ describe("nachladeFehler", () => {
     expect(einmalNeuLaden(110000, s, neu)).toBe(false);
     expect(einmalNeuLaden(140001, s, neu)).toBe(true);
     expect(neu).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("ladeMitWiederholung", () => {
+  const sofort = () => Promise.resolve();
+  it("wiederholt nach einem Fehler und liefert dann das Modul", async () => {
+    const f = vi.fn().mockRejectedValueOnce(new Error("Failed to fetch dynamically imported module")).mockResolvedValueOnce({ default: "Ansicht" });
+    await expect(ladeMitWiederholung(f, 3, sofort)()).resolves.toEqual({ default: "Ansicht" });
+    expect(f).toHaveBeenCalledTimes(2);
+  });
+  it("behandelt ein leeres Modul wie einen Fehler und meldet am Ende einen Nachlade-Fehler", async () => {
+    const f = vi.fn().mockResolvedValue(undefined);
+    const fehler = await ladeMitWiederholung(f, 3, sofort)().catch((e) => e);
+    expect(f).toHaveBeenCalledTimes(3);
+    expect(istNachladeFehler(fehler)).toBe(true);
   });
 });

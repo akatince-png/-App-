@@ -24,3 +24,25 @@ export function einmalNeuLaden(jetzt = Date.now(), speicher = globalThis.session
   neuLaden();
   return true;
 }
+
+// Für lazy(): einen fehlgeschlagenen Nachlade-Versuch (kurzer Verbindungs-
+// fehler, 502) still bis zu zweimal wiederholen, bevor das Auffangnetz
+// eingreift (Admin-Livetest 24.09.: ein einzelner 502 auf einer
+// Teil-Datei ließ den ganzen Tagesplan abstürzen). Scheitert es endgültig,
+// kommt ein Fehler, den istNachladeFehler erkennt → einmal neu laden.
+export function ladeMitWiederholung(importFn, versuche = 3, warte = (ms) => new Promise((r) => setTimeout(r, ms))) {
+  return async () => {
+    let letzter = null;
+    for (let i = 0; i < versuche; i++) {
+      try {
+        const modul = await importFn();
+        if (modul?.default) return modul;
+        letzter = new Error("leeres Modul");
+      } catch (e) {
+        letzter = e;
+      }
+      if (i < versuche - 1) await warte(800 * (i + 1));
+    }
+    throw istNachladeFehler(letzter) ? letzter : new Error(`Failed to fetch dynamically imported module (${letzter?.message || "unbekannt"})`);
+  };
+}

@@ -50,6 +50,18 @@ where email = 'claude.dauertest@example.com';
 
 (Falls `extensions.crypt` nicht existiert, das Schema weglassen: `crypt(...)` / `gen_salt(...)`.)
 
+## Admin-Testkonto (seit 24.09.2026, Nutzerinnen-Wunsch)
+
+`claude.admintest@example.com` („Claude Admin-Test“) ist ein Admin-Konto ohne Team, damit auch der Admin-Bereich live getestet wird. Die Rangliste ist ausgeblendet, damit es nirgends mitgezählt wird. **Nicht löschen.**
+
+- **Passwort:** wird wie oben je Lauf per SQL gesetzt. Die Admin-Rechte schützt ein Trigger (`profiles_is_admin_schutz`), deshalb darf sie nur ein bestehender Admin vergeben.
+- **Skript:** `scripts/dauertest/adminlauf.mjs` öffnet alle Admin- und normalen Ansichten und legt ein „Probe-Team Admin-Test“ mit Gruppenprotokoll an. Danach sieht es den Stand an, beendet das Protokoll, sieht sich per „Verwalten“ fünf Ansichten von Jonas an (ohne etwas zu ändern) und löscht das Probe-Team über die Oberfläche wieder. Befunde landen in `befunde.json`.
+
+```bash
+AKA_TEST_PW='<pw>' node scripts/dauertest/adminlauf.mjs
+```
+
+
 ## Täglicher Ablauf
 
 1. `git fetch origin main` und auf den Stand von `main` wechseln, dann `npm ci`, falls nötig.

@@ -266,6 +266,10 @@ löschbar.
   - `ui/GruppenprotokollAdmin.jsx` in Admin → Teams je Team: Formular (Name, Ziel, Zeitraum, Bausteine, eine Quest), laufende Protokolle mit „Stand“ und „Beenden“.
 - **Dauertest:** Das Skript hakt auf der Team-Seite eigene Gruppen-Gewohnheiten ab (mit Fleiß-Faktor). e2e: `e2e/gruppenprotokoll.spec.js`; das Harness kennt `?gruppe=1`.
 - **Bugsuche 24.09. (Nachmittag):** Live-Check mit Mia/Lea: 24 Ansichten fehlerfrei, Abhaken auf der Team-Seite funktioniert. Behoben: (1) Nach dem Enddatum liefen Gruppenprotokolle bisher einfach weiter. Jetzt `istAbgelaufen`: Der Stand bleibt auf dem Enddatum stehen, die Karte zeigt „abgeschlossen“, Abhaken und Home-Einträge entfallen, und im Admin steht „Zeit um – kann beendet werden“. (2) Der Team-Feed zeigt jetzt den Tag („heute“, „gestern“ usw., `tagLabel`). Vorher wirkte eine Routine von gestern, als wäre sie heute geschafft.
+- **Admin-Livetest 24.09. (Abend):** Neues Admin-Testkonto `claude.admintest@example.com`, Skript `scripts/dauertest/adminlauf.mjs` (siehe `scripts/dauertest/README.md`). Behoben:
+  1. **„Verwalten als“ auf der Team-Seite:** Die Seite rechnete mit dem Admin-Konto statt mit der verwalteten Person. Folgen: kein „Du“, „Motivieren“ bei sich selbst, leerer Feed. `MeinTeam` bekommt jetzt `ichId` = `userId` aus `useAppData`. Migration `0097_team_neuigkeiten_verwalten.sql` (auf Prod eingespielt) ergänzt `team_neuigkeiten(p_tage, p_fuer)`; `p_fuer` wirkt nur für Admins.
+  2. **Nachlade-Fehler:** Ein einzelner 502 auf einer Teil-Datei ließ den Tagesplan kurz abstürzen. Der alte `vite:preloadError`-Handler mit preventDefault ließ den Import mit `undefined` enden. Neu ist `lazyAnsicht` = `lazy(ladeMitWiederholung(...))`: zwei stille Wiederholungen, danach lädt das Auffangnetz einmal neu.
+  3. Im Admin-Dashboard wurde das „Admin“-Schild bei langen Namen weggequetscht.
 
 ### Nachtrag Teil 121 — Team-Seite, Team-Liga, Coach-Ansicht (24.09.)
 
