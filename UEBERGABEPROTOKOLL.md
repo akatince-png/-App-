@@ -256,6 +256,8 @@ löschbar.
 - **Schnellknöpfe im Gehirnbild:** Die Kacheln „Wasser eintragen“ und „Grad nicht gut?“ unter dem Gehirn sind entfernt. Stattdessen sitzen unten links im Gehirnbild zwei Knöpfe (`Schnellknoepfe` in `GehirnKarte.jsx`):
   - ein großer, leicht wippender Wasser-Tropfen (`.mp-tropfen`), der die Wasser-Seite öffnet;
   - ein runder gelber 💡-Knopf, der das Akutmodus-Panel öffnet.
+- **„Jetzt dran“ in der Karte:** Die Nutzerin hat sich aus drei Vorschauen für „Variante B“ entschieden. `HomeView.jsx` übergibt `kartenMitte` als `mitte` an `GehirnKarte`. Direkt unter dem Spielstand steht ein weißes Feld mit der nächsten Aufgabe groß (`renderAlsNaechstes({ max: 1, eingebettet: true })`), die folgenden stehen als antippbare „Danach:“-Chips in ihrer Bereichsfarbe daneben. Die separate „Als Nächstes“-Liste unter der Karte gibt es nicht mehr, die volle Liste steht im Tagesplan.
+- Das Test-Harness kennt `?beispiel=1` (Beispieltag mit Routine, Medikament, Supplement, Gewohnheit) für Design-Vorschauen.
 - **Aka-Knopf:** Der Aka-Orb bleibt wie gehabt fest unten mittig (`KiChat.jsx`, Portal). Auf ganzseitigen Screenshots erscheint er mitten auf der Seite; das ist kein Fehler.
 
 ### Nachtrag Teil 121 — Tagesrätsel statt freiem Denksport (24.09.)

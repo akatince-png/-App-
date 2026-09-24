@@ -707,8 +707,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   const direktzugriffWidgets = isEmergencyMode ? miniWidgetData.filter((w) => w.isEssential && w.aktiv) : miniWidgetData.filter((w) => w.aktiv);
   const weiterePlaeneWidgets = isEmergencyMode ? [] : miniWidgetData.filter((w) => !w.aktiv);
 
-  // Als-Nächstes-Liste als Baustein (24.09.): wird je nach Home-Variante
-  // unter der großen Karte oder in ihr gezeigt (siehe homeVariante).
+  // Als-Nächstes-Liste als Baustein (24.09.): steht jetzt im weißen Feld
+  // der großen Karte oben (siehe kartenMitte). "Tagesplan ›" führt zur
+  // vollen Liste; Morgen-/Abendroutine sind mit drin (routineAlsNaechstesItems).
   const renderAlsNaechstes = ({ max = 4, eingebettet = false } = {}) => (
       <div style={{ marginBottom: eingebettet ? 0 : 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -869,68 +870,40 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       </div>
   );
 
-  // VORSCHAU (24.09.): Varianten, wie "Als Nächstes" in die große Karte
-  // wandert — wählbar über ?home=a|b|c, nur zum Vergleichen.
-  const homeVariante = (() => {
-    try {
-      return new URLSearchParams(window.location.search).get("home") || "";
-    } catch {
-      return "";
-    }
-  })();
-  const [kartenTab, setKartenTab] = useState("heute");
+  // "Jetzt dran" in der großen Karte (24.09., Nutzerinnen-Wahl "B" aus
+  // drei Vorschauen): die nächste Aufgabe groß in einem weißen Feld, damit
+  // sie sich vom farbigen Kartenhintergrund klar abhebt; die folgenden als
+  // kleine Chips in ihrer Bereichsfarbe. Die volle Liste steht im Tagesplan.
   const weissesFeld = (kinder) => (
     <div style={{ marginTop: 14, background: "#fff", color: textMain, borderRadius: 18, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}>{kinder}</div>
   );
   const naechsteChips = angezeigteItems.slice(1, 4);
-  const kartenMitte =
-    homeVariante === "a"
-      ? weissesFeld(renderAlsNaechstes({ max: 3, eingebettet: true }))
-      : homeVariante === "b"
-        ? weissesFeld(
-            <>
-              {renderAlsNaechstes({ max: 1, eingebettet: true })}
-              {naechsteChips.length > 0 && (
-                <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>Danach:</span>
-                  {naechsteChips.map((item) => {
-                    const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
-                    return (
-                      <span key={item.key} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 9px", borderRadius: 99, background: k.bg, color: k.text, fontSize: 11.5, fontWeight: 700 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: 4, background: k.dot }} />
-                        {item.name}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )
-        : homeVariante === "c"
-          ? (
-              <>
-                <div role="tablist" style={{ display: "flex", gap: 6, marginTop: 14, padding: 4, borderRadius: 14, background: "rgba(255,255,255,0.16)" }}>
-                  {[
-                    ["heute", "📋 Heute"],
-                    ["gehirn", "🧠 Gehirn"],
-                  ].map(([id, label]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      role="tab"
-                      aria-selected={kartenTab === id}
-                      className="mp-tap"
-                      onClick={() => setKartenTab(id)}
-                      style={{ flex: 1, border: "none", borderRadius: 11, padding: "9px 0", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: kartenTab === id ? "#fff" : "transparent", color: kartenTab === id ? textMain : "#fff" }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                {kartenTab === "heute" && weissesFeld(renderAlsNaechstes({ max: 4, eingebettet: true }))}
-              </>
-            )
-          : null;
+  const kartenMitte = weissesFeld(
+    <>
+      {renderAlsNaechstes({ max: 1, eingebettet: true })}
+      {angezeigteItems.length === 0 && <div style={{ fontSize: 13.5, fontWeight: 700, color: textMuted, padding: "4px 2px" }}>Für heute ist alles erledigt 🎉</div>}
+      {naechsteChips.length > 0 && (
+        <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          <span style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>Danach:</span>
+          {naechsteChips.map((item) => {
+            const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+            return (
+              <button
+                key={item.key}
+                type="button"
+                className="mp-tap"
+                onClick={() => (item.kategorie === "training" ? starteTrainingVonItem(item) : onOpenView(item.viewId || "tagesplan"))}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 9px", borderRadius: 99, border: "none", background: k.bg, color: k.text, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                <span style={{ width: 7, height: 7, borderRadius: 4, background: k.dot }} />
+                {item.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
 
   return (
     <Shell>
@@ -957,7 +930,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         onAkut={() => setAkutOffen(true)}
         phase={phase}
         mitte={kartenMitte}
-        nurKopf={homeVariante === "c" && kartenTab === "heute"}
         kopf={
           <SpielstandKarte
             eingebettet
@@ -971,15 +943,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           />
         }
       />
-
-      {/* "Jetzt dran"/Als Nächstes direkt unter dem Spielstand (23.09.) —
-          eine Sache zur Zeit, vor allen Zusatz-Kacheln. */}
-      {/* Als Nächstes/Tagesplan direkt unter dem Tagesfortschritt (12.09.,
-          Nutzerinnen-Vorgabe), statt weiter unten — "Tagesplan" ist hier nur
-          noch der Link zur vollen Ansicht, kein eigener großer Button mehr.
-          Morgen-/Abendroutine tauchen hier jetzt mit auf, siehe
-          routineAlsNaechstesItems oben. */}
-      {!kartenMitte && renderAlsNaechstes()}
 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
