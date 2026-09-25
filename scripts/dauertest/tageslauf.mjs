@@ -39,9 +39,11 @@ fs.mkdirSync(OUT, { recursive: true });
 // (AKA_FLEISS, Anteil erledigter fälliger Punkte, Standard ≈ 0.83) und
 // ihren eigenen Pausentag (AKA_PAUSE_VERSATZ, 0–6), damit sich die Teams
 // unterscheiden und nicht alle am selben Tag pausieren.
-const FLEISS = Number(process.env.AKA_FLEISS || "0.83");
+const FLEISS = Number(process.env.AKA_FLEISS || "0.95");
 const PAUSE_VERSATZ = Number(process.env.AKA_PAUSE_VERSATZ || "0");
-const PAUSENTAG = (tagIndex + PAUSE_VERSATZ) % 7 === 5;
+// Seit 25.09. (Nutzerin: "alle Testkonten nur aktiv, nicht inaktiv"):
+// keine Pausentage mehr, außer ausdrücklich mit AKA_PAUSENTAGE=1.
+const PAUSENTAG = process.env.AKA_PAUSENTAGE === "1" && (tagIndex + PAUSE_VERSATZ) % 7 === 5;
 // Wiederholung nach einem abgebrochenen Lauf: nichts abhaken/eintragen,
 // nur anmelden und alle Ansichten prüfen (keine doppelten Testdaten).
 const NUR_ANSICHTEN = process.env.AKA_NUR_ANSICHTEN === "1";
@@ -411,7 +413,10 @@ try {
   await warte(1500);
   await foto("06d-team");
   const teamText = await text();
-  if (!/Wochenziel als Team/.test(teamText)) befund("Team-Seite: kein Wochenziel sichtbar — Konto nicht im Team oder Laden fehlgeschlagen (Foto 06d).");
+  // Konten ohne Team ("Test 1" als Einzelperson, Admin-Testkonto) haben
+  // bewusst kein Team-Wochenziel (AKA_OHNE_TEAM=1).
+  if (process.env.AKA_OHNE_TEAM === "1") schritt("Team-Seite: Konto bewusst ohne Team");
+  else if (!/Wochenziel als Team/.test(teamText)) befund("Team-Seite: kein Wochenziel sichtbar — Konto nicht im Team oder Laden fehlgeschlagen (Foto 06d).");
   bericht.teamText = teamText.slice(0, 800);
   // Gruppenprotokoll (seit 24.09.): eigene Gruppen-Gewohnheiten abhaken —
   // mit demselben Fleiß wie im Tagesplan, nicht am Pausentag.

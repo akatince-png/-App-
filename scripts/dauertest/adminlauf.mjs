@@ -71,7 +71,7 @@ await foto('32-zurueck');
 // eine Korrektur machen und rückgängig machen, einer Person schreiben. Die
 // Tipp-Zahlen je Aufgabe landen im Bericht (ADHS-Blick: so wenige wie möglich).
 const coach = { taps: {}, beobachtungen: [] };
-const TEST_COACHEES = ['Claude Dauertest', 'Mia Dauertest', 'Jonas Dauertest', 'Lea Dauertest'];
+const TEST_COACHEES = ['Claude Dauertest', 'Mia Dauertest', 'Jonas Dauertest', 'Lea Dauertest', 'Test 1'];
 // 1) Ergebnisse durchsehen: Coach-Übersicht
 await geh('admin');
 await p.getByRole('button', { name: /Coach-Übersicht/ }).first().click().catch(() => befund('Knopf Coach-Übersicht fehlt'));

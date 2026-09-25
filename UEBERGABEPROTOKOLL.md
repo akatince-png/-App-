@@ -92,6 +92,16 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Aka:** neuer Bereich `schichtplan` (`AIService.schichtplanAusChat`). Legt Varianten an bzw. aktualisiert sie und speichert optional den Rhythmus als Plan.
 - **Testkonto Jonas** ist seit 25.09. Schichtarbeiter: Früh/Spät wochenweise vom 21.09. bis 25.10., Wochenende frei. Die Tages- und Admin-Läufe fotografieren seine Schichtkarte und den Coach-Kasten.
 
+### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
+- Alle Testkonten haben **alle** Bereiche eingerichtet (per SQL, Schema wie in der App): Claude, Mia, Jonas, Lea, „Test 1“ (Einzelperson ohne Team, Onboarding jetzt abgeschlossen) und das Admin-Testkonto.
+  - Medikament (täglich), 2 Supplemente, 3 Mahlzeiten mit Wochenplan, Training Mo/Mi/Fr, 2 Gewohnheiten.
+  - Morgen- und Abendroutine mit Zeiten, Wasser-, Tageslicht- und Bildschirmzeit-Ziel, Schlafplan, Workout-Flow „Fokus 25/5“.
+- Bereits Vorhandenes blieb unverändert. Die ADHS-Medikamente von Mia und Lea standen auf „1× pro Woche“ und wurden auf täglich korrigiert.
+- **Hinweis Produkt:** Ein neues Medikament startet in der App mit „Hormone / Injektion / 1× pro Woche“, ein Überbleibsel aus der Peptid-Zeit. Für ADHS-Medikation wäre „täglich“ als Voreinstellung sinnvoller; noch nicht geändert, mit der Nutzerin abstimmen.
+- Täglicher Test: keine Pausentage mehr (`AKA_PAUSENTAGE=1` nur auf Wunsch), Fleiß 0.95 für alle, alle sechs Konten laufen täglich; „Test 1“ und das Admin-Testkonto mit `AKA_OHNE_TEAM=1`.
+- Stand 25.09. mittags: `letzte_aktivitaet` = heute bei allen sechs.
+- Leeres Team „Aka“ (0 Mitglieder) existiert. Es ist kein Testteam, deshalb nicht angefasst.
+
 ### ⚠️ Erinnerungen kamen nicht an – behoben (25.09.)
 Beim Einbau entdeckt: Der minütliche Cron-Job (jobid 2) bekam bei **jedem** Aufruf 401. Das Protokoll reicht nur 24 Stunden zurück; es ist also unklar, seit wann.
 1. Es fehlte der Authorization-Header (verify_jwt). Der Cron-Job schickt jetzt zusätzlich den öffentlichen anon-Schlüssel; eingespielt per `cron.alter_job`, weil der Job-Befehl das Geheimnis enthält.

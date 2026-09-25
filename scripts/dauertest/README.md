@@ -20,6 +20,8 @@ Wochenübersicht und Wochenprotokolle.
 
 Zwei Test-Teams mit bewusst **unterschiedlichen Lebensbereichen und unterschiedlichem Fleiß**. Ziel: sehen, wie sich Punkte, Serien, Team-Wochenziel und Liga verhalten, wenn nicht alle dieselben Bereiche haben.
 
+**Seit 25.09. (Nutzerin: „alle Testkonten komplett ausgefüllt, funktionsfähig und nur aktiv“):** Alle Testkonten haben **alle** Bereiche eingerichtet: Medikament täglich, 2 Supplemente, 3 Mahlzeiten täglich, Training Mo/Mi/Fr, 2 Gewohnheiten, Morgen- und Abendroutine, Wasser, Tageslicht, Bildschirmzeit, Schlafplan und einen Workout-Flow. Das gilt auch für das Admin-Testkonto und „Test 1“. **Keine Pausentage mehr** (nur noch mit `AKA_PAUSENTAGE=1`), Fleiß für alle **0.95**. Die Spalten „Bereiche/Nicht dabei/Fleiß/Pausentag“ unten sind damit nur noch Historie der ersten Tage. „Test 1“ (`test-yjmgc7d9@aka-test.local`, Einzelperson ohne Team) und das Admin-Testkonto laufen täglich mit, beide mit `AKA_OHNE_TEAM=1`.
+
 | Person | E-Mail | Team | Bereiche | Nicht dabei | Fleiß (`AKA_FLEISS`) | Pausentag-Versatz |
 |---|---|---|---|---|---|---|
 | Claude Dauertest | `claude.dauertest@example.com` | Sonne | Supplemente, Gewohnheiten, Morgen-/Abendroutine, Wasser | Medikamente, Training, Ernährung | 0.83 | 0 |
