@@ -182,6 +182,9 @@ export const EINNAHMEARTEN = [
   "Pulver",
   "Tropfen",
   "Nasenspray",
+  // Gel/Creme und Pflaster (25.09.): z. B. Testosteron-Ersatztherapie.
+  "Gel / Creme",
+  "Pflaster",
   "Blüte (Rauchen)",
   "Blüte (Verdampfen)",
   "Esswaren (Edibles)",

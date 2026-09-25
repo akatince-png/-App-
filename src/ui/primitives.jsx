@@ -193,6 +193,7 @@ export function Pill({ label, selected, onClick }) {
       type="button"
       className="mp-tap"
       onClick={onClick}
+      aria-pressed={!!selected}
       style={{
         padding: "9px 14px",
         borderRadius: 20,

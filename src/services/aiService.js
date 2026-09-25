@@ -551,11 +551,13 @@ export const AIService = {
       [
         "Du bist ein Assistent für eine bestehende App, der neue Medikamente/Hormone für Nutzer anlegt.",
         "Fasse das vorangegangene Gespräch jetzt als fertiges Medikament zusammen.",
+        "Kategorie: ADHS-Medikamente (z. B. Elvanse, Medikinet, Ritalin, Atomoxetin, Guanfacin) = \"ADHS-Medikation\"; Testosteron-Ersatztherapie (TRT), Schilddrüse, Östrogen o. Ä. = \"Hormone\".",
+        "Wenn nichts anderes gesagt wurde: täglich (intervallTyp \"fixed\", intervallDays 1) — nur Injektionen wie TRT oft 1× pro Woche (intervallDays 7).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
         "Format exakt:",
         '{ "name": string, "menge": string (z. B. "50mg"), ' +
-          '"kategorie": "Hormone"|"Peptid"|"Blutdruck"|"Diabetes"|"Cholesterin"|"Schmerzmittel"|"Sonstige", ' +
-          '"einnahmeart": "Injektion"|"Tablette (oral)"|"Kapsel"|"Pulver"|"Tropfen"|"Nasenspray", ' +
+          '"kategorie": "ADHS-Medikation"|"Hormone"|"Peptid"|"Cannabis"|"Blutdruck"|"Diabetes"|"Cholesterin"|"Schmerzmittel"|"Sonstige", ' +
+          '"einnahmeart": "Injektion"|"Tablette (oral)"|"Kapsel"|"Pulver"|"Tropfen"|"Nasenspray"|"Gel / Creme"|"Pflaster"|"Blüte (Rauchen)"|"Blüte (Verdampfen)"|"Esswaren (Edibles)", ' +
           '"intervallTyp": "fixed"|"custom"|"cycle"|"weekdays" (fixed = alle X Tage, custom = eigene Tagesanzahl, cycle = X Tage an/Y Tage ab, weekdays = feste Wochentage), ' +
           '"intervallDays": number (nur bei "fixed", sonst 1), "customDays": string (nur bei "custom"), ' +
           '"onDays": string, "offDays": string (nur bei "cycle"), "weekdays": string[] (nur bei "weekdays", aus "Mo","Di","Mi","Do","Fr","Sa","So"), ' +

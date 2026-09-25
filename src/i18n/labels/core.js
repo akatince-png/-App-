@@ -46,6 +46,8 @@ export const LABELS = {
     "Pulver": "Powder",
     "Tropfen": "Drops",
     "Nasenspray": "Nasal spray",
+    "Gel / Creme": "Gel / cream",
+    "Pflaster": "Patch",
 
     // --- MEDIKAMENTE_KATEGORIEN ---
     "Hormone": "Hormones",
@@ -391,6 +393,8 @@ export const LABELS = {
     "Pulver": "Toz",
     "Tropfen": "Damlalar",
     "Nasenspray": "Burun sprey",
+    "Gel / Creme": "Jel / krem",
+    "Pflaster": "Bant",
 
     // --- MEDIKAMENTE_KATEGORIEN ---
     "Hormone": "Hormonlar",

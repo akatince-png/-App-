@@ -92,6 +92,15 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Aka:** neuer Bereich `schichtplan` (`AIService.schichtplanAusChat`). Legt Varianten an bzw. aktualisiert sie und speichert optional den Rhythmus als Plan.
 - **Testkonto Jonas** ist seit 25.09. Schichtarbeiter: Früh/Spät wochenweise vom 21.09. bis 25.10., Wochenende frei. Die Tages- und Admin-Läufe fotografieren seine Schichtkarte und den Coach-Kasten.
 
+### Medikamente: neue Vorgaben + Grundsatz „ganzes Leben“ (25.09.)
+- **Grundsatz (auch in CLAUDE.md):** Die App managt das ganze Leben mit ADHS, nicht nur das ADHS. ADHS-Medikation muss sauber dokumentiert sein; Hormone (z. B. TRT), Ernährung, Schlaf, Bewegung und körperliche Gesundheit sind gleichwertig mit zu erfassen.
+- **Neues Medikament** startet jetzt mit „ADHS-Medikation / Tablette / täglich 08:00“ statt „Hormone / Injektion / 1× pro Woche“ aus der Peptid-Zeit.
+  - Beim Kategorie-Wechsel passen sich noch nicht selbst geänderte Felder an: Hormone → Injektion 1× pro Woche, Cannabis → Verdampfen, Cholesterin → abends. Siehe `utils/medikamentVorgaben.js` (mit Tests); gilt im Medikamente-Formular und in der Einrichtung.
+- **Neue Einnahmearten:** „Gel / Creme“ und „Pflaster“, z. B. für Testosteron-Gel.
+- **Aka** kennt jetzt beim Anlegen eines Medikaments die Kategorien „ADHS-Medikation“ und „Cannabis“ sowie alle Einnahmearten (vorher fehlten sie, Elvanse landete z. B. unter „Sonstige“ oder „Hormone“). Aka nimmt „täglich“ an, wenn nichts anderes gesagt wurde.
+- **Bestehende Einträge** ohne Kategorie behalten die alte Anzeige „Hormone / Injektion“, damit nichts umetikettiert wird.
+- `Pill` hat jetzt `aria-pressed` (Barrierefreiheit, Tests).
+
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
 - Alle Testkonten haben **alle** Bereiche eingerichtet (per SQL, Schema wie in der App): Claude, Mia, Jonas, Lea, „Test 1“ (Einzelperson ohne Team, Onboarding jetzt abgeschlossen) und das Admin-Testkonto.
   - Medikament (täglich), 2 Supplemente, 3 Mahlzeiten mit Wochenplan, Training Mo/Mi/Fr, 2 Gewohnheiten.

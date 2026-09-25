@@ -22,6 +22,14 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
 - **Leitprinzip, nicht verhandelbar:** Jede Funktion muss sowohl manuell
   als auch per KI-Coach nutzbar sein — niemals ein manuelles Formular
   entfernen oder verstecken, nur weil es jetzt auch einen KI-Weg gibt.
+- **Das ganze Leben mit ADHS, nicht nur das ADHS (Nutzerinnen-Vorgabe 25.09.):**
+  ADHS-Medikation steht im Mittelpunkt und muss sauber dokumentiert werden.
+  Genauso wichtig sind aber die mitwirkenden Bereiche: Hormone (z. B. TRT
+  bei einem Mann Mitte 40), körperliche Gesundheit, Ernährung, Schlaf,
+  Bewegung und alles, was auf Wohlbefinden und Botenstoffe (Dopamin,
+  Serotonin …) wirkt. Bei jeder Neu-Einstellung und jedem Standardwert
+  daran denken: sinnvolle Vorgabe für den häufigsten ADHS-Fall, aber alle
+  anderen Fälle genauso leicht und vollständig erfassbar.
 - **Admin/Coach-Seite gleichwertig testen und verschlanken (Nutzerinnen-
   Vorgabe 24.09.):** Nicht nur Gruppen und Einzelpersonen, auch das
   Admin-Konto und seine Abläufe regelmäßig live testen: Ergebnisse der

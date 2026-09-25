@@ -16,6 +16,7 @@ import { useT } from "../../i18n/translate";
 import { toLocalISODate } from "../../utils/dates";
 import KiChat from "../../ui/KiChat";
 import { AIService } from "../../services/aiService";
+import { kategorieWechseln, neuesMedikamentStart, vorgabenFuer } from "../../utils/medikamentVorgaben";
 import { getCoachName } from "../../utils/coachStorage";
 
 // CATEGORY_STEPS-Schlüssel → KATEGORIE_META-Schlüssel (weichen an einigen
@@ -117,6 +118,11 @@ const LEERE_DOSIERUNG = {
   uhrzeiten: ["20:00"],
   eigenerStart: "",
 };
+
+// Medikamente starten als ADHS-Medikation, täglich 08:00 (25.09., siehe
+// utils/medikamentVorgaben.js).
+const MED_START = neuesMedikamentStart();
+const LEERE_MED_DOSIERUNG = { ...LEERE_DOSIERUNG, intervallDays: MED_START.intervallDays, uhrzeiten: MED_START.uhrzeiten };
 
 // DosierungFields meldet "intervallPreset" als kombinierte Änderung
 // (Modus + Tage in einem Schritt); alle anderen Felder gehen 1:1 durch.
@@ -314,9 +320,16 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
 
   // Medikamente
   const [medName, setMedName] = useState("");
-  const [medKategorie, setMedKategorie] = useState("Hormone");
-  const [medEinnahmeart, setMedEinnahmeart] = useState("Injektion");
-  const [medDosierung, setMedDosierung] = useState(LEERE_DOSIERUNG);
+  const [medKategorie, setMedKategorie] = useState(MED_START.kategorie);
+  const [medEinnahmeart, setMedEinnahmeart] = useState(MED_START.einnahmeart);
+  const [medDosierung, setMedDosierung] = useState(LEERE_MED_DOSIERUNG);
+  // Kategorie wechseln: passende Vorschläge für noch nicht Geändertes.
+  const medKategorieWaehlen = (k) => {
+    const neu = kategorieWechseln({ kategorie: medKategorie, einnahmeart: medEinnahmeart, ...medDosierung }, k);
+    setMedKategorie(k);
+    setMedEinnahmeart(neu.einnahmeart);
+    setMedDosierung((prev) => ({ ...prev, intervallDays: neu.intervallDays, uhrzeiten: neu.uhrzeiten }));
+  };
 
   const setSuppDosierungFeld = (feld, val) => setSuppDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
   const setMedDosierungFeld = (feld, val) => setMedDosierung((prev) => anwendenDosierungsFeld(prev, feld, val));
@@ -368,9 +381,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
     setSuppEinnahmeart("Kapsel");
     setSuppDosierung(LEERE_DOSIERUNG);
     setMedName("");
-    setMedKategorie("Hormone");
-    setMedEinnahmeart("Injektion");
-    setMedDosierung(LEERE_DOSIERUNG);
+    setMedKategorie(MED_START.kategorie);
+    setMedEinnahmeart(MED_START.einnahmeart);
+    setMedDosierung(LEERE_MED_DOSIERUNG);
     setEigenesStartdatumAktiv(false);
     setEigenesStartdatum(toLocalISODate(new Date()));
     setIstZustand({});
@@ -613,9 +626,9 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       });
       if (result?.ok) {
         setMedName("");
-        setMedKategorie("Hormone");
-        setMedEinnahmeart("Injektion");
-        setMedDosierung(LEERE_DOSIERUNG);
+        setMedKategorie(MED_START.kategorie);
+        setMedEinnahmeart(MED_START.einnahmeart);
+        setMedDosierung(LEERE_MED_DOSIERUNG);
       }
     }
 
@@ -740,8 +753,8 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
       case "medikamente": {
         const m = await AIService.medikamentAusChat({ verlauf, coachName });
         setMedName(m.name || "");
-        setMedKategorie(m.kategorie || "Hormone");
-        setMedEinnahmeart(m.einnahmeart || "Injektion");
+        setMedKategorie(m.kategorie || MED_START.kategorie);
+        setMedEinnahmeart(m.einnahmeart || vorgabenFuer(m.kategorie || MED_START.kategorie).einnahmeart);
         setMedDosierung({
           menge: m.menge || "",
           intervallTyp: m.intervallTyp || "fixed",
@@ -1169,7 +1182,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               <Label>{tLabel("Kategorie")}</Label>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {MEDIKAMENTE_KATEGORIEN.map((k) => (
-                  <Pill key={k} label={tLabel(k)} selected={medKategorie === k} onClick={() => setMedKategorie(k)} />
+                  <Pill key={k} label={tLabel(k)} selected={medKategorie === k} onClick={() => medKategorieWaehlen(k)} />
                 ))}
               </div>
               <Label>{tLabel("Einnahmeart")}</Label>

@@ -8,6 +8,7 @@ import CannabisFelder from "../ui/CannabisFelder";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import AutocompleteInput from "../ui/AutocompleteInput";
 import { accentSoft, cardBorder, danger, textMuted } from "../ui/theme";
+import { kategorieWechseln, neuesMedikamentStart } from "../utils/medikamentVorgaben";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, NEBENWIRKUNGEN_OPTIONEN, PEPTIDE_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 import { describeInterval } from "../utils/schedule";
 import { fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
@@ -36,19 +37,18 @@ const DOSIS_FELDER = [
   "tropfenAnzahl",
 ];
 
+// Startwerte (25.09.): ADHS-Medikation, Tablette, täglich 08:00 — siehe
+// utils/medikamentVorgaben.js; beim Kategorie-Wechsel passen sich die
+// noch nicht selbst geänderten Felder an (z. B. Hormone → Injektion).
 const NEUES_MEDIKAMENT_LEER = {
   name: "",
   menge: "",
-  kategorie: "Hormone",
-  einnahmeart: "Injektion",
-  intervallTyp: "fixed",
-  intervallDays: 7,
+  ...neuesMedikamentStart(),
   customDays: "",
   onDays: "",
   offDays: "",
   weekdays: [],
   eigenerStart: "",
-  uhrzeiten: ["20:00"],
   thcProzent: "",
   cbdProzent: "",
   tabakMenge: "",
@@ -145,12 +145,7 @@ export default function MedikamenteView({ onHome, embedded = false }) {
   const handleChange = (feld, val) => {
     setNeuesMedikament((prev) => {
       if (feld === "intervallPreset") return { ...prev, intervallTyp: "fixed", intervallDays: val };
-      // Beim Wechsel zu "Cannabis" die Einnahmeart-Voreinstellung
-      // ("Injektion") auf eine tatsächlich passende Cannabis-Form umstellen
-      // statt einer Kombination, die keinen Sinn ergibt.
-      if (feld === "kategorie" && val === "Cannabis" && prev.einnahmeart === "Injektion") {
-        return { ...prev, kategorie: val, einnahmeart: "Blüte (Rauchen)" };
-      }
+      if (feld === "kategorie") return kategorieWechseln(prev, val);
       return { ...prev, [feld]: val };
     });
   };
