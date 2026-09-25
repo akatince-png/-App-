@@ -122,6 +122,12 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 
 **Noch nicht gebaut:** Atemübung als Schritt in der Morgen-/Abendroutine; Team-Muster im Tagebuch (was gute Tage im Team gemeinsam haben).
 
+### Evidenz-Grundlage + AKA-Kernprogramm (25.09., Konzept vorgeschlagen, wartet auf Freigabe)
+- Die Nutzerin hat eine Perplexity-Auswertung zu nichtmedikamentösen Verfahren geschickt. Sie steht jetzt als zwei Einträge in der Wissens-Basis (`coach_wissen`, bereich leer = gilt überall): „Evidenz: Nichtmedikamentöse Verfahren …“ und „Coaching-Prioritäten aus der Evidenz …“.
+- Hauptquelle geprüft: Meta-Analyse 2023, 67 Studien, 3.147 Kinder/Jugendliche. Korrektur gegenüber Perplexity: g=0,67 gilt für alle Verfahren zusammen, nicht für „Bewegung allgemein“.
+- Planungsgrundsatz: Bewegung ist fest eingeplant (nur Art, Zeit und Häufigkeit sind wählbar). Jeder Baustein wird an eine echte Alltagsaufgabe gekoppelt (Transfer). Atmung dient als kurze Vorbereitung und zur Regulation. Daten meist von Kindern, deshalb in der App keine Wirkversprechen.
+- Vorgeschlagen: ein 4-Wochen-Kernprogramm mit Pflichtbausteinen in Morgen- und Abendroutine, die wochenweise dazukommen. Details im Chat vom 25.09.; noch nichts gebaut.
+
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
 - Alle Testkonten haben **alle** Bereiche eingerichtet (per SQL, Schema wie in der App): Claude, Mia, Jonas, Lea, „Test 1“ (Einzelperson ohne Team, Onboarding jetzt abgeschlossen) und das Admin-Testkonto.
   - Medikament (täglich), 2 Supplemente, 3 Mahlzeiten mit Wochenplan, Training Mo/Mi/Fr, 2 Gewohnheiten.
