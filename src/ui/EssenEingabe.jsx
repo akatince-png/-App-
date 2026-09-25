@@ -4,8 +4,9 @@ import { PrimaryButton } from "./primitives";
 import { cardBorder, danger, textMuted } from "./theme";
 import { useDiktat } from "./useDiktat";
 import { AIService } from "../services/aiService";
-import { essenAuswerten, summe, werteFuer } from "../utils/essenRechner";
+import { essenAuswerten, summe, werteMitEinlage } from "../utils/essenRechner";
 import { toLocalISODate } from "../utils/dates";
+import { essenFotoAuswerten } from "../data/essenFoto";
 
 // "Was hast du gegessen?" (25.09., Nutzerinnen-Vorgabe): schreiben oder
 // sprechen, absenden – die App rechnet im Hintergrund ca.-Werte aus und
@@ -16,13 +17,31 @@ import { toLocalISODate } from "../utils/dates";
 const fmt = (n) => String(Math.round(Number(n) * 10) / 10).replace(".", ",");
 
 export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
-  const { essenSpeichern, aenderungVermerken } = useAppData();
+  const { essenSpeichern, aenderungVermerken, userId } = useAppData();
   const [text, setText] = useState("");
   const [ergebnis, setErgebnis] = useState(null);
   const [rechnet, setRechnet] = useState(false);
   const [fehler, setFehler] = useState(null);
   const [gespeichert, setGespeichert] = useState(null);
   const diktat = useDiktat({ value: text, onChange: setText });
+  // Foto (25.09.): Nährwerttabelle abfotografieren ("2 Scheiben von diesem
+  // Brot") oder die ganze Mahlzeit – Ergebnis erscheint als dieselbe
+  // Rechnung zum Bestätigen.
+  const fotoAuswerten = async (file, art) => {
+    if (!file) return;
+    setFehler(null);
+    setGespeichert(null);
+    setRechnet(true);
+    try {
+      const posten = await essenFotoAuswerten(userId, file, art, text.trim());
+      if (!text.trim()) setText(art === "etikett" ? "Foto der Nährwerttabelle" : "Foto der Mahlzeit");
+      setErgebnis({ posten, offen: [] });
+    } catch (e) {
+      setFehler(e.message || "Das Foto konnte nicht ausgewertet werden – bitte als Text eingeben.");
+    } finally {
+      setRechnet(false);
+    }
+  };
 
   const ausrechnen = async () => {
     setFehler(null);
@@ -57,7 +76,7 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
       posten: e.posten.map((p, j) => {
         if (j !== i) return p;
         const neu = Math.max(0, Number(g) || 0);
-        if (p.lebensmittel) return { ...p, gramm: neu, annahme: `${fmt(neu)} g`, werte: werteFuer(p.lebensmittel, neu) };
+        if (p.lebensmittel) return { ...p, gramm: neu, annahme: `${fmt(neu)} g${p.einlage ? ` · in ${p.einlage.label}` : ""}`, werte: werteMitEinlage(p.lebensmittel, neu, p.einlage) };
         const f = p.gramm ? neu / p.gramm : 0;
         return { ...p, gramm: neu, annahme: `${fmt(neu)} g`, werte: Object.fromEntries(Object.entries(p.werte).map(([k, v]) => [k, Math.round(v * f * 10) / 10])) };
       }),
@@ -101,6 +120,29 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
               {rechnet ? "Rechnet…" : "Ausrechnen"}
             </PrimaryButton>
           </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            {[
+              ["etikett", "📷 Nährwerttabelle", "Foto der Verpackung – oben dazuschreiben, wie viel (z. B. „2 Scheiben“)"],
+              ["mahlzeit", "📷 Mahlzeit", "Foto vom Teller – die App schätzt Mengen und Werte"],
+            ].map(([art, label, titel]) => (
+              <label key={art} title={titel} style={{ flex: 1, textAlign: "center", borderRadius: 12, padding: "10px 8px", background: "#EEF4FF", color: "#2D6FD6", fontWeight: 800, fontSize: 13.5, cursor: rechnet ? "default" : "pointer", opacity: rechnet ? 0.6 : 1 }}>
+                {label}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  aria-label={label}
+                  disabled={rechnet}
+                  style={{ display: "none" }}
+                  onChange={(ev) => {
+                    fotoAuswerten(ev.target.files?.[0], art);
+                    ev.target.value = "";
+                  }}
+                />
+              </label>
+            ))}
+          </div>
+          {fehler && <div style={{ color: danger, fontSize: 12.5, marginTop: 6 }}>{fehler}</div>}
           {gespeichert && (
             <div role="status" style={{ fontSize: 13, fontWeight: 700, color: "#1E8E5A", marginTop: 8 }}>
               ✓ Gespeichert: ≈ {gespeichert.kcal} kcal · {fmt(gespeichert.eiweiss)} g Eiweiß

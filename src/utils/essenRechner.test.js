@@ -39,3 +39,31 @@ describe("Ziele und Bilanz", () => {
     expect(tagesTipp({ eiweiss: 100, epaDha: 0, omega3: 0 }, { eiweiss: 140, omega3Mg: 250 }, { eiweiss: ["Skyr/Quark"] })).toMatch(/Noch 40 g Eiweiß offen – z. B. 150 g Skyr/);
   });
 });
+
+describe("Trend-Lebensmittel, tierische Fette, Einlagen", () => {
+  it("kennt Superfoods und Fette", () => {
+    for (const [text, name] of [
+      ["2 EL Chiasamen", "Chiasamen"],
+      ["eine Handvoll Alfalfa Sprossen", "Alfalfa-Sprossen"],
+      ["150 g Amaranth", "Amaranth gekocht"],
+      ["1 EL Rindertalg", "Rindertalg"],
+      ["1 TL Ghee", "Ghee"],
+      ["1 EL Schmalz", "Schweineschmalz"],
+      ["Kimchi", "Kimchi"],
+      ["1 TL Spirulina", "Spirulina"],
+    ])
+      expect(teilLesen(text).lebensmittel?.name, text).toBe(name);
+  });
+  it("Sardinen: in Wasser, in Olivenöl, mit Öl", () => {
+    const wasser = teilLesen("1 Dose Sardinen in Wasser");
+    const olive = teilLesen("1 Dose Sardinen in Olivenöl");
+    const mitOel = teilLesen("1 Dose Sardinen in Olivenöl mit Öl");
+    expect(wasser.gramm).toBe(90);
+    expect(wasser.werte.fett).toBeLessThan(olive.werte.fett);
+    expect(olive.werte.fett).toBeLessThan(mitOel.werte.fett);
+    // Olivenöl statt Sojaöl: weniger Omega-6
+    expect(olive.werte.omega6).toBeLessThan(teilLesen("1 Dose Sardinen").werte.omega6);
+    expect(olive.annahme).toMatch(/in Olivenöl, abgetropft/);
+    expect(essenAuswerten("Sardinen mit Öl und Brot").posten.map((p) => p.lebensmittel.name)).toEqual(["Sardinen", "Roggenbrot"]);
+  });
+});

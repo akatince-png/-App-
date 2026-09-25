@@ -1,0 +1,125 @@
+Alfalfa-Sprossen|alfalfa;alfalfasprossen;alfa alfa;sprossen|^Alfalfa seeds, sprouted, raw|handvoll=30;portion=50
+Quinoa gekocht|quinoa|^Quinoa, cooked|portion=180;el=15
+Amaranth gekocht|amaranth|^Amaranth grain, cooked|portion=180
+Amaranth gepufft|amaranth gepufft;gepuffter amaranth;amaranth pops|^Amaranth grain, uncooked|el=5;portion=30
+Buchweizen gekocht|buchweizen|^Buckwheat groats, roasted, cooked|portion=180
+Hirse gekocht|hirse|^Millet, cooked|portion=180
+Dinkel gekocht|dinkel|^Spelt, cooked|portion=180
+Teff gekocht|teff|^Teff, cooked|portion=180
+Bulgur gekocht|bulgur|^Bulgur, cooked|portion=180
+Couscous gekocht|couscous|^Couscous, cooked|portion=180
+Polenta|polenta;maisgrieß|^Cornmeal, whole-grain, yellow|portion=50
+Haferkleie|haferkleie|^Oat bran, raw|el=8
+Flohsamenschalen|flohsamen;flohsamenschalen|MANUELL_PSYLLIUM|tl=5;el=10
+Sesam|sesam;sesamsamen|^Seeds, sesame seeds, whole, dried|el=9;tl=3
+Tahin|tahin;tahini;sesammus|^Seeds, sesame butter, tahini, type of kernels unspecified|el=15;tl=5
+Mandelmus|mandelmus;mandelbutter|^Nuts, almond butter, plain, without salt added|el=16;tl=8
+Cashewmus|cashewmus|^Nuts, cashew butter, plain, without salt added|el=16
+Macadamia|macadamia;macadamianüsse|^Nuts, macadamia nuts, raw|handvoll=30
+Pekannüsse|pekannüsse;pecan|^Nuts, pecans$|handvoll=30
+Paranüsse|paranüsse;paranuss|^Nuts, brazilnuts, dried, unblanched|stück=5;handvoll=30
+Pistazien|pistazien|^Nuts, pistachio nuts, raw|handvoll=30
+Pinienkerne|pinienkerne|^Nuts, pine nuts, dried|el=9
+Kokosraspeln|kokos;kokosraspeln;kokosflocken|^Nuts, coconut meat, dried \(desiccated\), not sweetened|el=5
+Kokosmilch|kokosmilch|^Nuts, coconut milk, canned \(liquid expressed from grated meat and water\)|el=15;dose=400;portion=100
+Kakaonibs|kakaonibs;cacao nibs;kakao nibs|^Cocoa, dry powder, unsweetened$|el=8
+Kakaopulver|kakao;kakaopulver|^Cocoa, dry powder, unsweetened$|el=8;tl=3
+Spirulina|spirulina|^Seaweed, spirulina, dried|tl=3;el=7
+Nori/Algen|nori;algen;seetang|^Seaweed, laver, raw|portion=10;blatt=3
+Wakame|wakame|^Seaweed, wakame, raw|portion=50
+Goji-Beeren|goji;gojibeeren|^Goji berries, dried|el=10;handvoll=30
+Cranberries getrocknet|cranberries;cranberrys|^Cranberries, dried, sweetened|handvoll=30
+Granatapfel|granatapfel;granatapfelkerne|^Pomegranates, raw|stück=280;el=15
+Acai-Pulver|acai;açaí|MANUELL_ACAI|tl=3;el=7
+Matcha|matcha|MANUELL_MATCHA|tl=2
+Moringa|moringa|^Drumstick leaves, raw|tl=3
+Kurkuma|kurkuma;curcuma|^Spices, turmeric, ground|tl=3
+Ingwer|ingwer|^Ginger root, raw|tl=5;stück=10
+Knoblauch|knoblauch|^Garlic, raw|stück=4;zehe=4
+Hefeflocken|hefeflocken;nährhefe|MANUELL_HEFE|el=5
+Kefir|kefir|^Kefir, lowfat, plain|glas=200;becher=250
+Kombucha|kombucha|^Tea, kombucha|glas=250;flasche=330
+Sauerkraut|sauerkraut|^Sauerkraut, canned, solids and liquids|portion=150
+Kimchi|kimchi|^Kimchi|portion=100
+Miso|miso|^Miso$|el=18;tl=6
+Tempeh|tempeh|^Tempeh$|portion=100
+Seitan|seitan|^Vital wheat gluten|portion=100
+Natto|natto|^Natto|portion=50
+Sojajoghurt|sojajoghurt;soja joghurt|^Yogurt, soy|becher=150
+Mandeldrink|mandeldrink;mandelmilch|^Beverages, almond milk, unsweetened, shelf stable|glas=200
+Kokosöl|kokosöl;kokosfett|^Oil, coconut|tl=4.5;el=13.5
+Avocadoöl|avocadoöl|^Oil, avocado|tl=4.5;el=13.5
+Walnussöl|walnussöl|^Oil, walnut|tl=4.5;el=13.5
+Hanföl|hanföl|MANUELL_HANFOEL|tl=4.5;el=13.5
+Sesamöl|sesamöl|^Oil, sesame, salad or cooking|tl=4.5;el=13.5
+Kürbiskernöl|kürbiskernöl|MANUELL_KUERBISKERNOEL|tl=4.5;el=13.5
+MCT-Öl|mct;mct öl;mct-öl|MANUELL_MCT|tl=5;el=15
+Ghee|ghee;butterschmalz;geklärte butter|^Butter oil, anhydrous|tl=5;el=13
+Rindertalg|talg;rindertalg;tallow;rinderfett|^Fat, beef tallow|tl=4.5;el=13
+Schweineschmalz|schmalz;schweineschmalz;lard|^Lard$|tl=4.5;el=13
+Entenfett|entenfett|MANUELL_ENTENFETT|tl=4.5;el=13
+Gänseschmalz|gänseschmalz;gänsefett|^Fat, goose|tl=4.5;el=13
+Hühnerfett|hühnerfett|^Fat, chicken|tl=4.5;el=13
+Knochenmark|knochenmark;markknochen|MANUELL_MARK|portion=30
+Eigelb|eigelb;dotter|^Egg, yolk, raw, fresh|stück=17
+Rinderleber|leber;rinderleber|^Beef, variety meats and by-products, liver, cooked, pan-fried|portion=100
+Hühnerleber|hühnerleber|^Chicken, liver, all classes, cooked, pan-fried|portion=100
+Rinderherz|herz;rinderherz|^Beef, variety meats and by-products, heart, cooked, simmered|portion=100
+Knochenbrühe|knochenbrühe;bone broth;rinderbrühe;brühe|^Soup, beef broth or bouillon canned, ready-to-serve|tasse=250;glas=250
+Speck|speck;bacon|^Pork, cured, bacon, pre-sliced, cooked, pan-fried|scheibe=10
+Lamm|lamm;lammfleisch|^Lamb, leg, shank half, separable lean only|portion=150
+Hirsch/Wild|wild;hirsch;reh|^Game meat, deer, cooked, roasted|portion=150
+Bison|bison|^Game meat, bison, separable lean only, cooked, roasted|portion=150
+Ente|ente;entenbrust|^Duck, domesticated, meat only, cooked, roasted|portion=150
+Ribeye-Steak|ribeye;entrecote|^Beef, rib eye steak, boneless, lip off, separable lean and fat, trimmed to 0" fat, all grades, cooked, grilled|portion=250
+Rinderhack mager|mageres hack;rinderhack mager|^Beef, ground, 95% lean meat / 5% fat, crumbles, cooked, pan-browned|portion=125
+Wildlachs|wildlachs;sockeye|^Fish, salmon, sockeye, cooked, dry heat|portion=125
+Räucherlachs|räucherlachs;lachs geräuchert|^Fish, salmon, chinook, smoked$|scheibe=20;portion=100
+Forelle|forelle|^Fish, trout, rainbow, farmed, cooked, dry heat|portion=125;stück=150
+Sardellen|sardellen;anchovis|^Fish, anchovy, european, canned in oil, drained solids|stück=4;dose=50
+Makrele Dose|makrele dose;makrelenfilet|^Fish, mackerel, jack, canned, drained solids|dose=125
+Lachs Dose|lachs dose;dosenlachs|^Fish, salmon, pink, canned, drained solids|dose=150
+Hering eingelegt|hering eingelegt;bismarckhering;rollmops|^Fish, herring, Atlantic, pickled|stück=60
+Austern|austern;auster|^Mollusks, oyster, eastern, wild, cooked, moist heat|stück=15
+Miesmuscheln|muscheln;miesmuscheln|^Mollusks, mussel, blue, cooked, moist heat|portion=150
+Lebertran|lebertran|^Fish oil, cod liver|tl=4.5;el=13.5
+Fischöl|fischöl;omega-3 öl|^Fish oil, salmon|tl=4.5;kapsel=1
+Algenöl|algenöl|MANUELL_ALGENOEL|tl=4.5;kapsel=1
+Oliven|oliven|^Olives, ripe, canned \(small-extra large\)|stück=4;handvoll=30
+Getrocknete Tomaten|getrocknete tomaten|^Tomatoes, sun-dried, packed in oil, drained|stück=5
+Grünkohl|grünkohl|^Kale, cooked, boiled, drained, without salt|portion=150
+Rote Bete|rote bete;rote beete|^Beets, cooked, boiled, drained|stück=80;portion=150
+Blumenkohl|blumenkohl|^Cauliflower, cooked, boiled, drained, without salt|portion=150
+Rosenkohl|rosenkohl|^Brussels sprouts, cooked, boiled, drained, without salt|portion=150
+Grüne Bohnen|grüne bohnen;brechbohnen|^Beans, snap, green, cooked, boiled, drained, without salt|portion=150
+Kürbis|kürbis;hokkaido|^Pumpkin, cooked, boiled, drained, without salt|portion=200
+Aubergine|aubergine|^Eggplant, cooked, boiled, drained, without salt|portion=150
+Rucola|rucola|^Arugula, raw|handvoll=20
+Feldsalat|feldsalat|^Lettuce, green leaf, raw|handvoll=30
+Ananas|ananas|^Pineapple, raw, all varieties|scheibe=80;portion=150
+Wassermelone|wassermelone;melone|^Watermelon, raw|scheibe=300;portion=250
+Pfirsich|pfirsich;nektarine|^Peaches, yellow, raw|stück=150
+Himbeeren|himbeeren|^Raspberries, raw|handvoll=60;portion=125
+Kirschen|kirschen|^Cherries, sweet, raw|handvoll=80
+Feigen getrocknet|feigen|^Figs, dried, uncooked|stück=20
+Aprikosen getrocknet|aprikosen getrocknet;trockenaprikosen|^Apricots, dried, sulfured, uncooked|stück=8
+Reiswaffel|reiswaffel;reiswaffeln|^Snacks, rice cakes, brown rice, plain|stück=9
+Proteinriegel|proteinriegel|^Nutrition bar \(Snickers Marathon Protein Bar\)|riegel=50;stück=50
+Knäckebrot|knäckebrot|^Crackers, rye, wafers, plain|scheibe=10
+Tortilla/Wrap|wrap;tortilla|^Tortillas, ready-to-bake or -fry, flour, refrigerated|stück=60
+Falafel|falafel|^Falafel, home-prepared|stück=17
+Ziegenkäse|ziegenkäse|^Cheese, goat, soft type|portion=30
+Camembert|camembert;brie|^Cheese, camembert|portion=30
+Halloumi|halloumi|MANUELL_HALLOUMI|portion=100
+Quark 40%|sahnequark;quark 40|MANUELL_QUARK40|becher=250;el=25
+Buttermilch|buttermilch|^Milk, buttermilk, fluid, cultured, lowfat|glas=200
+Ayran|ayran|MANUELL_AYRAN|glas=250
+Tee ungesüßt|tee;grüner tee|^Beverages, tea, green, brewed, regular|tasse=200
+Energydrink|energydrink;red bull|^Beverages, Energy drink, RED BULL$|dose=250
+Smoothie|smoothie|MANUELL_SMOOTHIE|glas=250;flasche=250
+Döner|döner;döner kebab|MANUELL_DOENER|stück=350
+Sushi|sushi|MANUELL_SUSHI|stück=30;portion=250
+Porridge|porridge fertig;haferbrei|^Cereals, oats, regular and quick, unenriched, cooked with water \(includes boiling and microwaving\), without salt|portion=250
+Ahornsirup|ahornsirup|^Syrups, maple|el=20;tl=7
+Agavendicksaft|agave;agavendicksaft|^Sweetener, syrup, agave|el=21;tl=7
+Sojaöl|sojaöl|^Oil, soybean, salad or cooking$|tl=4.5;el=13.5

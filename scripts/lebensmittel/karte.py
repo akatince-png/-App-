@@ -5,7 +5,7 @@ Eiweiß (Eiklar)|eiklar;eiweiß vom ei|Egg, white, raw, fresh|stück=33
 Vollkornbrot|vollkornbrot;schwarzbrot;roggenvollkornbrot|Bread, whole-wheat, commercially prepared|scheibe=45
 Weißbrot|toast;toastbrot;weißbrot|Bread, white, commercially prepared (includes soft bread crumbs)|scheibe=25
 Brötchen|brötchen;semmel;weck|Rolls, hamburger or hotdog, plain|stück=55
-Roggenbrot|roggenbrot;mischbrot;graubrot|Bread, rye|scheibe=40
+Roggenbrot|roggenbrot;mischbrot;graubrot;brot|Bread, rye|scheibe=40
 Haferflocken|haferflocken;porridge;hafer|Cereals, oats, regular and quick, not fortified, dry|el=10;portion=50;handvoll=30
 Müsli|müsli;muesli|Cereals ready-to-eat, granola, homemade|portion=50
 Reis gekocht|reis;reis gekocht|Rice, white, long-grain, regular, enriched, cooked|portion=180
@@ -56,7 +56,7 @@ Lachs|lachs|Fish, salmon, Atlantic, farmed, cooked, dry heat|portion=125;stück=
 Thunfisch Dose|thunfisch|Fish, tuna, light, canned in water, drained solids (Includes foods for USDA's Food Distribution Program)|dose=150;portion=100
 Hering|hering;matjes|Fish, herring, Atlantic, cooked, dry heat|portion=100;stück=80
 Makrele|makrele|Fish, mackerel, Atlantic, cooked, dry heat|portion=125;stück=100
-Sardinen|sardinen;sardine|Fish, sardine, Atlantic, canned in oil, drained solids with bone|dose=90
+Sardinen|sardinen;sardine|Fish, sardine, Atlantic, canned in oil, drained solids with bone|dose=90;stück=25
 Kabeljau|kabeljau;dorsch;weißfisch;seelachs|Fish, cod, Atlantic, cooked, dry heat|portion=150;stück=150
 Garnelen|garnelen;shrimps;krabben|Crustaceans, shrimp, mixed species, cooked, moist heat (may contain additives to retain moisture)|portion=100
 Milch|milch;vollmilch|Milk, whole, 3.25% milkfat, with added vitamin D|glas=200;tasse=150;becher=250

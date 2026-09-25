@@ -72,7 +72,8 @@ export function lebensmittelFinden(text) {
 // "zwei Scheiben Vollkornbrot, 3 Bananen und 5 Eier" → Teile.
 export function zerlegen(text) {
   return String(text || "")
-    .split(/,|;|\n|\+|\bund\b|\bmit\b|\bsowie\b|\bdazu\b/i)
+    // "mit Öl"/"mit Olivenöl" gehört zur Einlage, ist kein eigener Posten.
+    .split(/,|;|\n|\+|\bund\b|\bmit\b(?!\s+(?:dem\s+)?(?:extra\s+)?(?:nativem\s+)?[a-zäöüß]*öl\b)|\bsowie\b|\bdazu\b/i)
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -85,6 +86,44 @@ function zahlLesen(wort) {
   if (/^\d+([.,]\d+)?$/.test(w)) return Number(w.replace(",", "."));
   return ZAHLWOERTER[w] ?? null;
 }
+
+// Eingelegt (Nutzerinnen-Vorgabe 25.09.: "in was ist es eingelegt"):
+// Konserven/Eingelegtes nehmen einen Teil der Einlage auf. Abgetropft
+// ≈ 8 g Öl je 100 g, "mit Öl"/"nicht abgetropft" ≈ 20 g. Fisch, der in
+// der Liste schon als "in Öl" steht (Sardinen, Sardellen), wird erst auf
+// das reine Fischfleisch zurückgerechnet und dann mit der genannten Einlage
+// neu berechnet.
+const EINLAGEN = [
+  [/\b(in|mit)\s+(extra\s+)?(nativem\s+|natives\s+)?olivenöl\b/, { oel: "Olivenöl", label: "Olivenöl" }],
+  [/\b(in|mit)\s+sonnenblumenöl\b/, { oel: "Sonnenblumenöl", label: "Sonnenblumenöl" }],
+  [/\b(in|mit)\s+rapsöl\b/, { oel: "Rapsöl", label: "Rapsöl" }],
+  [/\b(in|mit)\s+(pflanzen)?öl\b/, { oel: "Sonnenblumenöl", label: "Öl (Pflanzenöl)" }],
+  [/\b(in|im)\s+(wasser|eigenen\s+saft|eigenem\s+saft|salzlake|lake)\b|\bnaturell\b/, { oel: null, label: "Wasser/eigenem Saft" }],
+  [/\b(in|mit)\s+tomaten(soße|sosse|sauce)\b/, { tomate: true, label: "Tomatensoße" }],
+];
+const MIT_EINLAGE = /\b(mit|samt|inkl\.?|inklusive)\s+(dem\s+)?öl\b|nicht abgetropft/;
+
+export function einlageLesen(text) {
+  const t = norm(text);
+  for (const [re, e] of EINLAGEN) {
+    if (re.test(t)) return { ...e, anteil: e.oel && MIT_EINLAGE.test(t) ? 0.2 : 0.08, rest: t.replace(re, " ").replace(MIT_EINLAGE, " ").replace(/\babgetropft\b/, " ").replace(/\s+/g, " ").trim() };
+  }
+  return null;
+}
+
+// Werte mit Einlage: Fischfleisch (ggf. Standard-Öl herausgerechnet) + Einlage.
+export function werteMitEinlage(l, gramm, einlage) {
+  if (!einlage) return werteFuer(l, gramm);
+  const basis = werteFuer(l, gramm);
+  const minus = l.standardEinlage === "öl" ? werteFuer(finde("Sojaöl"), gramm * 0.08) : null;
+  const plus = einlage.oel ? werteFuer(finde(einlage.oel), gramm * einlage.anteil) : einlage.tomate ? werteFuer(finde("Tomate"), gramm * 0.15) : null;
+  const w = {};
+  for (const k of NAEHRWERTE) w[k] = Math.max(0, Math.round(((basis[k] || 0) - (minus?.[k] || 0) + (plus?.[k] || 0)) * 10) / 10);
+  w.kcal = Math.round(w.kcal);
+  for (const k of ["omega3", "epaDha", "omega6"]) w[k] = Math.round(w[k]);
+  return w;
+}
+const finde = (name) => LEBENSMITTEL.find((l) => l.name === name);
 
 // Einen Teil lesen: Menge, Einheit, Lebensmittel, angenommene Gramm.
 export function teilLesen(teil) {
@@ -110,7 +149,9 @@ export function teilLesen(teil) {
     woerter = woerter.slice(1);
   }
   if (woerter[0] === "von" || woerter[0] === "vom") woerter = woerter.slice(1);
-  const name = woerter.join(" ");
+  let name = woerter.join(" ");
+  const einlage = einlageLesen(name);
+  if (einlage) name = einlage.rest;
   const lebensmittel = lebensmittelFinden(name);
   if (!lebensmittel) return { text: teil.trim(), name, menge, einheit, lebensmittel: null };
   const m = menge ?? 1;
@@ -126,7 +167,8 @@ export function teilLesen(teil) {
     const label = EINHEIT_LABEL[schluessel] || schluessel;
     annahme = `${fmt(m)} ${label} à ${fmt(proEinheit)} g = ${fmt(gramm)} g`;
   }
-  return { text: teil.trim(), name, menge: m, einheit, lebensmittel, gramm, annahme, werte: werteFuer(lebensmittel, gramm) };
+  if (einlage) annahme += einlage.oel ? ` · in ${einlage.label}, ${einlage.anteil === 0.2 ? "mit Öl (≈ 20 g je 100 g)" : "abgetropft (≈ 8 g Öl je 100 g)"}` : ` · in ${einlage.label}`;
+  return { text: teil.trim(), name, menge: m, einheit, lebensmittel, gramm, annahme, einlage, werte: werteMitEinlage(lebensmittel, gramm, einlage) };
 }
 
 const STANDARD_PORTION = { el: 15, tl: 5, glas: 200, tasse: 150, becher: 150, handvoll: 30, portion: 150, scheibe: 30, "stück": 100 };

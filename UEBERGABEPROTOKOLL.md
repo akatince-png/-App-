@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 254 Unit-Tests, 86 E2E-Tests (Stand 25.09.).
+  - 256 Unit-Tests, 86 E2E-Tests (Stand 25.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -146,6 +146,8 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Coach:** `views/admin/ErnaehrungCoach.jsx` in der aufgeklappten Coachee-Zeile: Ø 7 Tage Eiweiß g/kg gegen Ziel, kcal, Omega-6:3, Fisch-Tage, „Ansprechen“, „Ziele setzen“ (Person sieht „von deinem Coach empfohlen“).
 - **Kernprogramm:** neuer Baustein `makros` ab Woche 3 („Eiweißziel – Makros im Blick“, geschafft = ≥ 90 % des Eiweißziels); Mahlzeiten-Baustein zählt jetzt auch freie Einträge.
 - **Wissens-Basis:** Eintrag „Ernährung bei ADHS: Studienlage …“ (Del-Ponte 2019 Muster, Wolraich 1995 Zucker, Morton 2018 Eiweiß, LaChance 2016 Omega-6:3, Appetit unter Stimulanzien, Formulierungsregeln ohne Wirkversprechen).
+- **Erweitert (25.09. abends):** 235 Lebensmittel (USDA SR Legacy + FNDDS 2024): Superfoods (Chia, Alfalfa, Amaranth, Quinoa, Buchweizen, Spirulina, Goji, Acai …), Fermentiertes (Kefir, Kimchi, Kombucha, Miso, Tempeh), tierische Fette (Talg, Schmalz, Ghee, Enten-/Gänsefett, Knochenmark), Innereien, Wild, Fischkonserven, Öle (Lein, Hanf, Algen, MCT …). Kohlenhydrate jetzt wie auf deutschen Etiketten ohne Ballaststoffe. **Einlage** („Sardinen in Wasser/in Olivenöl/mit Öl“): Rechner rechnet Fischfleisch + aufgenommene Einlage (abgetropft ≈ 8 g Öl je 100 g, mit Öl ≈ 20 g), `einlageLesen`/`werteMitEinlage` in `utils/essenRechner.js`.
+- **Foto** (`supabase/functions/essen-scan`, `data/essenFoto.js`): „📷 Nährwerttabelle“ (+ Satz wie „2 Scheiben“) und „📷 Mahlzeit“ (Teller, Mengen geschätzt). Ergebnis erscheint als dieselbe Rechnung zum Bestätigen. Nutzt Claude (claude-opus-5, JSON-Schema, Refusal-Fallback). **Braucht das Secret `ANTHROPIC_API_KEY`** in Supabase (Edge Functions → Secrets) – ist Stand 25.09. NICHT gesetzt (Prüfung: POST `{"pruefen":true}` → `bereit:false`); dasselbe gilt für die bestehende Blutwerte-Foto-Erkennung. Ohne Schlüssel zeigt die App „Foto-Erkennung ist noch nicht eingerichtet“.
 - **Datenschutz-Hinweis:** Unbekannte Lebensmittel gehen als Text an den eingestellten KI-Anbieter (wie bei Aka). Das sollte in der Datenschutzerklärung stehen, auch wenn die Oberfläche keinen Chat zeigt.
 
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
