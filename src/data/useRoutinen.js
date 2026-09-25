@@ -6,6 +6,7 @@ import { routineGeschafftFeier } from "../utils/routineFeier";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { verspaetungHinweis } from "../utils/routineVerspaetung";
 import { einstellungenFuer, planFuer, plusTage, schritteFuer, zeileZuPlantag, zeileZuVariante } from "../utils/schichtplan";
+import { pauseFuer, zeileZuPause } from "../utils/kernprogramm";
 
 function rowToSchritt(r) {
   return {
@@ -16,6 +17,7 @@ function rowToSchritt(r) {
     dauerMin: r.dauer_min,
     nurVarianten: r.nur_varianten || null,
     gueltigAb: r.gueltig_ab || null,
+    kernKey: r.kern_key || null,
   };
 }
 
@@ -61,6 +63,11 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   // aktualisiert, damit nach Mitternacht die neue Schicht gilt.
   const [varianten, setVarianten] = useState([]);
   const [plan, setPlan] = useState({});
+  // Kernprogramm (25.09.): vom Coach pausierte Pflicht-Bausteine fallen an
+  // diesen Tagen aus der Routine; `geladen` verhindert, dass fehlende
+  // Pflicht-Schritte angelegt werden, bevor die Schritte überhaupt da sind.
+  const [kernPausen, setKernPausen] = useState([]);
+  const [geladen, setGeladen] = useState(false);
   const [heute, setHeute] = useState(() => toLocalISODate(new Date()));
   useEffect(() => {
     const pruefen = () => setHeute(toLocalISODate(new Date()));
@@ -76,15 +83,17 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: s }, { data: d }, { data: e }, { data: sl }, { data: va }, { data: pl }] = await Promise.all([
+      const [{ data: s }, { data: d }, { data: e }, { data: sl }, { data: va }, { data: pl }, { data: kp }] = await Promise.all([
         supabase.from("routine_schritte").select("*").eq("user_id", userId).order("routine").order("reihenfolge"),
         supabase.from("routine_durchlaeufe").select("*").eq("user_id", userId).order("gestartet_um", { ascending: false }),
         supabase.from("routine_einstellungen").select("*").eq("user_id", userId),
         supabase.from("routine_schritt_logs").select("*").eq("user_id", userId),
         supabase.from("routine_varianten").select("*").eq("user_id", userId).order("reihenfolge"),
         supabase.from("routine_schichtplan").select("*").eq("user_id", userId).gte("datum", plusTage(toLocalISODate(new Date()), -35)),
+        supabase.from("kern_pausen").select("*").eq("user_id", userId),
       ]);
       if (cancelled) return;
+      if (kp) setKernPausen(kp.map(zeileZuPause));
       if (va) setVarianten(va.map(zeileZuVariante));
       if (pl) {
         const next = {};
@@ -103,6 +112,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
         sl.forEach((row) => (next[`${row.datum}__${row.schritt_id}`] = true));
         setSchrittErledigt(next);
       }
+      setGeladen(!!s);
     })();
     return () => {
       cancelled = true;
@@ -114,7 +124,10 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   const hatSchicht = varianten.length > 0 || Object.keys(plan).length > 0;
   const einstellungenAm = useCallback((datum) => (hatSchicht ? einstellungenFuer(datum, schichtCtx) : einstellungen), [hatSchicht, schichtCtx, einstellungen]);
   const planAm = useCallback((datum) => planFuer(datum, schichtCtx), [schichtCtx]);
-  const schritteAm = useCallback((datum) => schritteFuer(datum, schritte, planFuer(datum, schichtCtx).variante?.id || null), [schritte, schichtCtx]);
+  const schritteAm = useCallback(
+    (datum) => schritteFuer(datum, schritte, planFuer(datum, schichtCtx).variante?.id || null).filter((sc) => !sc.kernKey || !pauseFuer(kernPausen, sc.kernKey, datum)),
+    [schritte, schichtCtx, kernPausen]
+  );
   const einstellungenHeute = useMemo(() => einstellungenAm(heute), [einstellungenAm, heute]);
   const schritteHeute = useMemo(() => schritteAm(heute), [schritteAm, heute]);
   const heutePlan = useMemo(() => planAm(heute), [planAm, heute]);
@@ -367,6 +380,78 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     [schrittErledigt, schritte, durchlaeufe, userId, belohnungPufferMin, schrittZeit, durchlaufSpeichern, einstellungenAm, schritteAm]
   );
 
+  // Name/Dauer eines Schritts ändern (Pflicht-Bausteine: Art und Dauer frei
+  // einstellbar, nur löschen geht nicht).
+  const schrittAendern = useCallback(async (id, { name, dauerMin }) => {
+    const patch = {};
+    if (name != null) {
+      if (!name.trim()) return { ok: false, error: "Bitte einen Namen eingeben." };
+      patch.name = name.trim();
+    }
+    if (dauerMin != null) patch.dauer_min = Math.max(1, Number(dauerMin) || 1);
+    const { data, error } = await supabase.from("routine_schritte").update(patch).eq("id", id).select().single();
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    const neu = rowToSchritt(data);
+    setSchritte((prev) => prev.map((sc) => (sc.id === id ? neu : sc)));
+    return { ok: true, schritt: neu };
+  }, []);
+
+  // Kernprogramm: fehlende Pflicht-Bausteine als Schritte anlegen. Morgens
+  // kommen sie nach vorn (Wasser/Licht/Atmen zuerst), abends ans Ende, „Ins
+  // Bett zur festen Zeit“ bleibt immer der letzte Schritt. Doppelte fängt
+  // der eindeutige Index (user_id, kern_key) ab.
+  const kernSchritteAnlegen = useCallback(
+    async (bausteine) => {
+      const neu = [];
+      for (const routine of ["morgen", "abend"]) {
+        const liste = bausteine.filter((b) => b.routine === routine);
+        if (!liste.length) continue;
+        const bisherige = [...schritte, ...neu].filter((sc) => sc.routine === routine);
+        const minR = bisherige.length ? Math.min(...bisherige.map((sc) => sc.reihenfolge)) : 0;
+        const maxR = bisherige.length ? Math.max(...bisherige.map((sc) => sc.reihenfolge)) : -1;
+        const rows = liste.map((b, i) => ({
+          user_id: userId,
+          routine,
+          reihenfolge: routine === "morgen" ? minR - liste.length + i : maxR + 1 + i,
+          name: `${b.icon} ${b.name}`,
+          dauer_min: b.dauerMin || 5,
+          kern_key: b.key,
+        }));
+        for (const row of rows) {
+          const { data, error } = await supabase.from("routine_schritte").insert(row).select().single();
+          if (error) {
+            if (error.code !== "23505") console.error(error);
+            continue;
+          }
+          neu.push(rowToSchritt(data));
+        }
+        if (routine === "abend") {
+          const alle = [...schritte, ...neu].filter((sc) => sc.routine === "abend");
+          const bett = alle.find((sc) => sc.kernKey === "schlafenszeit");
+          const hoechste = Math.max(...alle.map((sc) => sc.reihenfolge));
+          if (bett && bett.reihenfolge < hoechste) {
+            await supabase.from("routine_schritte").update({ reihenfolge: hoechste + 1 }).eq("id", bett.id);
+            const i = neu.findIndex((sc) => sc.id === bett.id);
+            if (i >= 0) neu[i] = { ...neu[i], reihenfolge: hoechste + 1 };
+            else neu.push({ ...bett, reihenfolge: hoechste + 1, ersetzt: true });
+          }
+        }
+      }
+      if (neu.length) {
+        setSchritte((prev) => {
+          const ersetzt = new Map(neu.filter((sc) => sc.ersetzt).map((sc) => [sc.id, { ...sc, ersetzt: undefined }]));
+          const rest = prev.map((sc) => ersetzt.get(sc.id) || sc);
+          return [...rest, ...neu.filter((sc) => !sc.ersetzt)];
+        });
+      }
+      return { ok: true, anzahl: neu.filter((sc) => !sc.ersetzt).length };
+    },
+    [userId, schritte]
+  );
+
   // --- Schichtarbeit: Varianten + Schichtplan (25.09.) -------------------
   const varianteSpeichern = useCallback(
     async (v) => {
@@ -478,5 +563,9 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     routineSchrittVerschieben: schrittVerschieben,
     routineDurchlaufSpeichern: durchlaufSpeichern,
     routineZeitrahmenSetzen: zeitrahmenSetzen,
+    routineSchrittAendern: schrittAendern,
+    routineKernSchritteAnlegen: kernSchritteAnlegen,
+    routineKernPausen: kernPausen,
+    routineGeladen: geladen,
   };
 }

@@ -1,4 +1,5 @@
 import { einstellungenFuer, planFuer } from "../../src/utils/schichtplan";
+import { programmStand } from "../../src/utils/kernprogramm";
 // Automatischer Mock für useAppData() (~150 Felder aus ~30 Daten-Hooks) —
 // für einen echten, handgeschriebenen Mock müsste jeder Hook einzeln
 // gelesen werden. Stattdessen ein Proxy, der für jeden angefragten
@@ -138,8 +139,19 @@ function explizit(userId, overrides) {
     routineHeutePlan: planFuer(new Date().toISOString().slice(0, 10), ctx),
     routineEinstellungenFuer: (datum) => einstellungenFuer(datum, ctx),
     routineSchritteFuer: () => basis.routineSchritte || [],
+    // Kernprogramm (25.09.): Stand mit der echten Logik aus den Etappen.
+    kernEtappen: basis.kernEtappen || [],
+    kernStand: programmStand(basis.kernEtappen || [], isoHeute()),
+    kernTop3: {},
+    kernWochenChecks: [],
+    routineKernPausen: [],
     ...basis,
   };
+}
+
+function isoHeute() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function siehtAusWieFunktion(key) {

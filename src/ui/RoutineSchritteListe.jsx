@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "./primitives";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { ROUTINE_META } from "../utils/dayItems";
 import ItemVerlauf from "./ItemVerlauf";
+import { pauseFuer } from "../utils/kernprogramm";
+import { toLocalISODate } from "../utils/dates";
 
 const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
@@ -20,7 +22,15 @@ const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
 // RoutineHeuteChecklist.jsx (routineSchrittZeit), hier nur zusätzlich mit
 // Auf/Ab-Pfeilen und Löschen fürs Bearbeiten.
 export default function RoutineSchritteListe({ routine, schritte, onEntfernen, onVerschieben, zeigeVerlauf = true }) {
-  const { routineSchrittZeit } = useAppData();
+  const { routineSchrittZeit, routineSchrittAendern, routineKernPausen = [] } = useAppData();
+  // Pflicht-Bausteine des Kernprogramms (25.09.): 🔒 statt ×, dafür Name
+  // und Dauer frei einstellbar. Pausieren kann nur der Coach.
+  const [bearbeiten, setBearbeiten] = useState(null);
+  const heute = toLocalISODate(new Date());
+  const pausiertBis = (s) => {
+    const p = s.kernKey && pauseFuer(routineKernPausen, s.kernKey, heute);
+    return p ? new Date(`${p.bis}T12:00:00`).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : null;
+  };
   const sortiert = [...schritte].sort((a, b) => a.reihenfolge - b.reihenfolge);
   const farbe = ROUTINE_FARBE[routine] || accentDark;
 
@@ -70,9 +80,51 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
                 {zeit && <span style={{ color: farbe }}>{zeit} · </span>}
                 {s.name}
               </div>
-              <div style={{ fontSize: 13, color: textMuted, marginTop: 1 }}>{s.dauerMin} Min.</div>
+              <div style={{ fontSize: 13, color: textMuted, marginTop: 1 }}>
+                {s.dauerMin} Min.
+                {s.kernKey && " · 🔒 gehört zum Kernprogramm"}
+                {pausiertBis(s) && ` · ⏸ vom Coach pausiert bis ${pausiertBis(s)}`}
+              </div>
+              {bearbeiten?.id === s.id && (
+                <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <input
+                    aria-label="Name des Schritts"
+                    value={bearbeiten.name}
+                    onChange={(e) => setBearbeiten((b) => ({ ...b, name: e.target.value }))}
+                    style={{ flex: "1 1 160px", border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 9px", fontSize: 14, fontFamily: "inherit" }}
+                  />
+                  <input
+                    aria-label="Dauer in Minuten"
+                    type="number"
+                    min={1}
+                    value={bearbeiten.dauerMin}
+                    onChange={(e) => setBearbeiten((b) => ({ ...b, dauerMin: e.target.value }))}
+                    style={{ width: 64, border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 9px", fontSize: 14, fontFamily: "inherit" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const r = await routineSchrittAendern?.(s.id, { name: bearbeiten.name, dauerMin: bearbeiten.dauerMin });
+                      if (r?.ok) setBearbeiten(null);
+                    }}
+                    style={{ border: "none", borderRadius: 10, padding: "8px 12px", background: accentDark, color: "#fff", fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+                  >
+                    Speichern
+                  </button>
+                </div>
+              )}
               {zeigeVerlauf && <ItemVerlauf kategorie={ROUTINE_KATEGORIE[routine]} itemName={s.name} />}
             </div>
+            {s.kernKey ? (
+              <button
+                type="button"
+                aria-label={`${s.name} einstellen`}
+                onClick={() => setBearbeiten(bearbeiten?.id === s.id ? null : { id: s.id, name: s.name, dauerMin: s.dauerMin })}
+                style={{ border: "none", background: "transparent", color: accentDark, fontSize: 17, cursor: "pointer", padding: "0 4px", flexShrink: 0 }}
+              >
+                🔒✎
+              </button>
+            ) : (
             <button
               type="button"
               onClick={() => {
@@ -83,6 +135,7 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
             >
               ×
             </button>
+            )}
           </div>
         );
       })}

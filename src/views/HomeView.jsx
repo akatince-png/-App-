@@ -36,6 +36,9 @@ import RanglisteKarte from "../ui/RanglisteKarte";
 import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
 import SchichtHeuteKarte from "../ui/SchichtHeuteKarte";
 import TagebuchKarte from "../ui/TagebuchKarte";
+import KernprogrammKarte from "../ui/KernprogrammKarte";
+import Top3Karte from "../ui/Top3Karte";
+import WochenCheckKarte from "../ui/WochenCheckKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
@@ -1035,6 +1038,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           nur im eigenen Konto, nicht beim Verwalten einer anderen Person. */}
       {/* Kontext-Tagebuch (25.09.): abends einmal "Wie war dein Tag?" —
           nur im eigenen Konto. */}
+      {/* AKA-Kernprogramm (25.09.): Etappe/Woche, Morgen-Startblock "Top 3",
+          sonntags Wochen-Check in der Erhaltung — nur im eigenen Konto. */}
+      {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} />}
+      {proband === null && <Top3Karte />}
+      {proband === null && <WochenCheckKarte />}
       {proband === null && <TagebuchKarte onOeffnen={() => onOpenView("tagebuch")} />}
       {/* Gruppen-Atem-Session (25.09.): 15 Min. vorher bis zum Ende. */}
       {team && aktuelleSession(atemSessions) && (

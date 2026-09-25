@@ -11,6 +11,9 @@ import { toLocalISODate } from "../../utils/dates";
 import { chatListe, chatZeitKurz, useCoachChat } from "../../data/coachChat";
 import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZahlen } from "../../utils/coachAufmerksamkeit";
 import { coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
+import KernprogrammCoach from "./KernprogrammCoach";
+import { kernprogrammStarten } from "../../data/kernprogrammAdmin";
+import { datumKurz, kernKurztext, naechsterMontag, programmStand, zeileZuEtappe } from "../../utils/kernprogramm";
 import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
 
 // Grafische Gesamtübersicht über ALLE Coachees gleichzeitig (15.08.,
@@ -38,6 +41,16 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
   const [verspaetungen, setVerspaetungen] = useState({});
   const [schichtByUser, setSchichtByUser] = useState({});
   const [chatEntwurf, setChatEntwurf] = useState("");
+  // AKA-Kernprogramm (25.09.): Etappen aller Coachees.
+  const [etappenByUser, setEtappenByUser] = useState({});
+  const [kernHinweis, setKernHinweis] = useState(null);
+  const etappenLaden = async (ids) => {
+    if (!ids?.length) return;
+    const { data } = await supabase.from("coaching_etappen").select("*").in("user_id", ids).order("nummer");
+    const m = {};
+    (data || []).forEach((r) => (m[r.user_id] ||= []).push(zeileZuEtappe(r)));
+    setEtappenByUser(m);
+  };
 
   // Chatliste (24.09., WhatsApp-Startseite): die letzten Nachrichten aller
   // Coachees; die Liste daraus baut chatListe().
@@ -76,6 +89,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       // neuer RPC-Umweg nötig, ganz normale Tabellen-Abfrage.
       const ids = data.map((p) => p.id);
       if (ids.length === 0) return;
+      etappenLaden(ids);
       // Routine-Zeiten der letzten Tage (25.09.): wer schafft die Morgen-/
       // Abendroutine meist deutlich später als geplant? (RLS: Admins lesen
       // beide Tabellen, siehe 0035.)
@@ -198,6 +212,17 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
         ))}
       </div>
 
+      <KernprogrammLeiste
+        personen={gefiltert}
+        etappenByUser={etappenByUser}
+        hinweis={kernHinweis}
+        onStarten={async (ids, start) => {
+          const r = await kernprogrammStarten(ids, start);
+          setKernHinweis(r.ok ? `🧭 Kernprogramm für ${r.anzahl} ${r.anzahl === 1 ? "Person" : "Personen"} ab ${datumKurz(start)} gestartet.` : `Fehler: ${r.error}`);
+          etappenLaden(sortiert.map((p) => p.id));
+        }}
+      />
+
       {sortiert.length > 8 && <TextInput value={suche} onChange={setSuche} placeholder="Suchen nach Name oder E-Mail…" />}
 
       {ladend && <div style={{ fontSize: 13, color: textMuted, marginTop: 14 }}>Lädt…</div>}
@@ -221,6 +246,8 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             onVerwalteAls={onVerwalteAls}
             training={trainingByUser[p.id]}
             schicht={schichtByUser[p.id]}
+            etappen={etappenByUser[p.id] || []}
+            onKernGeaendert={() => etappenLaden(sortiert.map((x) => x.id))}
             trainingOffen={trainingFuer === p.id}
             onToggleTraining={() => setTrainingFuer((v) => (v === p.id ? null : p.id))}
           />
@@ -316,7 +343,40 @@ export function CoachChatFenster({ proband: p, teamName, onZurueck, startText = 
   );
 }
 
-function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalteAls, training, trainingOffen, onToggleTraining, schicht }) {
+// Kernprogramm-Leiste über der Liste (25.09.): fällige Etappen-Gespräche
+// und "Programm starten" für alle aus der aktuellen Auswahl (Filter
+// "Alle" oder ein Team), die noch keins haben.
+function KernprogrammLeiste({ personen, etappenByUser, hinweis, onStarten }) {
+  const heute = toLocalISODate(new Date());
+  const [start, setStart] = useState(naechsterMontag(heute));
+  const ohne = personen.filter((p) => !(etappenByUser[p.id] || []).length);
+  const faellig = personen.filter((p) => programmStand(etappenByUser[p.id] || [], heute).gespraechFaellig);
+  if (!ohne.length && !faellig.length && !hinweis) return null;
+  return (
+    <div style={{ borderRadius: 14, border: `1.5px solid ${cardBorder}`, background: "#fff", padding: "10px 12px", marginBottom: 10 }} data-kern-leiste>
+      {faellig.length > 0 && (
+        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: ohne.length ? 8 : 0 }}>💬 Etappen-Gespräch fällig: {faellig.map((p) => p.vorname || p.email).join(", ")}</div>
+      )}
+      {ohne.length > 0 && (
+        <>
+          <div style={{ fontSize: 13 }}>
+            🧭 <b>{ohne.length}</b> {ohne.length === 1 ? "Person hat" : "Personen haben"} noch kein Kernprogramm: {ohne.map((p) => p.vorname || p.email).join(", ")}
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+            <input type="date" aria-label="Start für alle" value={start} onChange={(e) => setStart(e.target.value)} style={{ border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 9px", fontSize: 13.5, fontFamily: "inherit" }} />
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <PrimaryButton onClick={() => onStarten(ohne.map((p) => p.id), start)}>Für alle {ohne.length} starten</PrimaryButton>
+            </div>
+          </div>
+        </>
+      )}
+      {hinweis && <div style={{ fontSize: 12.5, marginTop: 8, color: textMuted }}>{hinweis}</div>}
+    </div>
+  );
+}
+
+function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalteAls, training, trainingOffen, onToggleTraining, schicht, etappen = [], onKernGeaendert }) {
+  const kernText = kernKurztext(etappen, toLocalISODate(new Date()));
   const s = p.status;
   const fortschritt = protokollFortschritt(p);
   const farbe = s.ampel === "rot" ? danger : s.ampel === "gelb" ? "#B7791F" : AMPEL.gruen;
@@ -343,6 +403,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
             <span style={{ color: farbe, fontWeight: 700 }}>{s.text}</span>
             {s.zusatz ? ` · ${s.zusatz}` : s.art !== "onboarding" ? ` · ${p.punkte_7_tage || 0} P. diese Woche` : ""}
           </span>
+          {kernText && <span style={{ display: "block", fontSize: 11.5, color: kernText.startsWith("💬") ? "#B7791F" : textMuted, fontWeight: kernText.startsWith("💬") ? 800 : 600 }}>{kernText}</span>}
         </span>
         {s.ungelesen > 0 ? (
           <span style={{ background: danger, color: "#fff", borderRadius: 99, fontSize: 11, fontWeight: 800, padding: "3px 8px", flexShrink: 0 }}>💬 {s.ungelesen}</span>
@@ -364,6 +425,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
           <div style={{ fontSize: 11.5, color: textMuted, margin: "4px 0 10px" }}>
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
+          <KernprogrammCoach personId={p.id} vorname={p.vorname} onChat={onChat} onGeaendert={onKernGeaendert} />
           <TagebuchKurz personId={p.id} vorname={p.vorname} onChat={onChat} />
           {schicht && <SchichtKurz schicht={schicht} onBearbeiten={() => {
             verwalten();

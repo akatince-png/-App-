@@ -22,6 +22,7 @@ import { useTagesplanAusnahmen } from "../../data/useTagesplanAusnahmen";
 import { useKompletterReset } from "../../data/useKompletterReset";
 import { useAtemSessions } from "../../data/useAtemSessions";
 import { useTagebuch } from "../../data/useTagebuch";
+import { useKernprogramm } from "../../data/useKernprogramm";
 
 const PlatformDataContext = createContext(null);
 
@@ -60,6 +61,8 @@ export function PlatformDataProvider({ children }) {
   const atemSessionsData = useAtemSessions(userId);
   // Kontext-Tagebuch (25.09.).
   const tagebuchData = useTagebuch(userId);
+  // AKA-Kernprogramm in 4-Wochen-Etappen (25.09.).
+  const kernData = useKernprogramm(userId, routinenData);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -88,6 +91,7 @@ export function PlatformDataProvider({ children }) {
     ...kompletterResetData,
     ...atemSessionsData,
     ...tagebuchData,
+    ...kernData,
   });
 
   return <PlatformDataContext.Provider value={value}>{children}</PlatformDataContext.Provider>;

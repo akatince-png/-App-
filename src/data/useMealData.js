@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
+import { meldeMoment } from "../utils/momentFrageBus";
 
 function rowToWochenplan(r) {
   return {
@@ -271,6 +272,9 @@ export function useMealData(userId, hauptprotokollId, belohnungPufferMin) {
         const mahlzeitName = mahlzeiten.find((m) => m.id === id)?.name || "Mahlzeit";
         feuereBelohnung({ text: `„${mahlzeitName}" erledigt`, icon: "utensils", punkte: 1 });
       }
+      // Frage im Moment (25.09.): "Eiweiß dabei?" — ob sie gestellt wird,
+      // entscheidet MomentFrageHost (nur im Kernprogramm ab Woche 3).
+      if (nextVal) meldeMoment({ art: "mahlzeit", userId, datum, mealId: id, tageszeit: zeit, name: mahlzeiten.find((m) => m.id === id)?.name || "Mahlzeit" });
     },
     [mahlzeitErledigt, mahlzeitErledigtAt, userId, belohnungPufferMin, mahlzeiten]
   );

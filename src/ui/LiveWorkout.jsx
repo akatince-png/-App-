@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, Label, PrimaryButton, TextInput } from "./primitives";
 import ViewHeader from "./ViewHeader";
 import Timer from "./Timer";
+import SatzFrage from "./SatzFrage";
+import { naechstesMalHinweis } from "../utils/trainingSaetze";
 import NumberWheelField from "./NumberWheelField";
 import TrainingVorschau from "./TrainingVorschau";
 import TrainingFeedbackPanel from "./TrainingFeedbackPanel";
@@ -31,7 +33,7 @@ function fmtDauer(sekunden) {
 // ausgelagert wurde. Reine Verhaltens-neutrale Umstrukturierung.
 // ---------------------------------------------------------------------------
 export default function LiveWorkout({ session, onFertig, onSchliessen }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, spotifyFortsetzen, spotifyLautstaerke, uebungsBilder } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, spotifyFortsetzen, spotifyLautstaerke, uebungsBilder, trainingAbschliessen } = useAppData();
   const [musikFehler, setMusikFehler] = useState(null);
   // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik
   // → Zuordnung, siehe SpotifyAnlassPicker), einmalig beim Öffnen dieser
@@ -82,11 +84,26 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
   // (z. B. aus dem Verlauf) nicht wieder abfragen.
   const [justFinished, setJustFinished] = useState(false);
   const [feedbackErledigt, setFeedbackErledigt] = useState(false);
+  // Intervall-Trainings (25.09.): direkt am Ende "Alle 5 Runden
+  // durchgezogen?" — ein Tipp, gespeichert als runden_ist.
+  const istIntervall =
+    (session.art === "Bodyweight" && !(session.uebungen || []).length) || session.art === "Isometrisches Training" || (session.art === "Cardio" && !!session.intervallArbeitSek);
+  const rundenSoll = istIntervall ? Number(session.runden) || 5 : null;
+  const [rundenBeantwortet, setRundenBeantwortet] = useState(false);
+  const rundenAntworten = (n) => {
+    trainingAbschliessen?.(session.id, { rundenIst: n });
+    setRundenBeantwortet(true);
+  };
   // Tatsächlich durchgeführte Werte pro Übung — startet als Kopie des Plans,
   // wird aber pro Übung nach dem letzten Satz bestätigt/angepasst, damit das
   // Protokoll später zeigt, was wirklich gemacht wurde, nicht nur den Plan.
   const [tatsaechlich, setTatsaechlich] = useState(() => (session.uebungen || []).map((u) => ({ ...u })));
   const [entwurf, setEntwurf] = useState(null);
+  // Frage nach jedem Satz (25.09.): Ergebnis je Übung und Satz, landet mit
+  // in `uebungen` (saetzeIst) der Session. `satzOffen` = Satz, dessen
+  // Frage gerade angezeigt wird (während die Pause schon läuft).
+  const [satzErgebnisse, setSatzErgebnisse] = useState({});
+  const [satzOffen, setSatzOffen] = useState(null);
 
   const uebungen = session.uebungen || [];
   const aktuelleUebung = uebungen[uebungIndex];
@@ -125,20 +142,36 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
 
   const satzFertig = () => {
     const gesamtSaetze = Number(aktuelleUebung?.saetze) || 1;
-    if (satzAktuell >= gesamtSaetze) {
+    setSatzOffen(satzAktuell);
+    // Letzter Satz: erst die Frage, dann "Tatsächlich durchgeführt".
+    if (satzAktuell < gesamtSaetze) setPhase("pause");
+    else setPhase("letzteFrage");
+  };
+
+  const satzBeantwortet = (antwort) => {
+    const satz = satzOffen;
+    setSatzErgebnisse((prev) => {
+      const liste = [...(prev[uebungIndex] || [])];
+      liste[satz - 1] = antwort;
+      return { ...prev, [uebungIndex]: liste };
+    });
+    if (phase === "letzteFrage") {
+      setSatzOffen(null);
       setPhase("bestaetigen");
-    } else {
-      setPhase("pause");
     }
   };
 
   const pauseFertig = () => {
+    setSatzOffen(null);
     setSatzAktuell((s) => s + 1);
     setPhase("uebung");
   };
 
   const uebungBestaetigen = () => {
-    const naechste = tatsaechlich.map((u, i) => (i === uebungIndex ? { ...u, ...entwurf } : u));
+    const ergebnisse = satzErgebnisse[uebungIndex];
+    const naechste = tatsaechlich.map((u, i) =>
+      i === uebungIndex ? { ...u, ...entwurf, ...(ergebnisse?.length ? { saetzeIst: ergebnisse.map((e) => e?.wdh ?? null), satzSchwere: ergebnisse.map((e) => e?.schwere ?? null) } : {}) } : u
+    );
     setTatsaechlich(naechste);
     if (uebungIndex + 1 < uebungen.length) {
       setUebungIndex((i) => i + 1);
@@ -174,7 +207,25 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
       )}
 
       {fertig ? (
-        justFinished && !feedbackErledigt ? (
+        justFinished && rundenSoll && !rundenBeantwortet ? (
+          <Card style={{ textAlign: "center", marginBottom: 14 }}>
+            <div style={{ fontSize: 17, fontWeight: 900, marginBottom: 10 }}>Alle {rundenSoll} Runden durchgezogen?</div>
+            <PrimaryButton onClick={() => rundenAntworten(rundenSoll)}>✅ Ja, alle {rundenSoll}</PrimaryButton>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "12px 0 6px" }}>NEIN – WIE VIELE?</div>
+            <div role="group" aria-label="Geschaffte Runden" style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+              {Array.from({ length: rundenSoll }, (_, i) => i).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => rundenAntworten(n)}
+                  style={{ border: "none", borderRadius: 99, padding: "8px 13px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: "#EEF4FF", color: "#2D6FD6" }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </Card>
+        ) : justFinished && !feedbackErledigt ? (
           <TrainingFeedbackPanel trainingId={session.id} onDone={() => setFeedbackErledigt(true)} />
         ) : (
           <Card style={{ textAlign: "center" }}>
@@ -233,8 +284,19 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                     </div>
                     <PrimaryButton onClick={satzFertig}>Satz fertig</PrimaryButton>
                   </>
+                ) : phase === "letzteFrage" ? (
+                  <SatzFrage key={`${uebungIndex}-${satzOffen}`} soll={aktuelleUebung.wiederholungen} satz={satzOffen} onAntwort={satzBeantwortet} />
                 ) : phase === "pause" ? (
                   <>
+                    {satzOffen && (
+                      <SatzFrage
+                        key={`${uebungIndex}-${satzOffen}`}
+                        soll={aktuelleUebung.wiederholungen}
+                        satz={satzOffen}
+                        antwort={satzErgebnisse[uebungIndex]?.[satzOffen - 1]}
+                        onAntwort={satzBeantwortet}
+                      />
+                    )}
                     <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginBottom: 6 }}>Pause</div>
                     <Timer
                       mode="countdown"
@@ -251,6 +313,13 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                 ) : (
                   entwurf && (
                     <div style={{ textAlign: "left" }}>
+                      {naechstesMalHinweis(satzErgebnisse[uebungIndex], aktuelleUebung.wiederholungen) && (
+                        <div style={{ fontSize: 12.5, background: "#E8F7F2", borderRadius: 12, padding: "8px 10px", marginBottom: 10 }}>
+                          {(satzErgebnisse[uebungIndex] || []).map((e, i) => (e ? `Satz ${i + 1}: ${e.wdh}` : null)).filter(Boolean).join(" · ")}
+                          <br />
+                          {naechstesMalHinweis(satzErgebnisse[uebungIndex], aktuelleUebung.wiederholungen)}
+                        </div>
+                      )}
                       <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, textAlign: "center" }}>
                         Tatsächlich durchgeführt:
                       </div>

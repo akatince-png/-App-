@@ -59,3 +59,21 @@ describe("RoutineSchritteListe", () => {
     expect(screen.getByText(/Noch keine Schritte/)).toBeInTheDocument();
   });
 });
+
+describe("RoutineSchritteListe – Kernprogramm", () => {
+  it("Pflicht-Baustein: 🔒 statt Löschen, Name/Dauer einstellbar", () => {
+    render(
+      <RoutineSchritteListe
+        routine="morgen"
+        schritte={[{ id: "k1", routine: "morgen", reihenfolge: 0, name: "💧 Glas Wasser", dauerMin: 1, kernKey: "wasser" }, ...SCHRITTE]}
+        onEntfernen={() => {}}
+        onVerschieben={() => {}}
+        zeigeVerlauf={false}
+      />
+    );
+    expect(screen.getByText(/gehört zum Kernprogramm/)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "×" }).length).toBe(2);
+    fireEvent.click(screen.getByRole("button", { name: "💧 Glas Wasser einstellen" }));
+    expect(screen.getByLabelText("Dauer in Minuten").value).toBe("1");
+  });
+});

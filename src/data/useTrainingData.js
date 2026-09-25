@@ -13,6 +13,7 @@ function rowToEintrag(r) {
     distanzKm: r.distanz_km,
     puls: r.puls,
     runden: r.runden,
+    rundenIst: r.runden_ist ?? null,
     cardioArt: r.cardio_art || "",
     cardioModus: r.cardio_modus || "",
     rpe: r.rpe,
@@ -142,6 +143,10 @@ export function useTrainingData(userId) {
     if (felder.uebungen != null) {
       patch.uebungen = felder.uebungen;
       lokalePatch.uebungen = felder.uebungen;
+    }
+    if (felder.rundenIst != null) {
+      patch.runden_ist = felder.rundenIst;
+      lokalePatch.rundenIst = felder.rundenIst;
     }
     let vorher;
     setTrainingEintraege((prev) =>

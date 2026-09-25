@@ -9,6 +9,7 @@ import { useAdmin } from "./context/AdminContext";
 import HomeView from "./views/HomeView";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
+import MomentFrageHost from "./ui/MomentFrageHost";
 import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
 import Aka from "./ui/Aka";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
@@ -51,6 +52,7 @@ const TeamView = lazyAnsicht(() => import("./views/TeamView"));
 const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
 const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
+const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazyAnsicht(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
 const ZusatzprotokollErstellenView = lazyAnsicht(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
@@ -61,7 +63,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "coaching", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -382,6 +384,8 @@ export default function AuthenticatedApp() {
     screen = <TeamView onHome={() => setView("home")} />;
   } else if (view === "coach-chat") {
     screen = <CoachChatView onHome={() => setView("home")} />;
+  } else if (view === "coaching") {
+    screen = <KernprogrammView onHome={() => setView("home")} />;
   } else if (view === "tagebuch") {
     screen = <TagebuchView onHome={() => setView("home")} />;
   } else if (view === "schichtplan") {
@@ -467,6 +471,7 @@ export default function AuthenticatedApp() {
   return (
     <div className="mp-app-shell">
       <Belohnungsfenster />
+      <MomentFrageHost />
       <AkutModusGlobal sichtbar={view !== "home" && view !== "form"} />
       {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
       <div className="mp-app-main">

@@ -81,6 +81,8 @@ const ROUTINEN_EINTRAEGE = [
   { id: "atemuebungen", icon: "wind", label: "Atemübungen" },
   // Kontext-Tagebuch (25.09.) — jederzeit erreichbar, nicht nur abends.
   { id: "tagebuch", icon: "book", label: "Tagebuch" },
+  // AKA-Kernprogramm (25.09.): Etappen, Pflicht-Bausteine, Sport.
+  { id: "coaching", icon: "target", label: "Mein AKA-Coaching" },
 ];
 
 // Nachvollziehbarkeit (Nutzerinnen-Vorgabe, 31.07.): "Alle Pläne" soll auch

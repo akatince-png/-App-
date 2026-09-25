@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 235 Unit-Tests, 80 E2E-Tests (Stand 25.09.).
+  - 248 Unit-Tests, 84 E2E-Tests (Stand 25.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -122,11 +122,21 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 
 **Noch nicht gebaut:** Atemübung als Schritt in der Morgen-/Abendroutine; Team-Muster im Tagebuch (was gute Tage im Team gemeinsam haben).
 
-### Evidenz-Grundlage + AKA-Kernprogramm (25.09., Konzept vorgeschlagen, wartet auf Freigabe)
-- Die Nutzerin hat eine Perplexity-Auswertung zu nichtmedikamentösen Verfahren geschickt. Sie steht jetzt als zwei Einträge in der Wissens-Basis (`coach_wissen`, bereich leer = gilt überall): „Evidenz: Nichtmedikamentöse Verfahren …“ und „Coaching-Prioritäten aus der Evidenz …“.
-- Hauptquelle geprüft: Meta-Analyse 2023, 67 Studien, 3.147 Kinder/Jugendliche. Korrektur gegenüber Perplexity: g=0,67 gilt für alle Verfahren zusammen, nicht für „Bewegung allgemein“.
-- Planungsgrundsatz: Bewegung ist fest eingeplant (nur Art, Zeit und Häufigkeit sind wählbar). Jeder Baustein wird an eine echte Alltagsaufgabe gekoppelt (Transfer). Atmung dient als kurze Vorbereitung und zur Regulation. Daten meist von Kindern, deshalb in der App keine Wirkversprechen.
-- Vorgeschlagen: ein 4-Wochen-Kernprogramm mit Pflichtbausteinen in Morgen- und Abendroutine, die wochenweise dazukommen. Details im Chat vom 25.09.; noch nichts gebaut.
+### Evidenz-Grundlage + AKA-Kernprogramm in 4-Wochen-Etappen (25.09., gebaut)
+- **Evidenz:** Perplexity-Auswertung der Nutzerin als zwei Einträge in der Wissens-Basis (`coach_wissen`): „Evidenz: Nichtmedikamentöse Verfahren …“ und „Coaching-Prioritäten aus der Evidenz …“. Hauptquelle geprüft (Meta-Analyse 2023, 67 Studien, 3.147 Kinder/Jugendliche); Korrektur: g=0,67 gilt für alle Verfahren zusammen. Grundsätze: Bewegung ist fest (nur Art/Zeit/Häufigkeit wählbar), jeder Baustein an einer echten Aufgabe (Transfer), Atmung als kurze Vorbereitung. Keine Wirkversprechen.
+- **Etappen (Nutzerinnen-Vorgabe):** Coaching läuft in 4-Wochen-Etappen, planbar auch für die Abrechnung. Etappe 1 = Einführung, danach Erhaltung (nichts Neues, dranbleiben). Jede Etappe endet mit einem Coach-Gespräch; der Coach wählt dann Erhaltung (nächste 4 Wochen), Pause oder Coaching beenden.
+- **Pflicht-Bausteine** (`utils/kernprogramm.js`, `BAUSTEINE`), wochenweise in der Einführung:
+  - W1 Anker: Glas Wasser, Tageslicht, Atemübung 2 Min. (morgens); Tagebuch, Ins Bett zur festen Zeit (abends).
+  - W2 Bewegung: Aktivierung 10 Min. (morgens), ruhige Atmung 5 Min. (abends), Sport 2–3×/Woche (Trainingsplan).
+  - W3 Essen + Planen: eiweißreiches Frühstück, „Top 3 + 15 Min. Start“ (morgens), regelmäßige Mahlzeiten.
+  - W4 Abend + Bilanz: Bildschirm-Stopp, Plan für morgen (abends).
+  - Routine-Bausteine werden automatisch als Schritte angelegt (`routine_schritte.kern_key`, eindeutig je Person), sobald ihre Woche beginnt (`useKernprogramm` → `routineKernSchritteAnlegen`). In der Liste 🔒 statt ×: Name und Dauer einstellbar, nicht löschbar (nur in der App gesperrt, nicht per DB). Pausieren kann nur der Coach (`kern_pausen`, mit Begründung); pausierte Schritte fallen an diesen Tagen aus der Routine.
+- **Coachee:** Startseiten-Karte (Woche/Etappe, „Sportart wählen“), Seite `#/coaching` (Etappen, Bausteine der letzten 7 Tage mit Ampel, alle Pflicht-Bausteine, Sport-Formular → `training_wochenplan`), Top-3-Karte morgens bis 14 Uhr (ab W3, `tages_top3`, „Hast du angefangen?“ hakt den Schritt ab), sonntags (Mo/Di nachholbar) Wochen-Check in der Erhaltung (`wochen_checks`: schwächster Baustein, was gestört hat, eine Änderung, Stimmung).
+- **Coach** (Coach-Übersicht): Leiste „Etappen-Gespräch fällig“ + „Für alle X starten“ (gilt für die aktuelle Auswahl, also auch pro Team), je Person Kurzstatus und aufgeklappt `KernprogrammCoach.jsx`: Bausteine 7 Tage, „wackelt seit 2 Wochen“ mit Chat-Entwurf, letzter Wochen-Check, Pausen, Gespräch eintragen + nächste Etappe.
+- **Fragen im richtigen Moment** (Lehre aus der Tagebuch-Studie): nach jedem Trainingssatz „Alle 10 Wiederholungen geschafft?“ (`ui/SatzFrage.jsx`, Pause läuft schon; `uebungen[].saetzeIst/satzSchwere`, Hinweis fürs nächste Mal), nach Intervall-Training „Alle 5 Runden?“ (`training_sessions.runden_ist`, Migration 0107), nach dem Abhaken einer Mahlzeit „Eiweiß dabei?“ (`meal_logs.eiweiss`, nur ab Kernprogramm-Woche 3, `ui/MomentFrageHost.jsx` + `utils/momentFrageBus.js`).
+- **Live:** Migrationen 0106 + 0107 eingespielt. Etappe 1 für alle 6 Testkonten (Claude, Mia, Jonas, Lea, Test 1, Admin-Test) vom 28.09. bis 25.10. angelegt. Die Pflicht-Schritte entstehen beim ersten Öffnen ab 28.09.
+- **Noch offen:** Aka kennt das Kernprogramm nur über die Wissens-Basis (kein eigener Aka-Bereich „Kernprogramm“); Erinnerung für den Wochen-Check per Push fehlt; täglicher Dauertest prüft die neuen Karten noch nicht gezielt.
+- **Nächstes Gesprächsthema der Nutzerin:** weitere kognitive Übungen (z. B. Ball, der durchs Bild springt und mit den Augen verfolgt wird).
 
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
 - Alle Testkonten haben **alle** Bereiche eingerichtet (per SQL, Schema wie in der App): Claude, Mia, Jonas, Lea, „Test 1“ (Einzelperson ohne Team, Onboarding jetzt abgeschlossen) und das Admin-Testkonto.

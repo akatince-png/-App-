@@ -98,7 +98,31 @@ function leseOverridesAusUrl() {
       return { datum: iso(16 - i), stimmung: gut ? 4 : 2, orte: gut ? ["🌳 Natur / draußen"] : ["🏠 Zuhause"], personen: [], essen: gut ? [] : ["viel Zucker"], tagesart: [], koerper: [], notiz: "", notizTeilen: false, auto: { draussenMin: gut ? 50 : 5 } };
     });
   }
-  // ?teilt=1:  // ?teilt=1:  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
+  // ?kern=1..4: AKA-Kernprogramm in Einführungswoche N (25.09.);
+  // ?kern=erhaltung: Etappe 2 (Erhaltung) läuft, 2. Woche.
+  const kern = params.get("kern");
+  if (kern) {
+    const h = new Date();
+    const iso = (n) => {
+      const d = new Date(h.getFullYear(), h.getMonth(), h.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    if (kern === "erhaltung") {
+      overrides.kernEtappen = [
+        { id: "k1", nummer: 1, art: "einfuehrung", start: iso(-35), ende: iso(-8), status: "abgeschlossen", gespraechAm: iso(-7) },
+        { id: "k2", nummer: 2, art: "erhaltung", start: iso(-7), ende: iso(20), status: "laufend" },
+      ];
+    } else {
+      const w = Number(kern);
+      overrides.kernEtappen = [{ id: "k1", nummer: 1, art: "einfuehrung", start: iso(-(w - 1) * 7), ende: iso(27 - (w - 1) * 7), status: "laufend" }];
+    }
+    overrides.routineSchritte = [
+      { id: "ks1", routine: "morgen", reihenfolge: 0, name: "💧 Glas Wasser", dauerMin: 1, kernKey: "wasser" },
+      { id: "ks2", routine: "morgen", reihenfolge: 1, name: "Zähne putzen", dauerMin: 3, kernKey: null },
+    ];
+    overrides.trainingWochenplan = [];
+  }
+  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).
   if (params.get("gruppe") === "1") {
