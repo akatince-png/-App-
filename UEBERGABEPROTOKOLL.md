@@ -93,8 +93,11 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Testkonto Jonas** ist seit 25.09. Schichtarbeiter: Früh/Spät wochenweise vom 21.09. bis 25.10., Wochenende frei. Die Tages- und Admin-Läufe fotografieren seine Schichtkarte und den Coach-Kasten.
 
 ### Medikamente: neue Vorgaben + Grundsatz „ganzes Leben“ (25.09.)
-- **Grundsatz (auch in CLAUDE.md):** Die App managt das ganze Leben mit ADHS, nicht nur das ADHS. ADHS-Medikation muss sauber dokumentiert sein; Hormone (z. B. TRT), Ernährung, Schlaf, Bewegung und körperliche Gesundheit sind gleichwertig mit zu erfassen.
-- **Neues Medikament** startet jetzt mit „ADHS-Medikation / Tablette / täglich 08:00“ statt „Hormone / Injektion / 1× pro Woche“ aus der Peptid-Zeit.
+- **Grundsatz (auch in CLAUDE.md, von der Nutzerin präzisiert):** Die App managt das ganze Leben mit ADHS. **Alle Bausteine sind gleichwertig**, Medikation ist nur einer davon; genauso Bewegung, Ernährung, Supplemente, Schlaf, Tageslicht, Atemübungen, Hormone und körperliche Gesundheit. Die Nutzerin ist überzeugt, dass gute Rahmenbedingungen viel bewirken und teils Medikamente ersetzen können. Deshalb soll auch der Kontext (wo, wann, mit wem, was gegessen, wie lange) erfassbar werden.
+- **Offene Ideen der Nutzerin (25.09., noch nicht beauftragt):**
+  - Feste Atemübungs-Routine, von Aka geführt, später evtl. als Gruppen-Session vom Coach.
+  - Kontext-Tagebuch: Ort, Uhrzeit, Personen, Essen, Dauer, um gute und schlechte Tage mit den Bedingungen zu verknüpfen.
+- **Neues Medikament** (nur innerhalb des Bereichs Medikamente, als häufigster Fall) startet jetzt mit „ADHS-Medikation / Tablette / täglich 08:00“ statt „Hormone / Injektion / 1× pro Woche“ aus der Peptid-Zeit.
   - Beim Kategorie-Wechsel passen sich noch nicht selbst geänderte Felder an: Hormone → Injektion 1× pro Woche, Cannabis → Verdampfen, Cholesterin → abends. Siehe `utils/medikamentVorgaben.js` (mit Tests); gilt im Medikamente-Formular und in der Einrichtung.
 - **Neue Einnahmearten:** „Gel / Creme“ und „Pflaster“, z. B. für Testosteron-Gel.
 - **Aka** kennt jetzt beim Anlegen eines Medikaments die Kategorien „ADHS-Medikation“ und „Cannabis“ sowie alle Einnahmearten (vorher fehlten sie, Elvanse landete z. B. unter „Sonstige“ oder „Hormone“). Aka nimmt „täglich“ an, wenn nichts anderes gesagt wurde.
