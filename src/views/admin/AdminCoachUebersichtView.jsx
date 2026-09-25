@@ -79,7 +79,8 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       // beide Tabellen, siehe 0035.)
       // Schichtarbeit (25.09.): Varianten + Plan je Person (4 Wochen zurück,
       // 3 Wochen voraus) — für Verspätung je Schicht und "Pünktlichkeit je
-      // Schicht" in der aufgeklappten Zeile.
+      // Schicht" in der aufgeklappten Zeile. Bis 200 Tage voraus, damit
+      // "läuft bis" das echte Planende zeigt.
       const heuteIso = toLocalISODate(new Date());
       const [{ data: wochenplan }, { data: sessions }, { data: routineZeiten }, { data: routineLaeufe }, { data: varianten }, { data: planZeilen }] = await Promise.all([
         supabase.from("training_wochenplan").select("user_id, name, wochentag, uhrzeit, arten").in("user_id", ids),
@@ -87,7 +88,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
         supabase.from("routine_einstellungen").select("user_id, routine, start_zeit").in("user_id", ids),
         supabase.from("routine_durchlaeufe").select("user_id, routine, datum, gestartet_um, abgeschlossen_um").in("user_id", ids).gte("datum", plusTage(heuteIso, -27)),
         supabase.from("routine_varianten").select("*").in("user_id", ids).order("reihenfolge"),
-        supabase.from("routine_schichtplan").select("*").in("user_id", ids).gte("datum", plusTage(heuteIso, -27)).lte("datum", plusTage(heuteIso, 20)),
+        supabase.from("routine_schichtplan").select("*").in("user_id", ids).gte("datum", plusTage(heuteIso, -27)).lte("datum", plusTage(heuteIso, 200)),
       ]);
       const startZeiten = new Map((routineZeiten || []).map((z) => [`${z.user_id}_${z.routine}`, z.start_zeit]));
       setVerspaetungen(
