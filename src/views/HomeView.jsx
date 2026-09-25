@@ -1083,6 +1083,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         onAkut={() => setAkutOffen(true)}
         phase={phase}
         mitte={kartenMitte}
+        kopfUnten
         kopf={
           <SpielstandKarte
             eingebettet

@@ -222,7 +222,7 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht" }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
@@ -237,7 +237,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       <div style={{ position: "relative" }}>
       {/* Spielstand oben in derselben Karte (24.09.), durch eine feine Linie
           vom Gehirn-Teil getrennt. */}
-      {kopf && (
+      {kopf && !kopfUnten && (
         <>
           {kopf}
           {mitte}
@@ -455,6 +455,13 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             Erfolge ›
           </button>
         </div>
+      )}
+      {kopf && kopfUnten && (
+        <>
+          <div style={{ height: 1, background: "rgba(255,255,255,0.18)", margin: "14px 0" }} />
+          {mitte}
+          <div style={{ marginTop: 14 }}>{kopf}</div>
+        </>
       )}
       </div>
     </div>
