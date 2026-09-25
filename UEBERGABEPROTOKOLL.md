@@ -100,7 +100,7 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Hinweis Produkt:** Ein neues Medikament startet in der App mit „Hormone / Injektion / 1× pro Woche“, ein Überbleibsel aus der Peptid-Zeit. Für ADHS-Medikation wäre „täglich“ als Voreinstellung sinnvoller; noch nicht geändert, mit der Nutzerin abstimmen.
 - Täglicher Test: keine Pausentage mehr (`AKA_PAUSENTAGE=1` nur auf Wunsch), Fleiß 0.95 für alle, alle sechs Konten laufen täglich; „Test 1“ und das Admin-Testkonto mit `AKA_OHNE_TEAM=1`.
 - Stand 25.09. mittags: `letzte_aktivitaet` = heute bei allen sechs.
-- Leeres Team „Aka“ (0 Mitglieder) existiert. Es ist kein Testteam, deshalb nicht angefasst.
+- Leeres Team „Aka“ (0 Mitglieder, vermutlich früher versehentlich beim Testen angelegt) am 25.09. auf Wunsch der Nutzerin gelöscht. Es gibt nur noch Test-Team Sonne und Test-Team Mond.
 
 ### ⚠️ Erinnerungen kamen nicht an – behoben (25.09.)
 Beim Einbau entdeckt: Der minütliche Cron-Job (jobid 2) bekam bei **jedem** Aufruf 401. Das Protokoll reicht nur 24 Stunden zurück; es ist also unklar, seit wann.
