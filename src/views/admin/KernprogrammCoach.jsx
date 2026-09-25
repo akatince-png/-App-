@@ -4,12 +4,14 @@ import { cardBorder, danger, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
 import { toLocalISODate } from "../../utils/dates";
 import { kernprogrammStarten } from "../../data/kernprogrammAdmin";
+import { zeileZuEssen } from "../../data/useEssen";
 import { plusTage } from "../../utils/schichtplan";
 import {
   ETAPPEN_NAME,
   ampel,
   bausteinFuer,
   datumKurz,
+  ernaehrungFuerBilanz,
   faelligeBausteine,
   kernBilanz,
   naechsteEtappeVorschlag,
@@ -36,7 +38,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
 
   const laden = useCallback(async () => {
     const seit = plusTage(heute, -14);
-    const [et, pa, sc, sl, du, tr, wp, ml, wc, t3] = await Promise.all([
+    const [et, pa, sc, sl, du, tr, wp, ml, wc, t3, es, me, zu, pr, ch] = await Promise.all([
       supabase.from("coaching_etappen").select("*").eq("user_id", personId).order("nummer"),
       supabase.from("kern_pausen").select("*").eq("user_id", personId),
       supabase.from("routine_schritte").select("id, routine, kern_key").eq("user_id", personId).not("kern_key", "is", null),
@@ -47,6 +49,12 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       supabase.from("meal_logs").select("log_date, meal_id, tageszeit, erledigt").eq("user_id", personId).gte("log_date", seit),
       supabase.from("wochen_checks").select("*").eq("user_id", personId).order("woche_start", { ascending: false }).limit(2),
       supabase.from("tages_top3").select("datum, angefangen").eq("user_id", personId).gte("datum", plusTage(heute, -6)),
+      // Ernährung (Baustein "Eiweißziel" ab Woche 3)
+      supabase.from("essen_eintraege").select("*").eq("user_id", personId).gte("datum", seit),
+      supabase.from("meals").select("id, name").eq("user_id", personId),
+      supabase.from("meal_ingredients").select("meal_id, name, menge, menge_gramm").eq("user_id", personId),
+      supabase.from("profiles").select("category_ziele, gewicht_start").eq("id", personId).maybeSingle(),
+      supabase.from("checkins").select("datum, gewicht").eq("user_id", personId).order("datum"),
     ]);
     const schrittErledigt = {};
     (sl.data || []).forEach((r) => (schrittErledigt[`${r.datum}__${r.schritt_id}`] = true));
@@ -62,6 +70,14 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       trainingWochenplan: wp.data || [],
       mahlzeitErledigt,
       checks: wc.data || [],
+      ...ernaehrungFuerBilanz({
+        essenEintraege: (es.data || []).map(zeileZuEssen),
+        mahlzeiten: (me.data || []).map((m) => ({ ...m, zutaten: (zu.data || []).filter((z) => z.meal_id === m.id).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: z.menge_gramm })) })),
+        mahlzeitErledigt,
+        categoryZiele: pr.data?.category_ziele || {},
+        gewichtsEintraege: ch.data || [],
+        personalData: { gewichtStart: pr.data?.gewicht_start },
+      }),
       top3: t3.data || [],
     });
   }, [personId, heute]);

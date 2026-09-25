@@ -9,10 +9,12 @@ import { cardBorder, danger, textMuted } from "../ui/theme";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { TAGESZEIT_STUNDE, KATEGORIE_META } from "../utils/dayItems";
-import { berechneGrundumsatz } from "../utils/kalorien";
 import { useAppData } from "../context/AppDataContext";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import EssenEingabe from "../ui/EssenEingabe";
+import ErnaehrungBilanz from "../ui/ErnaehrungBilanz";
+import ErnaehrungZiele from "../ui/ErnaehrungZiele";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Ernährung
 // ist Terrakotta, passend zu den bunten Home-Mini-Widgets.
@@ -222,10 +224,7 @@ export default function NutritionView({ onHome, embedded = false }) {
     wochenplanMahlzeitSetzen,
     wochenplanMahlzeitEntfernen,
     aenderungVermerken,
-    personalData,
-    gewichtsEintraege,
     categoryZiele,
-    setCategoryZiel,
   } = useAppData();
   const [neueMahlzeit, setNeueMahlzeit] = useState(LEERE_MAHLZEIT);
   const [mahlzeitTag, setMahlzeitTag] = useState(new Date());
@@ -332,24 +331,10 @@ export default function NutritionView({ onHome, embedded = false }) {
   const heuteAnzahl = tagesEintraege.length;
   const heuteErledigtAnzahl = tagesEintraege.filter((e) => mahlzeitErledigt[`${tagStr}__${e.mealId}__${zeitVon(e)}`]).length;
 
-  // Kalorien-Übersicht: "Ist" wird automatisch nach Mifflin-St-Jeor aus
-  // Profil-Angaben berechnet, "Ziel" ist eine manuelle Prozent-Abweichung
-  // davon (z. B. -15% für ein Kaloriendefizit) — beide zusammen sollen hier
-  // immer sichtbar sein, damit der Ernährungsplan bewusst danach ausgerichtet
-  // werden kann. Makros/weitere Details folgen später.
-  const aktuellesGewicht = gewichtsEintraege?.length ? gewichtsEintraege[gewichtsEintraege.length - 1].gewicht : personalData.gewichtStart;
-  const kalorienIst = berechneGrundumsatz({
-    geschlecht: personalData.geschlecht,
-    geburtsdatum: personalData.geburtsdatum,
-    groesse: personalData.groesse,
-    gewicht: aktuellesGewicht,
-  });
+  // Kalorienziel steht seit 25.09. im Ernährungsziel (ErnaehrungZiele.jsx),
+  // zusammen mit Eiweiß g/kg, Fett %, Omega-3 und Quellen.
   const kalorienZiel = categoryZiele?.ernaehrung?.kalorienZiel ?? "";
-  const kalorienZielAendern = (val) => {
-    setCategoryZiel("ernaehrung", { ...(categoryZiele?.ernaehrung || {}), kalorienZiel: val === "" ? null : Number(val) });
-  };
-  const kalorienZielProzent =
-    kalorienIst && kalorienZiel ? Math.round(((Number(kalorienZiel) - kalorienIst) / kalorienIst) * 100) : null;
+  const [zieleOffen, setZieleOffen] = useState(false);
 
   const zeitGruppen = Array.from(new Set(tagesEintraege.map(zeitVon)));
 
@@ -363,27 +348,31 @@ export default function NutritionView({ onHome, embedded = false }) {
         <KategorieErinnerung kategorie="ernaehrung" label="🔔 Erinnerungen" mitTagen />
       </Card>
 
-      {kalorienIst && (
-        <Card style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Kalorien-Übersicht</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <div style={{ flex: 1 }}>
-              <Label>Ist (berechnet)</Label>
-              <div style={{ fontSize: 18, fontWeight: 800 }}>{kalorienIst} kcal</div>
-              <div style={{ fontSize: 10.5, color: textMuted }}>Mifflin-St-Jeor, aktueller Zustand</div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <Label>Ziel (optional)</Label>
-              <TextInput type="number" value={kalorienZiel} onChange={kalorienZielAendern} placeholder={String(kalorienIst)} />
-              {kalorienZielProzent !== null && (
-                <div style={{ fontSize: 10.5, color: textMuted, marginTop: 2 }}>
-                  {kalorienZielProzent > 0 ? `+${kalorienZielProzent}` : kalorienZielProzent}% ggü. Ist
-                </div>
-              )}
-            </div>
+      {/* Ernährung (25.09., Vorschau freigegeben): Essen per Satz/Sprache
+          eintragen, Tagesbilanz mit Makros und Omega-3, Ernährungsziel mit
+          Quellen (ersetzt die frühere Kalorien-Übersicht, Kalorienziel ist
+          jetzt dort mit drin). */}
+      <EssenEingabe />
+      <ErnaehrungBilanz />
+      <Card style={{ marginBottom: 14 }}>
+        <button
+          type="button"
+          aria-expanded={zieleOffen}
+          onClick={() => setZieleOffen((v) => !v)}
+          style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", padding: 0, color: "inherit" }}
+        >
+          <span style={{ fontSize: 14.5, fontWeight: 900 }}>🎯 Mein Ernährungsziel</span>
+          <span style={{ fontSize: 12.5, color: textMuted }}>
+            {categoryZiele?.ernaehrung?.eiweissGProKg ? `${String(categoryZiele.ernaehrung.eiweissGProKg).replace(".", ",")} g/kg Eiweiß` : "einstellen"}
+            {kalorienZiel ? ` · ${kalorienZiel} kcal` : ""} {zieleOffen ? "▾" : "›"}
+          </span>
+        </button>
+        {zieleOffen && (
+          <div style={{ marginTop: 10 }}>
+            <ErnaehrungZiele onGespeichert={() => setZieleOffen(false)} />
           </div>
-        </Card>
-      )}
+        )}
+      </Card>
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neue Mahlzeit</div>
       <Card akzent style={{ marginBottom: 14 }}>

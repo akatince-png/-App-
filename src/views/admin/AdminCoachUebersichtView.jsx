@@ -12,6 +12,7 @@ import { chatListe, chatZeitKurz, useCoachChat } from "../../data/coachChat";
 import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZahlen } from "../../utils/coachAufmerksamkeit";
 import { coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
 import KernprogrammCoach from "./KernprogrammCoach";
+import ErnaehrungCoach from "./ErnaehrungCoach";
 import { kernprogrammStarten } from "../../data/kernprogrammAdmin";
 import { datumKurz, kernKurztext, naechsterMontag, programmStand, zeileZuEtappe } from "../../utils/kernprogramm";
 import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
@@ -426,6 +427,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
           <KernprogrammCoach personId={p.id} vorname={p.vorname} onChat={onChat} onGeaendert={onKernGeaendert} />
+          <ErnaehrungCoach personId={p.id} vorname={p.vorname} onChat={onChat} />
           <TagebuchKurz personId={p.id} vorname={p.vorname} onChat={onChat} />
           {schicht && <SchichtKurz schicht={schicht} onBearbeiten={() => {
             verwalten();

@@ -17,7 +17,7 @@ describe("programmStand", () => {
     const w2 = programmStand([e1], "2026-10-05");
     expect(w2).toMatchObject({ woche: 2, einfuehrungWoche: 2, erhaltung: false });
     expect(faelligeBausteine(w2).map((b) => b.key)).toContain("sport");
-    expect(faelligeBausteine(programmStand([e1], "2026-10-19")).length).toBe(13);
+    expect(faelligeBausteine(programmStand([e1], "2026-10-19")).length).toBe(14);
   });
   it("Gespräch fällig am Ende, Erhaltung danach", () => {
     expect(programmStand([e1], "2026-10-24").gespraechFaellig).toBe(true);
@@ -73,5 +73,14 @@ describe("Satz-Ergebnisse", () => {
     expect(sollWiederholungen("")).toBe(null);
     expect(naechstesMalHinweis([{ wdh: 10 }, { wdh: 10 }], "10")).toMatch(/etwas mehr/);
     expect(naechstesMalHinweis([{ wdh: 10 }, { wdh: 8 }], "10")).toMatch(/18 von 20/);
+  });
+});
+
+describe("Kernprogramm: Eiweißziel ab Woche 3", () => {
+  it("zählt Tage mit mind. 90 % des Eiweißziels", () => {
+    const ernaehrungAm = (t) => ({ mahlzeiten: 3, eiweiss: t === "2026-10-13" ? 140 : 100 });
+    const b = kernBilanz({ etappen: [e1], ernaehrungAm, eiweissZiel: 148 }, "2026-10-12", "2026-10-14", "2026-10-15");
+    expect(b.find((x) => x.key === "makros")).toMatchObject({ erledigt: 1, von: 3 });
+    expect(b.find((x) => x.key === "mahlzeiten")).toMatchObject({ erledigt: 3, von: 3 });
   });
 });

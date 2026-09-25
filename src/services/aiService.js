@@ -345,6 +345,40 @@ export const AIService = {
    * Tagebuch (25.09.): Tageseintrag aus dem Gespräch. Nur Werte aus den
    * vorgegebenen Listen, damit die Muster-Auswertung sie vergleichen kann.
    */
+  /**
+   * Ernährung (25.09.): Nährwerte für Lebensmittel schätzen, die die
+   * eingebaute Liste nicht kennt ("Kaiserschmarrn", "Döner"). Läuft im
+   * Hintergrund ohne Chat; die App zeigt das Ergebnis wie ihre eigene
+   * Rechnung (angenommene Gramm + Werte) zum Bestätigen.
+   *
+   * @param {string[]} texte
+   * @returns {Promise<Array<{text: string, name: string, gramm: number, kcal: number, eiweiss: number, fett: number, kh: number, zucker: number, omega3: number, epaDha: number, omega6: number}>>}
+   */
+  async naehrwerteSchaetzen(texte) {
+    const system = [
+      "Du schätzt Nährwerte für eine Ernährungs-App. Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext.",
+      "Für jeden Eintrag: übliche Portionsgröße in Gramm annehmen, wenn keine Menge genannt ist; Mengenangaben wörtlich übernehmen.",
+      "Werte für die GESAMTE genannte Menge (nicht pro 100 g): kcal, eiweiss/fett/kh/zucker in g (1 Nachkommastelle), omega3 (ALA+EPA+DHA), epaDha und omega6 in mg.",
+      'Format exakt: { "posten": [ { "text": string (Eingabe), "name": string (kurzer deutscher Name), "gramm": number, "kcal": number, "eiweiss": number, "fett": number, "kh": number, "zucker": number, "omega3": number, "epaDha": number, "omega6": number } ] }',
+    ].join(" ");
+    const antwort = await sendeAnfrage({ system, messages: [{ role: "user", content: JSON.stringify(texte) }], json: true });
+    const data = parseJsonAntwort(antwort);
+    const zahl = (v) => Math.max(0, Number(v) || 0);
+    return (Array.isArray(data.posten) ? data.posten : []).map((p, i) => ({
+      text: String(p.text || texte[i] || ""),
+      name: String(p.name || p.text || texte[i] || ""),
+      gramm: zahl(p.gramm),
+      kcal: Math.round(zahl(p.kcal)),
+      eiweiss: zahl(p.eiweiss),
+      fett: zahl(p.fett),
+      kh: zahl(p.kh),
+      zucker: zahl(p.zucker),
+      omega3: Math.round(zahl(p.omega3)),
+      epaDha: Math.round(zahl(p.epaDha)),
+      omega6: Math.round(zahl(p.omega6)),
+    }));
+  },
+
   async tagebuchAusChat({ verlauf, coachName, optionen }) {
     const data = await ausChatZusammenfassen(
       coachName,

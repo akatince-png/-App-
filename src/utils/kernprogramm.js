@@ -10,6 +10,21 @@
 // Häufigkeit wählbar), jeder Baustein hängt an einer echten Alltagsaufgabe,
 // Atmung als kurze Vorbereitung/Regulation. Keine Wirkversprechen.
 import { plusTage, wochenBeginn } from "./schichtplan";
+import { aktuellesGewicht, makroZiele, tagesWerte } from "./essenRechner";
+
+// Ernährungs-Werte je Tag + Eiweißziel in g für die Bilanz (Coachee- und
+// Coach-Seite bauen dasselbe aus ihren Daten).
+export function ernaehrungFuerBilanz({ essenEintraege = [], mahlzeiten = [], mahlzeitErledigt = {}, categoryZiele = {}, gewichtsEintraege = [], personalData = {} }) {
+  const zielE = categoryZiele?.ernaehrung || {};
+  const ziel = makroZiele(zielE, aktuellesGewicht(gewichtsEintraege, personalData), zielE.kalorienZiel);
+  return {
+    ernaehrungAm: (t) => {
+      const w = tagesWerte(t, { essenEintraege, mahlzeiten, mahlzeitErledigt });
+      return { mahlzeiten: w.anzahl, eiweiss: w.eiweiss };
+    },
+    eiweissZiel: ziel.eiweiss,
+  };
+}
 
 export const ETAPPE_TAGE = 28;
 
@@ -27,6 +42,7 @@ export const BAUSTEINE = [
   { key: "fruehstueck", woche: 3, routine: "morgen", icon: "🍳", name: "Eiweißreiches Frühstück", dauerMin: 15 },
   { key: "top3", woche: 3, routine: "morgen", icon: "📝", name: "Top 3 + 15 Min. Start", dauerMin: 20 },
   { key: "mahlzeiten", woche: 3, routine: null, icon: "🍽️", name: "Regelmäßige Mahlzeiten" },
+  { key: "makros", woche: 3, routine: null, icon: "🥚", name: "Eiweißziel (Makros im Blick)" },
   { key: "bildschirm_stopp", woche: 4, routine: "abend", icon: "📱", name: "Bildschirm-Stopp", dauerMin: 1 },
   { key: "plan_morgen", woche: 4, routine: "abend", icon: "🗒️", name: "Plan für morgen", dauerMin: 3 },
 ];
@@ -36,7 +52,7 @@ export const schrittName = (b) => `${b.icon} ${b.name}`;
 export const WOCHEN = {
   1: { titel: "Anker", icon: "⚓", text: "Glas Wasser, Tageslicht und 2 Min. Atmen am Morgen. Abends Tagebuch und feste Schlafenszeit." },
   2: { titel: "Bewegung", icon: "🏃", text: "Neu: 10 Min. Aktivierung am Morgen, ruhige Atmung am Abend, Sport 2–3× pro Woche." },
-  3: { titel: "Essen + Planen", icon: "🍳", text: "Neu: eiweißreiches Frühstück, Top 3 des Tages mit 15 Min. Start, regelmäßige Mahlzeiten." },
+  3: { titel: "Essen + Planen", icon: "🍳", text: "Neu: eiweißreiches Frühstück, Top 3 des Tages mit 15 Min. Start, regelmäßige Mahlzeiten und dein Eiweißziel (Eiweiß, Fett, Kohlenhydrate im Blick)." },
   4: { titel: "Abend + Bilanz", icon: "🌙", text: "Neu: Bildschirm-Stopp und Plan für morgen. Am Ende: Gespräch mit deinem Coach." },
 };
 
@@ -119,6 +135,9 @@ export function kernBilanz(d, von, bis, heute) {
     trainings = [],
     trainingWochenplan = [],
     mahlzeitErledigt = {},
+    // Ernährung (25.09.): je Tag Anzahl Mahlzeiten/Einträge + Eiweiß in g.
+    ernaehrungAm = null,
+    eiweissZiel = null,
   } = d;
   const stand = programmStand(etappen, bis);
   const tage = [];
@@ -134,7 +153,16 @@ export function kernBilanz(d, von, bis, heute) {
       return { ...b, erledigt: Math.min(erledigt, von_), von: von_, pausiert };
     }
     if (b.key === "mahlzeiten") {
-      const zaehlt = (t) => Object.entries(mahlzeitErledigt).filter(([k, v]) => v && k.startsWith(`${t}__`)).length >= 2;
+      const zaehlt = (t) => (ernaehrungAm ? ernaehrungAm(t).mahlzeiten : Object.entries(mahlzeitErledigt).filter(([k, v]) => v && k.startsWith(`${t}__`)).length) >= 2;
+      const relevant = aktiveTage.filter((t) => t < heute || zaehlt(t));
+      return { ...b, erledigt: relevant.filter(zaehlt).length, von: relevant.length, pausiert };
+    }
+    if (b.key === "makros") {
+      // Geschafft = mind. 90 % des Eiweißziels (ohne Ziel: überhaupt eingetragen).
+      const zaehlt = (t) => {
+        const w = ernaehrungAm ? ernaehrungAm(t) : { mahlzeiten: 0, eiweiss: 0 };
+        return eiweissZiel ? w.eiweiss >= eiweissZiel * 0.9 : w.mahlzeiten > 0;
+      };
       const relevant = aktiveTage.filter((t) => t < heute || zaehlt(t));
       return { ...b, erledigt: relevant.filter(zaehlt).length, von: relevant.length, pausiert };
     }
@@ -200,6 +228,7 @@ export function bilanzAusAppData(a, von, bis, heute) {
       trainings: a.trainingEintraege,
       trainingWochenplan: a.trainingWochenplan,
       mahlzeitErledigt: a.mahlzeitErledigt,
+      ...ernaehrungFuerBilanz(a),
     },
     von,
     bis,

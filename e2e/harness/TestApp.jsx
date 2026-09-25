@@ -122,6 +122,17 @@ function leseOverridesAusUrl() {
     ];
     overrides.trainingWochenplan = [];
   }
+  // ?essen=1: Ernährungsziel + zwei Einträge heute (25.09.).
+  if (params.get("essen") === "1") {
+    const h = new Date();
+    const heute = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-${String(h.getDate()).padStart(2, "0")}`;
+    overrides.personalData = { gewichtStart: 82, geschlecht: "Männlich", geburtsdatum: "1981-05-01", groesse: 182 };
+    overrides.categoryZiele = { ernaehrung: { ziel: "abnehmen", kalorienZiel: 2100, eiweissGProKg: 1.8, fettProzent: 30, omega3Mg: 250, omega6zu3Max: 5, fischProWoche: 2, quellen: { eiweiss: ["Skyr/Quark", "Eier"] } } };
+    overrides.essenEintraege = [
+      { id: "es1", datum: heute, uhrzeit: "07:30", text: "Rührei aus 3 Eiern und 2 Scheiben Vollkornbrot", posten: [], werte: { kcal: 548, eiweiss: 32, fett: 22, kh: 39, zucker: 4, ballast: 5, omega3: 400, epaDha: 190, omega6: 5900 } },
+      { id: "es2", datum: heute, uhrzeit: "12:45", text: "125 g Lachs, 250 g Kartoffeln, Brokkoli", posten: [], werte: { kcal: 520, eiweiss: 38, fett: 16, kh: 52, zucker: 3, ballast: 8, omega3: 3100, epaDha: 2900, omega6: 2500 } },
+    ];
+  }
   // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).

@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 248 Unit-Tests, 84 E2E-Tests (Stand 25.09.).
+  - 254 Unit-Tests, 86 E2E-Tests (Stand 25.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -137,6 +137,16 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Live:** Migrationen 0106 + 0107 eingespielt. Etappe 1 für alle 6 Testkonten (Claude, Mia, Jonas, Lea, Test 1, Admin-Test) vom 28.09. bis 25.10. angelegt. Die Pflicht-Schritte entstehen beim ersten Öffnen ab 28.09.
 - **Noch offen:** Aka kennt das Kernprogramm nur über die Wissens-Basis (kein eigener Aka-Bereich „Kernprogramm“); Erinnerung für den Wochen-Check per Push fehlt; täglicher Dauertest prüft die neuen Karten noch nicht gezielt.
 - **Nächstes Gesprächsthema der Nutzerin:** weitere kognitive Übungen (z. B. Ball, der durchs Bild springt und mit den Augen verfolgt wird).
+
+### Ernährung: Makros, Quellen, Omega-3 + Eingabe per Satz (25.09., Vorschau freigegeben)
+- **Nutzerinnen-Vorgaben:** Eingabe schreiben oder sprechen („zwei Scheiben Vollkornbrot, drei Bananen und fünf Eier“), absenden, die App rechnet im Hintergrund und zeigt die Rechnung (angenommene Gramm, Rechenweg, Werte) mit „Passt – speichern“. **Keine sichtbare KI-Unterhaltung**, keine Erklärung – die Nutzerin will nicht, dass die KI als Ersatz für den Coach wirkt. Startwerte immer sichtbar vor dem Speichern.
+- **Rechner** (`utils/essenRechner.js`, Tests): liest Menge (Ziffern, Zahlwörter, „halbe“, „anderthalb“), Einheit (g, Scheibe, Stück, EL, TL, Becher, Glas, Handvoll, Portion …) und Lebensmittel. Nährwerte aus `data/lebensmittel.js` (110 Lebensmittel, **USDA FoodData Central SR Legacy**, gemeinfrei, inkl. Omega-3 = ALA+EPA+DHA+DPA, EPA/DHA, Omega-6; erzeugt mit `scripts/lebensmittel/gen.py`, deutsche Namen/Portionen in `karte.py`). Unbekanntes schätzt `AIService.naehrwerteSchaetzen` im Hintergrund; es erscheint genauso als Rechnung („übliche Portion“). Gramm pro Posten änderbar.
+- **Daten:** `essen_eintraege` (Migration 0108, eigene + Admin). Ziele in `profiles.category_ziele.ernaehrung`: ziel, kalorienZiel, eiweissGProKg (Standard 1,6), fettProzent (30), omega3Mg (250 EPA/DHA), omega6zu3Max (5), fischProWoche (2), quellen {eiweiss, fett, kh, vermeiden}, vomCoach.
+- **Oberfläche** (Pläne → Ernährung): „Was hast du gegessen?“, „📊 Heute“ (Balken Eiweiß/Fett/KH/kcal, Omega-3 EPA/DHA, Omega-6:3 über 7 Tage, Fisch-Tage, Tipp aus bevorzugten Quellen, Hinweise zu Frühstückseiweiß/Zucker-Zeitpunkt/regelmäßig essen), „🎯 Mein Ernährungsziel“ (ersetzt die frühere Kalorien-Übersicht; Bedarf ≈ Grundumsatz × 1,4). Tagesbilanz zählt freie Einträge + abgehakte geplante Mahlzeiten (über deren Zutaten).
+- **Coach:** `views/admin/ErnaehrungCoach.jsx` in der aufgeklappten Coachee-Zeile: Ø 7 Tage Eiweiß g/kg gegen Ziel, kcal, Omega-6:3, Fisch-Tage, „Ansprechen“, „Ziele setzen“ (Person sieht „von deinem Coach empfohlen“).
+- **Kernprogramm:** neuer Baustein `makros` ab Woche 3 („Eiweißziel – Makros im Blick“, geschafft = ≥ 90 % des Eiweißziels); Mahlzeiten-Baustein zählt jetzt auch freie Einträge.
+- **Wissens-Basis:** Eintrag „Ernährung bei ADHS: Studienlage …“ (Del-Ponte 2019 Muster, Wolraich 1995 Zucker, Morton 2018 Eiweiß, LaChance 2016 Omega-6:3, Appetit unter Stimulanzien, Formulierungsregeln ohne Wirkversprechen).
+- **Datenschutz-Hinweis:** Unbekannte Lebensmittel gehen als Text an den eingestellten KI-Anbieter (wie bei Aka). Das sollte in der Datenschutzerklärung stehen, auch wenn die Oberfläche keinen Chat zeigt.
 
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
 - Alle Testkonten haben **alle** Bereiche eingerichtet (per SQL, Schema wie in der App): Claude, Mia, Jonas, Lea, „Test 1“ (Einzelperson ohne Team, Onboarding jetzt abgeschlossen) und das Admin-Testkonto.

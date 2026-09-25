@@ -15,6 +15,7 @@ import { useTrainingTemplates } from "../../data/useTrainingTemplates";
 import { useCheckinData } from "../../data/useCheckinData";
 import { useSleepData } from "../../data/useSleepData";
 import { useBiomarkerData } from "../../data/useBiomarkerData";
+import { useEssen } from "../../data/useEssen";
 
 const TrackingDataContext = createContext(null);
 
@@ -37,6 +38,8 @@ export function TrackingDataProvider({ children }) {
   const supplementData = useSupplementData(userId, eintragsProtokollId, belohnungPufferMin);
   const drinkData = useDrinkRecipes(userId);
   const mealData = useMealData(userId, eintragsProtokollId, belohnungPufferMin);
+  // Frei eingegebenes Essen mit ca.-Werten (25.09.).
+  const essenData = useEssen(userId);
   const gewohnheitenData = useGewohnheitenData(userId, eintragsProtokollId);
 
   // Einträge beendeter Zusatzprotokolle ausblenden (Verlauf bleibt).
@@ -65,6 +68,7 @@ export function TrackingDataProvider({ children }) {
     ...supplementData,
     ...drinkData,
     ...mealData,
+    ...essenData,
     ...gewohnheitenData,
     ...atemuebungenData,
     ...hydrationData,
