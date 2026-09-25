@@ -1,3 +1,4 @@
+import { einstellungenFuer, planFuer } from "../../src/utils/schichtplan";
 // Automatischer Mock für useAppData() (~150 Felder aus ~30 Daten-Hooks) —
 // für einen echten, handgeschriebenen Mock müsste jeder Hook einzeln
 // gelesen werden. Stattdessen ein Proxy, der für jeden angefragten
@@ -89,7 +90,7 @@ function explizit(userId, overrides) {
   // fälschlich "Weiter mit diesem Protokoll" statt des leeren Namensfelds
   // anbieten (gibtBestehendesAnGeboten prüft genau dieses Feld).
   const istFrischesOnboarding = overrides?.onboardingComplete === false;
-  return {
+  const basis = {
     userId,
     loading: false,
     onboardingComplete: true,
@@ -123,7 +124,21 @@ function explizit(userId, overrides) {
           { hauptprotokoll_id: "e2e-hauptprotokoll-1", kategorie: "schlaf", aktiv: true, aktiviert_am: "2026-01-01T00:00:00.000Z" },
           { hauptprotokoll_id: "e2e-hauptprotokoll-1", kategorie: "hydration", aktiv: true, aktiviert_am: "2026-01-01T00:00:00.000Z" },
         ],
+    // Schichtarbeit (25.09.): standardmäßig keine Varianten/kein Plan.
+    routineVarianten: [],
+    routineSchichtplan: {},
     ...overrides,
+  };
+  // Abgeleitete Schicht-Werte wie im echten useRoutinen (mit echter Logik).
+  const ctx = { plan: basis.routineSchichtplan, varianten: basis.routineVarianten, standard: basis.routineEinstellungenStandard || basis.routineEinstellungen || {} };
+  return {
+    routineEinstellungenStandard: ctx.standard,
+    routineSchritteAlle: basis.routineSchritte || [],
+    routinePlanFuer: (datum) => planFuer(datum, ctx),
+    routineHeutePlan: planFuer(new Date().toISOString().slice(0, 10), ctx),
+    routineEinstellungenFuer: (datum) => einstellungenFuer(datum, ctx),
+    routineSchritteFuer: () => basis.routineSchritte || [],
+    ...basis,
   };
 }
 

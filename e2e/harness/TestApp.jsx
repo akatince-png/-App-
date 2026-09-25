@@ -61,7 +61,27 @@ function leseOverridesAusUrl() {
     overrides.routineDurchlaeufe = [lauf(1, 8, 40), lauf(2, 8, 50), lauf(3, 6, 5), lauf(4, 9, 0)];
     overrides.protokollEintraege = [];
   }
-  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
+  // ?schicht=1: Schichtarbeit (25.09.) — Früh/Spät/Frei, heute Frühschicht,
+  // morgen Spätschicht. ?schicht=leer: Seite ohne Varianten.
+  if (params.get("schicht") === "1") {
+    const h = new Date();
+    const iso = (n) => {
+      const d = new Date(h.getFullYear(), h.getMonth(), h.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    overrides.routineVarianten = [
+      { id: "vf", name: "Frühschicht", icon: "🌅", arbeitVon: "06:00", arbeitBis: "14:00", morgenStart: "04:30", abendStart: "21:00", reihenfolge: 0 },
+      { id: "vs", name: "Spätschicht", icon: "🌆", arbeitVon: "14:00", arbeitBis: "22:00", morgenStart: "09:30", abendStart: "23:45", reihenfolge: 1 },
+      { id: "vx", name: "Frei", icon: "🌿", arbeitVon: "", arbeitBis: "", morgenStart: "08:00", abendStart: "22:30", reihenfolge: 2 },
+    ];
+    overrides.routineSchichtplan = {
+      [iso(0)]: { datum: iso(0), varianteId: "vf", art: "variante" },
+      [iso(1)]: { datum: iso(1), varianteId: "vs", art: "variante" },
+    };
+    overrides.routineEinstellungen = { morgen: { routine: "morgen", startZeit: "06:00", endZeit: "08:00" }, abend: { routine: "abend", startZeit: "22:00", endZeit: "" } };
+    overrides.routineSchritte = [{ id: "r1", routine: "morgen", reihenfolge: 1, name: "Wasser trinken", dauerMin: 1 }];
+  }
+  // ?teilt=1:  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).
   if (params.get("gruppe") === "1") {

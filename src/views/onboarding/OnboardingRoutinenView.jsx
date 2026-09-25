@@ -31,16 +31,18 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel, forts
     routineSchrittEntfernen,
     routineSchrittVerschieben,
     routineEinstellungen,
+    routineEinstellungenStandard,
+    routineSchritteAlle,
     routineZeitrahmenSetzen,
     categoryZiele,
     setCategoryZiel,
     aktivesHauptprotokoll,
     teilprotokollSpeichern,
   } = useAppData();
-  const morgenSchritte = routineSchritte.filter((s) => s.routine === "morgen");
-  const abendSchritte = routineSchritte.filter((s) => s.routine === "abend");
-  const morgenEinstellung = routineEinstellungen.morgen || { startZeit: "", endZeit: "" };
-  const abendEinstellung = routineEinstellungen.abend || { startZeit: "", endZeit: "" };
+  const morgenSchritte = (routineSchritteAlle || routineSchritte).filter((s) => s.routine === "morgen");
+  const abendSchritte = (routineSchritteAlle || routineSchritte).filter((s) => s.routine === "abend");
+  const morgenEinstellung = (routineEinstellungenStandard || routineEinstellungen).morgen || { startZeit: "", endZeit: "" };
+  const abendEinstellung = (routineEinstellungenStandard || routineEinstellungen).abend || { startZeit: "", endZeit: "" };
 
   // Schlaf — seit 16.09. hier statt als eigener Kategorie-Schritt
   // (Nutzerinnen-Vorgabe: "Schlafplan mit der Morgen- und Abendroutine gleich

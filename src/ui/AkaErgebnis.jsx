@@ -74,6 +74,13 @@ export default function AkaErgebnis({ ergebnis }) {
           {daten.map((s) => s.name).join(", ")}
         </Box>
       );
+    case "schichtplan":
+      return (
+        <Box>
+          Zeiten je Schicht gespeichert: {daten.varianten.map((v) => `${v.name} (☀ ${v.morgenStart || "–"} · 🌙 ${v.abendStart || "–"})`).join(", ")}
+          {daten.planText ? ` · Schichtplan ${daten.planText}` : ""}. Anpassen unter „📅 Plan“ auf der Startseite.
+        </Box>
+      );
     default:
       return null;
   }

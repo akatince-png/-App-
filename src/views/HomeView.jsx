@@ -32,6 +32,7 @@ import QuickTaskList from "../ui/QuickTaskList";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
 import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
+import SchichtHeuteKarte from "../ui/SchichtHeuteKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
@@ -988,6 +989,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       )}
       {/* Verspätete Routine als Muster (25.09.): "Passt deine Zeit noch?" —
           nur im eigenen Konto, nicht beim Verwalten einer anderen Person. */}
+      {/* Schichtarbeit (25.09.): welche Schicht heute gilt + "Heute anders". */}
+      <SchichtHeuteKarte />
       {proband === null && <RoutineZeitHinweisKarte zeigeCoachKnopf={!isAdmin} onCoachChat={() => onOpenView("coach-chat")} />}
       {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
           (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine

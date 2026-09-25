@@ -64,6 +64,9 @@ const RESET_TABELLEN = [
   "hauptprotokolle",
   "routine_schritte",
   "routine_einstellungen",
+  // Schichtarbeit (25.09.): Plan vor den Varianten.
+  "routine_schichtplan",
+  "routine_varianten",
   // Lücken geschlossen (24.09.): Quest-Fortschritt, Routine-Zuordnungen
   // und eigene Atemübungen blieben beim kompletten Reset bisher stehen.
   "quest_fortschritt",

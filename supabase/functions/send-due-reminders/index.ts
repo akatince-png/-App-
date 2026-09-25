@@ -326,8 +326,19 @@ Deno.serve(async (req) => {
     return new Response("ok");
   }
 
-  // Kein Nutzer-Login hier — nur der Cron-Job darf das auslösen.
-  if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) {
+  // Kein Nutzer-Login hier — nur der Cron-Job darf das auslösen. Das
+  // Geheimnis steht seit 25.09. auch in public.cron_konfig (nur per
+  // Service-Role lesbar, Migration 0104): das CRON_SECRET der Function
+  // passte nicht mehr zum Cron-Job, dadurch kam seit Längerem KEINE
+  // Erinnerung mehr an (jeder Aufruf 401).
+  const geschickt = req.headers.get("x-cron-secret");
+  let erlaubt = !!CRON_SECRET && geschickt === CRON_SECRET;
+  if (!erlaubt && geschickt) {
+    const pruefer = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: konfig } = await pruefer.from("cron_konfig").select("wert").eq("name", "send-due-reminders").maybeSingle();
+    erlaubt = !!konfig?.wert && geschickt === konfig.wert;
+  }
+  if (!erlaubt) {
     return new Response(JSON.stringify({ error: "Nicht autorisiert." }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
@@ -783,21 +794,41 @@ Deno.serve(async (req) => {
       { routine: "morgen", kategorie: "morgenroutine", icon: "🌅", name: "Morgenroutine" },
       { routine: "abend", kategorie: "abendroutine", icon: "🌆", name: "Abendroutine" },
     ];
+    // Schichtarbeit (25.09.): an Tagen mit Schichtplan-Eintrag gilt die
+    // Zeit der Schicht (routine_varianten) bzw. die eigene Tageszeit;
+    // "krank" = keine Routine-Erinnerung. Sonst die normale start_zeit.
     for (const re of ROUTINE_ERINNERUNG) {
       const userIds = [...nutzerInfo].filter(([, info]) => istAktiv(info.erinnerungen[re.kategorie])).map(([id]) => id);
       if (userIds.length === 0) continue;
 
-      const { data: rows, error } = await admin
-        .from("routine_einstellungen")
-        .select("user_id, start_zeit")
-        .eq("routine", re.routine)
-        .in("user_id", userIds);
+      const [{ data: standardRows, error }, { data: planRows, error: planError }, { data: variantenRows, error: variantenError }] = await Promise.all([
+        admin.from("routine_einstellungen").select("user_id, start_zeit").eq("routine", re.routine).in("user_id", userIds),
+        admin
+          .from("routine_schichtplan")
+          .select("user_id, datum, variante_id, art, morgen_start, abend_start")
+          .in("user_id", userIds)
+          .in("datum", [...new Set(userIds.map((id) => nutzerInfo.get(id)!.heute))]),
+        admin.from("routine_varianten").select("id, morgen_start, abend_start").in("user_id", userIds),
+      ]);
       if (error) {
         console.error("Abfrage routine_einstellungen fehlgeschlagen:", error);
         continue;
       }
+      if (planError) console.error("Abfrage routine_schichtplan fehlgeschlagen:", planError);
+      if (variantenError) console.error("Abfrage routine_varianten fehlgeschlagen:", variantenError);
+      const feld = re.routine === "morgen" ? "morgen_start" : "abend_start";
+      const variantenById = new Map<string, Record<string, string | null>>((variantenRows || []).map((v: Record<string, string | null>) => [v.id as string, v]));
+      const zeitProNutzer = new Map<string, string | null>();
+      for (const r of standardRows || []) zeitProNutzer.set(r.user_id, r.start_zeit);
+      for (const t of planRows || []) {
+        if (t.datum !== nutzerInfo.get(t.user_id)?.heute) continue;
+        if (t.art === "krank") zeitProNutzer.set(t.user_id, null);
+        else if (t.art === "eigen") zeitProNutzer.set(t.user_id, t[feld] || zeitProNutzer.get(t.user_id) || null);
+        else zeitProNutzer.set(t.user_id, variantenById.get(t.variante_id)?.[feld] || zeitProNutzer.get(t.user_id) || null);
+      }
+      const rows = [...zeitProNutzer].map(([user_id, start_zeit]) => ({ user_id, start_zeit }));
 
-      for (const row of rows || []) {
+      for (const row of rows) {
         const info = nutzerInfo.get(row.user_id);
         if (!info || !row.start_zeit) continue;
         const uhrzeitKurz = String(row.start_zeit).slice(0, 5);

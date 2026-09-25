@@ -11,11 +11,34 @@ import { COACH_CHAT_ENTWURF_KEY, HINWEIS_RUHE_TAGE, ZEIT_HINWEIS_NAME, hinweisRu
 const FARBE = { spaet: "#E0A21B", ok: "#1E8E5A", leer: "#E4E6EE" };
 
 export default function RoutineZeitHinweisKarte({ zeigeCoachKnopf, onCoachChat }) {
-  const { routineDurchlaeufe, routineEinstellungen, protokollEintraege, routineZeitrahmenSetzen, aenderungVermerken } = useAppData();
+  const {
+    routineDurchlaeufe,
+    routineEinstellungenStandard,
+    routineEinstellungen,
+    routinePlanFuer,
+    routineVarianteSpeichern,
+    protokollEintraege,
+    routineZeitrahmenSetzen,
+    aenderungVermerken,
+  } = useAppData();
+  const standard = routineEinstellungenStandard || routineEinstellungen;
   const [erledigt, setErledigt] = useState(null);
 
   const muster = ["morgen", "abend"]
-    .map((r) => verspaetungsMuster(routineDurchlaeufe, r, routineEinstellungen?.[r]?.startZeit))
+    // Schichtarbeit (25.09.): je Tag die Zeit der geltenden Schicht; das
+    // Muster nennt dann die Schicht, in der es hakt ("bei Frühschicht").
+    .map((r) =>
+      verspaetungsMuster(
+        routineDurchlaeufe,
+        r,
+        routinePlanFuer
+          ? (datum) => {
+              const p = routinePlanFuer(datum);
+              return { startZeit: r === "morgen" ? p.morgen : p.abend, key: p.key, variante: p.variante };
+            }
+          : standard?.[r]?.startZeit
+      )
+    )
     .find((m) => m && !hinweisRuht(protokollEintraege, m.routine));
 
   if (erledigt) {
@@ -31,8 +54,16 @@ export default function RoutineZeitHinweisKarte({ zeigeCoachKnopf, onCoachChat }
   const vermerken = (detail) => aenderungVermerken({ kategorie, itemName: ZEIT_HINWEIS_NAME, aktion: "geändert", detail });
 
   const umstellen = async () => {
+    if (muster.variante) {
+      const feld = muster.routine === "morgen" ? "morgenStart" : "abendStart";
+      const r = await routineVarianteSpeichern({ ...muster.variante, [feld]: muster.vorschlag });
+      if (!r?.ok) return;
+      vermerken(`${muster.variante.name}: Startzeit ${muster.startZeit} → ${muster.vorschlag} (nach ${muster.spaetAnzahl} späten Tagen)`);
+      setErledigt(`✓ ${muster.labelLang} startet jetzt um ${muster.vorschlag}.`);
+      return;
+    }
     // Ende um dieselbe Spanne mitverschieben, damit der Zeitrahmen gleich lang bleibt.
-    const alt = routineEinstellungen?.[muster.routine]?.endZeit || "";
+    const alt = standard?.[muster.routine]?.endZeit || "";
     const zuMin = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
     const endZeit = alt ? minZuUhrzeit(zuMin(alt) + zuMin(muster.vorschlag) - zuMin(muster.startZeit)) : "";
     const r = await routineZeitrahmenSetzen(muster.routine, muster.vorschlag, endZeit);
@@ -57,9 +88,9 @@ export default function RoutineZeitHinweisKarte({ zeigeCoachKnopf, onCoachChat }
   const knopf = { width: "100%", border: "none", borderRadius: 14, padding: "12px 14px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", marginTop: 8 };
 
   return (
-    <section aria-label={`Passt deine ${muster.label}-Zeit noch?`} style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: `2px solid ${FARBE.spaet}` }}>
+    <section aria-label={`Passt deine ${muster.label}-Zeit${muster.variante ? ` bei ${muster.variante.name}` : ""} noch?`} style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: `2px solid ${FARBE.spaet}` }}>
       <div style={{ fontWeight: 900, fontSize: 15 }}>
-        {muster.routine === "morgen" ? "🌅" : "🌙"} Passt deine {muster.label}-Zeit noch?
+        {muster.routine === "morgen" ? "🌅" : "🌙"} Passt deine {muster.label}-Zeit{muster.variante ? ` bei ${muster.variante.name}` : ""} noch?
       </div>
       <div style={{ fontSize: 13, color: "#4A5170", marginTop: 4, lineHeight: 1.4 }}>
         An {muster.spaetAnzahl} der letzten {muster.tage.length} Tage hat sie erst später geklappt – meist gegen <b>{muster.vorschlag}</b> statt um {muster.startZeit}. Das ist okay, geschafft ist geschafft.

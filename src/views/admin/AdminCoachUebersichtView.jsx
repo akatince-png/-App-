@@ -8,7 +8,8 @@ import { supabase } from "../../lib/supabaseClient";
 import { toLocalISODate } from "../../utils/dates";
 import { chatListe, chatZeitKurz, useCoachChat } from "../../data/coachChat";
 import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZahlen } from "../../utils/coachAufmerksamkeit";
-import { MUSTER_TAGE, coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
+import { coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
+import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
 
 // Grafische Gesamtübersicht über ALLE Coachees gleichzeitig (15.08.,
 // Nutzerin-Vorgabe: "wie meine Flipcharts aufrufen ... auf einen Blick
@@ -33,6 +34,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
   const [reiter, setReiter] = useState("uebersicht");
   const [chatZeilen, setChatZeilen] = useState([]);
   const [verspaetungen, setVerspaetungen] = useState({});
+  const [schichtByUser, setSchichtByUser] = useState({});
   const [chatEntwurf, setChatEntwurf] = useState("");
 
   // Chatliste (24.09., WhatsApp-Startseite): die letzten Nachrichten aller
@@ -75,16 +77,34 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       // Routine-Zeiten der letzten Tage (25.09.): wer schafft die Morgen-/
       // Abendroutine meist deutlich später als geplant? (RLS: Admins lesen
       // beide Tabellen, siehe 0035.)
-      const musterStart = new Date();
-      musterStart.setDate(musterStart.getDate() - (MUSTER_TAGE - 1));
-      const [{ data: wochenplan }, { data: sessions }, { data: routineZeiten }, { data: routineLaeufe }] = await Promise.all([
+      // Schichtarbeit (25.09.): Varianten + Plan je Person (4 Wochen zurück,
+      // 3 Wochen voraus) — für Verspätung je Schicht und "Pünktlichkeit je
+      // Schicht" in der aufgeklappten Zeile.
+      const heuteIso = toLocalISODate(new Date());
+      const [{ data: wochenplan }, { data: sessions }, { data: routineZeiten }, { data: routineLaeufe }, { data: varianten }, { data: planZeilen }] = await Promise.all([
         supabase.from("training_wochenplan").select("user_id, name, wochentag, uhrzeit, arten").in("user_id", ids),
         supabase.from("training_sessions").select("user_id, datum, art, name, erledigt").in("user_id", ids).order("datum", { ascending: false }),
         supabase.from("routine_einstellungen").select("user_id, routine, start_zeit").in("user_id", ids),
-        supabase.from("routine_durchlaeufe").select("user_id, routine, datum, gestartet_um, abgeschlossen_um").in("user_id", ids).gte("datum", toLocalISODate(musterStart)),
+        supabase.from("routine_durchlaeufe").select("user_id, routine, datum, gestartet_um, abgeschlossen_um").in("user_id", ids).gte("datum", plusTage(heuteIso, -27)),
+        supabase.from("routine_varianten").select("*").in("user_id", ids).order("reihenfolge"),
+        supabase.from("routine_schichtplan").select("*").in("user_id", ids).gte("datum", plusTage(heuteIso, -27)).lte("datum", plusTage(heuteIso, 20)),
       ]);
       const startZeiten = new Map((routineZeiten || []).map((z) => [`${z.user_id}_${z.routine}`, z.start_zeit]));
-      setVerspaetungen(coachVerspaetungen([...(routineZeiten || []), ...(routineLaeufe || []).map((l) => ({ ...l, start_zeit: startZeiten.get(`${l.user_id}_${l.routine}`) }))]));
+      setVerspaetungen(
+        coachVerspaetungen(
+          [...(routineZeiten || []), ...(routineLaeufe || []).map((l) => ({ ...l, start_zeit: startZeiten.get(`${l.user_id}_${l.routine}`) }))],
+          new Date(),
+          { varianten: varianten || [], plan: planZeilen || [] }
+        )
+      );
+      const schicht = {};
+      for (const v of varianten || []) (schicht[v.user_id] ||= { varianten: [], plan: {}, laeufe: [], standard: {} }).varianten.push(zeileZuVariante(v));
+      for (const t of planZeilen || []) if (schicht[t.user_id]) schicht[t.user_id].plan[t.datum] = zeileZuPlantag(t);
+      for (const [id, e] of Object.entries(schicht)) {
+        e.laeufe = (routineLaeufe || []).filter((l) => l.user_id === id).map((l) => ({ routine: l.routine, datum: l.datum, gestartetUm: l.gestartet_um, abgeschlossenUm: l.abgeschlossen_um }));
+        e.standard = { morgen: { startZeit: String(startZeiten.get(`${id}_morgen`) || "").slice(0, 5) }, abend: { startZeit: String(startZeiten.get(`${id}_abend`) || "").slice(0, 5) } };
+      }
+      setSchichtByUser(schicht);
       const vorSiebenTagen = new Date();
       vorSiebenTagen.setDate(vorSiebenTagen.getDate() - 7);
       const vorSiebenTagenStr = toLocalISODate(vorSiebenTagen);
@@ -197,6 +217,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             }}
             onVerwalteAls={onVerwalteAls}
             training={trainingByUser[p.id]}
+            schicht={schichtByUser[p.id]}
             trainingOffen={trainingFuer === p.id}
             onToggleTraining={() => setTrainingFuer((v) => (v === p.id ? null : p.id))}
           />
@@ -292,7 +313,7 @@ export function CoachChatFenster({ proband: p, teamName, onZurueck, startText = 
   );
 }
 
-function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalteAls, training, trainingOffen, onToggleTraining }) {
+function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalteAls, training, trainingOffen, onToggleTraining, schicht }) {
   const s = p.status;
   const fortschritt = protokollFortschritt(p);
   const farbe = s.ampel === "rot" ? danger : s.ampel === "gelb" ? "#B7791F" : AMPEL.gruen;
@@ -340,16 +361,21 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
           <div style={{ fontSize: 11.5, color: textMuted, margin: "4px 0 10px" }}>
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
+          {schicht && <SchichtKurz schicht={schicht} onBearbeiten={() => {
+            verwalten();
+            // Nach dem Wechsel in "Verwalten als" direkt die Schichtplan-Seite.
+            setTimeout(() => (window.location.hash = "#/schichtplan"), 300);
+          }} />}
           {s.verspaetung && (
             <div style={{ borderRadius: 12, background: "#FFF6E0", border: "1.5px solid #F2C94C", padding: "10px 12px", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 800 }}>
-                {s.verspaetung.label}: an {s.verspaetung.spaetAnzahl} von {s.verspaetung.tage.length} Tagen deutlich später
+                {s.verspaetung.labelLang || s.verspaetung.label}: an {s.verspaetung.spaetAnzahl} von {s.verspaetung.tage.length} Tagen deutlich später
               </div>
               <div style={{ fontSize: 12, color: textMuted, margin: "2px 0 8px" }}>
                 Meist gegen {s.verspaetung.vorschlag} statt {s.verspaetung.startZeit} – vielleicht ist die Zeit nicht gut geplant.
               </div>
               <PrimaryButton variant="ghost" onClick={() => onChat(satzVomCoach(s.verspaetung, p.vorname))}>
-                💬 Zeit ansprechen
+                💬 {s.verspaetung.variante ? `${s.verspaetung.variante.name}-Zeit ansprechen` : "Zeit ansprechen"}
               </PrimaryButton>
             </div>
           )}
@@ -426,4 +452,51 @@ function CoacheeTrainingPanel({ training, onVerwalteAls }) {
       </div>
     </div>
   );
+}
+
+// Schichtplan einer Person (25.09.): die nächsten 14 Tage als Leiste,
+// Pünktlichkeit je Schicht (4 Wochen) und "Plan bearbeiten".
+function SchichtKurz({ schicht, onBearbeiten }) {
+  const ctx = { plan: schicht.plan, varianten: schicht.varianten, standard: schicht.standard };
+  const heute = isoTag(new Date());
+  const tage = Array.from({ length: 14 }, (_, i) => planFuer(plusTage(heute, i), ctx));
+  const puenktlich = puenktlichkeitJeVariante(schicht.laeufe, "morgen", ctx, new Date(), 28);
+  const letzter = Object.keys(schicht.plan).sort().at(-1);
+  return (
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "#fff" }}>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>
+        SCHICHTPLAN · heute {tags(tage[0])}
+        {letzter && letzter >= heute ? ` · läuft bis ${letzter.slice(8, 10)}.${letzter.slice(5, 7)}.` : " · kein Plan"}
+      </div>
+      <div style={{ display: "flex", gap: 3, margin: "6px 0" }} aria-label="Schichten der nächsten 14 Tage">
+        {tage.map((t) => (
+          <span key={t.datum} title={`${t.datum}: ${t.label}`} style={{ flex: 1, textAlign: "center", fontSize: 12, borderRadius: 5, padding: "2px 0", background: t.art === "standard" ? "#F1F2F6" : "#FFF1D6" }}>
+            {t.icon || "–"}
+          </span>
+        ))}
+      </div>
+      {puenktlich.length > 0 && (
+        <div style={{ fontSize: 12.5, margin: "4px 0 8px" }}>
+          <div style={{ fontWeight: 800, marginBottom: 2 }}>Morgenroutine pünktlich je Schicht (4 Wochen)</div>
+          {puenktlich.map((x) => (
+            <div key={x.key} style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>
+                {x.icon} {x.label}
+              </span>
+              <b style={{ color: x.puenktlich / x.gesamt >= 0.6 ? AMPEL.gruen : danger }}>
+                {x.puenktlich} von {x.gesamt}
+              </b>
+            </div>
+          ))}
+        </div>
+      )}
+      <PrimaryButton variant="ghost" onClick={onBearbeiten}>
+        ✏️ Schichtplan bearbeiten
+      </PrimaryButton>
+    </div>
+  );
+}
+
+function tags(p) {
+  return p.art === "standard" ? "normal" : `${p.icon || ""} ${p.label}`.trim();
 }

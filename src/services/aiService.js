@@ -184,10 +184,11 @@ export const AIService = {
         "medikament (neues Medikament/Hormon), hydration (Trinkziel/-erinnerungen),",
         "tageslicht (Tageslicht-/Freiluft-Ziel), training (Trainingsplan), ernaehrung (Rezepte/Mahlzeiten),",
         "schlaf (Schlaf-Eintrag für die letzte Nacht), workflow (neues Arbeits-/Pause-Intervall-Preset),",
-        "morgenroutine bzw. abendroutine (feste Schritt-Kette für die Morgen- bzw. Abendroutine).",
+        "morgenroutine bzw. abendroutine (feste Schritt-Kette für die Morgen- bzw. Abendroutine),",
+        "schichtplan (Schichtarbeit: Früh-/Spät-/Nachtschicht, wechselnde Wochen, andere Routine-Startzeiten je Schicht).",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -284,6 +285,38 @@ export const AIService = {
     );
     if (!Array.isArray(data.schritte) || !data.schritte.length) throw new Error("Unerwartetes Format: 'schritte' fehlt oder ist leer.");
     return data.schritte;
+  },
+
+  /**
+   * Schichtarbeit (25.09.): fasst ein Gespräch über Schichten als Zeit-
+   * Varianten (Startzeiten je Schicht) und optional einen Rhythmus zusammen
+   * — Format passend zu utils/schichtplan.js (planErzeugen).
+   */
+  async schichtplanAusChat({ verlauf, coachName, heute }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der für Schichtarbeit die Startzeiten von Morgen- und Abendroutine je Schicht und einen Schichtplan anlegt.",
+        `Heute ist ${heute}. Relative Angaben wie "ab Montag" in ein Datum umrechnen.`,
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        "Format exakt:",
+        '{ "varianten": [ { "name": string (z. B. "Frühschicht", "Spätschicht", "Nachtschicht", "Frei"), "morgenStart": "HH:MM"|null, "abendStart": "HH:MM"|null, "arbeitVon": "HH:MM"|null, "arbeitBis": "HH:MM"|null } ], ' +
+          '"rhythmus": "wochenweise"|"2-2-2"|"fsnx"|"eigen"|null, "eigenesMuster": [string] (Variantennamen Tag für Tag, nur bei "eigen"), ' +
+          '"start": "YYYY-MM-DD"|null, "wochen": number|null }',
+        '"wochenweise" = eine Woche Früh, eine Woche Spät im Wechsel (Wochenende frei); "2-2-2" = 2 Früh, 2 Spät, 2 Frei; "fsnx" = je 2 Tage Früh, Spät, Nacht, Frei.',
+        "Fehlende Startzeiten sinnvoll schätzen (Morgenroutine ca. 1–1,5 Std. vor Arbeitsbeginn bzw. nach dem Aufstehen). Eine Variante \"Frei\" mit anlegen, wenn der Rhythmus freie Tage hat.",
+      ],
+      verlauf,
+      "Fasse die besprochenen Schichten und den Plan jetzt als JSON zusammen, wie vereinbart."
+    );
+    if (!Array.isArray(data.varianten) || !data.varianten.length) throw new Error("Unerwartetes Format: 'varianten' fehlt oder ist leer.");
+    return {
+      varianten: data.varianten,
+      rhythmus: data.rhythmus || null,
+      eigenesMuster: Array.isArray(data.eigenesMuster) ? data.eigenesMuster : [],
+      start: data.start || null,
+      wochen: Number(data.wochen) || null,
+    };
   },
 
   /**

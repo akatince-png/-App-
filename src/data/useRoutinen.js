@@ -1,13 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { routineGeschafftFeier } from "../utils/routineFeier";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { verspaetungHinweis } from "../utils/routineVerspaetung";
+import { einstellungenFuer, planFuer, plusTage, schritteFuer, zeileZuPlantag, zeileZuVariante } from "../utils/schichtplan";
 
 function rowToSchritt(r) {
-  return { id: r.id, routine: r.routine, reihenfolge: r.reihenfolge, name: r.name, dauerMin: r.dauer_min };
+  return {
+    id: r.id,
+    routine: r.routine,
+    reihenfolge: r.reihenfolge,
+    name: r.name,
+    dauerMin: r.dauer_min,
+    nurVarianten: r.nur_varianten || null,
+    gueltigAb: r.gueltig_ab || null,
+  };
 }
 
 function rowToDurchlauf(r) {
@@ -47,18 +56,41 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   // Doppeltipp-Schutz (13.09.): siehe pendingErledigtRef in
   // useGewohnheitenData.js.
   const pendingErledigtRef = useRef({});
+  // Schichtarbeit (25.09., utils/schichtplan.js): Zeit-Varianten und je Tag
+  // die geltende Variante. `heute` wird minütlich/beim Zurückkehren
+  // aktualisiert, damit nach Mitternacht die neue Schicht gilt.
+  const [varianten, setVarianten] = useState([]);
+  const [plan, setPlan] = useState({});
+  const [heute, setHeute] = useState(() => toLocalISODate(new Date()));
+  useEffect(() => {
+    const pruefen = () => setHeute(toLocalISODate(new Date()));
+    const takt = setInterval(pruefen, 60000);
+    document.addEventListener("visibilitychange", pruefen);
+    return () => {
+      clearInterval(takt);
+      document.removeEventListener("visibilitychange", pruefen);
+    };
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
-      const [{ data: s }, { data: d }, { data: e }, { data: sl }] = await Promise.all([
+      const [{ data: s }, { data: d }, { data: e }, { data: sl }, { data: va }, { data: pl }] = await Promise.all([
         supabase.from("routine_schritte").select("*").eq("user_id", userId).order("routine").order("reihenfolge"),
         supabase.from("routine_durchlaeufe").select("*").eq("user_id", userId).order("gestartet_um", { ascending: false }),
         supabase.from("routine_einstellungen").select("*").eq("user_id", userId),
         supabase.from("routine_schritt_logs").select("*").eq("user_id", userId),
+        supabase.from("routine_varianten").select("*").eq("user_id", userId).order("reihenfolge"),
+        supabase.from("routine_schichtplan").select("*").eq("user_id", userId).gte("datum", plusTage(toLocalISODate(new Date()), -35)),
       ]);
       if (cancelled) return;
+      if (va) setVarianten(va.map(zeileZuVariante));
+      if (pl) {
+        const next = {};
+        pl.forEach((r) => (next[r.datum] = zeileZuPlantag(r)));
+        setPlan(next);
+      }
       if (s) setSchritte(s.map(rowToSchritt));
       if (d) setDurchlaeufe(d.map(rowToDurchlauf));
       if (e) {
@@ -77,6 +109,16 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     };
   }, [userId]);
 
+  // Was gilt an einem Tag? Ohne Varianten/Plan exakt wie bisher.
+  const schichtCtx = useMemo(() => ({ plan, varianten, standard: einstellungen }), [plan, varianten, einstellungen]);
+  const hatSchicht = varianten.length > 0 || Object.keys(plan).length > 0;
+  const einstellungenAm = useCallback((datum) => (hatSchicht ? einstellungenFuer(datum, schichtCtx) : einstellungen), [hatSchicht, schichtCtx, einstellungen]);
+  const planAm = useCallback((datum) => planFuer(datum, schichtCtx), [schichtCtx]);
+  const schritteAm = useCallback((datum) => schritteFuer(datum, schritte, planFuer(datum, schichtCtx).variante?.id || null), [schritte, schichtCtx]);
+  const einstellungenHeute = useMemo(() => einstellungenAm(heute), [einstellungenAm, heute]);
+  const schritteHeute = useMemo(() => schritteAm(heute), [schritteAm, heute]);
+  const heutePlan = useMemo(() => planAm(heute), [planAm, heute]);
+
   // Uhrzeit eines Schritts — nicht in der DB gespeichert (nur die geplante
   // Dauer je Schritt), sondern aus dem Zeitrahmen-Start der Routine plus
   // der Summe der Dauer aller davor liegenden Schritte hergeleitet. Fehlt
@@ -85,11 +127,11 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   // istRechtzeitig()), nicht als "zu spät".
   const schrittZeit = useCallback(
     (schrittId) => {
-      const schritt = schritte.find((sc) => sc.id === schrittId);
+      const schritt = schritteHeute.find((sc) => sc.id === schrittId);
       if (!schritt) return "";
-      const startZeit = einstellungen[schritt.routine]?.startZeit;
+      const startZeit = einstellungenHeute[schritt.routine]?.startZeit;
       if (!startZeit) return "";
-      const vorherige = schritte
+      const vorherige = schritteHeute
         .filter((sc) => sc.routine === schritt.routine && sc.reihenfolge < schritt.reihenfolge)
         .reduce((summe, sc) => summe + (Number(sc.dauerMin) || 0), 0);
       const [h, m] = startZeit.split(":").map(Number);
@@ -98,7 +140,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
       const minute = gesamt % 60;
       return `${String(stunde).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
     },
-    [schritte, einstellungen]
+    [schritteHeute, einstellungenHeute]
   );
 
   // Zeitrahmen der Routine (z. B. Morgenroutine 6:00-9:00 Uhr) — Grundlage
@@ -123,11 +165,15 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   );
 
   const schrittHinzufuegen = useCallback(
-    async (routine, name, dauerMin) => {
+    async (routine, name, dauerMin, { nurVarianten = null, gueltigAb = null } = {}) => {
       if (!name?.trim()) return { ok: false, error: "Bitte einen Namen für den Schritt eingeben." };
       const bisherige = schritte.filter((sc) => sc.routine === routine);
       const reihenfolge = bisherige.length ? Math.max(...bisherige.map((sc) => sc.reihenfolge)) + 1 : 0;
       const row = { user_id: userId, routine, reihenfolge, name: name.trim(), dauer_min: Number(dauerMin) || 5 };
+      // Schichtarbeit (25.09.): Schritt nur bei bestimmten Varianten bzw.
+      // erst ab einem Datum ("nächste Woche kommt X dazu").
+      if (nurVarianten?.length) row.nur_varianten = nurVarianten;
+      if (gueltigAb) row.gueltig_ab = gueltigAb;
       const { data, error } = await supabase.from("routine_schritte").insert(row).select().single();
       if (error) {
         console.error(error);
@@ -244,7 +290,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
       // Jeder Abschluss landet im Tagesprotokoll, eine Verspätung
       // ausdrücklich mit vermerkt (25.09., utils/routineVerspaetung.js) —
       // gemessen am Start, wie beim Belohnungsfenster.
-      const spaet = verspaetungHinweis(einstellungen[routine]?.startZeit, gestartetUm, belohnungPufferMin);
+      const spaet = verspaetungHinweis(einstellungenAm(heute)[routine]?.startZeit, gestartetUm, belohnungPufferMin);
       aenderungVermerken?.({
         kategorie: routine === "morgen" ? "morgenroutine" : "abendroutine",
         itemName: routine === "morgen" ? "Morgenroutine" : "Abendroutine",
@@ -253,7 +299,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
       });
       return { ok: true, durchlauf: neu };
     },
-    [userId, durchlaeufe, einstellungen, belohnungPufferMin, aenderungVermerken]
+    [userId, durchlaeufe, einstellungenAm, belohnungPufferMin, aenderungVermerken]
   );
 
   // Bestätigt/entfernt EINEN Schritt für einen Tag, unabhängig vom
@@ -299,14 +345,14 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
       }
 
       if (!schritt) return;
-      const geschwister = schritte.filter((sc) => sc.routine === schritt.routine);
+      const geschwister = schritteAm(datum).filter((sc) => sc.routine === schritt.routine);
       const alleErledigt = geschwister.every((sc) => sc.id === schrittId || schrittErledigt[`${datum}__${sc.id}`]);
       const schonDurchlauf = durchlaeufe.some((d) => d.routine === schritt.routine && d.datum === datum);
       if (alleErledigt && !schonDurchlauf) {
         // Letzter Schritt abgehakt → dieselbe große Feier wie beim geführten
         // Ablauf (25.09.); pünktlich = innerhalb des Puffers nach der
         // eingestellten Startzeit der Routine.
-        const startZeit = einstellungen[schritt.routine]?.startZeit;
+        const startZeit = einstellungenAm(datum)[schritt.routine]?.startZeit;
         const jetztIso = new Date().toISOString();
         feuereBelohnung(routineGeschafftFeier(schritt.routine, istRechtzeitig(startZeit, belohnungPufferMin), verspaetungHinweis(startZeit, jetztIso, belohnungPufferMin)));
         durchlaufSpeichern({
@@ -318,13 +364,112 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
         });
       }
     },
-    [schrittErledigt, schritte, durchlaeufe, userId, belohnungPufferMin, schrittZeit, durchlaufSpeichern, einstellungen]
+    [schrittErledigt, schritte, durchlaeufe, userId, belohnungPufferMin, schrittZeit, durchlaufSpeichern, einstellungenAm, schritteAm]
+  );
+
+  // --- Schichtarbeit: Varianten + Schichtplan (25.09.) -------------------
+  const varianteSpeichern = useCallback(
+    async (v) => {
+      const row = {
+        user_id: userId,
+        name: v.name?.trim() || "Variante",
+        icon: v.icon || "🕐",
+        arbeit_von: v.arbeitVon || null,
+        arbeit_bis: v.arbeitBis || null,
+        morgen_start: v.morgenStart || null,
+        abend_start: v.abendStart || null,
+        reihenfolge: v.reihenfolge ?? varianten.length,
+      };
+      const anfrage = v.id ? supabase.from("routine_varianten").update(row).eq("id", v.id) : supabase.from("routine_varianten").insert(row);
+      const { data, error } = await anfrage.select().single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      const neu = zeileZuVariante(data);
+      setVarianten((prev) => (v.id ? prev.map((x) => (x.id === v.id ? neu : x)) : [...prev, neu]));
+      return { ok: true, variante: neu };
+    },
+    [userId, varianten.length]
+  );
+
+  const varianteEntfernen = useCallback(async (id) => {
+    const { error } = await supabase.from("routine_varianten").delete().eq("id", id);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setVarianten((prev) => prev.filter((x) => x.id !== id));
+    setPlan((prev) => Object.fromEntries(Object.entries(prev).filter(([, t]) => t.varianteId !== id)));
+    return { ok: true };
+  }, []);
+
+  // Ganzen Zeitraum speichern: alte Einträge von..bis ersetzen. Tage ohne
+  // Variante (null) bleiben leer = normale Zeit.
+  const schichtplanSpeichern = useCallback(
+    async (tage, von, bis) => {
+      const { error: loeschFehler } = await supabase.from("routine_schichtplan").delete().eq("user_id", userId).gte("datum", von).lte("datum", bis);
+      if (loeschFehler) {
+        console.error(loeschFehler);
+        return { ok: false, error: loeschFehler.message };
+      }
+      const rows = tage
+        .filter((t) => t.varianteId || t.art === "krank" || t.art === "eigen")
+        .map((t) => ({ user_id: userId, datum: t.datum, variante_id: t.varianteId || null, art: t.art || "variante", morgen_start: t.morgenStart || null, abend_start: t.abendStart || null }));
+      if (rows.length) {
+        const { error } = await supabase.from("routine_schichtplan").insert(rows);
+        if (error) {
+          console.error(error);
+          return { ok: false, error: error.message };
+        }
+      }
+      setPlan((prev) => {
+        const next = Object.fromEntries(Object.entries(prev).filter(([d]) => d < von || d > bis));
+        rows.forEach((r) => (next[r.datum] = zeileZuPlantag(r)));
+        return next;
+      });
+      return { ok: true, anzahl: rows.length };
+    },
+    [userId]
+  );
+
+  // Einen Tag ändern ("Heute anders"); `eintrag` null = zurück auf normal.
+  const schichtplanTagSetzen = useCallback(
+    async (datum, eintrag) => {
+      if (!eintrag) {
+        const { error } = await supabase.from("routine_schichtplan").delete().eq("user_id", userId).eq("datum", datum);
+        if (error) return { ok: false, error: error.message };
+        setPlan((prev) => Object.fromEntries(Object.entries(prev).filter(([d]) => d !== datum)));
+        return { ok: true };
+      }
+      const row = { user_id: userId, datum, variante_id: eintrag.varianteId || null, art: eintrag.art || "variante", morgen_start: eintrag.morgenStart || null, abend_start: eintrag.abendStart || null };
+      const { error } = await supabase.from("routine_schichtplan").upsert(row, { onConflict: "user_id,datum" });
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      setPlan((prev) => ({ ...prev, [datum]: zeileZuPlantag(row) }));
+      return { ok: true };
+    },
+    [userId]
   );
 
   return {
-    routineSchritte: schritte,
+    routineSchritte: schritteHeute,
+    routineSchritteAlle: schritte,
+    routineEinstellungenStandard: einstellungen,
+    routineVarianten: varianten,
+    routineSchichtplan: plan,
+    routineHeutePlan: heutePlan,
+    routinePlanFuer: planAm,
+    routineEinstellungenFuer: einstellungenAm,
+    routineSchritteFuer: schritteAm,
+    routineVarianteSpeichern: varianteSpeichern,
+    routineVarianteEntfernen: varianteEntfernen,
+    routineSchichtplanSpeichern: schichtplanSpeichern,
+    routineSchichtplanTagSetzen: schichtplanTagSetzen,
     routineDurchlaeufe: durchlaeufe,
-    routineEinstellungen: einstellungen,
+    routineEinstellungen: einstellungenHeute,
     routineSchrittErledigt: schrittErledigt,
     routineSchrittZeit: schrittZeit,
     routineSchrittErledigtUmschalten: toggleSchrittErledigt,

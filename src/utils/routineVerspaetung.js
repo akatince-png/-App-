@@ -1,3 +1,5 @@
+import { planFuer, zeileZuPlantag, zeileZuVariante } from "./schichtplan";
+
 // Verspätete Morgen-/Abendroutine (25.09., Nutzerinnen-Vorgabe): Später
 // erledigt ist kein Grund, dass etwas "nicht mehr stattfindet" — die
 // Verspätung wird vermerkt und es wird darauf reagiert:
@@ -60,24 +62,50 @@ export function verspaetungHinweis(startZeit, zeitpunkt, pufferMin = 0) {
 // Muster der letzten MUSTER_TAGE Tage (heute eingeschlossen). Gemessen wird
 // der START des Durchlaufs (wie beim Belohnungsfenster). `tage` enthält
 // alle Tage, auch ohne Durchlauf (min null), für die Balken der Karte.
+// `startZeit`: feste Uhrzeit ODER (Schichtplan, 25.09.) eine Funktion
+// datum → { startZeit, key, variante } — dann wird je Schicht gezählt
+// und nur die Schicht gemeldet, in der es an ≥ 3 Tagen hakt.
 export function verspaetungsMuster(durchlaeufe, routine, startZeit, heute = new Date()) {
-  if (uhrzeitMin(startZeit) === null) return null;
+  const aufloesen = typeof startZeit === "function" ? startZeit : () => ({ startZeit, key: "standard", variante: null });
   const tage = [];
   for (let i = MUSTER_TAGE - 1; i >= 0; i--) {
     const d = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate() - i);
     const iso = isoTag(d);
+    const info = aufloesen(iso) || {};
+    const start = info.startZeit || "";
     const lauf = (durchlaeufe || []).find((x) => x.routine === routine && x.datum === iso);
     const zeitpunkt = lauf ? lauf.gestartetUm || lauf.abgeschlossenUm : null;
-    const min = lauf ? verspaetungMin(startZeit, zeitpunkt) : null;
-    tage.push({ datum: iso, kurz: d.toLocaleDateString("de-DE", { weekday: "short" }).slice(0, 2), min, uhrzeit: min === null ? null : minZuUhrzeit(uhrzeitMin(startZeit) + min) });
+    const min = lauf ? verspaetungMin(start, zeitpunkt) : null;
+    tage.push({
+      datum: iso,
+      kurz: d.toLocaleDateString("de-DE", { weekday: "short" }).slice(0, 2),
+      min,
+      uhrzeit: min === null ? null : minZuUhrzeit(uhrzeitMin(start) + min),
+      startZeit: start.slice(0, 5),
+      key: info.key || "standard",
+      variante: info.variante || null,
+    });
   }
-  const spaet = tage.filter((t) => t.min !== null && t.min > MUSTER_GRENZE_MIN);
+  const gruppen = new Map();
+  for (const t of tage) if (t.min !== null && t.min > MUSTER_GRENZE_MIN) gruppen.set(t.key, [...(gruppen.get(t.key) || []), t]);
+  const spaet = [...gruppen.values()].sort((x, y) => y.length - x.length)[0] || [];
   if (spaet.length < MUSTER_MINDESTENS) return null;
   // Typische Uhrzeit = Median der verspäteten Tage, auf 15 Min. gerundet.
-  const sortiert = spaet.map((t) => uhrzeitMin(startZeit) + t.min).sort((a, b) => a - b);
+  const sortiert = spaet.map((t) => uhrzeitMin(t.startZeit) + t.min).sort((a, b) => a - b);
   const median = sortiert[Math.floor(sortiert.length / 2)];
   const vorschlag = minZuUhrzeit(Math.round(median / 15) * 15);
-  return { routine, label: LABEL[routine], startZeit: startZeit.slice(0, 5), tage, spaetAnzahl: spaet.length, vorschlag };
+  const variante = spaet[0].variante;
+  const label = LABEL[routine];
+  return {
+    routine,
+    label,
+    labelLang: variante ? `${label} bei ${variante.name}` : label,
+    variante,
+    startZeit: spaet[0].startZeit,
+    tage,
+    spaetAnzahl: spaet.length,
+    vorschlag,
+  };
 }
 
 // Hat die Person in den letzten HINWEIS_RUHE_TAGE Tagen schon auf die Karte
@@ -89,29 +117,50 @@ export function hinweisRuht(protokollEintraege, routine, heute = new Date()) {
 }
 
 // Für die Coach-Übersicht: aus Durchläufen + Startzeiten aller Personen
-// (RPC admin_routine_zeiten) je Person das auffälligste Muster.
-export function coachVerspaetungen(zeilen, heute = new Date()) {
+// je Person das auffälligste Muster. `schicht` (25.09.): Varianten- und
+// Schichtplan-Zeilen aller Personen (DB-Format, mit user_id).
+export function coachVerspaetungen(zeilen, heute = new Date(), schicht = { varianten: [], plan: [] }) {
   const proPerson = new Map();
+  const eintrag = (id) => proPerson.get(id) || { startZeiten: {}, durchlaeufe: [], varianten: [], plan: {} };
   for (const z of zeilen || []) {
-    const e = proPerson.get(z.user_id) || { startZeiten: {}, durchlaeufe: [] };
+    const e = eintrag(z.user_id);
     if (z.start_zeit) e.startZeiten[z.routine] = String(z.start_zeit).slice(0, 5);
     if (z.datum) e.durchlaeufe.push({ routine: z.routine, datum: z.datum, gestartetUm: z.gestartet_um, abgeschlossenUm: z.abgeschlossen_um });
     proPerson.set(z.user_id, e);
   }
+  for (const v of schicht.varianten || []) {
+    const e = eintrag(v.user_id);
+    e.varianten.push(zeileZuVariante(v));
+    proPerson.set(v.user_id, e);
+  }
+  for (const t of schicht.plan || []) {
+    const e = eintrag(t.user_id);
+    e.plan[t.datum] = zeileZuPlantag(t);
+    proPerson.set(t.user_id, e);
+  }
   const ergebnis = {};
   for (const [id, e] of proPerson) {
+    const ctx = { plan: e.plan, varianten: e.varianten, standard: { morgen: { startZeit: e.startZeiten.morgen || "" }, abend: { startZeit: e.startZeiten.abend || "" } } };
     for (const routine of ["morgen", "abend"]) {
-      const m = verspaetungsMuster(e.durchlaeufe, routine, e.startZeiten[routine], heute);
+      const m = verspaetungsMuster(e.durchlaeufe, routine, startZeitAufloeser(ctx, routine), heute);
       if (m && !ergebnis[id]) ergebnis[id] = m;
     }
   }
   return ergebnis;
 }
 
+// Auflöser für verspaetungsMuster aus einem Schichtplan-Kontext.
+export function startZeitAufloeser(ctx, routine) {
+  return (datum) => {
+    const p = planFuer(datum, ctx);
+    return { startZeit: routine === "morgen" ? p.morgen : p.abend, key: p.key, variante: p.variante };
+  };
+}
+
 // Vorformulierte Sätze (Coachee → Coach, Coach → Coachee).
 export function satzAnCoach(m) {
-  return `Meine ${m.label} klappt meist erst gegen ${m.vorschlag} statt um ${m.startZeit}. Können wir die Zeit gemeinsam anschauen?`;
+  return `Meine ${m.labelLang || m.label} klappt meist erst gegen ${m.vorschlag} statt um ${m.startZeit}. Können wir die Zeit gemeinsam anschauen?`;
 }
 export function satzVomCoach(m, vorname) {
-  return `Hallo${vorname ? ` ${vorname}` : ""}, mir ist aufgefallen, dass deine ${m.label} meist erst gegen ${m.vorschlag} klappt statt um ${m.startZeit}. Wollen wir die Zeit gemeinsam anpassen?`;
+  return `Hallo${vorname ? ` ${vorname}` : ""}, mir ist aufgefallen, dass deine ${m.labelLang || m.label} meist erst gegen ${m.vorschlag} klappt statt um ${m.startZeit}. Wollen wir die Zeit gemeinsam anpassen?`;
 }

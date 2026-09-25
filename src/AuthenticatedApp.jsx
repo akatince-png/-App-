@@ -49,6 +49,7 @@ const AtemuebungenView = lazyAnsicht(() => import("./views/AtemuebungenView"));
 const DenksportView = lazyAnsicht(() => import("./views/DenksportView"));
 const TeamView = lazyAnsicht(() => import("./views/TeamView"));
 const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
+const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazyAnsicht(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
 const ZusatzprotokollErstellenView = lazyAnsicht(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
@@ -59,7 +60,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "coach-chat", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -253,7 +254,12 @@ export default function AuthenticatedApp() {
       }
     };
     window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    // Auch direkte Hash-Links (z. B. "📅 Plan" → #/schichtplan, 25.09.).
+    window.addEventListener("hashchange", onPopState);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("hashchange", onPopState);
+    };
   }, [view, isAdmin]);
 
   useEffect(() => {
@@ -375,6 +381,8 @@ export default function AuthenticatedApp() {
     screen = <TeamView onHome={() => setView("home")} />;
   } else if (view === "coach-chat") {
     screen = <CoachChatView onHome={() => setView("home")} />;
+  } else if (view === "schichtplan") {
+    screen = <SchichtplanView onHome={() => setView("home")} />;
   } else if (view === "tagesraetsel") {
     screen = <DenksportView onHome={() => setView("home")} tagesraetselStart />;
   } else if (PLAENE_VIEW_IDS.includes(view)) {

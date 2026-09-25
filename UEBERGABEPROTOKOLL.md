@@ -58,6 +58,47 @@ Vorgabe der Nutzerin: Eine verpasste Uhrzeit darf nicht dazu führen, dass Funkt
   - `adminlauf.mjs` spricht betroffene Testpersonen an, höchstens einmal pro Woche und nur Testkonten.
 - **Hinweis:** Das echte Konto der Nutzerin erfüllt das Muster bereits (23.–25.09. nach 06:00). Die Karte erscheint dort ohne Coach-Knopf, weil es ein Admin-Konto ist.
 
+### Schichtarbeit: Routine-Zeiten je Schicht + Schichtplan (25.09., Vorschau freigegeben)
+Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spätschicht) sollen Morgen- und Abendroutine je Zeitraum unterschiedlich beginnen und leicht einstellbar sein. Die Schritte bleiben gleich, einzelne Schritte können je Schicht oder ab einem Datum gelten.
+- **Datenbank (Migration 0103):**
+  - `routine_varianten`: Name, Icon, Arbeitszeit, `morgen_start`, `abend_start`.
+  - `routine_schichtplan`: je `(user_id, datum)` eine Variante oder `art` = `krank`/`eigen` (mit eigenen Zeiten).
+  - `routine_schritte.nur_varianten uuid[]` und `gueltig_ab date`.
+  - RLS: eigene Zeilen plus Admin.
+- **Logik:** `utils/schichtplan.js` enthält:
+  - `planFuer`, `einstellungenFuer` (das Ende des Zeitrahmens wandert mit).
+  - `schritteFuer`, `planErzeugen` mit den Rhythmen wochenweise / 2-2-2 / fsnx / eigen.
+  - `puenktlichkeitJeVariante`.
+  - Tests in `schichtplan.test.js`.
+- **useRoutinen:**
+  - `routineEinstellungen` und `routineSchritte` gelten jetzt **für heute**. Dadurch richten sich Feier, Verspätung, Tagesphase, Ablauf und „Als Nächstes“ automatisch nach der Schicht.
+  - Die Bearbeitungsseiten nutzen `routineEinstellungenStandard` und `routineSchritteAlle`.
+  - Neu: `routinePlanFuer`, `routineVarianteSpeichern/Entfernen`, `routineSchichtplanSpeichern` (von–bis ersetzen), `routineSchichtplanTagSetzen`.
+  - `heute` wird minütlich aktualisiert.
+- **Oberfläche:**
+  - Seite `#/schichtplan` (`views/SchichtplanView.jsx`):
+    - Zeit-Varianten mit Vorlage „Früh · Spät · Frei“ (1 Tipp), Nachtschicht, eigene Variante.
+    - Schichtplan: Rhythmus, Start, 2/4/8 Wochen oder „bis auf Weiteres“ (26 Wochen). Kalender, in dem jeder Tag per Tipp umschaltbar ist; „ab heute beenden“.
+    - Schritte je Schicht bzw. ab Datum.
+  - Links darauf: „📅 Zeiten je Schicht & Schichtplan“ unter dem Zeitrahmen (Routinen-Seite und Routine-Reiter).
+  - Startseite: `ui/SchichtHeuteKarte.jsx` zeigt „HEUTE · FRÜHSCHICHT“, die Startzeiten und „Morgen: …“. „Heute anders“ bietet andere Schicht / Normal / Krank / Eigene Zeit (nur heute, protokolliert).
+- **Verspätung je Schicht:** `verspaetungsMuster` nimmt eine Funktion je Tag und zählt je Schicht.
+  - Die Karte fragt dann gezielt, z. B. „Passt deine Morgenroutine-Zeit bei Frühschicht noch?“.
+  - „Umstellen“ ändert die Zeit der Variante.
+- **Coach-Übersicht:**
+  - Aufgeklappte Zeile: Schichtleiste der nächsten 14 Tage, „Morgenroutine pünktlich je Schicht (4 Wochen)“ und „✏️ Schichtplan bearbeiten“ (Verwalten als → `#/schichtplan`).
+  - „💬 Frühschicht-Zeit ansprechen“.
+- **Erinnerungen** (`send-due-reminders`, v18): An Schichttagen gilt die Zeit der Schicht, „krank“ bedeutet keine Routine-Erinnerung.
+- **Aka:** neuer Bereich `schichtplan` (`AIService.schichtplanAusChat`). Legt Varianten an bzw. aktualisiert sie und speichert optional den Rhythmus als Plan.
+- **Testkonto Jonas** ist seit 25.09. Schichtarbeiter: Früh/Spät wochenweise vom 21.09. bis 25.10., Wochenende frei. Die Tages- und Admin-Läufe fotografieren seine Schichtkarte und den Coach-Kasten.
+
+### ⚠️ Erinnerungen kamen nicht an – behoben (25.09.)
+Beim Einbau entdeckt: Der minütliche Cron-Job (jobid 2) bekam bei **jedem** Aufruf 401. Das Protokoll reicht nur 24 Stunden zurück; es ist also unklar, seit wann.
+1. Es fehlte der Authorization-Header (verify_jwt). Der Cron-Job schickt jetzt zusätzlich den öffentlichen anon-Schlüssel; eingespielt per `cron.alter_job`, weil der Job-Befehl das Geheimnis enthält.
+2. Das `CRON_SECRET` der Function passte nicht zum `x-cron-secret` des Jobs. Deshalb vergleicht die Function jetzt auch mit `public.cron_konfig` (Migration 0104, nur Service-Role).
+
+Seit 08:59 UTC antwortet sie mit 200. Bei künftigen Deploys `verify_jwt` auf true lassen; der Job hat den Header jetzt.
+
 ### 🚀 Go-Live-Checkliste (Stand 25.09.2026, mit der Nutzerin besprochen)
 Ausgangslage:
 - Supabase im **Gratis-Tarif** (Org „Akatince“, Projekt „My Protocols“, Region **eu-central-1 / Frankfurt**). Belegt: Datenbank 54 MB von 500 MB, Dateien 13 MB von 1 GB, 7 Konten.

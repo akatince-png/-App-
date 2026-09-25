@@ -89,6 +89,11 @@ if (!/heute|zuletzt|ruhig|Punkte/i.test(ueText)) coach.beobachtungen.push('Über
 const jonasZeile = p.locator('button[aria-expanded]').filter({ hasText: 'Jonas Dauertest' }).first();
 if (await jonasZeile.count()) {
   await jonasZeile.click(); await w(800);
+  // Schichtplan (seit 25.09.): Jonas ist Schichtarbeiter → Leiste + Pünktlichkeit je Schicht.
+  const schichtText = await p.locator('text=SCHICHTPLAN').first().innerText().catch(() => '');
+  if (!schichtText) befund('Jonas: Schichtplan-Kasten in der Coach-Übersicht fehlt');
+  else coach.beobachtungen.push(`Jonas Schichtplan: ${schichtText.replace(/\s+/g, ' ')}`);
+  await foto('40b-coach-jonas-schicht');
   await p.getByRole('button', { name: /^💬 Chat( \(\d+ neu\))?$/ }).first().click(); await w(2500);
   const chat = p.getByRole('dialog', { name: /Chat: Jonas/ });
   const text = `Hi Jonas, wie läuft deine Woche? Melde dich gern kurz. (Dauertest ${new Date().toISOString().slice(0, 10)})`;
@@ -111,7 +116,7 @@ for (const n of TEST_COACHEES) {
   if (!(await zeile.count()) || !/meist später/.test(await zeile.innerText())) continue;
   const status = (await zeile.innerText()).split('\n').find((l) => /meist später/.test(l)) || '';
   if ((await zeile.getAttribute('aria-expanded')) !== 'true') { await zeile.click(); await w(800); }
-  const knopf = p.getByRole('button', { name: '💬 Zeit ansprechen' }).first();
+  const knopf = p.getByRole('button', { name: /Zeit ansprechen$/ }).first();
   if (!(await knopf.count())) { befund(`${n}: "meist später", aber kein Knopf "Zeit ansprechen"`); continue; }
   await knopf.click(); await w(2500);
   const chat = p.getByRole('dialog', { name: new RegExp(`Chat: ${n.split(' ')[0]}`) });

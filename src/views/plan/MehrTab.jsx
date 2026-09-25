@@ -101,11 +101,11 @@ function snapshotFuer(kategorie, appData) {
     case "atemuebungen":
       return { atemuebungen: appData.atemuebungen };
     case "morgenroutine":
-      return { schritte: appData.routineSchritte?.filter((s) => s.routine === "morgen"), zeitrahmen: appData.routineEinstellungen?.morgen };
+      return { schritte: (appData.routineSchritteAlle || appData.routineSchritte)?.filter((s) => s.routine === "morgen"), zeitrahmen: (appData.routineEinstellungenStandard || appData.routineEinstellungen)?.morgen };
     case "abendroutine":
       return {
-        schritte: appData.routineSchritte?.filter((s) => s.routine === "abend"),
-        zeitrahmen: appData.routineEinstellungen?.abend,
+        schritte: (appData.routineSchritteAlle || appData.routineSchritte)?.filter((s) => s.routine === "abend"),
+        zeitrahmen: (appData.routineEinstellungenStandard || appData.routineEinstellungen)?.abend,
         schlafplan: appData.categoryZiele?.schlaf,
       };
     case "projekt":

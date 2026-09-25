@@ -6,6 +6,7 @@ import { cardBorder, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { buildDayItems, ROUTINE_META } from "../utils/dayItems";
 import RoutineAblauf from "../ui/RoutineAblauf";
+import SchichtplanLink from "../ui/SchichtplanLink";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineSchritteEditor from "../ui/RoutineSchritteEditor";
 import RoutineSchritteListe from "../ui/RoutineSchritteListe";
@@ -47,6 +48,10 @@ function minutenSeitMitternacht(zeit) {
 export default function RoutineTabView({ routine, embedded = false, onHome }) {
   const {
     routineSchritte,
+    routineSchritteAlle,
+    routineEinstellungenStandard,
+    routineHeutePlan,
+    routineVarianten,
     routineSchrittHinzufuegen,
     routineSchrittEntfernen,
     routineSchrittVerschieben,
@@ -178,8 +183,12 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
   // wollen") und ist jetzt hinter einem Klick zusammengeklappt.
   const [einstellungenOffen, setEinstellungenOffen] = useState(false);
 
+  // Schichtarbeit (25.09.): der Zeitrahmen-Editor zeigt die normale Zeit
+  // (routineEinstellungenStandard), Ablauf/Überlappung die heute geltende.
   const einstellung = routineEinstellungen[routine] || { startZeit: "", endZeit: "" };
+  const einstellungStandard = routineEinstellungenStandard[routine] || { startZeit: "", endZeit: "" };
   const schritteFuerRoutine = routineSchritte.filter((s) => s.routine === routine).sort((a, b) => a.reihenfolge - b.reihenfolge);
+  const alleSchritteFuerRoutine = routineSchritteAlle.filter((s) => s.routine === routine).sort((a, b) => a.reihenfolge - b.reihenfolge);
 
   const startMin = minutenSeitMitternacht(einstellung.startZeit);
   const endMin = minutenSeitMitternacht(einstellung.endZeit);
@@ -249,14 +258,14 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     return result;
   };
   const schrittEntfernenUndProtokollieren = (id) => {
-    const schritt = schritteFuerRoutine.find((s) => s.id === id);
+    const schritt = alleSchritteFuerRoutine.find((s) => s.id === id);
     routineSchrittEntfernen(id);
     if (schritt) {
       aenderungVermerken({ kategorie: ROUTINE_ANLASS[routine], itemName: schritt.name, aktion: "entfernt", detail: `${schritt.dauerMin} Min.` });
     }
   };
   const schrittVerschiebenUndProtokollieren = (id, richtung) => {
-    const schritt = schritteFuerRoutine.find((s) => s.id === id);
+    const schritt = alleSchritteFuerRoutine.find((s) => s.id === id);
     routineSchrittVerschieben(id, richtung);
     if (schritt) {
       aenderungVermerken({
@@ -268,8 +277,8 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
     }
   };
   const zeitrahmenAendernUndProtokollieren = (neueStartZeit, neueEndZeit) => {
-    const vorherStart = einstellung.startZeit;
-    const vorherEnde = einstellung.endZeit;
+    const vorherStart = einstellungStandard.startZeit;
+    const vorherEnde = einstellungStandard.endZeit;
     routineZeitrahmenSetzen(routine, neueStartZeit, neueEndZeit);
     if (neueStartZeit === vorherStart && neueEndZeit === vorherEnde) return;
     aenderungVermerken({
@@ -348,7 +357,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
             <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10 }}>Schritte einrichten</div>
             <RoutineSchritteEditor
               routine={routine}
-              schritte={schritteFuerRoutine}
+              schritte={alleSchritteFuerRoutine}
               onHinzufuegen={schrittHinzufuegenUndProtokollieren}
               mahlzeiten={mahlzeiten}
               supplemente={supplemente}
@@ -360,7 +369,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
 
           <RoutineSchritteListe
             routine={routine}
-            schritte={schritteFuerRoutine}
+            schritte={alleSchritteFuerRoutine}
             onEntfernen={schrittEntfernenUndProtokollieren}
             onVerschieben={schrittVerschiebenUndProtokollieren}
           />
@@ -379,14 +388,15 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <div style={{ flex: 1 }}>
-                <TimeWheelField value={einstellung.startZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(v, einstellung.endZeit)} />
+                <TimeWheelField value={einstellungStandard.startZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(v, einstellungStandard.endZeit)} />
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>–</div>
               <div style={{ flex: 1 }}>
-                <TimeWheelField value={einstellung.endZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(einstellung.startZeit, v)} />
+                <TimeWheelField value={einstellungStandard.endZeit} onChange={(v) => zeitrahmenAendernUndProtokollieren(einstellungStandard.startZeit, v)} />
               </div>
             </div>
             <ItemVerlauf kategorie={ROUTINE_ANLASS[routine]} itemName={ROUTINE_LABEL[routine]} />
+            <SchichtplanLink heutePlan={routineHeutePlan} anzahlVarianten={routineVarianten.length} />
           </Card>
 
           {routine === "abend" && (

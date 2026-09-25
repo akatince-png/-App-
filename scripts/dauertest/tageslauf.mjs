@@ -184,12 +184,20 @@ try {
     if (await page.getByRole("button", { name: /Dein Coach hat geschrieben/ }).isVisible().catch(() => false)) befund("Hinweis „Dein Coach hat geschrieben“ bleibt nach dem Lesen stehen");
   }
 
+  // 1b²) Schichtplan (seit 25.09., Jonas ist Schichtarbeiter): Karte
+  //      "Heute im Schichtplan" fotografieren und prüfen.
+  const schichtKarte = page.getByRole("region", { name: "Heute im Schichtplan" });
+  if (await schichtKarte.isVisible().catch(() => false)) {
+    await foto("01a-schicht-heute");
+    schritt(`Schichtplan heute: ${(await schichtKarte.innerText()).split("\n").slice(0, 3).join(" · ")}`);
+  }
+
   // 1c) Karte "Passt deine Morgenroutine-Zeit noch?" (seit 25.09.): die
   //     Testpersonen laufen abends, ihre Morgenroutine (Start 07:00) ist
   //     also immer spät. Jede Person reagiert anders, damit alle Wege
   //     täglich echt benutzt werden: Claude "passt so", Mia stellt um,
   //     Jonas ignoriert (→ der Test-Coach spricht ihn an), Lea fragt den Coach.
-  const zeitKarte = page.getByRole("region", { name: /Passt deine (Morgen|Abend)routine-Zeit noch/ }).first();
+  const zeitKarte = page.getByRole("region", { name: /Passt deine (Morgen|Abend)routine-Zeit/ }).first();
   if (await zeitKarte.isVisible().catch(() => false)) {
     await foto("01c-zeit-karte");
     const wahl = { "claude.dauertest@example.com": "passt", "claude.dauertest2@example.com": "umstellen", "claude.dauertest4@example.com": "coach" }[EMAIL] || "ignorieren";
