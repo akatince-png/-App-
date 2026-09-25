@@ -60,15 +60,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const endpoint = stream
-      ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`
-      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    // Kostenlose Gemini-Stufe (25.09.): bei Überlastung (503), Kontingent
+    // (429) oder abgeschaltetem Modell (404) automatisch das nächste Modell.
+    const modelle = [model, "gemini-flash-latest", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.6-flash"].filter((m, i, a) => a.indexOf(m) === i);
+    let response: Response | null = null;
+    for (const m of modelle) {
+      const endpoint = stream
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`;
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok || ![404, 429, 500, 503].includes(response.status) || m === modelle[modelle.length - 1]) break;
+      console.error(`Gemini ${m}: ${response.status}, versuche nächstes Modell`);
+      await response.body?.cancel();
+    }
+    response = response!;
 
     // Bei stream=true den SSE-Body 1:1 weiterreichen, statt ihn erst
     // vollständig einzusammeln — sonst käme beim Client trotz Streaming-
