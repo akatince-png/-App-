@@ -31,6 +31,52 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - 168 Unit-Tests, 62 E2E-Tests.
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
+### 🚀 Go-Live-Checkliste (Stand 25.09.2026, mit der Nutzerin besprochen)
+Ausgangslage:
+- Supabase im **Gratis-Tarif** (Org „Akatince“, Projekt „My Protocols“, Region **eu-central-1 / Frankfurt**). Belegt: Datenbank 54 MB von 500 MB, Dateien 13 MB von 1 GB, 7 Konten.
+- Vercel: `akaapp.vercel.app`.
+- KI-Dienste: Groq (USA), Google Gemini, Google Text-to-Speech.
+
+**A. Vor den ersten echten Nutzer:innen**
+1. **Datenschutz (Gesundheitsdaten, Art. 9 DSGVO).** Die Nutzerin lässt das fachlich prüfen (Anwalt/Datenschutz); keine Rechtsberatung durch uns.
+   - Ausdrückliche Einwilligung beim ersten Anmelden (Häkchen + Zeitstempel speichern).
+   - Datenschutzerklärung und Impressum in der App.
+   - Auftragsverarbeitungsverträge mit Supabase, Vercel, Google und Groq.
+   - Klären, welche Daten an KI-Dienste gehen (Laborwert-Scan, Lexikon, Aka bei Admins).
+   - Klären, ob die App (Medikamente, KI-Hinweise) als Medizinprodukt gilt.
+2. **Supabase auf Pro (~25 $/Monat):** tägliche Sicherungen (im Gratis-Tarif keine), kein Pausieren nach Inaktivität. Danach „Prevent use of leaked passwords“ einschalten und mit einem bekannten Leak-Passwort testen (siehe „Später“).
+3. **Zwei-Faktor-Anmeldung (TOTP) für Admin-Konten** in die App einbauen. Admins sehen alle Gesundheitsdaten.
+4. **Konto vollständig löschen können** (DSGVO-Löschanfrage). Bisher leert „Alles löschen“ nur die Daten, das Login bleibt. Nötig ist eine Admin-Funktion bzw. Edge Function mit `auth.admin.deleteUser`, inkl. Profilbild im Storage.
+5. **Testkonten aus dem echten Betrieb nehmen.**
+   - Die vier Dauertest-Konten teilen ihre Punkte, stehen also in der Personen-Rangliste; die Test-Teams Sonne/Mond stehen in der Team-Rangliste.
+   - Echte Coachees sähen sie. Vor dem Start ausblenden (z. B. Spalte `ist_testkonto`, in den Ranglisten-RPCs filtern) oder den Team-Vergleich beenden.
+   - Das Admin-Testkonto ist bereits ausgeblendet (Admin, teilt nicht).
+6. **E-Mail-Versand für Einladungen:** Der eingebaute Supabase-Mailversand ist nur für Tests gedacht und stark begrenzt (wenige Mails pro Stunde). Für „Coachee einladen“ einen eigenen SMTP-Dienst (z. B. Brevo, Postmark) in Supabase → Authentication → SMTP eintragen.
+7. **Fehler-Frühwarnung einschalten:** Sentry ist eingebaut (`services/errorMonitoring.js`), aber live ist keine `VITE_SENTRY_DSN` gesetzt (im Bundle geprüft). Projekt anlegen und die DSN bei Vercel eintragen, sonst erfährt niemand von Abstürzen.
+8. **Vercel-Tarif:** Hobby ist nur für nicht-kommerzielle Nutzung. Bei bezahltem Coaching auf Pro (~20 $/Monat) wechseln; ggf. eigene Domain.
+
+**B. Direkt nach dem Start**
+- Team-Vergleich endet am **24.10.2026**: Abschlussbericht `docs/dauertest/team-vergleich.md` (Fairness der Punkte bei unterschiedlich vielen Bereichen) und die Nutzerin fragen, ob der Dauertest weiterläuft. Die tägliche Routine `trig_01AsxkNWc7EU8foQz3wH131u` dann anpassen oder stoppen.
+- Dauertest-Push: Antworten der Testpersonen lösen echte Push-Benachrichtigungen an die Admin-Geräte aus (so gewollt). Nach dem Start mit der Nutzerin klären, ob das bleibt.
+- Admin-Abläufe weiter täglich live testen und verschlanken (Grundsatz unten). Tipp-Zahlen je Coach-Aufgabe stehen in `coach-alltag.json`.
+- Tagesprotokoll kontrollieren: Kommen „erledigt“-Einträge von allen Abhak-Stellen an (Startseite, Tagesplan, Kategorie-Seiten)?
+- Beobachten: gelegentlich fehlschlagender E2E-Test `denksport.spec.js` (Admin spielt frei eine Runde).
+- Alte Git-Zweige löschen (Nutzerin auf GitHub, siehe „Offen“).
+
+**C. Wenn es wächst (ab etwa 100 aktiven Personen)**
+- **Punkte vorrechnen:** `team_liga`, `rangliste_personen`, `team_mitglieder_statistik` und `admin_liste_probanden` rechnen jedes Mal über `_punkte_ereignisse` alle Einträge aller Personen neu. Stattdessen eine Tages-Punkte-Tabelle (per Trigger oder nächtlichem Job) nutzen.
+- **App-Start entlasten:** Beim Öffnen werden viele Tabellen komplett geladen (~60 Abfragen). Nur die letzten Wochen laden, Älteres bei Bedarf.
+- **Chatliste serverseitig:** Sie lädt die letzten 1.000 Nachrichten aller Personen (`chatsLaden` in `AdminCoachUebersichtView.jsx`). Besser eine RPC „letzte Nachricht je Person“.
+- **Chat live statt Abfrage-Takt** (8 s): Supabase Realtime für `coachee_nachrichten`.
+- **KI-Kosten und Nutzungsgrenzen** (Gemini, Groq) beobachten, ggf. Limits je Person.
+- **Mehrere Coaches:** Rollen „Co-Coach“, die nur ihre eigenen Coachees/Teams sehen. Heute sieht jedes Admin-Konto alle.
+
+**D. Später (bewusst verschoben)**
+- Schutz vor geleakten Passwörtern (nach dem Pro-Wechsel, siehe unten).
+- WhatsApp höchstens als Anstoß ohne Gesundheitsdaten (siehe Grundsatz unten).
+- Canva-Anbindung (Wunsch der Nutzerin, noch nicht begonnen).
+- Tipp-Anzeige „… schreibt“ im Chat (bewusst weggelassen).
+
 ### Grundsatz: Admin/Coach-Abläufe mittesten (Nutzerin, 24.09.)
 Die Admin-Seite wird genauso getestet und verschlankt wie die Coachee-Seite.
 Geprüft wird der ganze Coach-Alltag: Ergebnisse regelmäßig durchsehen, Korrekturen vornehmen (über „Verwalten“), mit Coachees kommunizieren (heute Nachrichten und Hinweise in der App, später evtl. WhatsApp). Maßstab ist derselbe wie beim Abspecken des Onboardings: ADHS-tauglich, wenige Schritte, nichts Wichtiges versteckt. Das gilt auch für die Coachin selbst, die viele Personen gleichzeitig betreut.
