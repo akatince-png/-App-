@@ -4,9 +4,15 @@ import { supabase } from "../lib/supabaseClient";
 // Eigenständiger, kleiner Protokollbereich "Atemübungen" (16.08.) — bewusst
 // nicht in die Zeitplanung/Erinnerungs-Infrastruktur der neun etablierten
 // Bereiche (Schlaf, Training, ...) eingebaut, siehe Übergabeprotokoll.
+function zeileZuZeit(r) {
+  return { id: r.id, uhrzeit: String(r.uhrzeit).slice(0, 5), uebungKey: r.uebung_key, dauerMinuten: r.dauer_minuten, aktiv: r.aktiv };
+}
+
 export function useAtemuebungenData(userId) {
   const [atemuebungen, setAtemuebungen] = useState([]);
   const [atemuebungLogs, setAtemuebungLogs] = useState([]);
+  // Feste Atem-Zeiten (25.09.): Uhrzeit + Übung + Dauer, wie ein Termin.
+  const [atemZeiten, setAtemZeiten] = useState([]);
   // Bug-Fix (13.09., Teil 60): anders als die meisten Lade-Hooks in
   // src/data/ hatte load() bisher keinen cancelled-Guard — eine spät
   // auflösende Antwort (z. B. React-StrictMode-Doppel-Mount im Dev-Modus
@@ -16,11 +22,13 @@ export function useAtemuebungenData(userId) {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const [{ data: rows }, { data: logs }] = await Promise.all([
+    const [{ data: rows }, { data: logs }, { data: zeiten }] = await Promise.all([
       supabase.from("atemuebungen").select("*").eq("user_id", userId).order("created_at"),
-      supabase.from("atemuebung_logs").select("*").eq("user_id", userId).order("erstellt_am", { ascending: false }).limit(50),
+      supabase.from("atemuebung_logs").select("*").eq("user_id", userId).order("erstellt_am", { ascending: false }).limit(200),
+      supabase.from("atem_zeiten").select("*").eq("user_id", userId).order("uhrzeit"),
     ]);
     if (geladenAbgebrochenRef.current) return;
+    setAtemZeiten((zeiten || []).map(zeileZuZeit));
     setAtemuebungen(
       (rows || []).map((r) => ({
         id: r.id,
@@ -39,6 +47,8 @@ export function useAtemuebungenData(userId) {
         dauerSek: l.dauer_sek,
         ausAkutmodus: l.aus_akutmodus,
         gefuehlDanach: l.gefuehl_danach,
+        gefuehlVorher: l.gefuehl_vorher,
+        uebungKey: l.uebung_key,
         erstelltAm: l.erstellt_am,
       }))
     );
@@ -117,7 +127,7 @@ export function useAtemuebungenData(userId) {
   // aufAkutmodus: kennzeichnet Sitzungen, die aus dem Akutmodus heraus
   // gestartet wurden (AkutModusPanel.jsx), für spätere Auswertung.
   const atemuebungAbschliessen = useCallback(
-    async (uebung, dauerSek, { ausAkutmodus = false, gefuehlDanach = null } = {}) => {
+    async (uebung, dauerSek, { ausAkutmodus = false, gefuehlDanach = null, gefuehlVorher = null, sessionId = null } = {}) => {
       const { data, error } = await supabase
         .from("atemuebung_logs")
         .insert({
@@ -127,6 +137,9 @@ export function useAtemuebungenData(userId) {
           dauer_sek: Math.round(dauerSek),
           aus_akutmodus: ausAkutmodus,
           gefuehl_danach: gefuehlDanach,
+          gefuehl_vorher: gefuehlVorher,
+          uebung_key: uebung?.key || null,
+          session_id: sessionId,
         })
         .select()
         .single();
@@ -135,7 +148,16 @@ export function useAtemuebungenData(userId) {
         return { ok: false, error: error.message };
       }
       setAtemuebungLogs((prev) => [
-        { id: data.id, name: data.name, dauerSek: data.dauer_sek, ausAkutmodus: data.aus_akutmodus, gefuehlDanach: data.gefuehl_danach, erstelltAm: data.erstellt_am },
+        {
+          id: data.id,
+          name: data.name,
+          dauerSek: data.dauer_sek,
+          ausAkutmodus: data.aus_akutmodus,
+          gefuehlDanach: data.gefuehl_danach,
+          gefuehlVorher: data.gefuehl_vorher,
+          uebungKey: data.uebung_key,
+          erstelltAm: data.erstellt_am,
+        },
         ...prev,
       ]);
       return { ok: true };
@@ -143,5 +165,41 @@ export function useAtemuebungenData(userId) {
     [userId]
   );
 
-  return { atemuebungen, atemuebungLogs, atemuebungHinzufuegen, atemuebungEntfernen, atemuebungAbschliessen };
+  const atemZeitSpeichern = useCallback(
+    async ({ id, uhrzeit, uebungKey, dauerMinuten }) => {
+      if (!uhrzeit || !uebungKey) return { ok: false, error: "Bitte Uhrzeit und Übung wählen." };
+      const row = { user_id: userId, uhrzeit, uebung_key: uebungKey, dauer_minuten: Number(dauerMinuten) || 3, aktiv: true };
+      const anfrage = id ? supabase.from("atem_zeiten").update(row).eq("id", id) : supabase.from("atem_zeiten").insert(row);
+      const { data, error } = await anfrage.select().single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      const neu = zeileZuZeit(data);
+      setAtemZeiten((prev) => [...prev.filter((z) => z.id !== neu.id), neu].sort((a, b) => (a.uhrzeit < b.uhrzeit ? -1 : 1)));
+      return { ok: true, zeit: neu };
+    },
+    [userId]
+  );
+
+  const atemZeitEntfernen = useCallback(async (id) => {
+    const { error } = await supabase.from("atem_zeiten").delete().eq("id", id);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+    setAtemZeiten((prev) => prev.filter((z) => z.id !== id));
+    return { ok: true };
+  }, []);
+
+  return {
+    atemuebungen,
+    atemuebungLogs,
+    atemuebungHinzufuegen,
+    atemuebungEntfernen,
+    atemuebungAbschliessen,
+    atemZeiten,
+    atemZeitSpeichern,
+    atemZeitEntfernen,
+  };
 }

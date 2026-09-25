@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { tagebuchMuster, stimmungEmoji } from "../../utils/tagebuch";
+import { zeileZuEintrag } from "../../data/useTagebuch";
 import { Shell, PrimaryButton, TextInput } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
 import Profilbild from "../../ui/Profilbild";
@@ -362,6 +364,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
           <div style={{ fontSize: 11.5, color: textMuted, margin: "4px 0 10px" }}>
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
+          <TagebuchKurz personId={p.id} vorname={p.vorname} onChat={onChat} />
           {schicht && <SchichtKurz schicht={schicht} onBearbeiten={() => {
             verwalten();
             // Nach dem Wechsel in "Verwalten als" direkt die Schichtplan-Seite.
@@ -500,4 +503,72 @@ function SchichtKurz({ schicht, onBearbeiten }) {
 
 function tags(p) {
   return p.art === "standard" ? "normal" : `${p.icon || ""} ${p.label}`.trim();
+}
+
+// Tagebuch einer Person (25.09.): Stimmung der letzten 14 Einträge und die
+// stärksten Muster. Freie Notizen nur, wenn die Person sie geteilt hat
+// (admin_tagebuch() lässt private Notizen weg).
+function TagebuchKurz({ personId, vorname, onChat }) {
+  const [eintraege, setEintraege] = useState(null);
+  useEffect(() => {
+    let ab = false;
+    supabase.rpc("admin_tagebuch", { p_user: personId, p_tage: 60 }).then(({ data, error }) => {
+      if (ab) return;
+      if (error) console.error(error);
+      setEintraege((data || []).map(zeileZuEintrag));
+    });
+    return () => {
+      ab = true;
+    };
+  }, [personId]);
+  if (!eintraege || eintraege.length === 0) return null;
+  const m = tagebuchMuster(eintraege);
+  const geteilt = eintraege.filter((e) => e.notiz).slice(-3).reverse();
+  const top = m.muster.slice(0, 3);
+  return (
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "#fff" }}>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>TAGEBUCH · letzte {Math.min(14, eintraege.length)} Einträge</div>
+      <div aria-label="Stimmungsverlauf" style={{ fontSize: 19, letterSpacing: 2, margin: "4px 0" }}>
+        {eintraege.slice(-14).map((e) => (
+          <span key={e.datum} title={e.datum}>
+            {stimmungEmoji(e.stimmung)}
+          </span>
+        ))}
+      </div>
+      {m.bereit ? (
+        top.length > 0 && (
+          <div style={{ fontSize: 12.5, margin: "4px 0 6px" }}>
+            <b>Stärkste Muster</b>
+            {top.map((x) => (
+              <div key={x.key}>
+                {x.label}: gut {x.gut}/{x.gutVon} · schwer {x.schwer}/{x.schwerVon}
+              </div>
+            ))}
+          </div>
+        )
+      ) : (
+        <div style={{ fontSize: 12, color: textMuted }}>Muster ab 14 Einträgen (bisher {eintraege.length}).</div>
+      )}
+      {geteilt.map((e) => (
+        <div key={e.datum} style={{ fontSize: 12, marginTop: 2 }}>
+          👁 {e.datum.slice(8, 10)}.{e.datum.slice(5, 7)}.: {e.notiz}
+        </div>
+      ))}
+      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 4 }}>🔒 Nicht geteilte Notizen bleiben privat.</div>
+      {top[0] && (
+        <div style={{ marginTop: 8 }}>
+          <PrimaryButton
+            variant="ghost"
+            onClick={() =>
+              onChat(
+                `Hallo${vorname ? ` ${vorname}` : ""}, mir ist in deinem Tagebuch aufgefallen: „${top[0].label.replace(/^[^\p{L}\d]+\s/u, "")}“ kommt an deinen ${top[0].richtung === "gut" ? "guten" : "schweren"} Tagen deutlich öfter vor. Wollen wir schauen, was wir daraus machen?`
+              )
+            }
+          >
+            💬 Muster im Chat ansprechen
+          </PrimaryButton>
+        </div>
+      )}
+    </div>
+  );
 }

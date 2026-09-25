@@ -68,6 +68,8 @@ export const KATEGORIE_META = {
 // Farben stehen trotzdem zentral hier statt an sieben Stellen einzeln.
 // Tagesrätsel (24.09.): feste Tagesaufgabe aus dem Denksport — eigene
 // Farbe wie die "Gemischt"-Kachel der Denksport-Seite.
+// Atem-Pausen aus der festen Atem-Routine (25.09.) — Türkis wie der Atem-Kreis.
+export const ATEM_META = { dot: "#2E9C86", bg: "#E8F7F2", text: "#1E6E57" };
 export const TAGESRAETSEL_META = { bg: "#FCE6DE", text: "#9C3417", dot: "#E4643F", label: "Tagesrätsel", icon: "trophy" };
 
 export const ROUTINE_META = {

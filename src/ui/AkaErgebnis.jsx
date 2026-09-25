@@ -1,5 +1,6 @@
 import React from "react";
 import { accentSoft } from "./theme";
+import { tagebuchZeile } from "../utils/tagebuch";
 
 // Bestätigung nach "Übernehmen" in Aka (ui/Aka.jsx) — eine Anzeige für
 // alle Bereiche, passend zu dem, was useUniversellerCoach() zurückgibt.
@@ -74,6 +75,10 @@ export default function AkaErgebnis({ ergebnis }) {
           {daten.map((s) => s.name).join(", ")}
         </Box>
       );
+    case "atemroutine":
+      return <Box>Atem-Zeiten angelegt: {daten.map((z) => `${z.uhrzeit} ${z.name} (${z.dauerMinuten} Min.)`).join(", ")}. Sie stehen jetzt unter „Als Nächstes“.</Box>;
+    case "tagebuch":
+      return <Box>Im Tagebuch festgehalten: {tagebuchZeile(daten)}{daten.notiz ? " · 🔒 Notiz (privat)" : ""}</Box>;
     case "schichtplan":
       return (
         <Box>

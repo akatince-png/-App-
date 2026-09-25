@@ -81,7 +81,24 @@ function leseOverridesAusUrl() {
     overrides.routineEinstellungen = { morgen: { routine: "morgen", startZeit: "06:00", endZeit: "08:00" }, abend: { routine: "abend", startZeit: "22:00", endZeit: "" } };
     overrides.routineSchritte = [{ id: "r1", routine: "morgen", reihenfolge: 1, name: "Wasser trinken", dauerMin: 1 }];
   }
-  // ?teilt=1:  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
+  // ?atem=1: feste Atem-Zeit am Morgen (25.09.).
+  if (params.get("atem") === "1") {
+    overrides.atemZeiten = [{ id: "z1", uhrzeit: "07:10", uebungKey: "energie", dauerMinuten: 2, aktiv: true }];
+    overrides.atemuebungLogs = [];
+  }
+  // ?tagebuch=1: 16 Tagebuch-Einträge (gute Tage draußen, schwere mit Zucker).
+  if (params.get("tagebuch") === "1") {
+    const h = new Date();
+    const iso = (n) => {
+      const d = new Date(h.getFullYear(), h.getMonth(), h.getDate() - n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    overrides.tagebuchEintraege = Array.from({ length: 16 }, (_, i) => {
+      const gut = i % 3 !== 0;
+      return { datum: iso(16 - i), stimmung: gut ? 4 : 2, orte: gut ? ["🌳 Natur / draußen"] : ["🏠 Zuhause"], personen: [], essen: gut ? [] : ["viel Zucker"], tagesart: [], koerper: [], notiz: "", notizTeilen: false, auto: { draussenMin: gut ? 50 : 5 } };
+    });
+  }
+  // ?teilt=1:  // ?teilt=1:  // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).
   if (params.get("gruppe") === "1") {

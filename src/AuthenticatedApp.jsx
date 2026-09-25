@@ -50,6 +50,7 @@ const DenksportView = lazyAnsicht(() => import("./views/DenksportView"));
 const TeamView = lazyAnsicht(() => import("./views/TeamView"));
 const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
 const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
+const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazyAnsicht(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
 const ZusatzprotokollErstellenView = lazyAnsicht(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
@@ -60,7 +61,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -381,6 +382,8 @@ export default function AuthenticatedApp() {
     screen = <TeamView onHome={() => setView("home")} />;
   } else if (view === "coach-chat") {
     screen = <CoachChatView onHome={() => setView("home")} />;
+  } else if (view === "tagebuch") {
+    screen = <TagebuchView onHome={() => setView("home")} />;
   } else if (view === "schichtplan") {
     screen = <SchichtplanView onHome={() => setView("home")} />;
   } else if (view === "tagesraetsel") {

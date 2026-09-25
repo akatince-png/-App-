@@ -2,6 +2,8 @@ import { AIService } from "../services/aiService";
 import { getCoachName } from "../utils/coachStorage";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
+import { bibliotheksUebung } from "../utils/atemBibliothek";
+import { OPTIONEN as TAGEBUCH_OPTIONEN, autoWerte, tagebuchZeile } from "../utils/tagebuch";
 import { VORLAGEN, planErzeugen, plusTage, rollenZuordnung, wochenBeginn } from "../utils/schichtplan";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
@@ -20,6 +22,8 @@ export const BEREICH_LABELS = {
   morgenroutine: "Schritte anlegen",
   abendroutine: "Schritte anlegen",
   schichtplan: "Schichtplan übernehmen",
+  atemroutine: "Atem-Zeiten anlegen",
+  tagebuch: "Im Tagebuch festhalten",
 };
 
 // Die eine Aktions-Logik von Aka (seit 23.09. der einzige Weg — es gibt
@@ -46,7 +50,11 @@ export function useUniversellerCoach() {
     routineVarianten,
     routineVarianteSpeichern,
     routineSchichtplanSpeichern,
+    atemZeitSpeichern,
+    tagebuchSpeichern,
+    tagebuchEintraege,
   } = useAppData();
+  const appData = useAppData();
 
   // Übergabe an <KiChat pruefeBereitschaft>: läuft im Hintergrund nach
   // jeder Coach-Antwort, damit der "Übernehmen"-Knopf nur erscheint, wenn
@@ -266,6 +274,27 @@ export function useUniversellerCoach() {
           detail: `Per Aka: ${erg.varianten.map((v) => `${v.name} ☀ ${v.morgenStart || "–"}`).join(", ")}${planText ? ` · Plan ${planText}` : ""}`,
         });
         return { bereich: "schichtplan", daten: { varianten: erg.varianten, planText } };
+      }
+      case "atemroutine": {
+        const zeiten = await AIService.atemroutineAusChat({ verlauf, coachName });
+        const angelegt = [];
+        for (const z of zeiten) {
+          const u = bibliotheksUebung(z.uebung) || bibliotheksUebung("ruhig");
+          const r = await atemZeitSpeichern({ uhrzeit: z.uhrzeit, uebungKey: u.key, dauerMinuten: z.dauerMinuten || u.dauerMinuten });
+          if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+          angelegt.push({ uhrzeit: z.uhrzeit, name: u.name, dauerMinuten: z.dauerMinuten || u.dauerMinuten });
+          aenderungVermerken({ kategorie: "atemuebung", itemName: "Atem-Routine", aktion: "hinzugefügt", detail: `Per Aka: ${z.uhrzeit} · ${u.name}` });
+        }
+        return { bereich: "atemroutine", daten: angelegt };
+      }
+      case "tagebuch": {
+        const heute = toLocalISODate(new Date());
+        const e = await AIService.tagebuchAusChat({ verlauf, coachName, optionen: TAGEBUCH_OPTIONEN });
+        const vorher = (tagebuchEintraege || []).find((x) => x.datum === heute);
+        const r = await tagebuchSpeichern({ ...e, datum: heute, notizTeilen: vorher?.notizTeilen || false, auto: autoWerte(heute, appData) });
+        if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+        aenderungVermerken({ kategorie: "tagebuch", itemName: "Tagebuch", aktion: vorher ? "geändert" : "hinzugefügt", detail: `Per Aka: ${tagebuchZeile(r.eintrag)}` });
+        return { bereich: "tagebuch", daten: r.eintrag };
       }
       default:
         return { bereich: null };

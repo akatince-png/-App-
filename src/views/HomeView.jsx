@@ -11,7 +11,9 @@ import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMain, textMuted } from "../ui/theme";
-import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META } from "../utils/dayItems";
+import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META, ATEM_META } from "../utils/dayItems";
+import { ATEM_START_KEY, atemZeitenHeute, uebungFuerKey } from "../utils/atemBibliothek";
+import { aktuelleSession } from "../data/useAtemSessions";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
@@ -33,6 +35,7 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
 import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
 import SchichtHeuteKarte from "../ui/SchichtHeuteKarte";
+import TagebuchKarte from "../ui/TagebuchKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
@@ -131,6 +134,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     routineSchritte,
     routineDurchlaeufe,
     denkpauseErgebnisse,
+    atemZeiten,
+    atemuebungen,
+    atemSessions,
     eigeneGruppenLogs,
     gruppenprotokolle,
     gruppenBausteinUmschalten,
@@ -410,9 +416,41 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             };
           })
       );
+  // Feste Atem-Zeiten (25.09.): offene Atem-Pausen von heute, nach Uhrzeit
+  // zwischen die übrigen Punkte sortiert; Antippen startet die Übung.
+  const atemItems = isEmergencyMode
+    ? []
+    : atemZeitenHeute(atemZeiten, atemuebungLogs, today)
+        .filter((z) => !z.erledigt)
+        .map((z) => {
+          const u = uebungFuerKey(z.uebungKey, atemuebungen);
+          return {
+            key: `atem-${z.id}`,
+            name: `🌬️ Atem-Pause`,
+            kategorie: "atem",
+            viewId: "atemuebungen",
+            atemKey: z.uebungKey,
+            detail: `${u?.name || "Atemübung"} · ${z.dauerMinuten} Min.`,
+            uhrzeit: z.uhrzeit,
+            done: false,
+          };
+        });
+  const zeitZuMin = (u) => (u ? Number(u.slice(0, 2)) * 60 + Number(u.slice(3, 5)) : null);
+  const jetztMin = today.getHours() * 60 + today.getMinutes();
+  const atemJetzt = atemItems.filter((a) => zeitZuMin(a.uhrzeit) <= jetztMin + 30);
+  const atemSpaeter = atemItems.filter((a) => zeitZuMin(a.uhrzeit) > jetztMin + 30);
+  const atemStarten = (key) => {
+    try {
+      sessionStorage.setItem(ATEM_START_KEY, key);
+    } catch {
+      // ohne Speicher öffnet sich einfach die Atem-Seite
+    }
+  };
   const angezeigteItems = [
     ...routineAlsNaechstesItems.filter(routineIstJetzt),
+    ...atemJetzt,
     ...gruppiereFuerAlsNaechstes(offeneItems, t, tLabel),
+    ...atemSpaeter,
     ...gruppenItems,
     ...raetselItems,
     ...routineAlsNaechstesItems.filter((item) => !routineIstJetzt(item)),
@@ -800,7 +838,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
               <QuickTaskList items={quickTasksFormatted} maxItems={4} soundEnabled={soundEnabled} />
             ) : (
               angezeigteItems.slice(0, max).map((item, i) => {
-                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : item.kategorie === "gruppe" ? KATEGORIE_META.gewohnheit : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+                const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : item.kategorie === "gruppe" ? KATEGORIE_META.gewohnheit : item.kategorie === "atem" ? ATEM_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
                 // Morgen-/Abendroutine öffnen HIER eine Checkliste mit den
                 // echten Schritten statt wegzunavigieren (12.09., Nutzerin-
                 // Vorgabe) — "routine" ist der Schlüssel, den useRoutinen.js
@@ -833,6 +871,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                         onClick={() => {
                           if (item.kategorie === "training") return starteTrainingVonItem(item);
                           if (routineKey) return setExpandedRoutine((prev) => (prev === routineKey ? null : routineKey));
+                          if (item.atemKey) atemStarten(item.atemKey);
                           return onOpenView(item.viewId || "tagesplan");
                         }}
                         style={{
@@ -903,6 +942,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                           className="mp-tap"
                           onClick={() => {
                             if (routineKey) return setExpandedRoutine((prev) => (prev === routineKey ? null : routineKey));
+                            if (item.atemKey) atemStarten(item.atemKey);
                             return onOpenView(item.viewId || "tagesplan");
                           }}
                           style={{ color: textMuted, fontSize: 16, flexShrink: 0, background: "transparent", border: "none", cursor: "pointer" }}
@@ -941,13 +981,17 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>Danach:</span>
           {naechsteChips.map((item) => {
-            const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : item.kategorie === "gruppe" ? KATEGORIE_META.gewohnheit : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
+            const k = KATEGORIE_META[item.kategorie] || ROUTINE_META[item.kategorie] || (item.kategorie === "tagesraetsel" ? TAGESRAETSEL_META : item.kategorie === "gruppe" ? KATEGORIE_META.gewohnheit : item.kategorie === "atem" ? ATEM_META : null) || { dot: "#8A8F96", bg: "#F4F5F4", text: textMuted };
             return (
               <button
                 key={item.key}
                 type="button"
                 className="mp-tap"
-                onClick={() => (item.kategorie === "training" ? starteTrainingVonItem(item) : onOpenView(item.viewId || "tagesplan"))}
+                onClick={() => {
+                  if (item.kategorie === "training") return starteTrainingVonItem(item);
+                  if (item.atemKey) atemStarten(item.atemKey);
+                  return onOpenView(item.viewId || "tagesplan");
+                }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 9px", borderRadius: 99, border: "none", background: k.bg, color: k.text, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
               >
                 <span style={{ width: 7, height: 7, borderRadius: 4, background: k.dot }} />
@@ -989,6 +1033,29 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       )}
       {/* Verspätete Routine als Muster (25.09.): "Passt deine Zeit noch?" —
           nur im eigenen Konto, nicht beim Verwalten einer anderen Person. */}
+      {/* Kontext-Tagebuch (25.09.): abends einmal "Wie war dein Tag?" —
+          nur im eigenen Konto. */}
+      {proband === null && <TagebuchKarte onOeffnen={() => onOpenView("tagebuch")} />}
+      {/* Gruppen-Atem-Session (25.09.): 15 Min. vorher bis zum Ende. */}
+      {team && aktuelleSession(atemSessions) && (
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => onOpenView("atemuebungen")}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#E8F7F2", border: "2px solid #2E9C86", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+        >
+          <span style={{ fontSize: 26 }}>👥</span>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: "block", fontWeight: 900, fontSize: 14 }}>Gemeinsam atmen</span>
+            <span style={{ display: "block", fontSize: 12.5, color: "#1E6E57" }}>
+              {new Date(aktuelleSession(atemSessions).startUm) > new Date()
+                ? `startet um ${new Date(aktuelleSession(atemSessions).startUm).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
+                : "läuft gerade"}{" "}
+              · Mitmachen ›
+            </span>
+          </span>
+        </button>
+      )}
       {/* Schichtarbeit (25.09.): welche Schicht heute gilt + "Heute anders". */}
       <SchichtHeuteKarte />
       {proband === null && <RoutineZeitHinweisKarte zeigeCoachKnopf={!isAdmin} onCoachChat={() => onOpenView("coach-chat")} />}

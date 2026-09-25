@@ -79,6 +79,8 @@ const EIGENE_TAB_FARBE = {
 const ROUTINEN_EINTRAEGE = [
   { id: "routinen", icon: "target", label: "Gewohnheiten" },
   { id: "atemuebungen", icon: "wind", label: "Atemübungen" },
+  // Kontext-Tagebuch (25.09.) — jederzeit erreichbar, nicht nur abends.
+  { id: "tagebuch", icon: "book", label: "Tagebuch" },
 ];
 
 // Nachvollziehbarkeit (Nutzerinnen-Vorgabe, 31.07.): "Alle Pläne" soll auch

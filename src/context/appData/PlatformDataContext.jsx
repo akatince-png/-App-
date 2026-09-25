@@ -20,6 +20,8 @@ import { useTeamData } from "../../data/useTeamData";
 import { useGruppenprotokolle } from "../../data/gruppenprotokoll";
 import { useTagesplanAusnahmen } from "../../data/useTagesplanAusnahmen";
 import { useKompletterReset } from "../../data/useKompletterReset";
+import { useAtemSessions } from "../../data/useAtemSessions";
+import { useTagebuch } from "../../data/useTagebuch";
 
 const PlatformDataContext = createContext(null);
 
@@ -54,6 +56,10 @@ export function PlatformDataProvider({ children }) {
   const gruppenData = useGruppenprotokolle(userId, teamData.team?.id || null);
   const tagesplanAusnahmenData = useTagesplanAusnahmen(userId);
   const kompletterResetData = useKompletterReset(userId);
+  // Gruppen-Atem-Sessions (25.09.).
+  const atemSessionsData = useAtemSessions(userId);
+  // Kontext-Tagebuch (25.09.).
+  const tagebuchData = useTagebuch(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -80,6 +86,8 @@ export function PlatformDataProvider({ children }) {
     ...gruppenData,
     ...tagesplanAusnahmenData,
     ...kompletterResetData,
+    ...atemSessionsData,
+    ...tagebuchData,
   });
 
   return <PlatformDataContext.Provider value={value}>{children}</PlatformDataContext.Provider>;

@@ -185,10 +185,12 @@ export const AIService = {
         "tageslicht (Tageslicht-/Freiluft-Ziel), training (Trainingsplan), ernaehrung (Rezepte/Mahlzeiten),",
         "schlaf (Schlaf-Eintrag für die letzte Nacht), workflow (neues Arbeits-/Pause-Intervall-Preset),",
         "morgenroutine bzw. abendroutine (feste Schritt-Kette für die Morgen- bzw. Abendroutine),",
-        "schichtplan (Schichtarbeit: Früh-/Spät-/Nachtschicht, wechselnde Wochen, andere Routine-Startzeiten je Schicht).",
+        "schichtplan (Schichtarbeit: Früh-/Spät-/Nachtschicht, wechselnde Wochen, andere Routine-Startzeiten je Schicht),",
+        "atemroutine (feste Zeiten für Atemübungen, z. B. morgens 2 Min. zum Wachwerden),",
+        "tagebuch (die Person erzählt, wie ihr Tag war: Stimmung, wo, mit wem, Essen, Besonderes).",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -316,6 +318,56 @@ export const AIService = {
       eigenesMuster: Array.isArray(data.eigenesMuster) ? data.eigenesMuster : [],
       start: data.start || null,
       wochen: Number(data.wochen) || null,
+    };
+  },
+
+  /**
+   * Atem-Routine (25.09.): feste Zeiten mit Übung aus der App-Bibliothek.
+   */
+  async atemroutineAusChat({ verlauf, coachName }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der feste Zeiten für Atemübungen anlegt.",
+        "Verfügbare Übungen (nur diese Schlüssel verwenden): seufzer (Seufzer-Atmung: runterkommen, Stimmung), box (Box-Atmung: Stress, vor Terminen), gleichmaessig (Gleichmäßig atmen: Ausgleich, vor dem Schlafen), energie (Energie-Atmung: wach werden), ruhig (Ruhig werden: kurz sammeln).",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "zeiten": [ { "uhrzeit": "HH:MM", "uebung": "seufzer"|"box"|"gleichmaessig"|"energie"|"ruhig", "dauerMinuten": number } ] }',
+        "Fehlende Uhrzeiten sinnvoll wählen (morgens 07:15, mittags 12:30, abends 21:30).",
+      ],
+      verlauf,
+      "Fasse die besprochenen Atem-Zeiten jetzt als JSON zusammen, wie vereinbart."
+    );
+    if (!Array.isArray(data.zeiten) || !data.zeiten.length) throw new Error("Unerwartetes Format: 'zeiten' fehlt oder ist leer.");
+    return data.zeiten;
+  },
+
+  /**
+   * Tagebuch (25.09.): Tageseintrag aus dem Gespräch. Nur Werte aus den
+   * vorgegebenen Listen, damit die Muster-Auswertung sie vergleichen kann.
+   */
+  async tagebuchAusChat({ verlauf, coachName, optionen }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App und hältst fest, wie der Tag der Person war.",
+        "stimmung: 1 = schwer, 2 = eher schwer, 3 = mittel, 4 = gut, 5 = richtig gut.",
+        `Erlaubte Werte – orte: ${JSON.stringify(optionen.orte)}; personen: ${JSON.stringify(optionen.personen)}; essen: ${JSON.stringify(optionen.essen)}; tagesart: ${JSON.stringify(optionen.tagesart)}; koerper: ${JSON.stringify(optionen.koerper)}. Nur passende Werte exakt so übernehmen.`,
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "stimmung": 1-5, "orte": string[], "personen": string[], "essen": string[], "tagesart": string[], "koerper": string[], "notiz": string (kurz, in Ich-Form, was sonst Besonderes erzählt wurde, sonst leer) }',
+      ],
+      verlauf,
+      "Fasse den besprochenen Tag jetzt als JSON zusammen, wie vereinbart."
+    );
+    if (!data.stimmung) throw new Error("Unerwartetes Format: 'stimmung' fehlt.");
+    const nur = (feld) => (Array.isArray(data[feld]) ? data[feld].filter((w) => optionen[feld].includes(w)) : []);
+    return {
+      stimmung: Math.min(5, Math.max(1, Math.round(Number(data.stimmung)))),
+      orte: nur("orte"),
+      personen: nur("personen"),
+      essen: nur("essen"),
+      tagesart: nur("tagesart"),
+      koerper: nur("koerper"),
+      notiz: data.notiz || "",
     };
   },
 
