@@ -19,8 +19,14 @@ export function zeileZuEintrag(r) {
   };
 }
 
+export function zeileZuMoment(r) {
+  return { id: r.id, zeit: r.zeit, gefuehle: r.gefuehle || [], staerke: r.staerke, ausloeser: r.ausloeser || "", personen: r.personen || [], orte: r.orte || [], hilfe: r.hilfe || [], notizTeilen: !!r.notiz_teilen };
+}
+
 export function useTagebuch(userId) {
   const [eintraege, setEintraege] = useState([]);
+  // Momente (25.09.): zwischendurch über den 💡-Knopf festgehalten.
+  const [momente, setMomente] = useState([]);
 
   useEffect(() => {
     if (!userId) return;
@@ -31,6 +37,8 @@ export function useTagebuch(userId) {
       if (abgebrochen) return;
       if (error) console.error(error);
       setEintraege((data || []).map(zeileZuEintrag));
+      const { data: m } = await supabase.from("moment_eintraege").select("*").eq("user_id", userId).gte("zeit", `${seit}T00:00:00`).order("zeit");
+      if (!abgebrochen) setMomente((m || []).map(zeileZuMoment));
     })();
     return () => {
       abgebrochen = true;
@@ -66,5 +74,38 @@ export function useTagebuch(userId) {
     [userId]
   );
 
-  return { tagebuchEintraege: eintraege, tagebuchSpeichern };
+  const momentSpeichern = useCallback(
+    async (m) => {
+      if (!m?.gefuehle?.length && !m?.ausloeser?.trim()) return { ok: false, error: "Bitte antippen, was los ist – oder kurz beschreiben." };
+      const row = {
+        user_id: userId,
+        zeit: new Date().toISOString(),
+        gefuehle: m.gefuehle || [],
+        staerke: m.staerke || null,
+        ausloeser: m.ausloeser?.trim() || null,
+        personen: m.personen || [],
+        orte: m.orte || [],
+        hilfe: m.hilfe || [],
+        notiz_teilen: !!m.notizTeilen,
+      };
+      const { data, error } = await supabase.from("moment_eintraege").insert(row).select().single();
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      const neu = zeileZuMoment(data);
+      setMomente((prev) => [...prev, neu]);
+      return { ok: true, moment: neu };
+    },
+    [userId]
+  );
+
+  const momentEntfernen = useCallback(async (id) => {
+    const { error } = await supabase.from("moment_eintraege").delete().eq("id", id);
+    if (error) return { ok: false, error: error.message };
+    setMomente((prev) => prev.filter((m) => m.id !== id));
+    return { ok: true };
+  }, []);
+
+  return { tagebuchEintraege: eintraege, tagebuchSpeichern, momente, momentSpeichern, momentEntfernen };
 }

@@ -4,6 +4,7 @@ import { accentDark, accentSoft, textMuted, danger } from "./theme";
 import { useAkutModus, AKUT_SYMPTOME, akutmodusEreignisLoggen } from "../data/useAkutModus";
 import { useAppData } from "../context/AppDataContext";
 import AtemTimer from "./AtemTimer";
+import MomentFesthalten from "./MomentFesthalten";
 
 // Standard-Atemübung, falls unter "Atemübungen" noch keine eigene
 // angelegt wurde — 4-4-6 ist ein gängiges, leicht zu merkendes Muster
@@ -103,6 +104,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
   const [aktuelleAktion, setAktuelleAktion] = useState(null);
   const [gefuehlProtokolliert, setGefuehlProtokolliert] = useState(false);
   const [atemModusAktiv, setAtemModusAktiv] = useState(false);
+  const [momentOffen, setMomentOffen] = useState(false);
   // "Eigene Maßnahme" (16.08., Nutzerinnen-Vorgabe): manche machen im
   // Akutmodus etwas ganz anderes als die angebotenen Optionen (Beispiel
   // der Nutzerin: "geht an die frische Luft und konzentriert sich fünf
@@ -202,6 +204,16 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
         </button>
       </div>
 
+      {momentOffen && !atemModusAktiv && (
+        <MomentFesthalten
+          onFertig={() => setMomentOffen(false)}
+          onAtmen={() => {
+            setMomentOffen(false);
+            setAtemModusAktiv(true);
+          }}
+        />
+      )}
+
       {atemModusAktiv && (
         <div>
           <AtemTimer uebung={atemUebungFuerAkutmodus} onFertig={atemFertig} kompakt />
@@ -250,8 +262,16 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
         </div>
       )}
 
-      {!atemModusAktiv && !massnahmeOffen && !massnahmeEingetragen && !antwort && !laden && (
+      {!atemModusAktiv && !momentOffen && !massnahmeOffen && !massnahmeEingetragen && !antwort && !laden && (
         <>
+          <button
+            type="button"
+            onClick={() => setMomentOffen(true)}
+            className="mp-tap"
+            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "12px 14px", marginBottom: 10, borderRadius: 14, border: "1px solid rgba(217, 119, 6, 0.35)", background: "#fff", color: "#B45309", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textAlign: "left" }}
+          >
+            <span style={{ fontSize: 18 }}>📝</span> Moment festhalten (was ist los, wer war dabei?)
+          </button>
           <button
             type="button"
             onClick={() => setAtemModusAktiv(true)}

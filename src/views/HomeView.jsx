@@ -35,7 +35,6 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
 import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
 import SchichtHeuteKarte from "../ui/SchichtHeuteKarte";
-import TagebuchKarte from "../ui/TagebuchKarte";
 import KernprogrammKarte from "../ui/KernprogrammKarte";
 import Top3Karte from "../ui/Top3Karte";
 import WochenCheckKarte from "../ui/WochenCheckKarte";
@@ -1043,7 +1042,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} />}
       {proband === null && <Top3Karte />}
       {proband === null && <WochenCheckKarte />}
-      {proband === null && <TagebuchKarte onOeffnen={() => onOpenView("tagebuch")} />}
       {/* Gruppen-Atem-Session (25.09.): 15 Min. vorher bis zum Ende. */}
       {team && aktuelleSession(atemSessions) && (
         <button

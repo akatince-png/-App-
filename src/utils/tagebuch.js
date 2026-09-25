@@ -113,3 +113,20 @@ export function tagebuchMuster(eintraege) {
   muster.sort((a, b) => Math.abs(b.unterschied) - Math.abs(a.unterschied));
   return { ...basis, muster, bereit: true };
 }
+
+// Momente (25.09.): zwischendurch festhalten, was gerade los ist.
+export const MOMENT_GEFUEHLE = ["😤 aufgewühlt", "😡 wütend / ausgerastet", "⚡ impulsiv", "😵 überfordert", "🔊 reizüberflutet", "😰 ängstlich / nervös", "😢 traurig", "😩 erschöpft", "🎯 Hyperfokus", "😊 richtig gut"];
+export const MOMENT_HILFE = ["🌬️ Atemübung", "🚶 Rausgegangen", "💧 Wasser getrunken", "🗣️ Mit jemandem geredet", "⏸️ Pause gemacht", "🎧 Musik"];
+
+// Tagebuch-Schritt der Abendroutine (Kernprogramm-Baustein oder eigener
+// Schritt mit "Tagebuch" im Namen): dort wird "Wie war dein Tag?" gefragt.
+export const istTagebuchSchritt = (s) => !!s && (s.kernKey === "tagebuch" || /tagebuch|wie war dein tag/i.test(s.name || ""));
+
+// Kurzzeile für einen Moment, z. B. "18:40 · 😡 wütend / ausgerastet (4/5) · mit Partner:in · zuhause".
+export function momentZeile(m) {
+  const t = new Date(m.zeit);
+  const uhr = `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
+  return [uhr, [m.gefuehle.join(", "), m.staerke ? `(${m.staerke}/5)` : ""].filter(Boolean).join(" "), m.personen.length ? `mit ${m.personen.join(", ")}` : "", m.orte.join(", "), m.hilfe.length ? `geholfen: ${m.hilfe.join(", ")}` : ""]
+    .filter(Boolean)
+    .join(" · ");
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { tagebuchMuster, stimmungEmoji } from "../../utils/tagebuch";
-import { zeileZuEintrag } from "../../data/useTagebuch";
+import { tagebuchMuster, stimmungEmoji, momentZeile } from "../../utils/tagebuch";
+import { zeileZuEintrag, zeileZuMoment } from "../../data/useTagebuch";
 import { Shell, PrimaryButton, TextInput } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
 import Profilbild from "../../ui/Profilbild";
@@ -574,8 +574,14 @@ function tags(p) {
 // (admin_tagebuch() lässt private Notizen weg).
 function TagebuchKurz({ personId, vorname, onChat }) {
   const [eintraege, setEintraege] = useState(null);
+  const [momente, setMomente] = useState([]);
   useEffect(() => {
     let ab = false;
+    supabase.rpc("admin_momente", { p_user: personId, p_tage: 30 }).then(({ data, error }) => {
+      if (ab) return;
+      if (error) console.error(error);
+      setMomente((data || []).map(zeileZuMoment));
+    });
     supabase.rpc("admin_tagebuch", { p_user: personId, p_tage: 60 }).then(({ data, error }) => {
       if (ab) return;
       if (error) console.error(error);
@@ -585,7 +591,7 @@ function TagebuchKurz({ personId, vorname, onChat }) {
       ab = true;
     };
   }, [personId]);
-  if (!eintraege || eintraege.length === 0) return null;
+  if (!eintraege || (eintraege.length === 0 && momente.length === 0)) return null;
   const m = tagebuchMuster(eintraege);
   const geteilt = eintraege.filter((e) => e.notiz).slice(-3).reverse();
   const top = m.muster.slice(0, 3);
@@ -618,6 +624,20 @@ function TagebuchKurz({ personId, vorname, onChat }) {
           👁 {e.datum.slice(8, 10)}.{e.datum.slice(5, 7)}.: {e.notiz}
         </div>
       ))}
+      {momente.length > 0 && (
+        <div aria-label="Momente" style={{ fontSize: 12, marginTop: 6 }}>
+          <b>📝 Momente (30 Tage): {momente.length}</b>
+          {[...momente]
+            .reverse()
+            .slice(0, 4)
+            .map((x) => (
+              <div key={x.id}>
+                {new Date(x.zeit).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })} {momentZeile(x)}
+                {x.ausloeser ? ` – 👁 ${x.ausloeser}` : ""}
+              </div>
+            ))}
+        </div>
+      )}
       <div style={{ fontSize: 11.5, color: textMuted, marginTop: 4 }}>🔒 Nicht geteilte Notizen bleiben privat.</div>
       {top[0] && (
         <div style={{ marginTop: 8 }}>

@@ -7,6 +7,9 @@ import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { routineGeschafftFeier } from "../utils/routineFeier";
 import { verspaetungHinweis } from "../utils/routineVerspaetung";
+import TagebuchFormular from "./TagebuchFormular";
+import { istTagebuchSchritt } from "../utils/tagebuch";
+import { toLocalISODate } from "../utils/dates";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -31,7 +34,10 @@ function fmtDauer(sekunden) {
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege } = useAppData();
+  const heute = toLocalISODate(new Date());
+  const tagebuchHeute = (tagebuchEintraege || []).find((e) => e.datum === heute);
+  const [tagebuchNachher, setTagebuchNachher] = useState(false);
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
   const [musikFehler, setMusikFehler] = useState(null);
@@ -123,6 +129,18 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Gesamtzeit: {fmtDauer(gesamtSek)}</div>
           <PrimaryButton onClick={onAbschluss}>Zurück zum Tag</PrimaryButton>
         </Card>
+        {/* "Wie war dein Tag?" (25.09.): gehört an den Abend, nicht auf die
+            Startseite – hier, falls die Abendroutine keinen Tagebuch-Schritt hat. */}
+        {routine === "abend" && !schritte.some(istTagebuchSchritt) && (!tagebuchHeute || tagebuchNachher) && (
+          <Card style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 8 }}>📓 Wie war dein Tag?</div>
+            {tagebuchNachher ? (
+              <div role="status" style={{ fontSize: 13, fontWeight: 700, color: accentDark }}>✓ Festgehalten. Gute Nacht!</div>
+            ) : (
+              <TagebuchFormular datum={heute} kompakt onGespeichert={() => setTagebuchNachher(true)} />
+            )}
+          </Card>
+        )}
         {protokoll.length > 0 && (
           <Card>
             <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>Auswertung — geplant vs. tatsächlich</div>
@@ -168,6 +186,17 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
           </button>
         </div>
       )}
+      {istTagebuchSchritt(aktuell) ? (
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10, textAlign: "center" }}>📓 Wie war dein Tag?</div>
+          <TagebuchFormular key={aktuell.id} datum={heute} vorhanden={tagebuchHeute} kompakt onGespeichert={weiter} />
+          <div style={{ textAlign: "center", marginTop: 8 }}>
+            <button type="button" onClick={weiter} style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, cursor: "pointer", padding: 6 }}>
+              Heute überspringen
+            </button>
+          </div>
+        </Card>
+      ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>
         <Timer key={aktuell.id} mode="countdown" initialSeconds={(Number(aktuell.dauerMin) || 5) * 60} autoStart vorwarnungSek={30} onFertig={weiter} />
@@ -177,6 +206,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
           </PrimaryButton>
         </div>
       </Card>
+      )}
       <div style={{ textAlign: "center" }}>
         <button
           type="button"

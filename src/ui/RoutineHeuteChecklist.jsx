@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, StatusBadge } from "./primitives";
 import { cardBorder, textMuted } from "./theme";
 import { toLocalISODate } from "../utils/dates";
 import { routineTagesStatus } from "../utils/routineStatus";
 import { useAppData } from "../context/AppDataContext";
 import { ROUTINE_META } from "../utils/dayItems";
+import TagebuchFormular from "./TagebuchFormular";
+import { istTagebuchSchritt } from "../utils/tagebuch";
 
 const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
@@ -28,7 +30,7 @@ const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
 // erledigt an (siehe routineTagesStatus), auch ohne einzelne
 // `routine_schritt_logs`.
 export default function RoutineHeuteChecklist({ routine, datum }) {
-  const { routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken } =
+  const { routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken, tagebuchEintraege } =
     useAppData();
   const heute = datum || toLocalISODate(new Date());
   const { schritte, schrittIstErledigt } = routineTagesStatus(routine, heute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
@@ -40,6 +42,15 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
   // Komponente zeigt den "Bestätigen"-Knopf ohnehin nur, solange der Schritt
   // noch offen ist (siehe unten) — jeder Klick hier ist also immer ein
   // echtes Bestätigen, nie ein Zurücknehmen.
+  // Tagebuch-Schritt (25.09.): "Bestätigen" öffnet "Wie war dein Tag?"
+  // direkt darunter; gespeichert = Schritt erledigt. Gibt es schon einen
+  // Eintrag für den Tag, wird einfach abgehakt.
+  const [tagebuchOffen, setTagebuchOffen] = useState(null);
+  const tagebuchVorhanden = (tagebuchEintraege || []).some((e) => e.datum === heute);
+  const klick = (schritt) => {
+    if (istTagebuchSchritt(schritt) && !tagebuchVorhanden) return setTagebuchOffen(schritt.id);
+    bestaetigen(schritt);
+  };
   const bestaetigen = (schritt) => {
     routineSchrittErledigtUmschalten(schritt.id, heute);
     aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: schritt.name, aktion: "erledigt", detail: "" });
@@ -61,8 +72,8 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
         const zeit = routineSchrittZeit(s.id);
         const done = schrittIstErledigt(s.id);
         return (
+          <React.Fragment key={s.id}>
           <div
-            key={s.id}
             style={{
               display: "flex",
               alignItems: "center",
@@ -83,7 +94,7 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
             ) : (
               <button
                 type="button"
-                onClick={() => bestaetigen(s)}
+                onClick={() => klick(s)}
                 style={{
                   flexShrink: 0,
                   padding: "7px 16px",
@@ -100,6 +111,13 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
               </button>
             )}
           </div>
+          {tagebuchOffen === s.id && !done && (
+            <div style={{ padding: "4px 0 10px" }}>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>📓 Wie war dein Tag?</div>
+              <TagebuchFormular datum={heute} kompakt onGespeichert={() => { setTagebuchOffen(null); bestaetigen(s); }} />
+            </div>
+          )}
+          </React.Fragment>
         );
       })}
     </Card>

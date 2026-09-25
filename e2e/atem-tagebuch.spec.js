@@ -23,21 +23,27 @@ test("Atem: feste Zeit steht auf der Startseite unter 'Als Nächstes'", async ({
   await expect(page.getByText("Energie-Atmung · 2 Min.").first()).toBeVisible();
 });
 
-test("Tagebuch: Abend-Karte ab 17 Uhr, speichert Stimmung und Ort, Notiz standardmäßig privat", async ({ page }) => {
+// 25.09.: "Wie war dein Tag?" ist keine Startseiten-Karte mehr (kommt in
+// der Abendroutine); Zwischenereignisse über den gelben 💡-Knopf.
+test("Moment festhalten: gelber Knopf → Gefühl, Stärke, Auslöser, wer dabei, privat", async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 8, 25, 20, 0));
   await page.goto("/e2e/harness/index.html?isAdmin=0#/home");
-  const karte = page.getByRole("region", { name: "Wie war dein Tag?" });
-  await expect(karte).toBeVisible();
-  await karte.getByRole("button", { name: "gut", exact: true }).click();
-  await karte.getByRole("button", { name: "🌳 Natur / draußen" }).click();
-  await karte.getByRole("button", { name: "Freunde" }).click();
-  await karte.getByRole("button", { name: "Fertig" }).click();
-  const [[e]] = await aufrufe(page, "tagebuchSpeichern");
-  expect(e).toMatchObject({ datum: "2026-09-25", stimmung: 4, orte: ["🌳 Natur / draußen"], personen: ["Freunde"], notizTeilen: false });
-  await expect(page.getByRole("status")).toContainText("Danke");
+  await expect(page.getByRole("region", { name: "Wie war dein Tag?" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Grad nicht gut?" }).click();
+  await page.getByRole("button", { name: /Moment festhalten/ }).click();
+  const f = page.getByRole("region", { name: "Moment festhalten" });
+  await f.getByRole("button", { name: "⚡ impulsiv" }).click();
+  await f.getByRole("button", { name: "4", exact: true }).click();
+  await f.getByLabel("Auslöser", { exact: true }).fill("Streit wegen Termin");
+  await f.getByRole("button", { name: "Freunde" }).click();
+  await f.getByRole("button", { name: "Festhalten" }).click();
+  const [[m]] = await aufrufe(page, "momentSpeichern");
+  expect(m).toMatchObject({ gefuehle: ["⚡ impulsiv"], staerke: 4, ausloeser: "Streit wegen Termin", personen: ["Freunde"], notizTeilen: false });
+  await page.getByRole("button", { name: "🌬️ Jetzt eine Atemübung" }).click();
+  await expect(page.getByText("Zurück zur Übersicht")).toBeVisible();
 });
 
-test("Tagebuch: vor 17 Uhr keine Karte; Seite zeigt Muster ab 14 Einträgen", async ({ page }) => {
+test("Tagebuch: keine Startseiten-Karte; Seite zeigt Muster ab 14 Einträgen", async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 8, 25, 11, 0));
   await page.goto("/e2e/harness/index.html?isAdmin=0&tagebuch=1#/home");
   await expect(page.getByRole("region", { name: "Wie war dein Tag?" })).toHaveCount(0);

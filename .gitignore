@@ -36,3 +36,4 @@ blob-report/
 *.sln
 *.sw?
 dauertest-out/
+_*.mjs

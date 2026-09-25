@@ -52,6 +52,7 @@ const RESET_TABELLEN = [
   "errungenschaften",
   "atemuebung_logs",
   "tagebuch_eintraege",
+  "moment_eintraege",
   "denkpause_ergebnisse",
   "akutmodus_log",
   "drink_logs",

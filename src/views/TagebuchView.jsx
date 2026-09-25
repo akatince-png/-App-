@@ -5,13 +5,13 @@ import TagebuchFormular from "../ui/TagebuchFormular";
 import { textMuted, cardBorder } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
-import { MUSTER_MIN_EINTRAEGE, autoZeilen, stimmungEmoji, tagebuchMuster, tagebuchZeile } from "../utils/tagebuch";
+import { MUSTER_MIN_EINTRAEGE, autoZeilen, momentZeile, stimmungEmoji, tagebuchMuster, tagebuchZeile } from "../utils/tagebuch";
 
 // Kontext-Tagebuch (25.09., Vorschau freigegeben): Eintrag für heute oder
 // gestern, "Was deine guten Tage gemeinsam haben" und der Verlauf. Geht
 // auch per Aka ("Mein Tag war gut, war mit Freunden im Park …").
 export default function TagebuchView({ onHome }) {
-  const { tagebuchEintraege = [] } = useAppData();
+  const { tagebuchEintraege = [], momente = [], momentEntfernen } = useAppData();
   const heute = toLocalISODate(new Date());
   const gestern = toLocalISODate(new Date(Date.now() - 86400000));
   const [datum, setDatum] = useState(heute);
@@ -80,6 +80,31 @@ export default function TagebuchView({ onHome }) {
           </>
         )}
       </Card>
+
+      {momente.length > 0 && (
+        <Card style={{ marginBottom: 14 }} aria-label="Momente">
+          <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, marginBottom: 2 }}>📝 Festgehaltene Momente</div>
+          <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 6 }}>Über den gelben 💡-Knopf, wenn gerade etwas los ist.</div>
+          {[...momente]
+            .reverse()
+            .slice(0, 30)
+            .map((m) => (
+              <div key={m.id} data-moment style={{ padding: "7px 0", borderBottom: `1px solid ${cardBorder}`, fontSize: 12.5, display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <div>
+                  <b>{new Date(m.zeit).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" })}</b> · {momentZeile(m)}
+                  {m.ausloeser && (
+                    <div style={{ fontSize: 12, marginTop: 2 }}>
+                      {m.notizTeilen ? "👁" : "🔒"} {m.ausloeser}
+                    </div>
+                  )}
+                </div>
+                <button type="button" aria-label="Moment löschen" onClick={() => window.confirm("Diesen Moment löschen?") && momentEntfernen?.(m.id)} style={{ border: "none", background: "transparent", color: textMuted, cursor: "pointer", fontSize: 13 }}>
+                  ✕
+                </button>
+              </div>
+            ))}
+        </Card>
+      )}
 
       {tagebuchEintraege.length > 0 && (
         <Card>
