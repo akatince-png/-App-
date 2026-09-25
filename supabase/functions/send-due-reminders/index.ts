@@ -843,6 +843,49 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Atem-Routine (25.09.): feste Atem-Zeiten (atem_zeiten) ------------
+    // Wie ein Termin: zur Uhrzeit + Vorab-Hinweis. An, solange die Person
+    // die Kategorie "atemuebungen" nicht ausdrücklich ausgeschaltet hat.
+    {
+      const userIds = [...nutzerInfo].filter(([, info]) => (info.erinnerungen.atemuebungen as { aktiv?: boolean } | undefined)?.aktiv !== false).map(([id]) => id);
+      if (userIds.length > 0) {
+        const { data: rows, error } = await admin.from("atem_zeiten").select("user_id, uhrzeit, dauer_minuten, aktiv").in("user_id", userIds);
+        if (error) console.error("Abfrage atem_zeiten fehlgeschlagen:", error);
+        for (const row of rows || []) {
+          const info = nutzerInfo.get(row.user_id);
+          if (!info || row.aktiv === false) continue;
+          const uhrzeitKurz = String(row.uhrzeit).slice(0, 5);
+          if (uhrzeitKurz === info.jetzt) merken(row.user_id, "🌬️", `Atem-Pause (${row.dauer_minuten} Min.)`);
+          const vorlaufMinuten = vorlaufFuer(info.erinnerungen.atemuebungen);
+          const vorabZiel = vorlaufMinuten > 0 ? verschobeneUhrzeit(info.jetzt, vorlaufMinuten) : null;
+          if (vorabZiel && uhrzeitKurz === vorabZiel) merken(row.user_id, "⏳", `Gleich dran (${formatiereVorlauf(vorlaufMinuten)}): Atem-Pause`);
+        }
+      }
+    }
+
+    // --- Gruppen-Atem-Session (25.09.): 15 Min. vorher + zum Start ---------
+    {
+      const jetztMs = Date.now();
+      const minute = (ms: number) => Math.floor(ms / 60000);
+      const { data: sessions, error } = await admin
+        .from("atem_sessions")
+        .select("id, team_id, start_um, dauer_minuten")
+        .gte("start_um", new Date(jetztMs - 60000).toISOString())
+        .lte("start_um", new Date(jetztMs + 16 * 60000).toISOString());
+      if (error) console.error("Abfrage atem_sessions fehlgeschlagen:", error);
+      for (const s of sessions || []) {
+        const start = new Date(s.start_um).getTime();
+        const vorab = minute(start - 15 * 60000) === minute(jetztMs);
+        const jetztStart = minute(start) === minute(jetztMs);
+        if (!vorab && !jetztStart) continue;
+        const { data: mitglieder } = await admin.from("profiles").select("id").eq("team_id", s.team_id);
+        for (const m of mitglieder || []) {
+          if (!nutzerInfo.has(m.id)) continue;
+          merken(m.id, "👥", vorab ? `Gemeinsam atmen in 15 Min. (${s.dauer_minuten} Min.)` : "Gemeinsam atmen startet jetzt – mach mit!");
+        }
+      }
+    }
+
     // --- Workout-Flow: Zeitplan mit Wochentagen (workflow_plaene) ---------
     // Wie Training/Ernährung ein echter Wochenplan (wochentage[] + uhrzeit),
     // zusätzlich mit optionalem Gültigkeits-Zeitraum (gueltig_von/

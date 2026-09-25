@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 168 Unit-Tests, 62 E2E-Tests.
+  - 235 Unit-Tests, 80 E2E-Tests (Stand 25.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -94,9 +94,7 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 
 ### Medikamente: neue Vorgaben + Grundsatz „ganzes Leben“ (25.09.)
 - **Grundsatz (auch in CLAUDE.md, von der Nutzerin präzisiert):** Die App managt das ganze Leben mit ADHS. **Alle Bausteine sind gleichwertig**, Medikation ist nur einer davon; genauso Bewegung, Ernährung, Supplemente, Schlaf, Tageslicht, Atemübungen, Hormone und körperliche Gesundheit. Die Nutzerin ist überzeugt, dass gute Rahmenbedingungen viel bewirken und teils Medikamente ersetzen können. Deshalb soll auch der Kontext (wo, wann, mit wem, was gegessen, wie lange) erfassbar werden.
-- **Offene Ideen der Nutzerin (25.09., noch nicht beauftragt):**
-  - Feste Atemübungs-Routine, von Aka geführt, später evtl. als Gruppen-Session vom Coach.
-  - Kontext-Tagebuch: Ort, Uhrzeit, Personen, Essen, Dauer, um gute und schlechte Tage mit den Bedingungen zu verknüpfen.
+- Die zwei Ideen der Nutzerin (Atem-Routine, Kontext-Tagebuch) sind am 25.09. gebaut, siehe nächster Abschnitt.
 - **Neues Medikament** (nur innerhalb des Bereichs Medikamente, als häufigster Fall) startet jetzt mit „ADHS-Medikation / Tablette / täglich 08:00“ statt „Hormone / Injektion / 1× pro Woche“ aus der Peptid-Zeit.
   - Beim Kategorie-Wechsel passen sich noch nicht selbst geänderte Felder an: Hormone → Injektion 1× pro Woche, Cannabis → Verdampfen, Cholesterin → abends. Siehe `utils/medikamentVorgaben.js` (mit Tests); gilt im Medikamente-Formular und in der Einrichtung.
 - **Neue Einnahmearten:** „Gel / Creme“ und „Pflaster“, z. B. für Testosteron-Gel.
@@ -104,12 +102,31 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Bestehende Einträge** ohne Kategorie behalten die alte Anzeige „Hormone / Injektion“, damit nichts umetikettiert wird.
 - `Pill` hat jetzt `aria-pressed` (Barrierefreiheit, Tests).
 
+### Atem-Routine + Kontext-Tagebuch (25.09., Vorschauen freigegeben)
+**Atem** (`views/AtemuebungenView.jsx`, `utils/atemBibliothek.js`, `ui/AtemFuehrung.jsx`, Migration 0105):
+- Bibliothek mit 5 Übungen (Seufzer-Atmung, Box, gleichmäßig, Energie mit Hinweis, ruhig). Eigene Übungen und das manuelle Formular bleiben.
+- Geführter Ablauf: Gefühl vorher (4 Gesichter) → 5 s Vorlauf → Atemkreis mit Sprachansage (de-DE, speechSynthesis) und Vibration → Gefühl nachher. Verlauf zeigt vorher → nachher. Der alte `AtemTimer` bleibt für den Akutmodus.
+- Feste Atem-Zeiten (`atem_zeiten`) erscheinen auf der Startseite im Tagesplan (Kategorie „atem“) und bekommen Push-Erinnerungen (zur Zeit + Vorlauf, Kategorie `atemuebungen`, an solange nicht ausdrücklich aus).
+- **Gruppen-Session:** Der Coach (Admin, ohne „Verwalten als“) plant je Team Übung, Dauer, Start (`atem_sessions`). Einladung sofort per Push (`send-team-push`), Erinnerung 15 Min. vorher und zum Start (`send-due-reminders` v19). Alle Teilnehmenden atmen im selben Takt (Start ist fest, der Kreis rechnet ab `start_um`). Teilnahmen mit Gefühl vorher/nachher in `atem_session_teilnahmen`.
+- Keine Heilversprechen in den Texten; nur „wofür“ (z. B. „zum Runterkommen“).
+
+**Tagebuch** (`#/tagebuch`, `views/TagebuchView.jsx`, `ui/TagebuchKarte.jsx`, `utils/tagebuch.js`):
+- Abendkarte auf der Startseite ab 17 Uhr, solange heute nichts eingetragen ist; „Heute nicht“ blendet sie bis morgen aus.
+- Stimmung (5 Gesichter), Ort, Personen; optional Essen, Tagesart, Körper, freie Notiz (mit Diktat).
+- Automatisch dazu (`auto` jsonb): Schlaf, draußen, Wasser, Bildschirm, Training, Mahlzeiten, Medikament, Supplemente, Atem.
+- „Was deine guten Tage gemeinsam haben“: ab 14 Einträgen mit je ≥ 3 guten und schweren Tagen, nur Unterschiede ≥ 30 Prozentpunkte, ausdrücklich „Zusammenhänge, keine Beweise“.
+- **Datenschutz:** Die freie Notiz ist privat. Der Coach sieht über `admin_tagebuch()` Stimmung, Auswahl und Muster, die Notiz nur, wenn die Person „auch für meinen Coach sichtbar“ angehakt hat. Keine direkte Admin-Policy auf `tagebuch_eintraege`.
+- Tagebuch-Einträge zählen als Aktivität/Punkte (`_punkte_ereignisse`). „Alles löschen“ löscht Tagebuch und Atem-Zeiten mit, „Fortschritt auf Null“ nicht.
+
+**Aka** kann beides: „Atempause jeden Tag um 13 Uhr“ (Bereich `atemroutine`) und „Mein Tag war gut, war mit Freunden im Park“ (Bereich `tagebuch`).
+
+**Noch nicht gebaut:** Atemübung als Schritt in der Morgen-/Abendroutine; Team-Muster im Tagebuch (was gute Tage im Team gemeinsam haben).
+
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
 - Alle Testkonten haben **alle** Bereiche eingerichtet (per SQL, Schema wie in der App): Claude, Mia, Jonas, Lea, „Test 1“ (Einzelperson ohne Team, Onboarding jetzt abgeschlossen) und das Admin-Testkonto.
   - Medikament (täglich), 2 Supplemente, 3 Mahlzeiten mit Wochenplan, Training Mo/Mi/Fr, 2 Gewohnheiten.
   - Morgen- und Abendroutine mit Zeiten, Wasser-, Tageslicht- und Bildschirmzeit-Ziel, Schlafplan, Workout-Flow „Fokus 25/5“.
 - Bereits Vorhandenes blieb unverändert. Die ADHS-Medikamente von Mia und Lea standen auf „1× pro Woche“ und wurden auf täglich korrigiert.
-- **Hinweis Produkt:** Ein neues Medikament startet in der App mit „Hormone / Injektion / 1× pro Woche“, ein Überbleibsel aus der Peptid-Zeit. Für ADHS-Medikation wäre „täglich“ als Voreinstellung sinnvoller; noch nicht geändert, mit der Nutzerin abstimmen.
 - Täglicher Test: keine Pausentage mehr (`AKA_PAUSENTAGE=1` nur auf Wunsch), Fleiß 0.95 für alle, alle sechs Konten laufen täglich; „Test 1“ und das Admin-Testkonto mit `AKA_OHNE_TEAM=1`.
 - Stand 25.09. mittags: `letzte_aktivitaet` = heute bei allen sechs.
 - Leeres Team „Aka“ (0 Mitglieder, vermutlich früher versehentlich beim Testen angelegt) am 25.09. auf Wunsch der Nutzerin gelöscht. Es gibt nur noch Test-Team Sonne und Test-Team Mond.
