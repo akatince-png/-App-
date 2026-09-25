@@ -59,10 +59,12 @@ export function useBiomarkerData(userId) {
       setOcrError(null);
       setOcrSuccessCount(null);
       try {
-        const fotoPath = await uploadPhoto(userId, file, "blutwerte");
         const {
           data: { session },
         } = await supabase.auth.getSession();
+        // In den Ordner der angemeldeten Person (25.09.): im "Verwalten als"-
+        // Modus scheiterte sonst schon das Hochladen (fremder Ordner).
+        const fotoPath = await uploadPhoto(session?.user?.id || userId, file, "blutwerte");
         const { data, error } = await supabase.functions.invoke("blutwerte-scan", {
           body: { fotoPath, mediaType: file.type || "image/jpeg" },
           headers: { Authorization: `Bearer ${session.access_token}` },
@@ -90,7 +92,7 @@ export function useBiomarkerData(userId) {
         const datum = toLocalISODate(new Date());
         const { data: inserted, error: insertError } = await supabase
           .from("blutwerte_archiv")
-          .insert({ user_id: userId, datum, werte: data.werte, foto_path: fotoPath })
+          .insert({ user_id: userId, datum, werte: data.werte, foto_path: (session?.user?.id || userId) === userId ? fotoPath : null })
           .select()
           .single();
         if (insertError) throw new Error(insertError.message);

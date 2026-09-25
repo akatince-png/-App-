@@ -20,9 +20,18 @@ async function verkleinern(file, maxSeite = 1600) {
   }
 }
 
+// Hochladen immer in den Ordner der ANGEMELDETEN Person (Speicherregeln +
+// Pfadprüfung der Function). Im "Verwalten als"-Modus ist das der Admin –
+// die Erkennung funktioniert dann trotzdem; das Foto selbst wird nicht an
+// den Eintrag der verwalteten Person gehängt (sie könnte es nicht sehen).
+async function eigeneId(fallback) {
+  const { data } = await supabase.auth.getUser();
+  return data?.user?.id || fallback;
+}
+
 export async function essenFotoAuswerten(userId, file, art, text) {
   const bild = await verkleinern(file);
-  const fotoPath = await uploadPhoto(userId, bild, "essen");
+  const fotoPath = await uploadPhoto(await eigeneId(userId), bild, "essen");
   const { data, error } = await supabase.functions.invoke("essen-scan", { body: { fotoPath, mediaType: bild.type || "image/jpeg", art, text } });
   if (error || data?.error) throw new Error(await edgeFunctionFehlertext(error, data, "Das Foto konnte nicht ausgewertet werden."));
   return (data.posten || []).map((p) => ({
@@ -41,7 +50,8 @@ export async function essenFotoAuswerten(userId, file, art, text) {
 // Liefert { name, form, menge, portion, inhaltsstoffe: [{ name, menge, einheit }], hinweis }.
 export async function praeparatFotoAuswerten(userId, file, art, text) {
   const bild = await verkleinern(file);
-  const fotoPath = await uploadPhoto(userId, bild, art === "medikament" ? "medikamente" : "supplemente");
+  const ich = await eigeneId(userId);
+  const fotoPath = await uploadPhoto(ich, bild, art === "medikament" ? "medikamente" : "supplemente");
   const { data, error } = await supabase.functions.invoke("essen-scan", { body: { fotoPath, mediaType: bild.type || "image/jpeg", art, text } });
   if (error || data?.error) throw new Error(await edgeFunctionFehlertext(error, data, "Das Foto konnte nicht ausgewertet werden."));
   const p = data.praeparat || {};
@@ -52,6 +62,6 @@ export async function praeparatFotoAuswerten(userId, file, art, text) {
     portion: p.portion || "",
     hinweis: p.hinweis || "",
     inhaltsstoffe: (p.inhaltsstoffe || []).filter((s) => s?.name).map((s) => ({ name: s.name, menge: Number(s.menge) || 0, einheit: s.einheit || "" })),
-    fotoPath,
+    fotoPath: ich === userId ? fotoPath : null,
   };
 }
