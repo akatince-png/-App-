@@ -22,6 +22,7 @@ function rowToHormonDosierung(row) {
     eigenerStart: row.eigener_start || "",
     uhrzeiten: row.uhrzeiten?.length ? row.uhrzeiten.map((t) => t.slice(0, 5)) : ["20:00"],
     fotoPath: row.foto_path || null,
+    inhaltsstoffe: Array.isArray(row.inhaltsstoffe) ? row.inhaltsstoffe : [],
     // Nur für kategorie "Peptid" relevant (Injektion/Nasenspray-Details,
     // siehe useProtocolData.js — dieselben zwei Felder, jetzt hier
     // gespiegelt, damit das Onboarding komplett auf hormones umgestellt
@@ -74,6 +75,9 @@ function toRow(userId, neuesHormon, hauptprotokollId) {
     cannabis_filter: neuesHormon.filterTyp || null,
     cannabis_temperatur_grad: neuesHormon.temperaturGrad ? Number(neuesHormon.temperaturGrad) : null,
     cannabis_tropfen: neuesHormon.tropfenAnzahl ? Number(neuesHormon.tropfenAnzahl) : null,
+    // Per Foto (25.09.): Inhaltsstoffe je Einnahme + Packungsfoto.
+    inhaltsstoffe: neuesHormon.inhaltsstoffe || [],
+    foto_path: neuesHormon.fotoPath || null,
   };
 }
 
@@ -162,7 +166,8 @@ export function useHormoneData(userId, startdatum, dauer, hauptprotokollId, belo
           weekdays: neuesHormon.weekdays || [],
           eigenerStart: neuesHormon.eigenerStart,
           uhrzeiten: neuesHormon.uhrzeiten?.length ? neuesHormon.uhrzeiten : ["20:00"],
-          fotoPath: null,
+          fotoPath: data.foto_path || null,
+          inhaltsstoffe: neuesHormon.inhaltsstoffe || [],
           bacWasser: "",
           spruehstoesse: "",
           thcProzent: neuesHormon.thcProzent || "",

@@ -13,6 +13,8 @@ import KategorieErinnerung from "../ui/KategorieErinnerung";
 import ItemVerlauf from "../ui/ItemVerlauf";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { supplementToRow } from "../data/useSupplementData";
+import PraeparatFoto from "../ui/PraeparatFoto";
+import { inhaltsstoffeText } from "../utils/inhaltsstoffe";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe —
 // Supplemente sind Gold, passend zu den bunten Home-Mini-Widgets.
@@ -60,6 +62,7 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto, onInter
               {s.hinweis && ` · ${s.hinweis}`}
               {s.uhrzeiten?.length ? ` · ${describeInterval(s)}` : ""}
             </div>
+            {s.inhaltsstoffe?.length > 0 && <div style={{ fontSize: 11, color: textMuted }}>Je Einnahme: {inhaltsstoffeText(s.inhaltsstoffe, 6)}</div>}
           </div>
         </div>
         <input type="file" accept="image/*" id={`supplement-foto-${s.id}`} style={{ display: "none" }} onChange={handleFoto} />
@@ -120,7 +123,7 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto, onInter
   );
 }
 
-const LEERES_SUPPLEMENT = { name: "", tageszeiten: [], hinweis: "" };
+const LEERES_SUPPLEMENT = { name: "", tageszeiten: [], hinweis: "", menge: "", inhaltsstoffe: [], fotoPath: null };
 const LEERES_REZEPT = { name: "", hinweis: "", zutaten: [{ name: "", menge: "" }] };
 
 const UNTERTABS = [
@@ -326,10 +329,24 @@ function SupplementeSection() {
   return (
     <>
 
+      <PraeparatFoto
+        art="supplement"
+        onUebernehmen={(p) => setNeuesSupplement((alt) => ({ ...alt, name: p.name || alt.name, menge: p.menge || alt.menge, inhaltsstoffe: p.inhaltsstoffe, fotoPath: p.fotoPath }))}
+      />
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Neues Supplement (manuell)</div>
       <Card akzent style={{ marginBottom: 14 }}>
         <Label>Name</Label>
         <TextInput value={neuesSupplement.name} onChange={(v) => setNeuesSupplement((p) => ({ ...p, name: v }))} placeholder="z. B. Omega-3" />
+        <Label>Menge je Einnahme (optional)</Label>
+        <TextInput value={neuesSupplement.menge} onChange={(v) => setNeuesSupplement((p) => ({ ...p, menge: v }))} placeholder="z. B. 3 Kapseln" />
+        {neuesSupplement.inhaltsstoffe.length > 0 && (
+          <div style={{ fontSize: 12, color: textMuted, marginTop: 6 }}>
+            Inhalt je Einnahme: {inhaltsstoffeText(neuesSupplement.inhaltsstoffe)}{" "}
+            <button type="button" onClick={() => setNeuesSupplement((p) => ({ ...p, inhaltsstoffe: [], fotoPath: null }))} style={{ border: "none", background: "transparent", color: danger, fontSize: 12, cursor: "pointer", padding: 0 }}>
+              entfernen
+            </button>
+          </div>
+        )}
         <Label>Tageszeit(en)</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
           {TAGESZEITEN.map((z) => (

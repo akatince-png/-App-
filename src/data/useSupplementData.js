@@ -25,6 +25,8 @@ function rowToSupplement(r) {
     uhrzeiten: r.uhrzeiten || [],
     eigenerStart: r.eigener_start || "",
     fotoPath: r.foto_path || null,
+    // Inhaltsstoffe je Einnahme (25.09., z. B. aus dem Dosen-Foto).
+    inhaltsstoffe: Array.isArray(r.inhaltsstoffe) ? r.inhaltsstoffe : [],
     // Zugehöriges (Haupt- oder Zusatz-)Protokoll — für das 🧪-Etikett und
     // das Ausblenden beendeter Zusatzprotokolle (siehe useZusatzprotokolle).
     hauptprotokollId: r.hauptprotokoll_id || null,
@@ -107,6 +109,8 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
           name: neuesSupplement.name,
           tageszeiten: neuesSupplement.tageszeiten || [],
           hinweis: neuesSupplement.hinweis || "",
+          inhaltsstoffe: neuesSupplement.inhaltsstoffe || [],
+          foto_path: neuesSupplement.fotoPath || null,
           ...supplementToRow(neuesSupplement),
         })
         .select()

@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 257 Unit-Tests, 86 E2E-Tests (Stand 25.09.).
+  - 260 Unit-Tests, 86 E2E-Tests (Stand 25.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -149,6 +149,7 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Wissens-Basis:** Eintrag „Ernährung bei ADHS: Studienlage …“ (Del-Ponte 2019 Muster, Wolraich 1995 Zucker, Morton 2018 Eiweiß, LaChance 2016 Omega-6:3, Appetit unter Stimulanzien, Formulierungsregeln ohne Wirkversprechen).
 - **Erweitert (25.09. abends):** 235 Lebensmittel (USDA SR Legacy + FNDDS 2024): Superfoods (Chia, Alfalfa, Amaranth, Quinoa, Buchweizen, Spirulina, Goji, Acai …), Fermentiertes (Kefir, Kimchi, Kombucha, Miso, Tempeh), tierische Fette (Talg, Schmalz, Ghee, Enten-/Gänsefett, Knochenmark), Innereien, Wild, Fischkonserven, Öle (Lein, Hanf, Algen, MCT …). Kohlenhydrate jetzt wie auf deutschen Etiketten ohne Ballaststoffe. **Einlage** („Sardinen in Wasser/in Olivenöl/mit Öl“): Rechner rechnet Fischfleisch + aufgenommene Einlage (abgetropft ≈ 8 g Öl je 100 g, mit Öl ≈ 20 g), `einlageLesen`/`werteMitEinlage` in `utils/essenRechner.js`.
 - **Foto** (`supabase/functions/essen-scan`, `data/essenFoto.js`): „📷 Nährwerttabelle“ (+ Satz wie „2 Scheiben“) und „📷 Mahlzeit“ (Teller, Mengen geschätzt). Ergebnis erscheint als dieselbe Rechnung zum Bestätigen. Nutzt Claude (claude-opus-5, JSON-Schema, Refusal-Fallback), falls `ANTHROPIC_API_KEY` gesetzt ist – Stand 25.09. NICHT gesetzt (auch die Blutwerte-Foto-Erkennung braucht ihn). Solange nimmt die Function den vorhandenen `GEMINI_API_KEY` (Modell `gemini-3.8-flash`, bei Überlastung weiter zu gemini-flash-latest/3.5/3.6; `gemini-2.5-flash` ist für neue Nutzer abgeschaltet – falls die App-Texte (Aka) über Gemini laufen, `VITE_AI_MODEL` prüfen!). Prüfen: POST `{"pruefen":true,"modelle":true}` an essen-scan. Live-Test 25.09. abends: Function läuft, aber Google meldete bei allen Flash-Modellen 503 „high demand“ – erfolgreiche Erkennung noch nicht bestätigt; mit `ANTHROPIC_API_KEY` wäre man davon unabhängig.
+- **Supplemente/Medikamente per Foto** (25.09., `ui/PraeparatFoto.jsx`, `praeparatFotoAuswerten` in `data/essenFoto.js`, dieselbe Function `essen-scan` mit `art: "supplement" | "medikament"` und eigenem Schema): Dose/Packung fotografieren, optional „3 Kapseln“ dazuschreiben oder sprechen → Name, Form, Einnahme-Menge, Inhaltsstoffe je Einnahme (umgerechnet). Zum Prüfen (Stoffe einzeln entfernbar), „Passt – übernehmen“ füllt nur das manuelle Formular darunter; Zeit wählen und speichern bleibt manuell. Gespeichert in `supplements.inhaltsstoffe` / `hormones.inhaltsstoffe` (jsonb, Migration 0110) + Packungsfoto als `foto_path`; Anzeige „Je Einnahme: …“ in den Listen. Supplement-Formular hat dafür jetzt auch ein Feld „Menge je Einnahme“.
 - **Datenschutz-Hinweis:** Unbekannte Lebensmittel gehen als Text an den eingestellten KI-Anbieter (wie bei Aka). Das sollte in der Datenschutzerklärung stehen, auch wenn die Oberfläche keinen Chat zeigt.
 
 ### Testkonten komplett und nur aktiv (25.09., Vorgabe der Nutzerin)
@@ -628,7 +629,7 @@ löschbar.
 
 ### Nachtrag Teil 121 — Home: eine Karte ganz oben, Schnellknöpfe im Gehirn (24.09.)
 
-- **Eine Karte oben:** Ganz oben steht eine einzige Karte (`GehirnKarte` mit Prop `kopf`). Darin sitzt der Spielstand (`SpielstandKarte eingebettet`) mit Begrüßung, Level, Tagesring, Serie, Punkten und Level-Balken. Darunter folgt, durch eine Linie getrennt, „Dein Gehirn“. „Als Nächstes“ und die Tages-Quests kommen danach.
+- **Eine Karte oben:** Ganz oben steht eine einzige Karte (`GehirnKarte` mit Prop `kopf`). **Seit 25.09. (Nutzerinnen-Wunsch, Vorschau freigegeben) umgedreht (`kopfUnten`):** kleine Begrüßungszeile (`gruss`-Prop der GehirnKarte), dann „Dein Gehirn“ mit Balken, Tropfen und 💡, darunter „Als Nächstes“ und zuletzt der Spielstand (`SpielstandKarte eingebettet`, `gruss={null}`: Level, Tagesring, Serie, Punkte, Level-Balken). Die Tages-Quests kommen danach.
 - **Schnellknöpfe im Gehirnbild:** Die Kacheln „Wasser eintragen“ und „Grad nicht gut?“ unter dem Gehirn sind entfernt. Stattdessen sitzen unten links im Gehirnbild zwei Knöpfe (`Schnellknoepfe` in `GehirnKarte.jsx`):
   - ein großer, leicht wippender Wasser-Tropfen (`.mp-tropfen`), der die Wasser-Seite öffnet;
   - ein runder gelber 💡-Knopf, der das Akutmodus-Panel öffnet.

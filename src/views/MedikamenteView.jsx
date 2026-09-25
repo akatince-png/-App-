@@ -16,6 +16,8 @@ import { useAppData } from "../context/AppDataContext";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import PraeparatFoto from "../ui/PraeparatFoto";
+import { formZuEinnahmeart, inhaltsstoffeText } from "../utils/inhaltsstoffe";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Medikamente
 // sind Lila, passend zu den bunten Home-Mini-Widgets.
@@ -55,6 +57,8 @@ const NEUES_MEDIKAMENT_LEER = {
   filterTyp: "",
   temperaturGrad: "",
   tropfenAnzahl: "",
+  inhaltsstoffe: [],
+  fotoPath: null,
 };
 
 // Kompakte Zusammenfassung der Cannabis-Detailfelder für die Protokoll-Liste
@@ -230,6 +234,19 @@ export default function MedikamenteView({ onHome, embedded = false }) {
         <KategorieErinnerung kategorie="medikamente" label="🔔 Erinnerungen Medikamente" />
       </Card>
 
+      <PraeparatFoto
+        art="medikament"
+        onUebernehmen={(p) =>
+          setNeuesMedikament((alt) => ({
+            ...alt,
+            name: p.name || alt.name,
+            menge: p.menge || alt.menge,
+            einnahmeart: formZuEinnahmeart(p.form, EINNAHMEARTEN) || alt.einnahmeart,
+            inhaltsstoffe: p.inhaltsstoffe,
+            fotoPath: p.fotoPath,
+          }))
+        }
+      />
       <Card akzent style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Neues Medikament hinzufügen (manuell)</div>
         <Label>Name</Label>
@@ -261,6 +278,14 @@ export default function MedikamenteView({ onHome, embedded = false }) {
           mengePlaceholder={neuesMedikament.kategorie === "Cannabis" ? "z. B. 0,3 g" : "z. B. 100 mg"}
         />
 
+        {neuesMedikament.inhaltsstoffe?.length > 0 && (
+          <div style={{ fontSize: 12, color: textMuted, marginTop: 6 }}>
+            Inhalt je Einnahme: {inhaltsstoffeText(neuesMedikament.inhaltsstoffe)}{" "}
+            <button type="button" onClick={() => setNeuesMedikament((p) => ({ ...p, inhaltsstoffe: [], fotoPath: null }))} style={{ border: "none", background: "transparent", color: danger, fontSize: 12, cursor: "pointer", padding: 0 }}>
+              entfernen
+            </button>
+          </div>
+        )}
         {medikamentError && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{medikamentError}</div>}
         <div style={{ marginTop: 10 }}>
           <PrimaryButton onClick={submit} disabled={speichertGerade || !neuesMedikament.name.trim() || !intervallGueltig(neuesMedikament) || mengeOhneEinheit(neuesMedikament.menge)}>
@@ -392,6 +417,9 @@ export default function MedikamenteView({ onHome, embedded = false }) {
                           {hormonDosierung[h]?.menge} · {hormonDosierung[h]?.einnahmeart || "Injektion"} · {describeInterval(hormonDosierung[h])} ·{" "}
                           {(hormonDosierung[h]?.uhrzeiten || []).join(" & ")}
                         </div>
+                        {hormonDosierung[h]?.inhaltsstoffe?.length > 0 && (
+                          <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>Je Einnahme: {inhaltsstoffeText(hormonDosierung[h].inhaltsstoffe, 6)}</div>
+                        )}
                         {hormonDosierung[h]?.kategorie === "Cannabis" && cannabisDetailZeile(hormonDosierung[h]) && (
                           <div style={{ fontSize: 11, color: textMuted, marginTop: 2 }}>{cannabisDetailZeile(hormonDosierung[h])}</div>
                         )}

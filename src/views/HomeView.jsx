@@ -1065,7 +1065,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Schichtarbeit (25.09.): welche Schicht heute gilt + "Heute anders". */}
       <SchichtHeuteKarte />
       {proband === null && <RoutineZeitHinweisKarte zeigeCoachKnopf={!isAdmin} onCoachChat={() => onOpenView("coach-chat")} />}
-      {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
+      {/* Seit 25.09. (Nutzerinnen-Wunsch): Begrüßung, dann Gehirn + Balken
+          oben, darunter Als Nächstes und der Spielstand (kopfUnten).
+          Ursprünglich (24.09.): EINE Karte mit Spielstand
           (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
           Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
           Akut-Knopf. Als Nächstes und Quests folgen darunter. */}
@@ -1084,10 +1086,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         phase={phase}
         mitte={kartenMitte}
         kopfUnten
+        gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
         kopf={
           <SpielstandKarte
             eingebettet
-            gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
+            gruss={null}
             statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
             erledigt={erledigtCount + raetselZaehlt}
             gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}

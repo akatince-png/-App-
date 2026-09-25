@@ -8,6 +8,8 @@
 // lädt es serverseitig und fragt Claude (ANTHROPIC_API_KEY) oder, falls
 // nur der vorhandene GEMINI_API_KEY gesetzt ist, Gemini. Schlüssel bleiben hier.
 // Die App zeigt das Ergebnis als Rechnung zum Bestätigen, ohne Chat.
+// Seit 25.09. auch "supplement"/"medikament": Dose/Packung + "3 Kapseln" →
+// Name, Form, Einnahme-Menge und Inhaltsstoffe je Einnahme.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
@@ -64,6 +66,39 @@ const SCHEMA = {
   },
 };
 
+// Präparat (25.09.): Supplement-Dose oder Medikamenten-Packung + "3 Kapseln".
+const PRAEPARAT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["erkannt", "hinweis", "name", "form", "menge", "portion", "inhaltsstoffe"],
+  properties: {
+    erkannt: { type: "boolean" },
+    hinweis: { type: "string" },
+    name: { type: "string" },
+    form: { type: "string", enum: ["Kapsel", "Tablette (oral)", "Pulver", "Tropfen", "Nasenspray", "Gel / Creme", "Pflaster", "Injektion", "Sonstiges"] },
+    menge: { type: "string" },
+    portion: { type: "string" },
+    inhaltsstoffe: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "menge", "einheit"],
+        properties: { name: { type: "string" }, menge: zahl, einheit: { type: "string" } },
+      },
+    },
+  },
+};
+const PRAEPARAT_REGELN = [
+  "Du liest Etiketten von Nahrungsergänzungsmitteln und Medikamenten für eine deutschsprachige App ab. Alle Texte auf Deutsch, kurz.",
+  "name = Produktname wie auf der Packung (Marke + Produkt, z. B. \"Magnesium 400 Kapseln\"). form = Darreichungsform.",
+  "menge = die EINE Einnahme, die die Person nimmt, mit Einheit, z. B. \"3 Kapseln\" oder \"1 Messlöffel (12 g)\" oder \"1 Tablette (50 mg)\". Ohne Angabe der Person: die Verzehrempfehlung/Dosis vom Etikett.",
+  "portion = was das Etikett als Portion angibt, z. B. \"2 Kapseln\" oder \"1 Messlöffel = 12 g\".",
+  "inhaltsstoffe = alle Wirk-/Inhaltsstoffe mit Menge für GENAU diese eine Einnahme (umgerechnet, falls die Person mehr oder weniger als eine Etikett-Portion nimmt). Einheit wie auf dem Etikett (mg, µg, g, IE, mg Koffein …). Hilfsstoffe (Kapselhülle, Trennmittel, Farbstoffe) weglassen.",
+  "Nichts erfinden: was nicht lesbar ist, weglassen und in hinweis kurz erwähnen. Keine Bewertung, keine Wirkversprechen.",
+  "erkannt = false, wenn keine Packung/kein Etikett zu sehen ist; dann inhaltsstoffe leer und in hinweis kurz, was fehlt.",
+];
+
 const REGELN = [
   "Du rechnest Nährwerte für eine deutschsprachige Ernährungs-App. Alle Texte auf Deutsch, kurz.",
   "Werte immer für die GESAMTE gegessene Menge (nicht pro 100 g): kcal, eiweiss/fett/kh/zucker/ballast in g (1 Nachkommastelle), omega3 (ALA+EPA+DHA), epaDha und omega6 in mg.",
@@ -75,7 +110,7 @@ const REGELN = [
 ];
 
 // Claude (bevorzugt, wenn ANTHROPIC_API_KEY gesetzt ist).
-async function mitClaude(bild: string, mediaType: string, aufgabe: string) {
+async function mitClaude(bild: string, mediaType: string, aufgabe: string, regeln: string[], schema: unknown) {
   const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
   // deno-lint-ignore no-explicit-any
   const res: any = await client.beta.messages.create({
@@ -84,8 +119,8 @@ async function mitClaude(bild: string, mediaType: string, aufgabe: string) {
     betas: ["server-side-fallback-2026-07-01"],
     // @ts-ignore: neuere Parameter (Fallback bei Ablehnung, JSON-Schema)
     fallbacks: "default",
-    output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
-    system: REGELN.join("\n"),
+    output_config: { effort: "medium", format: { type: "json_schema", schema } },
+    system: regeln.join("\n"),
     messages: [
       {
         role: "user",
@@ -104,13 +139,13 @@ async function mitClaude(bild: string, mediaType: string, aufgabe: string) {
 // Gemini (vorhandener Schlüssel des Projekts), gleiche Regeln + JSON-Ausgabe.
 // Bei Überlastung (429/503) weiter zum nächsten Modell.
 const GEMINI_MODELLE = [GEMINI_MODEL, "gemini-flash-latest", "gemini-3.5-flash", "gemini-3.6-flash"].filter((m, i, a) => a.indexOf(m) === i);
-async function mitGemini(bild: string, mediaType: string, aufgabe: string) {
+async function mitGemini(bild: string, mediaType: string, aufgabe: string, regeln: string[], schema: unknown) {
   for (const modell of GEMINI_MODELLE) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modell}:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: REGELN.join("\n") + "\nAntworte NUR mit JSON: " + JSON.stringify(SCHEMA) }] },
+        systemInstruction: { parts: [{ text: regeln.join("\n") + "\nAntworte NUR mit JSON: " + JSON.stringify(schema) }] },
         contents: [{ role: "user", parts: [{ inline_data: { mime_type: mediaType || "image/jpeg", data: bild } }, { text: aufgabe }] }],
         generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
       }),
@@ -159,12 +194,23 @@ Deno.serve(async (req) => {
     if (ladeFehler || !datei) return antwort({ error: "Foto konnte nicht geladen werden." }, 404);
     const bild = base64(await datei.arrayBuffer());
 
+    // Präparat (Supplement/Medikament): eigenes Schema, Antwort 1:1 zurück.
+    if (art === "supplement" || art === "medikament") {
+      const aufgabeP = `Das Foto zeigt die Packung/das Etikett eines ${art === "supplement" ? "Nahrungsergänzungsmittels" : "Medikaments"}.${text ? ` Die Person sagt: "${text}".` : ""} Lies Name, Form, Portion und alle Inhaltsstoffe ab und rechne auf ihre Einnahme um.`;
+      const p = ANTHROPIC_API_KEY
+        ? await mitClaude(bild, mediaType, aufgabeP, PRAEPARAT_REGELN, PRAEPARAT_SCHEMA)
+        : await mitGemini(bild, mediaType, aufgabeP, PRAEPARAT_REGELN, PRAEPARAT_SCHEMA);
+      if (p === null) return antwort({ error: "Das Foto konnte gerade nicht ausgewertet werden – bitte gleich nochmal versuchen." }, 422);
+      if (!p.erkannt) return antwort({ error: p.hinweis || "Auf dem Foto war kein Etikett zu erkennen." }, 422);
+      return antwort({ praeparat: p });
+    }
+
     const aufgabe =
       art === "etikett"
         ? `Das Foto zeigt eine Nährwerttabelle/Verpackung. Lies die Werte je 100 g (und ggf. Portionsgröße) ab. Gegessen wurde: "${text || "1 Portion"}". Nutze Stück-/Scheibengewichte vom Etikett, sonst übliche Größen. Ein Posten.`
         : `Das Foto zeigt eine Mahlzeit.${text ? ` Dazu sagt die Person: "${text}".` : ""} Erkenne die Komponenten, schätze jeweils die Menge in Gramm aus Tellergröße und Proportionen und berechne die Werte. Ein Posten je Komponente.`;
 
-    const daten = ANTHROPIC_API_KEY ? await mitClaude(bild, mediaType, aufgabe) : await mitGemini(bild, mediaType, aufgabe);
+    const daten = ANTHROPIC_API_KEY ? await mitClaude(bild, mediaType, aufgabe, REGELN, SCHEMA) : await mitGemini(bild, mediaType, aufgabe, REGELN, SCHEMA);
     if (daten === null) return antwort({ error: "Das Foto konnte nicht ausgewertet werden." }, 422);
     if (!daten.erkannt || !Array.isArray(daten.posten) || daten.posten.length === 0) {
       return antwort({ error: daten.hinweis || "Auf dem Foto war nichts Auswertbares zu sehen." }, 422);

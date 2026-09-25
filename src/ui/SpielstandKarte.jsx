@@ -99,8 +99,8 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
         fontFamily: "inherit",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9, minWidth: 0 }}>{gruss}</div>
+      <div style={{ display: "flex", justifyContent: gruss ? "space-between" : "flex-end", alignItems: "center", gap: 10, marginBottom: gruss ? 12 : 4 }}>
+        {gruss && <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9, minWidth: 0 }}>{gruss}</div>}
         <span style={{ padding: "5px 11px", borderRadius: 999, background: GOLD, color: "#3B2A00", fontSize: 12, fontWeight: 900, whiteSpace: "nowrap" }}>
           Level {lvl.level}
         </span>
