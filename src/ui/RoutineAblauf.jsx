@@ -5,6 +5,7 @@ import { accentDark, cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
+import { routineGeschafftFeier } from "../utils/routineFeier";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -84,15 +85,8 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       // weiter (gleicher Bug wie beim Workflow-/Trainings-Timer).
       spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
-      if (rechtzeitigGestartetRef.current) {
-        feuereBelohnung({
-          text: `${ROUTINE_LABEL[routine]} geschafft!`,
-          untertitel: routine === "morgen" ? "Starker Start in den Tag. 💪" : "Stark — der Tag ist rund. 🌙",
-          icon: routine === "morgen" ? "sunrise" : "moon",
-          punkte: 1,
-          gross: true,
-        });
-      }
+      // Immer feiern (25.09.), pünktlich oder später — siehe routineFeier.js.
+      feuereBelohnung(routineGeschafftFeier(routine, rechtzeitigGestartetRef.current));
       setFertig(true);
     }
   };

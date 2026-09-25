@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 import { istRechtzeitig } from "../utils/belohnungZeit";
+import { routineGeschafftFeier } from "../utils/routineFeier";
 import { feuereBelohnung } from "../utils/belohnungBus";
 
 function rowToSchritt(r) {
@@ -291,6 +292,10 @@ export function useRoutinen(userId, belohnungPufferMin) {
       const alleErledigt = geschwister.every((sc) => sc.id === schrittId || schrittErledigt[`${datum}__${sc.id}`]);
       const schonDurchlauf = durchlaeufe.some((d) => d.routine === schritt.routine && d.datum === datum);
       if (alleErledigt && !schonDurchlauf) {
+        // Letzter Schritt abgehakt → dieselbe große Feier wie beim geführten
+        // Ablauf (25.09.); pünktlich = innerhalb des Puffers nach der
+        // eingestellten Startzeit der Routine.
+        feuereBelohnung(routineGeschafftFeier(schritt.routine, istRechtzeitig(einstellungen[schritt.routine]?.startZeit, belohnungPufferMin)));
         durchlaufSpeichern({
           routine: schritt.routine,
           schritte: geschwister
@@ -300,7 +305,7 @@ export function useRoutinen(userId, belohnungPufferMin) {
         });
       }
     },
-    [schrittErledigt, schritte, durchlaeufe, userId, belohnungPufferMin, schrittZeit, durchlaufSpeichern]
+    [schrittErledigt, schritte, durchlaeufe, userId, belohnungPufferMin, schrittZeit, durchlaufSpeichern, einstellungen]
   );
 
   return {

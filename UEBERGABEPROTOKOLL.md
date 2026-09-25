@@ -31,6 +31,13 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - 168 Unit-Tests, 62 E2E-Tests.
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
+### Routine-Feier (25.09., Rückmeldung der Nutzerin)
+„Morgenroutine geschafft!“ kam nicht. Ursachen:
+- Beim Abhaken der Schritte (Checkliste) gab es gar keine Abschluss-Feier.
+- Der geführte Ablauf feierte nur, wenn er pünktlich gestartet wurde (Startzeit 06:00 + 10 Min.; sie war um 08:49 fertig).
+
+Jetzt feiern beide Wege immer groß, über `utils/routineFeier.js`: pünktlich „Starker Start…“, später „Auch später zählt – starte gut in deinen Tag“. Die kleinen Meldungen je Schritt bleiben pünktlichkeitsgebunden (Vorgabe 12.09.).
+
 ### 🚀 Go-Live-Checkliste (Stand 25.09.2026, mit der Nutzerin besprochen)
 Ausgangslage:
 - Supabase im **Gratis-Tarif** (Org „Akatince“, Projekt „My Protocols“, Region **eu-central-1 / Frankfurt**). Belegt: Datenbank 54 MB von 500 MB, Dateien 13 MB von 1 GB, 7 Konten.
