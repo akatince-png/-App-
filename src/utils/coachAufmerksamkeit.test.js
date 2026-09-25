@@ -17,6 +17,20 @@ describe("coacheeStatus", () => {
   });
 });
 
+describe("coacheeStatus – Routine-Zeit", () => {
+  it("aktiv, aber Routine meist später = gelb und braucht dich; ruhig bleibt rot", () => {
+    const v = { routine: "morgen", label: "Morgenroutine", vorschlag: "08:45", startZeit: "06:00" };
+    expect(coacheeStatus({ ...basis, letzte_aktivitaet: "2026-09-24", routine_verspaetung: v }, heute)).toMatchObject({
+      art: "verspaetet",
+      ampel: "gelb",
+      text: "🌅 Morgenroutine meist später",
+      zusatz: "Ø 08:45 statt 06:00",
+      brauchtDich: true,
+    });
+    expect(coacheeStatus({ ...basis, letzte_aktivitaet: "2026-09-20", routine_verspaetung: v }, heute)).toMatchObject({ ampel: "rot" });
+  });
+});
+
 describe("coacheesSortiert + uebersichtZahlen", () => {
   it("Admins raus, wer dich braucht zuerst (ungelesen, dann am längsten ruhig), Rest nach Punkten", () => {
     const liste = coacheesSortiert(

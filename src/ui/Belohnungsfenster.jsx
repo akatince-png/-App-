@@ -168,6 +168,11 @@ export default function Belohnungsfenster() {
           {symbol(84, 40)}
           <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginTop: 20, lineHeight: 1.25 }}>{eintrag.text}</div>
           {eintrag.untertitel && <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", marginTop: 8, lineHeight: 1.45 }}>{eintrag.untertitel}</div>}
+          {eintrag.hinweis && (
+            <div data-feier-hinweis style={{ marginTop: 12, padding: "8px 12px", borderRadius: 12, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", fontSize: 12.5, lineHeight: 1.4 }}>
+              {eintrag.hinweis}
+            </div>
+          )}
           {punkteText && (
             <div style={{ marginTop: 14, padding: "7px 16px", borderRadius: 999, background: "rgba(92,195,168,0.18)", color: "#8FE3CC", fontSize: 16, fontWeight: 900 }}>
               ⚡ {punkteText}

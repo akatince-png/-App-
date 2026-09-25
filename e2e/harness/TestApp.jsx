@@ -47,6 +47,20 @@ function leseOverridesAusUrl() {
   if (params.get("coachnachricht") === "1") {
     overrides.coacheeNachrichten = [{ id: "n9", text: "Hi, wie läuft deine Woche?", gelesen: false, absender: "coach", erstelltAm: new Date().toISOString() }];
   }
+  // ?spaet=1: Morgenroutine an 3 der letzten 5 Tage deutlich später als
+  // geplant (06:00) — Karte "Passt deine Zeit noch?" (25.09.).
+  if (params.get("spaet") === "1") {
+    const h = new Date();
+    const lauf = (n, std, min) => {
+      const d = new Date(h.getFullYear(), h.getMonth(), h.getDate() - n, std, min);
+      const datum = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return { id: `d${n}`, routine: "morgen", datum, schritte: [], gestartetUm: d.toISOString(), abgeschlossenUm: d.toISOString() };
+    };
+    overrides.routineSchritte = [{ id: "r1", routine: "morgen", reihenfolge: 1, name: "Wasser trinken", dauerMin: 1 }];
+    overrides.routineEinstellungen = { morgen: { routine: "morgen", startZeit: "06:00", endZeit: "09:00" } };
+    overrides.routineDurchlaeufe = [lauf(1, 8, 40), lauf(2, 8, 50), lauf(3, 6, 5), lauf(4, 9, 0)];
+    overrides.protokollEintraege = [];
+  }
   // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).

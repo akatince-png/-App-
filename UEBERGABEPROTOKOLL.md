@@ -38,6 +38,26 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
 
 Jetzt feiern beide Wege immer groß, über `utils/routineFeier.js`: pünktlich „Starker Start…“, später „Auch später zählt – starte gut in deinen Tag“. Die kleinen Meldungen je Schritt bleiben pünktlichkeitsgebunden (Vorgabe 12.09.).
 
+### Verspätete Routine: vermerken und reagieren (25.09., Vorschau freigegeben)
+Vorgabe der Nutzerin: Eine verpasste Uhrzeit darf nicht dazu führen, dass Funktionen ausfallen. Die Verspätung wird dokumentiert, und darauf wird reagiert.
+- **Jede verspätete Routine:** Die Feier kommt trotzdem, mit dem kleinen Zusatz „🕐 Heute X Std. Y Min. später als geplant (06:00). Ist im Protokoll vermerkt.“
+  - Jeder Abschluss steht im Tagesprotokoll als `erledigt`: „komplett geschafft“ oder „verspätet – …“.
+  - Das läuft zentral in `useRoutinen.durchlaufSpeichern`, gemessen am Start des Durchlaufs.
+- **Muster:** Die Karte `ui/RoutineZeitHinweisKarte.jsx` steht oben auf Home, nur im eigenen Konto. Wege:
+  - „Auf HH:MM umstellen“: Das Ende wird mitverschoben.
+  - „💬 Mit meinem Coach besprechen“: öffnet den Chat mit einem vorbereiteten Satz; gesendet wird erst mit „Senden“. Nur für Coachees.
+  - „Nein, passt so“.
+  - Jede Wahl wird als `Zeit-Hinweis` protokolliert. Danach fragt die Karte eine Woche nicht mehr, auch auf anderen Geräten.
+- **Coach-Übersicht:** Betroffene erscheinen gelb mit „🌅 Morgenroutine meist später · Ø 08:45 statt 06:00“ und zählen zu „brauchen dich“.
+  - In der aufgeklappten Zeile gibt es „💬 Zeit ansprechen“ mit vorbereitetem Satz.
+  - Die Daten kommen direkt aus `routine_einstellungen`/`routine_durchlaeufe` (Admin-RLS); keine Migration nötig.
+- **Grenzwerte** stehen als Konstanten in `utils/routineVerspaetung.js`: 3 von 5 Tagen, mehr als 30 Min., 1 Woche Ruhe. Laut Nutzerin erstmal so festgesetzt; in der Praxis prüfen und bei Bedarf anpassen. Vorschlagszeit = Median der späten Tage, auf 15 Min. gerundet.
+- **Täglicher Test:**
+  - Die 4 Testkonten haben seit 25.09. eine Morgenroutine mit Start 07:00. Da sie abends laufen, sind sie immer spät.
+  - Reaktionen in `tageslauf.mjs`: Claude „passt so“, Mia stellt um, Lea fragt den Coach, Jonas ignoriert.
+  - `adminlauf.mjs` spricht betroffene Testpersonen an, höchstens einmal pro Woche und nur Testkonten.
+- **Hinweis:** Das echte Konto der Nutzerin erfüllt das Muster bereits (23.–25.09. nach 06:00). Die Karte erscheint dort ohne Coach-Knopf, weil es ein Admin-Konto ist.
+
 ### 🚀 Go-Live-Checkliste (Stand 25.09.2026, mit der Nutzerin besprochen)
 Ausgangslage:
 - Supabase im **Gratis-Tarif** (Org „Akatince“, Projekt „My Protocols“, Region **eu-central-1 / Frankfurt**). Belegt: Datenbank 54 MB von 500 MB, Dateien 13 MB von 1 GB, 7 Konten.

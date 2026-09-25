@@ -31,6 +31,7 @@ import { getCoachName } from "../utils/coachStorage";
 import QuickTaskList from "../ui/QuickTaskList";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
+import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
@@ -985,6 +986,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           <span style={{ background: "#E0352B", color: "#fff", borderRadius: 99, fontSize: 11, fontWeight: 800, padding: "3px 8px", flexShrink: 0 }}>{ungeleseneCoachNachrichten.length}</span>
         </button>
       )}
+      {/* Verspätete Routine als Muster (25.09.): "Passt deine Zeit noch?" —
+          nur im eigenen Konto, nicht beim Verwalten einer anderen Person. */}
+      {proband === null && <RoutineZeitHinweisKarte zeigeCoachKnopf={!isAdmin} onCoachChat={() => onOpenView("coach-chat")} />}
       {/* Ganz oben EINE Karte (24.09., Nutzerinnen-Wunsch): Spielstand
           (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
           Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und

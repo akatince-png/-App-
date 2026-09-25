@@ -21,6 +21,12 @@ export function coacheeStatus(p, heute = new Date()) {
   const ruhigTage = p.letzte_aktivitaet ? tageZwischen(p.letzte_aktivitaet, heute) : null;
   if (ruhigTage === null) return { art: "ruhig", ampel: "rot", text: "noch nicht aktiv", zusatz: null, brauchtDich: true, ungelesen, ruhigTage: 999 };
   if (ruhigTage >= 2) return { art: "ruhig", ampel: "rot", text: `seit ${ruhigTage} Tagen ruhig`, zusatz: null, brauchtDich: true, ungelesen, ruhigTage };
+  // Routine-Zeit passt nicht (25.09., utils/routineVerspaetung.js): aktiv,
+  // aber an 3 von 5 Tagen deutlich später — gelb, zählt zu "braucht dich".
+  const v = p.routine_verspaetung;
+  if (v) {
+    return { art: "verspaetet", ampel: "gelb", text: `${v.routine === "morgen" ? "🌅" : "🌙"} ${v.label} meist später`, zusatz: `Ø ${v.vorschlag} statt ${v.startZeit}`, brauchtDich: true, ungelesen, ruhigTage, verspaetung: v };
+  }
   return { art: "aktiv", ampel: "gruen", text: ruhigTage === 0 ? "heute aktiv" : "gestern aktiv", zusatz: null, brauchtDich: ungelesen > 0, ungelesen, ruhigTage };
 }
 

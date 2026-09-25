@@ -9,8 +9,8 @@ import { nachTagenGruppieren } from "../data/coachChat";
 // ✓ zugestellt / blaue ✓✓ gelesen, Schnellantworten mit einem Tipp und
 // Diktieren (ohne KI). Für Coach UND Coachee dieselbe Komponente —
 // `ich` sagt, welche Seite "rechts" ist.
-export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichten, fehler, onSenden, onZurueck, vorlagen = [], platzhalter = "Nachricht …" }) {
-  const [text, setText] = useState("");
+export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichten, fehler, onSenden, onZurueck, vorlagen = [], platzhalter = "Nachricht …", startText = "" }) {
+  const [text, setText] = useState(startText);
   const [sendet, setSendet] = useState(false);
   const [sendeFehler, setSendeFehler] = useState(null);
   const verlaufRef = useRef(null);
@@ -78,6 +78,7 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
                   <div
                     key={n.id}
                     data-chat-nachricht={meine ? "eigene" : "fremde"}
+                    data-zeit={n.erstelltAm}
                     style={{
                       alignSelf: meine ? "flex-end" : "flex-start",
                       maxWidth: "78%",

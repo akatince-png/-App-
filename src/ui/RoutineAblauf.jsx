@@ -6,6 +6,7 @@ import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { routineGeschafftFeier } from "../utils/routineFeier";
+import { verspaetungHinweis } from "../utils/routineVerspaetung";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -86,7 +87,9 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
       // Immer feiern (25.09.), pünktlich oder später — siehe routineFeier.js.
-      feuereBelohnung(routineGeschafftFeier(routine, rechtzeitigGestartetRef.current));
+      feuereBelohnung(
+        routineGeschafftFeier(routine, rechtzeitigGestartetRef.current, verspaetungHinweis(routineEinstellungen?.[routine]?.startZeit, gestartetUmRef.current, belohnungPufferMin))
+      );
       setFertig(true);
     }
   };

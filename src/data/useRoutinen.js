@@ -4,6 +4,7 @@ import { toLocalISODate } from "../utils/dates";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { routineGeschafftFeier } from "../utils/routineFeier";
 import { feuereBelohnung } from "../utils/belohnungBus";
+import { verspaetungHinweis } from "../utils/routineVerspaetung";
 
 function rowToSchritt(r) {
   return { id: r.id, routine: r.routine, reihenfolge: r.reihenfolge, name: r.name, dauerMin: r.dauer_min };
@@ -32,7 +33,7 @@ function rowToEinstellung(r) {
 // (routine_schritte: was gehört dazu, Reihenfolge, geplante Dauer) getrennt
 // von den tatsächlichen Durchläufen (routine_durchlaeufe: was wurde wann
 // wirklich gemacht, wie lange hat's gedauert) — siehe RoutineAblauf.jsx.
-export function useRoutinen(userId, belohnungPufferMin) {
+export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   const [schritte, setSchritte] = useState([]);
   const [durchlaeufe, setDurchlaeufe] = useState([]);
   const [einstellungen, setEinstellungen] = useState({});
@@ -240,9 +241,19 @@ export function useRoutinen(userId, belohnungPufferMin) {
       }
       const neu = rowToDurchlauf(data);
       setDurchlaeufe((prev) => [neu, ...prev]);
+      // Jeder Abschluss landet im Tagesprotokoll, eine Verspätung
+      // ausdrücklich mit vermerkt (25.09., utils/routineVerspaetung.js) —
+      // gemessen am Start, wie beim Belohnungsfenster.
+      const spaet = verspaetungHinweis(einstellungen[routine]?.startZeit, gestartetUm, belohnungPufferMin);
+      aenderungVermerken?.({
+        kategorie: routine === "morgen" ? "morgenroutine" : "abendroutine",
+        itemName: routine === "morgen" ? "Morgenroutine" : "Abendroutine",
+        aktion: "erledigt",
+        detail: spaet ? `verspätet – ${spaet.replace(/^Heute /, "")}` : "komplett geschafft",
+      });
       return { ok: true, durchlauf: neu };
     },
-    [userId, durchlaeufe]
+    [userId, durchlaeufe, einstellungen, belohnungPufferMin, aenderungVermerken]
   );
 
   // Bestätigt/entfernt EINEN Schritt für einen Tag, unabhängig vom
@@ -295,13 +306,15 @@ export function useRoutinen(userId, belohnungPufferMin) {
         // Letzter Schritt abgehakt → dieselbe große Feier wie beim geführten
         // Ablauf (25.09.); pünktlich = innerhalb des Puffers nach der
         // eingestellten Startzeit der Routine.
-        feuereBelohnung(routineGeschafftFeier(schritt.routine, istRechtzeitig(einstellungen[schritt.routine]?.startZeit, belohnungPufferMin)));
+        const startZeit = einstellungen[schritt.routine]?.startZeit;
+        const jetztIso = new Date().toISOString();
+        feuereBelohnung(routineGeschafftFeier(schritt.routine, istRechtzeitig(startZeit, belohnungPufferMin), verspaetungHinweis(startZeit, jetztIso, belohnungPufferMin)));
         durchlaufSpeichern({
           routine: schritt.routine,
           schritte: geschwister
             .sort((a, b) => a.reihenfolge - b.reihenfolge)
             .map((sc) => ({ name: sc.name, geplantMin: sc.dauerMin, tatsaechlichSek: null })),
-          gestartetUm: new Date().toISOString(),
+          gestartetUm: jetztIso,
         });
       }
     },

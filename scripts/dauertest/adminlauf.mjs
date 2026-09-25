@@ -101,6 +101,37 @@ if (await jonasZeile.count()) {
   coach.beobachtungen.push(`Chat mit Jonas: ${antworten} Nachricht(en) von Jonas im Verlauf`);
   await chat.getByRole('button', { name: 'Zurück' }).click(); await w(1500);
 } else befund('Jonas-Zeile in der Coach-Übersicht nicht gefunden');
+// 2b) Routine meist später (25.09.): Testpersonen, deren Morgen-/Abend-
+//    routine an 3 von 5 Tagen > 30 Min. später klappt, stehen gelb mit
+//    "… meist später". Der Test-Coach spricht die Zeit per Chat an —
+//    NUR bei den Testkonten, nie bei echten Personen.
+coach.verspaetet = [];
+for (const n of TEST_COACHEES) {
+  const zeile = p.locator('button[aria-expanded]').filter({ hasText: n }).first();
+  if (!(await zeile.count()) || !/meist später/.test(await zeile.innerText())) continue;
+  const status = (await zeile.innerText()).split('\n').find((l) => /meist später/.test(l)) || '';
+  if ((await zeile.getAttribute('aria-expanded')) !== 'true') { await zeile.click(); await w(800); }
+  const knopf = p.getByRole('button', { name: '💬 Zeit ansprechen' }).first();
+  if (!(await knopf.count())) { befund(`${n}: "meist später", aber kein Knopf "Zeit ansprechen"`); continue; }
+  await knopf.click(); await w(2500);
+  const chat = p.getByRole('dialog', { name: new RegExp(`Chat: ${n.split(' ')[0]}`) });
+  const entwurf = await chat.getByRole('textbox').inputValue();
+  if (!/mir ist aufgefallen/.test(entwurf)) befund(`${n}: Zeit-Nachricht nicht vorbereitet`);
+  // Höchstens einmal pro Woche ansprechen (wie die Karte bei der Person).
+  const schonGefragt = await chat.locator('[data-chat-nachricht="eigene"]').evaluateAll((els) =>
+    els.some((e) => /mir ist aufgefallen/.test(e.textContent) && Date.now() - new Date(e.dataset.zeit).getTime() < 7 * 86400000));
+  if (schonGefragt) {
+    await chat.getByRole('button', { name: 'Zurück' }).click(); await w(1500);
+    coach.verspaetet.push(`${n}: ${status.trim()} → diese Woche schon angesprochen`);
+    continue;
+  }
+  await chat.getByRole('button', { name: 'Senden' }).click(); await w(2500);
+  await foto(`41b-zeit-${n.split(' ')[0].toLowerCase()}`);
+  await chat.getByRole('button', { name: 'Zurück' }).click(); await w(1500);
+  coach.verspaetet.push(`${n}: ${status.trim()} → Coach hat geschrieben`);
+  coach.taps.zeitAnsprechen = 3; // Zeile, Zeit ansprechen, Senden (Text schon vorbereitet)
+}
+coach.beobachtungen.push(coach.verspaetet.length ? `Routine meist später: ${coach.verspaetet.join('; ')}` : 'Routine meist später: bei keiner Testperson');
 const zeilen = await p.locator('button[aria-expanded]').allInnerTexts();
 if (zeilen.some((z) => /Claude Admin-Test/.test(z))) befund('Admin-Konto erscheint in der Coach-Übersicht');
 coach.beobachtungen.push(`Reihenfolge: ${zeilen.map((z) => z.split('\n')[0]).join(' → ')}`);

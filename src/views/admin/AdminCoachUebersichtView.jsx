@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { toLocalISODate } from "../../utils/dates";
 import { chatListe, chatZeitKurz, useCoachChat } from "../../data/coachChat";
 import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZahlen } from "../../utils/coachAufmerksamkeit";
+import { MUSTER_TAGE, coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
 
 // Grafische Gesamtübersicht über ALLE Coachees gleichzeitig (15.08.,
 // Nutzerin-Vorgabe: "wie meine Flipcharts aufrufen ... auf einen Blick
@@ -31,6 +32,8 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
   const [chatFuer, setChatFuer] = useState(null);
   const [reiter, setReiter] = useState("uebersicht");
   const [chatZeilen, setChatZeilen] = useState([]);
+  const [verspaetungen, setVerspaetungen] = useState({});
+  const [chatEntwurf, setChatEntwurf] = useState("");
 
   // Chatliste (24.09., WhatsApp-Startseite): die letzten Nachrichten aller
   // Coachees; die Liste daraus baut chatListe().
@@ -69,10 +72,19 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       // neuer RPC-Umweg nötig, ganz normale Tabellen-Abfrage.
       const ids = data.map((p) => p.id);
       if (ids.length === 0) return;
-      const [{ data: wochenplan }, { data: sessions }] = await Promise.all([
+      // Routine-Zeiten der letzten Tage (25.09.): wer schafft die Morgen-/
+      // Abendroutine meist deutlich später als geplant? (RLS: Admins lesen
+      // beide Tabellen, siehe 0035.)
+      const musterStart = new Date();
+      musterStart.setDate(musterStart.getDate() - (MUSTER_TAGE - 1));
+      const [{ data: wochenplan }, { data: sessions }, { data: routineZeiten }, { data: routineLaeufe }] = await Promise.all([
         supabase.from("training_wochenplan").select("user_id, name, wochentag, uhrzeit, arten").in("user_id", ids),
         supabase.from("training_sessions").select("user_id, datum, art, name, erledigt").in("user_id", ids).order("datum", { ascending: false }),
+        supabase.from("routine_einstellungen").select("user_id, routine, start_zeit").in("user_id", ids),
+        supabase.from("routine_durchlaeufe").select("user_id, routine, datum, gestartet_um, abgeschlossen_um").in("user_id", ids).gte("datum", toLocalISODate(musterStart)),
       ]);
+      const startZeiten = new Map((routineZeiten || []).map((z) => [`${z.user_id}_${z.routine}`, z.start_zeit]));
+      setVerspaetungen(coachVerspaetungen([...(routineZeiten || []), ...(routineLaeufe || []).map((l) => ({ ...l, start_zeit: startZeiten.get(`${l.user_id}_${l.routine}`) }))]));
       const vorSiebenTagen = new Date();
       vorSiebenTagen.setDate(vorSiebenTagen.getDate() - 7);
       const vorSiebenTagenStr = toLocalISODate(vorSiebenTagen);
@@ -94,7 +106,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
 
   // "Wer braucht dich?" (24.09., Nutzerinnen-Freigabe der Vorschau): nur
   // Coachees (Admin-Konten ausgeblendet), sortiert nach Aufmerksamkeit.
-  const sortiert = coacheesSortiert(probanden);
+  const sortiert = coacheesSortiert(probanden.map((p) => (verspaetungen[p.id] ? { ...p, routine_verspaetung: verspaetungen[p.id] } : p)));
   const zahlen = uebersichtZahlen(sortiert);
   const teamName = (id) => teams.find((t) => t.id === id)?.name || null;
   const gefiltert = sortiert.filter((p) => {
@@ -179,7 +191,10 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             teamName={teamName(p.team_id)}
             offen={offenFuer === p.id}
             onToggle={() => setOffenFuer((v) => (v === p.id ? null : p.id))}
-            onChat={() => setChatFuer(p)}
+            onChat={(entwurf = "") => {
+              setChatEntwurf(entwurf);
+              setChatFuer(p);
+            }}
             onVerwalteAls={onVerwalteAls}
             training={trainingByUser[p.id]}
             trainingOffen={trainingFuer === p.id}
@@ -188,7 +203,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
         ))}
       </div>
       <div style={{ fontSize: 11.5, color: textMuted, lineHeight: 1.5, marginTop: 10 }}>
-        Oben steht, wer dich braucht: seit 2 oder mehr Tagen ruhig, Onboarding offen oder eine ungelesene Nachricht. Neue Zugänge anlegen geht weiter im Admin-Dashboard.
+        Oben steht, wer dich braucht: seit 2 oder mehr Tagen ruhig, Onboarding offen, eine ungelesene Nachricht oder eine Routine, die an 3 von 5 Tagen mehr als 30 Min. später klappt. Neue Zugänge anlegen geht weiter im Admin-Dashboard.
       </div>
       </>
       )}
@@ -197,8 +212,10 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
         <CoachChatFenster
           proband={chatFuer}
           teamName={teamName(chatFuer.team_id)}
+          startText={chatEntwurf}
           onZurueck={() => {
             setChatFuer(null);
+            setChatEntwurf("");
             probandenLaden();
             chatsLaden();
           }}
@@ -255,7 +272,7 @@ function ChatListe({ eintraege, teamName, onOeffnen }) {
 const COACH_VORLAGEN = ["Wie läuft's bei dir?", "Stark gemacht! 💪", "Brauchst du Hilfe?"];
 
 // Chat mit EINER Person aus Coach-Sicht (24.09., WhatsApp-Stil).
-export function CoachChatFenster({ proband: p, teamName, onZurueck }) {
+export function CoachChatFenster({ proband: p, teamName, onZurueck, startText = "" }) {
   const { nachrichten, fehler, senden } = useCoachChat(p.id, "coach");
   const status = p.status || coacheeStatus(p);
   return (
@@ -270,6 +287,7 @@ export function CoachChatFenster({ proband: p, teamName, onZurueck }) {
       onZurueck={onZurueck}
       vorlagen={COACH_VORLAGEN}
       platzhalter={`Nachricht an ${p.vorname || "die Person"} …`}
+      startText={startText}
     />
   );
 }
@@ -322,7 +340,20 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
           <div style={{ fontSize: 11.5, color: textMuted, margin: "4px 0 10px" }}>
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
-          <PrimaryButton onClick={onChat}>💬 Chat{s.ungelesen > 0 ? ` (${s.ungelesen} neu)` : ""}</PrimaryButton>
+          {s.verspaetung && (
+            <div style={{ borderRadius: 12, background: "#FFF6E0", border: "1.5px solid #F2C94C", padding: "10px 12px", marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>
+                {s.verspaetung.label}: an {s.verspaetung.spaetAnzahl} von {s.verspaetung.tage.length} Tagen deutlich später
+              </div>
+              <div style={{ fontSize: 12, color: textMuted, margin: "2px 0 8px" }}>
+                Meist gegen {s.verspaetung.vorschlag} statt {s.verspaetung.startZeit} – vielleicht ist die Zeit nicht gut geplant.
+              </div>
+              <PrimaryButton variant="ghost" onClick={() => onChat(satzVomCoach(s.verspaetung, p.vorname))}>
+                💬 Zeit ansprechen
+              </PrimaryButton>
+            </div>
+          )}
+          <PrimaryButton onClick={() => onChat()}>💬 Chat{s.ungelesen > 0 ? ` (${s.ungelesen} neu)` : ""}</PrimaryButton>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             <div style={{ flex: 1 }}>
               <PrimaryButton variant="ghost" onClick={verwalten}>

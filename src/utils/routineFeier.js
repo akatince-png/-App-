@@ -4,7 +4,9 @@
 // IMMER: pünktlich mit "Starker Start", später mit "Auch später zählt".
 // Die kleinen Meldungen je Schritt bleiben an die Pünktlichkeit gebunden
 // (Vorgabe 12.09.).
-export function routineGeschafftFeier(routine, rechtzeitig) {
+// `verspaetung` (25.09.): Text aus verspaetungHinweis() — erscheint klein
+// unter der Feier, ohne Vorwurf, mit dem Vermerk, dass es protokolliert ist.
+export function routineGeschafftFeier(routine, rechtzeitig, verspaetung = null) {
   const morgen = routine === "morgen";
   return {
     text: morgen ? "Morgenroutine geschafft! 🌅" : "Abendroutine geschafft! 🌙",
@@ -18,5 +20,6 @@ export function routineGeschafftFeier(routine, rechtzeitig) {
     icon: morgen ? "sunrise" : "moon",
     punkte: 1,
     gross: true,
+    ...(verspaetung ? { hinweis: `🕐 ${verspaetung}. Ist im Protokoll vermerkt.` } : {}),
   };
 }

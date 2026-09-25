@@ -184,6 +184,30 @@ try {
     if (await page.getByRole("button", { name: /Dein Coach hat geschrieben/ }).isVisible().catch(() => false)) befund("Hinweis „Dein Coach hat geschrieben“ bleibt nach dem Lesen stehen");
   }
 
+  // 1c) Karte "Passt deine Morgenroutine-Zeit noch?" (seit 25.09.): die
+  //     Testpersonen laufen abends, ihre Morgenroutine (Start 07:00) ist
+  //     also immer spät. Jede Person reagiert anders, damit alle Wege
+  //     täglich echt benutzt werden: Claude "passt so", Mia stellt um,
+  //     Jonas ignoriert (→ der Test-Coach spricht ihn an), Lea fragt den Coach.
+  const zeitKarte = page.getByRole("region", { name: /Passt deine (Morgen|Abend)routine-Zeit noch/ }).first();
+  if (await zeitKarte.isVisible().catch(() => false)) {
+    await foto("01c-zeit-karte");
+    const wahl = { "claude.dauertest@example.com": "passt", "claude.dauertest2@example.com": "umstellen", "claude.dauertest4@example.com": "coach" }[EMAIL] || "ignorieren";
+    if (wahl === "passt") await zeitKarte.getByRole("button", { name: /Nein, passt so/ }).click();
+    if (wahl === "umstellen") await zeitKarte.getByRole("button", { name: /umstellen$/ }).click();
+    if (wahl === "coach") {
+      await zeitKarte.getByRole("button", { name: /Mit meinem Coach besprechen/ }).click();
+      await warte(2500);
+      const chat = page.getByRole("dialog", { name: /Chat: Dein Coach/ });
+      if (!/klappt meist erst gegen/.test(await chat.getByRole("textbox").inputValue().catch(() => ""))) befund("Zeit-Karte: Satz für den Coach nicht vorbereitet");
+      await chat.getByRole("button", { name: "Senden" }).click().catch(() => befund("Zeit-Karte: Senden im Coach-Chat nicht möglich"));
+      await warte(1500);
+      await chat.getByRole("button", { name: "Zurück" }).click().catch(() => {});
+    }
+    await warte(1500);
+    schritt(`Zeit-Karte gesehen, Reaktion: ${wahl}`);
+  }
+
   // 2) Tagesplan abhaken (außer am Pausentag)
   await geheZu("tagesplan");
   for (const gruppe of ["🌅 Morgenroutine", "🌙 Abendroutine"]) {

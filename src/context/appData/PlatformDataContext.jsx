@@ -42,7 +42,7 @@ export function PlatformDataProvider({ children }) {
   const adminNotizenData = useAdminNotizen(userId);
   const spotifyData = useSpotifyVerbindung(userId);
   const uebungsBilderData = useUebungsBilder(userId);
-  const routinenData = useRoutinen(userId, belohnungPufferMin);
+  const routinenData = useRoutinen(userId, belohnungPufferMin, aenderungsprotokollData.aenderungVermerken);
   const zeitbloeckeData = useZeitbloecke(userId);
   const coacheeNachrichtenData = useCoacheeNachrichten(userId);
   const coachWissenData = useCoachWissen(userId);
