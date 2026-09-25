@@ -5,12 +5,15 @@
 // - "mahlzeit": Foto eines Tellers (+ optionaler Satz) → ca.-Werte je
 //   erkannter Komponente mit geschätzten Gramm.
 // Wie blutwerte-scan: Bild liegt im privaten "photos"-Bucket, die Function
-// lädt es serverseitig und fragt Claude; der ANTHROPIC_API_KEY bleibt hier.
+// lädt es serverseitig und fragt Claude (ANTHROPIC_API_KEY) oder, falls
+// nur der vorhandene GEMINI_API_KEY gesetzt ist, Gemini. Schlüssel bleiben hier.
 // Die App zeigt das Ergebnis als Rechnung zum Bestätigen, ohne Chat.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+const GEMINI_MODEL = Deno.env.get("GEMINI_VISION_MODEL") || "gemini-3.8-flash";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -71,12 +74,73 @@ const REGELN = [
   "erkannt = false, wenn auf dem Bild nichts Brauchbares zu sehen ist; dann posten leer und in hinweis kurz, was fehlt.",
 ];
 
+// Claude (bevorzugt, wenn ANTHROPIC_API_KEY gesetzt ist).
+async function mitClaude(bild: string, mediaType: string, aufgabe: string) {
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+  // deno-lint-ignore no-explicit-any
+  const res: any = await client.beta.messages.create({
+    model: "claude-opus-5",
+    max_tokens: 4000,
+    betas: ["server-side-fallback-2026-07-01"],
+    // @ts-ignore: neuere Parameter (Fallback bei Ablehnung, JSON-Schema)
+    fallbacks: "default",
+    output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
+    system: REGELN.join("\n"),
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: bild } },
+          { type: "text", text: aufgabe },
+        ],
+      },
+    ],
+  });
+  if (res.stop_reason === "refusal") return null;
+  const textBlock = (res.content || []).find((b: { type: string }) => b.type === "text");
+  return JSON.parse(textBlock?.text || "{}");
+}
+
+// Gemini (vorhandener Schlüssel des Projekts), gleiche Regeln + JSON-Ausgabe.
+// Bei Überlastung (429/503) weiter zum nächsten Modell.
+const GEMINI_MODELLE = [GEMINI_MODEL, "gemini-flash-latest", "gemini-3.5-flash", "gemini-3.6-flash"].filter((m, i, a) => a.indexOf(m) === i);
+async function mitGemini(bild: string, mediaType: string, aufgabe: string) {
+  for (const modell of GEMINI_MODELLE) {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modell}:generateContent?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: REGELN.join("\n") + "\nAntworte NUR mit JSON: " + JSON.stringify(SCHEMA) }] },
+        contents: [{ role: "user", parts: [{ inline_data: { mime_type: mediaType || "image/jpeg", data: bild } }, { text: aufgabe }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
+      }),
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      console.error(`Gemini-Fehler (${modell}):`, JSON.stringify(j).slice(0, 300));
+      if ([404, 429, 500, 503].includes(r.status)) continue;
+      return null;
+    }
+    const text = (j.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("");
+    return JSON.parse(text.replace(/```json|```/g, "").trim() || "{}");
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     const body = await req.json();
     // Bereitschafts-Check (verrät nur, ob ein Schlüssel hinterlegt ist).
-    if (body?.pruefen) return antwort({ bereit: !!ANTHROPIC_API_KEY });
+    if (body?.pruefen) {
+      let modelle: string[] = [];
+      if (body.modelle && GEMINI_API_KEY) {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}&pageSize=200`);
+        const j = await r.json();
+        modelle = (j.models || []).map((m: { name: string }) => m.name).filter((n: string) => /gemini/.test(n));
+      }
+      return antwort({ bereit: !!ANTHROPIC_API_KEY || !!GEMINI_API_KEY, claude: !!ANTHROPIC_API_KEY, gemini: !!GEMINI_API_KEY, modelle });
+    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return antwort({ error: "Nicht angemeldet." }, 401);
@@ -88,7 +152,7 @@ Deno.serve(async (req) => {
 
     const { fotoPath, mediaType, art, text } = body || {};
     if (!fotoPath || typeof fotoPath !== "string" || !fotoPath.startsWith(`${user.id}/`)) return antwort({ error: "Ungültiger Foto-Pfad." }, 400);
-    if (!ANTHROPIC_API_KEY) return antwort({ error: "Foto-Erkennung ist noch nicht eingerichtet." }, 503);
+    if (!ANTHROPIC_API_KEY && !GEMINI_API_KEY) return antwort({ error: "Foto-Erkennung ist noch nicht eingerichtet." }, 503);
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: datei, error: ladeFehler } = await admin.storage.from("photos").download(fotoPath);
@@ -100,29 +164,8 @@ Deno.serve(async (req) => {
         ? `Das Foto zeigt eine Nährwerttabelle/Verpackung. Lies die Werte je 100 g (und ggf. Portionsgröße) ab. Gegessen wurde: "${text || "1 Portion"}". Nutze Stück-/Scheibengewichte vom Etikett, sonst übliche Größen. Ein Posten.`
         : `Das Foto zeigt eine Mahlzeit.${text ? ` Dazu sagt die Person: "${text}".` : ""} Erkenne die Komponenten, schätze jeweils die Menge in Gramm aus Tellergröße und Proportionen und berechne die Werte. Ein Posten je Komponente.`;
 
-    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-    // deno-lint-ignore no-explicit-any
-    const res: any = await client.beta.messages.create({
-      model: "claude-opus-5",
-      max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      // @ts-ignore: neuere Parameter (Fallback bei Ablehnung, JSON-Schema)
-      fallbacks: "default",
-      output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
-      system: REGELN.join("\n"),
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: bild } },
-            { type: "text", text: aufgabe },
-          ],
-        },
-      ],
-    });
-    if (res.stop_reason === "refusal") return antwort({ error: "Das Foto konnte nicht ausgewertet werden." }, 422);
-    const textBlock = (res.content || []).find((b: { type: string }) => b.type === "text");
-    const daten = JSON.parse(textBlock?.text || "{}");
+    const daten = ANTHROPIC_API_KEY ? await mitClaude(bild, mediaType, aufgabe) : await mitGemini(bild, mediaType, aufgabe);
+    if (daten === null) return antwort({ error: "Das Foto konnte nicht ausgewertet werden." }, 422);
     if (!daten.erkannt || !Array.isArray(daten.posten) || daten.posten.length === 0) {
       return antwort({ error: daten.hinweis || "Auf dem Foto war nichts Auswertbares zu sehen." }, 422);
     }

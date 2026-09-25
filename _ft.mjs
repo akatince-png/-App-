@@ -1,0 +1,15 @@
+import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+const K = process.env.K;
+const sb = createClient("https://xdajxswaclukstteafnk.supabase.co", K);
+const { data: s, error: e } = await sb.auth.signInWithPassword({ email: "claude.dauertest@example.com", password: "Tmp-Fototest-8841x" });
+if (e) throw e;
+const uid = s.user.id;
+const path = `${uid}/essen/test-${Date.now()}.jpg`;
+const up = await sb.storage.from("photos").upload(path, fs.readFileSync(process.env.BILD), { contentType: "image/jpeg" });
+if (up.error) throw up.error;
+const t0 = Date.now();
+const { data, error } = await sb.functions.invoke("essen-scan", { body: { fotoPath: path, mediaType: "image/jpeg", art: "etikett", text: "2 Scheiben von diesem Brot" } });
+console.log("Dauer", Date.now() - t0, "ms");
+console.log(JSON.stringify(error ? { error: String(error), ctx: await error.context?.text?.() } : data, null, 1));
+await sb.storage.from("photos").remove([path]);
