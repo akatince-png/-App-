@@ -287,8 +287,10 @@ try {
         await feierWegtippen();
         // Knöpfe aus LiveWorkout.jsx/Timer.jsx: Satz fertig → Pause
         // überspringen → Stimmt, weiter / Stimmt, Training beenden; bei
-        // Cardio (Stoppuhr) Start → Fertig.
-        const k = page.getByRole("button", { name: /^(Satz fertig|Pause überspringen|Stimmt, weiter|Stimmt, Training beenden|Start|Fertig|Workout starten)$/ }).first();
+        // Cardio (Stoppuhr) Start → Fertig. Seit 25.09. nach jedem Satz
+        // "Alle 10 Wiederholungen geschafft?" (SatzFrage.jsx) bzw. nach
+        // Intervallen "Alle 5 Runden?" → "✅ Ja, alle N".
+        const k = page.getByRole("button", { name: /^(✅ Ja, alle \d+|Weiter ohne Angabe|Satz fertig|Pause überspringen|Stimmt, weiter|Stimmt, Training beenden|Start|Fertig|Workout starten)$/ }).first();
         if (!(await k.isVisible().catch(() => false))) break;
         await k.click();
         await warte(700);

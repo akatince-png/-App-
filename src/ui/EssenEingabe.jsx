@@ -77,8 +77,11 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
         if (j !== i) return p;
         const neu = Math.max(0, Number(g) || 0);
         if (p.lebensmittel) return { ...p, gramm: neu, annahme: `${fmt(neu)} g${p.einlage ? ` · in ${p.einlage.label}` : ""}`, werte: werteMitEinlage(p.lebensmittel, neu, p.einlage) };
-        const f = p.gramm ? neu / p.gramm : 0;
-        return { ...p, gramm: neu, annahme: `${fmt(neu)} g`, werte: Object.fromEntries(Object.entries(p.werte).map(([k, v]) => [k, Math.round(v * f * 10) / 10])) };
+        // Immer vom ursprünglich geschätzten Stand aus rechnen – sonst bleiben
+        // die Werte nach einem Zwischenstand "0" (Zahl gelöscht, neu getippt) für immer 0.
+        const basis = p.basis || { gramm: p.gramm, werte: p.werte };
+        const f = basis.gramm ? neu / basis.gramm : 0;
+        return { ...p, basis, gramm: neu, annahme: `${fmt(neu)} g`, werte: Object.fromEntries(Object.entries(basis.werte).map(([k, v]) => [k, Math.round(v * f * 10) / 10])) };
       }),
     }));
 

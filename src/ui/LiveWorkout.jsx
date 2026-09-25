@@ -224,6 +224,9 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                 </button>
               ))}
             </div>
+            <button type="button" onClick={() => setRundenBeantwortet(true)} style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, cursor: "pointer", padding: 6, marginTop: 8, fontFamily: "inherit" }}>
+              Weiter ohne Angabe
+            </button>
           </Card>
         ) : justFinished && !feedbackErledigt ? (
           <TrainingFeedbackPanel trainingId={session.id} onDone={() => setFeedbackErledigt(true)} />
@@ -285,7 +288,20 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                     <PrimaryButton onClick={satzFertig}>Satz fertig</PrimaryButton>
                   </>
                 ) : phase === "letzteFrage" ? (
-                  <SatzFrage key={`${uebungIndex}-${satzOffen}`} soll={aktuelleUebung.wiederholungen} satz={satzOffen} onAntwort={satzBeantwortet} />
+                  <>
+                    <SatzFrage key={`${uebungIndex}-${satzOffen}`} soll={aktuelleUebung.wiederholungen} satz={satzOffen} onAntwort={satzBeantwortet} />
+                    {/* Die Frage ist ein Angebot, keine Pflicht – nie hier festhängen. */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSatzOffen(null);
+                        setPhase("bestaetigen");
+                      }}
+                      style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, cursor: "pointer", padding: 6, fontFamily: "inherit" }}
+                    >
+                      Weiter ohne Angabe
+                    </button>
+                  </>
                 ) : phase === "pause" ? (
                   <>
                     {satzOffen && (

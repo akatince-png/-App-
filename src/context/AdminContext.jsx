@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
+import { merkeRueckkehrZumDashboard } from "../utils/verwaltungRueckkehr";
 
 // Trägt, welche Probandin/welcher Proband gerade stellvertretend verwaltet
 // wird ("Verwalten als"-Modus, siehe AdminDashboardView.jsx) — null heißt:
@@ -12,7 +13,10 @@ export function AdminProvider({ children }) {
   const [proband, setProband] = useState(null); // { id, email, vorname } | null
 
   const verwalteAls = useCallback((p) => setProband(p), []);
-  const verlasseVerwaltung = useCallback(() => setProband(null), []);
+  const verlasseVerwaltung = useCallback(() => {
+    merkeRueckkehrZumDashboard();
+    setProband(null);
+  }, []);
 
   return <AdminContext.Provider value={{ proband, verwalteAls, verlasseVerwaltung }}>{children}</AdminContext.Provider>;
 }

@@ -12,6 +12,7 @@ import Belohnungsfenster from "./ui/Belohnungsfenster";
 import MomentFrageHost from "./ui/MomentFrageHost";
 import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
 import Aka from "./ui/Aka";
+import { nimmRueckkehrZumDashboard } from "./utils/verwaltungRueckkehr";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
@@ -226,6 +227,11 @@ export default function AuthenticatedApp() {
       // als" erwartet) auf Home zu landen. anfangsHashSchonVerwendet lebt
       // auf Modul-Ebene und überlebt daher genau diese Remounts, obwohl
       // der Komponenten-State jedes Mal frisch startet.
+      // Aus "Verwalten als" zurück → ins Admin-Dashboard, nicht auf Home.
+      if (isAdmin && nimmRueckkehrZumDashboard()) {
+        setView("admin");
+        return;
+      }
       if (!anfangsHashSchonVerwendet) {
         anfangsHashSchonVerwendet = true;
         const ausUrl = viewAusHash();

@@ -57,9 +57,12 @@ await beendenBtn.first().click(); await w(3000); await foto('23-beendet');
 if(!/Beendet: .*Probe-Woche/.test(await txt())) befund('Beendet-Hinweis fehlt');
 // Verwalten als Jonas (nur ansehen)
 await geh('admin');
+// Innerstes Element, das Jonas' E-Mail UND einen "Verwalten"-Knopf enthält
+// (25.09.: die alte Eltern-Suche griff bei geänderter Listen-Reihenfolge die
+// ganze Liste und öffnete so die erste Person statt Jonas).
 const btn = p.getByRole('button',{name:'Verwalten',exact:true});
-const n = await btn.count(); let geklickt=false;
-for (let i=0;i<n;i++){ const t = await btn.nth(i).evaluate(el=>{ let e=el; for(let k=0;k<8&&e;k++){ e=e.parentElement; if(e && e.querySelectorAll('button').length>=3 && /Dauertest|@/.test(e.innerText)) return e.innerText; } return ''; }); if(/Jonas Dauertest/.test(t)){ await btn.nth(i).click(); geklickt=true; break; } }
+const jonasVerwaltenZeile = p.locator("div").filter({ hasText: "claude.dauertest3@example.com" }).filter({ has: btn }).last();
+let geklickt = await jonasVerwaltenZeile.getByRole('button',{name:'Verwalten',exact:true}).first().click().then(()=>true).catch(()=>false);
 if(!geklickt) befund('Verwalten-Knopf für Jonas nicht gefunden');
 await w(5000); await juhu(); aktuell='verwalten-home'; await foto('30-verwalten-home');
 if(!/Du verwaltest gerade: Jonas/.test(await txt())) befund('Verwalten-Banner fehlt');
