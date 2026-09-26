@@ -96,9 +96,24 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
     In der aufgeklappten Person: „Programme von …“ mit Freischalten, Starten (abends), Pausieren, Beenden und
     Fortsetzen. Dort steht auch, was die Person in der Vorstellung angetippt hat (`profiles.vorstellung_tabs`).
     Starten der Einstellungsphase legt Etappe 1 an (`data/programmeAdmin.js`).
-  - Noch nicht gebaut: individuelle Einstellungen je Person über Status und Start hinaus (Feld `einstellungen`
-    ist vorbereitet), weitere Programme (neue Zeile in `programme` + eigener Inhalt), Pausieren verschiebt die
-    Wochen nicht (die Etappe läuft nach Datum weiter).
+  - **Pausieren, Woche wiederholen, persönlich einstellen (26.09. abends, Nutzerin):**
+    - Pausieren merkt sich `einstellungen.pauseSeit`. Beim Fortsetzen rücken die laufende und alle späteren
+      Etappen um die Pausentage nach hinten, es geht in derselben Woche weiter. Die Person sieht währenddessen
+      „⏸ Gerade pausiert“.
+    - „🔁 Woche N wiederholen“: Die Wiederholung beginnt immer am Tag nach dem Ende der laufenden Woche
+      (egal, an welchem Wochentag die Person gestartet ist). Das Etappen-Ende und spätere Etappen rücken sofort
+      um 7 Tage (Datenbank). Der Beginn der laufenden Etappe rückt erst ab dem Wiederholungstag
+      (`einstellungen.verschiebungen` [{etappeId, ab, tage, woche}], angewendet in `etappenVerschieben`
+      auf Coachee- und Coach-Seite). Bis zum Wiederholungstag kann man die Wiederholung zurücknehmen.
+      Die Dauer wird angezeigt als „8 Wochen + N wiederholt“.
+    - „⚙️ Persönlich einstellen“: Bausteine für diese Person weglassen (`einstellungen.ausgelassen`, wirkt auf
+      fällige Bausteine, Pflicht-Schritte und Bilanz) und eine Notiz nur für den Coach.
+    - Logik mit Tests in `utils/programme.js`, Speichern in `data/programmeAdmin.js`.
+  - Noch nicht gebaut: weitere Programme (neue Zeile in `programme` + eigener Inhalt), erst wenn welche anstehen.
+  - **Kamera beim Training (Frage der Nutzerin 26.09.):** Es werden **keine Videos** aufgenommen oder gespeichert.
+    Die Erkennung (MediaPipe, von Google, kostenlos, ohne Gemini, ohne Mengengrenze) läuft nur auf dem Handy.
+    Gespeichert wird nur die gezählte Zahl (`satzGezaehlt`). Video-Nachweise für Quests/Gruppen wären ein
+    eigenes Feature (kurze Clips, Speicher bei Supabase, automatisches Löschen nach Bestätigung). Das ist noch nicht entschieden.
 - **Bilder mit Menschen:** In der Vorstellung (und später anderswo) Illustrationen oder Bilder von Menschen,
   die gerade etwas tun oder die App erfolgreich nutzen. Im Beispiel 3 stehen Platzhalter-Figuren,
   die später durch echte Bilder bzw. Illustrationen ersetzt werden.
@@ -131,7 +146,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 282 Unit-Tests, 91 E2E-Tests (Stand 26.09. abends).
+  - 287 Unit-Tests, 92 E2E-Tests (Stand 26.09. abends).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)

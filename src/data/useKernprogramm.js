@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
 import { faelligeBausteine, zeileZuEtappe } from "../utils/kernprogramm";
-import { EINSTELLUNG, kernStandMitProgramm, zeileZuProgramm, zeileZuTeilnahme } from "../utils/programme";
+import { EINSTELLUNG, etappenVerschieben, kernStandMitProgramm, zeileZuProgramm, zeileZuTeilnahme } from "../utils/programme";
 import { plusTage } from "../utils/schichtplan";
 
 const zeileZuCheck = (r) => ({ wocheStart: r.woche_start, kernKey: r.kern_key, stoerung: r.stoerung || [], aenderung: r.aenderung || "", stimmung: r.stimmung });
@@ -45,9 +45,12 @@ export function useKernprogramm(userId, routinen) {
     };
   }, [userId]);
 
+  const einstellungTeilnahme = teilnahmen.find((t) => t.programmId === EINSTELLUNG) || null;
+  // Wochen-Wiederholung (26.09.): Beginn der laufenden Etappe rückt ab dem Wiederholungstag nach hinten.
+  const etappenSicht = useMemo(() => etappenVerschieben(etappen, einstellungTeilnahme?.einstellungen?.verschiebungen, heute), [etappen, einstellungTeilnahme, heute]);
   const stand = useMemo(
-    () => kernStandMitProgramm(etappen, heute, teilnahmen.find((t) => t.programmId === EINSTELLUNG) || null, programme.find((p) => p.id === EINSTELLUNG) || null),
-    [etappen, heute, teilnahmen, programme]
+    () => kernStandMitProgramm(etappenSicht, heute, einstellungTeilnahme, programme.find((p) => p.id === EINSTELLUNG) || null),
+    [etappenSicht, heute, einstellungTeilnahme, programme]
   );
 
   // Fehlende Pflicht-Schritte anlegen — erst wenn die Routine-Schritte
@@ -111,7 +114,7 @@ export function useKernprogramm(userId, routinen) {
     programme,
     programmTeilnahmen: teilnahmen,
     vorstellungTabsSpeichern,
-    kernEtappen: etappen,
+    kernEtappen: etappenSicht,
     kernStand: stand,
     kernWochenChecks: checks,
     kernTop3: top3,

@@ -1,5 +1,6 @@
 import MesswocheAuswertung from "../../ui/MesswocheAuswertung";
 import React, { useCallback, useEffect, useState } from "react";
+import { EINSTELLUNG, etappenVerschieben, zeileZuTeilnahme } from "../../utils/programme";
 import { PrimaryButton } from "../../ui/primitives";
 import { cardBorder, danger, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
@@ -39,7 +40,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
 
   const laden = useCallback(async () => {
     const seit = plusTage(heute, -14);
-    const [et, pa, sc, sl, du, tr, wp, ml, wc, t3, es, me, zu, pr, ch, alleSchritte] = await Promise.all([
+    const [et, pa, sc, sl, du, tr, wp, ml, wc, t3, es, me, zu, pr, ch, alleSchritte, tn] = await Promise.all([
       supabase.from("coaching_etappen").select("*").eq("user_id", personId).order("nummer"),
       supabase.from("kern_pausen").select("*").eq("user_id", personId),
       supabase.from("routine_schritte").select("id, routine, kern_key").eq("user_id", personId).not("kern_key", "is", null),
@@ -58,13 +59,18 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       supabase.from("checkins").select("datum, values").eq("user_id", personId).order("datum"),
       // Messwoche (26.09.): alle Schritte mit Dauer, um Vorschläge zu übernehmen.
       supabase.from("routine_schritte").select("id, routine, name, dauer_min").eq("user_id", personId),
+      // Programm-Modul (26.09.): Wiederholungen + ausgelassene Bausteine.
+      supabase.from("programm_teilnahmen").select("*").eq("user_id", personId).eq("programm_id", EINSTELLUNG).maybeSingle(),
     ]);
+    const teilnahme = tn.data ? zeileZuTeilnahme(tn.data) : null;
     const schrittErledigt = {};
     (sl.data || []).forEach((r) => (schrittErledigt[`${r.datum}__${r.schritt_id}`] = true));
     const mahlzeitErledigt = {};
     (ml.data || []).forEach((r) => r.erledigt && (mahlzeitErledigt[`${r.log_date}__${r.meal_id}__${r.tageszeit}`] = true));
     setD({
-      etappen: (et.data || []).map(zeileZuEtappe),
+      etappen: etappenVerschieben((et.data || []).map(zeileZuEtappe), teilnahme?.einstellungen?.verschiebungen, heute),
+      teilnahme,
+      ausgelassen: teilnahme?.einstellungen?.ausgelassen || [],
       pausen: (pa.data || []).map(zeileZuPause),
       schritte: (sc.data || []).map((r) => ({ id: r.id, routine: r.routine, kernKey: r.kern_key })),
       schrittErledigt,
@@ -93,7 +99,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
   }, [laden]);
 
   if (!d) return null;
-  const stand = programmStand(d.etappen, heute);
+  const stand = { ...programmStand(d.etappen, heute), ausgelassen: d.ausgelassen };
   const neu = async () => {
     await laden();
     onGeaendert?.();
@@ -296,7 +302,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>⏸ Baustein pausieren</div>
           <select aria-label="Baustein" value={pause.key} onChange={(e) => setPause((p) => ({ ...p, key: e.target.value }))} style={{ ...feld, width: "100%" }}>
             <option value="">Baustein wählen…</option>
-            {faelligeBausteine(stand.aktiv ? stand : programmStand(d.etappen, letzte.ende)).map((b) => (
+            {faelligeBausteine(stand.aktiv ? stand : { ...programmStand(d.etappen, letzte.ende), ausgelassen: d.ausgelassen }).map((b) => (
               <option key={b.key} value={b.key}>
                 {b.icon} {b.name}
               </option>

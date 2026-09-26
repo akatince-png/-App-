@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { PrimaryButton } from "../../ui/primitives";
 import { accentDark, cardBorder, danger, textMain, textMuted } from "../../ui/theme";
 import { toLocalISODate } from "../../utils/dates";
-import { datumKurz, programmStand } from "../../utils/kernprogramm";
-import { EINSTELLUNG, STATUS_TEXT, teilnahmenZaehlen } from "../../utils/programme";
+import { BAUSTEINE, datumKurz, programmStand } from "../../utils/kernprogramm";
+import { EINSTELLUNG, STATUS_TEXT, etappenVerschieben, kernStandMitProgramm, teilnahmenZaehlen, wiederholungAb } from "../../utils/programme";
 
 // Programme als eigenständige Module (26.09., Nutzerinnen-Vorgabe) – die
 // Coach-Seite: oben die Programme für alle (an/aus, automatisch für neue,
@@ -98,10 +98,13 @@ export function ProgrammeLeiste({ personen, etappenByUser, programme, teilnahmen
 }
 
 // Programme einer Person (in der aufgeklappten Coachee-Zeile).
-export function ProgrammePerson({ person, programme, teilnahmen, tabs, onSetzen, onStarten }) {
+// `aktionen`: { setzen, starten, pausieren, fortsetzen, wiederholen,
+// zuruecknehmen, persoenlich } – jeweils async, liefern { ok, error }.
+export function ProgrammePerson({ person, programme, teilnahmen, etappen = [], tabs, aktionen }) {
   const heute = toLocalISODate(new Date());
   const [start, setStart] = useState({});
   const [fehler, setFehler] = useState(null);
+  const [einstellenOffen, setEinstellenOffen] = useState(null);
   const eigene = teilnahmen.filter((t) => t.userId === person.id);
   const ausfuehren = async (fn) => {
     setFehler(null);
@@ -119,6 +122,10 @@ export function ProgrammePerson({ person, programme, teilnahmen, tabs, onSetzen,
       {programme.map((p) => {
         const t = eigene.find((x) => x.programmId === p.id);
         const status = t?.status;
+        const verschiebungen = t?.einstellungen?.verschiebungen || [];
+        const stand = p.id === EINSTELLUNG && t ? kernStandMitProgramm(etappenVerschieben(etappen, verschiebungen, heute), heute, t, p) : null;
+        const ab = stand?.aktiv ? wiederholungAb(stand) : null;
+        const schonGeplant = ab && verschiebungen.some((v) => v.ab === ab);
         return (
           <div key={p.id} style={{ padding: "7px 0", borderTop: "1px solid #F0F1F5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
@@ -128,43 +135,121 @@ export function ProgrammePerson({ person, programme, teilnahmen, tabs, onSetzen,
               </span>
               <span style={{ fontSize: 12, fontWeight: 800, color: status ? STATUS_FARBE[status] : textMuted }}>
                 {status ? STATUS_TEXT[status] : "nicht freigeschaltet"}
-                {status === "laufend" && t.start ? ` · seit ${datumKurz(t.start)}` : ""}
+                {status === "laufend" && stand?.aktiv ? ` · Woche ${stand.gesamtWoche}` : ""}
+                {status === "pausiert" && t.einstellungen?.pauseSeit ? ` seit ${datumKurz(t.einstellungen.pauseSeit)}` : ""}
               </span>
             </div>
+            {p.wochen && t && (
+              <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2 }}>
+                Dauer: {p.wochen} Wochen{verschiebungen.length ? ` + ${verschiebungen.length} wiederholt = ${p.wochen + verschiebungen.length}` : ""}
+                {t.notiz ? ` · 📝 ${t.notiz}` : ""}
+              </div>
+            )}
+            {verschiebungen
+              .filter((v) => v.ab > heute)
+              .map((v) => (
+                <div key={v.ab} style={{ fontSize: 12, marginTop: 4, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  🔁 Woche {v.woche} wird ab {datumKurz(v.ab)} wiederholt
+                  <button type="button" style={knopf(false)} onClick={() => ausfuehren(() => aktionen.zuruecknehmen(person.id, t, v))}>
+                    Zurücknehmen
+                  </button>
+                </div>
+              ))}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginTop: 6 }}>
               {!status && (
-                <button type="button" style={knopf(true)} onClick={() => ausfuehren(() => onSetzen(person.id, p.id, { status: "wartet" }))}>
+                <button type="button" style={knopf(true)} onClick={() => ausfuehren(() => aktionen.setzen(person.id, p.id, { status: "wartet" }))}>
                   + Freischalten
                 </button>
               )}
               {status === "wartet" && (
                 <>
-                  <input type="date" aria-label={`Start ${p.name}`} value={start[p.id] || heute} onChange={(e) => setStart((s) => ({ ...s, [p.id]: e.target.value }))} style={datumFeld} />
-                  <button type="button" style={knopf(true)} onClick={() => ausfuehren(() => onStarten([person.id], p.id, start[p.id] || heute))}>
+                  <input type="date" aria-label={`Start ${p.name}`} value={start[p.id] || heute} onChange={(e) => setStart((x) => ({ ...x, [p.id]: e.target.value }))} style={datumFeld} />
+                  <button type="button" style={knopf(true)} onClick={() => ausfuehren(() => aktionen.starten([person.id], p.id, start[p.id] || heute))}>
                     ▶ Starten (abends)
                   </button>
                 </>
               )}
               {status === "laufend" && (
                 <>
-                  <button type="button" style={knopf(false)} onClick={() => ausfuehren(() => onSetzen(person.id, p.id, { status: "pausiert" }))}>
+                  {ab && !schonGeplant && (
+                    <button type="button" style={knopf(false)} title={`Ab ${datumKurz(ab)} (Tag nach dem Ende dieser Woche)`} onClick={() => ausfuehren(() => aktionen.wiederholen(person.id, t, stand))}>
+                      🔁 Woche {stand.gesamtWoche} wiederholen
+                    </button>
+                  )}
+                  <button type="button" style={knopf(false)} onClick={() => ausfuehren(() => aktionen.pausieren(person.id, p.id, t))}>
                     ⏸ Pausieren
                   </button>
-                  <button type="button" style={knopf(false)} onClick={() => ausfuehren(() => onSetzen(person.id, p.id, { status: "beendet" }))}>
+                  <button type="button" style={knopf(false)} onClick={() => ausfuehren(() => aktionen.setzen(person.id, p.id, { status: "beendet" }))}>
                     ⏹ Beenden
                   </button>
                 </>
               )}
               {(status === "pausiert" || status === "beendet") && (
-                <button type="button" style={knopf(true)} onClick={() => ausfuehren(() => onSetzen(person.id, p.id, { status: "laufend" }))}>
+                <button type="button" style={knopf(true)} onClick={() => ausfuehren(() => aktionen.fortsetzen(person.id, p.id, t))}>
                   ▶ Fortsetzen
                 </button>
               )}
+              {t && (
+                <button type="button" style={knopf(einstellenOffen === p.id)} aria-expanded={einstellenOffen === p.id} data-programme-toggle onClick={() => setEinstellenOffen((o) => (o === p.id ? null : p.id))}>
+                  ⚙️ Persönlich einstellen
+                </button>
+              )}
             </div>
+            {ab && !schonGeplant && status === "laufend" && <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>Wiederholen beginnt am Tag nach dem Ende dieser Woche ({datumKurz(ab)}); alles Weitere rückt 7 Tage nach hinten.</div>}
+            {status === "pausiert" && <div style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>Beim Fortsetzen rückt alles um die Pausentage nach hinten – es geht in derselben Woche weiter.</div>}
+            {einstellenOffen === p.id && t && <PersoenlichEinstellen key={t.id} teilnahme={t} mitBausteinen={p.id === EINSTELLUNG} onSpeichern={(werte) => ausfuehren(() => aktionen.persoenlich(person.id, p.id, t, werte))} />}
           </div>
         );
       })}
       {fehler && <div style={{ fontSize: 12, color: danger, marginTop: 6 }}>{fehler}</div>}
+    </div>
+  );
+}
+
+// Persönliche Einstellungen je Teilnahme: Bausteine auslassen + Notiz.
+function PersoenlichEinstellen({ teilnahme, mitBausteinen, onSpeichern }) {
+  const [aus, setAus] = useState(teilnahme.einstellungen?.ausgelassen || []);
+  const [notiz, setNotiz] = useState(teilnahme.notiz || "");
+  const [gespeichert, setGespeichert] = useState(false);
+  return (
+    <div style={{ marginTop: 8, borderRadius: 10, background: "#F7F8FB", padding: "10px 11px" }} data-persoenlich>
+      {mitBausteinen && (
+        <>
+          <div style={{ fontSize: 12.5, fontWeight: 800 }}>Bausteine für diese Person</div>
+          <div style={{ fontSize: 11.5, color: textMuted, margin: "2px 0 6px" }}>Durchgestrichen = fällt für diese Person weg (z. B. nach Absprache).</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            {BAUSTEINE.map((b) => {
+              const weg = aus.includes(b.key);
+              return (
+                <button
+                  key={b.key}
+                  type="button"
+                  aria-pressed={!weg}
+                  onClick={() => setAus((a) => (weg ? a.filter((k) => k !== b.key) : [...a, b.key]))}
+                  style={{ border: `1px solid ${weg ? "#D5D8E2" : "#9CC9B0"}`, background: weg ? "#fff" : "#EAF6EF", color: weg ? textMuted : textMain, textDecoration: weg ? "line-through" : "none", borderRadius: 99, padding: "4px 9px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  {b.icon} {b.name} · W{b.woche}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+      <div style={{ fontSize: 12.5, fontWeight: 800, marginTop: 10 }}>Notiz (nur für dich)</div>
+      <textarea aria-label="Notiz zum Programm" value={notiz} onChange={(e) => setNotiz(e.target.value)} rows={2} placeholder="z. B. Knie schonen, lieber Rad statt Laufen" style={{ width: "100%", boxSizing: "border-box", border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 9px", fontSize: 13, fontFamily: "inherit", marginTop: 4 }} />
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+        <button
+          type="button"
+          style={knopf(true)}
+          onClick={async () => {
+            await onSpeichern({ ausgelassen: aus, notiz: notiz.trim() });
+            setGespeichert(true);
+          }}
+        >
+          Speichern
+        </button>
+        {gespeichert && <span style={{ fontSize: 12, color: "#2E9C86", fontWeight: 700 }}>✓ gespeichert</span>}
+      </div>
     </div>
   );
 }

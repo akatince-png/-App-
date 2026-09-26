@@ -108,7 +108,8 @@ export function programmStand(etappen, heute) {
 
 export function faelligeBausteine(stand) {
   if (!stand?.aktiv) return [];
-  return BAUSTEINE.filter((b) => b.woche <= stand.einfuehrungWoche);
+  const aus = stand.ausgelassen || [];
+  return BAUSTEINE.filter((b) => b.woche <= stand.einfuehrungWoche && !aus.includes(b.key));
 }
 
 export function pauseFuer(pausen, key, datum) {
@@ -138,8 +139,10 @@ export function kernBilanz(d, von, bis, heute) {
     // Ernährung (25.09.): je Tag Anzahl Mahlzeiten/Einträge + Eiweiß in g.
     ernaehrungAm = null,
     eiweissZiel = null,
+    // Persönliche Einstellungen (26.09.): für diese Person ausgelassene Bausteine.
+    ausgelassen = [],
   } = d;
-  const stand = programmStand(etappen, bis);
+  const stand = { ...programmStand(etappen, bis), ausgelassen };
   const tage = [];
   for (let t = von; t <= bis; t = plusTage(t, 1)) tage.push(t);
   return faelligeBausteine(stand).map((b) => {
@@ -228,6 +231,7 @@ export function bilanzAusAppData(a, von, bis, heute) {
       trainings: a.trainingEintraege,
       trainingWochenplan: a.trainingWochenplan,
       mahlzeitErledigt: a.mahlzeitErledigt,
+      ausgelassen: a.kernStand?.ausgelassen || [],
       ...ernaehrungFuerBilanz(a),
     },
     von,

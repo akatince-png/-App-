@@ -1,5 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
-import { EINSTELLUNG, zeileZuProgramm, zeileZuTeilnahme } from "../utils/programme";
+import { EINSTELLUNG, etappenAenderungen, tageZwischen, wiederholungAb, zeileZuProgramm, zeileZuTeilnahme } from "../utils/programme";
+import { toLocalISODate } from "../utils/dates";
+import { plusTage } from "../utils/schichtplan";
 import { kernprogrammStarten } from "./kernprogrammAdmin";
 
 // Coach-Seite des Programm-Moduls (26.09., Migration 0112): Katalog an/aus,
@@ -60,4 +62,69 @@ export async function programmStarten(personIds, programmId, start) {
     if (!r.ok) return r;
   }
   return { ok: true, anzahl: personIds.length };
+}
+
+// ---- Pausieren, Woche wiederholen, persönliche Einstellungen (26.09.) ----
+
+async function etappenRoh(userId) {
+  const { data } = await supabase.from("coaching_etappen").select("id, nummer, start, ende").eq("user_id", userId).order("nummer");
+  return data || [];
+}
+
+async function etappenAnwenden(aenderungen) {
+  for (const a of aenderungen) {
+    const { error } = await supabase.from("coaching_etappen").update({ start: a.start, ende: a.ende }).eq("id", a.id);
+    if (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    }
+  }
+  return { ok: true };
+}
+
+// Pausieren merkt sich den Tag; beim Fortsetzen rückt alles um die Pause nach hinten.
+export async function programmPausieren(userId, programmId, teilnahme) {
+  const einstellungen = { ...(teilnahme?.einstellungen || {}), pauseSeit: toLocalISODate(new Date()) };
+  return teilnahmeSetzen(userId, programmId, { status: "pausiert", einstellungen });
+}
+
+export async function programmFortsetzen(userId, programmId, teilnahme) {
+  const heute = toLocalISODate(new Date());
+  const { pauseSeit, ...rest } = teilnahme?.einstellungen || {};
+  const tage = pauseSeit ? Math.max(0, tageZwischen(pauseSeit, heute)) : 0;
+  const einstellungen = { ...rest };
+  if (tage > 0 && programmId === EINSTELLUNG) {
+    const r = await etappenAnwenden(etappenAenderungen(await etappenRoh(userId), heute, tage, "pause"));
+    if (!r.ok) return r;
+    // Noch ausstehende Wiederholungen rücken mit.
+    einstellungen.verschiebungen = (rest.verschiebungen || []).map((v) => (v.ab >= pauseSeit ? { ...v, ab: plusTage(v.ab, tage) } : v));
+  }
+  return teilnahmeSetzen(userId, programmId, { status: "laufend", einstellungen });
+}
+
+// Laufende Woche wiederholen: ab dem Tag nach dem Ende dieser Woche.
+export async function wocheWiederholen(userId, teilnahme, stand) {
+  const ab = wiederholungAb(stand);
+  if (!ab) return { ok: false, error: "Gerade läuft keine Woche." };
+  const liste = teilnahme?.einstellungen?.verschiebungen || [];
+  if (liste.some((v) => v.ab === ab)) return { ok: true };
+  const r = await etappenAnwenden(etappenAenderungen(await etappenRoh(userId), ab, 7, "wiederholung"));
+  if (!r.ok) return r;
+  const einstellungen = { ...(teilnahme?.einstellungen || {}), verschiebungen: [...liste, { etappeId: stand.etappe.id, ab, tage: 7, woche: stand.gesamtWoche }] };
+  return teilnahmeSetzen(userId, EINSTELLUNG, { einstellungen });
+}
+
+// Noch nicht begonnene Wiederholung zurücknehmen.
+export async function wiederholungZuruecknehmen(userId, teilnahme, v) {
+  if (v.ab <= toLocalISODate(new Date())) return { ok: false, error: "Die Wiederholung läuft schon." };
+  const r = await etappenAnwenden(etappenAenderungen(await etappenRoh(userId), v.ab, -7, "wiederholung"));
+  if (!r.ok) return r;
+  const einstellungen = { ...(teilnahme?.einstellungen || {}), verschiebungen: (teilnahme?.einstellungen?.verschiebungen || []).filter((x) => x.ab !== v.ab) };
+  return teilnahmeSetzen(userId, EINSTELLUNG, { einstellungen });
+}
+
+// Persönliche Einstellungen: ausgelassene Bausteine + Notiz.
+export async function persoenlichSpeichern(userId, programmId, teilnahme, { ausgelassen, notiz }) {
+  const einstellungen = { ...(teilnahme?.einstellungen || {}), ausgelassen: ausgelassen || [] };
+  return teilnahmeSetzen(userId, programmId, { einstellungen, notiz: notiz ?? "" });
 }

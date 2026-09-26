@@ -37,6 +37,14 @@ export default function KernprogrammKarte({ onOeffnen }) {
           <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4, lineHeight: 1.4 }}>Deinen Start legst du mit deinem Coach fest. Los geht&apos;s am Abend – mit deiner ersten Abendroutine.</div>
         </div>
       );
+    if (stand.pausiert)
+      return (
+        <div style={{ ...karte, cursor: "default" }} data-kern-pausiert>
+          <div style={klein}>DEIN AKA-COACHING</div>
+          <div style={{ fontWeight: 900, fontSize: 16, marginTop: 3 }}>⏸ Gerade pausiert</div>
+          <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4, lineHeight: 1.4 }}>Kein Druck. Wenn es weitergeht, machst du genau da weiter, wo du aufgehört hast.</div>
+        </div>
+      );
     if (!stand.geplant) return null;
     return (
       <button type="button" className="mp-tap" onClick={onOeffnen} style={karte}>

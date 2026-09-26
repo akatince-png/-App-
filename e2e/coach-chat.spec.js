@@ -166,3 +166,45 @@ test("Coach: Programme – Einstellungsphase für eine Person starten, Tabs aus 
   expect(gesendet.etappen[0][0]).toMatchObject({ user_id: "p-lea", nummer: 1, art: "einfuehrung" });
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
+
+// Woche wiederholen + persönlich einstellen (26.09.).
+test("Coach: Woche wiederholen verschiebt die Etappe, persönliche Einstellungen lassen Bausteine weg", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const gesendet = { teilnahmen: [], etappenPatch: [] };
+  const etappe = { id: "e-lea", user_id: "p-lea", nummer: 1, art: "einfuehrung", start: tag(9), ende: tag(-18), status: "laufend" };
+  await page.route("**/rest/v1/rpc/admin_liste_probanden*", (r) => r.fulfill({ json: PERSONEN }));
+  await page.route("**/rest/v1/teams*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/training_*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/programme*", (r) => r.fulfill({ json: [{ id: "einstellung", name: "AKA-Einstellungsphase", emoji: "🧭", wochen: 8, reihenfolge: 0, aktiv: true, fuer_neue: true }] }));
+  await page.route("**/rest/v1/programm_teilnahmen*", (r) => {
+    if (r.request().method() === "POST") {
+      gesendet.teilnahmen.push(r.request().postDataJSON());
+      return r.fulfill({ status: 201, json: [] });
+    }
+    return r.fulfill({ json: [{ id: "t-lea", user_id: "p-lea", programm_id: "einstellung", status: "laufend", start: tag(9), einstellungen: {} }] });
+  });
+  await page.route("**/rest/v1/coaching_etappen*", (r) => {
+    if (r.request().method() === "PATCH") {
+      gesendet.etappenPatch.push(r.request().postDataJSON());
+      return r.fulfill({ status: 204, body: "" });
+    }
+    return r.fulfill({ json: [etappe] });
+  });
+  await page.route("**/rest/v1/profiles*", (r) => r.fulfill({ json: [] }));
+  await chatMocks(page, []);
+  await page.goto("/e2e/harness/index.html#/admin-uebersicht");
+  await page.locator("button[aria-expanded]:not([data-programme-toggle])").filter({ hasText: "Lea" }).click();
+  const person = page.locator("[data-programme-person]");
+  await expect(person).toContainText("läuft · Woche 2");
+  await person.getByRole("button", { name: "🔁 Woche 2 wiederholen" }).click();
+  await expect.poll(() => gesendet.teilnahmen.length).toBe(1);
+  expect(gesendet.etappenPatch[0]).toMatchObject({ start: tag(9), ende: tag(-25) });
+  expect(gesendet.teilnahmen[0].einstellungen.verschiebungen[0]).toMatchObject({ etappeId: "e-lea", ab: tag(-5), tage: 7, woche: 2 });
+  await person.getByRole("button", { name: "⚙️ Persönlich einstellen" }).click();
+  await person.getByRole("button", { name: /Tageslicht · W1/ }).click();
+  await person.getByLabel("Notiz zum Programm").fill("Knie schonen");
+  await person.getByRole("button", { name: "Speichern" }).click();
+  await expect.poll(() => gesendet.teilnahmen.length).toBe(2);
+  expect(gesendet.teilnahmen[1]).toMatchObject({ notiz: "Knie schonen", einstellungen: { ausgelassen: ["licht"] } });
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});

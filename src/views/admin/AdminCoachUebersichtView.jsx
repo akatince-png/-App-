@@ -13,7 +13,8 @@ import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZah
 import { coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
 import KernprogrammCoach from "./KernprogrammCoach";
 import ErnaehrungCoach from "./ErnaehrungCoach";
-import { programmEinstellen, programmStarten, programmeUndTeilnahmenLaden, teilnahmeSetzen } from "../../data/programmeAdmin";
+import { persoenlichSpeichern, programmEinstellen, programmFortsetzen, programmPausieren, programmStarten, programmeUndTeilnahmenLaden, teilnahmeSetzen, wiederholungZuruecknehmen, wocheWiederholen } from "../../data/programmeAdmin";
+import { etappenVerschieben } from "../../utils/programme";
 import { ProgrammeLeiste, ProgrammePerson } from "./ProgrammeCoach";
 import { datumKurz, kernKurztext, zeileZuEtappe } from "../../utils/kernprogramm";
 import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
@@ -167,6 +168,20 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
     return (p.vorname || "").toLowerCase().includes(q) || (p.email || "").toLowerCase().includes(q);
   });
   const teamFilter = teams.filter((t) => sortiert.some((p) => p.team_id === t.id));
+  // Etappen mit aufgeschobener Wochen-Wiederholung (26.09.) für Anzeige/Leiste.
+  const heuteIso = toLocalISODate(new Date());
+  const etappenSicht = Object.fromEntries(
+    Object.entries(etappenByUser).map(([id, liste]) => [id, etappenVerschieben(liste, prog.teilnahmen.find((t) => t.userId === id && t.programmId === "einstellung")?.einstellungen?.verschiebungen, heuteIso)])
+  );
+  const programmAktionen = {
+    setzen: async (userId, programmId, felder) => programmAktion(await teilnahmeSetzen(userId, programmId, felder), "Programm geändert."),
+    starten: async (ids, programmId, start) => programmAktion(await programmStarten(ids, programmId, start), `🧭 Gestartet ab ${datumKurz(start)} abends.`),
+    pausieren: async (userId, programmId, t) => programmAktion(await programmPausieren(userId, programmId, t), "⏸ Pausiert."),
+    fortsetzen: async (userId, programmId, t) => programmAktion(await programmFortsetzen(userId, programmId, t), "▶ Fortgesetzt – die Wochen sind nach hinten gerückt."),
+    wiederholen: async (userId, t, stand) => programmAktion(await wocheWiederholen(userId, t, stand), `🔁 Woche ${stand.gesamtWoche} wird wiederholt.`),
+    zuruecknehmen: async (userId, t, v) => programmAktion(await wiederholungZuruecknehmen(userId, t, v), "Wiederholung zurückgenommen."),
+    persoenlich: async (userId, programmId, t, werte) => programmAktion(await persoenlichSpeichern(userId, programmId, t, werte), "Persönliche Einstellungen gespeichert."),
+  };
 
   return (
     <Shell>
@@ -227,7 +242,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
 
       <ProgrammeLeiste
         personen={gefiltert}
-        etappenByUser={etappenByUser}
+        etappenByUser={etappenSicht}
         programme={prog.programme}
         teilnahmen={prog.teilnahmen}
         hinweis={kernHinweis}
@@ -261,16 +276,16 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             onVerwalteAls={onVerwalteAls}
             training={trainingByUser[p.id]}
             schicht={schichtByUser[p.id]}
-            etappen={etappenByUser[p.id] || []}
+            etappen={etappenSicht[p.id] || []}
             onKernGeaendert={() => etappenLaden(sortiert.map((x) => x.id))}
             programmeTeil={
               <ProgrammePerson
                 person={p}
                 programme={prog.programme}
                 teilnahmen={prog.teilnahmen}
+                etappen={etappenByUser[p.id] || []}
                 tabs={prog.tabsByUser[p.id]}
-                onSetzen={async (userId, programmId, felder) => programmAktion(await teilnahmeSetzen(userId, programmId, felder), "Programm geändert.")}
-                onStarten={async (ids, programmId, start) => programmAktion(await programmStarten(ids, programmId, start), `🧭 Gestartet ab ${datumKurz(start)} abends.`)}
+                aktionen={programmAktionen}
               />
             }
             trainingOffen={trainingFuer === p.id}
