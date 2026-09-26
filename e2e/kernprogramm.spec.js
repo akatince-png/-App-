@@ -55,3 +55,13 @@ test("Erhaltung: Karte 'Dranbleiben' und sonntags Wochen-Check", async ({ page }
   expect(ws).toBe("2026-10-26");
   expect(felder).toMatchObject({ stimmung: 4 });
 });
+
+// Messwoche (26.09.): Woche 1 misst; ab 3 Messungen Vorschlag übernehmen.
+test("Messwoche: Auswertung zeigt Ø-Zeiten und übernimmt den Vorschlag", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1&mess=1#/coaching");
+  await expect(page.getByText(/Deine Messwoche · Tag 1 von 7/)).toBeVisible();
+  await expect(page.getByText("3 von 3 Messungen ✓")).toBeVisible();
+  await page.getByRole("button", { name: "✓ 4 Min. übernehmen" }).click();
+  const aufrufe = await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "routineSchrittAendern").map((a) => a.args));
+  expect(aufrufe[0]).toEqual(["ks2", { dauerMin: 4 }]);
+});

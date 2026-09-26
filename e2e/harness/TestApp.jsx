@@ -122,6 +122,19 @@ function leseOverridesAusUrl() {
     ];
     overrides.trainingWochenplan = [];
   }
+  // ?mess=1 (mit ?kern=1): drei gemessene Morgenroutinen in der Messwoche (26.09.).
+  if (params.get("mess") === "1") {
+    const h = new Date();
+    const heute = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-${String(h.getDate()).padStart(2, "0")}`;
+    overrides.routineDurchlaeufe = [170, 180, 190].map((sek, i) => ({
+      id: `md${i}`,
+      routine: "morgen",
+      datum: heute,
+      gestartetUm: `${heute}T06:00:00`,
+      abgeschlossenUm: `${heute}T06:${String(20 + i * 5).padStart(2, "0")}:00`,
+      schritte: [{ schrittId: "ks2", name: "Zähne putzen", geplantMin: 3, tatsaechlichSek: sek }],
+    }));
+  }
   // ?essen=1: Ernährungsziel + zwei Einträge heute (25.09.).
   if (params.get("essen") === "1") {
     const h = new Date();

@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { Shell, Card } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import SportBausteinFormular from "../ui/SportBausteinFormular";
+import MesswocheAuswertung from "../ui/MesswocheAuswertung";
+import { messTag } from "../utils/messwoche";
 import { EtappenBalken } from "../ui/KernprogrammKarte";
 import { cardBorder, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
@@ -16,7 +18,7 @@ const AMPEL_FARBE = { gruen: "#1E8E5A", gelb: "#C27A00", rot: "#E0352B", grau: "
 // Bausteine mit der Woche, in der sie dazukommen, und die Sport-Einstellung.
 export default function KernprogrammView({ onHome }) {
   const appData = useAppData();
-  const { kernStand: stand, kernEtappen = [], routineKernPausen = [], trainingWochenplan = [], kognitivErgebnisse = [] } = appData;
+  const { kernStand: stand, kernEtappen = [], routineKernPausen = [], trainingWochenplan = [], kognitivErgebnisse = [], routineDurchlaeufe = [], routineSchritteAlle = [], trainingEintraege = [], routineSchrittAendern } = appData;
   const heute = toLocalISODate(new Date());
   const bilanz = useMemo(() => (stand?.aktiv ? bilanzAusAppData(appData, plusTage(heute, -6), heute, heute) : []), [stand, appData, heute]);
   const [sportOffen, setSportOffen] = useState(false);
@@ -94,6 +96,24 @@ export default function KernprogrammView({ onHome }) {
           Uhrzeit, Art und Dauer stellst du selbst ein (in deiner Morgen-/Abendroutine auf 🔒✎ tippen). Pausieren kann nur dein Coach, z. B. bei einer Verletzung.
         </div>
       </Card>
+
+      {/* Messwoche (26.09.): Woche 1 misst, danach feste Zeiten aus den Messwerten. */}
+      {stand?.aktiv && stand.etappe?.art === "einfuehrung" && heute <= plusTage(stand.etappe.start, 20) && (
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 900, fontSize: 15 }}>📏 Deine Messwoche{messTag(stand, heute) ? ` · Tag ${messTag(stand, heute)} von 7` : ""}</div>
+          <div style={{ fontSize: 12.5, color: textMuted, margin: "3px 0 10px", lineHeight: 1.45 }}>
+            In der ersten Woche messen wir nur: Starte Morgen- und Abendroutine mit „Routine starten“ – die Uhr läuft, du tippst dich in deinem Tempo durch. Ab 3 Messungen schlägt die App feste Zeiten vor.
+          </div>
+          <MesswocheAuswertung
+            durchlaeufe={routineDurchlaeufe}
+            schritte={routineSchritteAlle}
+            trainings={trainingEintraege}
+            von={stand.etappe.start}
+            bis={plusTage(stand.etappe.start, 6)}
+            onUebernehmen={(id, min) => routineSchrittAendern?.(id, { dauerMin: min })}
+          />
+        </Card>
+      )}
 
       {/* Konzentrationstraining (26.09.): freiwilliger Zusatz, kein Pflicht-
           Baustein – die Belege für Übertragung in den Alltag sind schwächer

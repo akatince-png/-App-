@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 268 Unit-Tests, 87 E2E-Tests (Stand 26.09.).
+  - 271 Unit-Tests, 88 E2E-Tests (Stand 26.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -101,6 +101,13 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Aka** kennt jetzt beim Anlegen eines Medikaments die Kategorien „ADHS-Medikation“ und „Cannabis“ sowie alle Einnahmearten (vorher fehlten sie, Elvanse landete z. B. unter „Sonstige“ oder „Hormone“). Aka nimmt „täglich“ an, wenn nichts anderes gesagt wurde.
 - **Bestehende Einträge** ohne Kategorie behalten die alte Anzeige „Hormone / Injektion“, damit nichts umetikettiert wird.
 - `Pill` hat jetzt `aria-pressed` (Barrierefreiheit, Tests).
+
+### Messwoche (26.09., Konzept der Nutzerin „nicht starr vorgeben, erst messen“)
+- **Woche 1 der Einführung = Messwoche** (`utils/messwoche.js`, `istMesswoche(kernStand)`). Fest ist nur die Aufwachzeit (Weckzeit = Startzeit der Morgenroutine) plus die Anker-Bausteine; die eigene Morgen-/Abendroutine wird gemessen.
+- **Geführter Ablauf im Messmodus** (`RoutineAblauf.jsx`): Stoppuhr je Schritt statt Countdown, Hauptuhr läuft durch; morgens (bis 3 h nach der Weckzeit) Frage „Ab dem Wecker (hh:mm) / Ab jetzt“ – Hauptuhr startet dann rückwirkend ab Weckzeit. Protokoll je Schritt jetzt mit `schrittId`.
+- **Auswertung** (`ui/MesswocheAuswertung.jsx`): je Routine Ø/kürzeste/längste Gesamtdauer, je Schritt Ø + Anzahl; ab **3 Messungen** Vorschlag = Ø + 15 % Puffer (aufgerundet, Minuten), „✓ übernehmen“ setzt `routine_schritte.dauer_min` (einzeln oder alle). Training: Ø Dauer erledigter Einheiten. Durchläufe über 4 h zählen nicht. Sichtbar im Coaching (`#/coaching`, Coachee) und in der Coach-Ansicht (Kernprogramm-Kasten) bis 3 Wochen nach Etappenstart.
+- **Wecken:** Web-App kann nicht laut wecken → Handy-Wecker + Push zur Routine-Startzeit; echter App-Wecker erst mit nativer App.
+- **Noch offen / nächste Schritte:** Kamera-Wiederholungszählung (Kniebeugen/Liegestütze, im Browser, Bild bleibt auf dem Gerät), Plausibilitäts-Prüfung für Wettbewerbe; Smartwatch/Health-Daten nur mit nativer App (HealthKit/Health Connect, DSGVO Art. 9). Körper-Figur neben dem Gehirn liegt als **Vorschau** auf dem Arbeitszweig (nicht auf main).
 
 ### Denksport: Knobeln + Konzentrationstraining (26.09., Nutzerin: „Aufgaben fordern einen nicht wirklich heraus“)
 - **Knobeln** (`utils/knobelAufgaben.js`): erzeugte Aufgaben mit Level 1–10 (Start 4): Kopfrechnen in zwei Schritten, Prozent/Brüche, Zahlenreihen mit verschachtelten Regeln, Wochentag in n Tagen, Uhrzeit + Dauer, Logik (Händeschütteln, Dreisatz, Rabatt+Aufschlag). Gespeichert als `denkpause_ergebnisse.kategorie = "knobel"`; Level aus je 10 Antworten (≥ 80 % → +1, < 50 % → −1). **Tagesrätsel = 3 Knobel + 2 aus Rätsel/Wortspiel/Wissen** (keine leichten Mathe-Katalogfragen mehr). Im freien Training (Admin) eigene Karte „Knobeln“.

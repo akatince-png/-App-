@@ -10,6 +10,7 @@ import { verspaetungHinweis } from "../utils/routineVerspaetung";
 import TagebuchFormular from "./TagebuchFormular";
 import { istTagebuchSchritt } from "../utils/tagebuch";
 import { toLocalISODate } from "../utils/dates";
+import { istMesswoche, messTag } from "../utils/messwoche";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -34,10 +35,18 @@ function fmtDauer(sekunden) {
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand } = useAppData();
   const heute = toLocalISODate(new Date());
   const tagebuchHeute = (tagebuchEintraege || []).find((e) => e.datum === heute);
   const [tagebuchNachher, setTagebuchNachher] = useState(false);
+  // Messwoche (26.09.): Woche 1 des AKA-Coachings misst statt vorzugeben –
+  // Stoppuhr je Schritt statt Countdown, Hauptuhr ab dem Aufwachen.
+  const messmodus = istMesswoche(kernStand);
+  const messTagNr = messTag(kernStand, heute);
+  const weckzeit = routineEinstellungen?.[routine]?.startZeit || "";
+  const weckMs = weckzeit ? new Date(`${heute}T${weckzeit}:00`).getTime() : null;
+  // Frage "Seit wann wach?" nur morgens und nur bis 3 h nach der Weckzeit.
+  const [wachGefragt, setWachGefragt] = useState(!(messmodus && routine === "morgen" && weckMs && Date.now() > weckMs && Date.now() - weckMs < 3 * 3600000));
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
   const [musikFehler, setMusikFehler] = useState(null);
@@ -82,7 +91,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
 
   const weiter = () => {
     const tatsaechlichSek = Math.round((Date.now() - startZeitRef.current) / 1000);
-    protokollRef.current = [...protokollRef.current, { name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek }];
+    protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek }];
     if (index + 1 < schritte.length) {
       setIndex((i) => i + 1);
       startZeitRef.current = Date.now();
@@ -113,6 +122,30 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
             Für die {ROUTINE_LABEL[routine]} sind noch keine Schritte eingerichtet.
           </div>
           <PrimaryButton onClick={abbrechen}>Zurück</PrimaryButton>
+        </Card>
+      </Shell>
+    );
+  }
+
+  if (!wachGefragt && schritte.length) {
+    const ab = (ms) => {
+      gestartetUmRef.current = new Date(ms).toISOString();
+      gesamtStartRef.current = ms;
+      startZeitRef.current = Date.now();
+      setWachGefragt(true);
+    };
+    return (
+      <Shell>
+        <Card style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 30 }}>📏</div>
+          <div style={{ fontSize: 17, fontWeight: 900, margin: "6px 0 4px" }}>Messwoche{messTagNr ? ` · Tag ${messTagNr} von 7` : ""}</div>
+          <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 14 }}>Wir messen nur, wie lange deine Morgenroutine wirklich dauert – nichts muss schnell gehen. Ab wann soll die Hauptuhr laufen?</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <PrimaryButton onClick={() => ab(weckMs)}>⏰ Ab dem Wecker ({weckzeit})</PrimaryButton>
+            <PrimaryButton variant="ghost" onClick={() => ab(Date.now())}>
+              Ab jetzt
+            </PrimaryButton>
+          </div>
         </Card>
       </Shell>
     );
@@ -173,6 +206,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       </div>
       <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 8 }}>
         {ROUTINE_EMOJI[routine]} {ROUTINE_LABEL[routine]} · Schritt {index + 1} von {schritte.length}
+        {messmodus && ` · 📏 Messwoche${messTagNr ? ` Tag ${messTagNr}` : ""}`}
       </div>
       {musikFehler && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
@@ -199,7 +233,14 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>
-        <Timer key={aktuell.id} mode="countdown" initialSeconds={(Number(aktuell.dauerMin) || 5) * 60} autoStart vorwarnungSek={30} onFertig={weiter} />
+        {messmodus ? (
+          <div aria-label="Stoppuhr Schritt" style={{ fontSize: 44, fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+            {fmtDauer((Date.now() - startZeitRef.current) / 1000)}
+            <div style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>📏 wird gemessen – in deinem Tempo</div>
+          </div>
+        ) : (
+          <Timer key={aktuell.id} mode="countdown" initialSeconds={(Number(aktuell.dauerMin) || 5) * 60} autoStart vorwarnungSek={30} onFertig={weiter} />
+        )}
         <div style={{ marginTop: 14 }}>
           <PrimaryButton onClick={weiter} variant="success">
             Schritt fertig

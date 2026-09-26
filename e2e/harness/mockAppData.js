@@ -75,7 +75,7 @@ const BEKANNTE_FUNKTIONEN = new Set([
 // listener to be a function").
 const FUNKTIONS_PRAEFIXE = /^(set|toggle|add|save|skip|complete|clear|reset|update|create|delete|open|close|handle|on|confirm|verknuepfe|load)[A-ZÄÖÜ]/;
 const FUNKTIONS_SUFFIXE =
-  /(hinzufuegen|entfernen|speichern|loeschen|erzeugen|erstellen|setzen|aktualisieren|markieren|bestaetigen|pruefen|vermerken|archivieren|abschliessen|neuLaden|laden|fragen|anfordern|aktivieren|deaktivieren|trennen|kopieren|starten|stoppen|verbinden|anlegen|einladen|umschalten|zuruecksetzen|verwerfen|uebernehmen|ueberarbeiten)$/i;
+  /(hinzufuegen|entfernen|speichern|loeschen|erzeugen|erstellen|setzen|aktualisieren|markieren|bestaetigen|pruefen|vermerken|archivieren|abschliessen|neuLaden|laden|fragen|anfordern|aktivieren|deaktivieren|trennen|kopieren|starten|stoppen|verbinden|anlegen|einladen|umschalten|zuruecksetzen|verwerfen|uebernehmen|ueberarbeiten|aendern)$/i;
 
 // Felder, die eine feste, von der Namens-Heuristik abweichende Bedeutung
 // haben (Flags, die über Weiterleitung/Sichtbarkeit entscheiden) — werden

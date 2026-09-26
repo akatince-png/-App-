@@ -50,7 +50,7 @@ export const bausteinFuer = (key) => BAUSTEINE.find((b) => b.key === key) || nul
 export const schrittName = (b) => `${b.icon} ${b.name}`;
 
 export const WOCHEN = {
-  1: { titel: "Anker", icon: "⚓", text: "Glas Wasser, Tageslicht und 2 Min. Atmen am Morgen. Abends Tagebuch und feste Schlafenszeit." },
+  1: { titel: "Messwoche + Anker", icon: "📏", text: "Feste Aufwachzeit, dann Glas Wasser, Tageslicht und 2 Min. Atmen. Morgen- und Abendroutine laufen mit Stoppuhr – wir messen, wie lange du wirklich brauchst. Abends Tagebuch und feste Schlafenszeit." },
   2: { titel: "Bewegung", icon: "🏃", text: "Neu: 10 Min. Aktivierung am Morgen, ruhige Atmung am Abend, Sport 2–3× pro Woche." },
   3: { titel: "Essen + Planen", icon: "🍳", text: "Neu: eiweißreiches Frühstück, Top 3 des Tages mit 15 Min. Start, regelmäßige Mahlzeiten und dein Eiweißziel (Eiweiß, Fett, Kohlenhydrate im Blick)." },
   4: { titel: "Abend + Bilanz", icon: "🌙", text: "Neu: Bildschirm-Stopp und Plan für morgen. Am Ende: Gespräch mit deinem Coach." },

@@ -1,3 +1,4 @@
+import MesswocheAuswertung from "../../ui/MesswocheAuswertung";
 import React, { useCallback, useEffect, useState } from "react";
 import { PrimaryButton } from "../../ui/primitives";
 import { cardBorder, danger, textMuted } from "../../ui/theme";
@@ -38,13 +39,13 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
 
   const laden = useCallback(async () => {
     const seit = plusTage(heute, -14);
-    const [et, pa, sc, sl, du, tr, wp, ml, wc, t3, es, me, zu, pr, ch] = await Promise.all([
+    const [et, pa, sc, sl, du, tr, wp, ml, wc, t3, es, me, zu, pr, ch, alleSchritte] = await Promise.all([
       supabase.from("coaching_etappen").select("*").eq("user_id", personId).order("nummer"),
       supabase.from("kern_pausen").select("*").eq("user_id", personId),
       supabase.from("routine_schritte").select("id, routine, kern_key").eq("user_id", personId).not("kern_key", "is", null),
       supabase.from("routine_schritt_logs").select("schritt_id, datum").eq("user_id", personId).gte("datum", seit),
-      supabase.from("routine_durchlaeufe").select("routine, datum").eq("user_id", personId).gte("datum", seit),
-      supabase.from("training_sessions").select("datum, erledigt").eq("user_id", personId).gte("datum", seit),
+      supabase.from("routine_durchlaeufe").select("routine, datum, schritte, gestartet_um, abgeschlossen_um").eq("user_id", personId).gte("datum", plusTage(heute, -21)),
+      supabase.from("training_sessions").select("datum, erledigt, dauer_min").eq("user_id", personId).gte("datum", plusTage(heute, -21)),
       supabase.from("training_wochenplan").select("id, wochentag, name").eq("user_id", personId),
       supabase.from("meal_logs").select("log_date, meal_id, tageszeit, erledigt").eq("user_id", personId).gte("log_date", seit),
       supabase.from("wochen_checks").select("*").eq("user_id", personId).order("woche_start", { ascending: false }).limit(2),
@@ -55,6 +56,8 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       supabase.from("meal_ingredients").select("meal_id, name, menge, menge_gramm").eq("user_id", personId),
       supabase.from("profiles").select("category_ziele, gewicht_start").eq("id", personId).maybeSingle(),
       supabase.from("checkins").select("datum, values").eq("user_id", personId).order("datum"),
+      // Messwoche (26.09.): alle Schritte mit Dauer, um Vorschläge zu übernehmen.
+      supabase.from("routine_schritte").select("id, routine, name, dauer_min").eq("user_id", personId),
     ]);
     const schrittErledigt = {};
     (sl.data || []).forEach((r) => (schrittErledigt[`${r.datum}__${r.schritt_id}`] = true));
@@ -66,6 +69,9 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       schritte: (sc.data || []).map((r) => ({ id: r.id, routine: r.routine, kernKey: r.kern_key })),
       schrittErledigt,
       durchlaeufe: du.data || [],
+      messDurchlaeufe: (du.data || []).map((r) => ({ routine: r.routine, datum: r.datum, schritte: r.schritte || [], gestartetUm: r.gestartet_um, abgeschlossenUm: r.abgeschlossen_um })),
+      messSchritte: (alleSchritte.data || []).map((r) => ({ id: r.id, routine: r.routine, name: r.name, dauerMin: r.dauer_min })),
+      messTrainings: (tr.data || []).map((r) => ({ datum: r.datum, erledigt: r.erledigt, dauerMin: r.dauer_min })),
       trainings: tr.data || [],
       trainingWochenplan: wp.data || [],
       mahlzeitErledigt,
@@ -194,6 +200,29 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
           Wochen-Check {datumKurz(check.woche_start)}: {check.kern_key ? `${bausteinFuer(check.kern_key)?.name || check.kern_key} – ` : ""}
           {(check.stoerung || []).join(", ") || "keine Störung genannt"}
           {check.aenderung ? ` → ${check.aenderung}` : ""} · Woche {["", "😣", "😕", "😐", "🙂", "🤩"][check.stimmung] || ""}
+        </div>
+      )}
+
+      {/* Messwoche (26.09.): Woche 1 der Einführung wird gemessen; ab 3
+          Messungen je Schritt Vorschlag mit einem Tipp übernehmen. */}
+      {stand.aktiv && stand.etappe.art === "einfuehrung" && heute <= plusTage(stand.etappe.start, 20) && (
+        <div style={{ marginTop: 10, borderTop: `1px solid ${cardBorder}`, paddingTop: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>📏 Messwoche {datumKurz(stand.etappe.start)} – {datumKurz(plusTage(stand.etappe.start, 6))}</div>
+          <MesswocheAuswertung
+            durchlaeufe={d.messDurchlaeufe}
+            schritte={d.messSchritte}
+            trainings={d.messTrainings}
+            von={stand.etappe.start}
+            bis={plusTage(stand.etappe.start, 6)}
+            onUebernehmen={async (id, min) => {
+              const { error } = await supabase.from("routine_schritte").update({ dauer_min: min }).eq("id", id);
+              if (error) {
+                setFehler(error.message);
+                return { ok: false };
+              }
+              return { ok: true };
+            }}
+          />
         </div>
       )}
 
