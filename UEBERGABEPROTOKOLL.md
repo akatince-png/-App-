@@ -1,30 +1,60 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
-## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026) — Maßstab für jede Änderung
+## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026, überarbeitet am selben Abend) — Maßstab für jede Änderung
 
-**AKA ist eine Lifestyle-App für Menschen mit ADHS.** Sie hilft auf zwei Wegen:
+Quellen: Aussagen der Nutzerin vom 26.09., Claim „Deine exekutive rechte Hand“ (Abschnitt 1),
+Wissens-Basis (`coach_wissen`: „Rolle & Grenzen: Coaching ist keine Therapie“,
+„ADHS-Coaching-Grundhaltung … Drei-Ebenen-Modell“, „ADHS-Paradoxon: … Lebensrahmenbedingungen“,
+„Evidenz: Nichtmedikamentöse Verfahren …“).
 
-1. **Struktur aufbauen:** für alle, denen es schwerfällt, Strukturen zu schaffen.
-   Das geht Schritt für Schritt: erst messen, dann planen (Messwoche, 8-Wochen-Kernprogramm).
-2. **Struktur vereinfachen und bündeln:** für alle, die schon Strukturen haben.
-   Alles läuft in **einer** App zusammen, einfacher und einheitlicher als mit vielen einzelnen Apps.
+**1. AKA ist ein Management-Tool für den Alltag mit ADHS: „Deine exekutive rechte Hand“.**
+Ziel ist, die **Alltagssymptome** von ADHS so gut wie möglich zu managen. App und Coach übernehmen die
+**exekutiven Aufgaben**, die mit ADHS schwerfallen: planen, erinnern, tracken, kontrollieren/im Blick
+behalten und auswerten. Die Person soll nicht nachdenken, nicht selbst planen, keine sieben Apps öffnen
+und keine zehn Pläne abarbeiten müssen. Auch das Auswerten, also welche Schlüsse aus den Daten folgen,
+übernimmt der Coach mithilfe der App. Das ist Coaching bzw. Management, **keine Therapie**:
+keine Diagnose und keine Heils- oder Wirkversprechen.
 
-**Wie:** auf dem interessantesten, benutzerfreundlichsten und effizientesten Weg.
-Daraus folgt für jede Seite, jeden Text und jeden Ablauf:
+**2. Das AKA-Konzept (Kern jedes Coachings).**
+- **Rückgrat:** eine konstante **Morgen- und Abendroutine** (planen und organisieren) und **Bewegung
+  im Alltag**. Hier liegt der Hauptaugenmerk.
+- **Darin eingebaut**, was sonst untergeht, weil es wie eine Kleinigkeit wirkt oder weil der Hyperfokus
+  (z. B. bei der Arbeit, der „Workaholic mit ADHS“) alles andere verdrängt: Wasser, Tageslicht,
+  Ernährung, Schlaf, Atmung, **Supplemente mit guter Studienlage**.
+- **Medikation** wird mit den Ärzten besprochen, und AKA behält sie im Blick (Einnahme, Beobachtungen
+  fürs Arztgespräch). Entscheidungen trifft nie das Coaching.
+- **Tracken** als Grundlage, damit Coach und App auswerten und nachstellen können.
+- Das Ziel in den Worten der Nutzerin: „ein geiles Leben führen“, einfacher, leichter, besser.
+- Das Verhältnis zu „alle Bausteine gleichwertig“ (CLAUDE.md): Kein Bereich wird abgewertet, und Medikation
+  ist nicht der Mittelpunkt. Das **Konzept** hat aber ein Rückgrat (Routinen + Bewegung), in das die übrigen
+  Bausteine eingebaut werden.
 
-- **Zeigen statt erklären:** Bilder, Grafiken, Bewegung und echte App-Elemente
-  (Gehirn, Körper-Figur, Balken-Skala, Logo) statt Textwüsten.
-- **ADHS offen ansprechen**, in Alltagssprache und ohne Fachchinesisch, damit sich die Leute darin wiederfinden.
-- **Wenige Schritte**, alles überspringbar. Nichts ist rot, nichts schimpft.
-- **Alle Bausteine gleichwertig** (siehe CLAUDE.md), und zwar ohne Heils- oder Wirkversprechen.
-  Beispiel-Charts werden als „Beispiel“ gekennzeichnet.
-- **Programme als Pakete:** Das 8-Wochen-Kernprogramm läuft für jede neue Person zuerst.
-  Die App funktioniert aber auch unabhängig davon und soll später weitere Programme aufnehmen
-  (z. B. Training). Programme deshalb als eigenes, austauschbares Modul denken, nicht fest verdrahten.
-- **Diese Perspektive regelmäßig auf Bestehendes anwenden.**
-  Erster Kandidat ist das Onboarding: Beispiel 2 der bildhaften Vorstellung wurde am 26.09. gezeigt
-  (Artefakt „AKA Vorstellung“), die Umsetzung wartet auf die Freigabe.
-  Konzept 8 Wochen: Artefakt „AKA 8 Wochen“, von der Nutzerin als Pilotplan freigegeben.
+**3. Zwei Zielgruppen.** Wer noch keine Struktur hat, **baut sie auf** (erst messen, dann planen).
+Wer schon Strukturen hat, **vereinfacht und vereinheitlicht** sie und bringt alles in einer App zusammen.
+
+**4. Community.** AKA verbindet viele Menschen mit ADHS: Teams, Rangliste, gemeinsame Atempausen (gibt es schon).
+Gewünscht ist auch **Austausch und Vergleich** untereinander („machen andere es genauso?“).
+Direkter Austausch zwischen Coachees ist noch nicht gebaut.
+
+**5. Einstellungsphase statt „8-Wochen-Programm“.** Die ersten Wochen (Pilot: 8, eventuell später 4)
+sind die **Einstellungsphase** am Anfang jedes Coachings: kennenlernen, alles einstellen, das
+AKA-Konzept kennenlernen. **Das Coaching ist nicht auf 8 Wochen begrenzt.** Danach geht es weiter,
+so lange es passt (Erhaltungs-Etappen, später weitere Programme). In Texten für Coachees deshalb keine
+feste Wochenzahl als „Produkt“ verkaufen.
+
+**6. Wie die App auftritt:** auf dem interessantesten, benutzerfreundlichsten und effizientesten Weg.
+- **Zeigen statt erklären:** Bilder, Grafiken, Bewegung, echte App-Elemente (Gehirn, Körper-Figur,
+  Balken-Skala, Logo) und Menschen, die etwas tun oder die App erfolgreich nutzen.
+- **ADHS offen ansprechen**, in Alltagssprache (Tabs im Kopf, Hyperfokus, vergessenes Trinken).
+- **Wenige Schritte**, alles überspringbar. Nichts ist rot, nichts schimpft. Beispiel-Charts sind als „Beispiel“ markiert.
+- Coachees gegenüber tritt der **Coach** als der auf, der auswertet und nachstellt. Aka im Hintergrund
+  wird Coachees nicht als KI-Ersatz präsentiert (Abschnitt 1, „Geschäftsmodell-Pivot“).
+
+**7. Diese Perspektive regelmäßig auf Bestehendes anwenden.** Erster Kandidat ist das Onboarding.
+Die bildhafte Vorstellung ist im Artefakt „AKA Vorstellung“ (Beispiel 4 vom 26.09.: exekutive rechte Hand,
+AKA-Konzept, Kleinigkeiten, Startseite, Coach, Community, Einstellungsphase, Start). Die Umsetzung wartet
+auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AKA 8 Wochen“ (Pilotplan freigegeben).
+
 - **Programme als eigenständige Module (Nutzerin, 26.09., ausdrücklich):**
   Das 8-Wochen-Programm wird als eigenes Programm in der App hinterlegt.
   - Die Admin kann ein Programm **für alle** aktivieren oder deaktivieren.
