@@ -54,7 +54,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       supabase.from("meals").select("id, name").eq("user_id", personId),
       supabase.from("meal_ingredients").select("meal_id, name, menge, menge_gramm").eq("user_id", personId),
       supabase.from("profiles").select("category_ziele, gewicht_start").eq("id", personId).maybeSingle(),
-      supabase.from("checkins").select("datum, gewicht").eq("user_id", personId).order("datum"),
+      supabase.from("checkins").select("datum, values").eq("user_id", personId).order("datum"),
     ]);
     const schrittErledigt = {};
     (sl.data || []).forEach((r) => (schrittErledigt[`${r.datum}__${r.schritt_id}`] = true));
@@ -75,7 +75,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
         mahlzeiten: (me.data || []).map((m) => ({ ...m, zutaten: (zu.data || []).filter((z) => z.meal_id === m.id).map((z) => ({ name: z.name, menge: z.menge, mengeGramm: z.menge_gramm })) })),
         mahlzeitErledigt,
         categoryZiele: pr.data?.category_ziele || {},
-        gewichtsEintraege: ch.data || [],
+        gewichtsEintraege: (ch.data || []).map((r) => ({ datum: r.datum, ...r.values })),
         personalData: { gewichtStart: pr.data?.gewicht_start },
       }),
       top3: t3.data || [],

@@ -24,7 +24,7 @@ export default function ErnaehrungCoach({ personId, vorname, onChat }) {
     const seit = plusTage(heute, -6);
     const [pr, ch, es, me, zu, lo] = await Promise.all([
       supabase.from("profiles").select("category_ziele, gewicht_start").eq("id", personId).maybeSingle(),
-      supabase.from("checkins").select("datum, gewicht").eq("user_id", personId).order("datum"),
+      supabase.from("checkins").select("datum, values").eq("user_id", personId).order("datum"),
       supabase.from("essen_eintraege").select("*").eq("user_id", personId).gte("datum", seit),
       supabase.from("meals").select("id, name").eq("user_id", personId),
       supabase.from("meal_ingredients").select("meal_id, name, menge, menge_gramm").eq("user_id", personId),
@@ -35,7 +35,8 @@ export default function ErnaehrungCoach({ personId, vorname, onChat }) {
     (lo.data || []).forEach((r) => r.erledigt && (mahlzeitErledigt[`${r.log_date}__${r.meal_id}__${r.tageszeit}`] = true));
     setD({
       ziele: pr.data?.category_ziele || {},
-      gewicht: aktuellesGewicht(ch.data || [], { gewichtStart: pr.data?.gewicht_start }),
+      // Gewicht steckt in checkins.values (jsonb), nicht in einer eigenen Spalte (Fund Dauertest 26.09.: 400).
+      gewicht: aktuellesGewicht((ch.data || []).map((r) => ({ datum: r.datum, ...r.values })), { gewichtStart: pr.data?.gewicht_start }),
       quelle: { essenEintraege: (es.data || []).map(zeileZuEssen), mahlzeiten, mahlzeitErledigt },
     });
   }, [personId, heute]);

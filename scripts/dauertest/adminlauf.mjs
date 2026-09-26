@@ -180,7 +180,10 @@ console.log('COACH', JSON.stringify(coach, null, 1));
 // Aufräumen: Probe-Team wieder löschen (über die Oberfläche = gleich mitgetestet).
 // Sicherheitshalber erst aus einem evtl. noch aktiven "Verwalten als" raus.
 if (/Du verwaltest gerade/.test(await txt())) { await p.getByRole('button', { name: /Zurück zum Dashboard/ }).first().click().catch(() => {}); await w(2500); }
+// Nach "Zurück zum Dashboard" lädt die App neu auf; ein Hash-Wechsel währenddessen
+// wird verschluckt → einmal hart neu laden, dann greift #/admin-teams sicher.
 await geh('admin-teams');
+if (!/Team löschen|Teams verwalten/.test(await txt()) || /Coach-Übersicht \(alle/.test(await txt())) { await p.reload(); await w(4000); for (let i=0;i<12&&/Lädt(…|\.\.\.)/.test(await txt().catch(()=>''));i++) await w(1000); }
 await foto('50-teams-vor-loeschen');
 const loeschen = p.locator(`xpath=//div[normalize-space(text())='${T}']/ancestor::div[.//button[normalize-space()='Team löschen']][1]//button[normalize-space()='Team löschen']`);
 if (await loeschen.first().waitFor({ timeout: 15000 }).then(() => true).catch(() => false)) { await loeschen.first().click(); await w(3000); if ((await txt()).includes(T)) befund('Probe-Team ließ sich nicht löschen'); } else befund('Team-löschen-Knopf nicht gefunden');
