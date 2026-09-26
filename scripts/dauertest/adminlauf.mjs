@@ -89,7 +89,7 @@ for (const n of TEST_COACHEES) {
 if (!/heute|zuletzt|ruhig|Punkte/i.test(ueText)) coach.beobachtungen.push('Übersicht zeigt keinen Tagesstand/keine letzte Aktivität je Person – wer Hilfe braucht, ist nicht auf einen Blick erkennbar.');
 // 2) Nachricht an Jonas (ruhigste Testperson) über den Chat (seit 24.09.
 //    WhatsApp-Stil): Zeile antippen → "💬 Chat" → schreiben → Senden.
-const jonasZeile = p.locator('button[aria-expanded]').filter({ hasText: 'Jonas Dauertest' }).first();
+const jonasZeile = p.locator('button[aria-expanded]:not([data-programme-toggle])').filter({ hasText: 'Jonas Dauertest' }).first();
 if (await jonasZeile.count()) {
   await jonasZeile.click(); await w(800);
   // Schichtplan (seit 25.09.): Jonas ist Schichtarbeiter → Leiste + Pünktlichkeit je Schicht.
@@ -115,7 +115,7 @@ if (await jonasZeile.count()) {
 //    NUR bei den Testkonten, nie bei echten Personen.
 coach.verspaetet = [];
 for (const n of TEST_COACHEES) {
-  const zeile = p.locator('button[aria-expanded]').filter({ hasText: n }).first();
+  const zeile = p.locator('button[aria-expanded]:not([data-programme-toggle])').filter({ hasText: n }).first();
   if (!(await zeile.count()) || !/meist später/.test(await zeile.innerText())) continue;
   const status = (await zeile.innerText()).split('\n').find((l) => /meist später/.test(l)) || '';
   if ((await zeile.getAttribute('aria-expanded')) !== 'true') { await zeile.click(); await w(800); }
@@ -140,7 +140,7 @@ for (const n of TEST_COACHEES) {
   coach.taps.zeitAnsprechen = 3; // Zeile, Zeit ansprechen, Senden (Text schon vorbereitet)
 }
 coach.beobachtungen.push(coach.verspaetet.length ? `Routine meist später: ${coach.verspaetet.join('; ')}` : 'Routine meist später: bei keiner Testperson');
-const zeilen = await p.locator('button[aria-expanded]').allInnerTexts();
+const zeilen = await p.locator('button[aria-expanded]:not([data-programme-toggle])').allInnerTexts();
 if (zeilen.some((z) => /Claude Admin-Test/.test(z))) befund('Admin-Konto erscheint in der Coach-Übersicht');
 coach.beobachtungen.push(`Reihenfolge: ${zeilen.map((z) => z.split('\n')[0]).join(' → ')}`);
 // 3) Korrektur: bei Mia einen Wasser-Eintrag ändern und wieder zurücksetzen

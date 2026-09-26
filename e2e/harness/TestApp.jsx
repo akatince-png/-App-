@@ -98,6 +98,8 @@ function leseOverridesAusUrl() {
       return { datum: iso(16 - i), stimmung: gut ? 4 : 2, orte: gut ? ["🌳 Natur / draußen"] : ["🏠 Zuhause"], personen: [], essen: gut ? [] : ["viel Zucker"], tagesart: [], koerper: [], notiz: "", notizTeilen: false, auto: { draussenMin: gut ? 50 : 5 } };
     });
   }
+  // ?programm=wartet: Einstellungsphase freigeschaltet, Start noch offen (26.09.).
+  if (params.get("programm") === "wartet") overrides.kernStand = { aktiv: false, etappe: null, wartet: true };
   // ?kern=1..4: AKA-Kernprogramm in Einführungswoche N (25.09.);
   // ?kern=erhaltung: Etappe 2 (Erhaltung) läuft, 2. Woche.
   const kern = params.get("kern");

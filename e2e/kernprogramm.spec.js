@@ -65,3 +65,10 @@ test("Messwoche: Auswertung zeigt Ø-Zeiten und übernimmt den Vorschlag", async
   const aufrufe = await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "routineSchrittAendern").map((a) => a.args));
   expect(aufrufe[0]).toEqual(["ks2", { dauerMin: 4 }]);
 });
+
+// Programm-Modul (26.09.): freigeschaltet, aber der Coach hat den Start noch nicht festgelegt.
+test("Programm wartet auf Start: Startseite zeigt die Einstellungsphase ohne Datum", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0&programm=wartet#/home");
+  await expect(page.getByText("🧭 Deine Einstellungsphase")).toBeVisible();
+  await expect(page.getByText(/Deinen Start legst du mit deinem Coach fest/)).toBeVisible();
+});

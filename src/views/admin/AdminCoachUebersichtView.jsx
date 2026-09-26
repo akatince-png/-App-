@@ -13,8 +13,9 @@ import { AMPEL, coacheeStatus, coacheesSortiert, letzteSiebenTage, uebersichtZah
 import { coachVerspaetungen, satzVomCoach } from "../../utils/routineVerspaetung";
 import KernprogrammCoach from "./KernprogrammCoach";
 import ErnaehrungCoach from "./ErnaehrungCoach";
-import { kernprogrammStarten } from "../../data/kernprogrammAdmin";
-import { datumKurz, kernKurztext, naechsterMontag, programmStand, zeileZuEtappe } from "../../utils/kernprogramm";
+import { programmEinstellen, programmStarten, programmeUndTeilnahmenLaden, teilnahmeSetzen } from "../../data/programmeAdmin";
+import { ProgrammeLeiste, ProgrammePerson } from "./ProgrammeCoach";
+import { datumKurz, kernKurztext, zeileZuEtappe } from "../../utils/kernprogramm";
 import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
 
 // Grafische Gesamtübersicht über ALLE Coachees gleichzeitig (15.08.,
@@ -51,6 +52,16 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
     const m = {};
     (data || []).forEach((r) => (m[r.user_id] ||= []).push(zeileZuEtappe(r)));
     setEtappenByUser(m);
+  };
+  // Programme als Module (26.09.): Katalog + Teilnahmen + Vorstellungs-Tabs.
+  const [prog, setProg] = useState({ programme: [], teilnahmen: [], tabsByUser: {} });
+  const programmeLaden = async (ids) => setProg(await programmeUndTeilnahmenLaden(ids));
+  const alleIds = () => probanden.map((p) => p.id);
+  const programmAktion = async (r, text) => {
+    setKernHinweis(r.ok ? text : `Fehler: ${r.error}`);
+    const ids = alleIds();
+    await Promise.all([programmeLaden(ids), etappenLaden(ids)]);
+    return r;
   };
 
   // Chatliste (24.09., WhatsApp-Startseite): die letzten Nachrichten aller
@@ -91,6 +102,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
       const ids = data.map((p) => p.id);
       if (ids.length === 0) return;
       etappenLaden(ids);
+      programmeLaden(ids);
       // Routine-Zeiten der letzten Tage (25.09.): wer schafft die Morgen-/
       // Abendroutine meist deutlich später als geplant? (RLS: Admins lesen
       // beide Tabellen, siehe 0035.)
@@ -213,15 +225,17 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
         ))}
       </div>
 
-      <KernprogrammLeiste
+      <ProgrammeLeiste
         personen={gefiltert}
         etappenByUser={etappenByUser}
+        programme={prog.programme}
+        teilnahmen={prog.teilnahmen}
         hinweis={kernHinweis}
-        onStarten={async (ids, start) => {
-          const r = await kernprogrammStarten(ids, start);
-          setKernHinweis(r.ok ? `🧭 Kernprogramm für ${r.anzahl} ${r.anzahl === 1 ? "Person" : "Personen"} ab ${datumKurz(start)} gestartet.` : `Fehler: ${r.error}`);
-          etappenLaden(sortiert.map((p) => p.id));
+        onStarten={async (ids, programmId, start) => {
+          const r = await programmStarten(ids, programmId, start);
+          return programmAktion(r, `🧭 Gestartet für ${r.anzahl} ${r.anzahl === 1 ? "Person" : "Personen"} ab ${datumKurz(start)} abends.`);
         }}
+        onEinstellen={async (programmId, felder) => programmAktion(await programmEinstellen(programmId, felder), "Programm-Einstellung gespeichert.")}
       />
 
       {sortiert.length > 8 && <TextInput value={suche} onChange={setSuche} placeholder="Suchen nach Name oder E-Mail…" />}
@@ -249,6 +263,16 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             schicht={schichtByUser[p.id]}
             etappen={etappenByUser[p.id] || []}
             onKernGeaendert={() => etappenLaden(sortiert.map((x) => x.id))}
+            programmeTeil={
+              <ProgrammePerson
+                person={p}
+                programme={prog.programme}
+                teilnahmen={prog.teilnahmen}
+                tabs={prog.tabsByUser[p.id]}
+                onSetzen={async (userId, programmId, felder) => programmAktion(await teilnahmeSetzen(userId, programmId, felder), "Programm geändert.")}
+                onStarten={async (ids, programmId, start) => programmAktion(await programmStarten(ids, programmId, start), `🧭 Gestartet ab ${datumKurz(start)} abends.`)}
+              />
+            }
             trainingOffen={trainingFuer === p.id}
             onToggleTraining={() => setTrainingFuer((v) => (v === p.id ? null : p.id))}
           />
@@ -344,39 +368,7 @@ export function CoachChatFenster({ proband: p, teamName, onZurueck, startText = 
   );
 }
 
-// Kernprogramm-Leiste über der Liste (25.09.): fällige Etappen-Gespräche
-// und "Programm starten" für alle aus der aktuellen Auswahl (Filter
-// "Alle" oder ein Team), die noch keins haben.
-function KernprogrammLeiste({ personen, etappenByUser, hinweis, onStarten }) {
-  const heute = toLocalISODate(new Date());
-  const [start, setStart] = useState(naechsterMontag(heute));
-  const ohne = personen.filter((p) => !(etappenByUser[p.id] || []).length);
-  const faellig = personen.filter((p) => programmStand(etappenByUser[p.id] || [], heute).gespraechFaellig);
-  if (!ohne.length && !faellig.length && !hinweis) return null;
-  return (
-    <div style={{ borderRadius: 14, border: `1.5px solid ${cardBorder}`, background: "#fff", padding: "10px 12px", marginBottom: 10 }} data-kern-leiste>
-      {faellig.length > 0 && (
-        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: ohne.length ? 8 : 0 }}>💬 Etappen-Gespräch fällig: {faellig.map((p) => p.vorname || p.email).join(", ")}</div>
-      )}
-      {ohne.length > 0 && (
-        <>
-          <div style={{ fontSize: 13 }}>
-            🧭 <b>{ohne.length}</b> {ohne.length === 1 ? "Person hat" : "Personen haben"} noch kein Kernprogramm: {ohne.map((p) => p.vorname || p.email).join(", ")}
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-            <input type="date" aria-label="Start für alle" value={start} onChange={(e) => setStart(e.target.value)} style={{ border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 9px", fontSize: 13.5, fontFamily: "inherit" }} />
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <PrimaryButton onClick={() => onStarten(ohne.map((p) => p.id), start)}>Für alle {ohne.length} starten</PrimaryButton>
-            </div>
-          </div>
-        </>
-      )}
-      {hinweis && <div style={{ fontSize: 12.5, marginTop: 8, color: textMuted }}>{hinweis}</div>}
-    </div>
-  );
-}
-
-function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalteAls, training, trainingOffen, onToggleTraining, schicht, etappen = [], onKernGeaendert }) {
+function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalteAls, training, trainingOffen, onToggleTraining, schicht, etappen = [], onKernGeaendert, programmeTeil = null }) {
   const kernText = kernKurztext(etappen, toLocalISODate(new Date()));
   const s = p.status;
   const fortschritt = protokollFortschritt(p);
@@ -426,6 +418,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
           <div style={{ fontSize: 11.5, color: textMuted, margin: "4px 0 10px" }}>
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
+          {programmeTeil}
           <KernprogrammCoach personId={p.id} vorname={p.vorname} onChat={onChat} onGeaendert={onKernGeaendert} />
           <ErnaehrungCoach personId={p.id} vorname={p.vorname} onChat={onChat} />
           <TagebuchKurz personId={p.id} vorname={p.vorname} onChat={onChat} />

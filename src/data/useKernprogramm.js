@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { toLocalISODate } from "../utils/dates";
-import { faelligeBausteine, programmStand, zeileZuEtappe } from "../utils/kernprogramm";
+import { faelligeBausteine, zeileZuEtappe } from "../utils/kernprogramm";
+import { EINSTELLUNG, kernStandMitProgramm, zeileZuProgramm, zeileZuTeilnahme } from "../utils/programme";
 import { plusTage } from "../utils/schichtplan";
 
 const zeileZuCheck = (r) => ({ wocheStart: r.woche_start, kernKey: r.kern_key, stoerung: r.stoerung || [], aenderung: r.aenderung || "", stimmung: r.stimmung });
@@ -14,18 +15,25 @@ export function useKernprogramm(userId, routinen) {
   const [etappen, setEtappen] = useState([]);
   const [checks, setChecks] = useState([]);
   const [top3, setTop3] = useState({});
+  // Programme (Migration 0112): Katalog + eigene Teilnahmen.
+  const [programme, setProgramme] = useState([]);
+  const [teilnahmen, setTeilnahmen] = useState([]);
   const heute = toLocalISODate(new Date());
 
   useEffect(() => {
     if (!userId) return;
     let abgebrochen = false;
     (async () => {
-      const [{ data: e }, { data: c }, { data: t }] = await Promise.all([
+      const [{ data: e }, { data: c }, { data: t }, { data: p }, { data: tn }] = await Promise.all([
         supabase.from("coaching_etappen").select("*").eq("user_id", userId).order("nummer"),
         supabase.from("wochen_checks").select("*").eq("user_id", userId).gte("woche_start", plusTage(toLocalISODate(new Date()), -120)),
         supabase.from("tages_top3").select("*").eq("user_id", userId).gte("datum", plusTage(toLocalISODate(new Date()), -30)),
+        supabase.from("programme").select("*").order("reihenfolge"),
+        supabase.from("programm_teilnahmen").select("*").eq("user_id", userId),
       ]);
       if (abgebrochen) return;
+      setProgramme((p || []).map(zeileZuProgramm));
+      setTeilnahmen((tn || []).map(zeileZuTeilnahme));
       setEtappen((e || []).map(zeileZuEtappe));
       setChecks((c || []).map(zeileZuCheck));
       const m = {};
@@ -37,7 +45,10 @@ export function useKernprogramm(userId, routinen) {
     };
   }, [userId]);
 
-  const stand = useMemo(() => programmStand(etappen, heute), [etappen, heute]);
+  const stand = useMemo(
+    () => kernStandMitProgramm(etappen, heute, teilnahmen.find((t) => t.programmId === EINSTELLUNG) || null, programme.find((p) => p.id === EINSTELLUNG) || null),
+    [etappen, heute, teilnahmen, programme]
+  );
 
   // Fehlende Pflicht-Schritte anlegen — erst wenn die Routine-Schritte
   // geladen sind, und je Schlüsselsatz nur einmal pro Sitzung versuchen.
@@ -82,7 +93,24 @@ export function useKernprogramm(userId, routinen) {
     [userId, top3]
   );
 
+  // Vorstellung vor dem Start: angetippte "offene Tabs" fürs Erstgespräch.
+  const vorstellungTabsSpeichern = useCallback(
+    async (tabs) => {
+      if (!userId) return { ok: false };
+      const { error } = await supabase.from("profiles").update({ vorstellung_tabs: tabs || [] }).eq("id", userId);
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
+    },
+    [userId]
+  );
+
   return {
+    programme,
+    programmTeilnahmen: teilnahmen,
+    vorstellungTabsSpeichern,
     kernEtappen: etappen,
     kernStand: stand,
     kernWochenChecks: checks,

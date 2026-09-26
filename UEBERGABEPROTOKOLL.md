@@ -73,13 +73,32 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
   die echte `GehirnKarte` mit Körper (neue Props `koerper` bzw. `werte` für Beispielwerte), ein Tag mit AKA,
   „Grad nicht gut?“, Muster + Coach-Chat, Community und die Einstellungsphase. Die Nutzerin hatte bemängelt,
   dass die HTML-Beispiele „absolut nicht so aussehen wie die App“, daher der Bau direkt in der App.
-  Offen: Die angetippten Tabs werden noch nicht gespeichert (gedacht fürs Erstgespräch), und die Texte gibt es nur auf Deutsch.
+  Die angetippten Tabs werden gespeichert (`profiles.vorstellung_tabs`), der Coach sieht sie. Die Texte gibt es nur auf Deutsch.
 - **Programme als eigenständige Module (Nutzerin, 26.09., ausdrücklich):**
   Das 8-Wochen-Programm wird als eigenes Programm in der App hinterlegt.
   - Die Admin kann ein Programm **für alle** aktivieren oder deaktivieren.
   - Standard: Für jede Person, die das erste Mal in die App kommt, ist es aktiv.
   - Später gibt es mehrere Programme, die **stufenweise pro Person** freigeschaltet und **individuell eingestellt** werden.
   - Die App selbst funktioniert immer auch ohne aktives Programm.
+- **Programm-Modul gebaut (26.09., Migration 0112, live eingespielt):**
+  - Tabellen `programme` (Katalog; `aktiv` = für alle an/aus, `fuer_neue` = neue Personen bekommen es
+    automatisch) und `programm_teilnahmen` (je Person: Status wartet/laufend/pausiert/abgeschlossen/beendet,
+    Start, `einstellungen` jsonb, Notiz). Ein Trigger auf `profiles` weist neuen Personen die Programme mit
+    `aktiv and fuer_neue` im Status „wartet“ zu.
+  - Erstes Programm: `einstellung` („AKA-Einstellungsphase“ = bisheriges Kernprogramm, Etappen weiter in
+    `coaching_etappen`). Bestehende Konten wurden nachgetragen: Testkonten „laufend“ ab 28.09., das Konto der
+    Nutzerin „wartet“.
+  - Logik: `utils/programme.js` (`kernStandMitProgramm`: aus/pausiert/beendet blendet das Kernprogramm aus,
+    „wartet“ zeigt auf der Startseite „Deine Einstellungsphase – Start legst du mit deinem Coach fest“), mit Tests.
+    Laden in `useKernprogramm` (`programme`, `programmTeilnahmen`).
+  - Coach: `views/admin/ProgrammeCoach.jsx` in der Coach-Übersicht. Oben die Leiste „🧭 Programme“ mit
+    „Für alle an“, „Neue bekommen es automatisch“ und „⏳ X warten auf den Start“ (Datum → „Für alle starten“).
+    In der aufgeklappten Person: „Programme von …“ mit Freischalten, Starten (abends), Pausieren, Beenden und
+    Fortsetzen. Dort steht auch, was die Person in der Vorstellung angetippt hat (`profiles.vorstellung_tabs`).
+    Starten der Einstellungsphase legt Etappe 1 an (`data/programmeAdmin.js`).
+  - Noch nicht gebaut: individuelle Einstellungen je Person über Status und Start hinaus (Feld `einstellungen`
+    ist vorbereitet), weitere Programme (neue Zeile in `programme` + eigener Inhalt), Pausieren verschiebt die
+    Wochen nicht (die Etappe läuft nach Datum weiter).
 - **Bilder mit Menschen:** In der Vorstellung (und später anderswo) Illustrationen oder Bilder von Menschen,
   die gerade etwas tun oder die App erfolgreich nutzen. Im Beispiel 3 stehen Platzhalter-Figuren,
   die später durch echte Bilder bzw. Illustrationen ersetzt werden.
@@ -112,7 +131,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 276 Unit-Tests, 88 E2E-Tests (Stand 26.09.).
+  - 282 Unit-Tests, 91 E2E-Tests (Stand 26.09. abends).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)

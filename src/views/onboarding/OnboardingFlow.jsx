@@ -144,7 +144,7 @@ function loescheGespeichertenStand() {
 // läuft unverändert den bisherigen Weg.
 export default function OnboardingFlow({ onDone, startPhase = "welcome", onCancel }) {
   const { proband } = useAdmin();
-  const { isAdmin, onboardingModus, aktivesHauptprotokoll, hauptprotokollErstellen, hauptprotokollUmbenennen, verknuepfeMitHauptprotokoll, ziele } = useAppData();
+  const { isAdmin, onboardingModus, aktivesHauptprotokoll, hauptprotokollErstellen, hauptprotokollUmbenennen, verknuepfeMitHauptprotokoll, ziele, vorstellungTabsSpeichern } = useAppData();
   const istAdminModus = proband !== null || isAdmin;
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
   const { user } = useAuth();
@@ -229,11 +229,13 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   let screen;
 
   if (phase === "welcome") {
-    // Vorschau 26.09.: bildhafte Vorstellung im App-Look statt der einen
-    // Willkommensseite (WelcomeView bleibt im Code).
+    // Seit 26.09.: bildhafte Vorstellung im App-Look statt der einen
+    // Willkommensseite (WelcomeView bleibt im Code). Angetippte "Tabs"
+    // landen im Profil (vorstellung_tabs) – der Coach sieht sie.
     screen = (
       <VorstellungView
-        onDone={async () => {
+        onDone={async ({ tabs } = {}) => {
+          if (tabs?.length && !proband) vorstellungTabsSpeichern?.(tabs);
           await protokollSicherstellen("Mein Start");
           setPhase("intro");
         }}

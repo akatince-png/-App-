@@ -83,7 +83,7 @@ test("Coach-Übersicht: wer dich braucht steht oben, Zeile öffnet Chat mit Vorl
   await page.goto("/e2e/harness/index.html#/admin-uebersicht");
   await expect(page.getByText("Heute für dich")).toBeVisible();
   // Reihenfolge: Lea (ungelesen), Jonas (seit 3 Tagen ruhig), Mia; Admin ausgeblendet.
-  const zeilen = page.locator("button[aria-expanded]");
+  const zeilen = page.locator("button[aria-expanded]:not([data-programme-toggle])");
   await expect(zeilen).toHaveCount(3);
   await expect(zeilen.nth(0)).toContainText("Lea");
   await expect(zeilen.nth(1)).toContainText("seit 3 Tagen ruhig");
@@ -124,5 +124,45 @@ test("Coach: Reiter 'Chats' listet Unterhaltungen nach zuletzt geschrieben, anti
   await expect(eintraege.nth(1)).toContainText("Du: Stark gemacht!");
   await eintraege.nth(0).click();
   await expect(page.getByRole("dialog", { name: "Chat: Lea" }).locator('[data-chat-nachricht="fremde"]')).toContainText("später anfangen");
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});
+
+// Programme als Module (26.09.): Leiste mit an/aus + "wartet auf Start",
+// je Person freischalten/starten; Start legt Etappe 1 und die Teilnahme an.
+test("Coach: Programme – Einstellungsphase für eine Person starten, Tabs aus der Vorstellung sehen", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const gesendet = { teilnahmen: [], etappen: [] };
+  await page.route("**/rest/v1/rpc/admin_liste_probanden*", (r) => r.fulfill({ json: PERSONEN }));
+  await page.route("**/rest/v1/teams*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/training_*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/programme*", (r) => r.fulfill({ json: [{ id: "einstellung", name: "AKA-Einstellungsphase", emoji: "🧭", wochen: 8, reihenfolge: 0, aktiv: true, fuer_neue: true }] }));
+  await page.route("**/rest/v1/programm_teilnahmen*", (r) => {
+    if (r.request().method() === "POST") {
+      gesendet.teilnahmen.push(r.request().postDataJSON());
+      return r.fulfill({ status: 201, json: [] });
+    }
+    return r.fulfill({ json: [{ id: "t-lea", user_id: "p-lea", programm_id: "einstellung", status: "wartet", start: null }] });
+  });
+  await page.route("**/rest/v1/coaching_etappen*", (r) => {
+    if (r.request().method() === "POST") {
+      gesendet.etappen.push(r.request().postDataJSON());
+      return r.fulfill({ status: 201, json: [] });
+    }
+    return r.fulfill({ json: [] });
+  });
+  await page.route("**/rest/v1/profiles*", (r) => r.fulfill({ json: [{ id: "p-lea", vorstellung_tabs: ["🔥 Hyperfokus", "😴 Zu spät ins Bett"] }] }));
+  await chatMocks(page, []);
+  await page.goto("/e2e/harness/index.html#/admin-uebersicht");
+  await expect(page.getByText(/warten auf den Start der Einstellungsphase/)).toBeVisible();
+  await page.getByRole("button", { name: /🧭 Programme/ }).click();
+  await expect(page.getByRole("switch", { name: "Für alle an" })).toHaveAttribute("aria-checked", "true");
+  await page.locator("button[aria-expanded]:not([data-programme-toggle])").filter({ hasText: "Lea" }).click();
+  const person = page.locator("[data-programme-person]");
+  await expect(person).toContainText("wartet auf Start");
+  await expect(person).toContainText("🔥 Hyperfokus · 😴 Zu spät ins Bett");
+  await person.getByRole("button", { name: "▶ Starten (abends)" }).click();
+  await expect.poll(() => gesendet.teilnahmen.length).toBe(1);
+  expect(gesendet.teilnahmen[0]).toMatchObject({ user_id: "p-lea", programm_id: "einstellung", status: "laufend" });
+  expect(gesendet.etappen[0][0]).toMatchObject({ user_id: "p-lea", nummer: 1, art: "einfuehrung" });
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });

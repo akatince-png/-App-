@@ -28,12 +28,21 @@ export default function KernprogrammKarte({ onOeffnen }) {
   const { kernStand: stand, trainingWochenplan = [] } = useAppData();
   if (!stand) return null;
   if (!stand.aktiv) {
+    // Programm-Modul (26.09.): Teilnahme wartet, bis der Coach den Start festlegt.
+    if (stand.wartet)
+      return (
+        <div style={{ ...karte, cursor: "default" }} data-kern-wartet>
+          <div style={klein}>DEIN AKA-COACHING</div>
+          <div style={{ fontWeight: 900, fontSize: 16, marginTop: 3 }}>🧭 Deine Einstellungsphase</div>
+          <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4, lineHeight: 1.4 }}>Deinen Start legst du mit deinem Coach fest. Los geht&apos;s am Abend – mit deiner ersten Abendroutine.</div>
+        </div>
+      );
     if (!stand.geplant) return null;
     return (
       <button type="button" className="mp-tap" onClick={onOeffnen} style={karte}>
         <div style={klein}>DEIN AKA-COACHING</div>
-        <div style={{ fontWeight: 900, fontSize: 16, marginTop: 3 }}>🧭 Startet am {datumKurz(stand.geplant.start)}</div>
-        <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4, lineHeight: 1.4 }}>Woche 1: {WOCHEN[1].text}</div>
+        <div style={{ fontWeight: 900, fontSize: 16, marginTop: 3 }}>🧭 Startet am {datumKurz(stand.geplant.start)} abends</div>
+        <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4, lineHeight: 1.4 }}>Los geht&apos;s mit deiner ersten Abendroutine. Woche 1: {WOCHEN[1].text}</div>
       </button>
     );
   }

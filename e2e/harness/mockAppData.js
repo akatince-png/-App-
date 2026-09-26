@@ -141,7 +141,9 @@ function explizit(userId, overrides) {
     routineSchritteFuer: () => basis.routineSchritte || [],
     // Kernprogramm (25.09.): Stand mit der echten Logik aus den Etappen.
     kernEtappen: basis.kernEtappen || [],
-    kernStand: programmStand(basis.kernEtappen || [], isoHeute()),
+    kernStand: basis.kernStand || programmStand(basis.kernEtappen || [], isoHeute()),
+    programme: basis.programme || [],
+    programmTeilnahmen: basis.programmTeilnahmen || [],
     kernTop3: {},
     kernWochenChecks: [],
     routineKernPausen: [],
