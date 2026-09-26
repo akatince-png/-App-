@@ -1,5 +1,31 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026) — Maßstab für jede Änderung
+
+**AKA ist eine Lifestyle-App für Menschen mit ADHS.** Sie hilft auf zwei Wegen:
+
+1. **Struktur aufbauen:** für alle, denen es schwerfällt, Strukturen zu schaffen.
+   Das geht Schritt für Schritt: erst messen, dann planen (Messwoche, 8-Wochen-Kernprogramm).
+2. **Struktur vereinfachen und bündeln:** für alle, die schon Strukturen haben.
+   Alles läuft in **einer** App zusammen, einfacher und einheitlicher als mit vielen einzelnen Apps.
+
+**Wie:** auf dem interessantesten, benutzerfreundlichsten und effizientesten Weg.
+Daraus folgt für jede Seite, jeden Text und jeden Ablauf:
+
+- **Zeigen statt erklären:** Bilder, Grafiken, Bewegung und echte App-Elemente
+  (Gehirn, Körper-Figur, Balken-Skala, Logo) statt Textwüsten.
+- **ADHS offen ansprechen**, in Alltagssprache und ohne Fachchinesisch, damit sich die Leute darin wiederfinden.
+- **Wenige Schritte**, alles überspringbar. Nichts ist rot, nichts schimpft.
+- **Alle Bausteine gleichwertig** (siehe CLAUDE.md), und zwar ohne Heils- oder Wirkversprechen.
+  Beispiel-Charts werden als „Beispiel“ gekennzeichnet.
+- **Programme als Pakete:** Das 8-Wochen-Kernprogramm läuft für jede neue Person zuerst.
+  Die App funktioniert aber auch unabhängig davon und soll später weitere Programme aufnehmen
+  (z. B. Training). Programme deshalb als eigenes, austauschbares Modul denken, nicht fest verdrahten.
+- **Diese Perspektive regelmäßig auf Bestehendes anwenden.**
+  Erster Kandidat ist das Onboarding: Beispiel 2 der bildhaften Vorstellung wurde am 26.09. gezeigt
+  (Artefakt „AKA Vorstellung“), die Umsetzung wartet auf die Freigabe.
+  Konzept 8 Wochen: Artefakt „AKA 8 Wochen“, von der Nutzerin als Pilotplan freigegeben.
+
 ## 🟢 AKTUELLER STAND 24.09.2026 (Nacht) — ZUERST LESEN
 
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter

@@ -19,6 +19,12 @@ Hinweise) und wird laufend gepflegt.
 
 Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
 
+- **Philosophie (Nutzerin, 26.09.):** AKA ist eine Lifestyle-App für
+  Menschen mit ADHS. Sie hilft beim Aufbau von Struktur und bündelt
+  vorhandene Strukturen in einer App, auf dem interessantesten,
+  benutzerfreundlichsten und effizientesten Weg: zeigen statt erklären,
+  wenige Schritte. Programme (z. B. das 8-Wochen-Kernprogramm) sind
+  austauschbare Pakete. Details stehen oben in `UEBERGABEPROTOKOLL.md`.
 - **Leitprinzip, nicht verhandelbar:** Jede Funktion muss sowohl manuell
   als auch per KI-Coach nutzbar sein — niemals ein manuelles Formular
   entfernen oder verstecken, nur weil es jetzt auch einen KI-Weg gibt.
