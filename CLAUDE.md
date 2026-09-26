@@ -22,7 +22,9 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
 - **Philosophie (Nutzerin, 26.09.):** AKA ist ein Management-Tool für den
   Alltag mit ADHS, „Deine exekutive rechte Hand“: App und Coach übernehmen
   Planen, Erinnern, Tracken, Im-Blick-Behalten und Auswerten. Kern ist das
-  AKA-Konzept. Das Rückgrat bilden feste Morgen- und Abendroutine und
+  AKA-Konzept. Das Rückgrat bilden feste Abend- und Morgenroutine (immer
+  Abend zuerst: „Ein guter Morgen beginnt am Abend davor“, einen Schritt
+  voraus) und
   Bewegung, darin eingebaut sind Wasser, Licht, Essen, Schlaf, Supplemente
   mit guter Studienlage und die Medikation (mit dem Arzt). Dazu kommt
   Community. Die ersten Wochen sind die Einstellungsphase, das Coaching

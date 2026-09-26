@@ -16,8 +16,17 @@ und keine zehn Pläne abarbeiten müssen. Auch das Auswerten, also welche Schlü
 keine Diagnose und keine Heils- oder Wirkversprechen.
 
 **2. Das AKA-Konzept (Kern jedes Coachings).**
-- **Rückgrat:** eine konstante **Morgen- und Abendroutine** (planen und organisieren) und **Bewegung
+- **Rückgrat:** eine konstante **Abend- und Morgenroutine** (planen und organisieren) und **Bewegung
   im Alltag**. Hier liegt der Hauptaugenmerk.
+- **Immer Abend vor Morgen (Nutzerin, 26.09., „essenziell“):** „Ein guter Morgen beginnt am Abend
+  davor.“ Wir starten nicht mit dem nächsten Morgen, sondern mit dem nächsten Abend und bereiten
+  den Morgen vor, damit man mit ADHS **immer einen Schritt voraus** ist. In Texten, Reihenfolgen und
+  Grafiken deshalb die Abendroutine zuerst nennen. Auch der Programmstart beginnt am Vorabend
+  (Vorschlag: Sonntagabend erste Abendroutine, Montag erster Morgen).
+- **Sich und sein ADHS kennen:** erst messen, dann planen. Mit dem Coach lernt man sich immer
+  besser kennen und richtet die App danach ein. So bekommt man sein Leben in den Griff.
+- **Bewegung** hervorheben (Evidenz in der Wissens-Basis und im Tagesplan-PDF: Bewegung als fester
+  Teil der Routine, an schweren Tagen als kurze Regulation, fünf Minuten genügen).
 - **Darin eingebaut**, was sonst untergeht, weil es wie eine Kleinigkeit wirkt oder weil der Hyperfokus
   (z. B. bei der Arbeit, der „Workaholic mit ADHS“) alles andere verdrängt: Wasser, Tageslicht,
   Ernährung, Schlaf, Atmung, **Supplemente mit guter Studienlage**.
@@ -51,8 +60,9 @@ feste Wochenzahl als „Produkt“ verkaufen.
   wird Coachees nicht als KI-Ersatz präsentiert (Abschnitt 1, „Geschäftsmodell-Pivot“).
 
 **7. Diese Perspektive regelmäßig auf Bestehendes anwenden.** Erster Kandidat ist das Onboarding.
-Die bildhafte Vorstellung ist im Artefakt „AKA Vorstellung“ (Beispiel 4 vom 26.09.: exekutive rechte Hand,
-AKA-Konzept, Kleinigkeiten, Startseite, Coach, Community, Einstellungsphase, Start). Die Umsetzung wartet
+Die bildhafte Vorstellung ist im Artefakt „AKA Vorstellung“ (Beispiel 5 vom 26.09.: Tabs antippen, exekutive rechte Hand,
+„Ein guter Morgen beginnt am Abend davor“, Bewegung, ein Tag mit AKA, Kleinigkeiten, „Grad nicht gut?“,
+dich kennenlernen + Coach, Community, Einstellungsphase + Start). Die Umsetzung wartet
 auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AKA 8 Wochen“ (Pilotplan freigegeben).
 
 - **Programme als eigenständige Module (Nutzerin, 26.09., ausdrücklich):**
