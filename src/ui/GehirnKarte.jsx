@@ -1,3 +1,4 @@
+import KoerperFigur from "./KoerperFigur";
 import React, { useMemo, useState } from "react";
 import { berechneGehirnZeitraum, WIDGET_REGION } from "../utils/gehirn";
 import { KATEGORIEN } from "../utils/errungenschaften";
@@ -262,7 +263,9 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         <div style={{ width: `${prozent}%`, height: "100%", borderRadius: 99, background: logoVerlauf, transition: "width 0.8s ease-out" }} />
       </div>
 
-      <div style={{ position: "relative" }}>
+      {/* Gehirn + Körper nebeneinander (26.09., Skizze der Nutzerin) */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ position: "relative", flex: "1.55 1 0", minWidth: 0 }}>
       <svg viewBox="40 24 250 200" role="img" aria-label={`Dein Gehirn, ${ZEITRAUM_TEXT[zeitraum] || "heute"} zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 420, display: "block", margin: "8px auto 0" }}>
         <defs>
           <clipPath id="mp-grosshirn">
@@ -376,6 +379,10 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         })}
       </svg>
       <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
+      </div>
+      <div style={{ flex: "1 1 0", minWidth: 0 }}>
+        <KoerperFigur />
+      </div>
       </div>
 
       {/* Tagesfortschritt-Balken je Bereich — gleiche Zeitraum-Wahl wie oben */}
