@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 271 Unit-Tests, 88 E2E-Tests (Stand 26.09.).
+  - 276 Unit-Tests, 88 E2E-Tests (Stand 26.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -107,7 +107,8 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Geführter Ablauf im Messmodus** (`RoutineAblauf.jsx`): Stoppuhr je Schritt statt Countdown, Hauptuhr läuft durch; morgens (bis 3 h nach der Weckzeit) Frage „Ab dem Wecker (hh:mm) / Ab jetzt“ – Hauptuhr startet dann rückwirkend ab Weckzeit. Protokoll je Schritt jetzt mit `schrittId`.
 - **Auswertung** (`ui/MesswocheAuswertung.jsx`): je Routine Ø/kürzeste/längste Gesamtdauer, je Schritt Ø + Anzahl; ab **3 Messungen** Vorschlag = Ø + 15 % Puffer (aufgerundet, Minuten), „✓ übernehmen“ setzt `routine_schritte.dauer_min` (einzeln oder alle). Training: Ø Dauer erledigter Einheiten. Durchläufe über 4 h zählen nicht. Sichtbar im Coaching (`#/coaching`, Coachee) und in der Coach-Ansicht (Kernprogramm-Kasten) bis 3 Wochen nach Etappenstart.
 - **Wecken:** Web-App kann nicht laut wecken → Handy-Wecker + Push zur Routine-Startzeit; echter App-Wecker erst mit nativer App.
-- **Noch offen / nächste Schritte:** Kamera-Wiederholungszählung (Kniebeugen/Liegestütze, im Browser, Bild bleibt auf dem Gerät), Plausibilitäts-Prüfung für Wettbewerbe; Smartwatch/Health-Daten nur mit nativer App (HealthKit/Health Connect, DSGVO Art. 9). Körper-Figur neben dem Gehirn liegt als **Vorschau** auf dem Arbeitszweig (nicht auf main).
+- **Kamera-Zählung (gebaut 26.09.):** Im Live-Training bei Kniebeugen, Liegestützen und Kettlebell-Swings „📷 Mit Kamera zählen“ (`ui/KameraZaehler.jsx`, Logik `utils/wiederholungZaehler.js`: Gelenkwinkel mit Hysterese, Mindestabstand 350 ms, besser sichtbare Körperseite). MediaPipe Pose Lite (`@mediapipe/tasks-vision`, nur bei Bedarf nachgeladen; WASM von jsDelivr, Modell von storage.googleapis.com), GPU mit CPU-Rückfall. Bild bleibt auf dem Gerät. Gezählte Sätze gelten als beantwortet und werden mit `satzGezaehlt` im Training gespeichert (Grundlage für faire Wettbewerbe). **Live mit echter Kamera noch nicht geprüft** (Sandbox-Browser ohne Internet).
+- **Noch offen / nächste Schritte:** Plausibilitäts-Prüfung für Wettbewerbe; Smartwatch/Health-Daten nur mit nativer App (HealthKit/Health Connect, DSGVO Art. 9). Körper-Figur neben dem Gehirn liegt als **Vorschau** auf dem Arbeitszweig (nicht auf main).
 
 ### Denksport: Knobeln + Konzentrationstraining (26.09., Nutzerin: „Aufgaben fordern einen nicht wirklich heraus“)
 - **Knobeln** (`utils/knobelAufgaben.js`): erzeugte Aufgaben mit Level 1–10 (Start 4): Kopfrechnen in zwei Schritten, Prozent/Brüche, Zahlenreihen mit verschachtelten Regeln, Wochentag in n Tagen, Uhrzeit + Dauer, Logik (Händeschütteln, Dreisatz, Rabatt+Aufschlag). Gespeichert als `denkpause_ergebnisse.kategorie = "knobel"`; Level aus je 10 Antworten (≥ 80 % → +1, < 50 % → −1). **Tagesrätsel = 3 Knobel + 2 aus Rätsel/Wortspiel/Wissen** (keine leichten Mathe-Katalogfragen mehr). Im freien Training (Admin) eigene Karte „Knobeln“.

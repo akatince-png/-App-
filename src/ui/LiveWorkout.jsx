@@ -3,6 +3,8 @@ import { Shell, Card, Label, PrimaryButton, TextInput } from "./primitives";
 import ViewHeader from "./ViewHeader";
 import Timer from "./Timer";
 import SatzFrage from "./SatzFrage";
+import KameraZaehler from "./KameraZaehler";
+import { kameraUebungFuer } from "../utils/wiederholungZaehler";
 import { naechstesMalHinweis } from "../utils/trainingSaetze";
 import NumberWheelField from "./NumberWheelField";
 import TrainingVorschau from "./TrainingVorschau";
@@ -104,6 +106,8 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
   // Frage gerade angezeigt wird (während die Pause schon läuft).
   const [satzErgebnisse, setSatzErgebnisse] = useState({});
   const [satzOffen, setSatzOffen] = useState(null);
+  // Kamera-Zählung (26.09.): bleibt über die Sätze einer Übung an.
+  const [kamera, setKamera] = useState(false);
 
   const uebungen = session.uebungen || [];
   const aktuelleUebung = uebungen[uebungIndex];
@@ -148,6 +152,25 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
     else setPhase("letzteFrage");
   };
 
+  // Satz per Kamera gezählt: Ergebnis gilt als beantwortet (gezaehlt = true,
+  // z. B. für Wettbewerbe), die Frage entfällt.
+  const kameraSatzFertig = (anzahl) => {
+    const gesamtSaetze = Number(aktuelleUebung?.saetze) || 1;
+    const satz = satzAktuell;
+    setSatzErgebnisse((prev) => {
+      const liste = [...(prev[uebungIndex] || [])];
+      liste[satz - 1] = { wdh: anzahl, schwere: null, gezaehlt: true };
+      return { ...prev, [uebungIndex]: liste };
+    });
+    if (satz < gesamtSaetze) {
+      setSatzOffen(satz);
+      setPhase("pause");
+    } else {
+      setSatzOffen(null);
+      setPhase("bestaetigen");
+    }
+  };
+
   const satzBeantwortet = (antwort) => {
     const satz = satzOffen;
     setSatzErgebnisse((prev) => {
@@ -170,12 +193,13 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
   const uebungBestaetigen = () => {
     const ergebnisse = satzErgebnisse[uebungIndex];
     const naechste = tatsaechlich.map((u, i) =>
-      i === uebungIndex ? { ...u, ...entwurf, ...(ergebnisse?.length ? { saetzeIst: ergebnisse.map((e) => e?.wdh ?? null), satzSchwere: ergebnisse.map((e) => e?.schwere ?? null) } : {}) } : u
+      i === uebungIndex ? { ...u, ...entwurf, ...(ergebnisse?.length ? { saetzeIst: ergebnisse.map((e) => e?.wdh ?? null), satzSchwere: ergebnisse.map((e) => e?.schwere ?? null), satzGezaehlt: ergebnisse.map((e) => !!e?.gezaehlt) } : {}) } : u
     );
     setTatsaechlich(naechste);
     if (uebungIndex + 1 < uebungen.length) {
       setUebungIndex((i) => i + 1);
       setSatzAktuell(1);
+      setKamera(false);
       setPhase("uebung");
     } else {
       beenden({ uebungen: naechste });
@@ -285,7 +309,24 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                     <div style={{ fontSize: 15, fontWeight: 800, color: accentDark, marginBottom: 14 }}>
                       Satz {satzAktuell} von {Number(aktuelleUebung.saetze) || 1}
                     </div>
-                    <PrimaryButton onClick={satzFertig}>Satz fertig</PrimaryButton>
+                    {kamera && kameraUebungFuer(aktuelleUebung.name) ? (
+                      <KameraZaehler
+                        key={`${uebungIndex}-${satzAktuell}`}
+                        uebung={kameraUebungFuer(aktuelleUebung.name)}
+                        ziel={Number(aktuelleUebung.wiederholungen) || null}
+                        onFertig={kameraSatzFertig}
+                        onAbbrechen={() => setKamera(false)}
+                      />
+                    ) : (
+                      <>
+                        <PrimaryButton onClick={satzFertig}>Satz fertig</PrimaryButton>
+                        {kameraUebungFuer(aktuelleUebung.name) && (
+                          <button type="button" onClick={() => setKamera(true)} style={{ marginTop: 10, border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
+                            📷 Mit Kamera zählen
+                          </button>
+                        )}
+                      </>
+                    )}
                   </>
                 ) : phase === "letzteFrage" ? (
                   <>
