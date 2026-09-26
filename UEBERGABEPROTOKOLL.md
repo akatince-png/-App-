@@ -65,6 +65,15 @@ Die bildhafte Vorstellung ist im Artefakt „AKA Vorstellung“ (Beispiel 5 vom 
 dich kennenlernen + Coach, Community, Einstellungsphase + Start). Die Umsetzung wartet
 auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AKA 8 Wochen“ (Pilotplan freigegeben).
 
+- **Start individuell (Nutzerin, 26.09.):** Das Programm startet, wann immer der Coach mit der Person
+  anfängt. Das ist kein fester Termin für alle. Passend zum Konzept beginnt es am Abend mit der ersten Abendroutine.
+- **Vorstellung im App-Look (Vorschau, nur auf dem Branch):** `views/onboarding/VorstellungView.jsx`
+  ersetzt in `OnboardingFlow` die Willkommensseite. Sie hat zehn Seiten aus echten Bausteinen: Tabs antippen,
+  „Ein guter Morgen beginnt am Abend davor“ mit Routinen-Karten, Sport-Figuren (`ui/MenschFigur.jsx`),
+  die echte `GehirnKarte` mit Körper (neue Props `koerper` bzw. `werte` für Beispielwerte), ein Tag mit AKA,
+  „Grad nicht gut?“, Muster + Coach-Chat, Community und die Einstellungsphase. Die Nutzerin hatte bemängelt,
+  dass die HTML-Beispiele „absolut nicht so aussehen wie die App“, daher der Bau direkt in der App.
+  Offen: Die angetippten Tabs werden noch nicht gespeichert (gedacht fürs Erstgespräch), und die Texte gibt es nur auf Deutsch.
 - **Programme als eigenständige Module (Nutzerin, 26.09., ausdrücklich):**
   Das 8-Wochen-Programm wird als eigenes Programm in der App hinterlegt.
   - Die Admin kann ein Programm **für alle** aktivieren oder deaktivieren.
