@@ -41,9 +41,11 @@ export function koerperWerte(d, heute = toLocalISODate(new Date())) {
 
 const glow = (a, farbe) => ({ fill: farbe, fillOpacity: 0.18 + a * 0.72, filter: a > 0.6 ? "url(#mp-koerper-glow)" : undefined, transition: "fill-opacity .6s" });
 
-export default function KoerperFigur() {
+// `werte` (optional): feste Beispielwerte statt der eigenen Tagesdaten,
+// z. B. in der Vorstellung vor dem Start (VorstellungView).
+export default function KoerperFigur({ werte = null }) {
   const d = useAppData();
-  const w = koerperWerte(d);
+  const w = werte || koerperWerte(d);
   const linie = { fill: "none", stroke: "#fff", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", opacity: 0.9 };
   return (
     <div aria-label="Dein Körper heute" style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0 }}>

@@ -223,7 +223,7 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
@@ -381,7 +381,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
       </div>
       <div style={{ flex: "1 1 0", minWidth: 0 }}>
-        <KoerperFigur />
+        <KoerperFigur werte={koerper} />
       </div>
       </div>
 

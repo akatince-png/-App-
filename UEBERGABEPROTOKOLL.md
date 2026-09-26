@@ -67,7 +67,7 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 
 - **Start individuell (Nutzerin, 26.09.):** Das Programm startet, wann immer der Coach mit der Person
   anfängt. Das ist kein fester Termin für alle. Passend zum Konzept beginnt es am Abend mit der ersten Abendroutine.
-- **Vorstellung im App-Look (Vorschau, nur auf dem Branch):** `views/onboarding/VorstellungView.jsx`
+- **Vorstellung im App-Look (live seit 26.09., Freigabe der Nutzerin):** `views/onboarding/VorstellungView.jsx`
   ersetzt in `OnboardingFlow` die Willkommensseite. Sie hat zehn Seiten aus echten Bausteinen: Tabs antippen,
   „Ein guter Morgen beginnt am Abend davor“ mit Routinen-Karten, Sport-Figuren (`ui/MenschFigur.jsx`),
   die echte `GehirnKarte` mit Körper (neue Props `koerper` bzw. `werte` für Beispielwerte), ein Tag mit AKA,

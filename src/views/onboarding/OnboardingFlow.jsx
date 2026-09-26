@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import WelcomeView from "../WelcomeView";
+import VorstellungView from "./VorstellungView";
 import HauptprotokollErstellenView from "./HauptprotokollErstellenView";
 import OnboardingQuickWinView from "./OnboardingQuickWinView";
 import OnboardingWerteAktualisierenView from "./OnboardingWerteAktualisierenView";
@@ -229,8 +229,10 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   let screen;
 
   if (phase === "welcome") {
+    // Vorschau 26.09.: bildhafte Vorstellung im App-Look statt der einen
+    // Willkommensseite (WelcomeView bleibt im Code).
     screen = (
-      <WelcomeView
+      <VorstellungView
         onDone={async () => {
           await protokollSicherstellen("Mein Start");
           setPhase("intro");

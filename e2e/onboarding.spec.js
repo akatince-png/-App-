@@ -42,9 +42,9 @@ test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon be
   await page.addInitScript(fakeSpeechRecognitionEinrichten);
   await page.goto("/e2e/harness/index.html?onboarding=1");
 
-  // Kürzeres Onboarding (24.09.): eine Willkommensseite, danach steht das
+  // Vorstellung (Vorschau 26.09.) überspringen, danach steht das
   // Namensfeld direkt auf der "Du & Aka"-Seite.
-  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
+  await page.getByRole("button", { name: "Überspringen", exact: true }).click();
 
   const namensfeld = page.getByPlaceholder("z. B. Anton Kaufmann");
   await expect(namensfeld).toBeVisible();
@@ -71,8 +71,8 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1");
 
-  await expect(page.getByText("In 3 Minuten startklar:")).toBeVisible();
-  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
+  await expect(page.getByText("Viele Tabs im Kopf?")).toBeVisible();
+  await page.getByRole("button", { name: "Überspringen", exact: true }).click();
 
   await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
   await page.getByRole("button", { name: "🙋 Ich klick mich selbst durch" }).click();
@@ -122,7 +122,7 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
 test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttätigkeit, Reduzieren-Vorstellung und Limit ab", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1");
-  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
+  await page.getByRole("button", { name: "Überspringen", exact: true }).click();
   await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
   await page.getByRole("button", { name: "🙋 Ich klick mich selbst durch" }).click();
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
@@ -155,7 +155,7 @@ test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttät
 test("Onboarding (Coachee, kurz): ohne Bereichswahl über den Steckbrief zum Abschluss", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1&isAdmin=0");
-  await page.getByRole("button", { name: "Los geht's", exact: true }).last().click();
+  await page.getByRole("button", { name: "Überspringen", exact: true }).click();
   await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Coachee");
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
   await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
@@ -306,5 +306,29 @@ test("Neues Protokoll (bestehendes Konto): „Alleine, ohne Aka“ unterdrückt 
   await page.getByRole("button", { name: "Jetzt einrichten" }).click();
   await expect(page.getByRole("button", { name: "Schließen" })).not.toBeVisible();
 
+  expect(fehler).toEqual([]);
+});
+
+// Vorstellung vor dem Start (Vorschau 26.09.): zehn Seiten im App-Look,
+// Tabs zum Antippen, Abend vor Morgen, echtes Gehirn mit Körper.
+test("Vorstellung: Tabs antippen, alle Seiten durchblättern, danach geht es zum Namen", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.goto("/e2e/harness/index.html?onboarding=1&isAdmin=0");
+  await expect(page.getByText("Viele Tabs im Kopf?")).toBeVisible();
+  await page.getByRole("button", { name: "🔥 Hyperfokus" }).click();
+  await page.getByRole("button", { name: "😴 Zu spät ins Bett" }).click();
+  await expect(page.getByText("2 davon kennst du.")).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await expect(page.getByText("Ein guter Morgen beginnt am Abend davor.")).toBeVisible();
+  await expect(page.getByText("① Heute Abend")).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await expect(page.locator('svg[aria-label^="Dein Gehirn"]')).toBeVisible();
+  await expect(page.getByLabel(/^Körper:/)).toBeVisible();
+  for (let i = 0; i < 5; i++) await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await expect(page.getByText("Erst stellen wir dich ein.")).toBeVisible();
+  await page.getByRole("button", { name: "Los geht's", exact: true }).click();
+  await expect(page.getByPlaceholder("z. B. Anton Kaufmann")).toBeVisible();
   expect(fehler).toEqual([]);
 });
