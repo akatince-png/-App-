@@ -40,6 +40,7 @@ export default function ErfolgeTab() {
     tageslichtEintraege,
     tageslichtZielMinuten,
     denkpauseErgebnisse,
+    kognitivErgebnisse,
     eigeneGruppenLogs,
   } = appData;
 
@@ -58,6 +59,7 @@ export default function ErfolgeTab() {
       tageslichtEintraege,
       tageslichtZielMinuten,
       denkpauseErgebnisse,
+      kognitivErgebnisse,
       eigeneGruppenLogs,
     }),
     [
@@ -74,6 +76,7 @@ export default function ErfolgeTab() {
       tageslichtEintraege,
       tageslichtZielMinuten,
       denkpauseErgebnisse,
+      kognitivErgebnisse,
       eigeneGruppenLogs,
     ]
   );

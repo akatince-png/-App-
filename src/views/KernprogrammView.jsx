@@ -16,7 +16,7 @@ const AMPEL_FARBE = { gruen: "#1E8E5A", gelb: "#C27A00", rot: "#E0352B", grau: "
 // Bausteine mit der Woche, in der sie dazukommen, und die Sport-Einstellung.
 export default function KernprogrammView({ onHome }) {
   const appData = useAppData();
-  const { kernStand: stand, kernEtappen = [], routineKernPausen = [], trainingWochenplan = [] } = appData;
+  const { kernStand: stand, kernEtappen = [], routineKernPausen = [], trainingWochenplan = [], kognitivErgebnisse = [] } = appData;
   const heute = toLocalISODate(new Date());
   const bilanz = useMemo(() => (stand?.aktiv ? bilanzAusAppData(appData, plusTage(heute, -6), heute, heute) : []), [stand, appData, heute]);
   const [sportOffen, setSportOffen] = useState(false);
@@ -94,6 +94,21 @@ export default function KernprogrammView({ onHome }) {
           Uhrzeit, Art und Dauer stellst du selbst ein (in deiner Morgen-/Abendroutine auf 🔒✎ tippen). Pausieren kann nur dein Coach, z. B. bei einer Verletzung.
         </div>
       </Card>
+
+      {/* Konzentrationstraining (26.09.): freiwilliger Zusatz, kein Pflicht-
+          Baustein – die Belege für Übertragung in den Alltag sind schwächer
+          als bei Bewegung, Schlaf und Routinen. */}
+      {stand?.aktiv && (
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 900, fontSize: 15 }}>🎯 Freiwillig: Konzentrationstraining</div>
+          <div style={{ fontSize: 12.5, color: textMuted, margin: "3px 0 8px", lineHeight: 1.45 }}>
+            Vier kurze Spiele (Bälle verfolgen, Stopp-Spiel, Zahlen merken, Regel-Wechsel), je 1–2 Minuten – gut als Start in einen Fokusblock. Diese Woche: {kognitivErgebnisse.filter((e) => String(e.erstelltAm).slice(0, 10) >= plusTage(heute, -6)).length} Runden.
+          </div>
+          <a href="#/denksport" style={{ color: "#2D6FD6", fontWeight: 800, fontSize: 13.5, textDecoration: "none" }}>
+            Zu den Spielen ›
+          </a>
+        </Card>
+      )}
 
       {stand?.aktiv && stand.einfuehrungWoche >= 2 && (
         <Card style={{ marginBottom: 24 }}>

@@ -7,6 +7,25 @@ import { useAppData } from "../context/AppDataContext";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { TAGESRAETSEL_META } from "../utils/dayItems";
+import { knobelAufgabe, knobelLevel } from "../utils/knobelAufgaben";
+import { SPIELE, SPIEL, naechstesLevel, ergebnisSatz } from "../utils/kognitiv";
+import { BaelleVerfolgen, StoppSpiel, ZahlenMerken, RegelWechsel } from "../ui/KonzentrationsSpiele";
+
+const SPIEL_KOMPONENTE = { ball: BaelleVerfolgen, stopp: StoppSpiel, zahlen: ZahlenMerken, wechsel: RegelWechsel };
+
+// Knobeln (26.09., Nutzerin: "Aufgaben fordern einen nicht wirklich
+// heraus"): erzeugte Aufgaben mit mitwachsendem Level. Das Tagesrätsel
+// besteht jetzt zu 3/5 aus Knobelaufgaben, der Rest aus Rätsel/Wortspiel/Wissen.
+function knobelRunde(anzahl, level) {
+  return Array.from({ length: anzahl }, () => knobelAufgabe(level));
+}
+function tagesraetselRunde(anzahl, level) {
+  const knobel = Math.ceil(anzahl * 0.6);
+  const rest = [];
+  for (let i = 0; i < anzahl - knobel; i++) rest.push(...denksportRunde(["raetsel", "wortspiele", "wissen"][i % 3], 1));
+  const runde = [...knobelRunde(knobel, level), ...rest];
+  return runde.sort(() => Math.random() - 0.5);
+}
 
 // Denksport nach Wunsch (Nutzerinnen-Wunsch 23.09.): die Aufgaben aus dem
 // Denkpausen-Katalog (je 200 Mathe, Wortspiele, Rätsel, Allgemeinwissen)
@@ -22,9 +41,10 @@ const KARTEN = [
   { id: "wortspiele", emoji: "🔤", farbe: "#D9822B", text: "Teekesselchen, Redewendungen, Wortketten" },
   { id: "raetsel", emoji: "🧩", farbe: "#7C5CE0", text: "Logik, Denkfallen, Knobeleien" },
   { id: "wissen", emoji: "🌍", farbe: "#1FA39A", text: "Geografie, Natur, Körper, Geschichte" },
+  { id: "knobel", emoji: "🧠", farbe: "#1B2350", text: "Anspruchsvoll – wird mit dir schwerer" },
   { id: "gemischt", emoji: "🎲", farbe: "#E4643F", text: "Von allem etwas" },
 ];
-const LABEL = { ...Object.fromEntries(DENKPAUSEN_KATEGORIEN.map((k) => [k.id, k.label])), gemischt: "Gemischt" };
+const LABEL = { ...Object.fromEntries(DENKPAUSEN_KATEGORIEN.map((k) => [k.id, k.label])), gemischt: "Gemischt", knobel: "Knobeln" };
 
 function ergebnisText(richtig) {
   if (richtig === RUNDE) return "Alles richtig — dein Kopf ist hellwach! 🚀";
@@ -40,7 +60,8 @@ function ergebnisText(richtig) {
 // gemischte Fragen, siehe utils/tagesraetsel.js). Aus der Tages-Quest bzw.
 // "Als Nächstes" (View "tagesraetsel") startet die Runde direkt.
 export default function DenksportView({ onHome, tagesraetselStart = false }) {
-  const { denkpauseErgebnisVermerken, denkpauseErgebnisse, istAdminKonto } = useAppData();
+  const { denkpauseErgebnisVermerken, denkpauseErgebnisse, istAdminKonto, kognitivErgebnisse = [], kognitivSpeichern } = useAppData();
+  const [spiel, setSpiel] = useState(null); // { id, level, ergebnis }
   const raetselHeute = tagesraetselHeute(denkpauseErgebnisse);
   const raetselOffen = Math.max(0, TAGESRAETSEL_ZIEL - raetselHeute);
   const [istTagesraetsel, setIstTagesraetsel] = useState(false);
@@ -53,7 +74,8 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
   const starten = (id, anzahl = RUNDE, tagesraetsel = false) => {
     setIstTagesraetsel(tagesraetsel);
     setKategorie(id);
-    setRunde(denksportRunde(id, anzahl));
+    const level = knobelLevel(denkpauseErgebnisse);
+    setRunde(tagesraetsel ? tagesraetselRunde(anzahl, level) : id === "knobel" ? knobelRunde(anzahl, level) : denksportRunde(id, anzahl));
     setIndex(0);
     setGewaehlt(null);
     setErgebnisse([]);
@@ -95,15 +117,82 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
     }
   };
 
+  // Konzentrationsspiel läuft / Ergebnis
+  if (spiel) {
+    const Komponente = SPIEL_KOMPONENTE[spiel.id];
+    const meta = SPIEL[spiel.id];
+    return (
+      <Shell>
+        <ViewHeader title={`${meta.emoji} ${meta.name}`} onHome={() => setSpiel(null)} homeTitle="Zurück" />
+        {!spiel.ergebnis ? (
+          <>
+            <div style={{ fontSize: 12.5, color: textMuted, textAlign: "center", marginBottom: 4 }}>
+              Level {spiel.level} · {meta.text}
+            </div>
+            <Komponente
+              key={spiel.runde}
+              level={spiel.level}
+              onFertig={(e) => {
+                kognitivSpeichern?.({ spiel: spiel.id, ...e });
+                setSpiel((x) => ({ ...x, ergebnis: e }));
+              }}
+            />
+          </>
+        ) : (
+          <div style={{ textAlign: "center", padding: "24px 8px" }}>
+            <div style={{ fontSize: 44 }}>{spiel.ergebnis.gesamt && spiel.ergebnis.richtig / spiel.ergebnis.gesamt >= 0.8 ? "🚀" : "🌱"}</div>
+            <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8 }}>{ergebnisSatz(spiel.id, spiel.ergebnis)}</div>
+            <div style={{ fontSize: 13, color: textMuted, marginTop: 6 }}>Nächstes Mal: Level {naechstesLevel([...kognitivErgebnisse, { ...spiel.ergebnis, spiel: spiel.id, erstelltAm: new Date().toISOString() }], spiel.id)}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
+              <button
+                type="button"
+                className="mp-tap"
+                onClick={() => setSpiel((x) => ({ id: x.id, level: naechstesLevel([...kognitivErgebnisse, { ...x.ergebnis, spiel: x.id, erstelltAm: new Date().toISOString() }], x.id), runde: (x.runde || 0) + 1 }))}
+                style={knopf(success, "#fff")}
+              >
+                Nochmal
+              </button>
+              <button type="button" className="mp-tap" onClick={() => setSpiel(null)} style={knopf("#fff", textMain, true)}>
+                Anderes Spiel
+              </button>
+            </div>
+          </div>
+        )}
+      </Shell>
+    );
+  }
+
   // Auswahl
   if (!kategorie) {
     return (
       <Shell>
         <ViewHeader title="🧩 Denksport" onHome={onHome} />
         <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 16 }}>
-          Kurz das Gehirn aufwecken: jeden Tag {TAGESRAETSEL_ZIEL} gemischte Fragen, kein Zeitdruck. Jede richtige Antwort bringt einen Punkt und lädt die Region „Fokus & Planung“ in deinem Gehirn auf.
+          Kurz das Gehirn aufwecken: jeden Tag {TAGESRAETSEL_ZIEL} Fragen (davon 3 Knobelaufgaben, die mit dir schwerer werden), kein Zeitdruck. Dazu vier kurze Konzentrationsspiele. Jede richtige Antwort bringt einen Punkt und lädt die Region „Fokus & Planung“ in deinem Gehirn auf.
         </div>
         <TagesraetselKarte heute={raetselHeute} onStart={tagesraetselStarten} />
+        <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, margin: "18px 0 4px" }}>🎯 Konzentrationstraining</div>
+        <div style={{ fontSize: 12, color: textMuted, marginBottom: 10, lineHeight: 1.45 }}>Je 1–2 Minuten. Das Level passt sich an dich an. Geübt wird die Aufgabe im Spiel – wie viel davon im Alltag ankommt, ist offen.</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {SPIELE.map((sp) => {
+            const level = naechstesLevel(kognitivErgebnisse, sp.id);
+            return (
+              <button
+                key={sp.id}
+                type="button"
+                className="mp-tap"
+                aria-label={`${sp.name} spielen`}
+                onClick={() => setSpiel({ id: sp.id, level, runde: 0 })}
+                style={{ textAlign: "left", border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: "14px 12px", background: "#fff", cursor: "pointer", fontFamily: "inherit", color: textMain }}
+              >
+                <div style={{ fontSize: 24 }}>{sp.emoji}</div>
+                <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4 }}>{sp.name}</div>
+                <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2, lineHeight: 1.35 }}>{sp.uebt}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#2D6FD6", marginTop: 6 }}>Level {level}</div>
+              </button>
+            );
+          })}
+        </div>
         {istAdminKonto && (
           <>
             <div style={{ fontSize: 13, fontWeight: 800, color: textMuted, margin: "18px 0 10px" }}>Freies Training</div>
@@ -257,7 +346,7 @@ function TagesraetselKarte({ heute, onStart }) {
       <div style={{ fontSize: 12.5, marginTop: 4, lineHeight: 1.45, opacity: 0.9 }}>
         {geschafft
           ? "Super, für heute erledigt! Morgen warten 5 neue Fragen."
-          : `Deine Tagesaufgabe: ${TAGESRAETSEL_ZIEL} gemischte Fragen. Geschafft gibt's einen Bonuspunkt, jede richtige Antwort zählt extra.`}
+          : `Deine Tagesaufgabe: ${TAGESRAETSEL_ZIEL} Fragen, davon 3 Knobelaufgaben, die mit dir schwerer werden. Geschafft gibt's einen Bonuspunkt, jede richtige Antwort zählt extra.`}
       </div>
       <div style={{ height: 7, borderRadius: 99, background: geschafft ? "rgba(255,255,255,0.3)" : "rgba(228,100,63,0.18)", marginTop: 10, overflow: "hidden" }}>
         <div style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", borderRadius: 99, background: geschafft ? "#fff" : f.dot }} />

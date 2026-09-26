@@ -136,6 +136,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     routineSchritte,
     routineDurchlaeufe,
     denkpauseErgebnisse,
+    kognitivErgebnisse,
     atemZeiten,
     atemuebungen,
     atemSessions,
@@ -748,10 +749,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       // Home zählte Tagesrätsel-/Denkpause-Punkte nie mit, Erfolge-Reiter
       // und Team-Seite schon (unterschiedliche Punktestände).
       denkpauseErgebnisse,
+      kognitivErgebnisse,
       eigeneGruppenLogs,
     }),
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
-      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, eigeneGruppenLogs]
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, kognitivErgebnisse, eigeneGruppenLogs]
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });

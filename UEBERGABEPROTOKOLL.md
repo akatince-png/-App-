@@ -28,7 +28,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 260 Unit-Tests, 86 E2E-Tests (Stand 25.09.).
+  - 268 Unit-Tests, 87 E2E-Tests (Stand 26.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)
@@ -101,6 +101,11 @@ Nutzerinnen-Wunsch: Für Schichtarbeiter (z. B. 4 Wochen abwechselnd Früh-/Spä
 - **Aka** kennt jetzt beim Anlegen eines Medikaments die Kategorien „ADHS-Medikation“ und „Cannabis“ sowie alle Einnahmearten (vorher fehlten sie, Elvanse landete z. B. unter „Sonstige“ oder „Hormone“). Aka nimmt „täglich“ an, wenn nichts anderes gesagt wurde.
 - **Bestehende Einträge** ohne Kategorie behalten die alte Anzeige „Hormone / Injektion“, damit nichts umetikettiert wird.
 - `Pill` hat jetzt `aria-pressed` (Barrierefreiheit, Tests).
+
+### Denksport: Knobeln + Konzentrationstraining (26.09., Nutzerin: „Aufgaben fordern einen nicht wirklich heraus“)
+- **Knobeln** (`utils/knobelAufgaben.js`): erzeugte Aufgaben mit Level 1–10 (Start 4): Kopfrechnen in zwei Schritten, Prozent/Brüche, Zahlenreihen mit verschachtelten Regeln, Wochentag in n Tagen, Uhrzeit + Dauer, Logik (Händeschütteln, Dreisatz, Rabatt+Aufschlag). Gespeichert als `denkpause_ergebnisse.kategorie = "knobel"`; Level aus je 10 Antworten (≥ 80 % → +1, < 50 % → −1). **Tagesrätsel = 3 Knobel + 2 aus Rätsel/Wortspiel/Wissen** (keine leichten Mathe-Katalogfragen mehr). Im freien Training (Admin) eigene Karte „Knobeln“.
+- **Konzentrationstraining** (`ui/KonzentrationsSpiele.jsx`, `utils/kognitiv.js`, Tabelle `kognitiv_ergebnisse`, Migration 0111): 🏓 Bälle verfolgen (Multiple Object Tracking), 🚦 Stopp-Spiel (Go/No-Go, Reaktionszeit), 🔢 Zahlen merken (Spanne, ab Level 7 rückwärts), 🔀 Regel-Wechsel (gerade/ungerade vs. kleiner/größer 5). Für alle auf der Denksport-Seite, Level je Spiel passt sich an (Start bewusst höher). 1 Punkt je Tag mit mindestens einer Runde (Client `errungenschaften` Kategorie „konzentration“ → Gehirn-Region Fokus; Server `_punkte_ereignisse`). Ohne Wirkversprechen („wie viel im Alltag ankommt, ist offen“). Im Kernprogramm als **freiwillige** Karte, kein Pflicht-Baustein.
+- **Wissens-Basis:** `wissen/allgemein/tagesplanung-gruen-gelb-rot.md` aus dem PDF der Nutzerin (Check-in, Tagesmodi Grün/Gelb/Rot, Notfallmodus, Wochenrhythmus, Regeln für Aka). **Noch nicht als Funktion gebaut:** Tagesmodus-Check-in mit automatischer Tageslast – mit der Nutzerin abstimmen.
 
 ### Atem-Routine + Kontext-Tagebuch (25.09., Vorschauen freigegeben)
 **Atem** (`views/AtemuebungenView.jsx`, `utils/atemBibliothek.js`, `ui/AtemFuehrung.jsx`, Migration 0105):

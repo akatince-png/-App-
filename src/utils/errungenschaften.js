@@ -1,3 +1,4 @@
+import { kognitivTage } from "./kognitiv";
 import { toLocalISODate, zaehleTageStreak } from "./dates";
 import { KATEGORIE_META, ROUTINE_META } from "./dayItems";
 import { aufhellen } from "../ui/theme";
@@ -161,6 +162,15 @@ export const KATEGORIEN = [
       ...(q.denkpauseErgebnisse || []).filter((e) => e.richtig).map((e) => normalisiereDatum(e.erstelltAm)),
       ...tageMitTagesraetsel(q.denkpauseErgebnisse),
     ],
+  },
+  {
+    // Konzentrationstraining (26.09.): 1 Punkt je Tag mit mindestens einer
+    // Runde (wie Atemübung; gleich gezählt in _punkte_ereignisse, Migration 0111).
+    key: "konzentration",
+    label: "Konzentrationstraining",
+    icon: "target",
+    grad: gradAus("#1B2350"),
+    holeTage: (q) => kognitivTage(q.kognitivErgebnisse),
   },
   {
     // Gruppenprotokoll (24.09.): eigene Gruppen-Gewohnheiten des Teams —

@@ -46,3 +46,21 @@ test("Tagesrätsel: von Home aus starten und 5 Fragen lösen", async ({ page }) 
   await expect(page.getByRole("button", { name: "Zurück zur Startseite" })).toBeVisible();
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
+
+// Konzentrationstraining + Knobeln (26.09.)
+test("Konzentrationstraining: Regel-Wechsel durchspielen, Ergebnis wird gespeichert", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0#/denksport");
+  await expect(page.getByText("🎯 Konzentrationstraining")).toBeVisible();
+  for (const n of ["Bälle verfolgen", "Stopp-Spiel", "Zahlen merken", "Regel-Wechsel"]) await expect(page.getByRole("button", { name: `${n} spielen` })).toBeVisible();
+  await page.getByRole("button", { name: "Regel-Wechsel spielen" }).click();
+  for (let i = 0; i < 30; i++) {
+    const knopf = page.getByRole("button", { name: /^(gerade|< 5 kleiner)$/ });
+    if (!(await knopf.first().isVisible().catch(() => false))) break;
+    await knopf.first().click();
+    await page.waitForTimeout(300);
+  }
+  await expect(page.getByText(/% richtig/)).toBeVisible();
+  const aufrufe = await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "kognitivSpeichern").map((a) => a.args[0]));
+  expect(aufrufe[0]).toMatchObject({ spiel: "wechsel", level: 3 });
+  await expect(page.getByRole("button", { name: "Nochmal" })).toBeVisible();
+});
