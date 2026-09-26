@@ -25,6 +25,15 @@ Daraus folgt für jede Seite, jeden Text und jeden Ablauf:
   Erster Kandidat ist das Onboarding: Beispiel 2 der bildhaften Vorstellung wurde am 26.09. gezeigt
   (Artefakt „AKA Vorstellung“), die Umsetzung wartet auf die Freigabe.
   Konzept 8 Wochen: Artefakt „AKA 8 Wochen“, von der Nutzerin als Pilotplan freigegeben.
+- **Programme als eigenständige Module (Nutzerin, 26.09., ausdrücklich):**
+  Das 8-Wochen-Programm wird als eigenes Programm in der App hinterlegt.
+  - Die Admin kann ein Programm **für alle** aktivieren oder deaktivieren.
+  - Standard: Für jede Person, die das erste Mal in die App kommt, ist es aktiv.
+  - Später gibt es mehrere Programme, die **stufenweise pro Person** freigeschaltet und **individuell eingestellt** werden.
+  - Die App selbst funktioniert immer auch ohne aktives Programm.
+- **Bilder mit Menschen:** In der Vorstellung (und später anderswo) Illustrationen oder Bilder von Menschen,
+  die gerade etwas tun oder die App erfolgreich nutzen. Im Beispiel 3 stehen Platzhalter-Figuren,
+  die später durch echte Bilder bzw. Illustrationen ersetzt werden.
 
 ## 🟢 AKTUELLER STAND 24.09.2026 (Nacht) — ZUERST LESEN
 
