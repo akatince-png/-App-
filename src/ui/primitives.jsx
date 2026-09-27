@@ -25,7 +25,9 @@ export function Shell({ children, bereich }) {
           // damit er nicht auf dem letzten Karteninhalt landet (Nutzerin
           // wollte den Button bewusst wieder mittig statt in der Ecke,
           // 29.07.) — so bleibt zumindest das Seitenende immer frei.
-          padding: "32px 16px 110px",
+          // Oben zusätzlich die Statusleiste (Uhrzeit/Akku) in der Home-
+          // Bildschirm-App aussparen (27.09.: Logo rutschte darunter).
+          padding: "calc(32px + env(safe-area-inset-top, 0px)) 16px 110px",
         }}
       >
         <div className="mp-shell-inner">{children}</div>

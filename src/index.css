@@ -14,6 +14,29 @@
   box-sizing: border-box;
 }
 
+/* iPhone (27.09., Nutzerinnen-Fund in der Home-Bildschirm-App: "die
+   Bildschirme verschieben sich"): iOS zoomt automatisch in die Seite, sobald
+   man in ein Eingabefeld mit weniger als 16 px Schrift tippt, und bleibt
+   danach vergrößert – die Seite wirkt dann zu breit und lässt sich seitlich
+   verschieben. Mit 16 px auf Touch-Geräten passiert das nicht mehr. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@media (hover: none) and (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+/* Nichts darf die Seite breiter als den Bildschirm machen ("clip" statt
+   "hidden", damit die klebenden Leisten oben weiter funktionieren). */
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   /* Dieselbe Schrift wie Shell (ui/primitives.jsx) auch für Elemente
