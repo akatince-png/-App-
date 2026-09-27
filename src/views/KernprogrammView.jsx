@@ -37,7 +37,7 @@ export default function KernprogrammView({ onHome, onTour }) {
       {(stand?.aktiv || stand?.geplant) && (
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 8 }}>DEINE ERSTEN 8 WOCHEN</div>
-          <AchtWochenPlan darstellung={new URLSearchParams(window.location.search).get("wochen") === "kacheln" ? "kacheln" : "fahrplan"} aktuell={stand.aktiv ? stand.gesamtWoche : 0} start={kernEtappen[0]?.start || stand.geplant?.start || null} />
+          <AchtWochenPlan aktuell={stand.aktiv ? stand.gesamtWoche : 0} start={kernEtappen[0]?.start || stand.geplant?.start || null} />
           {onTour && (
             <button type="button" className="mp-tap" onClick={onTour} style={{ marginTop: 10, width: "100%", border: `1.5px solid #1B2350`, background: "#fff", color: "#1B2350", borderRadius: 14, padding: 10, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
               ▶ So geht&apos;s – Tour nochmal ansehen

@@ -182,6 +182,22 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Tour „So geht's weiter“, 8 Wochen als Fahrplan, Steckbrief mit Standardwerten (27.09. abends, Nutzerin)
+- **8 Wochen:** `ui/AchtWochenPlan.jsx`, „Fahrplan mit Kacheln“ (Wunsch der Nutzerin): untereinander, jede Woche eine Kachel.
+  Woche 1–4 sind nachtblau mit Bausteinen aus `BAUSTEINE`, Woche 5–8 mint (`ERHALTUNG_WOCHEN`: Festigen, Dein Zusatz,
+  Nachmessen, Bilanz aus dem Pilotplan). Nach Woche 4 und 8 steht das Coach-Gespräch, am Ende „Danach geht es weiter“.
+  Die laufende Woche ist mit „JETZT“ markiert. Die Karte steht oben in „Mein AKA-Coaching“; die Startseiten-Karte
+  „Startet am …“ hat den Knopf „Deine 8 Wochen ansehen ›“. Den „Tagesmodus Grün/Gelb/Rot“ aus dem Pilotplan gibt es
+  noch nicht, deshalb taucht er nicht auf.
+- **Tour:** `views/onboarding/StartTourView.jsx` (View `tour`). Fünf Seiten: 8 Wochen, Abend vor Morgen + Messwoche,
+  Tag mit AKA, Coach + Aka, Start-Checkliste (Erinnerungen erlauben, Wecker, Glas Wasser). Sie kommt einmal direkt nach
+  dem ersten Onboarding und ist in „Mein AKA-Coaching“ über „Tour nochmal ansehen“ erreichbar. Bestehende Konten
+  bekommen sie nicht automatisch, damit die Dauertest-Skripte nicht hängen bleiben.
+- **Steckbrief:** Die Karte „👤 Über dich“ fragt Geschlecht, Größe, Gewicht und Geburtsdatum ab (Profil-Spalten über
+  `setPersonal`), dazu Geburtszeit, Geburtsort und „Wie aktiv ist dein Alltag?“ (in `profiles.steckbrief`). Der
+  Kalorienrechner `kalorienInfo` in `utils/steckbrief.js` zeigt den Grundumsatz (Mifflin-St-Jeor) und den Tagesbedarf
+  (× Aktivitätsfaktor). Der Coach sieht alles zeilenweise in der Einrichtungs-Checkliste (`steckbriefZeilen(s, person)`).
+
 ### Ausgeliefert (live auf main / Vercel, Migrationen auf Prod eingespielt)
 - **Design:** Die App-Farben wechseln mit der Tageszeit (Tagesphasen-Theme). „Hydration“ heißt überall „Wasser“.
 - **Startseite:** Spielstand und Gehirnkarte sind zusammengelegt, mit Wassertropfen und 💡 im Gehirnfeld. „Jetzt dran“ ist ein weißes Feld mit „Danach“-Chips. Neu ist die Karte „🏆 Rangliste“.

@@ -72,3 +72,15 @@ test("Programm wartet auf Start: Startseite zeigt die Einstellungsphase ohne Dat
   await expect(page.getByText("🧭 Deine Einstellungsphase")).toBeVisible();
   await expect(page.getByText(/Deinen Start legst du mit deinem Coach fest/)).toBeVisible();
 });
+
+test("Mein AKA-Coaching: die 8 Wochen als Fahrplan, laufende Woche markiert, Tour erneut aufrufbar", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=3#/coaching");
+  const plan = page.locator("[data-acht-wochen]");
+  await expect(plan.locator("[data-woche]")).toHaveCount(8);
+  await expect(plan.locator('[data-woche="3"]')).toContainText("JETZT");
+  await expect(plan.locator('[data-woche="4"]')).toContainText("Gespräch mit deinem Coach");
+  await page.getByRole("button", { name: /Tour nochmal ansehen/ }).click();
+  await expect(page.getByText("Deine ersten 8 Wochen")).toBeVisible();
+  await page.getByRole("button", { name: "Überspringen" }).click();
+  await expect(page.getByText("Guten", { exact: false }).first()).toBeVisible();
+});

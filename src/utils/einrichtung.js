@@ -51,7 +51,7 @@ export function einrichtungsSchritte(f) {
       stufe: "empfohlen",
       fertig: !!f.onboardingFertig,
       detail: f.onboardingFertig
-        ? steckbriefZeilen(f.steckbrief).join(" · ") || "Ausgefüllt"
+        ? steckbriefZeilen(f.steckbrief, f.person).join("\n") || "Ausgefüllt"
         : "Füllt die Person beim ersten Login aus – oder du über „Einrichten“",
       ziel: "form",
     },

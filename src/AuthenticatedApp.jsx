@@ -77,9 +77,6 @@ const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersic
 // aufgerufener Admin-Link darf eine Coachee nicht in eine Admin-Ansicht
 // bringen, die sie sowieso nicht sehen könnte (RLS blockt die Daten
 // serverseitig ohnehin, aber die Ansicht soll erst gar nicht aufblitzen).
-// Vorschau (27.09.): ?wochen=kacheln zeigt die 8 Wochen als Kacheln statt als Fahrplan.
-const tourDarstellung = () => (new URLSearchParams(window.location.search).get("wochen") === "kacheln" ? "kacheln" : "fahrplan");
-
 function istGueltigerView(view, isAdmin) {
   if (!view) return false;
   if (EINZEL_VIEWS.includes(view) || PLAENE_VIEW_IDS.includes(view) || ARCHIV_VIEW_IDS.includes(view)) return true;
@@ -363,7 +360,8 @@ export default function AuthenticatedApp() {
       <OnboardingFlow
         onDone={() => {
           completeOnboarding();
-          setView("home");
+          // Nach dem ersten Onboarding einmal die Tour "So geht's weiter" (27.09.).
+          setView("tour");
         }}
         onCancel={signOut}
       />
@@ -407,7 +405,7 @@ export default function AuthenticatedApp() {
   } else if (view === "coach-chat") {
     screen = <CoachChatView onHome={() => setView("home")} />;
   } else if (view === "tour") {
-    screen = <StartTourView onDone={() => setView("home")} darstellung={tourDarstellung()} />;
+    screen = <StartTourView onDone={() => setView("home")} />;
   } else if (view === "coaching") {
     screen = <KernprogrammView onHome={() => setView("home")} onTour={() => setView("tour")} />;
   } else if (view === "tagebuch") {

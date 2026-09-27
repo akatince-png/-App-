@@ -91,6 +91,14 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   await expect(page.getByRole("button", { name: "2× pro Woche", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Krafttraining", exact: true })).toBeVisible();
   await expect(page.getByPlaceholder("Etwas anderes? (optional)")).toBeVisible();
+  // Standardwerte + Kalorienrechner (27.09.).
+  await page.getByRole("button", { name: "Weiblich", exact: true }).click();
+  await page.getByPlaceholder("170", { exact: true }).fill("170");
+  await page.getByPlaceholder("70", { exact: true }).fill("70");
+  await page.locator("[data-steckbrief-person]").locator("..").locator('input[type="date"]').fill("1990-05-01");
+  await page.getByRole("button", { name: "Leicht aktiv", exact: true }).click();
+  await expect(page.locator("[data-steckbrief-kalorien]")).toContainText("Grundumsatz ca.");
+  await expect(page.locator("[data-steckbrief-kalorien]")).toContainText("Tagesbedarf ca.");
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
   // Nur Startzeiten, Abend zuerst.
@@ -104,6 +112,10 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
   await page.getByRole("button", { name: "Los geht's" }).last().click();
+  // Danach einmal die Tour "So geht's weiter" (27.09.).
+  await expect(page.getByText("Deine ersten 8 Wochen")).toBeVisible({ timeout: 10000 });
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Weiter", exact: true }).click();
+  await page.getByRole("button", { name: "Alles klar – zur Startseite" }).click();
   await expect(page.getByText("Tagebuch")).toBeVisible({ timeout: 10000 });
 
   expect(fehler).toEqual([]);

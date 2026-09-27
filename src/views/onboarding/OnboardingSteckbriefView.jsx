@@ -3,7 +3,8 @@ import { Shell, Card, Label, Pill, TextInput, PrimaryButton } from "../../ui/pri
 import { cardBorder, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useAppData } from "../../context/AppDataContext";
-import { SPORT_ARTEN, SPORT_MENGE, SUPPLEMENTE, alsText, umschalten } from "../../utils/steckbrief";
+import { AKTIVITAET, SPORT_ARTEN, SPORT_MENGE, SUPPLEMENTE, alsText, kalorienInfo, umschalten } from "../../utils/steckbrief";
+import { aktuellesGewicht } from "../../utils/essenRechner";
 
 const SPORT_ERFAHRUNG_OPTIONEN = ["Kein Training", "Anfänger", "Fortgeschritten", "Erfahren"];
 
@@ -14,7 +15,25 @@ const SPORT_ERFAHRUNG_OPTIONEN = ["Kein Training", "Anfänger", "Fortgeschritten
 // Hintergrundfragen erfasst, die die Admin dafür schon vorab kennen sollte
 // — bewusst NICHT dieselbe Detailtiefe wie die eigentlichen Pläne.
 export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
-  const { steckbrief, setSteckbrief } = useAppData();
+  const { steckbrief, setSteckbrief, personalData = {}, setPersonal, gewichtsEintraege } = useAppData();
+  // Lokale Anzeige, damit Tippen nicht auf das Speichern wartet.
+  const [person, setPerson] = React.useState(() => ({
+    geschlecht: personalData.geschlecht || "",
+    geburtsdatum: personalData.geburtsdatum || "",
+    groesse: personalData.groesse ?? "",
+    gewichtStart: personalData.gewichtStart ?? "",
+  }));
+  const [extra, setExtra] = React.useState(() => ({ geburtszeit: steckbrief.geburtszeit || "", geburtsort: steckbrief.geburtsort || "", aktivitaet: steckbrief.aktivitaet || "" }));
+  const extraAendern = (feld, val) => {
+    setExtra((e) => ({ ...e, [feld]: val }));
+    setSteckbrief({ [feld]: val });
+  };
+  const aendern = (feld, val) => {
+    setPerson((p) => ({ ...p, [feld]: val }));
+    setPersonal?.(feld, val);
+  };
+  const gewicht = Number(person.gewichtStart) || aktuellesGewicht(gewichtsEintraege, personalData);
+  const kalorien = kalorienInfo({ ...person, gewicht, aktivitaet: extra.aktivitaet });
 
   const supplementeJa = steckbrief.supplementeJa ?? null;
 
@@ -27,8 +46,61 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
         <div style={{ fontSize: 19, fontWeight: 800 }}>Kurzer Steckbrief</div>
       </div>
       <div style={{ fontSize: 13, color: textMuted, marginBottom: 18, lineHeight: 1.5 }}>
-        Nur antippen, was passt – ein paar Hintergrundfragen für dein Erstgespräch. Den Rest (Supplemente, Ernährung, Training, ...) richtet dein Coach danach gemeinsam mit dir ein.
+        Nur antippen oder kurz eintragen – ein paar Hintergrundfragen für dein Erstgespräch. Den Rest (Supplemente, Ernährung, Training, ...) richtet dein Coach danach gemeinsam mit dir ein.
       </div>
+
+      {/* Standardwerte + Kalorienrechner (27.09., Nutzerinnen-Wunsch). */}
+      <Card style={{ marginBottom: 16 }}>
+        <div data-steckbrief-person style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>👤 Über dich</div>
+        <Label>Geschlecht</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {["Weiblich", "Männlich", "Divers"].map((g) => (
+            <Pill key={g} label={g} selected={person.geschlecht === g} onClick={() => aendern("geschlecht", g)} />
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <Label>Größe (cm)</Label>
+            <TextInput type="number" value={person.groesse} onChange={(v) => aendern("groesse", v)} placeholder="170" />
+          </div>
+          <div>
+            <Label>Gewicht (kg)</Label>
+            <TextInput type="number" value={person.gewichtStart} onChange={(v) => aendern("gewichtStart", v)} placeholder="70" />
+          </div>
+        </div>
+        <Label>Geburtsdatum</Label>
+        <TextInput type="date" value={person.geburtsdatum} onChange={(v) => aendern("geburtsdatum", v)} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 10 }}>
+          <div>
+            <Label>Uhrzeit (falls bekannt)</Label>
+            <TextInput type="time" value={extra.geburtszeit} onChange={(v) => extraAendern("geburtszeit", v)} />
+          </div>
+          <div>
+            <Label>Geburtsort (optional)</Label>
+            <TextInput value={extra.geburtsort} onChange={(v) => extraAendern("geburtsort", v)} placeholder="z. B. Köln" />
+          </div>
+        </div>
+        <Label>Wie aktiv ist dein Alltag?</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {AKTIVITAET.map(([n]) => (
+            <Pill key={n} label={n} selected={extra.aktivitaet === n} onClick={() => extraAendern("aktivitaet", n)} />
+          ))}
+        </div>
+        {kalorien.grundumsatz && (
+          <div data-steckbrief-kalorien style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "#F3F4F8", fontSize: 13, lineHeight: 1.5 }}>
+            <b>🔥 Grundumsatz ca. {kalorien.grundumsatz} kcal</b>
+            {kalorien.bedarf ? (
+              <>
+                {" "}
+                · <b>Tagesbedarf ca. {kalorien.bedarf} kcal</b>
+              </>
+            ) : (
+              <span style={{ color: textMuted }}> · Alltag antippen für den Tagesbedarf</span>
+            )}
+            <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2 }}>Grobe Richtwerte, dein Coach sieht sie auch.</div>
+          </div>
+        )}
+      </Card>
 
       <Card style={{ marginBottom: 16 }}>
         <Label>Nimmst du aktuell Supplemente?</Label>

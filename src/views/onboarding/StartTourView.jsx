@@ -35,7 +35,7 @@ function Zeile({ icon, titel, text }) {
 }
 
 // ① Deine 8 Wochen
-function SeiteAchtWochen({ start, darstellung }) {
+function SeiteAchtWochen({ start }) {
   return (
     <>
       <Titel unter="Deine Einstellungsphase: Wir lernen dich kennen, messen und bauen Schritt für Schritt auf.">Deine ersten 8 Wochen</Titel>
@@ -44,7 +44,7 @@ function SeiteAchtWochen({ start, darstellung }) {
           🧭 Start: {datumKurz(start)} abends – mit deiner ersten Abendroutine
         </div>
       )}
-      <AchtWochenPlan darstellung={darstellung} start={start} />
+      <AchtWochenPlan start={start} />
     </>
   );
 }
@@ -149,13 +149,13 @@ function SeiteStart({ start, abend }) {
   );
 }
 
-export default function StartTourView({ onDone, darstellung = "fahrplan" }) {
+export default function StartTourView({ onDone }) {
   const { kernStand, routineEinstellungen = {} } = useAppData();
   const start = kernStand?.geplant?.start || kernStand?.etappe?.start || null;
   const abend = String(routineEinstellungen?.abend?.startZeit || "21:30").slice(0, 5);
   const morgen = String(routineEinstellungen?.morgen?.startZeit || "06:30").slice(0, 5);
   const seiten = [
-    () => <SeiteAchtWochen start={start} darstellung={darstellung} />,
+    () => <SeiteAchtWochen start={start} />,
     () => <SeiteAbend abend={abend} morgen={morgen} />,
     () => <SeiteTag />,
     () => <SeiteCoach />,

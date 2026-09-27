@@ -116,7 +116,7 @@ export default function EinrichtungsCheckliste({ person, onVerwalteAls }) {
               {s.emoji} {s.titel}{" "}
               <span style={{ fontSize: 10.5, fontWeight: 800, color: s.stufe === "pflicht" ? "#B5501F" : textMuted, marginLeft: 4 }}>{STUFE_TEXT[s.stufe]}</span>
             </span>
-            <span style={{ display: "block", fontSize: 12, color: s.fertig ? success : textMuted }}>{s.detail}</span>
+            <span style={{ display: "block", fontSize: 12, color: s.fertig ? success : textMuted, whiteSpace: "pre-line", lineHeight: 1.5 }}>{s.detail}</span>
             {s.art === "team" && (
               <select
                 aria-label="Team wählen"

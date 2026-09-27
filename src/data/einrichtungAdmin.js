@@ -15,7 +15,7 @@ const anzahl = async (tabelle, userId, filter) => {
 
 export async function einrichtungLaden(userId) {
   const [profil, routinen, schritte, training, wasser, licht, mahlzeiten, medikamente, supplemente, geraete, teilnahme] = await Promise.all([
-    supabase.from("profiles").select("vorname, zeitzone, onboarding_complete, erinnerungen, category_ziele, team_id, steckbrief").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("vorname, zeitzone, onboarding_complete, erinnerungen, category_ziele, team_id, steckbrief, geschlecht, geburtsdatum, groesse, gewicht_start").eq("id", userId).maybeSingle(),
     supabase.from("routine_einstellungen").select("routine, start_zeit, end_zeit").eq("user_id", userId),
     supabase.from("routine_schritte").select("routine").eq("user_id", userId),
     supabase.from("training_wochenplan").select("wochentag").eq("user_id", userId),
@@ -45,6 +45,7 @@ export async function einrichtungLaden(userId) {
       angemeldet: !!p.zeitzone,
       onboardingFertig: !!p.onboarding_complete,
       steckbrief: p.steckbrief || null,
+      person: { geschlecht: p.geschlecht || "", geburtsdatum: p.geburtsdatum || "", groesse: p.groesse ?? "", gewicht: p.gewicht_start ?? "" },
       erinnerungen: p.erinnerungen || {},
       teamId: p.team_id || null,
       teamName,
