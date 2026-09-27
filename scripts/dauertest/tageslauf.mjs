@@ -47,6 +47,9 @@ const PAUSENTAG = process.env.AKA_PAUSENTAGE === "1" && (tagIndex + PAUSE_VERSAT
 // Wiederholung nach einem abgebrochenen Lauf: nichts abhaken/eintragen,
 // nur anmelden und alle Ansichten prüfen (keine doppelten Testdaten).
 const NUR_ANSICHTEN = process.env.AKA_NUR_ANSICHTEN === "1";
+// Nachholen nach einem Skriptfehler im Tagesplan (27.09.): nur anmelden,
+// Tagesplan abhaken, Startseite ansehen – keine doppelten Wasser-/Licht-Einträge.
+const NUR_TAGESPLAN = process.env.AKA_NUR_TAGESPLAN === "1";
 const auslassen = (name) => {
   let h = tagIndex * 31;
   for (const c of `${EMAIL}|${name}`) h = (h * 33 + c.charCodeAt(0)) % 1000003;
@@ -167,6 +170,7 @@ try {
   await foto("01-home-vorher");
 
   if (!NUR_ANSICHTEN) {
+  if (!NUR_TAGESPLAN) {
   // 1b) Coach-Chat (seit 24.09.): Hinweis "Dein Coach hat geschrieben" oben
   //     auf der Startseite → Chat öffnen, mit einer Schnellantwort antworten
   //     (mit demselben Fleiß wie beim Abhaken).
@@ -218,8 +222,18 @@ try {
     schritt(`Zeit-Karte gesehen, Reaktion: ${wahl}`);
   }
 
+  } // Ende !NUR_TAGESPLAN
   // 2) Tagesplan abhaken (außer am Pausentag)
   await geheZu("tagesplan");
+  // Seit 27.09. startet der Tagesplan in der Bild-Ansicht (Zeitleiste). Ein
+  // Foto davon, dann auf die Liste umschalten – dort liegen die Abhak-Knöpfe,
+  // die dieses Skript bedient (die Wahl bleibt für spätere Aufrufe gespeichert).
+  const listeKnopf = page.getByRole("button", { name: "☰ Liste" });
+  if (await listeKnopf.isVisible().catch(() => false)) {
+    await foto("02a-tagesplan-bild");
+    await listeKnopf.click();
+    await warte(600);
+  }
   for (const gruppe of ["🌅 Morgenroutine", "🌙 Abendroutine"]) {
     const g = page.getByText(gruppe, { exact: true }).first();
     if (await g.isVisible().catch(() => false)) {
@@ -306,7 +320,7 @@ try {
   await foto("03-tagesplan-nachher");
 
   // 3) Morgenroutine einmal komplett durchlaufen (außer Pausentag)
-  if (!PAUSENTAG) {
+  if (!PAUSENTAG && !NUR_TAGESPLAN) {
     await geheZu("routinen");
     const start = page.getByText("▶️ Morgenroutine starten").first();
     if (await start.isVisible().catch(() => false)) {
@@ -327,6 +341,7 @@ try {
     }
   }
 
+  if (!NUR_TAGESPLAN) {
   // 4) Trinken: 2–4 Gläser (+200 ml) in der Hydration-Ansicht
   await geheZu("hydration");
   const schlucke = PAUSENTAG ? 0 : 2 + (tagIndex % 3);
@@ -456,6 +471,7 @@ try {
   await page.getByRole("button", { name: "👥 Teams" }).click().catch(() => {});
   await warte(1500);
   await foto("06e-team-liga");
+  } // Ende !NUR_TAGESPLAN (4–7)
   } else {
     schritt("Nur Ansichten (Wiederholungslauf, keine Aktionen)");
   }
@@ -466,7 +482,7 @@ try {
   bericht.homeText = (await text()).slice(0, 1500);
 
   // 8) Alle Bereiche einmal öffnen (Absturz-/Leer-/Fehler-Check)
-  const ansichten = [
+  const ansichten = NUR_TAGESPLAN ? [] : [
     "tagesplan", "routinen", "atemuebungen", "tageslicht", "hydration", "schlaf", "bildschirmzeit", "ernaehrung", "training",
     "supplemente", "medikamente", "wochenuebersicht", "morgenroutine", "abendroutine", "verlauf", "archiv", "statistik",
     "erfolge", "tagebuch", "profil", "mehr", "lexikon", "team", "denksport",
