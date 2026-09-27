@@ -1,8 +1,9 @@
 import React from "react";
-import { Shell, Card, Label, Pill, TextInput, TextArea, PrimaryButton } from "../../ui/primitives";
+import { Shell, Card, Label, Pill, TextInput, PrimaryButton } from "../../ui/primitives";
 import { cardBorder, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useAppData } from "../../context/AppDataContext";
+import { SPORT_ARTEN, SPORT_MENGE, SUPPLEMENTE, alsText, umschalten } from "../../utils/steckbrief";
 
 const SPORT_ERFAHRUNG_OPTIONEN = ["Kein Training", "Anfänger", "Fortgeschritten", "Erfahren"];
 
@@ -26,24 +27,38 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
         <div style={{ fontSize: 19, fontWeight: 800 }}>Kurzer Steckbrief</div>
       </div>
       <div style={{ fontSize: 13, color: textMuted, marginBottom: 18, lineHeight: 1.5 }}>
-        Nur ein paar Hintergrundfragen für dein Erstgespräch — den Rest (Supplemente, Ernährung, Training, ...) richtet dein Coach danach gemeinsam mit dir ein.
+        Nur antippen, was passt – ein paar Hintergrundfragen für dein Erstgespräch. Den Rest (Supplemente, Ernährung, Training, ...) richtet dein Coach danach gemeinsam mit dir ein.
       </div>
 
       <Card style={{ marginBottom: 16 }}>
         <Label>Nimmst du aktuell Supplemente?</Label>
         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
           <Pill label="Ja" selected={supplementeJa === true} onClick={() => setSteckbrief({ supplementeJa: true })} />
-          <Pill label="Nein" selected={supplementeJa === false} onClick={() => setSteckbrief({ supplementeJa: false, supplementeWelche: "" })} />
+          <Pill label="Nein" selected={supplementeJa === false} onClick={() => setSteckbrief({ supplementeJa: false, supplementeListe: [], supplementeAnderes: "", supplementeWelche: "" })} />
         </div>
         {supplementeJa === true && (
           <>
-            <Label>Welche?</Label>
-            <TextArea
-              value={steckbrief.supplementeWelche || ""}
-              onChange={(v) => setSteckbrief({ supplementeWelche: v })}
-              placeholder="z. B. Magnesium, Vitamin D, Omega-3 ..."
-              diktierbar
-            />
+            <Label>Welche? Einfach antippen</Label>
+            <div style={{ display: "flex", flexWrap: "wrap" }} data-steckbrief-supplemente>
+              {SUPPLEMENTE.map((n) => (
+                <Pill
+                  key={n}
+                  label={n}
+                  selected={(steckbrief.supplementeListe || []).includes(n)}
+                  onClick={() => {
+                    const liste = umschalten(steckbrief.supplementeListe, n);
+                    setSteckbrief({ supplementeListe: liste, supplementeWelche: alsText(liste, steckbrief.supplementeAnderes) });
+                  }}
+                />
+              ))}
+            </div>
+            <div style={{ marginTop: 6 }}>
+              <TextInput
+                value={steckbrief.supplementeAnderes || ""}
+                onChange={(v) => setSteckbrief({ supplementeAnderes: v, supplementeWelche: alsText(steckbrief.supplementeListe, v) })}
+                placeholder="Etwas anderes? (optional)"
+              />
+            </div>
           </>
         )}
       </Card>
@@ -58,20 +73,33 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
       </Card>
 
       <Card style={{ marginBottom: 16 }}>
-        <Label>Wie viel Sport machst du aktuell?</Label>
-        <TextInput
-          value={steckbrief.sportMenge || ""}
-          onChange={(v) => setSteckbrief({ sportMenge: v })}
-          placeholder="z. B. 2x pro Woche"
-          diktierbar
-        />
-        <Label>Kurze Beschreibung (optional)</Label>
-        <TextArea
-          value={steckbrief.sportBeschreibung || ""}
-          onChange={(v) => setSteckbrief({ sportBeschreibung: v })}
-          placeholder="z. B. Krafttraining im Studio, oder Laufen im Park ..."
-          diktierbar
-        />
+        <Label>Wie oft bewegst du dich aktuell?</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {SPORT_MENGE.map((o) => (
+            <Pill key={o} label={o} selected={steckbrief.sportMenge === o} onClick={() => setSteckbrief({ sportMenge: o })} />
+          ))}
+        </div>
+        <Label>Was machst du gern? Antippen, gern mehrere</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {SPORT_ARTEN.map((o) => (
+            <Pill
+              key={o}
+              label={o}
+              selected={(steckbrief.sportArten || []).includes(o)}
+              onClick={() => {
+                const liste = umschalten(steckbrief.sportArten, o);
+                setSteckbrief({ sportArten: liste, sportBeschreibung: alsText(liste, steckbrief.sportAnderes) });
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <TextInput
+            value={steckbrief.sportAnderes || ""}
+            onChange={(v) => setSteckbrief({ sportAnderes: v, sportBeschreibung: alsText(steckbrief.sportArten, v) })}
+            placeholder="Etwas anderes? (optional)"
+          />
+        </div>
       </Card>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>

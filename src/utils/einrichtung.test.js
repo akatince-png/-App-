@@ -31,3 +31,13 @@ describe("Einrichtungs-Checkliste", () => {
     expect(s.find((x) => x.key === "programm").fertig).toBe(false);
   });
 });
+
+describe("Steckbrief in der Checkliste", () => {
+  it("zeigt die angetippten Angaben lesbar an", () => {
+    const s = einrichtungsSchritte({ onboardingFertig: true, steckbrief: { supplementeJa: true, supplementeWelche: "Vitamin D3, Magnesium", sportMenge: "2× pro Woche", sportBeschreibung: "Laufen, Yoga" } });
+    const d = s.find((x) => x.key === "steckbrief").detail;
+    expect(d).toContain("💊 Supplemente: Vitamin D3, Magnesium");
+    expect(d).toContain("📅 Sport: 2× pro Woche");
+    expect(d).toContain("🏃 Arten: Laufen, Yoga");
+  });
+});

@@ -87,6 +87,10 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
 
   await expect(page.getByText("Womit willst du starten?")).toHaveCount(0);
   await expect(page.getByText("Kurzer Steckbrief")).toBeVisible();
+  // Steckbrief zum Antippen (27.09.) statt Freitext.
+  await expect(page.getByRole("button", { name: "2× pro Woche", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Krafttraining", exact: true })).toBeVisible();
+  await expect(page.getByPlaceholder("Etwas anderes? (optional)")).toBeVisible();
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
   // Nur Startzeiten, Abend zuerst.

@@ -190,11 +190,15 @@ function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
 // Gehirnbild (dort ist unter dem Stirnlappen Platz) — gleiche Funktionen.
 function Schnellknoepfe({ onWasser, onAkut }) {
   if (!onWasser && !onAkut) return null;
+  // Seit 27.09. (Nutzerin: "sitzen nicht gut, sieht doof aus") als eigene
+  // Zeile unter Gehirn und Körper statt über das Gehirnbild gelegt, mit
+  // Beschriftung – ganze Pille antippbar.
+  const pille = { display: "flex", alignItems: "center", gap: 8, border: "1.5px solid rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.1)", color: "#fff", borderRadius: 99, padding: "5px 14px 5px 6px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" };
   return (
-    <div style={{ position: "absolute", left: 2, bottom: 4, display: "flex", alignItems: "flex-end", gap: 10 }}>
+    <div data-schnellknoepfe style={{ display: "flex", flexWrap: "wrap", gap: 10, margin: "6px 0 12px" }}>
       {onWasser && (
-        <button type="button" className="mp-tap mp-tropfen" aria-label="Wasser eintragen" title="Wasser eintragen" onClick={onWasser} style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.35))" }}>
-          <svg width="54" height="66" viewBox="0 0 54 66" aria-hidden="true" style={{ display: "block" }}>
+        <button type="button" className="mp-tap mp-tropfen" aria-label="Wasser eintragen" onClick={onWasser} style={pille}>
+          <svg width="26" height="32" viewBox="0 0 54 66" aria-hidden="true" style={{ display: "block" }}>
             <defs>
               <linearGradient id="mp-tropfen-verlauf" x1="0" y1="0" x2="0.4" y2="1">
                 <stop offset="0%" style={{ stopColor: "#8CC8FF" }} />
@@ -202,21 +206,17 @@ function Schnellknoepfe({ onWasser, onAkut }) {
               </linearGradient>
             </defs>
             <path d="M27 3 C 27 3, 50 30, 50 43 A 23 23 0 0 1 4 43 C 4 30, 27 3, 27 3 Z" fill="url(#mp-tropfen-verlauf)" stroke="#fff" strokeWidth="3" />
-            <ellipse cx="18" cy="38" rx="4" ry="7" fill="rgba(255,255,255,0.45)" transform="rotate(20 18 38)" />
-            <path d="M27 36 v14 M20 43 h14" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M27 36 v14 M20 43 h14" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
           </svg>
+          Wasser
         </button>
       )}
       {onAkut && (
-        <button
-          type="button"
-          className="mp-tap"
-          aria-label="Grad nicht gut?"
-          title="Grad nicht gut?"
-          onClick={onAkut}
-          style={{ width: 46, height: 46, borderRadius: 99, border: "3px solid #fff", background: "linear-gradient(135deg, #F59E0B, #FBBF24)", fontSize: 22, cursor: "pointer", boxShadow: "0 6px 12px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-        >
-          💡
+        <button type="button" className="mp-tap" aria-label="Grad nicht gut?" onClick={onAkut} style={pille}>
+          <span aria-hidden="true" style={{ width: 28, height: 28, borderRadius: 99, background: "linear-gradient(135deg, #F59E0B, #FBBF24)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>
+            💡
+          </span>
+          Grad nicht gut?
         </button>
       )}
     </div>
@@ -378,12 +378,12 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           );
         })}
       </svg>
-      <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
       </div>
       <div style={{ flex: "1 1 0", minWidth: 0 }}>
         <KoerperFigur werte={koerper} />
       </div>
       </div>
+      <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
 
       {/* Tagesfortschritt-Balken je Bereich — gleiche Zeitraum-Wahl wie oben */}
       <div style={{ marginTop: 6, padding: "12px 10px 8px", borderRadius: 16, background: "rgba(255,255,255,0.06)" }}>

@@ -3,6 +3,8 @@
 // kann"). Reine Logik: aus den geladenen Fakten einer Person die Schritte in
 // AKA-Reihenfolge (Abend vor Morgen, dann Bewegung, dann die übrige Basis).
 //
+import { steckbriefZeilen } from "./steckbrief";
+
 // stufe: "pflicht" (nötig für "Bereit zum Start"), "empfohlen", "optional"
 // (nur falls nötig, z. B. Medikation). ziel = View, in die "Einrichten" springt.
 
@@ -48,7 +50,9 @@ export function einrichtungsSchritte(f) {
       titel: "Steckbrief & Ziele",
       stufe: "empfohlen",
       fertig: !!f.onboardingFertig,
-      detail: f.onboardingFertig ? "Ausgefüllt" : "Füllt die Person beim ersten Login aus – oder du über „Einrichten“",
+      detail: f.onboardingFertig
+        ? steckbriefZeilen(f.steckbrief).join(" · ") || "Ausgefüllt"
+        : "Füllt die Person beim ersten Login aus – oder du über „Einrichten“",
       ziel: "form",
     },
     {
