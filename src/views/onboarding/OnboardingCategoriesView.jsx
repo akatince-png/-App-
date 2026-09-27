@@ -89,7 +89,8 @@ export const ISTZUSTAND_FRAGEN = {
     { key: "getraenke", frage: "Was trinkst Du außer Wasser?", placeholder: "z. B. Kaffee, Saft, Limonade …" },
   ],
   bildschirmzeit: [
-    { key: "ueblich", frage: "Wie viel Bildschirmzeit hast Du üblicherweise am Tag?", placeholder: "z. B. ca. 3-4 Stunden" },
+    // Hinweis (27.09., Nutzerinnen-Wunsch): wo man die echte Zahl findet.
+    { key: "ueblich", frage: "Wie viel Bildschirmzeit hast Du üblicherweise am Tag?", placeholder: "z. B. ca. 3-4 Stunden", hinweis: "📱 Nachschauen statt schätzen: iPhone → Einstellungen → Bildschirmzeit, Android → Einstellungen → Digital Wellbeing." },
     { key: "taetigkeit", frage: "Was machst Du am meisten am Telefon?", placeholder: "z. B. Social Media, Nachrichten, Videos …" },
     { key: "reduzieren", frage: "Kannst Du Dir vorstellen, das zu reduzieren?", placeholder: "" },
   ],
@@ -920,6 +921,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               {ISTZUSTAND_FRAGEN[step.key].map((f) => (
                 <div key={f.key} style={{ marginBottom: 10 }}>
                   <Label>{tLabel(f.frage)}</Label>
+                  {f.hinweis && <div style={{ fontSize: 12, color: textMuted, margin: "-2px 0 6px", lineHeight: 1.45 }}>{f.hinweis}</div>}
                   <TextArea value={istZustand[f.key] || ""} onChange={(v) => setIstZustandFeld(f.key, v)} placeholder={f.placeholder} diktierbar />
                 </div>
               ))}

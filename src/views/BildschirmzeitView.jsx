@@ -105,6 +105,10 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
   const content = (
     <>
       {!embedded && <ViewHeader title="📱 Bildschirmzeit" onHome={onHome} />}
+      {/* Hinweis (27.09., Nutzerinnen-Wunsch): wo man die echte Zahl findet. */}
+      <div data-bildschirmzeit-hinweis style={{ fontSize: 12.5, color: textMuted, margin: "0 2px 12px", lineHeight: 1.45 }}>
+        📱 Nachschauen statt schätzen: iPhone → Einstellungen → Bildschirmzeit, Android → Einstellungen → Digital Wellbeing.
+      </div>
 
       <Card style={{ marginBottom: 14, textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
