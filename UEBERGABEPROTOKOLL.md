@@ -7299,7 +7299,15 @@ anlegen und die App zügig veröffentlichen.
   übliche Werte (Abend 21:30, Morgen 06:30, 2,5 l, 30 Min. Licht, Erinnerungen an), „Einrichten“ springt per
   Verwalten direkt in die Seite (`merkeZielNachVerwalten`), „Zurück“ öffnet die Checkliste wieder.
   Dashboard verschlankt: Werkzeug-Zeile, ein „+ Person hinzufügen“, Test-Coachee unten.
-  Offen (Plan C/D): Coachee-Onboarding kürzen, Coach-Handbuch.
+- 27.09. VORSCHAU (Branch): Erst-Onboarding nach AKA-Konzept (Nutzerinnen-Feedback nach eigenem Durchlauf):
+  „Ich erzähl Aka einfach frei“ entfernt (nur noch Schritt für Schritt / selbst durchklicken), keine Bereichswahl
+  „Womit willst du starten?“ und kein Routinen-Baukasten mehr. Für alle gleich: Vorstellung → Name & Weg →
+  Ziel & Grund → Steckbrief → `OnboardingStartzeitenView` (nur Startzeit Abend, dann Morgen; Standard
+  21:30/06:30) → Startklar. Schritte bringt das Programm Woche für Woche (erst tracken, dann festlegen).
+  Nicht gelöscht, nur nicht mehr im Erst-Onboarding: OnboardingBereicheView, OnboardingCoachFreitext,
+  OnboardingRoutinenView/CategoriesView (weiter im Weg „Neues Protokoll“). `onboarding_modus` „lang“ wirkt im
+  Erst-Onboarding damit nicht mehr.
+  Offen (Plan D): Coach-Handbuch.
 - 27.09.: Wissensdatenbank (`coach_wissen`) um drei Einträge ergänzt: „AKA: Positionierung und Abgrenzung“,
   „Body Doubling (Gemeinsam fokussieren)“, „Aufgaben zerlegen und Dauer schätzen (Zeitblindheit)“.
 

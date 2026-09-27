@@ -87,23 +87,11 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
             <div style={{ fontSize: 15.5, fontWeight: 800, lineHeight: 1.4 }}>Wie willst du einrichten?</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <PrimaryButton onClick={() => { nameSpeichern(); saveKiAutoStartUnterdrueckt(false); setModus("begleitet-frei"); }}>🗣️ Ich erzähl Aka einfach frei</PrimaryButton>
-            <button
-              type="button"
-              onClick={() => { nameSpeichern(); saveKiAutoStartUnterdrueckt(false); setModus("begleitet-schritt"); }}
-              style={{
-                padding: "13px 16px",
-                borderRadius: 12,
-                border: `1px solid ${cardBorder}`,
-                background: "#fff",
-                color: textMuted,
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              💬 Aka fragt mich Schritt für Schritt
-            </button>
+            {/* "Ich erzähl Aka einfach frei" entfernt (27.09., Nutzerin: zum
+                Start verhaspelt man sich mit ADHS eher – geführte Fragen
+                oder selbst durchklicken). OnboardingCoachFreitext bleibt im
+                Code, falls es später wieder gebraucht wird. */}
+            <PrimaryButton onClick={() => { nameSpeichern(); saveKiAutoStartUnterdrueckt(false); setModus("begleitet-schritt"); }}>💬 Aka fragt mich Schritt für Schritt</PrimaryButton>
             <button
               type="button"
               onClick={() => {

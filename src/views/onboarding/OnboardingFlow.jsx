@@ -13,7 +13,7 @@ import OnboardingCategoriesView from "./OnboardingCategoriesView";
 import OnboardingSteckbriefView from "./OnboardingSteckbriefView";
 import OnboardingCompletionView from "./OnboardingCompletionView";
 import OnboardingBereicheView from "./OnboardingBereicheView";
-import { START_BEREICHE } from "./startBereiche";
+import OnboardingStartzeitenView from "./OnboardingStartzeitenView";
 import { KATEGORIE_META } from "../../utils/dayItems";
 import { toLocalISODate } from "../../utils/dates";
 import { useAppData } from "../../context/AppDataContext";
@@ -149,7 +149,12 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   const vollstaendigesOnboarding = istAdminModus || onboardingModus === "lang";
   const { user } = useAuth();
   const [gespeichert] = useState(() => ladeGespeichertenStand(user?.id, startPhase));
-  const [phase, setPhase] = useState(gespeichert?.phase || startPhase); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
+  // Seit 27.09. gibt es im Erst-Onboarding keine Bereichswahl und keinen
+  // Routinen-Baukasten mehr – ein gespeicherter alter Stand springt zum Steckbrief.
+  const [phase, setPhase] = useState(() => {
+    const p = gespeichert?.phase || startPhase;
+    return startPhase !== "hauptprotokoll" && ["bereiche", "routinen", "categories", "laborwerte"].includes(p) ? "steckbrief" : p;
+  }); // welcome | hauptprotokoll | kiWahl | quickwin | intro | ziele | werteAktualisieren | profil | laborwerte | routinen | categories | steckbrief | celebration
   const [eingerichteteBereiche, setEingerichteteBereiche] = useState([]);
   // Nur beim normalen Durchlauf (Erst-Onboarding oder erneutes Durchlaufen
   // über "Mehr") darf HauptprotokollErstellenView ein bestehendes aktives
@@ -209,9 +214,9 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   };
 
   const spaeterListe = () => {
-    const liste = kurzerWeg && vollstaendigesOnboarding
-      ? START_BEREICHE.filter((b) => !(startBereiche || []).includes(b.key)).map((b) => ({ key: b.key, icon: b.icon, label: b.label, bg: b.meta.bg, text: b.meta.text, knopf: "+ einrichten" }))
-      : [];
+    // Seit 27.09. keine "Bereiche später dazunehmen"-Liste mehr: die
+    // Bausteine kommen Woche für Woche aus dem Programm bzw. vom Coach.
+    const liste = [];
     if (kurzerWeg) liste.push({ key: "profil", icon: "📋", label: "Profil & Laborwerte", bg: KATEGORIE_META.bildschirmzeit.bg, text: KATEGORIE_META.bildschirmzeit.text, knopf: "+ ergänzen" });
     return liste;
   };
@@ -262,7 +267,11 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
     // zu durchlaufen.
     screen = (
       <OnboardingIntroView
-        onDone={(opts) => setPhase(opts?.guided ? (vollstaendigesOnboarding ? "bereiche" : "steckbrief") : "ziele")}
+        onDone={async (opts) => {
+          // Seit 27.09. für alle gleich (AKA-Konzept): keine Bereichswahl.
+          if (opts?.guided) await protokollSicherstellen("Mein Start");
+          setPhase(opts?.guided ? "steckbrief" : "ziele");
+        }}
         onBack={() => setPhase("welcome")}
         onCancel={handleCancel}
         nurManuell={!istAdminModus}
@@ -273,7 +282,6 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
       <OnboardingZieleView
         onDone={async () => {
           if (istDirekterNeuStart) return setPhase("werteAktualisieren");
-          if (vollstaendigesOnboarding) return setPhase("bereiche");
           await protokollSicherstellen("Mein Start");
           setPhase("steckbrief");
         }}
@@ -304,11 +312,14 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
   } else if (phase === "steckbrief") {
     screen = (
       <OnboardingSteckbriefView
-        onDone={() => setPhase("celebration")}
+        onDone={() => setPhase(istDirekterNeuStart ? "celebration" : "startzeiten")}
         onBack={() => setPhase(istDirekterNeuStart ? (profilBesucht ? "profil" : "werteAktualisieren") : "ziele")}
         onCancel={handleCancel}
       />
     );
+  } else if (phase === "startzeiten") {
+    // AKA-Konzept (27.09.): nur Startzeiten, Abend zuerst.
+    screen = <OnboardingStartzeitenView onDone={() => setPhase("celebration")} onBack={() => setPhase("steckbrief")} onCancel={handleCancel} />;
   } else if (phase === "bereiche") {
     screen = (
       <OnboardingBereicheView
@@ -370,6 +381,7 @@ export default function OnboardingFlow({ onDone, startPhase = "welcome", onCance
         onDone={handleDone}
         spaeter={kurzerWeg ? spaeterListe() : null}
         onBack={() => {
+          if (!istDirekterNeuStart) return setPhase("startzeiten");
           if (!vollstaendigesOnboarding) return setPhase("steckbrief");
           if (!startBereiche) return setPhase("categories");
           if (gewaehlteKategorien.length > 0) return setPhase("categories");

@@ -64,9 +64,10 @@ test("Diktierfunktion ohne KI: Onboarding-Namensfeld lässt sich per Mikrofon be
   expect(fehler).toEqual([]);
 });
 
-// Kürzeres Erst-Onboarding (24.09., Nutzerinnen-Freigabe): Willkommen →
-// Du & Aka → Ziel & Grund → "Womit willst du starten?" → nur die gewählten
-// Bereiche → Startklar mit "Später dazunehmen".
+// Erst-Onboarding nach AKA-Konzept (27.09., Nutzerinnen-Vorgabe nach
+// eigenem Durchlauf): Vorstellung → Du & Aka (nur zwei Wege) → Ziel & Grund
+// → Steckbrief → Startzeiten (Abend zuerst) → Startklar. Keine Bereichswahl,
+// kein Routinen-Baukasten – die Schritte bringt das Programm.
 test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?onboarding=1");
@@ -75,77 +76,31 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   await page.getByRole("button", { name: "Überspringen", exact: true }).click();
 
   await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
+  // Nur noch zwei Wege, "frei erzählen" gibt es nicht mehr.
+  await expect(page.getByRole("button", { name: /Ich erzähl Aka einfach frei/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "💬 Aka fragt mich Schritt für Schritt" })).toBeVisible();
   await page.getByRole("button", { name: "🙋 Ich klick mich selbst durch" }).click();
 
   await expect(page.getByText("Ziel & Grund", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Tagesstruktur aufbauen" }).click();
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
-  // Bereichswahl: zwei Vorschläge sind vorausgewählt (Routinen, Gewohnheiten
-  // passend zu "Tagesstruktur aufbauen"), maximal drei wählbar.
-  await expect(page.getByText("Womit willst du starten?")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Routinen & Schlaf/ })).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: /Wasser/ }).click();
-  await expect(page.getByRole("button", { name: /Training/ })).toBeDisabled();
-  await expect(page.getByText("Mein Start", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "3 Bereiche einrichten" }).click();
-
-  // Routinen & Schlaf (Bereich 1 von 3).
-  await expect(page.getByText("Morgen- & Abendroutine", { exact: true })).toBeVisible();
-  await expect(page.getByText("Bereich 1 von 3")).toBeVisible();
-  const schliessen1 = page.getByRole("button", { name: "Schließen" });
-  if (await schliessen1.isVisible().catch(() => false)) await schliessen1.click();
+  await expect(page.getByText("Womit willst du starten?")).toHaveCount(0);
+  await expect(page.getByText("Kurzer Steckbrief")).toBeVisible();
   await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
-  // Danach NUR die gewählten Kategorien, ohne "Jetzt oder später?"-Seite.
-  await expect(page.getByText("Bereich 2 von 3")).toBeVisible();
-  await expect(page.getByText("einrichten?", { exact: false })).toHaveCount(0);
-  const schliessen2 = page.getByRole("button", { name: "Schließen" });
-  if (await schliessen2.isVisible().catch(() => false)) await schliessen2.click();
-  await page.getByRole("button", { name: "Doch überspringen" }).first().click();
-  await expect(page.getByText("Bereich 3 von 3")).toBeVisible();
-  const schliessen3 = page.getByRole("button", { name: "Schließen" });
-  if (await schliessen3.isVisible().catch(() => false)) await schliessen3.click();
-  await page.getByRole("button", { name: "Doch überspringen" }).first().click();
+  // Nur Startzeiten, Abend zuerst.
+  await expect(page.getByText("Wann startest du?")).toBeVisible();
+  const abend = page.getByText("🌙 Abendroutine beginnt um");
+  const morgen = page.getByText("🌅 Morgenroutine beginnt um");
+  expect((await abend.boundingBox()).y).toBeLessThan((await morgen.boundingBox()).y);
+  await expect(page.locator('input[type="time"]').first()).toHaveValue("21:30");
+  await expect(page.locator('input[type="time"]').nth(1)).toHaveValue("06:30");
+  await expect(page.getByText("Morgen- & Abendroutine", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
 
-  // Startklar mit "Später dazunehmen".
-  await expect(page.getByText("Später dazunehmen – wann du willst:")).toBeVisible();
   await page.getByRole("button", { name: "Los geht's" }).last().click();
   await expect(page.getByText("Tagebuch")).toBeVisible({ timeout: 10000 });
-
-  expect(fehler).toEqual([]);
-});
-
-// Nutzerinnen-Vorgabe (15.09.): Bildschirmzeit fragt die vier
-// Reflexionsfragen ab — im kürzeren Onboarding (24.09.) erreichbar, indem
-// man Bildschirmzeit als Start-Bereich wählt.
-test("Onboarding-Kategorien: Bildschirmzeit fragt üblichen Verbrauch, Haupttätigkeit, Reduzieren-Vorstellung und Limit ab", async ({ page }) => {
-  const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html?onboarding=1");
-  await page.getByRole("button", { name: "Überspringen", exact: true }).click();
-  await page.getByPlaceholder("z. B. Anton Kaufmann").fill("E2E Testperson");
-  await page.getByRole("button", { name: "🙋 Ich klick mich selbst durch" }).click();
-  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
-
-  // Vorschläge abwählen, nur Bildschirmzeit wählen.
-  await page.getByRole("button", { name: /Routinen & Schlaf/ }).click();
-  await page.getByRole("button", { name: /Medikamente/ }).click();
-  await page.getByRole("button", { name: /Bildschirmzeit/ }).click();
-  await page.getByRole("button", { name: "1 Bereich einrichten" }).click();
-
-  const schliessen = page.getByRole("button", { name: "Schließen" });
-  if (await schliessen.isVisible().catch(() => false)) await schliessen.click();
-
-  await expect(page.getByText("Wie viel Bildschirmzeit hast Du üblicherweise am Tag?", { exact: true })).toBeVisible();
-  await expect(page.getByText("Was machst Du am meisten am Telefon?", { exact: true })).toBeVisible();
-  await expect(page.getByText("Kannst Du Dir vorstellen, das zu reduzieren?", { exact: true })).toBeVisible();
-  await expect(page.getByText("Tageslimit in Minuten (Obergrenze, nicht Ziel zum Erreichen)", { exact: true })).toBeVisible();
-
-  await page.getByPlaceholder("z. B. 60").fill("45");
-  await page.getByRole("button", { name: "Speichern & weiter", exact: true }).click();
-
-  // Einziger Bereich → danach direkt Startklar.
-  await expect(page.getByText("Später dazunehmen – wann du willst:")).toBeVisible();
 
   expect(fehler).toEqual([]);
 });
@@ -163,6 +118,9 @@ test("Onboarding (Coachee, kurz): ohne Bereichswahl über den Steckbrief zum Abs
   await expect(page.getByText("Womit willst du starten?")).toHaveCount(0);
   const schliessen = page.getByRole("button", { name: "Schließen" });
   if (await schliessen.isVisible().catch(() => false)) await schliessen.click();
+  await expect(page.getByText("Kurzer Steckbrief")).toBeVisible();
+  await page.getByRole("button", { name: "Weiter", exact: true }).last().click();
+  await expect(page.getByText("Wann startest du?")).toBeVisible();
   expect(fehler).toEqual([]);
 });
 
