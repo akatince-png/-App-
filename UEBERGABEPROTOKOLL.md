@@ -38,6 +38,19 @@ keine Diagnose und keine Heils- oder Wirkversprechen.
   ist nicht der Mittelpunkt. Das **Konzept** hat aber ein Rückgrat (Routinen + Bewegung), in das die übrigen
   Bausteine eingebaut werden.
 
+**2b. Zwei Stufen: erst das „physische Betriebssystem“, dann der Alltag (Nutzerin, 27.09.).**
+- **Stufe 1 – Grundlagen:** Schlaf, Ernährung, Bewegung, Tageslicht, Wasser, Atmung, ggf. Medikation (mit dem Arzt)
+  und Supplemente. Die Überzeugung der Nutzerin: Wenn diese Grundlagen stimmen, funktioniert das „physische
+  Betriebssystem“ besser (sie denkt dabei an den Haushalt von Dopamin, Noradrenalin und Serotonin), und die
+  eigene Exekutive „greift“.
+- **Stufe 2 – Alltag und Leben:** Darauf aufbauend kommen Stück für Stück Alltagsaufgaben, Hobbys, Projekte und
+  Workflows dazu (Tagesplan, Bild-Tagesplan, Workflows, Routinen), immer mit App und Coach.
+- Das passt zum Vorschlag aus dem Marktvergleich: in der Einstellungsphase erst Abend/Morgen, Bewegung, Essen,
+  später Tagesstruktur, Bildschirm, Hobbys und Soziales.
+- **Formulierung in App-Texten:** Die Neurotransmitter-Begründung ist die Coaching-Überzeugung der Nutzerin.
+  In App- und Werbetexten keine Versprechen wie „bringt deinen Dopaminhaushalt in Ordnung“. Stattdessen:
+  „Erst die Grundlagen, dann der Alltag – so baust du dein System Schritt für Schritt auf.“
+
 **3. Zwei Zielgruppen.** Wer noch keine Struktur hat, **baut sie auf** (erst messen, dann planen).
 Wer schon Strukturen hat, **vereinfacht und vereinheitlicht** sie und bringt alles in einer App zusammen.
 
@@ -50,6 +63,23 @@ sind die **Einstellungsphase** am Anfang jedes Coachings: kennenlernen, alles ei
 AKA-Konzept kennenlernen. **Das Coaching ist nicht auf 8 Wochen begrenzt.** Danach geht es weiter,
 so lange es passt (Erhaltungs-Etappen, später weitere Programme). In Texten für Coachees deshalb keine
 feste Wochenzahl als „Produkt“ verkaufen.
+
+**5b. Positionierung nach dem Marktvergleich (27.09., Artefakt „AKA Marktvergleich“).**
+- Kategorie: **„AKA – Dein Alltagssystem für ADHS“**. Das Produkt ist das persönliche Alltagssystem. Die App ist das
+  Betriebssystem, das Coaching die persönliche Einrichtung, die ersten Wochen sind die Einstellungsphase.
+- Zielgruppe über den Zustand: „Ich funktioniere – aber mein Leben funktioniert nicht.“
+- Content-Leitsatz: „Du brauchst nicht noch mehr Wissen, sondern ein System, das Wissen in Handlung übersetzt.“
+- Abgrenzung:
+  - Therapie (ORIKO, DiGA): nur verweisen.
+  - Planer-Apps (Tiimo, Structured): wir planen das ganze Leben, nicht nur den Tag.
+  - Reines Coaching (NeuroPartner, Shimmer): bei uns stützt das System auch ohne Coach daneben.
+- Proof-Phase: Bevor wir mit Ergebnissen werben, echte Daten sammeln (Aktivität nach 2/8 Wochen, Abbrüche,
+  welche Bausteine bleiben, genutzte Funktionen, Selbstberichte).
+- Wachstumspfad: 1:1 → Coaching + App → Gruppe + App → Community + App → App + KI → App allein.
+- No-Gos beim Werben: „in 8 Wochen verändert“, „ADHS besiegen/unter Kontrolle“, „wissenschaftlich bewiesen“ ohne
+  eigene Daten, Heilversprechen.
+- Umsetzungsplan (freigegeben: Schritt ① + ②): ① Bild-Tagesplan, ② Timer-Ring, ③ Kopf leeren → Schritte,
+  ④ Body Doubling „Gemeinsam fokussieren“, ⑤ Wissen → Handlung, ⑥ Wochen-Rhythmus.
 
 **6. Wie die App auftritt:** auf dem interessantesten, benutzerfreundlichsten und effizientesten Weg.
 - **Zeigen statt erklären:** Bilder, Grafiken, Bewegung, echte App-Elemente (Gehirn, Körper-Figur,
