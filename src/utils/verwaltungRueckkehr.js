@@ -13,3 +13,26 @@ export function nimmRueckkehrZumDashboard() {
   zurueckZumDashboard = false;
   return war;
 }
+
+// Einrichtungs-Checkliste (27.09.): "Einrichten" öffnet "Verwalten als"
+// direkt in der passenden Seite (z. B. Abendroutine). Beim Zurückkehren
+// öffnet das Dashboard die Checkliste derselben Person wieder.
+let zielNachVerwalten = null;
+let checklisteFuer = null;
+
+export function merkeZielNachVerwalten(view, personId) {
+  zielNachVerwalten = view;
+  checklisteFuer = personId || null;
+}
+
+export function nimmZielNachVerwalten() {
+  const z = zielNachVerwalten;
+  zielNachVerwalten = null;
+  return z;
+}
+
+export function nimmOffeneCheckliste() {
+  const p = checklisteFuer;
+  checklisteFuer = null;
+  return p;
+}

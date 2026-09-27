@@ -7291,6 +7291,15 @@ anlegen und die App zügig veröffentlichen.
 - Ohne Kamera (Vorschlag C). Coach-Runden: Einladung beim Planen + Erinnerung 15 Min. vorher und zum
   Start über `send-due-reminders` (v21, 27.09.).
 - 27.09.: Konto der Nutzerin für die Einstellungsphase auf Start 28.09. gesetzt (wie die Testkonten).
+- 27.09. VORSCHAU (Branch): Coach-Einrichtung ohne KI. Admin-Dashboard: „🧭 Einrichten“ je Person öffnet
+  `views/admin/EinrichtungsCheckliste.jsx` (Logik `utils/einrichtung.js`, Laden/Vorlagen
+  `data/einrichtungAdmin.js`): Zugang, Team (Auswahl direkt), Steckbrief, Abend- vor Morgenroutine,
+  Bewegung, Wasser, Licht, Schlaf, Essen, Medikation/Supplemente (nur falls nötig), Erinnerungen,
+  Programmstart (Datum direkt). Pflicht für „Bereit zum Start“: Abend, Morgen, Start. „Vorlage“ setzt
+  übliche Werte (Abend 21:30, Morgen 06:30, 2,5 l, 30 Min. Licht, Erinnerungen an), „Einrichten“ springt per
+  Verwalten direkt in die Seite (`merkeZielNachVerwalten`), „Zurück“ öffnet die Checkliste wieder.
+  Dashboard verschlankt: Werkzeug-Zeile, ein „+ Person hinzufügen“, Test-Coachee unten.
+  Offen (Plan C/D): Coachee-Onboarding kürzen, Coach-Handbuch.
 - 27.09.: Wissensdatenbank (`coach_wissen`) um drei Einträge ergänzt: „AKA: Positionierung und Abgrenzung“,
   „Body Doubling (Gemeinsam fokussieren)“, „Aufgaben zerlegen und Dauer schätzen (Zeitblindheit)“.
 

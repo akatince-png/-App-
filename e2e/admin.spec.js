@@ -26,19 +26,14 @@ test("Admin-Dashboard rendert und fängt den fehlschlagenden Probanden-Request s
   expect(fehler.filter((f) => !f.includes("supabase") && !f.includes("fetch"))).toEqual([]);
 });
 
-const ADMIN_UNTERANSICHTEN = [
-  "Coach-Übersicht",
-  "Quests verwalten",
-  "Teams verwalten",
-  "Wissens-Basis verwalten",
-  "Coaching-Vorlagen",
-];
+// Seit 27.09. als kleine Werkzeug-Zeile (Teams, Wissen, Vorlagen, Quests).
+const ADMIN_UNTERANSICHTEN = ["Coach-Übersicht", "👥 Teams", "📚 Wissen", "📋 Vorlagen", "🎯 Quests"];
 
 // Übungsbilder-Verwaltung auf Wunsch der Nutzerin entfernt (23.09.) — die
 // Bilder sollen später in einer eigenen Sitzung automatisiert entstehen,
 // nicht per Hand hochgeladen werden.
 test("Admin-Dashboard zeigt keinen Übungsbilder-Upload mehr", async ({ page }) => {
-  await expect(page.getByRole("button", { name: "Coaching-Vorlagen", exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "📋 Vorlagen", exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Übungsbilder verwalten", exact: false })).toHaveCount(0);
 });
 
@@ -50,3 +45,10 @@ for (const label of ADMIN_UNTERANSICHTEN) {
     expect(fehler.filter((f) => !f.includes("supabase") && !f.includes("fetch"))).toEqual([]);
   });
 }
+
+test("Person hinzufügen: ein Knopf, darunter Einladung und Zugang mit Passwort", async ({ page }) => {
+  await page.getByRole("button", { name: "+ Person hinzufügen" }).click();
+  await expect(page.getByRole("button", { name: "✉️ Per E-Mail einladen (empfohlen)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "🔑 Zugang mit Passwort anlegen" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Test-Coachee zum Ausprobieren/ })).toBeVisible();
+});

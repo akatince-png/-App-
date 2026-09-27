@@ -12,7 +12,7 @@ import Belohnungsfenster from "./ui/Belohnungsfenster";
 import MomentFrageHost from "./ui/MomentFrageHost";
 import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
 import Aka from "./ui/Aka";
-import { nimmRueckkehrZumDashboard } from "./utils/verwaltungRueckkehr";
+import { nimmRueckkehrZumDashboard, nimmZielNachVerwalten } from "./utils/verwaltungRueckkehr";
 import AkutModusGlobal from "./ui/AkutModusGlobal";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
@@ -231,6 +231,12 @@ export default function AuthenticatedApp() {
       // Aus "Verwalten als" zurück → ins Admin-Dashboard, nicht auf Home.
       if (isAdmin && nimmRueckkehrZumDashboard()) {
         setView("admin");
+        return;
+      }
+      // Aus der Einrichtungs-Checkliste: direkt in die passende Seite.
+      const ziel = nimmZielNachVerwalten();
+      if (ziel && istGueltigerView(ziel, isAdmin)) {
+        setView(ziel);
         return;
       }
       if (!anfangsHashSchonVerwendet) {

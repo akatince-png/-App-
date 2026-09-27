@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { LanguageProvider } from "../../src/i18n/LanguageContext";
-import { AdminProvider } from "../../src/context/AdminContext";
+import { AdminProvider, useAdmin } from "../../src/context/AdminContext";
 import { AuthContext } from "../../src/context/AuthContext";
 import { AppDataContext } from "../../src/context/AppDataContext";
 import AuthenticatedApp from "../../src/AuthenticatedApp";
@@ -218,6 +218,13 @@ function leseOverridesAusUrl() {
   return overrides;
 }
 
+// Wie App.jsx: beim Wechsel in/aus "Verwalten als" neu aufbauen (27.09.,
+// damit der Direkt-Sprung der Einrichtungs-Checkliste testbar ist).
+function MitVerwaltungsSchluessel() {
+  const { proband } = useAdmin();
+  return <AuthenticatedApp key={proband?.id || "self"} />;
+}
+
 export default function TestApp() {
   // Coachee-Ansicht eines Admin-Kontos (AnsichtUmschalter) als echter
   // State, damit der Umschalter im Test wirklich umschaltet.
@@ -255,7 +262,7 @@ export default function TestApp() {
       <AdminProvider>
         <AuthContext.Provider value={mockAuthValue}>
           <AppDataContext.Provider value={appData}>
-            <AuthenticatedApp />
+            <MitVerwaltungsSchluessel />
           </AppDataContext.Provider>
         </AuthContext.Provider>
       </AdminProvider>

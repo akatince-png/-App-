@@ -7,6 +7,8 @@ import { istNetzwerkFehler, verstaendlicheFehlermeldung } from "../../utils/netz
 import { useAuth } from "../../context/AuthContext";
 import { edgeFunctionFehlertext } from "../../utils/edgeFunctionFehler";
 import { CoachChatFenster } from "./AdminCoachUebersichtView";
+import EinrichtungsCheckliste from "./EinrichtungsCheckliste";
+import { nimmOffeneCheckliste } from "../../utils/verwaltungRueckkehr";
 
 // Verlaufs-Schlüssel, unter denen Aka je nach Seite läuft (AKA_SEITEN in
 // ui/Aka.jsx) — muss dazu passen, sonst landet ein Hinweis nie im
@@ -40,8 +42,12 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
   const [suche, setSuche] = useState("");
   const [formOffen, setFormOffen] = useState(false);
   const [einladenOffen, setEinladenOffen] = useState(false);
+  const [hinzufuegenOffen, setHinzufuegenOffen] = useState(false);
   const [notizFuer, setNotizFuer] = useState(null); // proband.id | null
   const [nachrichtenFuer, setNachrichtenFuer] = useState(null); // proband | null (Chat offen)
+  // Einrichtungs-Checkliste (27.09.): offen für diese Person; nach "Zurück"
+  // aus "Verwalten" wieder bei derselben Person geöffnet.
+  const [einrichtungFuer, setEinrichtungFuer] = useState(() => nimmOffeneCheckliste());
   const [testAnlegenLaeuft, setTestAnlegenLaeuft] = useState(false);
   const [testFehler, setTestFehler] = useState(null);
   const [testKonto, setTestKonto] = useState(null); // { vorname, email, passwort } | null
@@ -131,99 +137,83 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
       <ViewHeader title="Admin-Dashboard" onHome={onHome} />
 
       <div style={{ fontSize: 13, color: textMuted, marginBottom: 18, lineHeight: 1.6 }}>
-        Hier siehst du alle Konten. Mit "Verwalten" öffnest du die App
-        stellvertretend mit den Daten dieser Person — du kannst dort alles
-        genauso einstellen wie sie selbst. Ein Banner oben zeigt dir jederzeit,
-        wessen Konto du gerade bearbeitest, mit einem Knopf zurück hierher.
+        Neue Person: „+ Person hinzufügen“, dann „🧭 Einrichten“ – dort siehst du, was bis zum Start fehlt.
+        „Verwalten“ öffnet die App der Person.
       </div>
 
       {onOpenUebersicht && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 10 }}>
           <PrimaryButton onClick={onOpenUebersicht}>📊 Coach-Übersicht (alle Coachees grafisch)</PrimaryButton>
         </div>
       )}
 
-      {onOpenQuests && (
-        <div style={{ marginBottom: 14 }}>
-          <PrimaryButton variant="ghost" onClick={onOpenQuests}>
-            🎯 Quests verwalten
-          </PrimaryButton>
-        </div>
-      )}
+      {/* Werkzeuge als eine kleine Zeile statt fünf großer Knöpfe (27.09.,
+          Nutzerinnen-Wunsch: Admin-Seite ADHS-tauglich verschlanken). */}
+      <div data-werkzeuge style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+        {[
+          onOpenTeams && { label: "👥 Teams", onClick: onOpenTeams },
+          onOpenWissen && { label: "📚 Wissen", onClick: onOpenWissen },
+          onOpenFormulare && { label: "📋 Vorlagen", onClick: onOpenFormulare },
+          onOpenQuests && { label: "🎯 Quests", onClick: onOpenQuests },
+        ]
+          .filter(Boolean)
+          .map((w) => (
+            <button
+              key={w.label}
+              type="button"
+              className="mp-tap"
+              onClick={w.onClick}
+              style={{ border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, borderRadius: 99, padding: "8px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              {w.label}
+            </button>
+          ))}
+      </div>
 
-      {onOpenTeams && (
-        <div style={{ marginBottom: 14 }}>
-          <PrimaryButton variant="ghost" onClick={onOpenTeams}>
-            👥 Teams verwalten
+      {/* Eine Person hinzufügen: ein Knopf, darunter die zwei Wege
+          (Einladung = Standard, Zugang mit Passwort = Ausnahme). */}
+      <div style={{ marginBottom: 10 }}>
+        <PrimaryButton
+          variant={hinzufuegenOffen ? "ghost" : "accent"}
+          onClick={() => {
+            setHinzufuegenOffen((v) => !v);
+            setEinladenOffen(false);
+            setFormOffen(false);
+          }}
+        >
+          {hinzufuegenOffen ? "Abbrechen" : "+ Person hinzufügen"}
+        </PrimaryButton>
+      </div>
+      {hinzufuegenOffen && !einladenOffen && !formOffen && (
+        <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+          <PrimaryButton variant="ghost" onClick={() => setEinladenOffen(true)}>
+            ✉️ Per E-Mail einladen (empfohlen)
           </PrimaryButton>
-        </div>
-      )}
-
-      {onOpenWissen && (
-        <div style={{ marginBottom: 14 }}>
-          <PrimaryButton variant="ghost" onClick={onOpenWissen}>
-            📚 Wissens-Basis verwalten
+          <PrimaryButton variant="ghost" onClick={() => setFormOffen(true)}>
+            🔑 Zugang mit Passwort anlegen
           </PrimaryButton>
-        </div>
-      )}
-
-      {onOpenFormulare && (
-        <div style={{ marginBottom: 14 }}>
-          <PrimaryButton variant="ghost" onClick={onOpenFormulare}>
-            📋 Coaching-Vorlagen
-          </PrimaryButton>
+          <div style={{ fontSize: 12, color: textMuted, lineHeight: 1.5 }}>
+            Danach bei der Person auf „🧭 Einrichten“ tippen: dort siehst du, was bis zum Start noch fehlt.
+          </div>
         </div>
       )}
 
       <TextInput value={suche} onChange={setSuche} placeholder="Suchen nach Name oder E-Mail…" />
-
-      <div style={{ marginTop: 14, marginBottom: 8, display: "flex", gap: 8 }}>
-        <div style={{ flex: 1 }}>
-          <PrimaryButton variant="ghost" onClick={() => setFormOffen((v) => !v)}>
-            {formOffen ? "Abbrechen" : "+ Neuen Zugang anlegen"}
-          </PrimaryButton>
-        </div>
-        <div style={{ flex: 1 }}>
-          <PrimaryButton variant="ghost" onClick={testCoacheeErstellen} disabled={testAnlegenLaeuft}>
-            {testAnlegenLaeuft ? "Lege an …" : "🧪 Test-Coachee erstellen"}
-          </PrimaryButton>
-        </div>
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <PrimaryButton variant="ghost" onClick={() => setEinladenOffen((v) => !v)}>
-          {einladenOffen ? "Abbrechen" : "✉️ Coachee einladen"}
-        </PrimaryButton>
-      </div>
+      <div style={{ height: 12 }} />
       {einladenOffen && (
         <EinladenForm
           onCreated={() => {
             setEinladenOffen(false);
+            setHinzufuegenOffen(false);
             ladeProbanden();
           }}
         />
       )}
-      {testFehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14 }}>{testFehler}</div>}
-      {testKonto && (
-        <Card style={{ marginBottom: 14, background: successSoft }}>
-          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>"{testKonto.vorname}" angelegt</div>
-          <div style={{ fontSize: 12.5, fontFamily: "monospace", marginBottom: 2 }}>{testKonto.email}</div>
-          <div style={{ fontSize: 12.5, fontFamily: "monospace" }}>{testKonto.passwort}</div>
-          <div style={{ fontSize: 11.5, color: textMuted, marginTop: 8, lineHeight: 1.5 }}>
-            Damit kannst du dich in einem privaten/anderen Browser-Tab separat einloggen und die App als echte
-            Nicht-Admin-Person nutzen — anders als bei "Verwalten", das bleibt technisch im Admin-Modus.
-          </div>
-          <div style={{ marginTop: 10 }}>
-            <PrimaryButton variant="ghost" onClick={testZugangsdatenKopieren}>
-              {testKopiert ? "Kopiert ✓" : "E-Mail + Passwort kopieren"}
-            </PrimaryButton>
-          </div>
-        </Card>
-      )}
-
       {formOffen && (
         <NeuerZugangForm
           onCreated={() => {
             setFormOffen(false);
+            setHinzufuegenOffen(false);
             ladeProbanden();
           }}
         />
@@ -300,6 +290,16 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
               <button
+                type="button"
+                onClick={() => setEinrichtungFuer((v) => (v === p.id ? null : p.id))}
+                aria-expanded={einrichtungFuer === p.id}
+                data-einrichten-knopf
+                className="mp-tap"
+                style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: "#2E9C86", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+              >
+                {einrichtungFuer === p.id ? "Schließen" : "🧭 Einrichten"}
+              </button>
+              <button
                 onClick={() => onVerwalteAls({ id: p.id, email: p.email, vorname: p.vorname })}
                 className="mp-tap"
                 style={{ padding: "11px 16px", borderRadius: 12, border: "none", background: accentDark, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
@@ -350,10 +350,36 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
             </div>
           </div>
           {notizFuer === p.id && <AdminNotizPanel proband={p} adminId={user?.id} />}
+          {einrichtungFuer === p.id && <EinrichtungsCheckliste person={p} onVerwalteAls={onVerwalteAls} />}
 
         </Card>
       ))}
       </div>
+      {/* Test-Konto (für eigene Probeläufe) – bewusst unten, damit es nicht
+          mit "Person hinzufügen" verwechselt wird. */}
+      <div style={{ marginTop: 18 }}>
+        <PrimaryButton variant="ghost" onClick={testCoacheeErstellen} disabled={testAnlegenLaeuft}>
+          {testAnlegenLaeuft ? "Lege an …" : "🧪 Test-Coachee zum Ausprobieren erstellen"}
+        </PrimaryButton>
+      </div>
+      {testFehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14 }}>{testFehler}</div>}
+      {testKonto && (
+        <Card style={{ marginBottom: 14, background: successSoft }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>"{testKonto.vorname}" angelegt</div>
+          <div style={{ fontSize: 12.5, fontFamily: "monospace", marginBottom: 2 }}>{testKonto.email}</div>
+          <div style={{ fontSize: 12.5, fontFamily: "monospace" }}>{testKonto.passwort}</div>
+          <div style={{ fontSize: 11.5, color: textMuted, marginTop: 8, lineHeight: 1.5 }}>
+            Damit kannst du dich in einem privaten/anderen Browser-Tab separat einloggen und die App als echte
+            Nicht-Admin-Person nutzen — anders als bei "Verwalten", das bleibt technisch im Admin-Modus.
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <PrimaryButton variant="ghost" onClick={testZugangsdatenKopieren}>
+              {testKopiert ? "Kopiert ✓" : "E-Mail + Passwort kopieren"}
+            </PrimaryButton>
+          </div>
+        </Card>
+      )}
+
       {nachrichtenFuer && (
         <CoachChatFenster
           proband={nachrichtenFuer}
