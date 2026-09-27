@@ -290,7 +290,10 @@ export default function AuthenticatedApp() {
     }
     const zielHash = hashFuerView(view);
     if (window.location.hash !== zielHash) {
-      window.history.pushState({ view }, "", zielHash);
+      // tiefe (27.09.): wie viele App-Seiten davor liegen – der "‹"-Knopf in
+      // ViewHeader geht dann eine Seite zurück statt immer zur Startseite.
+      const tiefe = view === "home" ? 0 : (window.history.state?.tiefe || 0) + 1;
+      window.history.pushState({ view, tiefe }, "", zielHash);
     }
   }, [view]);
 
