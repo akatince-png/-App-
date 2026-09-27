@@ -95,16 +95,24 @@ AKA_TEST_PW='<pw>' node scripts/dauertest/adminlauf.mjs
 7. **Echte Bugs** (Absturz, falsche Daten): klein und eindeutig → beheben wie jede Änderung (Feature-Branch, volle Testkette, dann `main`). Größer oder unklar → nur im Bericht festhalten und der Nutzerin melden.
 8. Keine Daten des Testkontos löschen oder „aufräumen“. Genau diese Daten sind der Langzeittest.
 
-## Seit 28.09.: zwei Läufe am Tag (Nutzerinnen-Wunsch 27.09.)
+## Seit 27.09.: realistische Uhrzeiten (ein Lauf am Tag)
 
-Vorher lief alles abends – auch die Morgenroutine. Das ergab unrealistische
-Hinweise („Morgenroutine meist erst 21:30“) und absurde Coach-Chats. Jetzt:
+Der Tageslauf klickt abends alles durch – auch die Morgenroutine. Das ergab
+unrealistische Hinweise („Morgenroutine meist erst 21:30“), absurde Coach-Chats
+und Schrittdauern von 1–2 Sekunden. Nutzerinnen-Wunsch: weiter einmal am Tag
+testen, aber realistisch. Deshalb:
 
-- **Morgenlauf 07:04 (Berlin):** `AKA_TEIL=morgen` – nur die Morgenroutine.
-  Routine „AKA Dauertest – Morgenlauf“ (trig_01LL9UxEDG916yPGyDYLAfLU).
-- **Abendlauf 21:15 (Berlin, Sommerzeit):** `AKA_TEIL=abend` – alles außer der
-  Morgenroutine (Tagesplan ohne die Morgenroutine-Gruppe, Abendroutine, Wasser,
-  Rätsel, Quests, Team, Ansichten) + Admin-Livetest + Bericht.
-- `AKA_NUR_TAGESPLAN=1`: nur den Tagesplan nachholen (z. B. wenn er im Lauf leer blieb).
-- Der Tagesplan startet in der Bild-Ansicht; das Skript fotografiert sie (02a) und schaltet auf „☰ Liste“.
-- Am 24.10. beide Routinen deaktivieren, falls der Test nicht verlängert wird.
+- Nach dem Tageslauf `scripts/dauertest/realistische-zeiten.sql` ausführen
+  (Supabase-SQL, `TAGE` durch `0` ersetzen = nur heute). Es setzt Start/Ende von
+  Morgen- und Abendroutine der sechs Testkonten auf glaubwürdige Zeiten und die
+  Schrittdauern auf ca. die geplante Dauer.
+- Stil je Person: Claude pünktlich (+3–15 Min.), Mia morgens oft später
+  (+38–62 Min. → Zeit-Hinweis, reagiert mit „umstellen“), Lea an ~3 von 5 Tagen
+  später (→ „Coach fragen“), Jonas pünktlich zur Schicht, Test 1 und Admin pünktlich.
+- 27.09.: einmalig für die letzten 7 Tage angewendet; Mias Morgenroutine stand
+  durch frühere „umstellen“-Antworten auf 21:15 und wurde auf 07:00 zurückgesetzt.
+- Die „verspätet“-Einträge im Tagesverlauf entstehen weiter beim Durchklicken am
+  Abend (die App schreibt sie sofort) – im Bericht nicht als echtes Verhalten werten.
+- `AKA_TEIL=morgen|abend` gibt es im Skript noch, wird aber nicht mehr genutzt.
+- Der Tagesplan startet in der Bild-Ansicht; das Skript fotografiert sie (02a) und
+  schaltet auf „☰ Liste“. `AKA_NUR_TAGESPLAN=1` holt nur den Tagesplan nach.
