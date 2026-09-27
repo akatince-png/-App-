@@ -121,6 +121,16 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
     `nachweise-aufraeumen` nach 7 Tagen (pg_cron täglich 3:17 UTC, Geheimnis in `cron_konfig`, am 27.09.
     live geprüft: Antwort 200). Code: `data/videoNachweise.js`, `utils/videoNachweis.js` (+ Tests),
     `views/admin/NachweiseCoach.jsx`, E2E `e2e/video-nachweis.spec.js` (Fake-Kamera).
+  - **Video-Archiv (27.09., Migration 0114, live):** Die Person kann im Aufnahme-Fenster ankreuzen „Mein Coach
+    darf ausgewählte Videos aufbewahren“ (`profiles.video_archiv_einverstanden`, jederzeit widerrufbar).
+    - Coach-Posteingang: „✓ Bestätigen“ (Video weg), „🗄️ Ins Archiv“ (nur mit Einverständnis, bleibt
+      dauerhaft), „📌 Besprechen“ (bleibt, bis der Coach entscheidet; ohne Einverständnis höchstens 7 Tage),
+      „Passt nicht“, „⬇️ Herunterladen“ (immer, mit lesbarem Dateinamen).
+    - In der aufgeklappten Person: „🎞️ Video-Archiv von …“ mit Ansehen, Herunterladen, „Ins Archiv“ und „Löschen“.
+    - Beim Widerruf löscht die nächtliche Funktion Archiv- und Besprechen-Videos (Regel auch in
+      `sollGeloeschtWerden`, `utils/videoNachweis.js`, getestet).
+    - Gedacht für: Wochen-Auswahl je Person, Besprechen mit der Person, später ein Dankeschön-/Zertifikats-Video
+      am Ende (Zusammenschnitt ist noch nicht gebaut; die Videos lassen sich dafür herunterladen).
   - **Kamera beim Training (Frage der Nutzerin 26.09.):** Es werden **keine Videos** aufgenommen oder gespeichert.
     Die Erkennung (MediaPipe, von Google, kostenlos, ohne Gemini, ohne Mengengrenze) läuft nur auf dem Handy.
     Gespeichert wird nur die gezählte Zahl (`satzGezaehlt`). Video-Nachweise siehe Punkt oben.
@@ -156,7 +166,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 290 Unit-Tests, 93 E2E-Tests (Stand 27.09.).
+  - 294 Unit-Tests, 94 E2E-Tests (Stand 27.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)

@@ -16,7 +16,7 @@ import ErnaehrungCoach from "./ErnaehrungCoach";
 import { persoenlichSpeichern, programmEinstellen, programmFortsetzen, programmPausieren, programmStarten, programmeUndTeilnahmenLaden, teilnahmeSetzen, wiederholungZuruecknehmen, wocheWiederholen } from "../../data/programmeAdmin";
 import { etappenVerschieben } from "../../utils/programme";
 import { ProgrammeLeiste, ProgrammePerson } from "./ProgrammeCoach";
-import NachweiseCoach from "./NachweiseCoach";
+import NachweiseCoach, { VideoArchivPerson } from "./NachweiseCoach";
 import { datumKurz, kernKurztext, zeileZuEtappe } from "../../utils/kernprogramm";
 import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
 
@@ -437,6 +437,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
             Die letzten 7 Tage (grün = etwas geschafft){fortschritt ? ` · Protokoll Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` : ""}
           </div>
           {programmeTeil}
+          <VideoArchivPerson personId={p.id} vorname={p.vorname} />
           <KernprogrammCoach personId={p.id} vorname={p.vorname} onChat={onChat} onGeaendert={onKernGeaendert} />
           <ErnaehrungCoach personId={p.id} vorname={p.vorname} onChat={onChat} />
           <TagebuchKurz personId={p.id} vorname={p.vorname} onChat={onChat} />

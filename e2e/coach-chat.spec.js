@@ -208,3 +208,38 @@ test("Coach: Woche wiederholen verschiebt die Etappe, persönliche Einstellungen
   expect(gesendet.teilnahmen[1]).toMatchObject({ notiz: "Knie schonen", einstellungen: { ausgelassen: ["licht"] } });
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
+
+// Video-Nachweise im Coach-Posteingang (27.09.): Archiv nur mit Einverständnis.
+test("Coach: Video-Nachweis ins Archiv legen (mit Einverständnis), ohne Einverständnis ausgegraut", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const patches = [];
+  const video = (id, user_id, titel) => ({ id, user_id, art: "training", titel, pfad: `${user_id}/${id}.webm`, status: "offen", created_at: new Date().toISOString(), dauer_sek: 12 });
+  await page.route("**/rest/v1/rpc/admin_liste_probanden*", (r) => r.fulfill({ json: PERSONEN }));
+  await page.route("**/rest/v1/teams*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/training_*", (r) => r.fulfill({ json: [] }));
+  await page.route("**/rest/v1/video_nachweise*", (r) => {
+    if (r.request().method() === "PATCH") {
+      patches.push(r.request().postDataJSON());
+      return r.fulfill({ status: 204, body: "" });
+    }
+    if (r.request().url().includes("status=eq.offen")) return r.fulfill({ json: [video("v1", "p-lea", "Kniebeugen · Satz 1"), video("v2", "p-mia", "Liegestütze · Satz 2")] });
+    return r.fulfill({ json: [] });
+  });
+  await page.route("**/rest/v1/profiles*", (r) => r.fulfill({ json: [{ id: "p-lea", video_archiv_einverstanden: true }, { id: "p-mia", video_archiv_einverstanden: null }] }));
+  await chatMocks(page, []);
+  await page.goto("/e2e/harness/index.html#/admin-uebersicht");
+  await page.getByRole("button", { name: /Video-Nachweise: 2 warten auf dich/ }).click();
+  const zeilen = page.locator("[data-video-zeile]");
+  await expect(zeilen).toHaveCount(2);
+  await expect(zeilen.nth(1).getByRole("button", { name: "🗄️ Ins Archiv" })).toBeDisabled();
+  await expect(zeilen.nth(1).getByRole("button", { name: "⬇️ Herunterladen" })).toBeVisible();
+  await zeilen.nth(0).getByRole("button", { name: "🗄️ Ins Archiv" }).click();
+  await expect.poll(() => patches.length).toBe(1);
+  expect(patches[0]).toMatchObject({ status: "archiviert" });
+  expect(patches[0].pfad).toBeUndefined();
+  await expect(zeilen).toHaveCount(1);
+  await zeilen.nth(0).getByRole("button", { name: "📌 Besprechen" }).click();
+  await expect.poll(() => patches.length).toBe(2);
+  expect(patches[1]).toMatchObject({ status: "besprechen" });
+  expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
+});

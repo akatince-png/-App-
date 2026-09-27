@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../context/AuthContext";
-import { nachweisHochladen } from "../data/videoNachweise";
+import { einverstaendnisLaden, einverstaendnisSetzen, nachweisHochladen } from "../data/videoNachweise";
 import { COUNTDOWN_SEK, LOESCH_TAGE, MAX_SEK, aufnahmeFormat } from "../utils/videoNachweis";
 import { accentDark } from "./theme";
 
@@ -51,6 +51,17 @@ export default function VideoNachweis({ art, bezugId, titel, onFertig, onSchlies
   const [blob, setBlob] = useState(null);
   const [vorschau, setVorschau] = useState(null);
   const [fehler, setFehler] = useState(null);
+  // Einverständnis fürs Aufbewahren (27.09.): einmal fragen, jederzeit änderbar.
+  const [einverstanden, setEinverstanden] = useState(undefined);
+  useEffect(() => {
+    if (!user?.id) return;
+    einverstaendnisLaden([user.id]).then((m) => setEinverstanden(m[user.id] ?? null));
+  }, [user?.id]);
+  const einverstaendnisAendern = async (ja) => {
+    setEinverstanden(ja);
+    const r = await einverstaendnisSetzen(user.id, ja);
+    if (!r.ok) setFehler("Einstellung konnte nicht gespeichert werden.");
+  };
 
   const kameraStoppen = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -192,8 +203,17 @@ export default function VideoNachweis({ art, bezugId, titel, onFertig, onSchlies
         {phase === "start" && (
           <>
             <div style={{ fontSize: 13, opacity: 0.85, lineHeight: 1.5, marginBottom: 12 }}>
-              Nach dem Tippen zählt die App von {COUNTDOWN_SEK} runter – dann läuft die Aufnahme (höchstens {MAX_SEK} Sek., ohne Ton). Nur dein Coach sieht das Video. Nach der Bestätigung wird es gelöscht, spätestens nach {LOESCH_TAGE} Tagen.
+              Nach dem Tippen zählt die App von {COUNTDOWN_SEK} runter – dann läuft die Aufnahme (höchstens {MAX_SEK} Sek., ohne Ton). Nur dein Coach sieht das Video.{" "}
+              {einverstanden === true ? "Dein Coach darf ausgewählte Videos für deinen Fortschritt aufbewahren – alle anderen werden gelöscht, spätestens nach " + LOESCH_TAGE + " Tagen." : `Nach der Bestätigung wird es gelöscht, spätestens nach ${LOESCH_TAGE} Tagen.`}
             </div>
+            {einverstanden !== undefined && (
+              <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 12.5, lineHeight: 1.45, background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "9px 11px", marginBottom: 12, cursor: "pointer" }}>
+                <input type="checkbox" checked={einverstanden === true} onChange={(e) => einverstaendnisAendern(e.target.checked)} style={{ marginTop: 2, width: 18, height: 18 }} />
+                <span>
+                  <b>Mein Coach darf ausgewählte Videos aufbewahren</b> – für meinen Fortschritt und z. B. ein Dankeschön-Video am Ende. Jederzeit widerrufbar; dann werden aufbewahrte Videos gelöscht.
+                </span>
+              </label>
+            )}
             <button type="button" style={knopf(false)} onClick={() => setPhase("countdown")}>
               ▶ Countdown starten
             </button>
