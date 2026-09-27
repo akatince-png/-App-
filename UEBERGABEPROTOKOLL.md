@@ -7291,7 +7291,7 @@ anlegen und die App zügig veröffentlichen.
 - Ohne Kamera (Vorschlag C). Coach-Runden: Einladung beim Planen + Erinnerung 15 Min. vorher und zum
   Start über `send-due-reminders` (v21, 27.09.).
 - 27.09.: Konto der Nutzerin für die Einstellungsphase auf Start 28.09. gesetzt (wie die Testkonten).
-- 27.09. VORSCHAU (Branch): Coach-Einrichtung ohne KI. Admin-Dashboard: „🧭 Einrichten“ je Person öffnet
+- 27.09. (freigegeben, auf main): Coach-Einrichtung ohne KI. Admin-Dashboard: „🧭 Einrichten“ je Person öffnet
   `views/admin/EinrichtungsCheckliste.jsx` (Logik `utils/einrichtung.js`, Laden/Vorlagen
   `data/einrichtungAdmin.js`): Zugang, Team (Auswahl direkt), Steckbrief, Abend- vor Morgenroutine,
   Bewegung, Wasser, Licht, Schlaf, Essen, Medikation/Supplemente (nur falls nötig), Erinnerungen,
@@ -7299,7 +7299,7 @@ anlegen und die App zügig veröffentlichen.
   übliche Werte (Abend 21:30, Morgen 06:30, 2,5 l, 30 Min. Licht, Erinnerungen an), „Einrichten“ springt per
   Verwalten direkt in die Seite (`merkeZielNachVerwalten`), „Zurück“ öffnet die Checkliste wieder.
   Dashboard verschlankt: Werkzeug-Zeile, ein „+ Person hinzufügen“, Test-Coachee unten.
-- 27.09. VORSCHAU (Branch): Erst-Onboarding nach AKA-Konzept (Nutzerinnen-Feedback nach eigenem Durchlauf):
+- 27.09. (freigegeben, auf main): Erst-Onboarding nach AKA-Konzept (Nutzerinnen-Feedback nach eigenem Durchlauf):
   „Ich erzähl Aka einfach frei“ entfernt (nur noch Schritt für Schritt / selbst durchklicken), keine Bereichswahl
   „Womit willst du starten?“ und kein Routinen-Baukasten mehr. Für alle gleich: Vorstellung → Name & Weg →
   Ziel & Grund → Steckbrief → `OnboardingStartzeitenView` (nur Startzeit Abend, dann Morgen; Standard
@@ -7307,7 +7307,8 @@ anlegen und die App zügig veröffentlichen.
   Nicht gelöscht, nur nicht mehr im Erst-Onboarding: OnboardingBereicheView, OnboardingCoachFreitext,
   OnboardingRoutinenView/CategoriesView (weiter im Weg „Neues Protokoll“). `onboarding_modus` „lang“ wirkt im
   Erst-Onboarding damit nicht mehr.
-  Offen (Plan D): Coach-Handbuch.
+  Dazu Hinweis bei Bildschirmzeit: „Nachschauen statt schätzen: iPhone → Einstellungen → Bildschirmzeit,
+  Android → Digital Wellbeing“. Offen (Plan D): Coach-Handbuch; Schalter „Onboarding kurz/lang“ ggf. entfernen.
 - 27.09.: Wissensdatenbank (`coach_wissen`) um drei Einträge ergänzt: „AKA: Positionierung und Abgrenzung“,
   „Body Doubling (Gemeinsam fokussieren)“, „Aufgaben zerlegen und Dauer schätzen (Zeitblindheit)“.
 
