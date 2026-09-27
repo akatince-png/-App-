@@ -14,6 +14,7 @@ import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMain, textMu
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META, ATEM_META } from "../utils/dayItems";
 import { ATEM_START_KEY, atemZeitenHeute, uebungFuerKey } from "../utils/atemBibliothek";
 import { aktuelleSession } from "../data/useAtemSessions";
+import FokusGemeinsamKarte from "../ui/FokusGemeinsamKarte";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
@@ -142,6 +143,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     atemuebungen,
     atemSessions,
     eigeneGruppenLogs,
+    eigeneFokusSitzungen,
     gruppenprotokolle,
     gruppenBausteinUmschalten,
     gruppenprotokolleNeuLaden,
@@ -752,9 +754,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       denkpauseErgebnisse,
       kognitivErgebnisse,
       eigeneGruppenLogs,
+      eigeneFokusSitzungen,
     }),
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
-      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, kognitivErgebnisse, eigeneGruppenLogs]
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, kognitivErgebnisse, eigeneGruppenLogs, eigeneFokusSitzungen]
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
@@ -1067,6 +1070,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           </span>
         </button>
       )}
+      {/* Gemeinsam fokussieren (27.09.): nur wenn gerade etwas los ist. */}
+      {proband === null && <FokusGemeinsamKarte onOeffnen={() => onOpenView("fokus")} />}
       {/* Schichtarbeit (25.09.): welche Schicht heute gilt + "Heute anders". */}
       <SchichtHeuteKarte />
       {proband === null && <RoutineZeitHinweisKarte zeigeCoachKnopf={!isAdmin} onCoachChat={() => onOpenView("coach-chat")} />}
@@ -1380,6 +1385,25 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           <div style={{ marginBottom: 8, fontSize: 20, lineHeight: "22px" }}>🧩</div>
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Denksport</div>
           <div style={{ fontSize: 10.5, color: textMuted }}>Rätsel & Quiz</div>
+        </button>
+        {/* Gemeinsam fokussieren / Body Doubling (27.09.). */}
+        <button
+          type="button"
+          className="mp-tap"
+          onClick={() => onOpenView("fokus")}
+          style={{
+            textAlign: "left",
+            borderRadius: 18,
+            padding: "14px 10px",
+            cursor: "pointer",
+            background: "#fff",
+            boxShadow: shadow,
+            border: `1px solid ${cardBorder}`,
+          }}
+        >
+          <div style={{ marginBottom: 8, fontSize: 20, lineHeight: "22px" }}>🎯</div>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Gemeinsam fokussieren</div>
+          <div style={{ fontSize: 10.5, color: textMuted }}>Nicht allein arbeiten</div>
         </button>
         {/* "Neues Protokoll" (13.09., Nutzerin-Vorgabe): ersetzt den
             früheren schwebenden runden "+"-Knopf oben rechts (Fab.jsx) —

@@ -181,6 +181,22 @@ function leseOverridesAusUrl() {
     ];
     overrides.eigeneGruppenLogs = [];
   }
+  // ?fokus=1: Gemeinsam fokussieren (27.09.) – Team mit zwei Leuten, die
+  // gerade fokussieren, und einem geteilten Erfolg von heute früh.
+  if (params.get("fokus") === "1") {
+    const vor = (min) => new Date(Date.now() - min * 60000).toISOString();
+    overrides.team = { id: "t1", name: "Team Sonne" };
+    overrides.teamKollegen = [
+      { id: "u2", vorname: "Anna" },
+      { id: "u3", vorname: "Jonas" },
+    ];
+    overrides.fokusSitzungen = [
+      { id: "f1", userId: "u2", ziel: "Bewerbung fertig schreiben", dauerMinuten: 25, startUm: vor(8), beendetUm: null, ergebnis: null, teilen: true },
+      { id: "f2", userId: "u3", ziel: "", dauerMinuten: 50, startUm: vor(20), beendetUm: null, ergebnis: null, teilen: true },
+      { id: "f3", userId: "u2", ziel: "Küche aufräumen", dauerMinuten: 15, startUm: vor(Math.min(180, new Date().getHours() * 60)), beendetUm: vor(1), ergebnis: "geschafft", teilen: true },
+    ];
+    overrides.fokusRunden = [];
+  }
   // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
   // Supplement, Gewohnheit) für Design-Vorschauen.
   if (params.get("beispiel") === "1") {
@@ -208,8 +224,27 @@ export default function TestApp() {
   const [coacheeAnsicht, setCoacheeAnsicht] = useState(false);
   const overrides = leseOverridesAusUrl();
   const istAdminKonto = overrides.istAdminKonto ?? true;
+  // Gemeinsam fokussieren (27.09.): echte Zustandsänderung, damit der Ablauf
+  // Start → Ring → "Wie lief's?" im Test durchspielbar ist.
+  const [fokusSitzungen, setFokusSitzungen] = useState(() => overrides.fokusSitzungen || []);
+  const fokusFunktionen = {
+    fokusSitzungen,
+    eigeneFokusSitzungen: fokusSitzungen.filter((x) => x.userId === MOCK_USER_ID),
+    fokusRunden: overrides.fokusRunden || [],
+    fokusStarten: async ({ ziel = "", dauerMinuten = 25, rundeId = null, teilen = true }) => {
+      const sitzung = { id: `f${Date.now()}`, userId: MOCK_USER_ID, rundeId, ziel, dauerMinuten, startUm: new Date().toISOString(), beendetUm: null, ergebnis: null, teilen };
+      setFokusSitzungen((p) => [...p, sitzung]);
+      return { ok: true, sitzung };
+    },
+    fokusAbschliessen: async (id, ergebnis) => {
+      setFokusSitzungen((p) => p.map((x) => (x.id === id ? { ...x, ergebnis, beendetUm: new Date().toISOString() } : x)));
+      return { ok: true };
+    },
+    fokusNeuLaden: async () => {},
+  };
   const appData = baueMockAppData(MOCK_USER_ID, {
     ...overrides,
+    ...fokusFunktionen,
     istAdminKonto,
     isAdmin: istAdminKonto && !coacheeAnsicht,
     coacheeAnsicht,

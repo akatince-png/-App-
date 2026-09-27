@@ -37,6 +37,7 @@ export function useErrungenschaften(userId, quellen) {
       quellen.denkpauseErgebnisse,
       quellen.kognitivErgebnisse,
       quellen.eigeneGruppenLogs,
+      quellen.eigeneFokusSitzungen,
     ]
   );
 

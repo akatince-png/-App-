@@ -187,10 +187,11 @@ export const AIService = {
         "morgenroutine bzw. abendroutine (feste Schritt-Kette für die Morgen- bzw. Abendroutine),",
         "schichtplan (Schichtarbeit: Früh-/Spät-/Nachtschicht, wechselnde Wochen, andere Routine-Startzeiten je Schicht),",
         "atemroutine (feste Zeiten für Atemübungen, z. B. morgens 2 Min. zum Wachwerden),",
-        "tagebuch (die Person erzählt, wie ihr Tag war: Stimmung, wo, mit wem, Essen, Besonderes).",
+        "tagebuch (die Person erzählt, wie ihr Tag war: Stimmung, wo, mit wem, Essen, Besonderes),",
+        "fokus (die Person will JETZT eine Weile konzentriert an einer Sache arbeiten, z. B. '25 Minuten Steuer', 'hilf mir, mit der Wäsche anzufangen' – startet eine Runde 'Gemeinsam fokussieren').",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -340,6 +341,27 @@ export const AIService = {
     );
     if (!Array.isArray(data.zeiten) || !data.zeiten.length) throw new Error("Unerwartetes Format: 'zeiten' fehlt oder ist leer.");
     return data.zeiten;
+  },
+
+  /**
+   * Gemeinsam fokussieren (27.09.): woran und wie lange die Person jetzt
+   * arbeiten will. Ziel = ein kleiner, klarer erster Schritt.
+   */
+  async fokusAusChat({ verlauf, coachName }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App, der eine Fokus-Runde startet (still arbeiten, andere aus dem Team sehen, wer gerade auch dran ist).",
+        "Formuliere das Ziel als kurzen, konkreten ersten Schritt (höchstens 8 Wörter), z. B. 'Steuerbelege in einen Stapel legen'.",
+        "Dauer: 15, 25 oder 50 Minuten; ohne Angabe 25.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "ziel": string, "dauerMinuten": 15|25|50 }',
+      ],
+      verlauf,
+      "Fasse die Fokus-Runde jetzt als JSON zusammen, wie vereinbart."
+    );
+    const dauer = [15, 25, 50].includes(Number(data.dauerMinuten)) ? Number(data.dauerMinuten) : 25;
+    return { ziel: String(data.ziel || "").slice(0, 120), dauerMinuten: dauer };
   },
 
   /**

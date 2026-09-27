@@ -2,6 +2,7 @@ import React, { createContext, useContext } from "react";
 import { useShallowStableValue } from "../useShallowStableValue";
 import { useCoreData } from "./CoreDataContext";
 import { usePushNotifications } from "../../data/usePushNotifications";
+import { useFokusGemeinsam } from "../../data/useFokusGemeinsam";
 import { useAenderungsprotokoll } from "../../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../../data/useLexikon";
@@ -63,6 +64,8 @@ export function PlatformDataProvider({ children }) {
   const tagebuchData = useTagebuch(userId);
   // AKA-Kernprogramm in 4-Wochen-Etappen (25.09.).
   const kernData = useKernprogramm(userId, routinenData);
+  // Gemeinsam fokussieren / Body Doubling (27.09.).
+  const fokusGemeinsamData = useFokusGemeinsam(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -92,6 +95,7 @@ export function PlatformDataProvider({ children }) {
     ...atemSessionsData,
     ...tagebuchData,
     ...kernData,
+    ...fokusGemeinsamData,
   });
 
   return <PlatformDataContext.Provider value={value}>{children}</PlatformDataContext.Provider>;

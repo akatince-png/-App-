@@ -7280,6 +7280,17 @@ anlegen und die App zügig veröffentlichen.
 - Fokus-Timer: `src/data/nativeTimerHinweis.js` plant in der iPhone-App eine lokale Mitteilung zum
   Timer-Ende (`@capacitor/local-notifications`), im Browser ohne Wirkung.
 
+### Stand 27.09.: „Gemeinsam fokussieren“ (Body Doubling) – freigegeben, auf main
+- Migration 0117 (live, nur neue Tabellen): `fokus_runden` (Coach plant, `team_id` null = alle),
+  `fokus_sitzungen` (Ziel, Dauer, Ergebnis geschafft/teilweise/nicht, `teilen`). Team sieht nur geteilte
+  Sitzungen (`gleiches_team`). `_punkte_ereignisse`: 1 Punkt je Tag mit abgeschlossener Sitzung.
+- Logik `src/utils/fokusGemeinsam.js`, Hook `src/data/useFokusGemeinsam.js`, Seite `FokusGemeinsamView`
+  (Route `fokus`), Startseiten-Karte `ui/FokusGemeinsamKarte.jsx` (nur wenn etwas los ist) + Kachel,
+  Eintrag unter „Alle Pläne“. Gehirn: Kategorie `fokusGemeinsam` zählt zu „Fokus & Planung“.
+- Aka: Bereich `fokus` („25 Minuten Steuer“) startet eine Runde (`fokusAusChat`).
+- Ohne Kamera (Vorschlag C). Noch offen: Erinnerung 15 Min. vor einer Coach-Runde über
+  `send-due-reminders` (heute nur Einladung beim Planen).
+
 ### Was dafür konkret nötig ist (grober Fahrplan, keiner der Schritte ist begonnen)
 
 1. **Ein Mac mit Xcode** — zwingende Voraussetzung, iOS-Apps lassen sich

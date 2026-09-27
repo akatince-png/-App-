@@ -173,6 +173,16 @@ export const KATEGORIEN = [
     holeTage: (q) => kognitivTage(q.kognitivErgebnisse),
   },
   {
+    // Gemeinsam fokussieren / Body Doubling (27.09.): 1 Punkt je Tag mit
+    // mindestens einer abgeschlossenen Sitzung (auch "Heute nicht" – das
+    // Dranbleiben zählt), gleich gezählt in _punkte_ereignisse (Migration 0117).
+    key: "fokusGemeinsam",
+    label: "Gemeinsam fokussieren",
+    icon: "target",
+    grad: gradAus("#7C5CE0"),
+    holeTage: (q) => [...new Set((q.eigeneFokusSitzungen || []).filter((s) => s.ergebnis).map((s) => toLocalISODate(new Date(s.startUm))))],
+  },
+  {
     // Gruppenprotokoll (24.09.): eigene Gruppen-Gewohnheiten des Teams —
     // 1 Punkt je Tag und Baustein, wie jeder andere erledigte Eintrag
     // (gleich gezählt wie in _punkte_ereignisse auf dem Server).

@@ -77,6 +77,12 @@ export default function AkaErgebnis({ ergebnis }) {
       );
     case "atemroutine":
       return <Box>Atem-Zeiten angelegt: {daten.map((z) => `${z.uhrzeit} ${z.name} (${z.dauerMinuten} Min.)`).join(", ")}. Sie stehen jetzt unter „Als Nächstes“.</Box>;
+    case "fokus":
+      return (
+        <Box>
+          🎯 Fokus-Runde läuft: {daten.ziel || "deine Sache"} · {daten.dauerMinuten} Min. Handy weg, ich melde mich, wenn die Zeit um ist. Wer aus dem Team gerade dabei ist, siehst du unter „Gemeinsam fokussieren“.
+        </Box>
+      );
     case "tagebuch":
       return <Box>Im Tagebuch festgehalten: {tagebuchZeile(daten)}{daten.notiz ? " · 🔒 Notiz (privat)" : ""}</Box>;
     case "schichtplan":

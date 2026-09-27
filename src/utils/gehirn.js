@@ -14,7 +14,7 @@ export const REGIONEN = [
     label: "Fokus & Planung",
     emoji: "🎯",
     farbe: "#7C5CE0",
-    kategorien: ["gewohnheiten", "morgenroutine", "abendroutine", "tagesraetsel", "konzentration"],
+    kategorien: ["gewohnheiten", "morgenroutine", "abendroutine", "tagesraetsel", "konzentration", "fokusGemeinsam"],
     text: "Routinen und Denksport trainieren Planung, Arbeitsgedächtnis und Selbststeuerung — genau die Fähigkeiten, bei denen ADHS am meisten Unterstützung braucht.",
   },
   {
@@ -118,7 +118,7 @@ export const WIDGET_REGION = {
   tageslicht: "rhythmus",
 };
 // Bereiche ohne eigenen Balken: zählen über ihre erledigten Tage im Zeitraum.
-const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", tagesraetsel: "fokus", konzentration: "fokus", gruppe: "fokus" };
+const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", tagesraetsel: "fokus", konzentration: "fokus", gruppe: "fokus", fokusGemeinsam: "fokus" };
 
 // widgets: Balken-Daten des gewählten Zeitraums (dailyCount/dailyTotal je
 // Bereich, siehe utils/zeitraumFortschritt.js); tage: Länge des Zeitraums.

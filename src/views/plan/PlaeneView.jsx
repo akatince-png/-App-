@@ -79,6 +79,8 @@ const EIGENE_TAB_FARBE = {
 const ROUTINEN_EINTRAEGE = [
   { id: "routinen", icon: "target", label: "Gewohnheiten" },
   { id: "atemuebungen", icon: "wind", label: "Atemübungen" },
+  // Gemeinsam fokussieren / Body Doubling (27.09.).
+  { id: "fokus", icon: "target", label: "Gemeinsam fokussieren" },
   // Kontext-Tagebuch (25.09.) — jederzeit erreichbar, nicht nur abends.
   { id: "tagebuch", icon: "book", label: "Tagebuch" },
   // AKA-Kernprogramm (25.09.): Etappen, Pflicht-Bausteine, Sport.

@@ -5,6 +5,8 @@ import { toLocalISODate } from "../utils/dates";
 import { bibliotheksUebung } from "../utils/atemBibliothek";
 import { OPTIONEN as TAGEBUCH_OPTIONEN, autoWerte, tagebuchZeile } from "../utils/tagebuch";
 import { VORLAGEN, planErzeugen, plusTage, rollenZuordnung, wochenBeginn } from "../utils/schichtplan";
+import { sitzungEnde } from "../utils/fokusGemeinsam";
+import { timerHinweisPlanen } from "./nativeTimerHinweis";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -24,6 +26,7 @@ export const BEREICH_LABELS = {
   schichtplan: "Schichtplan übernehmen",
   atemroutine: "Atem-Zeiten anlegen",
   tagebuch: "Im Tagebuch festhalten",
+  fokus: "Fokus-Runde starten",
 };
 
 // Die eine Aktions-Logik von Aka (seit 23.09. der einzige Weg — es gibt
@@ -53,6 +56,7 @@ export function useUniversellerCoach() {
     atemZeitSpeichern,
     tagebuchSpeichern,
     tagebuchEintraege,
+    fokusStarten,
   } = useAppData();
   const appData = useAppData();
 
@@ -287,6 +291,13 @@ export function useUniversellerCoach() {
           aenderungVermerken({ kategorie: "atemuebung", itemName: "Atem-Routine", aktion: "hinzugefügt", detail: `Per Aka: ${z.uhrzeit} · ${u.name}` });
         }
         return { bereich: "atemroutine", daten: angelegt };
+      }
+      case "fokus": {
+        const f = await AIService.fokusAusChat({ verlauf, coachName });
+        const r = await fokusStarten({ ziel: f.ziel, dauerMinuten: f.dauerMinuten });
+        if (!r?.ok) throw new Error(r?.error || "Starten fehlgeschlagen.");
+        timerHinweisPlanen({ symbol: "🎯", name: r.sitzung.ziel || "Gemeinsam fokussieren", ende: sitzungEnde(r.sitzung) });
+        return { bereich: "fokus", daten: r.sitzung };
       }
       case "tagebuch": {
         const heute = toLocalISODate(new Date());
