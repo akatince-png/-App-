@@ -11,9 +11,13 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:all": "npm run build && npm run lint && npm run typecheck && npm test && npm run test:e2e"
+    "test:all": "npm run build && npm run lint && npm run typecheck && npm test && npm run test:e2e",
+    "ios:sync": "npm run build && npx cap sync ios",
+    "ios:open": "npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "@mediapipe/tasks-vision": "^1.0.1",
     "@sentry/react": "^10.74.0",
     "@supabase/supabase-js": "^2.110.7",
@@ -24,6 +28,7 @@
     "recharts": "^3.9.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
     "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

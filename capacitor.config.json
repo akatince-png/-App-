@@ -1,0 +1,9 @@
+{
+  "appId": "de.aka.app",
+  "appName": "AKA",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#1B2350"
+  }
+}
