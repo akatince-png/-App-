@@ -55,6 +55,7 @@ const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
 const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
+const StartTourView = lazyAnsicht(() => import("./views/onboarding/StartTourView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazyAnsicht(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
 const ZusatzprotokollErstellenView = lazyAnsicht(() => import("./views/onboarding/ZusatzprotokollErstellenView"));
@@ -65,7 +66,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "coaching", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "coaching", "tour", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -76,6 +77,9 @@ const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersic
 // aufgerufener Admin-Link darf eine Coachee nicht in eine Admin-Ansicht
 // bringen, die sie sowieso nicht sehen könnte (RLS blockt die Daten
 // serverseitig ohnehin, aber die Ansicht soll erst gar nicht aufblitzen).
+// Vorschau (27.09.): ?wochen=kacheln zeigt die 8 Wochen als Kacheln statt als Fahrplan.
+const tourDarstellung = () => (new URLSearchParams(window.location.search).get("wochen") === "kacheln" ? "kacheln" : "fahrplan");
+
 function istGueltigerView(view, isAdmin) {
   if (!view) return false;
   if (EINZEL_VIEWS.includes(view) || PLAENE_VIEW_IDS.includes(view) || ARCHIV_VIEW_IDS.includes(view)) return true;
@@ -402,8 +406,10 @@ export default function AuthenticatedApp() {
     screen = <TeamView onHome={() => setView("home")} />;
   } else if (view === "coach-chat") {
     screen = <CoachChatView onHome={() => setView("home")} />;
+  } else if (view === "tour") {
+    screen = <StartTourView onDone={() => setView("home")} darstellung={tourDarstellung()} />;
   } else if (view === "coaching") {
-    screen = <KernprogrammView onHome={() => setView("home")} />;
+    screen = <KernprogrammView onHome={() => setView("home")} onTour={() => setView("tour")} />;
   } else if (view === "tagebuch") {
     screen = <TagebuchView onHome={() => setView("home")} />;
   } else if (view === "schichtplan") {
@@ -490,7 +496,7 @@ export default function AuthenticatedApp() {
     <div className="mp-app-shell">
       <Belohnungsfenster />
       <MomentFrageHost />
-      <AkutModusGlobal sichtbar={view !== "home" && view !== "form"} />
+      <AkutModusGlobal sichtbar={view !== "home" && view !== "form" && view !== "tour"} />
       {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
       <div className="mp-app-main">
         {proband && (
@@ -537,13 +543,13 @@ export default function AuthenticatedApp() {
             Wrapper hier remountet dabei automatisch neu, das Auffangnetz
             setzt sich also von selbst zurück, ohne dass die App komplett neu
             geladen werden muss. */}
-        {view !== "form" && <ZusatzprotokollBanner />}
+        {view !== "form" && view !== "tour" && <ZusatzprotokollBanner />}
         <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
           <ErrorBoundary onReset={() => setView("home")}>
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
             {/* Aka — ein Assistent, zentral für jede Seite (ui/Aka.jsx). Das
                 Onboarding ("form") hat seine eigene geführte KI-Einrichtung. */}
-            {view !== "form" && <Aka view={view} />}
+            {view !== "form" && view !== "tour" && <Aka view={view} />}
           </ErrorBoundary>
         </div>
       </div>

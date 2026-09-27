@@ -51,6 +51,7 @@ export default function KernprogrammKarte({ onOeffnen }) {
         <div style={klein}>DEIN AKA-COACHING</div>
         <div style={{ fontWeight: 900, fontSize: 16, marginTop: 3 }}>🧭 Startet am {datumKurz(stand.geplant.start)} abends</div>
         <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4, lineHeight: 1.4 }}>Los geht&apos;s mit deiner ersten Abendroutine. Woche 1: {WOCHEN[1].text}</div>
+        <div style={{ marginTop: 10, display: "block", textAlign: "center", borderRadius: 14, padding: 11, fontWeight: 800, fontSize: 14, background: "#F4C542", color: "#1B2350" }}>Deine 8 Wochen ansehen ›</div>
       </button>
     );
   }

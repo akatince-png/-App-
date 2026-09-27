@@ -5,6 +5,7 @@ import SportBausteinFormular from "../ui/SportBausteinFormular";
 import MesswocheAuswertung from "../ui/MesswocheAuswertung";
 import { messTag } from "../utils/messwoche";
 import { EtappenBalken } from "../ui/KernprogrammKarte";
+import AchtWochenPlan from "../ui/AchtWochenPlan";
 import { cardBorder, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
@@ -16,7 +17,7 @@ const AMPEL_FARBE = { gruen: "#1E8E5A", gelb: "#C27A00", rot: "#E0352B", grau: "
 // Übersicht AKA-Coaching (#/coaching, 25.09., Vorschau freigegeben):
 // Etappen mit Gesprächen, Bausteine der letzten 7 Tage, alle Pflicht-
 // Bausteine mit der Woche, in der sie dazukommen, und die Sport-Einstellung.
-export default function KernprogrammView({ onHome }) {
+export default function KernprogrammView({ onHome, onTour }) {
   const appData = useAppData();
   const { kernStand: stand, kernEtappen = [], routineKernPausen = [], trainingWochenplan = [], kognitivErgebnisse = [], routineDurchlaeufe = [], routineSchritteAlle = [], trainingEintraege = [], routineSchrittAendern } = appData;
   const heute = toLocalISODate(new Date());
@@ -29,6 +30,19 @@ export default function KernprogrammView({ onHome }) {
       {!stand?.aktiv && !stand?.geplant && (
         <Card style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 13.5, lineHeight: 1.5 }}>Dein Coach startet dein Programm. Danach siehst du hier deine Etappen und Bausteine.</div>
+        </Card>
+      )}
+
+      {/* Die 8 Wochen auf einen Blick (27.09., Nutzerinnen-Wunsch). */}
+      {(stand?.aktiv || stand?.geplant) && (
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 8 }}>DEINE ERSTEN 8 WOCHEN</div>
+          <AchtWochenPlan darstellung={new URLSearchParams(window.location.search).get("wochen") === "kacheln" ? "kacheln" : "fahrplan"} aktuell={stand.aktiv ? stand.gesamtWoche : 0} start={kernEtappen[0]?.start || stand.geplant?.start || null} />
+          {onTour && (
+            <button type="button" className="mp-tap" onClick={onTour} style={{ marginTop: 10, width: "100%", border: `1.5px solid #1B2350`, background: "#fff", color: "#1B2350", borderRadius: 14, padding: 10, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+              ▶ So geht&apos;s – Tour nochmal ansehen
+            </button>
+          )}
         </Card>
       )}
 

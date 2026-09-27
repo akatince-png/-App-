@@ -109,7 +109,10 @@ function leseOverridesAusUrl() {
       const d = new Date(h.getFullYear(), h.getMonth(), h.getDate() + n);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     };
-    if (kern === "erhaltung") {
+    if (kern === "geplant") {
+      // ?kern=geplant: Start ist morgen abend (27.09., Tour-Vorschau).
+      overrides.kernEtappen = [{ id: "k1", nummer: 1, art: "einfuehrung", start: iso(1), ende: iso(28), status: "laufend" }];
+    } else if (kern === "erhaltung") {
       overrides.kernEtappen = [
         { id: "k1", nummer: 1, art: "einfuehrung", start: iso(-35), ende: iso(-8), status: "abgeschlossen", gespraechAm: iso(-7) },
         { id: "k2", nummer: 2, art: "erhaltung", start: iso(-7), ende: iso(20), status: "laufend" },
