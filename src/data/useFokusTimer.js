@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { timerHinweisLoeschen, timerHinweisPlanen } from "./nativeTimerHinweis";
 
 // Fokus-Timer (27.09., Tiimo-Idee "Countdown-Ring"): ein laufender Timer für
 // einen Punkt aus dem Tagesplan. Liegt im Browser-Speicher, damit er beim
@@ -23,6 +24,9 @@ function schreiben(t) {
     /* privates Fenster o. Ä. – Timer lebt dann nur im Speicher */
   }
   window.dispatchEvent(new CustomEvent(EREIGNIS, { detail: t }));
+  // In der iPhone-App: Mitteilung zum Timer-Ende, auch bei gesperrtem Handy.
+  if (t) timerHinweisPlanen(t);
+  else timerHinweisLoeschen();
 }
 
 export function useFokusTimer() {

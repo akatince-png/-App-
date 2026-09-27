@@ -4,14 +4,10 @@
 // pg_cron ausgelöst) ist als nächster Schritt geplant und wird eine eigene,
 // mit dem Service-Role-Key abgesicherte Variante dieser Sendefunktion nutzen.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import webpush from "npm:web-push@3.6.7";
+import { sendeAnGeraet } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
-
-webpush.setVapidDetails("mailto:hello@myprotocols.app", VAPID_PUBLIC_KEY ?? "", VAPID_PRIVATE_KEY ?? "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,24 +55,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const payload = JSON.stringify({ title: title || "AKA", body: body || "", url: url || "/" });
+    const inhalt = { title: title || "AKA", body: body || "", url: url || "/" };
 
     let versendet = 0;
     for (const sub of subs) {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          payload
-        );
-        versendet++;
-      } catch (err) {
-        console.error("Push fehlgeschlagen für Endpoint:", sub.endpoint, err);
-        // Abgelaufenes/ungültiges Abo (z. B. Browser-Daten gelöscht) — aufräumen,
-        // damit künftige Versuche nicht wieder daran scheitern.
-        if (err?.statusCode === 404 || err?.statusCode === 410) {
-          await userClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-        }
-      }
+      const ergebnis = await sendeAnGeraet(sub, inhalt);
+      if (ergebnis === "ok") versendet++;
+      // Abgelaufenes/ungültiges Abo (z. B. Browser-Daten gelöscht, App
+      // gelöscht) — aufräumen, damit künftige Versuche nicht daran scheitern.
+      else if (ergebnis === "ungueltig") await userClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
     }
 
     if (versendet === 0) {

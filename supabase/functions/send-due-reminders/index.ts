@@ -47,12 +47,10 @@
 //      heutigen Tag). Bleibt bewusst ein fester Wert (nicht Teil der
 //      15.08.-Vorgabe, die betraf nur den Vorab-Hinweis).
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import webpush from "npm:web-push@3.6.7";
+import { sendeAnGeraet } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 // Für den automatischen Spotify-Start bei Bettzeit unten — dieselben Werte
 // wie bei spotify-play/spotify-auth-callback, hier zusätzlich als Secret
@@ -62,8 +60,6 @@ const SPOTIFY_CLIENT_SECRET = Deno.env.get("SPOTIFY_CLIENT_SECRET");
 
 const VORLAUF_MINUTEN = 15;
 const NACHFASS_MINUTEN = 10;
-
-webpush.setVapidDetails("mailto:hello@myprotocols.app", VAPID_PUBLIC_KEY ?? "", VAPID_PRIVATE_KEY ?? "");
 
 // Liefert die aktuelle lokale Uhrzeit als "HH:MM" in der übergebenen
 // IANA-Zeitzone — Intl statt manueller Offset-Rechnung, damit Sommer-/
@@ -964,16 +960,9 @@ Deno.serve(async (req) => {
       if (!eintraege || eintraege.length === 0) continue;
       const titel = eintraege.length === 1 ? `${eintraege[0].icon} Erinnerung` : `🔔 ${eintraege.length} Erinnerungen`;
       const body = eintraege.map((e) => e.zeile).join(" · ");
-      const payload = JSON.stringify({ title: titel, body, url: "/" });
-      try {
-        await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } }, payload);
-        versendet++;
-      } catch (err) {
-        console.error("Push fehlgeschlagen für Endpoint:", sub.endpoint, err);
-        if (err?.statusCode === 404 || err?.statusCode === 410) {
-          await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-        }
-      }
+      const ergebnis = await sendeAnGeraet(sub, { title: titel, body, url: "/" });
+      if (ergebnis === "ok") versendet++;
+      else if (ergebnis === "ungueltig") await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
     }
 
     return new Response(JSON.stringify({ ok: true, faellig: faellig.size, versendet }), {

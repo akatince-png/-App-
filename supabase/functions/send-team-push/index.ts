@@ -12,15 +12,11 @@
 // Seit 24.09. auch für den Coach-Chat (coachee_nachrichten): art "coach"
 // (Admin → Person, öffnet #/coach-chat) und "an-coach" (Person → Admins).
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import webpush from "npm:web-push@3.6.7";
+import { sendeAnGeraet } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
-
-webpush.setVapidDetails("mailto:hello@myprotocols.app", VAPID_PUBLIC_KEY ?? "", VAPID_PRIVATE_KEY ?? "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -126,23 +122,13 @@ Deno.serve(async (req) => {
     }
 
     const kurz = text && text.length > 120 ? `${text.slice(0, 117)}…` : text;
-    const payload = JSON.stringify({
-      title: titel,
-      body: kurz || "hat dir eine Nachricht geschickt.",
-      url: ziel,
-    });
+    const inhalt = { title: titel, body: kurz || "hat dir eine Nachricht geschickt.", url: ziel };
 
     let versendet = 0;
     for (const sub of subs) {
-      try {
-        await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } }, payload);
-        versendet++;
-      } catch (err) {
-        console.error("Push fehlgeschlagen für Endpoint:", sub.endpoint, err);
-        if (err?.statusCode === 404 || err?.statusCode === 410) {
-          await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-        }
-      }
+      const ergebnis = await sendeAnGeraet(sub, inhalt);
+      if (ergebnis === "ok") versendet++;
+      else if (ergebnis === "ungueltig") await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
     }
 
     return new Response(JSON.stringify({ ok: true, versendet }), {

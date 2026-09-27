@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { VAPID_PUBLIC_KEY } from "../lib/pushConfig";
 import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
+import { APNS_PREFIX, gemerkterToken, istNativ, nativeAbmelden, nativeAnmelden, nativeBerechtigungDa, plattform } from "./nativePush";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -14,8 +15,11 @@ function urlBase64ToUint8Array(base64String) {
 // nur wenn die Seite vorher "Zum Home-Bildschirm hinzugefügt" wurde (iOS
 // 16.4+) bzw. im Browser installiert ist (Android/Desktop) und der Nutzer
 // die Berechtigung erteilt hat.
+// Seit 27.09. zusätzlich die iPhone-App (Capacitor): dort läuft Push über
+// Apple (APNs), siehe nativePush.js – gleiche Knöpfe, gleiche Tabelle.
 export function usePushNotifications(userId) {
-  const [unterstuetzt] = useState(() => typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window);
+  const [nativ] = useState(() => istNativ());
+  const [unterstuetzt] = useState(() => nativ || (typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window));
   const [aktiv, setAktiv] = useState(false);
   const [ladend, setLadend] = useState(false);
   const [fehler, setFehler] = useState(null);
@@ -24,6 +28,15 @@ export function usePushNotifications(userId) {
     if (!unterstuetzt || !userId) return;
     let cancelled = false;
     (async () => {
+      if (nativ) {
+        try {
+          const da = (await nativeBerechtigungDa()) && !!gemerkterToken();
+          if (!cancelled) setAktiv(da);
+        } catch {
+          /* Plugin nicht verfügbar – bleibt inaktiv */
+        }
+        return;
+      }
       try {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
@@ -35,13 +48,23 @@ export function usePushNotifications(userId) {
     return () => {
       cancelled = true;
     };
-  }, [unterstuetzt, userId]);
+  }, [unterstuetzt, userId, nativ]);
 
   const pushAktivieren = useCallback(async () => {
     if (!unterstuetzt) return { ok: false, error: "Push-Benachrichtigungen werden auf diesem Gerät/Browser nicht unterstützt." };
     setLadend(true);
     setFehler(null);
     try {
+      if (nativ) {
+        const token = await nativeAnmelden();
+        const { error } = await supabase
+          .from("push_subscriptions")
+          .upsert({ user_id: userId, endpoint: APNS_PREFIX + token, plattform: plattform(), p256dh: null, auth_key: null }, { onConflict: "endpoint" });
+        if (error) throw error;
+        setAktiv(true);
+        setLadend(false);
+        return { ok: true };
+      }
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         setLadend(false);
@@ -70,7 +93,7 @@ export function usePushNotifications(userId) {
       setFehler(err.message);
       return { ok: false, error: `Aktivieren fehlgeschlagen: ${err.message}` };
     }
-  }, [unterstuetzt, userId]);
+  }, [unterstuetzt, userId, nativ]);
 
   // Bug-Fix: der Löschvorgang in der DB wurde bisher nicht auf einen Fehler
   // geprüft — schlug er fehl, stand trotzdem "deaktiviert" in der Oberfläche,
@@ -80,6 +103,16 @@ export function usePushNotifications(userId) {
     if (!unterstuetzt) return { ok: true };
     setFehler(null);
     try {
+      if (nativ) {
+        const token = gemerkterToken();
+        if (token) {
+          const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", APNS_PREFIX + token);
+          if (error) throw error;
+        }
+        await nativeAbmelden();
+        setAktiv(false);
+        return { ok: true };
+      }
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
@@ -94,7 +127,7 @@ export function usePushNotifications(userId) {
       setFehler(err.message);
       return { ok: false, error: `Deaktivieren fehlgeschlagen: ${err.message}` };
     }
-  }, [unterstuetzt]);
+  }, [unterstuetzt, nativ]);
 
   const pushTestSenden = useCallback(async () => {
     setFehler(null);

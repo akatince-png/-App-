@@ -7264,6 +7264,22 @@ Anleitung für den Mac, App Store Connect und offene Punkte (APNs-Push, Diktiere
 Benachrichtigungen für den Timer): **`docs/APP-STORE.md`**. Die Nutzerin will Anfang Oktober das Apple-Konto
 anlegen und die App zügig veröffentlichen.
 
+### Stand 27.09.: Push in der iPhone-App fertig (wartet nur auf den Apple-Schlüssel)
+- Client: `src/data/nativePush.js` (Capacitor `@capacitor/push-notifications`), eingebunden in
+  `usePushNotifications.js` – gleiche Knöpfe wie Web-Push. Das Gerät steht in `push_subscriptions` mit
+  `endpoint = "apns:<token>"`, `plattform = "ios"` (Migration 0116, live: Spalte `plattform`,
+  `p256dh`/`auth_key` nullable mit Check für Web-Zeilen, Update-Policy für upsert).
+- Server: `supabase/functions/_shared/push.ts` (`sendeAnGeraet`) – Web-Push oder APNs (ES256-JWT per
+  WebCrypto, Production mit automatischem Sandbox-Rückfall, ungültige Tokens werden gelöscht). Genutzt von
+  `send-push`, `send-team-push`, `send-due-reminders` (alle drei am 27.09. neu ausgerollt; beim Deploy per MCP
+  **immer `_shared/push.ts` mitschicken**, Entrypoint `<name>/index.ts`).
+- Secrets `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY` setzt die Nutzerin selbst (Anleitung
+  `docs/APP-STORE.md`). Ohne sie werden iPhone-Geräte still übersprungen, Web-Push läuft unverändert.
+- iOS: `AppDelegate.swift` reicht den Token an Capacitor weiter, `App/App.entitlements` (aps-environment)
+  ist im Xcode-Projekt eingetragen.
+- Fokus-Timer: `src/data/nativeTimerHinweis.js` plant in der iPhone-App eine lokale Mitteilung zum
+  Timer-Ende (`@capacitor/local-notifications`), im Browser ohne Wirkung.
+
 ### Was dafür konkret nötig ist (grober Fahrplan, keiner der Schritte ist begonnen)
 
 1. **Ein Mac mit Xcode** — zwingende Voraussetzung, iOS-Apps lassen sich
