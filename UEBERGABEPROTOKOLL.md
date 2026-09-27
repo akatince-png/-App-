@@ -7291,6 +7291,8 @@ anlegen und die App zügig veröffentlichen.
 - Ohne Kamera (Vorschlag C). Coach-Runden: Einladung beim Planen + Erinnerung 15 Min. vorher und zum
   Start über `send-due-reminders` (v21, 27.09.).
 - 27.09.: Konto der Nutzerin für die Einstellungsphase auf Start 28.09. gesetzt (wie die Testkonten).
+- 27.09.: Wissensdatenbank (`coach_wissen`) um drei Einträge ergänzt: „AKA: Positionierung und Abgrenzung“,
+  „Body Doubling (Gemeinsam fokussieren)“, „Aufgaben zerlegen und Dauer schätzen (Zeitblindheit)“.
 
 ### Was dafür konkret nötig ist (grober Fahrplan, keiner der Schritte ist begonnen)
 
