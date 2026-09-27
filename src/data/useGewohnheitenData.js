@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { feuereBelohnung } from "../utils/belohnungBus";
 import { zaehleTageStreak } from "../utils/dates";
 
 // Nutzt weiterhin die routines/routine_logs-Tabellen (frühere "Routinen"-
@@ -41,6 +42,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
         uhrzeit: r.uhrzeit ? r.uhrzeit.slice(0, 5) : "",
         zielTage: r.ziel_tage ?? null,
         menge: r.menge || "",
+        dauerMin: r.dauer_min ?? null,
         akutFavorit: !!r.akut_favorit,
         hauptprotokollId: r.hauptprotokoll_id || null,
       }))
@@ -70,7 +72,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
       if (!name) return { ok: false, error: "Bitte einen Namen eingeben." };
       const { data, error } = await supabase
         .from("routines")
-        .insert({ user_id: userId, hauptprotokoll_id: hauptprotokollId || null, name, icon: neu.icon || "🌱", uhrzeit: neu.uhrzeit || null, ziel_tage: neu.zielTage || null, menge: neu.menge || "" })
+        .insert({ user_id: userId, hauptprotokoll_id: hauptprotokollId || null, name, icon: neu.icon || "🌱", uhrzeit: neu.uhrzeit || null, ziel_tage: neu.zielTage || null, menge: neu.menge || "", dauer_min: Number(neu.dauerMin) > 0 ? Number(neu.dauerMin) : null })
         .select()
         .single();
       if (error) {
@@ -79,7 +81,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
       }
       setGewohnheiten((prev) => [
         ...prev,
-        { id: data.id, name: data.name, icon: data.icon, uhrzeit: data.uhrzeit?.slice(0, 5) || "", zielTage: data.ziel_tage ?? null, menge: data.menge || "", hauptprotokollId: data.hauptprotokoll_id || null },
+        { id: data.id, name: data.name, icon: data.icon, uhrzeit: data.uhrzeit?.slice(0, 5) || "", zielTage: data.ziel_tage ?? null, menge: data.menge || "", dauerMin: data.dauer_min ?? null, hauptprotokollId: data.hauptprotokoll_id || null },
       ]);
       return { ok: true, id: data.id };
     },
@@ -129,6 +131,26 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   // Als persönliche Akut-Übung markieren (Teil 18) — wird im neuen
   // Akutmodus (AkutModusKarte.jsx) prominent vorgeschlagen, statt nur die
   // allgemeine KI-Antwort zu zeigen.
+  // Dauer für den Bild-Tagesplan (27.09.).
+  const gewohnheitDauerSetzen = useCallback(async (id, dauerMin) => {
+    const wert = Number(dauerMin) > 0 ? Number(dauerMin) : null;
+    let vorher;
+    setGewohnheiten((prev) =>
+      prev.map((g) => {
+        if (g.id !== id) return g;
+        vorher = g.dauerMin;
+        return { ...g, dauerMin: wert };
+      })
+    );
+    const { error } = await supabase.from("routines").update({ dauer_min: wert }).eq("id", id);
+    if (error) {
+      console.error(error);
+      setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, dauerMin: vorher } : g)));
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  }, []);
+
   const gewohnheitAkutFavoritUmschalten = useCallback(async (id, aktuellerWert) => {
     const neuerWert = !aktuellerWert;
     setGewohnheiten((prev) => prev.map((g) => (g.id === id ? { ...g, akutFavorit: neuerWert } : g)));
@@ -139,6 +161,8 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
     }
   }, []);
 
+  const gewohnheitenRef = useRef(gewohnheiten);
+  gewohnheitenRef.current = gewohnheiten;
   const toggleGewohnheitErledigt = useCallback(
     async (datum, gewohnheitId) => {
       const k = `${datum}__${gewohnheitId}`;
@@ -154,6 +178,11 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
           console.error(error);
           pendingErledigtRef.current[k] = aktuellerWert;
           setGewohnheitErledigt((prev) => ({ ...prev, [k]: aktuellerWert }));
+        } else {
+          // Spielcharakter (27.09.): auch Gewohnheiten/Alltagsaufgaben bekommen
+          // den Belohnungs-Moment wie Mahlzeiten und Routine-Schritte.
+          const g = gewohnheitenRef.current.find((x) => x.id === gewohnheitId);
+          feuereBelohnung({ text: `${g?.icon && g.icon !== "🌱" ? `${g.icon} ` : ""}„${g?.name || "Gewohnheit"}" erledigt`, icon: "target", punkte: 1 });
         }
       } else {
         // Bug-Fix (17.09., "Testlauf"-Nachkontrolle): das Entfernen des
@@ -226,6 +255,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
     gewohnheitHinzufuegen,
     gewohnheitEntfernen,
     gewohnheitZielAktualisieren,
+    gewohnheitDauerSetzen,
     gewohnheitAkutFavoritUmschalten,
     toggleGewohnheitErledigt,
     gewohnheitNotizen,

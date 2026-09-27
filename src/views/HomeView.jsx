@@ -36,6 +36,7 @@ import RanglisteKarte from "../ui/RanglisteKarte";
 import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
 import SchichtHeuteKarte from "../ui/SchichtHeuteKarte";
 import KernprogrammKarte from "../ui/KernprogrammKarte";
+import LaufenderTimerKarte from "../ui/TimerRing";
 import Top3Karte from "../ui/Top3Karte";
 import WochenCheckKarte from "../ui/WochenCheckKarte";
 import TeamKarte from "../ui/TeamKarte";
@@ -1041,6 +1042,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           nur im eigenen Konto. */}
       {/* AKA-Kernprogramm (25.09.): Etappe/Woche, Morgen-Startblock "Top 3",
           sonntags Wochen-Check in der Erhaltung — nur im eigenen Konto. */}
+      {/* Fokus-Timer aus dem Bild-Tagesplan läuft weiter (27.09.) */}
+      <LaufenderTimerKarte />
       {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} />}
       {proband === null && <Top3Karte />}
       {proband === null && <WochenCheckKarte />}

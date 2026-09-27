@@ -186,7 +186,13 @@ function leseOverridesAusUrl() {
   if (params.get("beispiel") === "1") {
     overrides.hormonPlan = [{ date: new Date(), name: "Elvanse", uhrzeit: "08:00", menge: "30 mg" }];
     overrides.supplemente = [{ id: "s1", name: "Vitamin D3", tageszeiten: ["morgens"], hinweis: "1 Kapsel zum Frühstück" }];
-    overrides.gewohnheiten = [{ id: "g1", name: "10 Minuten Spaziergang", uhrzeit: "12:30", wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true }];
+    overrides.gewohnheiten = [
+      { id: "g1", name: "10 Minuten Spaziergang", uhrzeit: "12:30", wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true },
+      // Bild-Tagesplan (27.09.): Gewohnheiten mit Symbol + Dauer.
+      { id: "g2", name: "Wäsche machen", icon: "🧺", uhrzeit: "09:30", dauerMin: 30, wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true },
+      { id: "g3", name: "Steuerunterlagen sortieren", icon: "🧾", uhrzeit: "", dauerMin: 25, wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true },
+    ];
+    overrides.routineEinstellungen = { morgen: { routine: "morgen", startZeit: "06:30" }, abend: { routine: "abend", startZeit: "21:30" } };
     overrides.routineSchritte = [
       { id: "r1", routine: "morgen", reihenfolge: 1, name: "Wasser trinken", dauerMin: 1 },
       { id: "r2", routine: "morgen", reihenfolge: 2, name: "Zähne putzen", dauerMin: 3 },

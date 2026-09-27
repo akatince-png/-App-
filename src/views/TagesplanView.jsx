@@ -21,6 +21,8 @@ import RoutineSchritteListe from "../ui/RoutineSchritteListe";
 import TrainingVorschau from "../ui/TrainingVorschau";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import DenkpauseNudge from "../ui/DenkpauseNudge";
+import BildTagesplan from "../ui/BildTagesplan";
+import LaufenderTimerKarte from "../ui/TimerRing";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -67,6 +69,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     zeitbloecke,
     routineSchritte,
     routineDurchlaeufe,
+    routineEinstellungen,
     routineSchrittErledigt,
     routineSchrittHinzufuegen,
     routineSchrittEntfernen,
@@ -96,6 +99,22 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const [feedbackKategorie, setFeedbackKategorie] = useState(null);
   const [trainingFehler, setTrainingFehler] = useState(null);
   const [trainingVorschau, setTrainingVorschau] = useState(null);
+  // Bild-Tagesplan (27.09.): "🖼️ Bild" als Standard, "☰ Liste" = bisherige Ansicht.
+  const [ansicht, setAnsichtState] = useState(() => {
+    try {
+      return localStorage.getItem("mp-tagesplan-ansicht") || "bild";
+    } catch {
+      return "bild";
+    }
+  });
+  const setAnsicht = (a) => {
+    setAnsichtState(a);
+    try {
+      localStorage.setItem("mp-tagesplan-ansicht", a);
+    } catch {
+      /* egal */
+    }
+  };
   // Ein-Tipp-Abhaken (UX-Review 23.09.): "Bestätigen" hakt sofort ab (inkl.
   // Belohnungsfenster, siehe skip*Feedback in den Daten-Hooks) und öffnet
   // danach nur noch die optionale Kurz-Rückmeldung (ui/SchnellFeedback.jsx).
@@ -357,6 +376,34 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const abendRoutineStatus = useMemo(
     () => routineTagesStatus("abend", selectedDateStr, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt }),
     [selectedDateStr, routineSchritte, routineDurchlaeufe, routineSchrittErledigt]
+  );
+
+  // Routinen als Blöcke im Bild-Tagesplan: Beginn aus den Routine-Einstellungen,
+  // Dauer = Summe der Schritte.
+  const routinenBloecke = useMemo(
+    () =>
+      [
+        ["morgen", "Morgenroutine", morgenRoutineStatus],
+        ["abend", "Abendroutine", abendRoutineStatus],
+      ]
+        .map(([r, name, status]) => {
+          const schritte = (routineSchritte || []).filter((x) => x.routine === r);
+          const start = routineEinstellungen?.[r]?.startZeit || "";
+          if (!schritte.length && !start) return null;
+          const dauer = schritte.reduce((sum, x) => sum + (Number(x.dauerMin) || 0), 0) || 15;
+          return {
+            key: `routine-${r}`,
+            kategorie: `${r}routine`,
+            routine: r,
+            name,
+            uhrzeit: String(start).slice(0, 5),
+            dauerMin: dauer,
+            detail: status.anzahlGesamt > 0 ? `${status.anzahlErledigt}/${status.anzahlGesamt} Schritte` : "Noch keine Schritte",
+            done: status.anzahlGesamt > 0 && status.anzahlErledigt >= status.anzahlGesamt,
+          };
+        })
+        .filter(Boolean),
+    [routineSchritte, routineEinstellungen, morgenRoutineStatus, abendRoutineStatus]
   );
 
   // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick
@@ -699,6 +746,46 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       )}
 
       {modus === "tag" && (
+        <div role="group" aria-label="Ansicht" style={{ display: "flex", gap: 4, marginBottom: 14, background: "#F1F2F6", borderRadius: 12, padding: 3 }}>
+          {[
+            ["bild", "🖼️ Bild"],
+            ["liste", "☰ Liste"],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              className="mp-tap"
+              aria-pressed={ansicht === id}
+              onClick={() => setAnsicht(id)}
+              style={{ flex: 1, border: "none", borderRadius: 10, padding: "8px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: ansicht === id ? "#fff" : "transparent", color: ansicht === id ? accentDark : textMuted, boxShadow: ansicht === id ? "0 2px 6px rgba(0,0,0,0.08)" : "none" }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {modus === "tag" && ansicht === "bild" && (
+        <>
+          {sameDay(selectedDate, new Date()) && (
+            <LaufenderTimerKarte
+              onFertig={(t) => {
+                const item = tagesItems.find((i) => i.key === t.key);
+                // Abhaken löst die Belohnung des jeweiligen Bereichs aus.
+                if (item && !item.done && item.onConfirm && item.kategorie !== "training") {
+                  item.onConfirm();
+                  return true;
+                }
+                return false;
+              }}
+            />
+          )}
+          <BildTagesplan items={tagesItems} routinen={routinenBloecke} heute={sameDay(selectedDate, new Date())} onRoutineStart={setAblaufRoutine} onTraining={setTrainingVorschau} />
+          {zeigeUebergangsDenkpause && <DenkpauseNudge text="Kurzer Denksport zwischendurch?" onDismiss={() => setDenkpauseVersteckt(true)} />}
+        </>
+      )}
+
+      {modus === "tag" && ansicht === "liste" && (
         <>
           {tagesItems.length === 0 && (
             <Card>

@@ -164,6 +164,15 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
   - **Kamera beim Training (Frage der Nutzerin 26.09.):** Es werden **keine Videos** aufgenommen oder gespeichert.
     Die Erkennung (MediaPipe, von Google, kostenlos, ohne Gemini, ohne Mengengrenze) läuft nur auf dem Handy.
     Gespeichert wird nur die gezählte Zahl (`satzGezaehlt`). Video-Nachweise siehe Punkt oben.
+- **Bild-Tagesplan + Timer-Ring (live seit 27.09., Freigabe der Nutzerin):**
+  - `ui/BildTagesplan.jsx` mit Logik in `utils/bildTagesplan.js` (+ Tests): Zeitleiste mit großen Symbolen, deren
+    Blockhöhe der Dauer folgt, rote Jetzt-Linie und Routinen als Blöcke. Umschalter „🖼️ Bild / ☰ Liste“ im Tagesplan
+    (Standard Bild, gemerkt im Browser).
+  - Timer: `data/useFokusTimer.js` (ein Timer, im Browser gespeichert) und `ui/TimerRing.jsx` („läuft gerade“ auf der
+    Startseite und im Tagesplan, +5 Min, ✓ Fertig hakt ab).
+  - Gewohnheiten haben eine Dauer (`routines.dauer_min`, Migration 0115) und mehr Symbole; Aka übernimmt die Dauer.
+  - **Spielcharakter:** Gewohnheiten zeigen jetzt beim Abhaken den Belohnungs-Moment (+1 Punkt, wie Mahlzeiten).
+    Ein fertiger Timer ohne Punkt wird als „Fokus-Zeit geschafft“ gefeiert.
 - **Bilder mit Menschen:** In der Vorstellung (und später anderswo) Illustrationen oder Bilder von Menschen,
   die gerade etwas tun oder die App erfolgreich nutzen. Im Beispiel 3 stehen Platzhalter-Figuren,
   die später durch echte Bilder bzw. Illustrationen ersetzt werden.
@@ -7247,6 +7256,13 @@ sinnvolle Wege, absteigend nach Aufwand:
 Nutzerin konkret gewünschten Verbesserungen (App-Store, eigene Sounds über
 APNs) mit dem kleinsten Umbau, ohne den bestehenden, funktionierenden
 Code wegzuwerfen.
+
+### Stand 27.09.: Capacitor ist vorbereitet
+`capacitor.config.json` (App-ID `de.aka.app`, bitte mit dem Apple-Konto abgleichen), iOS-Projekt `ios/App` (Capacitor 8,
+Swift Package Manager), Berechtigungstexte in `Info.plist`, Skripte `npm run ios:sync` / `ios:open`.
+Anleitung für den Mac, App Store Connect und offene Punkte (APNs-Push, Diktieren, Deep Links, lokale
+Benachrichtigungen für den Timer): **`docs/APP-STORE.md`**. Die Nutzerin will Anfang Oktober das Apple-Konto
+anlegen und die App zügig veröffentlichen.
 
 ### Was dafür konkret nötig ist (grober Fahrplan, keiner der Schritte ist begonnen)
 

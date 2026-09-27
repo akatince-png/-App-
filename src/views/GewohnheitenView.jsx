@@ -24,9 +24,11 @@ import { useSchlafplanBearbeitung } from "../ui/useSchlafplanBearbeitung";
 // Gewohnheiten sind Teal, passend zu den bunten Home-Mini-Widgets.
 const { text: accentDark } = KATEGORIE_META.gewohnheit;
 
-const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭"];
+const ICON_OPTIONEN = ["🌱", "🧘", "📖", "🚶", "✍️", "🎯", "☀️", "💤", "🥗", "🚭", "🧺", "🧹", "🛒", "🍳", "📞", "💻", "🧾", "🐕", "🪴", "🚿"];
+// Dauer für den Bild-Tagesplan (27.09.)
+const DAUER_OPTIONEN = [5, 10, 15, 20, 30, 45, 60, 90];
 
-const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", urzeitVon: "", urzeitBis: "", zielTage: "", menge: "" };
+const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", urzeitVon: "", urzeitBis: "", zielTage: "", menge: "", dauerMin: "" };
 
 function Fortschrittsbalken({ tage, ziel }) {
   const pct = ziel ? Math.min(100, Math.round((tage / ziel) * 100)) : 0;
@@ -37,7 +39,7 @@ function Fortschrittsbalken({ tage, ziel }) {
   );
 }
 
-function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielAendern, onAkutFavoritUmschalten, gesamtTage, aktuelleSerie }) {
+function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielAendern, onDauerAendern, onAkutFavoritUmschalten, gesamtTage, aktuelleSerie }) {
   const [zielEditOpen, setZielEditOpen] = useState(false);
   const [zielEntwurf, setZielEntwurf] = useState(g.zielTage ? String(g.zielTage) : "");
   const [zielGrund, setZielGrund] = useState("");
@@ -58,6 +60,19 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
               <div style={{ fontSize: 11, color: textMuted }}>
                 {g.urzeitVon && g.urzeitBis ? `${g.urzeitVon}–${g.urzeitBis} Uhr` : g.uhrzeit ? `${g.uhrzeit} Uhr` : ""}
               </div>
+            )}
+            {onDauerAendern && (
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: textMuted, marginTop: 2 }}>
+                ⏱
+                <select aria-label={`Dauer ${g.name}`} value={g.dauerMin || ""} onChange={(e) => onDauerAendern(g.id, e.target.value)} style={{ border: "none", background: "transparent", color: textMuted, fontSize: 11, fontFamily: "inherit", padding: 0 }}>
+                  <option value="">Dauer?</option>
+                  {DAUER_OPTIONEN.map((m) => (
+                    <option key={m} value={m}>
+                      {m} Min
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
           </div>
         </div>
@@ -149,6 +164,7 @@ export default function GewohnheitenView({ onHome }) {
     gewohnheitHinzufuegen,
     gewohnheitEntfernen,
     gewohnheitZielAktualisieren,
+    gewohnheitDauerSetzen,
     gewohnheitAkutFavoritUmschalten,
     toggleGewohnheitErledigt,
     gesamtTage,
@@ -489,6 +505,13 @@ export default function GewohnheitenView({ onHome }) {
           ))}
         </div>
 
+        <Label>Wie lange? (optional – für den Bild-Tagesplan und den Timer)</Label>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          {DAUER_OPTIONEN.map((m) => (
+            <Pill key={m} label={`${m} Min`} selected={Number(neu.dauerMin) === m} onClick={() => setNeu((p) => ({ ...p, dauerMin: Number(p.dauerMin) === m ? "" : m }))} />
+          ))}
+        </div>
+
         <Label>Menge / Umfang (optional)</Label>
         <TextInput value={neu.menge} onChange={(v) => setNeu((p) => ({ ...p, menge: v }))} placeholder="z. B. 20 Seiten, 10 Minuten" />
 
@@ -549,6 +572,7 @@ export default function GewohnheitenView({ onHome }) {
               onToggleHeute={() => handleToggleHeute(g)}
               onEntfernen={handleEntfernen}
               onZielAendern={handleZielAendern}
+              onDauerAendern={gewohnheitDauerSetzen}
               onAkutFavoritUmschalten={gewohnheitAkutFavoritUmschalten}
               gesamtTage={gesamtTage}
               aktuelleSerie={aktuelleSerie}

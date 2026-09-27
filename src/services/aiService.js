@@ -242,7 +242,7 @@ export const AIService = {
    * sich also direkt weiterreichen.
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string}} params
-   * @returns {Promise<{name: string, icon: string, menge: string, uhrzeit: string, urzeitVon: string, urzeitBis: string, zielTage: number|null}>}
+   * @returns {Promise<{name: string, icon: string, menge: string, uhrzeit: string, urzeitVon: string, urzeitBis: string, zielTage: number|null, dauerMin: number|null}>}
    */
   async gewohnheitAusChat({ verlauf, coachName }) {
     const data = await ausChatZusammenfassen(
@@ -254,7 +254,8 @@ export const AIService = {
         "Format exakt:",
         '{ "name": string, "icon": string (ein einzelnes passendes Emoji), "menge": string (z. B. "10 Seiten", leer wenn nicht genannt), ' +
           '"uhrzeit": string ("HH:MM" bei fester Uhrzeit, sonst leer), "urzeitVon": string, "urzeitBis": string (bei Zeitfenster statt fester Uhrzeit, sonst beide leer), ' +
-          '"zielTage": number|null (Zieltage bis die Gewohnheit etabliert ist, z. B. 21 oder 66 — null wenn nicht genannt/offen) }',
+          '"zielTage": number|null (Zieltage bis die Gewohnheit etabliert ist, z. B. 21 oder 66 — null wenn nicht genannt/offen), ' +
+          '"dauerMin": number|null (wie viele Minuten es dauert, z. B. 30 — null wenn nicht genannt) }',
       ],
       verlauf,
       "Fasse die oben besprochene Gewohnheit jetzt als JSON zusammen, wie vereinbart."

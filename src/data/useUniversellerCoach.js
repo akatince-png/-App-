@@ -82,6 +82,7 @@ export function useUniversellerCoach() {
           urzeitVon: g.urzeitVon || "",
           urzeitBis: g.urzeitBis || "",
           zielTage: g.zielTage ?? null,
+          dauerMin: g.dauerMin ?? null,
         });
         if (!result?.ok) throw new Error(result?.error || "Speichern fehlgeschlagen.");
         aenderungVermerken({
