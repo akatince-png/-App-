@@ -882,6 +882,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Gemeinsam fokussieren (27.09.): Coach-Runden 15 Min. vorher + Start --
+    // team_id null = alle Coachees, sonst nur das Team.
+    {
+      const jetztMs = Date.now();
+      const minute = (ms: number) => Math.floor(ms / 60000);
+      const { data: runden, error } = await admin
+        .from("fokus_runden")
+        .select("id, team_id, titel, start_um, dauer_minuten")
+        .gte("start_um", new Date(jetztMs - 60000).toISOString())
+        .lte("start_um", new Date(jetztMs + 16 * 60000).toISOString());
+      if (error) console.error("Abfrage fokus_runden fehlgeschlagen:", error);
+      for (const r of runden || []) {
+        const start = new Date(r.start_um).getTime();
+        const vorab = minute(start - 15 * 60000) === minute(jetztMs);
+        const jetztStart = minute(start) === minute(jetztMs);
+        if (!vorab && !jetztStart) continue;
+        let q = admin.from("profiles").select("id").eq("is_admin", false);
+        if (r.team_id) q = q.eq("team_id", r.team_id);
+        const { data: personen } = await q;
+        const name = r.titel || "Gemeinsam fokussieren";
+        for (const m of personen || []) {
+          if (!nutzerInfo.has(m.id)) continue;
+          merken(m.id, "🎯", vorab ? `${name} in 15 Min. (${r.dauer_minuten} Min.)` : `${name} startet jetzt – mach mit!`);
+        }
+      }
+    }
+
     // --- Workout-Flow: Zeitplan mit Wochentagen (workflow_plaene) ---------
     // Wie Training/Ernährung ein echter Wochenplan (wochentage[] + uhrzeit),
     // zusätzlich mit optionalem Gültigkeits-Zeitraum (gueltig_von/

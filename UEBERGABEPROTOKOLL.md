@@ -7288,8 +7288,9 @@ anlegen und die App zügig veröffentlichen.
   (Route `fokus`), Startseiten-Karte `ui/FokusGemeinsamKarte.jsx` (nur wenn etwas los ist) + Kachel,
   Eintrag unter „Alle Pläne“. Gehirn: Kategorie `fokusGemeinsam` zählt zu „Fokus & Planung“.
 - Aka: Bereich `fokus` („25 Minuten Steuer“) startet eine Runde (`fokusAusChat`).
-- Ohne Kamera (Vorschlag C). Noch offen: Erinnerung 15 Min. vor einer Coach-Runde über
-  `send-due-reminders` (heute nur Einladung beim Planen).
+- Ohne Kamera (Vorschlag C). Coach-Runden: Einladung beim Planen + Erinnerung 15 Min. vorher und zum
+  Start über `send-due-reminders` (v21, 27.09.).
+- 27.09.: Konto der Nutzerin für die Einstellungsphase auf Start 28.09. gesetzt (wie die Testkonten).
 
 ### Was dafür konkret nötig ist (grober Fahrplan, keiner der Schritte ist begonnen)
 
