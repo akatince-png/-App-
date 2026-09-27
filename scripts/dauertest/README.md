@@ -94,3 +94,17 @@ AKA_TEST_PW='<pw>' node scripts/dauertest/adminlauf.mjs
 6. **Bericht schreiben**: `docs/dauertest/<datum>.md` mit Kurzfazit, Befunden (Bug oder UX) und Zahlenverlauf (Punkte, Serie, Level, Einträge). Nach `main` pushen (reiner Doku-Commit).
 7. **Echte Bugs** (Absturz, falsche Daten): klein und eindeutig → beheben wie jede Änderung (Feature-Branch, volle Testkette, dann `main`). Größer oder unklar → nur im Bericht festhalten und der Nutzerin melden.
 8. Keine Daten des Testkontos löschen oder „aufräumen“. Genau diese Daten sind der Langzeittest.
+
+## Seit 28.09.: zwei Läufe am Tag (Nutzerinnen-Wunsch 27.09.)
+
+Vorher lief alles abends – auch die Morgenroutine. Das ergab unrealistische
+Hinweise („Morgenroutine meist erst 21:30“) und absurde Coach-Chats. Jetzt:
+
+- **Morgenlauf 07:04 (Berlin):** `AKA_TEIL=morgen` – nur die Morgenroutine.
+  Routine „AKA Dauertest – Morgenlauf“ (trig_01LL9UxEDG916yPGyDYLAfLU).
+- **Abendlauf 21:15 (Berlin, Sommerzeit):** `AKA_TEIL=abend` – alles außer der
+  Morgenroutine (Tagesplan ohne die Morgenroutine-Gruppe, Abendroutine, Wasser,
+  Rätsel, Quests, Team, Ansichten) + Admin-Livetest + Bericht.
+- `AKA_NUR_TAGESPLAN=1`: nur den Tagesplan nachholen (z. B. wenn er im Lauf leer blieb).
+- Der Tagesplan startet in der Bild-Ansicht; das Skript fotografiert sie (02a) und schaltet auf „☰ Liste“.
+- Am 24.10. beide Routinen deaktivieren, falls der Test nicht verlängert wird.

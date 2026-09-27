@@ -50,6 +50,12 @@ const NUR_ANSICHTEN = process.env.AKA_NUR_ANSICHTEN === "1";
 // Nachholen nach einem Skriptfehler im Tagesplan (27.09.): nur anmelden,
 // Tagesplan abhaken, Startseite ansehen – keine doppelten Wasser-/Licht-Einträge.
 const NUR_TAGESPLAN = process.env.AKA_NUR_TAGESPLAN === "1";
+// Zwei Läufe am Tag (27.09., Nutzerin: Testdaten sollen realistisch sein –
+// abends erledigte Morgenroutinen erzeugten absurde "meist erst 21:30"-
+// Hinweise und Chats): AKA_TEIL=morgen → nur die Morgenroutine (früh am
+// Morgen laufen lassen), AKA_TEIL=abend → alles außer der Morgenroutine.
+// Ohne AKA_TEIL wie bisher alles in einem Lauf.
+const TEIL = process.env.AKA_TEIL || "alles";
 const auslassen = (name) => {
   let h = tagIndex * 31;
   for (const c of `${EMAIL}|${name}`) h = (h * 33 + c.charCodeAt(0)) % 1000003;
@@ -170,7 +176,7 @@ try {
   await foto("01-home-vorher");
 
   if (!NUR_ANSICHTEN) {
-  if (!NUR_TAGESPLAN) {
+  if (!NUR_TAGESPLAN && TEIL !== "morgen") {
   // 1b) Coach-Chat (seit 24.09.): Hinweis "Dein Coach hat geschrieben" oben
   //     auf der Startseite → Chat öffnen, mit einer Schnellantwort antworten
   //     (mit demselben Fleiß wie beim Abhaken).
@@ -234,7 +240,7 @@ try {
     await listeKnopf.click();
     await warte(600);
   }
-  for (const gruppe of ["🌅 Morgenroutine", "🌙 Abendroutine"]) {
+  for (const gruppe of TEIL === "abend" ? ["🌙 Abendroutine"] : ["🌅 Morgenroutine", "🌙 Abendroutine"]) {
     const g = page.getByText(gruppe, { exact: true }).first();
     if (await g.isVisible().catch(() => false)) {
       await g.click();
@@ -245,7 +251,7 @@ try {
   const jetzt = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" }).format(new Date());
   const erledigt = [];
   const ausgelassen = [];
-  if (!PAUSENTAG) {
+  if (!PAUSENTAG && TEIL !== "morgen") {
     const bearbeitet = new Set();
     for (let runde = 0; runde < 25; runde++) {
       const knoepfe = await page.getByRole("button", { name: "Bestätigen", exact: true }).all();
@@ -278,7 +284,7 @@ try {
   }
   // Training (seit 24.09.): fällige Trainings über "Training starten" im
   // Live-Workout durchklicken (Knöpfe bis zum Ende/Speichern).
-  if (!PAUSENTAG) {
+  if (!PAUSENTAG && TEIL !== "morgen") {
     for (let t = 0; t < 2; t++) {
       const start = page.getByRole("button", { name: "Training starten" }).first();
       if (!(await start.isVisible().catch(() => false))) break;
@@ -320,7 +326,7 @@ try {
   await foto("03-tagesplan-nachher");
 
   // 3) Morgenroutine einmal komplett durchlaufen (außer Pausentag)
-  if (!PAUSENTAG && !NUR_TAGESPLAN) {
+  if (!PAUSENTAG && !NUR_TAGESPLAN && TEIL !== "abend") {
     await geheZu("routinen");
     const start = page.getByText("▶️ Morgenroutine starten").first();
     if (await start.isVisible().catch(() => false)) {
@@ -341,7 +347,7 @@ try {
     }
   }
 
-  if (!NUR_TAGESPLAN) {
+  if (!NUR_TAGESPLAN && TEIL !== "morgen") {
   // 4) Trinken: 2–4 Gläser (+200 ml) in der Hydration-Ansicht
   await geheZu("hydration");
   const schlucke = PAUSENTAG ? 0 : 2 + (tagIndex % 3);
@@ -482,7 +488,7 @@ try {
   bericht.homeText = (await text()).slice(0, 1500);
 
   // 8) Alle Bereiche einmal öffnen (Absturz-/Leer-/Fehler-Check)
-  const ansichten = NUR_TAGESPLAN ? [] : [
+  const ansichten = NUR_TAGESPLAN || TEIL === "morgen" ? [] : [
     "tagesplan", "routinen", "atemuebungen", "tageslicht", "hydration", "schlaf", "bildschirmzeit", "ernaehrung", "training",
     "supplemente", "medikamente", "wochenuebersicht", "morgenroutine", "abendroutine", "verlauf", "archiv", "statistik",
     "erfolge", "tagebuch", "profil", "mehr", "lexikon", "team", "denksport",
