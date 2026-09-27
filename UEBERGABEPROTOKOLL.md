@@ -110,10 +110,20 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
       fällige Bausteine, Pflicht-Schritte und Bilanz) und eine Notiz nur für den Coach.
     - Logik mit Tests in `utils/programme.js`, Speichern in `data/programmeAdmin.js`.
   - Noch nicht gebaut: weitere Programme (neue Zeile in `programme` + eigener Inhalt), erst wenn welche anstehen.
+  - **Video-Nachweise (gebaut 27.09., Migration 0113, live):** Die Knöpfe „🎥 Video-Nachweis“ sitzen beim Training
+    (während eines Satzes), bei angenommenen Quests und bei jedem Baustein im Gruppenprotokoll
+    (`ui/VideoNachweis.jsx`). Vor der Aufnahme läuft ein großer Countdown 5-4-3-2-1 (Nutzerin: „damit die Leute
+    keine unnötigen Bewegungen machen“). Die Aufnahme dauert höchstens 20 Sek., ohne Ton, 640×480, ca. 800 kbit/s
+    (≈ 2 MB). Danach „Nochmal“ oder „An Coach senden“. Speicherort: privater Bucket `nachweise/<user_id>/…`,
+    Tabelle `video_nachweise`. **Nur der Coach** sieht und entscheidet (Coach-Übersicht →
+    „🎥 Video-Nachweise: N warten auf dich“ → Ansehen → „✓ Bestätigen“ / „Passt nicht“). Danach wird das
+    Video sofort gelöscht, der Eintrag bleibt. Unbestätigte Videos löscht die Edge Function
+    `nachweise-aufraeumen` nach 7 Tagen (pg_cron täglich 3:17 UTC, Geheimnis in `cron_konfig`, am 27.09.
+    live geprüft: Antwort 200). Code: `data/videoNachweise.js`, `utils/videoNachweis.js` (+ Tests),
+    `views/admin/NachweiseCoach.jsx`, E2E `e2e/video-nachweis.spec.js` (Fake-Kamera).
   - **Kamera beim Training (Frage der Nutzerin 26.09.):** Es werden **keine Videos** aufgenommen oder gespeichert.
     Die Erkennung (MediaPipe, von Google, kostenlos, ohne Gemini, ohne Mengengrenze) läuft nur auf dem Handy.
-    Gespeichert wird nur die gezählte Zahl (`satzGezaehlt`). Video-Nachweise für Quests/Gruppen wären ein
-    eigenes Feature (kurze Clips, Speicher bei Supabase, automatisches Löschen nach Bestätigung). Das ist noch nicht entschieden.
+    Gespeichert wird nur die gezählte Zahl (`satzGezaehlt`). Video-Nachweise siehe Punkt oben.
 - **Bilder mit Menschen:** In der Vorstellung (und später anderswo) Illustrationen oder Bilder von Menschen,
   die gerade etwas tun oder die App erfolgreich nutzen. Im Beispiel 3 stehen Platzhalter-Figuren,
   die später durch echte Bilder bzw. Illustrationen ersetzt werden.
@@ -146,7 +156,7 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   - Öffentliche Registrierung gesperrt (Supabase „Allow new users to sign up“ = aus, geprüft). Konten nur über die Admin-Funktionen.
   - Trigger-Funktionen gehärtet (0099). Beim Passwortwechsel ist das alte Passwort nötig.
 - **Tests:**
-  - 287 Unit-Tests, 92 E2E-Tests (Stand 26.09. abends).
+  - 290 Unit-Tests, 93 E2E-Tests (Stand 27.09.).
   - Täglicher Live-Dauertest (Routine `trig_01AsxkNWc7EU8foQz3wH131u`, 19:15 UTC): 4 Testpersonen in 2 Teams (Sonne vs. Mond) bis 24.10., dazu der Admin-Livetest `scripts/dauertest/adminlauf.mjs` mit `claude.admintest@example.com`.
 
 ### Routine-Feier (25.09., Rückmeldung der Nutzerin)

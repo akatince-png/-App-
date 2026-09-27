@@ -16,6 +16,7 @@ import ErnaehrungCoach from "./ErnaehrungCoach";
 import { persoenlichSpeichern, programmEinstellen, programmFortsetzen, programmPausieren, programmStarten, programmeUndTeilnahmenLaden, teilnahmeSetzen, wiederholungZuruecknehmen, wocheWiederholen } from "../../data/programmeAdmin";
 import { etappenVerschieben } from "../../utils/programme";
 import { ProgrammeLeiste, ProgrammePerson } from "./ProgrammeCoach";
+import NachweiseCoach from "./NachweiseCoach";
 import { datumKurz, kernKurztext, zeileZuEtappe } from "../../utils/kernprogramm";
 import { isoTag, planFuer, plusTage, puenktlichkeitJeVariante, zeileZuPlantag, zeileZuVariante } from "../../utils/schichtplan";
 
@@ -239,6 +240,8 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
           </button>
         ))}
       </div>
+
+      <NachweiseCoach namen={Object.fromEntries(probanden.map((p) => [p.id, p.vorname || p.email]))} />
 
       <ProgrammeLeiste
         personen={gefiltert}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { VideoNachweisKnopf } from "./VideoNachweis";
 import Profilbild from "./Profilbild";
 import { cardBorder, danger, hexZuRgba, logoVerlauf, nachtSchatten, nachtVerlauf, textMuted } from "./theme";
 import { KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META } from "../utils/dayItems";
@@ -127,6 +128,7 @@ export default function GruppenprotokollKarte({ gp, userId, onUmschalten, darfAb
               ) : (
                 <div style={{ fontSize: 11.5, color: k.text, opacity: 0.8 }}>{b.art === "eigen" ? "noch niemand" : AUTO_HINWEIS[b.art]}</div>
               )}
+              {darfAbhaken && userId && !gp.abgelaufen && <VideoNachweisKnopf art="gruppe" bezugId={`${gp.id}:${b.id}`} titel={`${gp.name}: ${b.name}`} label="🎥 Nachweis" style={{ fontSize: 12, color: k.text }} />}
             </div>
             {b.art === "eigen" && darfAbhaken && userId && !gp.abgelaufen ? (
               <button

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, TextArea, TextInput, PrimaryButton } from "./primitives";
 import { danger, success, textMain, textMuted } from "./theme";
+import { VideoNachweisKnopf } from "./VideoNachweis";
 
 // Freiwillige Sonderaufgaben von der Coach (16.08., Nutzerinnen-Vorgabe:
 // "sone Quest, sone Sonderaufgabe an meine Coachees erteilen zu können") —
@@ -125,6 +126,7 @@ function QuestZeile({ quest, onFortschritt }) {
             </div>
           )}
           <PrimaryButton onClick={() => setOffen(true)}>Quest abschließen</PrimaryButton>
+          <VideoNachweisKnopf art="quest" bezugId={quest.id} titel={quest.titel} style={{ alignSelf: "center" }} />
         </div>
       ) : (
         <div style={{ marginTop: 10 }}>

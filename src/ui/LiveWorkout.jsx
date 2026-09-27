@@ -4,6 +4,7 @@ import ViewHeader from "./ViewHeader";
 import Timer from "./Timer";
 import SatzFrage from "./SatzFrage";
 import KameraZaehler from "./KameraZaehler";
+import { VideoNachweisKnopf } from "./VideoNachweis";
 import { kameraUebungFuer } from "../utils/wiederholungZaehler";
 import { naechstesMalHinweis } from "../utils/trainingSaetze";
 import NumberWheelField from "./NumberWheelField";
@@ -325,6 +326,10 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                             📷 Mit Kamera zählen
                           </button>
                         )}
+                        {/* Video-Nachweis (27.09.): mit Countdown, nur der Coach sieht es. */}
+                        <div>
+                          <VideoNachweisKnopf key={`${uebungIndex}-${satzAktuell}`} art="training" bezugId={session?.id} titel={`${aktuelleUebung.name} · Satz ${satzAktuell}`} label="🎥 Video-Nachweis aufnehmen" style={{ marginTop: 6, fontSize: 13.5 }} />
+                        </div>
                       </>
                     )}
                   </>
