@@ -6,7 +6,7 @@ import { cardBorder, textMain, textMuted } from "./theme";
 // bewusst zurück zu `input[type="time"]`, nur einheitlich größer gestylt
 // statt der kleinen Standardgröße. Gleicher `value`/`onChange(string)`-
 // Vertrag wie zuvor, also an allen bisherigen Einsatzstellen austauschbar.
-export default function TimeWheelField({ value, onChange, ariaLabel }) {
+export default function TimeWheelField({ value, onChange, ariaLabel, kompakt = false }) {
   const [fokussiert, setFokussiert] = useState(false);
   return (
     <input
@@ -20,13 +20,13 @@ export default function TimeWheelField({ value, onChange, ariaLabel }) {
       style={{
         width: "100%",
         boxSizing: "border-box",
-        minHeight: 56,
-        padding: "14px 18px",
+        minHeight: kompakt ? 48 : 56,
+        padding: kompakt ? "10px 8px" : "14px 18px",
         borderRadius: 16,
         border: `1.5px solid ${fokussiert ? textMain : cardBorder}`,
         background: "#FAFBFA",
         color: value ? textMain : textMuted,
-        fontSize: 18,
+        fontSize: kompakt ? 16 : 18,
         fontWeight: 700,
         outline: "none",
       }}

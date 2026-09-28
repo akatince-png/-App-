@@ -486,20 +486,20 @@ function EinsaetzeEingabe({ bloecke, onChange, label }) {
                 {pause != null ? `☕ Pause ${Math.floor(pause / 60) ? `${Math.floor(pause / 60)} Std. ` : ""}${pause % 60 ? `${pause % 60} Min.` : ""}`.trim() : "☕ Pause"} · {i + 1}. Einsatz
               </div>
             )}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", alignItems: "center", gap: 6, marginTop: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr 22px", alignItems: "center", gap: 4, marginTop: 8 }}>
               <div style={{ minWidth: 0 }}>
-                <TimeWheelField value={b.von} onChange={(v) => setze(i, "von", v)} ariaLabel={`${label} von${zusatz}`} />
+                <TimeWheelField value={b.von} onChange={(v) => setze(i, "von", v)} ariaLabel={`${label} von${zusatz}`} kompakt />
               </div>
               <span>–</span>
               <div style={{ minWidth: 0 }}>
-                <TimeWheelField value={b.bis} onChange={(v) => setze(i, "bis", v)} ariaLabel={`${label} bis${zusatz}`} />
+                <TimeWheelField value={b.bis} onChange={(v) => setze(i, "bis", v)} ariaLabel={`${label} bis${zusatz}`} kompakt />
               </div>
               {i > 0 ? (
-                <button type="button" aria-label={`${i + 1}. Einsatz entfernen`} onClick={() => onChange(bloecke.filter((_, k) => k !== i))} style={{ border: "none", background: "none", fontSize: 18, color: textMuted, cursor: "pointer", padding: 4 }}>
+                <button type="button" aria-label={`${i + 1}. Einsatz entfernen`} onClick={() => onChange(bloecke.filter((_, k) => k !== i))} style={{ border: "none", background: "none", fontSize: 16, color: textMuted, cursor: "pointer", padding: 0 }}>
                   ✕
                 </button>
               ) : (
-                <span style={{ width: 26 }} />
+                <span />
               )}
             </div>
           </div>
