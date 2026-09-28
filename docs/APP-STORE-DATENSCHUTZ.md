@@ -25,7 +25,7 @@ Ziel der Nutzerin: Antrag bei Apple Mitte der Woche ab 05.10.2026. Hier steht, w
    Solange dort noch `[ … ]` steht, **nicht** einreichen.
 2. **Texte prüfen lassen** (Anwalt/Datenschutz), besonders wegen Gesundheitsdaten.
 3. **Auftragsverarbeitungsverträge (AVV/DPA)** abschließen bzw. akzeptieren: Supabase, Vercel, Google (Gemini, Text-to-Speech), Groq. Meist als Online-Formular im jeweiligen Konto.
-4. **Freigabe für die Datenbank-Änderung** (Migration 0120: drei neue Spalten in `profiles`) und das Einspielen der Edge Function `konto-loeschen` – ich spiele beides nach deinem Ja ein.
+4. ~~Freigabe Datenbank-Änderung und Edge Function `konto-loeschen`~~ – erledigt 28.09.
 5. **Test-Zugang für Apples Prüfer:** ein eigenes Coachee-Konto mit Beispieldaten (Einwilligung vorab erteilt), Zugangsdaten gibst **du** in App Store Connect unter „App-Prüfung“ ein – nie in den Chat.
 6. **Testkonten aus Ranglisten nehmen** (Go-Live-Checkliste A5), damit der Prüfer keine Fantasie-Teams sieht.
 7. Optional, aber empfohlen: **Supabase Pro** (tägliche Sicherungen) und **eigener E-Mail-Versand (SMTP)** für Einladungen.
