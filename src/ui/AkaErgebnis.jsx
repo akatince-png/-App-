@@ -87,6 +87,11 @@ export default function AkaErgebnis({ ergebnis }) {
       return (
         <Box>
           🗓️ Im Kalender „Mein Alltag“: {daten.map((e) => `${e.titel} ${e.datum ? e.datum.split("-").reverse().join(".") : e.wochentage.join(", ")} ${e.start}–${e.ende}`).join(" · ")}
+          {ergebnis.konflikte?.length > 0 && (
+            <div data-aka-konflikt style={{ marginTop: 6 }}>
+              ⚠️ Achtung: {ergebnis.konflikte.map((k) => `„${k.eintrag}“ überschneidet sich mit ${k.mit} (${k.tag} ${String(Math.floor(k.von / 60)).padStart(2, "0")}:${String(k.von % 60).padStart(2, "0")})`).join("; ")}. Sag mir eine andere Zeit, oder tippe den Eintrag im Kalender an und ändere ihn.
+            </div>
+          )}
         </Box>
       );
     case "tagebuch":

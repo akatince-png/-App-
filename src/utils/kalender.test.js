@@ -85,3 +85,26 @@ describe("Mein Alltag im Gehirn", () => {
     expect(g.regionen.find((r) => r.key === "ruhe").ladung).toBeGreaterThan(0);
   });
 });
+
+describe("Überschneidungen", () => {
+  it("Wäsche in der Arbeitszeit wird erkannt, Supplement und kurzer Spaziergang nicht", async () => {
+    const { konflikte, konflikteFuerEintrag, bloeckeFuerTag } = await import("./kalender");
+    const bl = [
+      { key: "arbeit", start: 510, ende: 990, art: "arbeit", titel: "Arbeit" },
+      { key: "waesche", start: 570, ende: 600, art: "gewohnheit", titel: "Wäsche" },
+      { key: "spazier", start: 750, ende: 760, art: "gewohnheit", titel: "Spaziergang" },
+      { key: "d3", start: 480, ende: 490, art: "supplement", titel: "D3" },
+    ];
+    const k = konflikte(bl);
+    expect(k.get("waesche").map((x) => x.titel)).toEqual(["Arbeit"]);
+    expect(k.has("spazier")).toBe(false);
+    expect(k.has("d3")).toBe(false);
+
+    const eintraege = [{ id: 1, bereich: "arbeit", titel: "Arbeit", start: "08:30", ende: "16:30", wochentage: ["Mo", "Di"] }];
+    const fuer = (d) => bloeckeFuerTag(d, { alltagEintraege: eintraege });
+    const mo = new Date(2026, 8, 28);
+    expect(konflikteFuerEintrag({ bereich: "haushalt", titel: "Wäsche", start: "09:30", ende: "10:00", wochentage: ["Di"] }, fuer, mo).map((t) => [t.titel, t.tag])).toEqual([["Arbeit", "Di"]]);
+    expect(konflikteFuerEintrag({ bereich: "haushalt", titel: "Wäsche", start: "18:00", ende: "18:30", wochentage: ["Di"] }, fuer, mo)).toEqual([]);
+    expect(konflikteFuerEintrag({ id: 1, bereich: "arbeit", titel: "Arbeit", start: "08:30", ende: "16:30", wochentage: ["Mo"] }, fuer, mo)).toEqual([]);
+  });
+});

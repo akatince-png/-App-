@@ -201,6 +201,22 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Druck/PDF mit Auswahl + Überschneidungs-Hinweise (28.09. abends, Nutzerin)
+- **Druck/PDF (Wochenübersicht → „🖨️ Druck / PDF zusammenstellen“):** 1. Was soll drauf? Vorlagen „🩺 Nur Gesundheit“
+  (Standard) / „🗓️ Kompletter Wochenplan“ plus einzeln an/aus: Gesundheit (Medikation, Supplemente, Training,
+  Ernährung, Wasser, Tageslicht, Schlaf, Routinen, Gewohnheiten, Bildschirmzeit) und Alltag (Arbeit, Haushalt, Hobby,
+  Me-Time, Termine, Freunde & Familie, eigene Bereiche, Projekte). 2. Welche Teile? (Wochenplan, Dosierintervalle,
+  Fortschritt, Wochenverlauf, Änderungen). 3. Zeitraum. Dann **Vorschau** (dasselbe Dokument verkleinert) →
+  „⬇️ PDF herunterladen“ oder „🖨️ Drucken“ (öffnet das PDF im neuen Tab). Nicht Gewähltes kommt gar nicht erst ins
+  Dokument. Logik `utils/exportAuswahl.js`, unbekannte Kategorien bleiben draußen. Kalender-Einträge erscheinen jetzt
+  auch in Tag/Woche/Monat der Wochenübersicht.
+- **Überschneidungen** (Nutzerin: „wie kann ich Wäsche machen, wenn ich 8–16 auf der Arbeit bin?“): `konflikte` /
+  `konflikteFuerEintrag` in `utils/kalender.js`. Nur zeitbelegende Dinge zählen (nicht Supplemente, Medikation,
+  Wasser, Licht, Essen, Atem, Gewohnheiten ≤ 15 Min.). Beim Speichern eines Kalender-Eintrags: gelber Hinweis
+  „Zeit ändern / Trotzdem eintragen“. Im Stundenplan (Tag/Woche) gelber Rahmen + ⚠️, in den Details der Hinweis.
+  Aka meldet Überschneidungen im Ergebnis. Die Wochenübersicht (ohne Endzeiten) markiert noch nicht.
+- Beispieldaten im Test-Harness stimmig gemacht (mit ?alltag=1 liegt „Wäsche machen“ um 18:15).
+
 ### Kalender „Mein Alltag“ (28.09., Vorschau freigegeben, gebaut und live)
 Wunsch: Stundenplan, Woche, Monat, damit Haushalt, Arbeit, Hobbys usw. im selben Plan stehen wie Routinen und Bausteine.
 Entscheidungen: ~~Freischaltung nach den 8 Wochen als Programm~~ → **seit 28.09. abends für alle von Anfang an da**

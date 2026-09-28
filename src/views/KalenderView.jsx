@@ -5,7 +5,7 @@ import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { buildDayItems } from "../utils/dayItems";
 import { addDays, sameDay, toLocalISODate } from "../utils/dates";
-import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, bloeckeFuerTag, eigeneBereichMeta, hhmm, monatsRaster, spaltenVerteilen } from "../utils/kalender";
+import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, bloeckeFuerTag, eigeneBereichMeta, hhmm, konflikte, konflikteFuerEintrag, monatsRaster, spaltenVerteilen } from "../utils/kalender";
 
 // Kalender „Mein Alltag“ (28.09., Vorschau freigegeben). Tag als Zeitleiste,
 // Woche als Stundenplan, Monat als Kalenderblatt. Alles aus der App erscheint
@@ -54,7 +54,7 @@ function useTagesBloecke() {
   };
 }
 
-function Block({ b, pxProMin, klein, onClick }) {
+function Block({ b, pxProMin, klein, onClick, konflikt = false }) {
   const top = (Math.max(b.start, VON) - VON) * pxProMin;
   const hoehe = Math.max((Math.min(b.ende, BIS) - Math.max(b.start, VON)) * pxProMin, klein ? 12 : 20);
   const breite = 100 / b.spalten;
@@ -64,6 +64,7 @@ function Block({ b, pxProMin, klein, onClick }) {
       type={b.alltag ? "button" : undefined}
       onClick={b.alltag ? () => onClick?.(b) : undefined}
       data-block={b.alltag ? "alltag" : b.art}
+      data-konflikt={konflikt ? "ja" : undefined}
       title={`${hhmm(b.start)}–${hhmm(b.ende)} ${b.titel}`}
       style={{
         position: "absolute",
@@ -83,6 +84,8 @@ function Block({ b, pxProMin, klein, onClick }) {
         fontWeight: 700,
         opacity: b.done ? 0.55 : 1,
         boxSizing: "border-box",
+        outline: konflikt ? "2px solid #E8A33B" : "none",
+        outlineOffset: -1,
         textAlign: "left",
         fontFamily: "inherit",
         cursor: b.alltag ? "pointer" : "default",
@@ -91,13 +94,13 @@ function Block({ b, pxProMin, klein, onClick }) {
     >
       {klein ? (
         <span>
-          {b.done ? "✓ " : b.icon ? `${b.icon} ` : ""}
+          {konflikt ? "⚠️ " : b.done ? "✓ " : b.icon ? `${b.icon} ` : ""}
           {b.titel}
         </span>
       ) : (
         <>
           <span style={{ display: "block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
-            {b.icon ? `${b.icon} ` : ""}
+            {konflikt ? "⚠️ " : b.icon ? `${b.icon} ` : ""}
             {b.titel}
             {b.done ? " ✓" : ""}
           </span>
@@ -143,9 +146,10 @@ function TagAnsicht({ datum, bloecke, onBlock }) {
       <div style={{ position: "relative", flex: 1 }}>
         <Linien pxProMin={px} />
         {sameDay(datum, new Date()) && <JetztLinie pxProMin={px} />}
-        {spaltenVerteilen(bloecke).map((b) => (
-          <Block key={b.key} b={b} pxProMin={px} onClick={onBlock} />
-        ))}
+        {(() => {
+          const k = konflikte(bloecke);
+          return spaltenVerteilen(bloecke).map((b) => <Block key={b.key} b={b} pxProMin={px} onClick={onBlock} konflikt={k.has(b.key)} />);
+        })()}
       </div>
     </div>
   );
@@ -174,9 +178,11 @@ function WochenAnsicht({ tage, bloeckeFuer, onTag, onBlock }) {
           </div>
           {tage.map((d, i) => (
             <div key={i} style={{ position: "relative", flex: 1, borderLeft: `1px solid ${cardBorder}`, background: sameDay(d, new Date()) ? "rgba(27,35,80,.04)" : "transparent" }}>
-              {spaltenVerteilen(bloeckeFuer(d)).map((b) => (
-                <Block key={b.key} b={b} pxProMin={px} klein onClick={(x) => onBlock(x, d)} />
-              ))}
+              {(() => {
+                const bl = bloeckeFuer(d);
+                const k = konflikte(bl);
+                return spaltenVerteilen(bl).map((b) => <Block key={b.key} b={b} pxProMin={px} klein onClick={(x) => onBlock(x, d)} konflikt={k.has(b.key)} />);
+              })()}
             </div>
           ))}
         </div>
@@ -229,17 +235,23 @@ function MonatsAnsicht({ jahr, monat, bloeckeFuer, onTag }) {
 
 const leer = (datum) => ({ bereich: "haushalt", bereichId: null, titel: "", start: "10:00", ende: "10:45", wochentage: [WOCHENTAGE[(datum.getDay() + 6) % 7]], datum: null, erinnerung: true });
 
-function EintragFormular({ start, datum, onFertig }) {
+function EintragFormular({ start, datum, onFertig, bloeckeFuer }) {
   const { alltagBereiche = [], alltagSpeichern, alltagLoeschen, alltagBereichAnlegen } = useAppData();
   const [e, setE] = useState(start);
   const [fehler, setFehler] = useState(null);
   const [laeuft, setLaeuft] = useState(false);
   const [neuerBereich, setNeuerBereich] = useState(null); // { name, icon } | null
+  const [warnung, setWarnung] = useState(null); // Überschneidungen vor dem Speichern
   const einmalig = !!e.datum;
   const setze = (felder) => setE((x) => ({ ...x, ...felder }));
 
-  const speichern = async () => {
+  const speichern = async (trotzdem = false) => {
     setFehler(null);
+    if (!trotzdem && bloeckeFuer) {
+      const t = konflikteFuerEintrag(e, bloeckeFuer, datum);
+      if (t.length) return setWarnung(t);
+    }
+    setWarnung(null);
     setLaeuft(true);
     const r = await alltagSpeichern?.(e);
     setLaeuft(false);
@@ -320,9 +332,23 @@ function EintragFormular({ start, datum, onFertig }) {
         <input type="checkbox" checked={e.erinnerung} onChange={(ev) => setze({ erinnerung: ev.target.checked })} /> Erinnerung zur Startzeit
       </label>
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 8 }}>Tipp: Auch per Aka, z. B. „Samstags 10 Uhr Staubsaugen“.</div>
+      {warnung && (
+        <div data-konflikt-warnung style={{ background: "#FFF6E5", border: "1.5px solid #E8B04A", borderRadius: 12, padding: "10px 12px", fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>
+          ⚠️ Zu dieser Zeit ist schon etwas geplant:{" "}
+          {warnung.map((t) => `${t.icon ? `${t.icon} ` : ""}${t.titel} (${t.tag} ${hhmm(t.start)}–${hhmm(t.ende)})`).join(", ")}.
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button type="button" onClick={() => setWarnung(null)} style={knopf(true)}>
+              Zeit ändern
+            </button>
+            <button type="button" onClick={() => speichern(true)} style={knopf(false)}>
+              Trotzdem eintragen
+            </button>
+          </div>
+        </div>
+      )}
       {fehler && <div style={{ color: danger, fontSize: 12.5, marginBottom: 8 }}>{fehler}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" disabled={laeuft} onClick={speichern} style={{ ...knopf(true), flex: 1, padding: 11, fontSize: 14 }}>
+        <button type="button" disabled={laeuft} onClick={() => speichern()} style={{ ...knopf(true), flex: 1, padding: 11, fontSize: 14 }}>
           {laeuft ? "…" : "Speichern"}
         </button>
         {e.id && (
@@ -343,8 +369,9 @@ function EintragFormular({ start, datum, onFertig }) {
   );
 }
 
-function BlockDetails({ b, datum, onAendern, onSchliessen }) {
+function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
   const { alltagAbhaken } = useAppData();
+  const mit = bloeckeFuer ? konflikte(bloeckeFuer(datum)).get(b.key) || [] : [];
   return (
     <Card style={{ marginBottom: 12, border: `1.5px solid ${b.farbe.dot}` }}>
       <div data-block-details style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -359,6 +386,11 @@ function BlockDetails({ b, datum, onAendern, onSchliessen }) {
           ✕
         </button>
       </div>
+      {mit.length > 0 && (
+        <div data-konflikt-details style={{ marginTop: 8, fontSize: 12.5, color: "#7A5200", background: "#FFF6E5", borderRadius: 10, padding: "6px 10px" }}>
+          ⚠️ Überschneidet sich mit {mit.map((x) => `${x.titel} (${hhmm(x.start)}–${hhmm(x.ende)})`).join(", ")}. Über „Ändern“ eine andere Zeit wählen.
+        </div>
+      )}
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <button type="button" onClick={async () => (await alltagAbhaken?.(b.alltag.id, toLocalISODate(datum)))?.ok && onSchliessen()} style={{ ...knopf(true), flex: 1, padding: 10 }}>
           {b.done ? "↩︎ Nicht erledigt" : "✓ Erledigt"}
@@ -433,6 +465,7 @@ export default function KalenderView({ onHome }) {
       </div>
       {details && !formular && (
         <BlockDetails
+          bloeckeFuer={bloeckeFuer}
           b={details.b}
           datum={details.datum}
           onSchliessen={() => setDetails(null)}
@@ -443,7 +476,7 @@ export default function KalenderView({ onHome }) {
         />
       )}
       {formular ? (
-        <EintragFormular key={formular.id || "neu"} start={formular} datum={datum} onFertig={() => setFormular(null)} />
+        <EintragFormular key={formular.id || "neu"} start={formular} datum={datum} bloeckeFuer={bloeckeFuer} onFertig={() => setFormular(null)} />
       ) : (
         !details && (
           <button type="button" className="mp-tap" onClick={() => setFormular(leer(datum))} style={{ width: "100%", marginBottom: 10, border: "1.5px dashed #1B2350", background: "#fff", color: "#1B2350", borderRadius: 12, padding: 9, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>

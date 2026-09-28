@@ -240,6 +240,9 @@ function leseOverridesAusUrl() {
       { id: "g2", name: "Wäsche machen", icon: "🧺", uhrzeit: "09:30", dauerMin: 30, wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true },
       { id: "g3", name: "Steuerunterlagen sortieren", icon: "🧾", uhrzeit: "", dauerMin: 25, wochentage: [0, 1, 2, 3, 4, 5, 6], aktiv: true },
     ];
+    // Mit ?alltag=1 (Arbeit 8:30–16:30) liegt die Wäsche sinnvoll am Abend
+    // statt mitten in der Arbeitszeit (Nutzerin 28.09.: Beispiele müssen stimmen).
+    if (params.get("alltag") === "1") overrides.gewohnheiten[1] = { ...overrides.gewohnheiten[1], uhrzeit: "18:15" };
     overrides.routineEinstellungen = { morgen: { routine: "morgen", startZeit: "06:30" }, abend: { routine: "abend", startZeit: "21:30" } };
     overrides.routineSchritte = [
       { id: "r1", routine: "morgen", reihenfolge: 1, name: "Wasser trinken", dauerMin: 1 },

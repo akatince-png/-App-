@@ -6,6 +6,7 @@ import { bibliotheksUebung } from "../utils/atemBibliothek";
 import { OPTIONEN as TAGEBUCH_OPTIONEN, autoWerte, tagebuchZeile } from "../utils/tagebuch";
 import { VORLAGEN, planErzeugen, plusTage, rollenZuordnung, wochenBeginn } from "../utils/schichtplan";
 import { sitzungEnde } from "../utils/fokusGemeinsam";
+import { bloeckeFuerTag, konflikteFuerEintrag } from "../utils/kalender";
 import { timerHinweisPlanen } from "./nativeTimerHinweis";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
@@ -59,6 +60,9 @@ export function useUniversellerCoach() {
     tagebuchEintraege,
     fokusStarten,
     alltagSpeichern,
+    alltagEintraege,
+    alltagBereiche,
+    routineEinstellungen,
   } = useAppData();
   const appData = useAppData();
 
@@ -310,7 +314,11 @@ export function useUniversellerCoach() {
           if (r?.ok) angelegt.push(r.eintrag);
         }
         if (!angelegt.length) throw new Error("Speichern fehlgeschlagen.");
-        return { bereich: "alltag", daten: angelegt };
+        // Überschneidungen mit Routinen und anderen Kalender-Einträgen melden.
+        const alle = [...(alltagEintraege || []).filter((x) => !angelegt.some((a) => a.id === x.id)), ...angelegt];
+        const fuer = (d) => bloeckeFuerTag(d, { routineEinstellungen: routineEinstellungen || {}, alltagEintraege: alle, alltagBereiche: alltagBereiche || [] });
+        const konflikt = angelegt.flatMap((e) => konflikteFuerEintrag(e, fuer).map((t) => ({ eintrag: e.titel, mit: t.titel, tag: t.tag, von: t.start, bis: t.ende })));
+        return { bereich: "alltag", daten: angelegt, konflikte: konflikt };
       }
       case "tagebuch": {
         const heute = toLocalISODate(new Date());

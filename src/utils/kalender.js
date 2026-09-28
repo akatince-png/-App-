@@ -69,7 +69,7 @@ export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, al
   for (const it of items) {
     const start = minuten(it.uhrzeit);
     if (start == null) continue;
-    const ende = it.raw?.endUhrzeit ? minuten(it.raw.endUhrzeit) : start + (STANDARD_DAUER[it.kategorie] || 20);
+    const ende = it.raw?.endUhrzeit ? minuten(it.raw.endUhrzeit) : start + (Number(it.raw?.dauerMin) || STANDARD_DAUER[it.kategorie] || 20);
     const meta = it.farbe || KATEGORIE_META[it.kategorie] || KATEGORIE_META.zeitblock;
     bloecke.push({ key: it.key, start, ende: Math.max(ende, start + 10), titel: it.name, icon: null, farbe: meta, art: it.kategorie, done: !!it.done });
   }
@@ -141,4 +141,58 @@ export function alltagEintraegeBereinigen(liste) {
       };
     })
     .filter(Boolean);
+}
+
+// Überschneidungen (28.09., Nutzerin: „wie kann ich Wäsche machen, wenn ich
+// von 8 bis 16 auf der Arbeit bin?“). Nur Dinge, die Zeit wirklich belegen,
+// zählen; was nebenher läuft (Supplemente, Medikation, Wasser, Licht,
+// Essen, kurze Gewohnheiten bis 15 Min.) nicht.
+const NEBENHER = new Set(["supplement", "hormon", "hydration", "tageslicht", "bildschirmzeit", "mahlzeit", "atemuebung"]);
+export function belegtZeit(b) {
+  if (NEBENHER.has(b.art)) return false;
+  if (b.art === "gewohnheit") return b.ende - b.start > 15;
+  return true;
+}
+
+// Liefert je Block-Key die Titel der Blöcke, mit denen er sich überschneidet.
+export function konflikte(bloecke) {
+  const belegt = bloecke.filter(belegtZeit);
+  const ergebnis = new Map();
+  for (let i = 0; i < belegt.length; i++) {
+    for (let j = i + 1; j < belegt.length; j++) {
+      const a = belegt[i];
+      const b = belegt[j];
+      if (a.start < b.ende && b.start < a.ende) {
+        ergebnis.set(a.key, [...(ergebnis.get(a.key) || []), b]);
+        ergebnis.set(b.key, [...(ergebnis.get(b.key) || []), a]);
+      }
+    }
+  }
+  return ergebnis;
+}
+
+// Prüft einen neuen/geänderten Alltags-Eintrag gegen die Blöcke der Tage,
+// an denen er gilt (je Wochentag der nächste Termin ab „ab“).
+export function konflikteFuerEintrag(eintrag, bloeckeFuer, ab = new Date()) {
+  const start = minuten(eintrag.start);
+  if (start == null) return [];
+  const ende = minuten(eintrag.ende) ?? start + 60;
+  const tage = eintrag.datum
+    ? [new Date(`${eintrag.datum}T12:00:00`)]
+    : (eintrag.wochentage || []).map((w) => {
+        const d = new Date(ab.getFullYear(), ab.getMonth(), ab.getDate());
+        const ziel = WOCHENTAGE.indexOf(w);
+        while ((d.getDay() + 6) % 7 !== ziel) d.setDate(d.getDate() + 1);
+        return d;
+      });
+  const neu = { key: "neu", start, ende, art: eintrag.bereich || "termin" };
+  const treffer = [];
+  for (const d of tage) {
+    for (const b of bloeckeFuer(d)) {
+      if (b.alltag && b.alltag.id === eintrag.id) continue;
+      if (!belegtZeit(b)) continue;
+      if (neu.start < b.ende && b.start < neu.ende && !treffer.some((t) => t.titel === b.titel)) treffer.push({ ...b, tag: WOCHENTAGE[(d.getDay() + 6) % 7] });
+    }
+  }
+  return treffer;
 }

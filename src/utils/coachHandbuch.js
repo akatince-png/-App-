@@ -197,6 +197,8 @@ export const KAPITEL = [
       "Fehlt ein Bereich (z. B. Kinder, Ehrenamt, Garten): „+ Eigener Bereich“ mit Namen und Symbol. Das geht für die Person selbst oder für dich über Verwalten.",
       "Die Person kann auch Aka sagen: „Samstags 10 Uhr Staubsaugen“ – der Eintrag landet im Kalender.",
       "Antippen eines Eintrags: abhaken, ändern oder löschen.",
+      "Überschneidet sich etwas (z. B. Wäsche in der Arbeitszeit), fragt die App beim Speichern nach. Im Stundenplan sind Überschneidungen gelb markiert – beim Durchsehen mit der Person gemeinsam auflösen.",
+      "Drucken/PDF: Wochenübersicht → „Druck / PDF zusammenstellen“. „Nur Gesundheit“ für Ärztin/Arzt, „Kompletter Wochenplan“ für den Alltag; einzelne Bereiche an- und abwählbar, vorher Vorschau.",
     ],
     achten: [
       "Die Woche soll Luft haben. Lieber Lücken lassen als jede Stunde verplanen.",

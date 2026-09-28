@@ -20,6 +20,9 @@ test("Woche, Tag, Monat; Eintrag mit eigenem Bereich anlegen; Alltags-Eintrag ab
   await page.getByPlaceholder(/Staubsaugen/).fill("Lesen");
   await page.getByRole("button", { name: "So", exact: true }).click();
   await page.getByRole("button", { name: "Speichern", exact: true }).click();
+  // Mi 10:00 liegt in der Arbeitszeit → Hinweis, bewusst trotzdem eintragen.
+  await expect(page.locator("[data-konflikt-warnung]")).toContainText("Arbeit");
+  await page.getByRole("button", { name: "Trotzdem eintragen" }).click();
   const gespeichert = await aufrufe(page, "alltagSpeichern");
   expect(gespeichert.at(-1)[0]).toMatchObject({ bereich: "metime", titel: "Lesen", start: "10:00", ende: "10:45", wochentage: ["Mi", "So"] });
 
@@ -44,4 +47,25 @@ test("Woche, Tag, Monat; Eintrag mit eigenem Bereich anlegen; Alltags-Eintrag ab
 test("Pläne: Einstieg „Mein Alltag“", async ({ page }) => {
   await page.goto("/e2e/harness/index.html?isAdmin=0#/hydration");
   await expect(page.getByText("Mein Alltag (Kalender)")).toBeVisible();
+});
+
+test("Überschneidung: Hinweis beim Eintragen, Trotzdem oder Zeit ändern", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 28, 12, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&alltag=1#/kalender");
+  await page.getByRole("button", { name: /\+ Eintrag/ }).click();
+  await page.getByPlaceholder(/Staubsaugen/).fill("Wäsche");
+  // Vorgabe: Mi 10:00–10:45 → mitten in „Arbeit“ (Mo–Do 8:30–16:30).
+  await page.getByRole("button", { name: "Speichern", exact: true }).click();
+  const warnung = page.locator("[data-konflikt-warnung]");
+  await expect(warnung).toContainText("Arbeit");
+  expect(await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "alltagSpeichern").length)).toBe(0);
+  await page.getByRole("button", { name: "Trotzdem eintragen" }).click();
+  expect(await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "alltagSpeichern").length)).toBe(1);
+});
+
+test("Überschneidungen sind im Stundenplan markiert", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 28, 12, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&alltag=1&kal=tag#/kalender");
+  // Mittwoch: „Laufen 17:00“ (Training, 60 Min.) vs. „Kita abholen 16:45–17:15“.
+  await expect(page.locator('[data-konflikt="ja"]').first()).toBeVisible();
 });
