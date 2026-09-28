@@ -73,6 +73,9 @@ const WINDUNGEN = [
   "M 262 104 C 270 110 270 118 266 124",
 ];
 
+// Ruhigere Auswahl der Windungen (Design 2.0): die markantesten, ohne Gewirr.
+const WINDUNGEN_RUHIG = WINDUNGEN.filter((_, i) => [0, 1, 4, 5, 6, 7, 12, 14, 16].includes(i));
+
 function bahn([x1, y1], [x2, y2]) {
   return `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 - 16} ${x2} ${y2}`;
 }
@@ -275,6 +278,18 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             <stop offset="0%" stopColor={stimmung.linieVon} />
             <stop offset="100%" stopColor={stimmung.linieBis} />
           </linearGradient>
+          <radialGradient id="mp-gehirn-tiefe" cx="38%" cy="32%" r="75%">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.16" />
+            <stop offset="55%" stopColor="#fff" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0.18" />
+          </radialGradient>
+          <filter id="mp-gehirn-linie" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="1.6" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <clipPath id="mp-kleinhirn">
             <path d={KLEINHIRN} />
             <path d={HIRNSTAMM} />
@@ -296,6 +311,9 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         <path d={HIRNSTAMM} fill={stimmung.grund} />
         <path d={KLEINHIRN} fill={stimmung.grund} />
         <path d={GROSSHIRN} fill={stimmung.grund} />
+        {/* Design 2.0: sanfte Tiefe – heller Kern oben links, dunkler Rand */}
+        <path d={GROSSHIRN} fill="url(#mp-gehirn-tiefe)" style={{ pointerEvents: "none" }} />
+        <path d={KLEINHIRN} fill="url(#mp-gehirn-tiefe)" style={{ pointerEvents: "none" }} />
 
         {/* Regionen leuchten mit ihrer Ladung — weich ineinander verlaufend,
             an der Hirnkontur zugeschnitten */}
@@ -321,18 +339,22 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         ))}
 
         {/* Logo-Linien: Umriss + Windungen */}
+        {/* Design 2.0: Umriss mit leichtem Schein, weniger und feinere
+            Windungen – ruhiger, aber weiter im Linienstil des Logos. */}
         <g fill="none" stroke="url(#mp-gehirn-verlauf)" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
-          <path d={HIRNSTAMM} strokeWidth="3.5" />
-          <path d={KLEINHIRN} strokeWidth="3.5" />
-          <path d={GROSSHIRN} strokeWidth="4" />
-          <path d={SEITENFURCHE} strokeWidth="3.5" />
-          <path d={ZENTRALFURCHE} strokeWidth="3" opacity="0.85" />
-          <g strokeWidth="3" opacity="0.8">
-            {WINDUNGEN.map((d) => (
+          <g filter="url(#mp-gehirn-linie)">
+            <path d={HIRNSTAMM} strokeWidth="3" />
+            <path d={KLEINHIRN} strokeWidth="3" />
+            <path d={GROSSHIRN} strokeWidth="3.4" />
+          </g>
+          <path d={SEITENFURCHE} strokeWidth="2.8" />
+          <path d={ZENTRALFURCHE} strokeWidth="2.4" opacity="0.8" />
+          <g strokeWidth="2" opacity="0.5">
+            {WINDUNGEN_RUHIG.map((d) => (
               <path key={d} d={d} />
             ))}
           </g>
-          <g strokeWidth="2.5" opacity="0.6">
+          <g strokeWidth="1.8" opacity="0.45">
             <path d="M 212 170 C 230 176 254 176 272 166" />
             <path d="M 220 180 C 236 184 254 184 268 178" />
           </g>
@@ -367,8 +389,8 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
                 r={an ? 14 : 12}
                 fill={r.zustand === "leer" ? "#1B2146" : r.farbe}
                 fillOpacity={r.zustand === "aktiv" ? 1 : 0.5}
-                stroke={an ? "#fff" : "rgba(255,255,255,0.55)"}
-                strokeWidth={an ? 2.5 : 1.2}
+                stroke={an ? "#fff" : "rgba(255,255,255,0.7)"}
+                strokeWidth={an ? 2.5 : 1.4}
                 strokeDasharray={r.zustand === "leer" ? "3 3" : undefined}
               />
               <text x={x} y={y + 4} textAnchor="middle" fontSize="12" style={{ pointerEvents: "none" }}>

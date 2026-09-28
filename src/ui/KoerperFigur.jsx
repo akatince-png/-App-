@@ -39,45 +39,82 @@ export function koerperWerte(d, heute = toLocalISODate(new Date())) {
   };
 }
 
-const glow = (a, farbe) => ({ fill: farbe, fillOpacity: 0.18 + a * 0.72, filter: a > 0.6 ? "url(#mp-koerper-glow)" : undefined, transition: "fill-opacity .6s" });
+// Design 2.0 (28.09., Nutzerin: „Körperfigur gerne überarbeiten“): weiche,
+// freundliche Silhouette aus abgerundeten Formen statt kantigem Umriss.
+// Jede Zone liegt als Grundfläche (zart) und leuchtet darüber mit ihrem Wert.
+const ZONEN = {
+  kopf: "#A393FF",
+  brust: "#5DD6C6",
+  bauch: "#5AAEFF",
+  bewegung: "#FFA85C",
+};
+const deck = (a) => 0.16 + a * 0.84;
+const RUMPF = "M40 52 C40 45 46 41 53 41 L67 41 C74 41 80 45 80 52 L79 104 C79 112 73 117 65 117 L55 117 C47 117 41 112 41 104 Z";
+const ARM_L = "M42 50 C34 60 29 74 26 92";
+const ARM_R = "M78 50 C86 60 91 74 94 92";
+const BEIN_L = "M52 114 C51 138 50 158 49 182";
+const BEIN_R = "M68 114 C69 138 70 158 71 182";
 
 // `werte` (optional): feste Beispielwerte statt der eigenen Tagesdaten,
 // z. B. in der Vorstellung vor dem Start (VorstellungView).
 export default function KoerperFigur({ werte = null }) {
   const d = useAppData();
   const w = werte || koerperWerte(d);
-  const linie = { fill: "none", stroke: "#fff", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", opacity: 0.9 };
+  const grund = "rgba(255,255,255,0.14)";
+  const glied = (dPfad, breite, a) => (
+    <>
+      <path d={dPfad} stroke={grund} strokeWidth={breite} strokeLinecap="round" fill="none" />
+      <path d={dPfad} stroke={ZONEN.bewegung} strokeOpacity={deck(a) * 0.9} strokeWidth={breite - 2} strokeLinecap="round" fill="none" filter={a > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "stroke-opacity .6s" }} />
+    </>
+  );
   return (
     <div aria-label="Dein Körper heute" style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0 }}>
-      <svg viewBox="0 0 120 200" role="img" aria-label={`Körper: Schlaf ${Math.round(w.kopf * 100)} %, Bewegung ${Math.round(w.bewegung * 100)} %, Tageslicht ${Math.round(w.licht * 100)} %`} style={{ width: "100%", maxWidth: 170, display: "block" }}>
+      <svg viewBox="0 0 120 200" role="img" aria-label={`Körper: Schlaf ${Math.round(w.kopf * 100)} %, Bewegung ${Math.round(w.bewegung * 100)} %, Tageslicht ${Math.round(w.licht * 100)} %`} style={{ width: "100%", maxWidth: 160, display: "block" }}>
         <defs>
           <filter id="mp-koerper-glow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="4" result="b" />
+            <feGaussianBlur stdDeviation="3.5" result="b" />
             <feMerge>
               <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <radialGradient id="mp-koerper-licht" cx="50%" cy="45%" r="55%">
-            <stop offset="0%" stopColor="#FFD166" stopOpacity={0.05 + w.licht * 0.45} />
+          <radialGradient id="mp-koerper-licht" cx="50%" cy="42%" r="58%">
+            <stop offset="0%" stopColor="#FFD166" stopOpacity={0.04 + w.licht * 0.5} />
             <stop offset="100%" stopColor="#FFD166" stopOpacity="0" />
           </radialGradient>
+          <linearGradient id="mp-koerper-glanz" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.35" />
+            <stop offset="60%" stopColor="#fff" stopOpacity="0" />
+          </linearGradient>
+          <clipPath id="mp-koerper-brust">
+            <rect x="0" y="0" width="120" height="80" />
+          </clipPath>
+          <clipPath id="mp-koerper-bauch">
+            <rect x="0" y="80" width="120" height="60" />
+          </clipPath>
         </defs>
         {/* Tageslicht-Schein */}
-        <ellipse cx="60" cy="95" rx="58" ry="98" fill="url(#mp-koerper-licht)" />
-        {/* Zonen */}
-        <circle cx="60" cy="24" r="15" style={glow(w.kopf, "#8E7CF0")} />
-        <path d="M44 46 Q60 40 76 46 L78 78 Q60 84 42 78 Z" style={glow(w.brust, "#5DD6C6")} />
-        <path d="M42 80 Q60 86 78 80 L76 108 Q60 114 44 108 Z" style={glow(w.bauch, "#4FA3FF")} />
-        <path d="M43 48 L24 92 L30 95 L47 60 Z M77 48 L96 92 L90 95 L73 60 Z" style={glow(w.bewegung, "#F2994A")} />
-        <path d="M46 110 L40 180 L50 182 L58 118 Z M74 110 L80 180 L70 182 L62 118 Z" style={glow(w.bewegung, "#F2994A")} />
-        {/* Umriss */}
-        <circle cx="60" cy="24" r="15" style={linie} />
-        <path d="M60 39 L60 44 M44 46 Q60 40 76 46 L96 92 L90 95 L76 62 L76 108 L80 180 L70 182 L60 118 L50 182 L40 180 L44 108 L44 62 L30 95 L24 92 Z" style={linie} />
+        <ellipse cx="60" cy="96" rx="58" ry="100" fill="url(#mp-koerper-licht)" />
+        {/* Beine und Arme (Bewegung) */}
+        {glied(BEIN_L, 15, w.bewegung)}
+        {glied(BEIN_R, 15, w.bewegung)}
+        {glied(ARM_L, 12, w.bewegung)}
+        {glied(ARM_R, 12, w.bewegung)}
+        {/* Rumpf: Brust (Atem/Ruhe) und Bauch (Essen + Wasser) */}
+        <path d={RUMPF} fill={grund} />
+        <path d={RUMPF} clipPath="url(#mp-koerper-brust)" fill={ZONEN.brust} fillOpacity={deck(w.brust) * 0.9} filter={w.brust > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
+        <path d={RUMPF} clipPath="url(#mp-koerper-bauch)" fill={ZONEN.bauch} fillOpacity={deck(w.bauch) * 0.9} filter={w.bauch > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
+        <path d="M44 80 Q60 84 76 80" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        <path d={RUMPF} fill="url(#mp-koerper-glanz)" />
+        {/* Hals + Kopf (Schlaf) */}
+        <rect x="55" y="34" width="10" height="9" rx="4" fill={grund} />
+        <circle cx="60" cy="22" r="14" fill={grund} />
+        <circle cx="60" cy="22" r="14" fill={ZONEN.kopf} fillOpacity={deck(w.kopf) * 0.9} filter={w.kopf > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
+        <circle cx="60" cy="22" r="14" fill="url(#mp-koerper-glanz)" />
       </svg>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginTop: 4, maxWidth: 200 }}>
         {w.chips.map(([emoji, wert, label]) => (
-          <span key={label} title={label} style={{ fontSize: 10.5, fontWeight: 800, padding: "3px 7px", borderRadius: 99, background: "rgba(255,255,255,0.14)", whiteSpace: "nowrap" }}>
+          <span key={label} title={label} style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.14)", whiteSpace: "nowrap" }}>
             {emoji} {wert}
           </span>
         ))}
