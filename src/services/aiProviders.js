@@ -19,6 +19,7 @@
 // ("groq-chat" bzw. "gemini-chat" in supabase/functions/), die den echten
 // Key nur serverseitig als Secret hält.
 import { supabase } from "../lib/supabaseClient";
+import { kiPruefen } from "../utils/kiEinwilligung";
 
 const PROVIDER = (import.meta.env.VITE_AI_PROVIDER || "ollama").toLowerCase();
 const MODEL = import.meta.env.VITE_AI_MODEL || "llama3.1";
@@ -46,6 +47,7 @@ const BASE_URL = import.meta.env.VITE_AI_BASE_URL || STANDARD_BASE_URLS[PROVIDER
  * @returns {Promise<string>}
  */
 export async function sendeAnfrage({ system, messages, json = false }) {
+  kiPruefen();
   if (PROVIDER === "ollama") return anfrageOllama({ system, messages, json });
   if (PROVIDER === "groq") return anfrageOpenAiKompatibel({ system, messages, json });
   if (PROVIDER === "gemini") return anfrageGemini({ system, messages, json });
@@ -65,6 +67,7 @@ export async function sendeAnfrage({ system, messages, json = false }) {
  * @returns {Promise<string>} die vollständige Antwort, wenn sie fertig ist
  */
 export async function sendeAnfrageStreamend({ system, messages, onTeilantwort }) {
+  kiPruefen();
   if (PROVIDER === "ollama") return anfrageOllamaStreamend({ system, messages, onTeilantwort });
   if (PROVIDER === "gemini") return anfrageGeminiStreamend({ system, messages, onTeilantwort });
   const antwort = await sendeAnfrage({ system, messages, json: false });

@@ -5,6 +5,8 @@ import Logo from "../ui/Logo";
 import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/translate";
 import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
+import { RechtstextInhalt } from "./recht/RechtstextView";
+import { DATENSCHUTZ, IMPRESSUM } from "../utils/rechtstexte";
 
 // Selbstregistrierung entfernt (Nutzerinnen-Vorgabe 16.08.: "er soll nur
 // darüber reinkommen oder eingeladen werden müssen") — Konten entstehen
@@ -16,6 +18,7 @@ import { useLanguage, SUPPORTED_LANGS } from "../i18n/LanguageContext";
 // email signups" deaktiviert werden — steht im Übergabeprotokoll.
 export default function LoginView() {
   const { signIn } = useAuth();
+  const [rechtstext, setRechtstext] = useState(null);
   const { t } = useT();
   const { lang, setLang } = useLanguage();
   const [email, setEmail] = useState("");
@@ -87,6 +90,29 @@ export default function LoginView() {
       <div style={{ fontSize: 12, color: textMuted, textAlign: "center", lineHeight: 1.5 }}>
         Neu hier? Du bekommst eine Einladung von deinem Coach — eine eigene Registrierung gibt es nicht.
       </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 18, margin: "14px 0 24px" }}>
+        {[
+          ["datenschutz", "Datenschutzerklärung"],
+          ["impressum", "Impressum"],
+        ].map(([art, label]) => (
+          <button key={art} type="button" onClick={() => setRechtstext(art)} style={{ border: "none", background: "none", color: "#2D6FD6", fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {rechtstext && (
+        <div role="dialog" aria-modal="true" aria-label={rechtstext === "impressum" ? "Impressum" : "Datenschutzerklärung"} style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(21, 24, 26, 0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div style={{ background: "#fff", width: "100%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", borderRadius: "18px 18px 0 0", padding: "18px 18px 28px" }} data-login-rechtstext>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ flex: 1, fontSize: 17, fontWeight: 900 }}>{rechtstext === "impressum" ? "Impressum" : "Datenschutzerklärung"}</div>
+              <button type="button" onClick={() => setRechtstext(null)} aria-label="Schließen" style={{ border: "none", background: "none", fontSize: 22, cursor: "pointer" }}>
+                ✕
+              </button>
+            </div>
+            <RechtstextInhalt abschnitte={rechtstext === "impressum" ? IMPRESSUM : DATENSCHUTZ} />
+          </div>
+        </div>
+      )}
     </Shell>
   );
 }

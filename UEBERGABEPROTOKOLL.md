@@ -201,6 +201,17 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Datenschutz für den App-Store-Antrag (28.09. nachts, Nutzerin: Antrag Mitte der Woche ab 05.10.)
+Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung; Konto **sofort selbst löschen**.
+- **Einwilligung** (`views/recht/EinwilligungView.jsx`): einmalig für Coachees (nicht Admin, nicht Verwalten-Modus) vor der App: Datenschutz/Gesundheitsdaten Pflicht, KI freiwillig. Speichert `profiles.datenschutz_einwilligung_am`, `datenschutz_version`, `ki_einwilligung_am` (**Migration 0120, noch nicht eingespielt – erst nach Freigabe**, sonst hängen Coachees im Einwilligungs-Schritt, weil das Speichern scheitert).
+- **KI-Sperre** (`utils/kiEinwilligung.js`): `kiPruefen()` vor jedem KI-Aufruf (aiProviders `sendeAnfrage`/`sendeAnfrageStreamend`, Lexikon, Akutmodus, Laborwert-Scan, Essen-/Präparat-Foto, Cloud-Sprachausgabe → dann Geräte-Stimme). Schalter gesetzt von `useProfileData` (Admin-Konten immer erlaubt; im Verwalten-Modus gilt die Einwilligung der verwalteten Person). Harness: `?ki=0`, `?einwilligung=0`.
+- **Mehr → Datenschutz & Konto** (`ui/DatenschutzKarte.jsx`): Einwilligungsstand, KI-Schalter, Links, **Konto löschen** (Bestätigung „LÖSCHEN“; im Verwalten-Modus löscht der Coach das Konto der Person; Admins löschen sich nicht selbst). Edge Function **`konto-loeschen`** (**noch nicht deployt**): Dateien in photos/profilbilder/nachweise unter `<userId>/`, dann `auth.admin.deleteUser` (alle FKs cascade/set null, geprüft 28.09.).
+- **Rechtstexte** (`utils/rechtstexte.js`, eine Quelle): In-App-Ansicht `#/datenschutz`, `#/impressum`, Anmeldeseite (Overlay), öffentlich `public/datenschutz.html` + `impressum.html` (erzeugt von `scripts/rechtstexte-html.mjs` als `prebuild`). **Platzhalter `[ … ]` für Name/Anschrift/E-Mail/Aufsichtsbehörde – Nutzerin liefert.** Keine Rechtsberatung, fachliche Prüfung durch die Nutzerin.
+- **iOS:** `PrivacyInfo.xcprivacy` (kein Tracking, Datentypen, UserDefaults CA92.1) im Xcode-Projekt eingetragen; Kamera-/Foto-Texte um Dienstplan ergänzt.
+- **Google Fonts entfernt** → `@fontsource/inter` + `@fontsource/poppins` in `main.jsx` (keine IP an Google).
+- Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
+- Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
+
 ### Geplant: Design-Überarbeitung der ganzen App mit Canva (Nutzerin 28.09., „in absehbarer Zeit“, nicht sofort)
 Canva ist als Connector verbunden. Vorgehen wie besprochen: erst Bestandsaufnahme (Screenshots aller Hauptseiten), dann in Canva ein Design-Board (Farben, Schrift, Kacheln, Icons, 2–3 Beispielseiten) zur Auswahl, nach Freigabe schrittweise Umsetzung im Code (Vorschau auf dem Branch, dann main). ADHS-tauglich: ruhig, klar, wenige Elemente je Seite. Nachtblau + Bereichsfarben sind bisherige Freigaben – bei der Überarbeitung bewusst nachfragen, was bleibt.
 

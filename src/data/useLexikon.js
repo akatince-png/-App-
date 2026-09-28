@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { wissensBasisFuerLexikonKategorie } from "../utils/wissensBasis";
 import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
+import { kiPruefen } from "../utils/kiEinwilligung";
 
 export function useLexikon() {
   const [lexikonVerlauf, setLexikonVerlauf] = useState([]);
@@ -16,6 +17,7 @@ export function useLexikon() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      kiPruefen();
       const kontext = wissensBasisFuerLexikonKategorie(kategorie);
       const { data, error } = await supabase.functions.invoke("lexikon", {
         body: { frage: trimmed, kategorie, kontext },
@@ -50,6 +52,7 @@ export function useLexikon() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
+    kiPruefen();
     const kontext = wissensBasisFuerLexikonKategorie(kategorie);
     const { data, error } = await supabase.functions.invoke("lexikon", {
       body: { frage: trimmed, kategorie, kontext },

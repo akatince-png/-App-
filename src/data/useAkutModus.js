@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { wissensBasisFuerPfade } from "../utils/wissensBasis";
 import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
+import { kiPruefen } from "../utils/kiEinwilligung";
 
 // Symptom-Kacheln für den Akutmodus (HomeView.jsx/AkutModusKarte.jsx,
 // Nutzerinnen-Vorgabe 16.08.: ein Knopf für Momente akuter
@@ -37,6 +38,7 @@ export function useAkutModus() {
     setFehler(null);
     setAntwort(null);
     try {
+      kiPruefen();
       const kontext = wissensBasisFuerPfade(pfade?.length ? pfade : FREITEXT_PFADE);
       const {
         data: { session },

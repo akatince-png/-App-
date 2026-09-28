@@ -5,6 +5,7 @@ import { AuthContext } from "../../src/context/AuthContext";
 import { AppDataContext } from "../../src/context/AppDataContext";
 import AuthenticatedApp from "../../src/AuthenticatedApp";
 import { baueMockAppData } from "./mockAppData";
+import { setzeKiErlaubt } from "../../src/utils/kiEinwilligung";
 
 // Rendert die App OHNE echtes Supabase/echte Auth — AuthProvider und
 // AppDataProvider (beide würden echte Netzwerkaufrufe machen) werden
@@ -30,6 +31,14 @@ const mockAuthValue = {
 function leseOverridesAusUrl() {
   const params = new URLSearchParams(window.location.search);
   const overrides = {};
+  // Einwilligungen (28.09.): standardmäßig erteilt; ?einwilligung=0 zeigt den
+  // Einwilligungs-Schritt, ?ki=0 = KI nicht erlaubt.
+  const kiErlaubtParam = params.get("ki") !== "0";
+  setzeKiErlaubt(kiErlaubtParam);
+  overrides.einwilligung =
+    params.get("einwilligung") === "0"
+      ? { datenschutzAm: null, kiAm: null, geladen: true }
+      : { datenschutzAm: "2026-09-01T08:00:00.000Z", kiAm: kiErlaubtParam ? "2026-09-01T08:00:00.000Z" : null, geladen: true };
   if (params.get("onboarding") === "1") overrides.onboardingComplete = false;
   if (params.get("isAdmin") === "0") {
     overrides.isAdmin = false;

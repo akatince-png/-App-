@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { toLocalISODate } from "../utils/dates";
 import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
+import { kiPruefen } from "../utils/kiEinwilligung";
 
 export function useBiomarkerData(userId) {
   const [biomarker, setBiomarkerState] = useState({});
@@ -62,6 +63,7 @@ export function useBiomarkerData(userId) {
         const {
           data: { session },
         } = await supabase.auth.getSession();
+        kiPruefen();
         // In den Ordner der angemeldeten Person (25.09.): im "Verwalten als"-
         // Modus scheiterte sonst schon das Hochladen (fremder Ordner).
         const fotoPath = await uploadPhoto(session?.user?.id || userId, file, "blutwerte");

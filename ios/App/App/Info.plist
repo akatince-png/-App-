@@ -67,12 +67,12 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>AKA nutzt die Kamera, um Wiederholungen im Training zu zählen, Video-Nachweise aufzunehmen und Nährwerttabellen, Präparate oder Laborwerte abzufotografieren. Bilder zum Zählen bleiben auf dem Gerät.</string>
+	<string>AKA nutzt die Kamera, um Wiederholungen im Training zu zählen, Video-Nachweise aufzunehmen und Nährwerttabellen, Präparate, Laborwerte oder deinen Dienstplan abzufotografieren. Bilder zum Zählen und das Dienstplan-Foto bleiben auf dem Gerät.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>AKA nutzt das Mikrofon, wenn du Einträge per Sprache diktierst.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>AKA wandelt deine gesprochenen Einträge in Text um, damit du nicht tippen musst.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>AKA braucht Zugriff auf deine Fotos, wenn du ein vorhandenes Bild (z. B. eine Nährwerttabelle oder ein Profilbild) auswählst.</string>
+	<string>AKA braucht Zugriff auf deine Fotos, wenn du ein vorhandenes Bild (z. B. eine Nährwerttabelle, deinen Dienstplan oder ein Profilbild) auswählst.</string>
 </dict>
 </plist>

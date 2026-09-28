@@ -10,6 +10,7 @@ import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import VorlaufFeld from "../../ui/VorlaufFeld";
 import AnsichtUmschalter from "../../ui/AnsichtUmschalter";
 import AppTempoKarte from "../../ui/AppTempoKarte";
+import DatenschutzKarte from "../../ui/DatenschutzKarte";
 
 // Morgen-/Abendroutine und Workout-Flow sind keine der 8 Onboarding-
 // Kategorien (categorySteps.js — die haben je eigene Einrichtungs-Screens,
@@ -852,6 +853,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           </div>
         ))}
       </Card>
+      <DatenschutzKarte />
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erweiterungen")}</div>
       <Card style={{ marginBottom: 14 }}>

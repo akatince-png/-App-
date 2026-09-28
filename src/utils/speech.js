@@ -9,6 +9,7 @@
 //   die geräteeigene Web-Speech-Sprachausgabe aus — die App bleibt so in
 //   jedem Zustand nutzbar, nie stumm.
 import { supabase } from "../lib/supabaseClient";
+import { kiPruefen } from "./kiEinwilligung";
 
 export function spracherkennungVerfuegbar() {
   return typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -139,6 +140,8 @@ function audioAbspielen(audio, meineGeneration) {
 // fängt das ab und weicht dann komplett auf die Browser-eigene Sprachausgabe
 // aus, statt mittendrin hängen zu bleiben.
 async function cloudSprich(text, meineGeneration) {
+  // Ohne KI-Einwilligung: Geräte-Stimme statt Google Text-to-Speech.
+  kiPruefen();
   const {
     data: { session },
   } = await supabase.auth.getSession();

@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import { uploadPhoto } from "../lib/storage";
 import { edgeFunctionFehlertext } from "../utils/edgeFunctionFehler";
+import { kiPruefen } from "../utils/kiEinwilligung";
 
 // Essen per Foto (25.09.): Foto verkleinern (Handyfotos sind oft > 5 MB),
 // in den privaten Bucket laden, Edge Function "essen-scan" auswerten lassen.
@@ -30,6 +31,7 @@ async function eigeneId(fallback) {
 }
 
 export async function essenFotoAuswerten(userId, file, art, text) {
+  kiPruefen();
   const bild = await verkleinern(file);
   const fotoPath = await uploadPhoto(await eigeneId(userId), bild, "essen");
   const { data, error } = await supabase.functions.invoke("essen-scan", { body: { fotoPath, mediaType: bild.type || "image/jpeg", art, text } });
@@ -49,6 +51,7 @@ export async function essenFotoAuswerten(userId, file, art, text) {
 // optional mit "3 Kapseln davon". art: "supplement" | "medikament".
 // Liefert { name, form, menge, portion, inhaltsstoffe: [{ name, menge, einheit }], hinweis }.
 export async function praeparatFotoAuswerten(userId, file, art, text) {
+  kiPruefen();
   const bild = await verkleinern(file);
   const ich = await eigeneId(userId);
   const fotoPath = await uploadPhoto(ich, bild, art === "medikament" ? "medikamente" : "supplemente");

@@ -155,6 +155,16 @@ try {
   await page.locator("input[type=password]").fill(PW);
   const t0 = Date.now();
   await page.getByRole("button", { name: "Anmelden" }).click();
+  // Einwilligung (seit 28.09.): Testkonten stimmen beim ersten Mal zu
+  // (Datenschutz + KI, damit auch die KI-Funktionen mitgetestet werden).
+  const einwilligung = await page.locator("[data-einwilligung]").waitFor({ timeout: 8000 }).then(() => true).catch(() => false);
+  if (einwilligung) {
+    await foto("00a-einwilligung");
+    await page.locator("[data-einwilligung-datenschutz]").check();
+    await page.locator("[data-einwilligung-ki]").check();
+    await page.getByRole("button", { name: "Weiter" }).click();
+    schritt("Einwilligung erteilt (Datenschutz + KI)");
+  }
   const geladen = await page
     .getByRole("button", { name: /^Spielstand:/ })
     .first()

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { MESSWERT_DEFS } from "../constants";
+import { setzeKiErlaubt } from "../utils/kiEinwilligung";
+import { DATENSCHUTZ_VERSION } from "../utils/rechtstexte";
 
 const DEFAULT_AKTIVE = ["gewicht", "kfa", "taille", "blutdruck", "ruhepuls", "energie"];
 
@@ -95,6 +97,8 @@ export function useProfileData(userId) {
   const [ranglisteSichtbar, setRanglisteSichtbarState] = useState(false);
   // Profilbild (24.09., siehe data/profilbild.js): Pfad im privaten Bucket.
   const [profilbildPfad, setProfilbildPfad] = useState(null);
+  // Einwilligungen (28.09., Migration 0120): Zeitstempel oder null.
+  const [einwilligung, setEinwilligungState] = useState({ datenschutzAm: null, kiAm: null, geladen: false });
 
   useEffect(() => {
     if (!userId) return;
@@ -124,6 +128,9 @@ export function useProfileData(userId) {
         setBelohnungPufferMinState(profile.belohnung_puffer_min ?? 10);
         setRanglisteSichtbarState(profile.rangliste_sichtbar ?? false);
         setProfilbildPfad(profile.profilbild_pfad || null);
+        setEinwilligungState({ datenschutzAm: profile.datenschutz_einwilligung_am || null, kiAm: profile.ki_einwilligung_am || null, geladen: true });
+        // KI nur mit Einwilligung (Admin-Konten = Betreiberin, immer erlaubt).
+        setzeKiErlaubt(!!profile.ki_einwilligung_am || !!profile.is_admin);
 
         // Serverseitiger Erinnerungs-Versand (pg_cron) rechnet in UTC und
         // muss wissen, in welcher Zeitzone eine eingetragene Uhrzeit
@@ -450,7 +457,36 @@ export function useProfileData(userId) {
     [userId, aktiveMesswerteSchreiben]
   );
 
+  // Einwilligung erteilen oder (nur KI) widerrufen. `datenschutz: true`
+  // speichert Zeitpunkt + Version der Datenschutzerklärung.
+  const einwilligungSetzen = useCallback(
+    async ({ datenschutz, ki }) => {
+      const jetzt = new Date().toISOString();
+      const update = {};
+      if (datenschutz) {
+        update.datenschutz_einwilligung_am = jetzt;
+        update.datenschutz_version = DATENSCHUTZ_VERSION;
+      }
+      if (ki !== undefined) update.ki_einwilligung_am = ki ? jetzt : null;
+      const { error } = await supabase.from("profiles").update(update).eq("id", userId);
+      if (error) {
+        console.error(error);
+        return { ok: false, error: error.message };
+      }
+      setEinwilligungState((alt) => ({
+        ...alt,
+        datenschutzAm: datenschutz ? jetzt : alt.datenschutzAm,
+        kiAm: ki === undefined ? alt.kiAm : ki ? jetzt : null,
+      }));
+      if (ki !== undefined) setzeKiErlaubt(ki || istAdminKonto);
+      return { ok: true };
+    },
+    [userId, istAdminKonto]
+  );
+
   return {
+    einwilligung,
+    einwilligungSetzen,
     loading,
     personalData,
     setPersonal,
