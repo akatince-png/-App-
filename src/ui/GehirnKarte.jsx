@@ -1,10 +1,12 @@
 import KoerperFigur from "./KoerperFigur";
-import React, { useMemo, useState } from "react";
+import React, { useId, useMemo, useState } from "react";
 import { berechneGehirnZeitraum, WIDGET_REGION } from "../utils/gehirn";
 import { KATEGORIEN } from "../utils/errungenschaften";
 import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
-import { logoBlau, logoTuerkis, logoVerlauf, nachtVerlaufFest } from "./theme";
+import { logoTuerkis, logoVerlauf, nachtVerlaufFest } from "./theme";
 import Icon from "./Icon";
+import gehirnTag from "../assets/gehirn/tag.webp";
+import gehirnAbend from "../assets/gehirn/abend.webp";
 
 // "Dein Gehirn" + Tagesfortschritt in EINER Karte (Nutzerinnen-Wunsch
 // 23.09.: "das Diagramm sollte auch in dieser Fläche mit dargestellt
@@ -22,62 +24,39 @@ import Icon from "./Icon";
 const KATEGORIE_LABEL = new Map(KATEGORIEN.map((k) => [k.key, k.label]));
 const ZEITRAUM_TEXT = { tag: "Heute", woche: "Diese Woche", monat: "Diesen Monat", gesamt: "Seit Protokollstart" };
 
-// Klassische Gehirn-Seitenansicht (Nutzerinnen-Wunsch 23.09.: "mehr nach
-// Gehirn, nicht nach Wolke"): Stirnlappen vorne links, Scheitel oben,
-// Hinterhaupt hinten, Schläfenlappen unten mit Schläfenpol, getrennt durch
-// die Seitenfurche; darunter hinten Kleinhirn und Hirnstamm.
-const GROSSHIRN =
-  "M 58 120 C 50 88 70 58 104 46 C 140 32 196 34 230 52 C 262 68 280 98 276 130 C 274 148 262 160 244 162 C 228 164 214 160 204 156 C 196 170 180 182 160 184 C 132 186 110 176 100 160 C 94 150 96 140 104 134 C 96 136 84 138 74 136 C 62 134 58 128 58 120 Z";
-const KLEINHIRN = "M 204 158 C 206 176 222 190 244 190 C 266 190 280 176 276 158 C 266 164 250 166 236 164 C 224 164 212 162 204 158 Z";
-const HIRNSTAMM = "M 188 176 C 191 190 193 200 194 212 C 197 218 205 218 208 212 C 208 200 209 190 212 178 Z";
+// Gehirn-Bilder aus Canva (Design 2.0, Nutzerin 28.09.: „Ja so 2 und 3“):
+// tagsüber das Gehirn mit farbigen Lappen, abends das leuchtende Neon-Gehirn.
+// Beide Bilder zeigen die Seitenansicht (Stirn links, Kleinhirn hinten unten).
+// Die Regionen liegen als Flächen darüber: Wer lädt, bekommt dort die volle
+// Farbe bzw. das volle Leuchten, der Rest bleibt blass.
+const BILD = {
+  hell: { src: gehirnTag, b: 720, h: 590 },
+  dunkel: { src: gehirnAbend, b: 720, h: 572 },
+};
 
-// Regionen als Flächen, an der Kontur zugeschnitten. Grenzen folgen grob
-// der Seitenfurche (unten: Schläfenlappen) und der Zentralfurche.
+// Flächen und Symbol-Punkte in Anteilen (0–1) der Bildbreite/-höhe, damit sie
+// auf beide Bilder passen. Zuordnung wie bisher: Stirnlappen = Fokus,
+// Streifen davor/dahinter = Bewegung (motorischer Bereich), Scheitel =
+// Energie, Hinterhaupt = Rhythmus, Schläfenlappen = Ruhe, Kleinhirn = Erholung.
 const FLAECHEN = {
-  fokus: "0,0 138,0 146,121 104,134 0,150",
-  bewegung: "138,0 170,0 172,116 146,121",
-  energie: "170,0 320,0 320,70 248,104 196,112 172,116",
-  rhythmus: "320,70 320,240 250,240 248,104",
-  ruhe: "0,150 104,134 146,121 172,116 196,112 248,104 250,240 0,240",
+  fokus: [[-0.2, -0.2], [0.4, -0.2], [0.32, 0.44], [0.3, 0.56], [0.25, 0.72], [-0.2, 0.72]],
+  bewegung: [[0.4, -0.2], [0.53, -0.2], [0.42, 0.43], [0.3, 0.56], [0.32, 0.44]],
+  energie: [[0.53, -0.2], [0.8, -0.2], [0.78, 0.2], [0.72, 0.36], [0.56, 0.36], [0.42, 0.43]],
+  rhythmus: [[0.8, -0.2], [1.2, -0.2], [1.2, 0.72], [0.8, 0.66], [0.72, 0.52], [0.72, 0.36], [0.78, 0.2]],
+  ruhe: [[0.42, 0.43], [0.56, 0.36], [0.72, 0.36], [0.72, 0.52], [0.78, 0.63], [0.55, 0.64], [0.46, 0.78], [0.25, 0.78], [0.25, 0.72], [0.3, 0.56]],
+  erholung: [[0.46, 0.64], [0.95, 0.62], [0.95, 1.2], [0.46, 1.2]],
 };
 const PUNKT = {
-  fokus: [88, 96],
-  bewegung: [156, 62],
-  energie: [212, 78],
-  rhythmus: [260, 128],
-  ruhe: [150, 154],
-  erholung: [242, 178],
+  fokus: [0.2, 0.36],
+  bewegung: [0.42, 0.16],
+  energie: [0.63, 0.19],
+  rhythmus: [0.86, 0.42],
+  ruhe: [0.48, 0.58],
+  erholung: [0.72, 0.8],
 };
-// Furchen und Windungen im Logo-Linienstil.
-const SEITENFURCHE = "M 104 134 C 130 124 160 118 196 112 C 214 110 232 108 248 104";
-const ZENTRALFURCHE = "M 150 38 C 144 56 156 72 148 90 C 142 102 148 112 146 121";
-const WINDUNGEN = [
-  "M 68 104 C 78 94 88 106 98 98 C 108 90 116 100 126 92",
-  "M 80 74 C 92 66 100 78 112 70 C 122 64 128 74 136 68",
-  "M 72 126 C 82 120 92 126 100 122",
-  "M 110 48 C 116 58 126 54 130 62",
-  "M 176 50 C 186 60 198 50 208 60 C 218 70 230 62 240 72",
-  "M 172 88 C 184 80 194 94 206 86 C 218 78 228 92 242 86",
-  "M 250 96 C 258 106 252 118 262 126 C 268 132 266 142 258 148",
-  "M 116 158 C 128 150 138 164 150 156 C 162 148 172 162 188 154",
-  "M 128 174 C 140 168 150 178 164 172",
-  "M 64 88 C 72 80 80 90 88 84",
-  "M 96 56 C 104 64 114 58 120 66",
-  "M 118 84 C 126 94 136 86 140 96",
-  "M 84 116 C 94 110 104 118 114 112 C 124 106 132 114 140 108",
-  "M 168 66 C 176 74 186 70 192 78",
-  "M 210 100 C 220 94 232 100 240 96",
-  "M 244 58 C 252 66 262 70 266 82",
-  "M 108 146 C 118 140 126 148 136 144",
-  "M 180 134 C 188 142 198 138 204 146",
-  "M 262 104 C 270 110 270 118 266 124",
-];
-
-// Ruhigere Auswahl der Windungen (Design 2.0): die markantesten, ohne Gewirr.
-const WINDUNGEN_RUHIG = WINDUNGEN.filter((_, i) => [0, 1, 4, 5, 6, 7, 12, 14, 16].includes(i));
 
 function bahn([x1, y1], [x2, y2]) {
-  return `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 - 16} ${x2} ${y2}`;
+  return `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 - 50} ${x2} ${y2}`;
 }
 
 function deckkraft(r) {
@@ -95,27 +74,18 @@ const STIMMUNG = {
   morgen: {
     hintergrund: "#FFFFFF",
     schatten: "0 1px 2px rgba(60, 30, 10, 0.05), 0 8px 24px rgba(60, 30, 10, 0.07)",
-    linieVon: "#2FB39A",
-    linieBis: "#3E63D6",
-    grund: "#F4EEE8",
     hinweis: "☀️ Guten Morgen — deine Morgenroutine lädt dein Gehirn auf.",
     hell: true,
   },
   tag: {
     hintergrund: "#FFFFFF",
     schatten: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.07)",
-    linieVon: "#2FB39A",
-    linieBis: "#3E63D6",
-    grund: "#EDF2FB",
     hinweis: null,
     hell: true,
   },
   nacht: {
     hintergrund: nachtVerlaufFest,
     schatten: "0 14px 30px rgba(16, 19, 43, 0.35)",
-    linieVon: logoTuerkis,
-    linieBis: logoBlau,
-    grund: "#1D2350",
     hinweis: "🌙 Abendroutine — Zeit, langsam runterzufahren. Gleich geht's ins Bett.",
   },
 };
@@ -240,6 +210,10 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
   const prozent = Math.round(gehirn.gesamtLadung * 100);
   const waehle = (key) => setGewaehlt((g) => (g === key ? null : key));
   const sichtbareBalken = (widgets || []).filter((w) => w.kategorie !== "notfallmodus");
+  const uid = useId().replace(/:/g, "");
+  const bild = stimmung.hell ? BILD.hell : BILD.dunkel;
+  const punkt = (key) => [PUNKT[key][0] * bild.b, PUNKT[key][1] * bild.h];
+  const punkte = (liste) => liste.map(([x, y]) => `${x * bild.b},${y * bild.h}`).join(" ");
 
   return (
     <div style={{ "--gk-rgb": stimmung.hell ? "20, 30, 60" : "255, 255, 255", "--gk-text": stimmung.hell ? "#101828" : "#fff", position: "relative", marginBottom: 20, borderRadius: 24, padding: 16, color: "var(--gk-text)", background: stimmung.hintergrund, boxShadow: stimmung.schatten, border: stimmung.hell ? "1px solid rgba(16, 24, 40, 0.05)" : "none", transition: "background 1s" }}>
@@ -275,110 +249,52 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       {/* Gehirn + Körper nebeneinander (26.09., Skizze der Nutzerin) */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{ position: "relative", flex: "1.55 1 0", minWidth: 0 }}>
-      <svg viewBox="40 24 250 200" role="img" aria-label={`Dein Gehirn, ${ZEITRAUM_TEXT[zeitraum] || "heute"} zu ${prozent} Prozent aufgeladen`} style={{ width: "100%", maxWidth: 420, display: "block", margin: "8px auto 0" }}>
+      <svg viewBox={`0 0 ${bild.b} ${bild.h}`} role="img" aria-label={`Dein Gehirn, ${ZEITRAUM_TEXT[zeitraum] || "heute"} zu ${prozent} Prozent aufgeladen`} data-gehirn-bild={stimmung.hell ? "tag" : "abend"} style={{ width: "100%", maxWidth: 420, display: "block", margin: "8px auto 0" }}>
         <defs>
-          <clipPath id="mp-grosshirn">
-            <path d={GROSSHIRN} />
-          </clipPath>
-          <linearGradient id="mp-gehirn-verlauf" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={stimmung.linieVon} />
-            <stop offset="100%" stopColor={stimmung.linieBis} />
-          </linearGradient>
-          <radialGradient id="mp-gehirn-tiefe" cx="38%" cy="32%" r="75%">
-            <stop offset="0%" stopColor="#fff" stopOpacity="0.16" />
-            <stop offset="55%" stopColor="#fff" stopOpacity="0.04" />
-            <stop offset="100%" stopColor={stimmung.hell ? "#3E63D6" : "#000"} stopOpacity={stimmung.hell ? 0.08 : 0.18} />
-          </radialGradient>
-          <filter id="mp-gehirn-linie" x="-10%" y="-10%" width="120%" height="120%">
-            <feGaussianBlur stdDeviation="1.6" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          <filter id={`${uid}-weich`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation={bild.b * 0.03} />
           </filter>
-          <clipPath id="mp-kleinhirn">
-            <path d={KLEINHIRN} />
-            <path d={HIRNSTAMM} />
-          </clipPath>
-          {/* Weiche Übergänge zwischen den Regionen statt harter Kanten */}
-          <filter id="mp-gehirn-weich" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="9" />
-          </filter>
-          <filter id="mp-gehirn-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Grundform (Hirnstamm hinten, Kleinhirn davor, Großhirn vorne) */}
-        <path d={HIRNSTAMM} fill={stimmung.grund} />
-        <path d={KLEINHIRN} fill={stimmung.grund} />
-        <path d={GROSSHIRN} fill={stimmung.grund} />
-        {/* Design 2.0: sanfte Tiefe – heller Kern oben links, dunkler Rand */}
-        <path d={GROSSHIRN} fill="url(#mp-gehirn-tiefe)" style={{ pointerEvents: "none" }} />
-        <path d={KLEINHIRN} fill="url(#mp-gehirn-tiefe)" style={{ pointerEvents: "none" }} />
-
-        {/* Regionen leuchten mit ihrer Ladung — weich ineinander verlaufend,
-            an der Hirnkontur zugeschnitten */}
-        {[
-          ["mp-grosshirn", gehirn.regionen.filter((r) => r.key !== "erholung")],
-          ["mp-kleinhirn", gehirn.regionen.filter((r) => r.key === "erholung")],
-        ].map(([clip, liste]) => (
-          <g key={clip} clipPath={`url(#${clip})`}>
-            <g filter="url(#mp-gehirn-weich)">
-              {liste.map((r) => (
+          {/* Maske: je Region so viel Farbe/Leuchten, wie sie aufgeladen ist */}
+          <mask id={`${uid}-maske`} maskUnits="userSpaceOnUse" x="0" y="0" width={bild.b} height={bild.h}>
+            <g filter={`url(#${uid}-weich)`}>
+              {gehirn.regionen.map((r) => (
                 <polygon
                   key={r.key}
-                  points={r.key === "erholung" ? "170,150 300,150 300,240 170,240" : FLAECHEN[r.key]}
-                  fill={r.zustand === "leer" ? "#C8CEF0" : r.farbe}
+                  points={punkte(FLAECHEN[r.key])}
+                  fill="#fff"
                   fillOpacity={gewaehlt && gewaehlt !== r.key ? deckkraft(r) * 0.45 : deckkraft(r)}
                   className={r.zustand === "aktiv" ? "mp-gehirn-aktiv" : undefined}
-                  style={{ cursor: "pointer", transition: "fill-opacity 0.6s ease" }}
-                  onClick={() => waehle(r.key)}
+                  style={{ transition: "fill-opacity 0.6s ease" }}
                 />
               ))}
             </g>
-          </g>
-        ))}
+          </mask>
+        </defs>
 
-        {/* Logo-Linien: Umriss + Windungen */}
-        {/* Design 2.0: Umriss mit leichtem Schein, weniger und feinere
-            Windungen – ruhiger, aber weiter im Linienstil des Logos. */}
-        <g fill="none" stroke="url(#mp-gehirn-verlauf)" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
-          <g filter="url(#mp-gehirn-linie)">
-            <path d={HIRNSTAMM} strokeWidth="3" />
-            <path d={KLEINHIRN} strokeWidth="3" />
-            <path d={GROSSHIRN} strokeWidth="3.4" />
-          </g>
-          <path d={SEITENFURCHE} strokeWidth="2.8" />
-          <path d={ZENTRALFURCHE} strokeWidth="2.4" opacity="0.8" />
-          <g strokeWidth="2" opacity="0.5">
-            {WINDUNGEN_RUHIG.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-          <g strokeWidth="1.8" opacity="0.45">
-            <path d="M 212 170 C 230 176 254 176 272 166" />
-            <path d="M 220 180 C 236 184 254 184 268 178" />
-          </g>
-        </g>
+        {/* Grundbild blass (tagsüber entsättigt, abends gedimmt) … */}
+        <image href={bild.src} x="0" y="0" width={bild.b} height={bild.h} style={{ filter: stimmung.hell ? "saturate(0.3) brightness(1.06) opacity(0.72)" : "brightness(0.38) saturate(0.6)", mixBlendMode: stimmung.hell ? undefined : "screen" }} />
+        {/* … und darüber in voller Farbe, nur wo geladen ist */}
+        <image href={bild.src} x="0" y="0" width={bild.b} height={bild.h} mask={`url(#${uid}-maske)`} style={{ mixBlendMode: stimmung.hell ? undefined : "screen" }} />
+
+        {/* Tippflächen je Region */}
+        {gehirn.regionen.map((r) => (
+          <polygon key={r.key} points={punkte(FLAECHEN[r.key])} fill="transparent" style={{ cursor: "pointer" }} onClick={() => waehle(r.key)} />
+        ))}
 
         {/* Nervenbahnen: Regionen mit laufender Serie */}
         <g fill="none" strokeLinecap="round" style={{ pointerEvents: "none" }}>
           {gehirn.verbindungen
             .filter((v) => v.aktiv)
             .map((v) => (
-              <path key={`${v.a}-${v.b}`} d={bahn(PUNKT[v.a], PUNKT[v.b])} stroke="#FFFFFF" strokeWidth="2" strokeDasharray="5 6" className="mp-gehirn-bahn" opacity="0.8" />
+              <path key={`${v.a}-${v.b}`} d={bahn(punkt(v.a), punkt(v.b))} stroke={stimmung.hell ? "#3E63D6" : "#FFFFFF"} strokeWidth={bild.b * 0.008} strokeDasharray={`${bild.b * 0.02} ${bild.b * 0.024}`} className="mp-gehirn-bahn" opacity="0.8" />
             ))}
         </g>
 
         {/* Regions-Symbole */}
         {gehirn.regionen.map((r) => {
-          const [x, y] = PUNKT[r.key];
+          const [x, y] = punkt(r.key);
           const an = gewaehlt === r.key;
+          const radius = bild.b * (an ? 0.056 : 0.048);
           return (
             <g
               key={r.key}
@@ -392,14 +308,14 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
               <circle
                 cx={x}
                 cy={y}
-                r={an ? 14 : 12}
+                r={radius}
                 fill={r.zustand === "leer" ? (stimmung.hell ? "#fff" : "#1B2146") : r.farbe}
-                fillOpacity={r.zustand === "aktiv" ? 1 : 0.5}
-                style={{ stroke: an ? (stimmung.hell ? "#3E63D6" : "#fff") : stimmung.hell ? "#fff" : "rgba(255, 255, 255, 0.7)" }}
-                strokeWidth={an ? 2.5 : 1.4}
-                strokeDasharray={r.zustand === "leer" ? "3 3" : undefined}
+                fillOpacity={r.zustand === "aktiv" ? 1 : r.zustand === "leer" ? 0.92 : 0.75}
+                style={{ stroke: an ? (stimmung.hell ? "#3E63D6" : "#fff") : stimmung.hell ? "#fff" : "rgba(255, 255, 255, 0.7)", filter: stimmung.hell ? "drop-shadow(0 2px 4px rgba(16, 24, 40, 0.18))" : "drop-shadow(0 0 6px rgba(120, 160, 255, 0.6))" }}
+                strokeWidth={bild.b * (an ? 0.01 : 0.006)}
+                strokeDasharray={r.zustand === "leer" ? `${bild.b * 0.012} ${bild.b * 0.012}` : undefined}
               />
-              <text x={x} y={y + 4} textAnchor="middle" fontSize="12" style={{ pointerEvents: "none" }}>
+              <text x={x} y={y + bild.b * 0.017} textAnchor="middle" fontSize={bild.b * 0.048} style={{ pointerEvents: "none" }}>
                 {r.emoji}
               </text>
             </g>
