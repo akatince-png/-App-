@@ -51,3 +51,35 @@ Der **Fokus-Timer** meldet sich in der iPhone-App auch bei gesperrtem Handy (lok
 - **Diktieren:** Die Web-Spracherkennung gibt es in der iOS-WebView nicht zuverlässig, eventuell ist ein Capacitor-Plugin für Spracherkennung nötig.
 - **Links aus E-Mails** (Einladung, Passwort): Deep Links/Universal Links einrichten, sonst öffnen sie im Browser.
 - Nach jeder Code-Änderung: `npm run ios:sync`, dann in Xcode neu bauen.
+
+## TestFlight für die Forschungsphase (Entscheidung der Nutzerin 28.09.)
+
+Statt die App öffentlich in den App Store zu stellen, bekommen die Coachees sie über **TestFlight** (Apples Test-App). Die App ist nicht öffentlich zu finden, nur wer den Link hat, kann sie installieren. Die Datenschutz-Teile (Einwilligung, Konto löschen, Datenschutzerklärung) sind trotzdem drin.
+
+**Einmalig vorbereiten**
+1. Apple-Developer-Konto (99 €/Jahr) und ein Mac mit Xcode.
+2. App Store Connect → **Meine Apps → „+“ → Neue App**: Plattform iOS, Name „AKA“, Sprache Deutsch, Bundle-ID `de.aka.app` (muss zur App-ID im Developer-Konto passen), SKU z. B. `aka-001`.
+3. Am Mac (siehe „Was am Mac zu tun ist“ oben): `npm install`, `npm run ios:sync`, `npm run ios:open`, in Xcode das Team wählen.
+
+**Eine Version hochladen**
+1. Xcode: oben als Ziel „Any iOS Device“ wählen → **Product → Archive**.
+2. Im Fenster „Organizer“: **Distribute App → App Store Connect → Upload**. Die Frage nach Verschlüsselung ist schon beantwortet (`ITSAppUsesNonExemptEncryption = false`, die App nutzt nur normales HTTPS).
+3. Nach 10–30 Minuten erscheint die Version in App Store Connect unter **TestFlight**.
+4. Für jede neue Version in Xcode unter Target „App“ → General die **Build**-Nummer um 1 erhöhen (1, 2, 3 …). Eine Version läuft 90 Tage.
+
+**Testinformationen (TestFlight → Testinformationen)**
+- Beschreibung, was getestet werden soll, z. B. „ADHS-Alltagsbegleiter im Pilot-Coaching“.
+- Feedback-E-Mail: deine Adresse.
+- Datenschutz-URL: `https://akaapp.vercel.app/datenschutz.html`
+- **Anmeldedaten für die Beta-Prüfung:** ein eigenes Test-Coachee-Konto mit Beispieldaten. Die Zugangsdaten gibst **du** dort ein, nie in den Chat.
+- Prüfnotiz: „Keine offene Registrierung, Zugang per Einladung durch den Coach. KI-Funktionen nur nach freiwilliger Einwilligung. Konto löschen: Mehr → Datenschutz & Konto.“
+
+**Coachees einladen (externe Tester)**
+1. TestFlight → **Externe Tests → „+“** → Gruppe „Coachees“ anlegen.
+2. Die hochgeladene Version zur Gruppe hinzufügen → **Zur Prüfung senden**. Apples Beta-Prüfung dauert meist 1–2 Tage (nur bei der ersten Version einer Gruppe bzw. bei größeren Änderungen).
+3. Danach **Öffentlichen Link aktivieren** (Anzahl begrenzbar) und den Link an die Coachees schicken.
+4. Die Coachees laden die App **TestFlight** aus dem App Store, tippen auf den Link → „Installieren“. Anmelden wie gewohnt mit dem Zugang, den du ihnen als Coach anlegst.
+
+**Interne Tester** (bis 100, ohne Prüfung) sind nur Personen, die du unter „Benutzer und Zugriff“ in dein App-Store-Connect-Konto aufnimmst – gut für dich selbst und Mitarbeitende, für Coachees ist der öffentliche Link einfacher.
+
+**Später für den öffentlichen App Store:** siehe `docs/APP-STORE-DATENSCHUTZ.md` (Impressum vollständig, Auftragsverarbeitungsverträge, fachliche Prüfung der Texte, Datenschutz-Angaben ankreuzen).
