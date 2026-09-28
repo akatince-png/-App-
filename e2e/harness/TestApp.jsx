@@ -202,6 +202,30 @@ function leseOverridesAusUrl() {
   }
   // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
   // Supplement, Gewohnheit) für Design-Vorschauen.
+  // ?alltag=1: Kalender „Mein Alltag“ mit Beispiel-Einträgen (28.09., Vorschau).
+  if (params.get("alltag") === "1") {
+    const iso0 = (n) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    overrides.routineEinstellungen = { morgen: { startZeit: "06:30", endZeit: "07:30" }, abend: { startZeit: "21:30", endZeit: "22:30" } };
+    overrides.alltagEintraege = [
+      { id: 1, bereich: "arbeit", titel: "Arbeit", start: "08:30", ende: "16:30", wochentage: ["Mo", "Di", "Mi", "Do"] },
+      { id: 2, bereich: "arbeit", titel: "Arbeit (Homeoffice)", start: "08:30", ende: "13:00", wochentage: ["Fr"] },
+      { id: 3, bereich: "haushalt", titel: "Staubsaugen", start: "10:00", ende: "10:45", wochentage: ["Sa"] },
+      { id: 4, bereich: "haushalt", titel: "Wäsche", start: "19:00", ende: "19:30", wochentage: ["Mi"] },
+      { id: 5, bereich: "haushalt", titel: "Einkaufen", start: "17:00", ende: "17:45", wochentage: ["Fr"] },
+      { id: 6, bereich: "hobby", titel: "Gitarre", start: "19:30", ende: "20:30", wochentage: ["Di", "Do"] },
+      { id: 7, bereich: "sozial", titel: "Familie", start: "14:00", ende: "17:00", wochentage: ["So"] },
+      { id: 8, bereich: "termin", titel: "Zahnarzt", start: "15:00", ende: "16:00", datum: iso0(2) },
+    ];
+    overrides.trainingWochenplan = [
+      { id: "tw1", wochentag: "Mo", name: "Krafttraining", uhrzeit: "17:30", arten: ["Krafttraining"] },
+      { id: "tw2", wochentag: "Mi", name: "Laufen", uhrzeit: "17:00", arten: ["Cardio"] },
+      { id: "tw3", wochentag: "Sa", name: "Krafttraining", uhrzeit: "11:30", arten: ["Krafttraining"] },
+    ];
+  }
   if (params.get("beispiel") === "1") {
     overrides.hormonPlan = [{ date: new Date(), name: "Elvanse", uhrzeit: "08:00", menge: "30 mg" }];
     overrides.supplemente = [{ id: "s1", name: "Vitamin D3", tageszeiten: ["morgens"], hinweis: "1 Kapsel zum Frühstück" }];
