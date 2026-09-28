@@ -201,6 +201,9 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Geplant: Design-Überarbeitung der ganzen App mit Canva (Nutzerin 28.09., „in absehbarer Zeit“, nicht sofort)
+Canva ist als Connector verbunden. Vorgehen wie besprochen: erst Bestandsaufnahme (Screenshots aller Hauptseiten), dann in Canva ein Design-Board (Farben, Schrift, Kacheln, Icons, 2–3 Beispielseiten) zur Auswahl, nach Freigabe schrittweise Umsetzung im Code (Vorschau auf dem Branch, dann main). ADHS-tauglich: ruhig, klar, wenige Elemente je Seite. Nachtblau + Bereichsfarben sind bisherige Freigaben – bei der Überarbeitung bewusst nachfragen, was bleibt.
+
 ### Dienstplan abfotografieren (28.09. spätabends, Nutzerin, Vorschau auf dem Branch)
 Wunsch: Wer den Dienstplan nur wöchentlich bekommt, fotografiert ihn ab, die Zeiten werden übernommen – **ohne KI/Gemini-Kontingent**.
 - **Texterkennung auf dem Gerät:** `tesseract.js` (lazy geladen, nur auf dieser Seite). Beim ersten Mal lädt der Browser Programm + deutsche Sprachdaten (~6 MB) von jsDelivr, danach gecacht. Das Foto verlässt das Handy nicht.
