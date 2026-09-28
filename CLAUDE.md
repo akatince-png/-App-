@@ -29,6 +29,10 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   mit guter Studienlage und die Medikation (mit dem Arzt). Dazu kommt
   Community. Die ersten Wochen sind die Einstellungsphase, das Coaching
   geht danach weiter. Details stehen oben in `UEBERGABEPROTOKOLL.md`.
+- **Lifestyle-App, keine Therapie-/Krisen-App (Nutzerin, 28.09.):** keine
+  Notrufnummern, Telefonseelsorge oder Krisen-Abschnitte in Texten und
+  Handbüchern, alles im Verhältnis zum Alltag mit ADHS halten. Details:
+  `UEBERGABEPROTOKOLL.md`, Philosophie Punkt 6b.
 - **Leitprinzip, nicht verhandelbar:** Jede Funktion muss sowohl manuell
   als auch per KI-Coach nutzbar sein — niemals ein manuelles Formular
   entfernen oder verstecken, nur weil es jetzt auch einen KI-Weg gibt.

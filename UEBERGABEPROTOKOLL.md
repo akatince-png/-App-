@@ -89,6 +89,15 @@ feste Wochenzahl als „Produkt“ verkaufen.
 - Coachees gegenüber tritt der **Coach** als der auf, der auswertet und nachstellt. Aka im Hintergrund
   wird Coachees nicht als KI-Ersatz präsentiert (Abschnitt 1, „Geschäftsmodell-Pivot“).
 
+**6b. Lifestyle-App, kein Therapie- oder Krisenangebot (Nutzerin, 28.09., ausdrücklich).** AKA ist eine
+Lifestyle-App für Menschen mit ADHS. Sie ist keine Therapie, keine medizinische App und kein Krisendienst. In Texten,
+Handbüchern, Onboarding und Coach-Material deshalb **keine Notrufnummern (112/110), keine Telefonseelsorge und keine
+Krisen- oder Suizid-Abschnitte.** Die Nutzerin: „Ich würde es als ADHSler hinterfragen, warum da jetzt eine
+Notfalltelefonnummer ist … Es muss schon im Verhältnis bleiben.“ Was bleibt: der sachliche Hinweis „AKA ersetzt keine
+ärztliche Behandlung, Medikamente nur mit ärztlicher Absprache“. Schwere Momente löst die App im Alltagston
+(„Grad nicht gut?“, Coach anschreiben, Plan kleiner machen). Eine ADHS-spezifische Anlaufstelle wäre in Ordnung,
+wenn es eine passende gibt.
+
 **7. Diese Perspektive regelmäßig auf Bestehendes anwenden.** Erster Kandidat ist das Onboarding.
 Die bildhafte Vorstellung ist im Artefakt „AKA Vorstellung“ (Beispiel 5 vom 26.09.: Tabs antippen, exekutive rechte Hand,
 „Ein guter Morgen beginnt am Abend davor“, Bewegung, ein Tag mit AKA, Kleinigkeiten, „Grad nicht gut?“,
