@@ -144,6 +144,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
     atemSessions,
     eigeneGruppenLogs,
     eigeneFokusSitzungen,
+    alltagEintraege,
+    alltagErledigt,
     gruppenprotokolle,
     gruppenBausteinUmschalten,
     gruppenprotokolleNeuLaden,
@@ -755,9 +757,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       kognitivErgebnisse,
       eigeneGruppenLogs,
       eigeneFokusSitzungen,
+      alltagEintraege,
+      alltagErledigt,
     }),
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
-      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, kognitivErgebnisse, eigeneGruppenLogs, eigeneFokusSitzungen]
+      schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, kognitivErgebnisse, eigeneGruppenLogs, eigeneFokusSitzungen, alltagEintraege, alltagErledigt]
   );
   const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });

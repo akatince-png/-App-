@@ -217,7 +217,12 @@ Coach über Verwalten).
 - Erinnerungen: eigene Edge Function `send-alltag-reminders` (v1, verify_jwt) + pg_cron-Job
   `aka-alltag-erinnerungen` jede Minute (Befehl serverseitig aus dem send-due-reminders-Job kopiert, Geheimnis nie
   angezeigt; Prüfung gegen `cron_konfig`). Die große `send-due-reminders` bleibt unverändert.
-- Noch nicht: Alltags-Einträge zählen nicht ins Gehirn/Punkte; Handy-Kalender-Import.
+- **Gehirn (28.09., Nutzerin: „Einträge sollen ins Gehirn zählen“):** Tage mit abgehakten Einträgen zählen über die
+  Errungenschaften-Kategorien `alltagPlanung` (Arbeit, Haushalt, Termin, eigene Bereiche → Region „Fokus & Planung“)
+  und `alltagAusgleich` (Hobby, Me-Time, Freunde & Familie → „Ruhe & Gefühl“), `utils/errungenschaften.js` +
+  `utils/gehirn.js`. **Ohne Punkte** (holePunkte leer), weil Punkte die Team-Rangliste bestimmen – offen, ob sie später
+  Punkte geben sollen (dann auch `_punkte_ereignisse` per Migration ergänzen).
+- Noch nicht: Handy-Kalender-Import.
 - Tests: `utils/kalender.test.js`, `utils/programme.test.js`, `e2e/mein-alltag.spec.js`; Coach-Handbuch Kapitel
   „Nach den 8 Wochen: Mein Alltag“.
 

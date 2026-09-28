@@ -43,6 +43,8 @@ export default function ErfolgeTab() {
     kognitivErgebnisse,
     eigeneGruppenLogs,
     eigeneFokusSitzungen,
+    alltagEintraege,
+    alltagErledigt,
   } = appData;
 
   const quellen = useMemo(
@@ -63,6 +65,8 @@ export default function ErfolgeTab() {
       kognitivErgebnisse,
       eigeneGruppenLogs,
       eigeneFokusSitzungen,
+      alltagEintraege,
+      alltagErledigt,
     }),
     [
       supplementErledigt,
@@ -81,6 +85,8 @@ export default function ErfolgeTab() {
       kognitivErgebnisse,
       eigeneGruppenLogs,
       eigeneFokusSitzungen,
+      alltagEintraege,
+      alltagErledigt,
     ]
   );
 

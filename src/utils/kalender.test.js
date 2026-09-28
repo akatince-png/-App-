@@ -60,3 +60,27 @@ describe("Aka-Antwort für den Kalender prüfen", () => {
     ]);
   });
 });
+
+describe("Mein Alltag im Gehirn", () => {
+  it("abgehakte Einträge laden Fokus & Planung bzw. Ruhe & Gefühl, ohne Punkte", async () => {
+    const { berechneErrungenschaften } = await import("./errungenschaften");
+    const { berechneGehirnZeitraum } = await import("./gehirn");
+    const quellen = {
+      alltagEintraege: [
+        { id: "a1", bereich: "haushalt", bereichId: null },
+        { id: "a2", bereich: "metime", bereichId: null },
+        { id: "a3", bereich: "eigen", bereichId: "b1" },
+      ],
+      alltagErledigt: { "a1|2026-10-27": true, "a3|2026-10-28": true, "a2|2026-10-28": true, "a2|2026-10-26": false },
+    };
+    const e = berechneErrungenschaften(quellen);
+    const plan = e.kategorien.find((k) => k.key === "alltagPlanung");
+    const ausgleich = e.kategorien.find((k) => k.key === "alltagAusgleich");
+    expect(plan.tageListe.sort()).toEqual(["2026-10-27", "2026-10-28"]);
+    expect(ausgleich.tageListe).toEqual(["2026-10-28"]);
+    expect(plan.punkte + ausgleich.punkte).toBe(0);
+    const g = berechneGehirnZeitraum({ widgets: [], kategorien: e.kategorien, tage: 7, heute: new Date(2026, 9, 28) });
+    expect(g.regionen.find((r) => r.key === "fokus").ladung).toBeGreaterThan(0);
+    expect(g.regionen.find((r) => r.key === "ruhe").ladung).toBeGreaterThan(0);
+  });
+});

@@ -14,8 +14,8 @@ export const REGIONEN = [
     label: "Fokus & Planung",
     emoji: "🎯",
     farbe: "#7C5CE0",
-    kategorien: ["gewohnheiten", "morgenroutine", "abendroutine", "tagesraetsel", "konzentration", "fokusGemeinsam"],
-    text: "Routinen und Denksport trainieren Planung, Arbeitsgedächtnis und Selbststeuerung — genau die Fähigkeiten, bei denen ADHS am meisten Unterstützung braucht.",
+    kategorien: ["gewohnheiten", "morgenroutine", "abendroutine", "tagesraetsel", "konzentration", "fokusGemeinsam", "alltagPlanung"],
+    text: "Routinen, Denksport und erledigte Alltags-Termine trainieren Planung, Arbeitsgedächtnis und Selbststeuerung — genau die Fähigkeiten, bei denen ADHS am meisten Unterstützung braucht.",
   },
   {
     key: "bewegung",
@@ -46,8 +46,8 @@ export const REGIONEN = [
     label: "Ruhe & Gefühl",
     emoji: "🌬️",
     farbe: "#1FA39A",
-    kategorien: ["atemuebungen"],
-    text: "Ruhiges Atmen bremst das Stresssystem — das hilft, Gefühle und Impulse besser zu steuern.",
+    kategorien: ["atemuebungen", "alltagAusgleich"],
+    text: "Ruhiges Atmen bremst das Stresssystem — das hilft, Gefühle und Impulse besser zu steuern. Auch Me-Time, Hobbys und Zeit mit Menschen zählen hier.",
   },
   {
     key: "erholung",
@@ -118,7 +118,7 @@ export const WIDGET_REGION = {
   tageslicht: "rhythmus",
 };
 // Bereiche ohne eigenen Balken: zählen über ihre erledigten Tage im Zeitraum.
-const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", tagesraetsel: "fokus", konzentration: "fokus", gruppe: "fokus", fokusGemeinsam: "fokus" };
+const OHNE_BALKEN = { schlaf: "erholung", atemuebungen: "ruhe", tagesraetsel: "fokus", konzentration: "fokus", gruppe: "fokus", fokusGemeinsam: "fokus", alltagPlanung: "fokus", alltagAusgleich: "ruhe" };
 
 // widgets: Balken-Daten des gewählten Zeitraums (dailyCount/dailyTotal je
 // Bereich, siehe utils/zeitraumFortschritt.js); tage: Länge des Zeitraums.

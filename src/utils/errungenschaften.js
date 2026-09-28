@@ -47,6 +47,15 @@ function tageAusErledigtMap(map) {
 // (unterschieden nur über ein Textfeld ohne echte DB-Verknüpfung) — auf
 // Nutzerinnen-Wunsch (11.09.) bewusst als EINE gemeinsame Kategorie
 // geführt statt den Mehraufwand einer sauberen Trennung zu betreiben.
+// Tage mit abgehakten Alltags-Einträgen der genannten Bereiche.
+function alltagTage(q, bereiche) {
+  const bereichVon = new Map((q.alltagEintraege || []).map((e) => [String(e.id), e.bereichId ? "eigen" : e.bereich]));
+  const tage = Object.entries(q.alltagErledigt || {})
+    .filter(([k, v]) => v && bereiche.includes(bereichVon.get(k.split("|")[0])))
+    .map(([k]) => k.split("|")[1]);
+  return [...new Set(tage)];
+}
+
 export const KATEGORIEN = [
   {
     key: "morgenroutine",
@@ -181,6 +190,28 @@ export const KATEGORIEN = [
     icon: "target",
     grad: gradAus("#7C5CE0"),
     holeTage: (q) => [...new Set((q.eigeneFokusSitzungen || []).filter((s) => s.ergebnis).map((s) => toLocalISODate(new Date(s.startUm))))],
+  },
+  {
+    // Kalender „Mein Alltag“ (28.09., Nutzerin: „Einträge sollen ins Gehirn
+    // zählen“): Tage mit mindestens einem abgehakten Eintrag. Planung (Arbeit,
+    // Haushalt, Termine, eigene Bereiche) lädt „Fokus & Planung“, Ausgleich
+    // (Hobby, Me-Time, Freunde & Familie) lädt „Ruhe & Gefühl“. Bewusst ohne
+    // Punkte (holePunkte leer), weil Punkte auch die Team-Rangliste bestimmen
+    // und der Kalender erst nach der Einstellungsphase freigeschaltet wird.
+    key: "alltagPlanung",
+    label: "Mein Alltag – Planung",
+    icon: "calendarWeek",
+    grad: gradAus("#3F5BA9"),
+    holeTage: (q) => alltagTage(q, ["arbeit", "haushalt", "termin", "eigen"]),
+    holePunkte: () => [],
+  },
+  {
+    key: "alltagAusgleich",
+    label: "Mein Alltag – Ausgleich",
+    icon: "calendarWeek",
+    grad: gradAus("#2A9BBF"),
+    holeTage: (q) => alltagTage(q, ["hobby", "metime", "sozial"]),
+    holePunkte: () => [],
   },
   {
     // Gruppenprotokoll (24.09.): eigene Gruppen-Gewohnheiten des Teams —

@@ -38,6 +38,8 @@ export function useErrungenschaften(userId, quellen) {
       quellen.kognitivErgebnisse,
       quellen.eigeneGruppenLogs,
       quellen.eigeneFokusSitzungen,
+      quellen.alltagEintraege,
+      quellen.alltagErledigt,
     ]
   );
 
