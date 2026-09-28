@@ -13,6 +13,7 @@ import { useAppData } from "../context/AppDataContext";
 import TagesEintragBearbeiten from "../ui/TagesEintragBearbeiten";
 import RoutineTagesPeek from "../ui/RoutineTagesPeek";
 import ItemVerlauf from "../ui/ItemVerlauf";
+import { EXPORT_BEREICHE, EXPORT_TEILE, VORLAGEN, alltagItems, imExport, standardAuswahl } from "../utils/exportAuswahl";
 
 const WOCHENTAG_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -88,6 +89,9 @@ export default function WochenuebersichtView({
     routineDurchlaeufe,
     routineSchrittErledigt,
     routineEinstellungen,
+    alltagEintraege = [],
+    alltagBereiche = [],
+    alltagErledigt = {},
   } = appData;
 
   // Bug-Fix (Performance/Ruckeln): Diese View reichte bisher überall den
@@ -144,7 +148,7 @@ export default function WochenuebersichtView({
       projekte,
       zeitbloecke,
       ausnahmenNachSchluessel,
-    ]
+    ],
   );
 
   // Gleiches Prinzip wie dayItemsQuelldaten oben, nur für die Routine-
@@ -152,11 +156,28 @@ export default function WochenuebersichtView({
   // Einzelschritte aufklappbar") — siehe routineStatus.js.
   const routineQuelldaten = useMemo(
     () => ({ routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineEinstellungen }),
-    [routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineEinstellungen]
+    [routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineEinstellungen],
   );
 
   const [exportLaeuft, setExportLaeuft] = useState(false);
-  const [vorschauUrl, setVorschauUrl] = useState(null);
+  // Druck/PDF mit Auswahl + Kontroll-Vorschau (28.09., Nutzerin): null |
+  // "auswahl" | "vorschau". Standard: nur Gesundheit.
+  const [exportSchritt, setExportSchritt] = useState(null);
+  const [auswahl, setAuswahl] = useState(standardAuswahl);
+  const bereichUmschalten = (key) =>
+    setAuswahl((a) => {
+      const b = new Set(a.bereiche);
+      if (b.has(key)) b.delete(key);
+      else b.add(key);
+      return { ...a, bereiche: b };
+    });
+  const teilUmschalten = (key) =>
+    setAuswahl((a) => {
+      const t = new Set(a.teile);
+      if (t.has(key)) t.delete(key);
+      else t.add(key);
+      return { ...a, teile: t };
+    });
   const exportRef = useRef(null);
   // Nutzerinnen-Vorgabe (12.09.): der PDF-Zeitraum soll wählbar sein, statt
   // immer starr "von Protokollstart bis heute" — null = gesamter bisheriger
@@ -175,10 +196,7 @@ export default function WochenuebersichtView({
   // "abendroutine" (die Routine-Pseudo-Punkte, siehe routineQuelldaten
   // oben) sind ebenfalls klickbar, öffnen aber statt TagesEintragBearbeiten
   // das neue RoutineTagesPeek — siehe oeffneBearbeiten unten.
-  const AUSNAHME_KLICKBAR = useMemo(
-    () => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow", "training", "zeitblock", "morgenroutine", "abendroutine"]),
-    []
-  );
+  const AUSNAHME_KLICKBAR = useMemo(() => new Set(["hormon", "supplement", "mahlzeit", "gewohnheit", "workflow", "training", "zeitblock", "morgenroutine", "abendroutine"]), []);
   // Bottom-Sheet zum "Reingucken" in eine Routine (Nutzerin-Vorgabe, 17.09.)
   // — routinePeek === null heißt geschlossen, analog zu bearbeitenItem oben.
   const [routinePeek, setRoutinePeek] = useState(null);
@@ -256,9 +274,13 @@ export default function WochenuebersichtView({
   // Seit 17.09. inkl. Routine-Pseudo-Punkten (siehe routineQuelldaten/
   // mitRoutinePseudoItems oben) — buildDayItems() selbst erzeugt bewusst
   // weiterhin keine Routine-Einträge (siehe dortiger Kommentar).
+  // Kalender „Mein Alltag“ (28.09.): Einträge erscheinen auch im Wochenplan.
+  const mitAlltag = (items, d) => [...items, ...alltagItems(d, alltagEintraege, alltagBereiche, alltagErledigt)].sort((a, b) => String(a.uhrzeit || "99").localeCompare(String(b.uhrzeit || "99")));
+
   const tagesItems = useMemo(
-    () => mitRoutinePseudoItems(buildDayItems(selectedDate, dayItemsQuelldaten), selectedDate, routineQuelldaten),
-    [selectedDate, dayItemsQuelldaten, routineQuelldaten]
+    () => mitAlltag(mitRoutinePseudoItems(buildDayItems(selectedDate, dayItemsQuelldaten), selectedDate, routineQuelldaten), selectedDate),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedDate, dayItemsQuelldaten, routineQuelldaten, alltagEintraege, alltagBereiche, alltagErledigt],
   );
 
   // Vorberechnete Tages-Items für Wochenraster (Ansicht + PDF-Export teilen
@@ -266,8 +288,9 @@ export default function WochenuebersichtView({
   // diese Memoisierung liefen bis zu 7 buildDayItems()-Aufrufe bei jedem
   // Render neu, auch wenn sich nichts an der Woche geändert hatte.
   const wochenItemsProTag = useMemo(
-    () => wochentage.map((d) => mitRoutinePseudoItems(buildDayItems(d, dayItemsQuelldaten), d, routineQuelldaten)),
-    [wochentage, dayItemsQuelldaten, routineQuelldaten]
+    () => wochentage.map((d) => mitAlltag(mitRoutinePseudoItems(buildDayItems(d, dayItemsQuelldaten), d, routineQuelldaten), d)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wochentage, dayItemsQuelldaten, routineQuelldaten, alltagEintraege, alltagBereiche, alltagErledigt],
   );
 
   // Dasselbe fürs Monatsraster — Tage des sichtbaren Monats + je Tag die
@@ -281,10 +304,11 @@ export default function WochenuebersichtView({
     for (let i = 0; i < startOffset; i++) tage.push(null);
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const datum = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
-      tage.push({ datum, items: mitRoutinePseudoItems(buildDayItems(datum, dayItemsQuelldaten), datum, routineQuelldaten) });
+      tage.push({ datum, items: mitAlltag(mitRoutinePseudoItems(buildDayItems(datum, dayItemsQuelldaten), datum, routineQuelldaten), datum) });
     }
     return tage;
-  }, [monthDate, dayItemsQuelldaten, routineQuelldaten]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthDate, dayItemsQuelldaten, routineQuelldaten, alltagEintraege, alltagBereiche, alltagErledigt]);
 
   const substanzen = useMemo(() => {
     const p = peptide.map((name) => ({ name, kategorie: "Peptid", d: dosierung[name] }));
@@ -304,7 +328,7 @@ export default function WochenuebersichtView({
         ...s,
         anzahl: activeDoseDays(s.d, startdatum, dauerTage).length,
       })),
-    [substanzen, startdatum, dauerTage]
+    [substanzen, startdatum, dauerTage],
   );
 
   // Bug-Fix (12.09., Nutzerinnen-Rückmeldung): "Compliance (bisher)" bezog
@@ -420,13 +444,10 @@ export default function WochenuebersichtView({
     const hydrationZielErreicht = hydrationZielMl ? hydrationTage.filter((e) => (e.mengeMl || 0) >= hydrationZielMl).length : 0;
 
     const tageslichtTage = (tageslichtEintraege || []).filter((e) => imZeitraum(e.datum));
-    const tageslichtZielErreicht = tageslichtZielMinuten
-      ? tageslichtTage.filter((e) => (e.minuten || 0) >= tageslichtZielMinuten).length
-      : 0;
+    const tageslichtZielErreicht = tageslichtZielMinuten ? tageslichtTage.filter((e) => (e.minuten || 0) >= tageslichtZielMinuten).length : 0;
 
     const schlafTage = (schlafEintraege || []).filter((e) => imZeitraum(e.datum));
-    const schlafDurchschnitt =
-      schlafTage.length > 0 ? (schlafTage.reduce((summe, e) => summe + (Number(e.stunden) || 0), 0) / schlafTage.length).toFixed(1) : null;
+    const schlafDurchschnitt = schlafTage.length > 0 ? (schlafTage.reduce((summe, e) => summe + (Number(e.stunden) || 0), 0) / schlafTage.length).toFixed(1) : null;
 
     return { hydrationTage, hydrationZielErreicht, tageslichtTage, tageslichtZielErreicht, schlafTage, schlafDurchschnitt };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -450,12 +471,11 @@ export default function WochenuebersichtView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [protokollEintraege, erfassungsStartObj, heuteCap]);
 
-  const exportieren = async () => {
+  const exportieren = async (opts = {}) => {
     if (!exportRef.current) return;
     setExportLaeuft(true);
     try {
-      const { dataUrl } = await exportElementAsPdf(exportRef.current, `wochenuebersicht-${toLocalISODate(today)}.pdf`);
-      setVorschauUrl(dataUrl);
+      await exportElementAsPdf(exportRef.current, `wochenuebersicht-${toLocalISODate(today)}.pdf`, opts);
     } catch (e) {
       console.error(e);
     } finally {
@@ -463,12 +483,130 @@ export default function WochenuebersichtView({
     }
   };
 
+  // Inhalt von Druck/PDF – nur die gewählten Bereiche und Teile (28.09.).
+  // Wird zweimal gerendert: sichtbar in der Vorschau und unsichtbar für
+  // html2canvas; beide sehen dadurch garantiert gleich aus.
+  const exportInhalt = () => {
+    const teil = (k) => auswahl.teile.has(k);
+    const drin = (kategorie) => imExport(kategorie, auswahl);
+    const nurGesundheit = EXPORT_BEREICHE.filter((x) => auswahl.bereiche.has(x.key)).every((x) => x.gruppe === "gesundheit");
+    const bereiche = bereichsCompliance.filter((b) => drin(b.kategorie));
+    const geplant = bereiche.reduce((sum, b) => sum + b.geplant, 0);
+    const erledigt = bereiche.reduce((sum, b) => sum + b.erledigt, 0);
+    const quote = geplant > 0 ? Math.round((erledigt / geplant) * 100) : null;
+    const wochen = woechentlicheCompliance.map((w) => ({ ...w, kategorien: w.kategorien.filter((k) => drin(k.kategorie)) })).filter((w) => w.kategorien.length);
+    const aenderungen = aenderungenImZeitraum.filter((e) => drin(e.kategorie));
+    const h2 = { fontSize: 16, fontWeight: 800, margin: "16px 0 8px" };
+    return (
+      <>
+        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{nurGesundheit ? "Gesundheitsprotokoll" : "Wochenplan"}</div>
+        <div style={{ fontSize: 12, color: "#6B7178", marginBottom: 4 }}>
+          Protokoll-Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)} · Woche vom {fmtDate(montag)}
+        </div>
+        <div style={{ fontSize: 11, color: "#6B7178", marginBottom: 16 }}>
+          Enthalten:{" "}
+          {EXPORT_BEREICHE.filter((x) => auswahl.bereiche.has(x.key))
+            .map((x) => x.label)
+            .join(", ")}
+        </div>
+
+        {teil("wochenraster") && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginBottom: 20 }}>
+            {wochentage.map((d, i) => {
+              const items = wochenItemsProTag[i].filter((it) => drin(it.kategorie));
+              return (
+                <div key={i} style={{ border: "1px solid #EAEAE5", borderRadius: 10, padding: 8, minHeight: 140 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 6 }}>
+                    {WOCHENTAG_KURZ[i]} {fmtDate(d)}
+                  </div>
+                  {items.map((item) => (
+                    <div key={item.key} style={{ fontSize: 10, marginBottom: 4, borderLeft: `3px solid ${item.farbe || KATEGORIE_META[item.kategorie]?.dot || "#9AA0AA"}`, paddingLeft: 4 }}>
+                      <div style={{ fontWeight: 700 }}>
+                        {item.uhrzeit} {item.name} {item.done ? "✓" : ""}
+                      </div>
+                      {item.detail && <div style={{ color: "#6B7178" }}>{item.detail}</div>}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {teil("dosierung") && auswahl.bereiche.has("medikation") && statistikProSubstanz.length > 0 && (
+          <>
+            <div style={{ ...h2, marginTop: 0 }}>Dosierintervalle</div>
+            {statistikProSubstanz.map((st) => (
+              <div key={st.name} style={{ fontSize: 12, marginBottom: 4 }}>
+                <b>{st.name}</b> — {describeInterval(st.d)} ({st.anzahl}× im Zeitraum)
+              </div>
+            ))}
+          </>
+        )}
+
+        {teil("fortschritt") && (
+          <>
+            <div style={h2}>Fortschritt je Bereich</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>
+              Erfasst: {fmtDate(erfassungsStartObj)} – {fmtDate(heuteCap)}
+              {exportZeitraumWochen ? ` (letzte ${exportZeitraumWochen} Wochen)` : " (gesamter bisheriger Verlauf)"}
+            </div>
+            {quote !== null && <div style={{ fontSize: 12, marginBottom: 6 }}>Gesamt: {quote}% erledigt</div>}
+            {bereiche.map((b) => (
+              <div key={b.kategorie} style={{ fontSize: 12, marginBottom: 2 }}>
+                {b.label}: {b.prozent !== null ? `${b.prozent}%` : "–"} ({b.erledigt}/{b.geplant})
+              </div>
+            ))}
+            {auswahl.bereiche.has("wasser") && kumulativeCompliance.hydrationTage.length > 0 && (
+              <div style={{ fontSize: 12, marginBottom: 2 }}>
+                Wasser: Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
+              </div>
+            )}
+            {auswahl.bereiche.has("tageslicht") && kumulativeCompliance.tageslichtTage.length > 0 && (
+              <div style={{ fontSize: 12, marginBottom: 2 }}>
+                Tageslicht: Ziel an {kumulativeCompliance.tageslichtZielErreicht}/{kumulativeCompliance.tageslichtTage.length} Tagen erreicht
+              </div>
+            )}
+            {auswahl.bereiche.has("schlaf") && kumulativeCompliance.schlafDurchschnitt !== null && (
+              <div style={{ fontSize: 12, marginBottom: 2 }}>
+                Schlaf: Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)
+              </div>
+            )}
+          </>
+        )}
+
+        {teil("wochenverlauf") && wochen.length > 0 && (
+          <>
+            <div style={h2}>Wochenverlauf</div>
+            {wochen.map((w, i) => (
+              <div key={i} style={{ marginBottom: 16, breakInside: "avoid" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  Woche {i + 1} · {fmtDate(w.von)} – {fmtDate(w.bis)}
+                </div>
+                <WochenComplianceChart data={w.kategorien} height={150} />
+              </div>
+            ))}
+          </>
+        )}
+
+        {teil("aenderungen") && aenderungen.length > 0 && (
+          <>
+            <div style={h2}>Änderungen im Zeitraum</div>
+            {aenderungen.map((e) => (
+              <div key={e.id} style={{ fontSize: 12, marginBottom: 6 }}>
+                <b>{e.itemName}</b> — {e.aktion} ({fmtDate(new Date(e.erstelltAm))}
+                {e.detail ? `, ${e.detail}` : ""})
+              </div>
+            ))}
+          </>
+        )}
+      </>
+    );
+  };
+
   const content = (
     <>
-      {!embedded && (
-        <ViewHeader title="🗓️ Wochenübersicht" onHome={onHome} />
-      )}
-
+      {!embedded && <ViewHeader title="🗓️ Wochenübersicht" onHome={onHome} />}
 
       <div style={{ display: "flex", gap: 5, marginBottom: 14, overflowX: "auto" }}>
         {wochentage.map((d, i) => {
@@ -497,17 +635,12 @@ export default function WochenuebersichtView({
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>📁 Projekte & Zeitblöcke</div>
       <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>
-          Blocke Zeit für Arbeit oder eigene Projekte — taucht farbig in Tag, Woche und Monat auf.
-        </div>
+        <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 10 }}>Blocke Zeit für Arbeit oder eigene Projekte — taucht farbig in Tag, Woche und Monat auf.</div>
 
         {projekte.length > 0 && (
           <div style={{ marginBottom: 10 }}>
             {projekte.map((p) => (
-              <div
-                key={p.id}
-                style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}
-              >
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
                 <div style={{ width: 9, height: 9, borderRadius: 5, background: projektFarbe(p), flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.name}</div>
@@ -555,12 +688,7 @@ export default function WochenuebersichtView({
             <Label>Zeitblock eintragen</Label>
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {projekte.map((p) => (
-                <Pill
-                  key={p.id}
-                  label={p.name}
-                  selected={neuerBlock.projektId === p.id}
-                  onClick={() => setNeuerBlock((prev) => ({ ...prev, projektId: p.id }))}
-                />
+                <Pill key={p.id} label={p.name} selected={neuerBlock.projektId === p.id} onClick={() => setNeuerBlock((prev) => ({ ...prev, projektId: p.id }))} />
               ))}
             </div>
 
@@ -599,10 +727,7 @@ export default function WochenuebersichtView({
               .map((z) => {
                 const projekt = projekte.find((p) => p.id === z.projektId);
                 return (
-                  <div
-                    key={z.id}
-                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}
-                  >
+                  <div key={z.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${cardBorder}` }}>
                     <div style={{ width: 8, height: 8, borderRadius: 4, background: projektFarbe(projekt), flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 700 }}>{z.titel || projekt?.name || "Zeitblock"}</div>
@@ -771,9 +896,7 @@ export default function WochenuebersichtView({
             >
               ‹
             </button>
-            <div style={{ fontSize: 14, fontWeight: 800 }}>
-              {monthDate.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}
-            </div>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>{monthDate.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}</div>
             <button
               onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
               style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
@@ -804,59 +927,59 @@ export default function WochenuebersichtView({
               return (
                 <div
                   key={d.toISOString()}
-                    style={{
-                      aspectRatio: "1 / 1",
-                      borderRadius: 8,
-                      border: `1px solid ${cardBorder}`,
-                      padding: 4,
-                      fontSize: 9,
-                      fontWeight: 700,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      background: sameDay(d, today) ? accentSoft : "#fff",
-                    }}
-                  >
-                    <div style={{ color: textMuted }}>{d.getDate()}</div>
-                    <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                      {dotsToShow.map((item) => {
-                        const meta = KATEGORIE_META[item.kategorie];
-                        const klickbar = AUSNAHME_KLICKBAR.has(item.kategorie);
-                        return (
-                          <div
-                            key={item.key}
-                            onClick={
-                              klickbar
-                                ? (e) => {
-                                    e.stopPropagation();
-                                    oeffneBearbeiten(item, d);
-                                  }
-                                : undefined
-                            }
-                            style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: 3,
-                              background: item.farbe || meta.dot,
-                              cursor: klickbar ? "pointer" : "default",
-                              // Größerer Tap-Bereich als die sichtbaren 6px,
-                              // ohne das enge Monatsraster optisch zu sprengen
-                              // — boxSizing explizit content-box, da die App
-                              // global auf border-box zurücksetzt (sonst
-                              // würde padding die sichtbare Fläche auf 0
-                              // schrumpfen statt den Klickbereich zu vergrößern).
-                              boxSizing: "content-box",
-                              padding: klickbar ? 3 : 0,
-                              margin: klickbar ? -3 : 0,
-                              backgroundClip: "content-box",
-                            }}
-                            title={item.name}
-                          />
-                        );
-                      })}
-                    </div>
+                  style={{
+                    aspectRatio: "1 / 1",
+                    borderRadius: 8,
+                    border: `1px solid ${cardBorder}`,
+                    padding: 4,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    background: sameDay(d, today) ? accentSoft : "#fff",
+                  }}
+                >
+                  <div style={{ color: textMuted }}>{d.getDate()}</div>
+                  <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                    {dotsToShow.map((item) => {
+                      const meta = KATEGORIE_META[item.kategorie];
+                      const klickbar = AUSNAHME_KLICKBAR.has(item.kategorie);
+                      return (
+                        <div
+                          key={item.key}
+                          onClick={
+                            klickbar
+                              ? (e) => {
+                                  e.stopPropagation();
+                                  oeffneBearbeiten(item, d);
+                                }
+                              : undefined
+                          }
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 3,
+                            background: item.farbe || meta.dot,
+                            cursor: klickbar ? "pointer" : "default",
+                            // Größerer Tap-Bereich als die sichtbaren 6px,
+                            // ohne das enge Monatsraster optisch zu sprengen
+                            // — boxSizing explizit content-box, da die App
+                            // global auf border-box zurücksetzt (sonst
+                            // würde padding die sichtbare Fläche auf 0
+                            // schrumpfen statt den Klickbereich zu vergrößern).
+                            boxSizing: "content-box",
+                            padding: klickbar ? 3 : 0,
+                            margin: klickbar ? -3 : 0,
+                            backgroundClip: "content-box",
+                          }}
+                          title={item.name}
+                        />
+                      );
+                    })}
                   </div>
-                );
+                </div>
+              );
             })}
           </div>
 
@@ -934,7 +1057,10 @@ export default function WochenuebersichtView({
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{b.label}</div>
                 </div>
                 <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
-                  {b.prozent !== null ? `${b.prozent}%` : "–"} <span style={{ fontWeight: 500 }}>({b.erledigt}/{b.geplant})</span>
+                  {b.prozent !== null ? `${b.prozent}%` : "–"}{" "}
+                  <span style={{ fontWeight: 500 }}>
+                    ({b.erledigt}/{b.geplant})
+                  </span>
                 </div>
               </div>
             ))}
@@ -966,7 +1092,9 @@ export default function WochenuebersichtView({
                   <div style={{ width: 8, height: 8, borderRadius: 4, background: KATEGORIE_META.schlaf.dot, flexShrink: 0 }} />
                   <div style={{ fontSize: 13, fontWeight: 700 }}>Schlaf</div>
                 </div>
-                <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)</div>
+                <div style={{ fontSize: 12, color: textMuted, fontWeight: 700 }}>
+                  Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)
+                </div>
               </div>
             )}
           </>
@@ -1018,147 +1146,113 @@ export default function WochenuebersichtView({
       )}
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Export & Druck</div>
-      <Card>
-        <div style={{ fontSize: 12, color: textMuted, marginBottom: 12 }}>
-          Erstellt eine PDF-Datei mit dem vollen Wochenraster — praktisch für den Ausdruck oder das Arztgespräch.
-        </div>
-        {/* Nutzerinnen-Vorgabe (12.09.): Zeitraum für Compliance/Wochenverlauf
-            wählbar statt starr "gesamter bisheriger Verlauf" — wirkt sich
-            auf die Compliance-Karten oben UND auf den PDF-Export aus. */}
-        <div style={{ fontSize: 11, color: textMuted, marginBottom: 6 }}>Zeitraum für Fortschritt/Wochenverlauf:</div>
-        <div style={{ marginBottom: 12 }}>
-          <Pill label="Gesamter Verlauf" selected={!exportZeitraumWochen} onClick={() => setExportZeitraumWochen(null)} />
-          <Pill label="Letzte 4 Wochen" selected={exportZeitraumWochen === 4} onClick={() => setExportZeitraumWochen(4)} />
-          <Pill label="Letzte 8 Wochen" selected={exportZeitraumWochen === 8} onClick={() => setExportZeitraumWochen(8)} />
-          <Pill label="Letzte 12 Wochen" selected={exportZeitraumWochen === 12} onClick={() => setExportZeitraumWochen(12)} />
-        </div>
-        {/* Transparenz-Hinweis (Nutzerin-Vorgabe, 12.09.): ohne diesen
+      <div data-export={exportSchritt || "start"}>
+        <Card>
+          {!exportSchritt && (
+            <>
+              <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 12, lineHeight: 1.5 }}>
+                Wochenplan und Protokoll als PDF oder zum Drucken – z. B. fürs Arztgespräch. Du wählst selbst, was drauf soll, und siehst vorher eine Vorschau.
+              </div>
+              <PrimaryButton onClick={() => setExportSchritt("auswahl")}>🖨️ Druck / PDF zusammenstellen</PrimaryButton>
+            </>
+          )}
+
+          {exportSchritt === "auswahl" && (
+            <>
+              <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 6 }}>1. Was soll drauf?</div>
+              <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 6 }}>
+                {Object.entries(VORLAGEN).map(([k, v]) => {
+                  const aktiv = v.bereiche.length === auswahl.bereiche.size && v.bereiche.every((x) => auswahl.bereiche.has(x));
+                  return <Pill key={k} label={v.label} selected={aktiv} onClick={() => setAuswahl({ bereiche: new Set(v.bereiche), teile: new Set(auswahl.teile) })} />;
+                })}
+              </div>
+              {[
+                ["gesundheit", "Gesundheit"],
+                ["alltag", "Alltag (Kalender)"],
+              ].map(([gruppe, titel]) => (
+                <div key={gruppe} style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: textMuted, letterSpacing: 0.3, marginBottom: 4 }}>{titel.toUpperCase()}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap" }} data-export-gruppe={gruppe}>
+                    {EXPORT_BEREICHE.filter((x) => x.gruppe === gruppe).map((x) => (
+                      <Pill key={x.key} label={`${auswahl.bereiche.has(x.key) ? "✓ " : ""}${x.icon} ${x.label}`} selected={auswahl.bereiche.has(x.key)} onClick={() => bereichUmschalten(x.key)} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div style={{ fontSize: 13.5, fontWeight: 800, margin: "14px 0 6px" }}>2. Welche Teile?</div>
+              <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+                {EXPORT_TEILE.map((t) => (
+                  <Pill key={t.key} label={`${auswahl.teile.has(t.key) ? "✓ " : ""}${t.label}`} selected={auswahl.teile.has(t.key)} onClick={() => teilUmschalten(t.key)} />
+                ))}
+              </div>
+              <div style={{ fontSize: 13.5, fontWeight: 800, margin: "8px 0 6px" }}>3. Zeitraum</div>
+              <div style={{ marginBottom: 12 }}>
+                <Pill label="Gesamter Verlauf" selected={!exportZeitraumWochen} onClick={() => setExportZeitraumWochen(null)} />
+                <Pill label="Letzte 4 Wochen" selected={exportZeitraumWochen === 4} onClick={() => setExportZeitraumWochen(4)} />
+                <Pill label="Letzte 8 Wochen" selected={exportZeitraumWochen === 8} onClick={() => setExportZeitraumWochen(8)} />
+                <Pill label="Letzte 12 Wochen" selected={exportZeitraumWochen === 12} onClick={() => setExportZeitraumWochen(12)} />
+              </div>
+              {/* Transparenz-Hinweis (Nutzerin-Vorgabe, 12.09.): ohne diesen
             Hinweis sehen "Letzte X Wochen" und "Gesamter Verlauf" bei einem
             noch jungen Protokoll identisch aus, ohne dass erkennbar ist,
             warum — wirkt dann wie ein Bug statt wie erwartetes Verhalten. */}
-        {exportZeitraumWochen && erfassungsStartObj.getTime() <= startDatumObj.getTime() && (
-          <div style={{ fontSize: 11, color: textMuted, marginBottom: 12, marginTop: -6 }}>
-            Das Protokoll läuft noch keine {exportZeitraumWochen} Wochen — zeigt daher den gesamten bisherigen Verlauf.
-          </div>
-        )}
-        <PrimaryButton onClick={exportieren} disabled={exportLaeuft}>
-          {exportLaeuft ? "Wird erstellt..." : "Als PDF exportieren"}
-        </PrimaryButton>
-        {vorschauUrl && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 11, color: textMuted, marginBottom: 6 }}>Vorschau:</div>
-            <img src={vorschauUrl} alt="PDF-Vorschau" style={{ width: "100%", borderRadius: 10, border: `1px solid ${cardBorder}` }} />
-          </div>
-        )}
-      </Card>
+              {exportZeitraumWochen && erfassungsStartObj.getTime() <= startDatumObj.getTime() && (
+                <div style={{ fontSize: 11, color: textMuted, marginBottom: 12, marginTop: -6 }}>
+                  Das Protokoll läuft noch keine {exportZeitraumWochen} Wochen — zeigt daher den gesamten bisherigen Verlauf.
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setExportSchritt(null)} style={exportKnopf(false)}>
+                  Abbrechen
+                </button>
+                <div style={{ flex: 1 }}>
+                  <PrimaryButton onClick={() => setExportSchritt("vorschau")} disabled={auswahl.bereiche.size === 0}>
+                    Vorschau ansehen ›
+                  </PrimaryButton>
+                </div>
+              </div>
+            </>
+          )}
+
+          {exportSchritt === "vorschau" && (
+            <>
+              <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 4 }}>Vorschau – so sieht dein Dokument aus</div>
+              <div style={{ fontSize: 12, color: textMuted, marginBottom: 8, lineHeight: 1.45 }}>
+                Enthalten:{" "}
+                {EXPORT_BEREICHE.filter((x) => auswahl.bereiche.has(x.key))
+                  .map((x) => x.label)
+                  .join(", ")}
+                . Alles andere ist nicht im Dokument.
+              </div>
+              <div data-export-vorschau style={{ border: `1px solid ${cardBorder}`, borderRadius: 10, overflow: "auto", maxHeight: 460, background: "#F3F4F8", padding: 6 }}>
+                <div style={{ zoom: 0.33, width: 900 }}>
+                  <div style={{ background: "#fff", padding: 24, fontFamily: "sans-serif" }}>{exportInhalt()}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => setExportSchritt("auswahl")} style={exportKnopf(false)}>
+                  ‹ Auswahl ändern
+                </button>
+                <button type="button" disabled={exportLaeuft} onClick={() => exportieren({ oeffnen: true })} style={exportKnopf(false)}>
+                  🖨️ Drucken
+                </button>
+                <div style={{ flex: 1, minWidth: 150 }}>
+                  <PrimaryButton onClick={() => exportieren()} disabled={exportLaeuft}>
+                    {exportLaeuft ? "Wird erstellt..." : "⬇️ PDF herunterladen"}
+                  </PrimaryButton>
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
+      </div>
 
       {/* Unsichtbares Export-Raster: volles Mo-So-Raster im Desktop-Stil,
-          nur für html2canvas fotografiert, nie direkt sichtbar. */}
+          nur für html2canvas fotografiert, nie direkt sichtbar. Inhalt nach
+          Auswahl gefiltert (exportInhalt). */}
       <div style={{ position: "absolute", left: -9999, top: 0, width: 900 }}>
         <div ref={exportRef} style={{ background: "#fff", padding: 24, fontFamily: "sans-serif" }}>
-          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Wochenplan – Detaillierte Ansicht</div>
-          <div style={{ fontSize: 12, color: "#6B7178", marginBottom: 16 }}>
-            Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)} · Woche vom {fmtDate(montag)}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginBottom: 20 }}>
-            {wochentage.map((d, i) => {
-              const items = wochenItemsProTag[i];
-              return (
-                <div key={i} style={{ border: "1px solid #EAEAE5", borderRadius: 10, padding: 8, minHeight: 140 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 6 }}>
-                    {WOCHENTAG_KURZ[i]} {fmtDate(d)}
-                  </div>
-                  {items.map((item) => {
-                    const k = KATEGORIE_META[item.kategorie];
-                    return (
-                      <div key={item.key} style={{ fontSize: 10, marginBottom: 4, borderLeft: `3px solid ${item.farbe || k.dot}`, paddingLeft: 4 }}>
-                        <div style={{ fontWeight: 700 }}>
-                          {item.uhrzeit} {item.name}
-                        </div>
-                        {item.detail && <div style={{ color: "#6B7178" }}>{item.detail}</div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>Dosierintervalle</div>
-          {statistikProSubstanz.map((s) => (
-            <div key={s.name} style={{ fontSize: 12, marginBottom: 4 }}>
-              <b>{s.name}</b> — {describeInterval(s.d)} ({s.anzahl}× im Zeitraum)
-            </div>
-          ))}
-
-          <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Protokoll-Statistik</div>
-          <div style={{ fontSize: 12 }}>Dauer: {dauer || "–"} Wochen</div>
-          <div style={{ fontSize: 12 }}>
-            Protokoll-Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)}
-          </div>
-          {/* Bug-Fix (12.09.): stand bisher ohne erkennbaren Bezugszeitraum
-              da — bei einem frisch gestarteten Protokoll wirkte "Compliance:
-              0%" dadurch wie ein Fehler statt wie "es sind einfach erst
-              wenige Tage vergangen". */}
-          <div style={{ fontSize: 12, fontWeight: 700 }}>
-            Fortschritt erfasst: {fmtDate(erfassungsStartObj)} – {fmtDate(heuteCap)}
-            {exportZeitraumWochen ? ` (letzte ${exportZeitraumWochen} Wochen)` : " (gesamter bisheriger Verlauf)"}
-          </div>
-          {compliance !== null && <div style={{ fontSize: 12 }}>Compliance in diesem Zeitraum: {compliance}%</div>}
-
-          <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Compliance je Bereich</div>
-          {bereichsCompliance.map((b) => (
-            <div key={b.kategorie} style={{ fontSize: 12, marginBottom: 2 }}>
-              {b.label}: {b.prozent !== null ? `${b.prozent}%` : "–"} ({b.erledigt}/{b.geplant})
-            </div>
-          ))}
-          {kumulativeCompliance.hydrationTage.length > 0 && (
-            <div style={{ fontSize: 12, marginBottom: 2 }}>
-              Wasser: Ziel an {kumulativeCompliance.hydrationZielErreicht}/{kumulativeCompliance.hydrationTage.length} Tagen erreicht
-            </div>
-          )}
-          {kumulativeCompliance.tageslichtTage.length > 0 && (
-            <div style={{ fontSize: 12, marginBottom: 2 }}>
-              Tageslicht: Ziel an {kumulativeCompliance.tageslichtZielErreicht}/{kumulativeCompliance.tageslichtTage.length} Tagen erreicht
-            </div>
-          )}
-          {kumulativeCompliance.schlafDurchschnitt !== null && (
-            <div style={{ fontSize: 12, marginBottom: 2 }}>
-              Schlaf: Ø {kumulativeCompliance.schlafDurchschnitt} Std. ({kumulativeCompliance.schlafTage.length} Einträge)
-            </div>
-          )}
-
-          {/* Wochenverlauf (12.09., Nutzerinnen-Vorgabe): ein Diagramm pro
-              Woche seit Protokollstart statt nur einer kumulierten Zahl —
-              damit im ausgedruckten Protokoll (z. B. fürs Arztgespräch)
-              erkennbar ist, in welcher Woche was gut/schlecht lief. */}
-          {woechentlicheCompliance.length > 0 && (
-            <>
-              <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Wochenverlauf</div>
-              {woechentlicheCompliance.map((w, i) => (
-                <div key={i} style={{ marginBottom: 16, breakInside: "avoid" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                    Woche {i + 1} · {fmtDate(w.von)} – {fmtDate(w.bis)}
-                  </div>
-                  <WochenComplianceChart data={w.kategorien} height={150} />
-                </div>
-              ))}
-            </>
-          )}
-
-          {/* Änderungen im Zeitraum (12.09., Nutzerinnen-Vorgabe) — siehe
-              Kommentar bei der Live-Ansicht oben. */}
-          {aenderungenImZeitraum.length > 0 && (
-            <>
-              <div style={{ fontSize: 16, fontWeight: 800, margin: "16px 0 8px" }}>Änderungen im Zeitraum</div>
-              {aenderungenImZeitraum.map((e) => (
-                <div key={e.id} style={{ fontSize: 12, marginBottom: 6 }}>
-                  <b>{e.itemName}</b> — {e.aktion} ({fmtDate(new Date(e.erstelltAm))}
-                  {e.detail ? `, ${e.detail}` : ""})
-                </div>
-              ))}
-            </>
-          )}
+          {exportInhalt()}
         </div>
       </div>
 
@@ -1173,10 +1267,20 @@ export default function WochenuebersichtView({
           }}
         />
       )}
-      {routinePeek && (
-        <RoutineTagesPeek routine={routinePeek.routine} datum={routinePeek.datum} onClose={() => setRoutinePeek(null)} />
-      )}
+      {routinePeek && <RoutineTagesPeek routine={routinePeek.routine} datum={routinePeek.datum} onClose={() => setRoutinePeek(null)} />}
     </>
   );
   return embedded ? content : <Shell>{content}</Shell>;
 }
+
+const exportKnopf = (voll) => ({
+  border: voll ? "none" : `1.5px solid ${cardBorder}`,
+  background: voll ? "#1B2350" : "#fff",
+  color: voll ? "#fff" : "#15181A",
+  borderRadius: 12,
+  padding: "10px 12px",
+  fontSize: 13,
+  fontWeight: 800,
+  cursor: "pointer",
+  fontFamily: "inherit",
+});

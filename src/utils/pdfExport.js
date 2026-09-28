@@ -19,7 +19,9 @@ const SEITENRAND_MM = 15;
 // komplett clientseitig, kein Node-PDF-Renderer nötig. Gibt zusätzlich die
 // Daten-URL zurück, damit der Aufrufer daraus eine Vorschau-Miniatur
 // zeigen kann, ohne ein zweites Mal zu rendern.
-export async function exportElementAsPdf(element, filename = "protokoll.pdf") {
+// opts.oeffnen (28.09.): statt Download im neuen Tab öffnen – dort druckt man
+// über den Druck-Knopf des Browsers bzw. „Teilen → Drucken“ auf dem Handy.
+export async function exportElementAsPdf(element, filename = "protokoll.pdf", opts = {}) {
   const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#ffffff" });
   const imgData = canvas.toDataURL("image/png");
 
@@ -58,6 +60,10 @@ export async function exportElementAsPdf(element, filename = "protokoll.pdf") {
     }
   }
 
-  pdf.save(filename);
+  if (opts.oeffnen) {
+    const url = pdf.output("bloburl");
+    const fenster = window.open(url, "_blank");
+    if (!fenster) pdf.save(filename);
+  } else pdf.save(filename);
   return { dataUrl: imgData };
 }
