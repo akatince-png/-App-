@@ -201,6 +201,26 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Kalender „Mein Alltag“ (28.09., Vorschau freigegeben, gebaut und live)
+Wunsch: Stundenplan, Woche, Monat, damit Haushalt, Arbeit, Hobbys usw. im selben Plan stehen wie Routinen und Bausteine.
+Entscheidungen: Freischaltung **nach den 8 Wochen** als Programm; Handy-Kalender (Google/Apple) **erst später**;
+Bereiche Arbeit, Haushalt, Hobby, **Me-Time**, Termin, Freunde & Familie plus **eigene Bereiche** (Person selbst oder
+Coach über Verwalten).
+- DB (Migration 0118, live): `alltag_bereiche` (eigene Bereiche), `alltag_eintraege` (bereich/bereich_id, titel,
+  start_zeit/end_zeit, wochentage[] ODER datum, erinnerung), `alltag_erledigt` (eintrag_id + datum). RLS: eigene
+  Zeilen + admin voller Zugriff. Programm `alltag` im Katalog (aktiv, nicht automatisch für Neue).
+- Logik `utils/kalender.js` (Blöcke je Tag aus buildDayItems + Routinen-Zeitfenstern + Alltag, Überlappungen in
+  Spalten, Monatsraster, KI-Antwort prüfen), Daten `data/useAlltag.js`, Ansicht `views/KalenderView.jsx`
+  (Route `kalender`, Einstieg in Pläne „Mein Alltag (Kalender)“). Ohne Freischaltung (`alltagFreigeschaltet` in
+  `utils/programme.js`) ein freundlicher Hinweis; Admin sieht ihn immer.
+- Aka: Bereich `alltag` (`aiService.alltagAusChat`), z. B. „samstags 10 Uhr Staubsaugen“.
+- Erinnerungen: eigene Edge Function `send-alltag-reminders` (v1, verify_jwt) + pg_cron-Job
+  `aka-alltag-erinnerungen` jede Minute (Befehl serverseitig aus dem send-due-reminders-Job kopiert, Geheimnis nie
+  angezeigt; Prüfung gegen `cron_konfig`). Die große `send-due-reminders` bleibt unverändert.
+- Noch nicht: Alltags-Einträge zählen nicht ins Gehirn/Punkte; Handy-Kalender-Import.
+- Tests: `utils/kalender.test.js`, `utils/programme.test.js`, `e2e/mein-alltag.spec.js`; Coach-Handbuch Kapitel
+  „Nach den 8 Wochen: Mein Alltag“.
+
 ### Coach-Handbuch in der App (28.09., Plan D erledigt)
 Coach-Bereich → „📖 Handbuch“ (`views/admin/CoachHandbuchView.jsx`, Route `admin-handbuch`, nur Admin). Inhalt in
 `utils/coachHandbuch.js` (14 Kapitel: Rolle, Aufnehmen, Wer macht was beim Start, Erstgespräch mit Live-Verwalten,

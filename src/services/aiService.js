@@ -1,3 +1,4 @@
+import { alltagEintraegeBereinigen } from "../utils/kalender";
 import { sendeAnfrage, sendeAnfrageStreamend } from "./aiProviders";
 import { STANDARD_COACH_NAME } from "../utils/coachStorage";
 
@@ -191,9 +192,10 @@ export const AIService = {
         "atemroutine (feste Zeiten für Atemübungen, z. B. morgens 2 Min. zum Wachwerden),",
         "tagebuch (die Person erzählt, wie ihr Tag war: Stimmung, wo, mit wem, Essen, Besonderes),",
         "fokus (die Person will JETZT eine Weile konzentriert an einer Sache arbeiten, z. B. '25 Minuten Steuer', 'hilf mir, mit der Wäsche anzufangen' – startet eine Runde 'Gemeinsam fokussieren').",
+        "alltag (feste oder einmalige Termine im Kalender 'Mein Alltag': Arbeit, Haushalt, Hobby, Me-Time, Termin, Freunde & Familie, z. B. 'samstags 10 Uhr Staubsaugen', 'Dienstag 15 Uhr Zahnarzt', 'Mo bis Do 8:30 bis 16:30 Arbeit').",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -364,6 +366,28 @@ export const AIService = {
     );
     const dauer = [15, 25, 50].includes(Number(data.dauerMinuten)) ? Number(data.dauerMinuten) : 25;
     return { ziel: String(data.ziel || "").slice(0, 120), dauerMinuten: dauer };
+  },
+
+  /**
+   * Kalender „Mein Alltag“ (28.09.): Einträge aus einem Satz wie
+   * „samstags 10 Uhr Staubsaugen“. Wöchentlich (wochentage) oder einmalig
+   * (datum YYYY-MM-DD). Ohne Endzeit: 1 Stunde.
+   */
+  async alltagAusChat({ verlauf, coachName, heute }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App und legst Einträge im Kalender 'Mein Alltag' an.",
+        `Heute ist ${heute}. Bereiche: arbeit, haushalt, hobby, metime (Me-Time, Zeit für sich), termin, sozial (Freunde & Familie).`,
+        "Wiederkehrend: wochentage aus Mo, Di, Mi, Do, Fr, Sa, So und datum null. Einmalig: datum im Format YYYY-MM-DD und wochentage leer.",
+        "Uhrzeiten im Format HH:MM. Ohne Endzeit: eine Stunde nach Beginn. Titel kurz (höchstens 5 Wörter).",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "eintraege": [ { "bereich": string, "titel": string, "start": "HH:MM", "ende": "HH:MM", "wochentage": string[], "datum": string|null } ] }',
+      ],
+      verlauf,
+      "Fasse die Kalender-Einträge jetzt als JSON zusammen, wie vereinbart."
+    );
+    return alltagEintraegeBereinigen(data?.eintraege);
   },
 
   /**

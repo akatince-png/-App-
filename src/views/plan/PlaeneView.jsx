@@ -85,6 +85,8 @@ const ROUTINEN_EINTRAEGE = [
   { id: "tagebuch", icon: "book", label: "Tagebuch" },
   // AKA-Kernprogramm (25.09.): Etappen, Pflicht-Bausteine, Sport.
   { id: "coaching", icon: "target", label: "Mein AKA-Coaching" },
+  // Kalender „Mein Alltag“ (28.09.): nach der Einstellungsphase freigeschaltet.
+  { id: "kalender", icon: "calendarWeek", label: "Mein Alltag (Kalender)" },
 ];
 
 // Nachvollziehbarkeit (Nutzerinnen-Vorgabe, 31.07.): "Alle Pläne" soll auch

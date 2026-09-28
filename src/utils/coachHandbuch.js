@@ -94,7 +94,7 @@ export const KAPITEL = [
         ["5 · Festigen", "Nichts Neues muss", "Sonntag: Wochen-Check.", "5 Min."],
         ["6 · Dein Zusatz", "Ein freiwilliger Baustein, den ihr gemeinsam aussucht", "Zusatz mit der Person wählen und einrichten.", "10 Min."],
         ["7 · Nachmessen", "Routinen wieder mit Stoppuhr", "Vergleich mit Woche 1 vorbereiten.", "10 Min."],
-        ["8 · Bilanz", "Vorher und nachher anschauen", "Abschlussgespräch, nächste Etappe festlegen.", "30–45 Min."],
+        ["8 · Bilanz", "Vorher und nachher anschauen", "Abschlussgespräch, nächste Etappe festlegen, „Mein Alltag“ freischalten.", "30–45 Min."],
       ],
     },
     schritte: [
@@ -182,6 +182,26 @@ export const KAPITEL = [
       "Vorher (10 Min.): Übersicht → Person aufklappen: Bausteine der letzten Wochen, was wackelt, Wochen-Checks, Tagebuch-Muster. In Woche 8 zusätzlich den Vergleich Woche 1 und 7.",
       "Im Gespräch: Was lief gut? Was war schwer? Was nehmen wir mit?",
       "Danach: Gesprächsdatum und Notiz eintragen, „Wie geht's weiter?“ wählen: 🔁 Erhaltung (4 Wochen), ⏸ Pause oder 🏁 Coaching beenden.",
+    ],
+  },
+  {
+    id: "alltag",
+    emoji: "🗓️",
+    titel: "Nach den 8 Wochen: Mein Alltag",
+    wozu: "Der Kalender bringt das ganze Leben an einen Ort: Tag, Woche als Stundenplan und Monat. Neben Routinen, Training und Essen stehen dort Arbeit, Haushalt, Hobbys, Me-Time, Termine, Freunde & Familie und eigene Bereiche.",
+    dauer: "20–30 Minuten beim ersten Einrichten",
+    schritte: [
+      "Freischalten: Übersicht → Person → Programme → „Mein Alltag“ → „+ Freischalten“ → Datum → „▶ Starten“. Am besten im Abschlussgespräch nach Woche 8.",
+      "Gemeinsam einrichten (am Telefon mit Verwalten): Pläne → „Mein Alltag (Kalender)“ → „+ Eintrag“. Zuerst die großen Blöcke (Arbeit, feste Termine), dann Haushalt, dann Hobbys und Me-Time.",
+      "Wiederkehrendes über Wochentage, Einmaliges über „Einmalig“ mit Datum. Erinnerung ist an, sie meldet sich zur Startzeit.",
+      "Fehlt ein Bereich (z. B. Kinder, Ehrenamt, Garten): „+ Eigener Bereich“ mit Namen und Symbol. Das geht für die Person selbst oder für dich über Verwalten.",
+      "Die Person kann auch Aka sagen: „Samstags 10 Uhr Staubsaugen“ – der Eintrag landet im Kalender.",
+      "Antippen eines Eintrags: abhaken, ändern oder löschen.",
+    ],
+    achten: [
+      "Die Woche soll Luft haben. Lieber Lücken lassen als jede Stunde verplanen.",
+      "Me-Time ist ein fester Termin, kein Rest.",
+      "Die Routinen bleiben das Rückgrat. Neues wird um sie herum geplant, nicht auf sie drauf.",
     ],
   },
   {

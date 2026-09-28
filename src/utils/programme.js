@@ -1,5 +1,6 @@
 import { programmStand } from "./kernprogramm";
 import { plusTage } from "./schichtplan";
+import { toLocalISODate } from "./dates";
 
 // Programme als eigenständige Module (26.09.): Katalog (`programme`) und
 // Teilnahmen je Person (`programm_teilnahmen`), siehe Migration 0112.
@@ -7,6 +8,14 @@ import { plusTage } from "./schichtplan";
 // Etappen liegen weiter in coaching_etappen.
 
 export const EINSTELLUNG = "einstellung";
+export const ALLTAG = "alltag";
+
+// Kalender „Mein Alltag“ (28.09.): sichtbar, sobald der Coach das Programm
+// gestartet hat (Status „läuft“, Start erreicht).
+export function alltagFreigeschaltet(teilnahmen = [], heute = toLocalISODate(new Date())) {
+  const t = teilnahmen.find((x) => x.programmId === ALLTAG);
+  return !!t && t.status === "laufend" && (!t.start || t.start <= heute);
+}
 
 export const STATUS_TEXT = {
   wartet: "wartet auf Start",

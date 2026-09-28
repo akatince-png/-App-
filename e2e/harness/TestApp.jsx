@@ -210,6 +210,9 @@ function leseOverridesAusUrl() {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     };
     overrides.routineEinstellungen = { morgen: { startZeit: "06:30", endZeit: "07:30" }, abend: { startZeit: "21:30", endZeit: "22:30" } };
+    overrides.programmTeilnahmen = [{ id: "pt-a", programmId: "alltag", status: "laufend", start: iso0(-1), einstellungen: {} }];
+    overrides.alltagBereiche = [{ id: "b-kinder", name: "Kinder", icon: "👶", farbeIndex: 0 }];
+    overrides.alltagErledigt = {};
     overrides.alltagEintraege = [
       { id: 1, bereich: "arbeit", titel: "Arbeit", start: "08:30", ende: "16:30", wochentage: ["Mo", "Di", "Mi", "Do"] },
       { id: 2, bereich: "arbeit", titel: "Arbeit (Homeoffice)", start: "08:30", ende: "13:00", wochentage: ["Fr"] },
@@ -218,6 +221,8 @@ function leseOverridesAusUrl() {
       { id: 5, bereich: "haushalt", titel: "Einkaufen", start: "17:00", ende: "17:45", wochentage: ["Fr"] },
       { id: 6, bereich: "hobby", titel: "Gitarre", start: "19:30", ende: "20:30", wochentage: ["Di", "Do"] },
       { id: 7, bereich: "sozial", titel: "Familie", start: "14:00", ende: "17:00", wochentage: ["So"] },
+      { id: 9, bereich: "metime", titel: "Sauna", start: "18:30", ende: "20:00", wochentage: ["So"] },
+      { id: 10, bereich: "eigen", bereichId: "b-kinder", titel: "Kita abholen", start: "16:45", ende: "17:15", wochentage: ["Mo", "Di", "Mi", "Do"] },
       { id: 8, bereich: "termin", titel: "Zahnarzt", start: "15:00", ende: "16:00", datum: iso0(2) },
     ];
     overrides.trainingWochenplan = [

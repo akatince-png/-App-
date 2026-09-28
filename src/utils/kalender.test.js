@@ -44,3 +44,19 @@ describe("Kalender Mein Alltag", () => {
     expect(r.every((w) => w.length === 7)).toBe(true);
   });
 });
+
+describe("Aka-Antwort für den Kalender prüfen", () => {
+  it("übernimmt gültige Einträge, ergänzt Endzeit, verwirft Unvollständiges", async () => {
+    const { alltagEintraegeBereinigen } = await import("./kalender");
+    const r = alltagEintraegeBereinigen([
+      { bereich: "haushalt", titel: "Staubsaugen", start: "10:00", wochentage: ["Sa"] },
+      { bereich: "quatsch", titel: "Zahnarzt", start: "15:00", ende: "16:00", datum: "2026-10-30", wochentage: ["Mo"] },
+      { bereich: "hobby", titel: "", start: "18:00", wochentage: ["Di"] },
+      { bereich: "hobby", titel: "Gitarre", start: "18 Uhr", wochentage: ["Di"] },
+    ]);
+    expect(r).toEqual([
+      { bereich: "haushalt", titel: "Staubsaugen", start: "10:00", ende: "11:00", wochentage: ["Sa"], datum: null, erinnerung: true },
+      { bereich: "termin", titel: "Zahnarzt", start: "15:00", ende: "16:00", wochentage: [], datum: "2026-10-30", erinnerung: true },
+    ]);
+  });
+});

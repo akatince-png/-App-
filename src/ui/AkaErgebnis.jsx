@@ -83,6 +83,12 @@ export default function AkaErgebnis({ ergebnis }) {
           🎯 Fokus-Runde läuft: {daten.ziel || "deine Sache"} · {daten.dauerMinuten} Min. Handy weg, ich melde mich, wenn die Zeit um ist. Wer aus dem Team gerade dabei ist, siehst du unter „Gemeinsam fokussieren“.
         </Box>
       );
+    case "alltag":
+      return (
+        <Box>
+          🗓️ Im Kalender „Mein Alltag“: {daten.map((e) => `${e.titel} ${e.datum ? e.datum.split("-").reverse().join(".") : e.wochentage.join(", ")} ${e.start}–${e.ende}`).join(" · ")}
+        </Box>
+      );
     case "tagebuch":
       return <Box>Im Tagebuch festgehalten: {tagebuchZeile(daten)}{daten.notiz ? " · 🔒 Notiz (privat)" : ""}</Box>;
     case "schichtplan":

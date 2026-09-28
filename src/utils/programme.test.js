@@ -80,3 +80,14 @@ describe("Woche wiederholen + Pause", () => {
     expect(faelligeBausteine(stand).map((b) => b.key)).toContain("wasser");
   });
 });
+
+describe("Mein Alltag freischalten", () => {
+  it("nur wenn das Programm läuft und der Start erreicht ist", async () => {
+    const { alltagFreigeschaltet } = await import("./programme");
+    expect(alltagFreigeschaltet([])).toBe(false);
+    expect(alltagFreigeschaltet([{ programmId: "alltag", status: "wartet" }], "2026-11-25")).toBe(false);
+    expect(alltagFreigeschaltet([{ programmId: "alltag", status: "laufend", start: "2026-11-24" }], "2026-11-25")).toBe(true);
+    expect(alltagFreigeschaltet([{ programmId: "alltag", status: "laufend", start: "2026-11-26" }], "2026-11-25")).toBe(false);
+    expect(alltagFreigeschaltet([{ programmId: "einstellung", status: "laufend" }], "2026-11-25")).toBe(false);
+  });
+});

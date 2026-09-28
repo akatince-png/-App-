@@ -5,7 +5,7 @@ test("Coach-Handbuch: vom Dashboard erreichbar, Inhalt springt zum Kapitel", asy
   await page.goto("/e2e/harness/index.html#/admin");
   await page.getByRole("button", { name: "📖 Handbuch" }).click();
   await expect(page.getByText("Alles, was du als Coach tust")).toBeVisible();
-  await expect(page.locator("[data-kapitel]")).toHaveCount(14);
+  await expect(page.locator("[data-kapitel]")).toHaveCount(15);
   await expect(page.getByRole("cell", { name: "Person allein" })).toBeVisible();
   await page.getByRole("button", { name: /Das Erstgespräch/ }).first().click();
   await expect(page.getByText(/Jede Änderung, die du speicherst, erscheint/)).toBeVisible();

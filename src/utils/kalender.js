@@ -12,9 +12,29 @@ export const ALLTAG_BEREICHE = {
   arbeit: { label: "Arbeit", icon: "💼", bg: "#E3E8F4", text: "#26345C", dot: "#3F5BA9" },
   haushalt: { label: "Haushalt", icon: "🧹", bg: "#F3EADF", text: "#6B4A22", dot: "#B7843E" },
   hobby: { label: "Hobby", icon: "🎨", bg: "#F6E3F1", text: "#7A2767", dot: "#C04BA6" },
+  metime: { label: "Me-Time", icon: "🛁", bg: "#E6F3F8", text: "#155A70", dot: "#2A9BBF" },
   termin: { label: "Termin", icon: "📅", bg: "#FDE9E4", text: "#8C2F1C", dot: "#E0613F" },
   sozial: { label: "Freunde & Familie", icon: "👥", bg: "#E4F4EA", text: "#1F5E38", dot: "#3A9A62" },
 };
+
+// Farben für eigene Bereiche (Person oder Coach legt sie an).
+const EIGENE_FARBEN = [
+  { bg: "#EFE7FB", text: "#4B2A86", dot: "#7A4FD1" },
+  { bg: "#FFF1D6", text: "#7A5200", dot: "#D99A00" },
+  { bg: "#E2F4F1", text: "#16594F", dot: "#2A9C86" },
+  { bg: "#FBE3E8", text: "#8A2240", dot: "#D2466E" },
+  { bg: "#E7EEF6", text: "#2A4A6E", dot: "#4F7FB5" },
+];
+export const ICON_VORSCHLAEGE = ["⭐", "👶", "🐶", "🎓", "🙏", "🌱", "🚗", "💰", "🧘", "🎮", "📚", "🏡"];
+
+export function bereichMeta(eintrag, eigeneBereiche = []) {
+  if (eintrag?.bereichId) {
+    const b = eigeneBereiche.find((x) => x.id === eintrag.bereichId);
+    if (b) return { label: b.name, icon: b.icon, ...EIGENE_FARBEN[(b.farbeIndex || 0) % EIGENE_FARBEN.length] };
+  }
+  return ALLTAG_BEREICHE[eintrag?.bereich] || ALLTAG_BEREICHE.termin;
+}
+export const eigeneBereichMeta = (b) => ({ label: b.name, icon: b.icon, ...EIGENE_FARBEN[(b.farbeIndex || 0) % EIGENE_FARBEN.length] });
 
 export const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const wochentagVon = (date) => WOCHENTAGE[(date.getDay() + 6) % 7];
@@ -34,7 +54,7 @@ export function alltagAmTag(eintrag, date) {
 const STANDARD_DAUER = { mahlzeit: 30, training: 60, supplement: 10, hormon: 10, gewohnheit: 15, workflow: 30, zeitblock: 60 };
 
 // Alle Blöcke eines Tages, nach Beginn sortiert.
-export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, alltagEintraege = [] } = {}) {
+export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, alltagEintraege = [], alltagBereiche = [], alltagErledigt = {} } = {}) {
   const bloecke = [];
   for (const [key, meta] of [
     ["abend", ROUTINE_META.abendroutine],
@@ -57,8 +77,9 @@ export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, al
     if (!alltagAmTag(e, date)) continue;
     const start = minuten(e.start);
     if (start == null) continue;
-    const meta = ALLTAG_BEREICHE[e.bereich] || ALLTAG_BEREICHE.termin;
-    bloecke.push({ key: `a-${e.id}`, start, ende: minuten(e.ende) ?? start + 60, titel: e.titel, icon: meta.icon, farbe: meta, art: e.bereich });
+    const meta = bereichMeta(e, alltagBereiche);
+    const tag = toLocalISODate(date);
+    bloecke.push({ key: `a-${e.id}`, start, ende: minuten(e.ende) ?? start + 60, titel: e.titel, icon: meta.icon, farbe: meta, art: e.bereich, alltag: e, done: !!alltagErledigt[`${e.id}|${tag}`] });
   }
   return bloecke.sort((a, b) => a.start - b.start || b.ende - a.ende);
 }
@@ -98,4 +119,26 @@ export function monatsRaster(jahr, monat) {
   const zellen = [...Array(versatz).fill(null), ...Array.from({ length: tage }, (_, i) => new Date(jahr, monat, i + 1))];
   while (zellen.length % 7) zellen.push(null);
   return Array.from({ length: zellen.length / 7 }, (_, w) => zellen.slice(w * 7, w * 7 + 7));
+}
+
+// KI-Antwort (Aka) prüfen: nur gültige Bereiche, Tage, Uhrzeiten.
+export function alltagEintraegeBereinigen(liste) {
+  const uhr = (v) => (/^\d{1,2}:\d{2}$/.test(String(v || "")) ? String(v).padStart(5, "0") : null);
+  return (Array.isArray(liste) ? liste : [])
+    .map((e) => {
+      const start = uhr(e?.start);
+      const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(e?.datum || "")) ? e.datum : null;
+      const wochentage = datum ? [] : (e?.wochentage || []).filter((w) => WOCHENTAGE.includes(w));
+      if (!start || !String(e?.titel || "").trim() || (!datum && !wochentage.length)) return null;
+      return {
+        bereich: ALLTAG_BEREICHE[e.bereich] ? e.bereich : "termin",
+        titel: String(e.titel).trim().slice(0, 80),
+        start,
+        ende: uhr(e.ende) || hhmm(minuten(start) + 60),
+        wochentage,
+        datum,
+        erinnerung: true,
+      };
+    })
+    .filter(Boolean);
 }

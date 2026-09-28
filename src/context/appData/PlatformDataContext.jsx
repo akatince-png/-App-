@@ -3,6 +3,7 @@ import { useShallowStableValue } from "../useShallowStableValue";
 import { useCoreData } from "./CoreDataContext";
 import { usePushNotifications } from "../../data/usePushNotifications";
 import { useFokusGemeinsam } from "../../data/useFokusGemeinsam";
+import { useAlltag } from "../../data/useAlltag";
 import { useAenderungsprotokoll } from "../../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../../data/useLexikon";
@@ -66,6 +67,8 @@ export function PlatformDataProvider({ children }) {
   const kernData = useKernprogramm(userId, routinenData);
   // Gemeinsam fokussieren / Body Doubling (27.09.).
   const fokusGemeinsamData = useFokusGemeinsam(userId);
+  // Kalender „Mein Alltag“ (28.09., Migration 0118).
+  const alltagData = useAlltag(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -83,6 +86,7 @@ export function PlatformDataProvider({ children }) {
     ...hauptprotokollData,
     ...routinenData,
     ...zeitbloeckeData,
+    ...alltagData,
     ...coacheeNachrichtenData,
     ...coachWissenData,
     ...workflowData,

@@ -27,6 +27,7 @@ export const BEREICH_LABELS = {
   atemroutine: "Atem-Zeiten anlegen",
   tagebuch: "Im Tagebuch festhalten",
   fokus: "Fokus-Runde starten",
+  alltag: "In den Kalender eintragen",
 };
 
 // Die eine Aktions-Logik von Aka (seit 23.09. der einzige Weg — es gibt
@@ -57,6 +58,7 @@ export function useUniversellerCoach() {
     tagebuchSpeichern,
     tagebuchEintraege,
     fokusStarten,
+    alltagSpeichern,
   } = useAppData();
   const appData = useAppData();
 
@@ -298,6 +300,17 @@ export function useUniversellerCoach() {
         if (!r?.ok) throw new Error(r?.error || "Starten fehlgeschlagen.");
         timerHinweisPlanen({ symbol: "🎯", name: r.sitzung.ziel || "Gemeinsam fokussieren", ende: sitzungEnde(r.sitzung) });
         return { bereich: "fokus", daten: r.sitzung };
+      }
+      case "alltag": {
+        const liste = await AIService.alltagAusChat({ verlauf, coachName, heute: toLocalISODate(new Date()) });
+        if (!liste.length) throw new Error("Ich habe keinen Termin mit Uhrzeit und Tag erkannt.");
+        const angelegt = [];
+        for (const e of liste) {
+          const r = await alltagSpeichern?.(e);
+          if (r?.ok) angelegt.push(r.eintrag);
+        }
+        if (!angelegt.length) throw new Error("Speichern fehlgeschlagen.");
+        return { bereich: "alltag", daten: angelegt };
       }
       case "tagebuch": {
         const heute = toLocalISODate(new Date());

@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 // (gleiches Muster wie in mehreren bestehenden Test-Dateien, z. B.
 // RoutineHeuteChecklist.test.jsx, aber dort reicht ein Mock, weil die
 // Komponente selbst schlank ist), hier direkt an der Quelle gemockt.
-vi.mock("../lib/supabaseClient", () => ({ supabase: {} }));
+vi.mock("../lib/supabaseClient", () => ({ supabase: {}, setzeSchreibBeobachter: () => {} }));
 
 const { TAGESVERLAUF_AKTIONEN } = await import("../views/ProtokollLogView");
 const { VERLAUF_AKTIONEN } = await import("../ui/ItemVerlauf");
