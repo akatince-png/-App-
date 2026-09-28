@@ -229,10 +229,13 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null, balkenKlappbar = false }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
+  // Design 2.0: Balken je Bereich auf der Startseite eingeklappt (ruhiger),
+  // mit einem Tipp aufklappbar.
+  const [balkenOffen, setBalkenOffen] = useState(!balkenKlappbar);
   const auswahl = gehirn.regionen.find((r) => r.key === gewaehlt) || null;
   const prozent = Math.round(gehirn.gesamtLadung * 100);
   const waehle = (key) => setGewaehlt((g) => (g === key ? null : key));
@@ -410,7 +413,18 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       </div>
       <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
 
+      {balkenKlappbar && (
+        <button
+          type="button"
+          data-balken-umschalter
+          onClick={() => setBalkenOffen((o) => !o)}
+          style={{ display: "block", margin: "10px auto 0", border: "none", background: "rgba(var(--gk-rgb, 255, 255, 255), 0.07)", color: "inherit", borderRadius: 999, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          {balkenOffen ? "Bereiche ausblenden ▲" : "📊 Bereiche einzeln ansehen ▼"}
+        </button>
+      )}
       {/* Tagesfortschritt-Balken je Bereich — gleiche Zeitraum-Wahl wie oben */}
+      {balkenOffen && (
       <div style={{ marginTop: 6, padding: "12px 10px 8px", borderRadius: 16, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.06)" }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 4, height: 84 }}>
           {sichtbareBalken.map((w) => {
@@ -447,12 +461,13 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             const gedimmt = gewaehlt && WIDGET_REGION[w.kategorie] !== gewaehlt;
             return (
               <div key={w.kategorie} style={{ flex: 1, maxWidth: 26, display: "flex", justifyContent: "center", opacity: gedimmt ? 0.3 : w.aktiv ? 0.9 : 0.4 }}>
-                {icon ? <Icon name={icon} size={14} color="#fff" strokeWidth={2} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: "#fff" }} />}
+                {icon ? <Icon name={icon} size={14} color={stimmung.hell ? "#667085" : "#fff"} strokeWidth={2} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: stimmung.hell ? "#667085" : "#fff" }} />}
               </div>
             );
           })}
         </div>
       </div>
+      )}
 
       {auswahl ? (
         <div style={{ marginTop: 10, padding: 12, borderRadius: 16, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.08)", borderLeft: `4px solid ${auswahl.farbe}` }}>

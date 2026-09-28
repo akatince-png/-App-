@@ -128,3 +128,52 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
     </button>
   );
 }
+
+// Design 2.0 (28.09., Entwurf „Mischung B+C“): Spielstand als drei ruhige
+// Kacheln unter der Gehirn-Karte – heute erledigt (Ring), Serie, Level.
+// Antippen führt wie bisher zu den Erfolgen.
+export function SpielstandReihe({ erledigt, gesamt, punkte, serie, onOpenErfolge }) {
+  const lvl = levelAusPunkten(punkte);
+  const fortschritt = levelFortschritt(lvl);
+  const anteil = gesamt > 0 ? Math.min(1, erledigt / gesamt) : 0;
+  const kachel = {
+    background: "var(--mp-karte, #fff)",
+    border: "1px solid rgba(16, 24, 40, 0.05)",
+    boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 18px rgba(16, 24, 40, 0.05)",
+    borderRadius: 18,
+    padding: "11px 12px",
+    textAlign: "left",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    color: "inherit",
+    minWidth: 0,
+  };
+  const wert = { fontSize: 18, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.2 };
+  const unter = { fontSize: 11.5, color: "#667085", fontWeight: 600 };
+  return (
+    <div data-spielstand-reihe style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }} aria-label={`Spielstand: ${erledigt} von ${gesamt} heute erledigt, Serie ${serie} Tage, ${punkte} Punkte, Level ${lvl.level}`}>
+      <button type="button" className="mp-tap" onClick={onOpenErfolge} style={{ ...kachel, display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ width: 36, height: 36, borderRadius: 99, flexShrink: 0, background: `conic-gradient(${logoTuerkis} 0 ${anteil * 360}deg, #E6EAF2 0)`, display: "grid", placeItems: "center" }}>
+          <span style={{ width: 27, height: 27, borderRadius: 99, background: "var(--mp-karte, #fff)" }} />
+        </span>
+        <span style={{ minWidth: 0 }}>
+          <span style={{ ...wert, display: "block" }}>
+            {erledigt}/{gesamt}
+          </span>
+          <span style={{ ...unter, display: "block" }}>heute</span>
+        </span>
+      </button>
+      <button type="button" className="mp-tap" onClick={onOpenErfolge} style={kachel}>
+        <span style={{ ...wert, display: "block" }}>🔥 {serie}</span>
+        <span style={{ ...unter, display: "block" }}>{serie === 1 ? "Tag" : "Tage"} in Folge</span>
+      </button>
+      <button type="button" className="mp-tap" onClick={onOpenErfolge} style={kachel}>
+        <span style={{ ...wert, display: "block" }}>Level {lvl.level}</span>
+        <span style={{ display: "block", height: 5, borderRadius: 9, background: "#E6EAF2", margin: "5px 0 3px", overflow: "hidden" }}>
+          <span style={{ display: "block", width: `${Math.round(fortschritt * 100)}%`, height: "100%", background: logoVerlauf, borderRadius: 9 }} />
+        </span>
+        <span style={{ ...unter, display: "block" }}>⚡ {punkte} Punkte</span>
+      </button>
+    </div>
+  );
+}

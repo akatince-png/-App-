@@ -18,12 +18,11 @@ import FokusGemeinsamKarte from "../ui/FokusGemeinsamKarte";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
-import SpielstandKarte from "../ui/SpielstandKarte";
+import { SpielstandReihe } from "../ui/SpielstandKarte";
 import GehirnKarte from "../ui/GehirnKarte";
 import TagesQuestsKarte from "../ui/TagesQuestsKarte";
 import { useSpielFeiern } from "../ui/useSpielFeiern";
 import { baueTagesQuests } from "../utils/tagesQuests";
-import { statusText } from "../utils/motivation";
 import { toLocalISODate, addDays, sameDay, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
@@ -113,7 +112,7 @@ const ROUTINE_TEXT = { morgenroutine: ROUTINE_META.morgenroutine.text, abendrout
 
 
 export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll }) {
-  const { t, tLabel, lang } = useT();
+  const { t, tLabel } = useT();
   const {
     userId,
     hormonPlan,
@@ -982,7 +981,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // sie sich vom farbigen Kartenhintergrund klar abhebt; die folgenden als
   // kleine Chips in ihrer Bereichsfarbe. Die volle Liste steht im Tagesplan.
   const weissesFeld = (kinder) => (
-    <div style={{ marginTop: 14, background: "#fff", color: textMain, borderRadius: 18, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}>{kinder}</div>
+    <div style={{ background: "#fff", color: textMain, borderRadius: 22, padding: 14, border: "1px solid rgba(16, 24, 40, 0.05)", boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.06)" }}>{kinder}</div>
   );
   const naechsteChips = angezeigteItems.slice(1, 4);
   const kartenMitte = weissesFeld(
@@ -1100,25 +1099,27 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         onOpenErfolge={() => onOpenView("erfolge")}
         onDenksport={() => onOpenView("denksport")}
         onOpenView={onOpenView}
-        onWasser={() => onOpenView("hydration")}
-        onAkut={() => setAkutOffen(true)}
         phase={phase}
-        mitte={kartenMitte}
-        kopfUnten
-        gruss={null}
-        kopf={
-          <SpielstandKarte
-            eingebettet
-            gruss={null}
-            statusZeile={statusText(erledigtCount + raetselZaehlt, displayItems.length + (isEmergencyMode ? 0 : 1), lang)}
-            erledigt={erledigtCount + raetselZaehlt}
-            gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
-            punkte={gesamtPunkte}
-            serie={globalerStreak}
-            onOpenErfolge={() => onOpenView("erfolge")}
-          />
-        }
+        balkenKlappbar
       />
+      {/* Design 2.0 (28.09., Entwurf „Mischung B+C“): Spielstand als drei
+          Kacheln, Schnellknöpfe als eigene Zeile, „Jetzt dran“ als eigene Karte. */}
+      <SpielstandReihe
+        erledigt={erledigtCount + raetselZaehlt}
+        gesamt={displayItems.length + (isEmergencyMode ? 0 : 1)}
+        punkte={gesamtPunkte}
+        serie={globalerStreak}
+        onOpenErfolge={() => onOpenView("erfolge")}
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+        <button type="button" className="mp-tap" data-schnell-wasser aria-label="Wasser eintragen" onClick={() => onOpenView("hydration")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "none", borderRadius: 16, padding: "12px 10px", background: "#E6F0FF", color: "#1F4FAF", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+          💧 Wasser +
+        </button>
+        <button type="button" className="mp-tap" aria-label="Grad nicht gut?" onClick={() => setAkutOffen(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "none", borderRadius: 16, padding: "12px 10px", background: "#FFF3D6", color: "#8A5A00", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+          💡 Grad nicht gut?
+        </button>
+      </div>
+      <div data-jetzt-karte style={{ marginBottom: 20 }}>{kartenMitte}</div>
 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
@@ -1208,7 +1209,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           statt der schmalen `compact`-Variante — Design wird bei
           Gelegenheit noch weiter überarbeitet. */}
       <div style={{ marginBottom: 18 }}>
-        <ADHSModeToggle isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
+        <ADHSModeToggle compact isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
       </div>
 
       {/* Emergency Mode Info Banner */}
@@ -1288,9 +1289,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           genau wie jede andere Kategorie. */}
       {direktzugriffWidgets.length > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ marginBottom: 12 }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{t("home.direktzugriff")}</span>{" "}
-            <span style={{ fontSize: 11, fontWeight: 600, color: textMuted }}>— {t("home.direktzugriff.desc")}</span>
+          <div style={{ margin: "0 2px 10px", display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontFamily: fontHeading, fontSize: 18, fontWeight: 800, letterSpacing: -0.3, color: textMain }}>Deine Bereiche</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: textMuted }}>{t("home.direktzugriff.desc")}</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
             {direktzugriffWidgets.map((widget) => (

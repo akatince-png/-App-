@@ -92,12 +92,13 @@ export default function MiniPlanWidget({
       onClick={onClick}
       style={{
         position: "relative",
-        background: kartenHintergrund,
-        border: `1px solid ${aktiv ? hexZuRgba(baseColor, 0.28) : "#e5e7eb"}`,
-        borderRadius: "12px",
+        // Design 2.0 (28.09.): weiße Kachel, Farbe nur im Ring und Titel.
+        background: aktiv ? "#fff" : kartenHintergrund,
+        border: "1px solid rgba(16, 24, 40, 0.05)",
+        borderRadius: 18,
         padding: "12px",
         textAlign: "center",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 18px rgba(16, 24, 40, 0.05)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
