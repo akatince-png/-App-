@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { Shell, Card, Label, PrimaryButton, TextInput } from "./primitives";
 import ViewHeader from "./ViewHeader";
 import Timer from "./Timer";
@@ -36,6 +37,7 @@ function fmtDauer(sekunden) {
 // ausgelagert wurde. Reine Verhaltens-neutrale Umstrukturierung.
 // ---------------------------------------------------------------------------
 export default function LiveWorkout({ session, onFertig, onSchliessen }) {
+  useLiveNeuladenSperre(); // Coach-Änderungen erst nach dem Training neu laden
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, spotifyFortsetzen, spotifyLautstaerke, uebungsBilder, trainingAbschliessen } = useAppData();
   const [musikFehler, setMusikFehler] = useState(null);
   // Startet automatisch die dem Training zugeordnete Playlist (Mehr → Musik

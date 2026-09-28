@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { PrimaryButton } from "./primitives";
 import ProgressRing from "./ProgressRing";
 import { accentDark, textMuted } from "./theme";
@@ -63,6 +64,7 @@ export default function Timer({
   tickJedeSekunde = false,
 }) {
   const [status, setStatus] = useState("idle"); // idle | vorbereitung | running | paused | done
+  useLiveNeuladenSperre(status === "running" || status === "vorbereitung" || status === "paused");
   const [phase, setPhase] = useState("arbeit");
   const [rundeAktuell, setRundeAktuell] = useState(1);
   const [tick, setTick] = useState(0);

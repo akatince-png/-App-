@@ -55,6 +55,7 @@ const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
 const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
 import HilfeWaechter from "./ui/HilfeWaechter";
+import { nimmLiveNeuladen } from "./data/liveAktualisierung";
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const StartTourView = lazyAnsicht(() => import("./views/onboarding/StartTourView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
@@ -234,6 +235,14 @@ export default function AuthenticatedApp() {
       if (isAdmin && nimmRueckkehrZumDashboard()) {
         setView("admin");
         return;
+      }
+      // Live-Aktualisierung vom Coach: auf derselben Seite bleiben.
+      if (nimmLiveNeuladen()) {
+        const ausUrl = viewAusHash();
+        if (istGueltigerView(ausUrl, isAdmin)) {
+          setView(ausUrl);
+          return;
+        }
       }
       // Aus der Einrichtungs-Checkliste: direkt in die passende Seite.
       const ziel = nimmZielNachVerwalten();

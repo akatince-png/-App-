@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
 import { merkeRueckkehrZumDashboard } from "../utils/verwaltungRueckkehr";
+import { setzeLiveZiel } from "../data/liveAktualisierung";
 
 // Trägt, welche Probandin/welcher Proband gerade stellvertretend verwaltet
 // wird ("Verwalten als"-Modus, siehe AdminDashboardView.jsx) — null heißt:
@@ -12,8 +13,13 @@ const AdminContext = createContext(null);
 export function AdminProvider({ children }) {
   const [proband, setProband] = useState(null); // { id, email, vorname } | null
 
-  const verwalteAls = useCallback((p) => setProband(p), []);
+  // Live-Aktualisierung: Speichern im Verwalten-Modus meldet der Person ein Signal.
+  const verwalteAls = useCallback((p) => {
+    setzeLiveZiel(p?.id || null);
+    setProband(p);
+  }, []);
   const verlasseVerwaltung = useCallback(() => {
+    setzeLiveZiel(null);
     merkeRueckkehrZumDashboard();
     setProband(null);
   }, []);

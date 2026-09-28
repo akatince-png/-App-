@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { Shell, Card, PrimaryButton } from "./primitives";
 import Timer from "./Timer";
 import { accentDark, cardBorder, danger, textMuted } from "./theme";
@@ -35,6 +36,7 @@ function fmtDauer(sekunden) {
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
+  useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand } = useAppData();
   const heute = toLocalISODate(new Date());
   const tagebuchHeute = (tagebuchEintraege || []).find((e) => e.datum === heute);

@@ -9,4 +9,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Live-Aktualisierung (28.09., data/liveAktualisierung.js): erfolgreiche
+// Schreibzugriffe werden einem Beobachter gemeldet. Ohne Beobachter
+// verhält sich fetch exakt wie vorher.
+let schreibBeobachter = null;
+export const setzeSchreibBeobachter = (fn) => {
+  schreibBeobachter = fn;
+};
+
+const beobachtetesFetch = async (input, init) => {
+  const antwort = await fetch(input, init);
+  if (schreibBeobachter) {
+    try {
+      const url = typeof input === "string" ? input : input?.url;
+      schreibBeobachter(url, init?.method || input?.method, antwort.ok);
+    } catch {
+      // Beobachter darf nie das eigentliche Speichern stören.
+    }
+  }
+  return antwort;
+};
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, { global: { fetch: beobachtetesFetch } });

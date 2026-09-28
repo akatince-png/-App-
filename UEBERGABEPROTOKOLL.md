@@ -201,6 +201,22 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Live-Aktualisierung beim gemeinsamen Einrichten (28.09., Nutzerin)
+Wunsch: „Während ich mit ihm telefoniere, direkt Veränderungen vornehmen, die er dann eins zu eins gleich sieht.“
+- `data/liveAktualisierung.js`: Im Modus „Verwalten“ meldet jedes erfolgreiche Speichern (POST/PATCH/PUT/DELETE auf
+  `/rest/v1/<tabelle>`, nicht `/rpc/`) nach 1 s Ruhe ein Signal per Realtime-Broadcast (`httpSend`) auf den Kanal
+  `aka-live-<userId>`. Es werden keine Daten mitgeschickt, keine Migration nötig. Erkannt wird das über einen
+  Beobachter im Supabase-Client (`lib/supabaseClient.js`, `global.fetch`). Das Ziel setzt `AdminContext`
+  (`verwalteAls`/`verlasseVerwaltung`).
+- Coachee-Seite (`App.jsx`): hört auf den eigenen Kanal. Nach 0,8 s Ruhe wird `AppDataProvider` neu gemountet
+  (Key `self-<n>`), die Person bleibt auf derselben Seite (`nimmLiveNeuladen` in `AuthenticatedApp`). Während eine
+  Routine (`RoutineAblauf`), ein Training (`LiveWorkout`) oder ein Timer läuft oder ein Eingabefeld den Fokus hat,
+  wartet das Neuladen (`useLiveNeuladenSperre`).
+- Live getestet am 28.09. mit Admin-Testkonto → Verwalten Jonas → +200 ml Wasser: Jonas' offene App zeigte von selbst
+  den neuen Wert. In der Cloud-Sandbox kommt Chromium nicht per WebSocket durch den Proxy (Handshake 500), deshalb im
+  Test über Node gebrückt; aus Node direkt und für echte Geräte funktioniert Realtime normal. Tests:
+  `data/liveAktualisierung.test.jsx`.
+
 ### Tour „So geht's weiter“, 8 Wochen als Fahrplan, Steckbrief mit Standardwerten (27.09. abends, Nutzerin)
 - **8 Wochen:** `ui/AchtWochenPlan.jsx`, „Fahrplan mit Kacheln“ (Wunsch der Nutzerin): untereinander, jede Woche eine Kachel.
   Woche 1–4 sind nachtblau mit Bausteinen aus `BAUSTEINE`, Woche 5–8 mint (`ERHALTUNG_WOCHEN`: Festigen, Dein Zusatz,

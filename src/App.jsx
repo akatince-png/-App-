@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { markiereLiveNeuladen, useLiveAktualisierung } from "./data/liveAktualisierung";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppDataProvider } from "./context/AppDataContext";
 import { AdminProvider, useAdmin } from "./context/AdminContext";
@@ -23,6 +24,13 @@ function LoadingScreen() {
 function Root() {
   const { user, loading, invitePending } = useAuth();
   const { proband } = useAdmin();
+  // Live-Aktualisierung (28.09.): speichert der Coach im Verwalten-Modus
+  // etwas für diese Person, lädt ihre App die Daten neu (gleiche Seite).
+  const [liveStand, setLiveStand] = useState(0);
+  useLiveAktualisierung(user?.id, !!user && !proband, () => {
+    markiereLiveNeuladen();
+    setLiveStand((n) => n + 1);
+  });
   if (loading) return <LoadingScreen />;
   if (!user) return <LoginView />;
   // Einladungs-/Passwort-Vergessen-Link angeklickt (siehe AuthContext.jsx)
@@ -33,7 +41,7 @@ function Root() {
     // key erzwingt beim Betreten/Verlassen des "Verwalten als"-Modus einen
     // kompletten Remount von AppDataProvider + AuthenticatedApp — sonst
     // bliebe z. B. der view-State ("admin") oder alter Proband-State hängen.
-    <AppDataProvider key={proband?.id || "self"}>
+    <AppDataProvider key={proband?.id || `self-${liveStand}`}>
       <AuthenticatedApp />
     </AppDataProvider>
   );
