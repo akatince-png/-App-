@@ -110,7 +110,7 @@ function akaSeite(view) {
   return AKA_SEITEN[view] || ALLGEMEIN;
 }
 
-export default function Aka({ view }) {
+export default function Aka({ view, ohneOrb = false }) {
   const { handleBereitschaftPruefen, handleUniverselleUebernahme } = useUniversellerCoach();
   const seite = akaSeite(view);
   return (
@@ -124,6 +124,7 @@ export default function Aka({ view }) {
       onUebernehmen={handleUniverselleUebernahme}
       uebernehmenLabels={BEREICH_LABELS}
       renderErgebnis={(ergebnis) => <AkaErgebnis ergebnis={ergebnis} />}
+      ohneOrb={ohneOrb}
     />
   );
 }

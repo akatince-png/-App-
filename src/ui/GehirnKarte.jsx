@@ -90,21 +90,25 @@ function deckkraft(r) {
 // morgens Sonnenaufgang in den Morgenroutine-Farben, tagsüber Himmelblau,
 // ab Beginn der Abendroutine Nachthimmel mit Sternen und Mond.
 const STIMMUNG = {
+  // Design 2.0 (28.09., Entwurf „Mischung B+C“): morgens und tagsüber eine
+  // helle Karte mit dunkler Schrift, abends dunkel mit Leuchten.
   morgen: {
-    hintergrund: "linear-gradient(165deg, #FFB866 0%, #F08A24 38%, #B24A16 78%, #6E2A10 100%)",
-    schatten: "0 14px 30px rgba(176, 74, 22, 0.35)",
-    linieVon: "#FFF1DC",
-    linieBis: "#FFD39A",
-    grund: "rgba(90, 30, 8, 0.35)",
+    hintergrund: "#FFFFFF",
+    schatten: "0 1px 2px rgba(60, 30, 10, 0.05), 0 8px 24px rgba(60, 30, 10, 0.07)",
+    linieVon: "#2FB39A",
+    linieBis: "#3E63D6",
+    grund: "#F4EEE8",
     hinweis: "☀️ Guten Morgen — deine Morgenroutine lädt dein Gehirn auf.",
+    hell: true,
   },
   tag: {
-    hintergrund: "linear-gradient(165deg, #6DB0F5 0%, #2D6FD6 45%, #1B3E8C 100%)",
-    schatten: "0 14px 30px rgba(27, 62, 140, 0.35)",
-    linieVon: "#FFFFFF",
-    linieBis: "#CFE4FF",
-    grund: "rgba(10, 30, 80, 0.35)",
+    hintergrund: "#FFFFFF",
+    schatten: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.07)",
+    linieVon: "#2FB39A",
+    linieBis: "#3E63D6",
+    grund: "#EDF2FB",
     hinweis: null,
+    hell: true,
   },
   nacht: {
     hintergrund: nachtVerlaufFest,
@@ -130,7 +134,7 @@ function Deko({ phase }) {
           <span
             key={i}
             className="mp-stern"
-            style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: 99, background: "#fff", animationDelay: `${verz}s`, boxShadow: "0 0 6px rgba(255,255,255,0.9)" }}
+            style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: 99, background: "#fff", animationDelay: `${verz}s`, boxShadow: "0 0 6px rgba(var(--gk-rgb, 255, 255, 255), 0.9)" }}
           />
         ))}
         <span style={{ position: "absolute", right: 16, top: 150, fontSize: 28, filter: "drop-shadow(0 0 10px rgba(255,236,170,0.8))" }}>🌙</span>
@@ -146,8 +150,7 @@ function Deko({ phase }) {
   }
   return (
     <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", borderRadius: 24 }}>
-      <span style={{ position: "absolute", right: 12, top: 140, fontSize: 26, opacity: 0.9 }}>☁️</span>
-      <span style={{ position: "absolute", left: 14, top: 300, fontSize: 18, opacity: 0.6 }}>☁️</span>
+      <span style={{ position: "absolute", right: -60, top: 90, width: 190, height: 190, borderRadius: 999, background: "radial-gradient(circle, rgba(120,170,255,0.28) 0%, rgba(120,170,255,0) 70%)" }} />
     </div>
   );
 }
@@ -160,7 +163,7 @@ function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
     ...(zeigeGesamt ? [["gesamt", "Gesamt"]] : []),
   ];
   return (
-    <div role="group" aria-label="Zeitraum" style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.08)", borderRadius: 999, padding: 3 }}>
+    <div role="group" aria-label="Zeitraum" style={{ display: "flex", gap: 4, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.08)", borderRadius: 999, padding: 3 }}>
       {optionen.map(([id, label]) => (
         <button
           key={id}
@@ -177,7 +180,7 @@ function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
             cursor: "pointer",
             fontFamily: "inherit",
             background: zeitraum === id ? "#fff" : "transparent",
-            color: zeitraum === id ? "#171B3A" : "rgba(255,255,255,0.75)",
+            color: zeitraum === id ? "#171B3A" : "rgba(var(--gk-rgb, 255, 255, 255), 0.75)",
           }}
         >
           {label}
@@ -196,7 +199,7 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   // Seit 27.09. (Nutzerin: "sitzen nicht gut, sieht doof aus") als eigene
   // Zeile unter Gehirn und Körper statt über das Gehirnbild gelegt, mit
   // Beschriftung – ganze Pille antippbar.
-  const pille = { display: "flex", alignItems: "center", gap: 8, border: "1.5px solid rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.1)", color: "#fff", borderRadius: 99, padding: "5px 14px 5px 6px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" };
+  const pille = { display: "flex", alignItems: "center", gap: 8, border: "1.5px solid rgba(var(--gk-rgb, 255, 255, 255), 0.35)", background: "rgba(var(--gk-rgb, 255, 255, 255), 0.1)", color: "var(--gk-text, #fff)", borderRadius: 99, padding: "5px 14px 5px 6px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" };
   return (
     <div data-schnellknoepfe style={{ display: "flex", flexWrap: "wrap", gap: 10, margin: "6px 0 12px" }}>
       {onWasser && (
@@ -236,7 +239,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
   const sichtbareBalken = (widgets || []).filter((w) => w.kategorie !== "notfallmodus");
 
   return (
-    <div style={{ position: "relative", marginBottom: 20, borderRadius: 24, padding: 16, color: "#fff", background: stimmung.hintergrund, boxShadow: stimmung.schatten, transition: "background 1s" }}>
+    <div style={{ "--gk-rgb": stimmung.hell ? "20, 30, 60" : "255, 255, 255", "--gk-text": stimmung.hell ? "#101828" : "#fff", position: "relative", marginBottom: 20, borderRadius: 24, padding: 16, color: "var(--gk-text)", background: stimmung.hintergrund, boxShadow: stimmung.schatten, border: stimmung.hell ? "1px solid rgba(16, 24, 40, 0.05)" : "none", transition: "background 1s" }}>
       <Deko phase={phase} />
       <div style={{ position: "relative" }}>
       {/* Spielstand oben in derselben Karte (24.09.), durch eine feine Linie
@@ -245,7 +248,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
         <>
           {kopf}
           {mitte}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.18)", margin: "14px 0" }} />
+          <div style={{ height: 1, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.18)", margin: "14px 0" }} />
         </>
       )}
 
@@ -262,7 +265,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           ? "Noch alles ruhig — hake etwas ab, dann leuchtet die erste Region auf."
           : `${ZEITRAUM_TEXT[zeitraum] || "Heute"} zu ${prozent} % aufgeladen${prozent >= 100 ? " — alles leuchtet! 🎉" : ""}`}
       </div>
-      <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.12)", marginTop: 6, overflow: "hidden" }}>
+      <div style={{ height: 6, borderRadius: 99, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)", marginTop: 6, overflow: "hidden" }}>
         <div style={{ width: `${prozent}%`, height: "100%", borderRadius: 99, background: logoVerlauf, transition: "width 0.8s ease-out" }} />
       </div>
 
@@ -281,7 +284,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           <radialGradient id="mp-gehirn-tiefe" cx="38%" cy="32%" r="75%">
             <stop offset="0%" stopColor="#fff" stopOpacity="0.16" />
             <stop offset="55%" stopColor="#fff" stopOpacity="0.04" />
-            <stop offset="100%" stopColor="#000" stopOpacity="0.18" />
+            <stop offset="100%" stopColor={stimmung.hell ? "#3E63D6" : "#000"} stopOpacity={stimmung.hell ? 0.08 : 0.18} />
           </radialGradient>
           <filter id="mp-gehirn-linie" x="-10%" y="-10%" width="120%" height="120%">
             <feGaussianBlur stdDeviation="1.6" result="b" />
@@ -387,9 +390,9 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
                 cx={x}
                 cy={y}
                 r={an ? 14 : 12}
-                fill={r.zustand === "leer" ? "#1B2146" : r.farbe}
+                fill={r.zustand === "leer" ? (stimmung.hell ? "#fff" : "#1B2146") : r.farbe}
                 fillOpacity={r.zustand === "aktiv" ? 1 : 0.5}
-                stroke={an ? "#fff" : "rgba(255,255,255,0.7)"}
+                style={{ stroke: an ? (stimmung.hell ? "#3E63D6" : "#fff") : stimmung.hell ? "#fff" : "rgba(255, 255, 255, 0.7)" }}
                 strokeWidth={an ? 2.5 : 1.4}
                 strokeDasharray={r.zustand === "leer" ? "3 3" : undefined}
               />
@@ -408,7 +411,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
 
       {/* Tagesfortschritt-Balken je Bereich — gleiche Zeitraum-Wahl wie oben */}
-      <div style={{ marginTop: 6, padding: "12px 10px 8px", borderRadius: 16, background: "rgba(255,255,255,0.06)" }}>
+      <div style={{ marginTop: 6, padding: "12px 10px 8px", borderRadius: 16, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.06)" }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 4, height: 84 }}>
           {sichtbareBalken.map((w) => {
             const region = WIDGET_REGION[w.kategorie];
@@ -428,7 +431,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
                     width: "100%",
                     height: w.aktiv ? `${Math.max(6, Math.round(anteil * 100))}%` : "6%",
                     borderRadius: "6px 6px 2px 2px",
-                    background: w.aktiv ? farbe : "rgba(255,255,255,0.14)",
+                    background: w.aktiv ? farbe : "rgba(var(--gk-rgb, 255, 255, 255), 0.14)",
                     opacity: gedimmt ? 0.3 : 1,
                     boxShadow: w.aktiv && anteil > 0 && !gedimmt ? `0 0 10px ${farbe}88` : "none",
                     transition: "height 0.6s ease-out, opacity 0.3s",
@@ -452,7 +455,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       </div>
 
       {auswahl ? (
-        <div style={{ marginTop: 10, padding: 12, borderRadius: 16, background: "rgba(255,255,255,0.08)", borderLeft: `4px solid ${auswahl.farbe}` }}>
+        <div style={{ marginTop: 10, padding: 12, borderRadius: 16, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.08)", borderLeft: `4px solid ${auswahl.farbe}` }}>
           <div style={{ fontSize: 14, fontWeight: 800 }}>
             {auswahl.emoji} {auswahl.label}
           </div>
@@ -481,7 +484,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             type="button"
             onClick={onOpenErfolge}
             className="mp-tap"
-            style={{ border: "none", background: "rgba(255,255,255,0.12)", color: "#fff", borderRadius: 999, padding: "5px 11px", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+            style={{ border: "none", background: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)", color: "var(--gk-text, #fff)", borderRadius: 999, padding: "5px 11px", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
           >
             Erfolge ›
           </button>
@@ -489,7 +492,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       )}
       {kopf && kopfUnten && (
         <>
-          <div style={{ height: 1, background: "rgba(255,255,255,0.18)", margin: "14px 0" }} />
+          <div style={{ height: 1, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.18)", margin: "14px 0" }} />
           {mitte}
           <div style={{ marginTop: 14 }}>{kopf}</div>
         </>

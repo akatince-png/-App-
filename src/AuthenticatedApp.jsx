@@ -56,6 +56,7 @@ const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
 const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
 import HilfeWaechter from "./ui/HilfeWaechter";
+import BottomNav from "./ui/BottomNav";
 import { nimmLiveNeuladen } from "./data/liveAktualisierung";
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const KalenderView = lazyAnsicht(() => import("./views/KalenderView"));
@@ -513,6 +514,10 @@ export default function AuthenticatedApp() {
   // hinzuspringen würde den linearen Ablauf durchbrechen, ohne dass dafür
   // ein echter Bedarf gemeldet wurde.
   const zeigeSidebar = view !== "form";
+  // Design 2.0: feste Leiste unten – überall außer im geführten Onboarding
+  // und in der Tour (auf großen Bildschirmen blendet CSS sie aus).
+  const mitLeiste = view !== "form" && view !== "tour" && onboardingComplete;
+  const istDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px)").matches;
 
   // Einwilligung (28.09.): Coachees müssen einmal dem Datenschutz zustimmen,
   // bevor die App startet. Nicht für Admins und nicht im Verwalten-Modus.
@@ -531,7 +536,7 @@ export default function AuthenticatedApp() {
   }
 
   return (
-    <div className="mp-app-shell">
+    <div className={mitLeiste ? "mp-app-shell mp-mit-leiste" : "mp-app-shell"}>
       <Belohnungsfenster />
       <MomentFrageHost />
       {!isAdmin && !proband && <HilfeWaechter />}
@@ -588,10 +593,11 @@ export default function AuthenticatedApp() {
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
             {/* Aka — ein Assistent, zentral für jede Seite (ui/Aka.jsx). Das
                 Onboarding ("form") hat seine eigene geführte KI-Einrichtung. */}
-            {view !== "form" && view !== "tour" && <Aka view={view} />}
+            {view !== "form" && view !== "tour" && <Aka view={view} ohneOrb={mitLeiste && !istDesktop} />}
           </ErrorBoundary>
         </div>
       </div>
+      {mitLeiste && <BottomNav view={view} planIds={PLAENE_VIEW_IDS} onNavigate={setView} istAdminModus={istAdminModus} />}
     </div>
   );
 }

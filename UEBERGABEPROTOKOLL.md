@@ -212,6 +212,13 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Design 2.0 – Umsetzung Schritt 1 (28.09. nachts, Vorschau auf dem Branch)
+Nutzerin: „mit der Leiste, wie du es empfiehlst“. Umgesetzt:
+- **Feste Leiste unten** (`ui/BottomNav.jsx`, CSS `.mp-bottomnav` in index.css): Heute · Plan (Tagesplan) · Mitte Aka · Fortschritt (Erfolge) · Mehr. Mitte: Coachee → `coach-chat`, Admin/Verwalten → Ereignis `aka-oeffnen` öffnet den KI-Assistenten (KiChat `ohneOrb`, Orb entfällt auf dem Handy). Nicht im Onboarding/Tour; ab 1024 px blendet CSS sie aus (Seitenleiste). 💡-Knopf sitzt über der Leiste (`.mp-akut-knopf`). Test `e2e/leiste-unten.spec.js`.
+- **Schrift Plus Jakarta Sans** (@fontsource, main.jsx + Harness), Inter/Poppins entfernt; `fontHeading` = Jakarta.
+- **Startseite:** Datum + große Begrüßung oben (Logo klein rechts); Gehirn-Karte morgens/tagsüber **hell** (weiße Karte, `--gk-rgb`/`--gk-text` Variablen in GehirnKarte/SpielstandKarte/KoerperFigur), abends dunkel wie bisher; neuer Block **„🎮 Spielen & Fokus“** (Tagesrätsel, Denksport, Gemeinsam fokussieren) unter den Quests (`data-spielen`); doppelte Kacheln Denksport/Fokus/Mehr unten entfernt.
+- **Offen (Schritt 2):** Abend-Dunkelmodus für alle Seiten (Hintergrund + Karten dunkel), weitere Seiten im neuen Stil (Tagesplan, Mehr, Onboarding).
+
 ### Design 2.0 – Richtung (28.09. nachts)
 Nutzerin wollte „wirklich ein gesamtes neues Design, 2026 statt 2010“. Drei Richtungen als Entwürfe (docs/design-2.0/A-, B-, C-abend.png): A Sanft & Warm (Tiimo), B Klar & Ruhig (Structured), C Nacht & Glow (Neuro/Inflow). **Entscheidung: Mischung B (tagsüber/morgens, hell, Plus Jakarta Sans) + C (abends dunkel, Glas-Karten, Outfit), Gehirn + Körper + Spielelemente bleiben.** Entwürfe der Mischung: `docs/design-2.0/M-*.png` (mit/ohne feste Leiste unten: Heute · Plan · Aka · Fortschritt · Mehr) – Nutzerin entscheidet noch über die Leiste. Generator der Entwürfe: `docs/design-2.0/gen.py`, `gen2.py` (Schriften aus @fontsource, lokal gerendert).
 

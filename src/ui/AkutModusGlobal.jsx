@@ -71,7 +71,7 @@ export default function AkutModusGlobal({ sichtbar }) {
           onClick={() => setOffen(true)}
           aria-label="Akutmodus — grad nicht gut?"
           title="Akutmodus — grad nicht gut?"
-          className="mp-tap"
+          className="mp-tap mp-akut-knopf"
           style={{
             position: "fixed",
             bottom: "calc(18px + env(safe-area-inset-bottom, 0px))",

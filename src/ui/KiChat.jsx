@@ -98,6 +98,9 @@ export default function KiChat({
   pruefeBereitschaft,
   uebernehmenLabels,
   autoStart = false,
+  // Design 2.0 (28.09.): mit der festen Leiste unten öffnet deren Mittel-
+  // knopf den Chat (Ereignis „aka-oeffnen“), der schwebende Orb entfällt.
+  ohneOrb = false,
 }) {
   const appData = useAppData();
   const { coachVerlaufLaden, coachNachrichtSpeichern, adminNotizenKontext, spotifyPlaylists, spotifyAbspielen, isAdmin, coachWissen } = appData;
@@ -351,6 +354,13 @@ export default function KiChat({
       mikrofonStarten();
     }
   };
+  const starteRef = useRef(starteGespraech);
+  starteRef.current = starteGespraech;
+  useEffect(() => {
+    const oeffnen = () => starteRef.current();
+    window.addEventListener("aka-oeffnen", oeffnen);
+    return () => window.removeEventListener("aka-oeffnen", oeffnen);
+  }, []);
 
   // autoStart: schon eingebettet sichtbar statt hinter einem Trigger-Orb —
   // das Erscheinen dieses Screens gilt bereits als Zustimmung zum Gespräch.
@@ -429,6 +439,7 @@ export default function KiChat({
   // Onboarding-Screens. Fix: über createPortal direkt an document.body
   // rendern, damit "fixed" garantiert relativ zum echten Bildschirm bleibt,
   // unabhängig davon, wo KiChat im Baum eingebettet ist.
+  if (!offen && ohneOrb) return null;
   if (!offen) {
     return createPortal(
       <button

@@ -45,7 +45,7 @@ body {
      außerhalb einer Shell — Belohnungsfenster, Verwalten-als-/Zusatz-
      protokoll-Band, Seitenleiste — die sonst in der Browser-Standard-
      schrift (Serifen) erschienen. */
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--mp-canvas);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -569,4 +569,84 @@ input[type="time"]::-webkit-date-and-time-value {
 @keyframes mp-tropfen-wippen {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
+}
+
+/* Design 2.0: feste Leiste unten (ui/BottomNav.jsx). Schwebend mit weichem
+   Schatten, abends dunkel (data-tagesphase="nacht"). Ab 1024 px übernimmt
+   die Seitenleiste. */
+.mp-bottomnav {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  height: 66px;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(16, 24, 40, 0.06);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.14);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+:root[data-tagesphase="nacht"] .mp-bottomnav {
+  background: rgba(24, 27, 52, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(8, 10, 25, 0.4);
+}
+.mp-bottomnav-reiter {
+  flex: 1;
+  height: 100%;
+  border: none;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: #98a2b3;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.mp-bottomnav-reiter.an {
+  color: var(--mp-accent);
+}
+:root[data-tagesphase="nacht"] .mp-bottomnav-reiter {
+  color: #7a80ad;
+}
+:root[data-tagesphase="nacht"] .mp-bottomnav-reiter.an {
+  color: #fff;
+}
+.mp-bottomnav-mitte {
+  width: 54px;
+  height: 54px;
+  margin-top: -22px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--mp-accent), color-mix(in srgb, var(--mp-accent), #2ac3c9 45%));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--mp-accent) 40%, transparent);
+}
+/* Hilfe-Knopf (💡) über die Leiste heben. */
+.mp-mit-leiste .mp-akut-knopf {
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+}
+@media (min-width: 1024px) {
+  .mp-bottomnav {
+    display: none;
+  }
+  .mp-mit-leiste .mp-akut-knopf {
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }

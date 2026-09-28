@@ -17,7 +17,7 @@ export function Shell({ children, bereich }) {
           minHeight: "100vh",
           background: bg,
           color: textMain,
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           display: "flex",
           justifyContent: "center",
           // Unten extra Platz reserviert: der schwebende, mittig sitzende

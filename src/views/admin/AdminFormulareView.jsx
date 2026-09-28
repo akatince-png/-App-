@@ -210,7 +210,7 @@ function ExportFeld({ feld, werte }) {
 
 function ExportAnsicht({ formular, werte }) {
   return (
-    <div style={{ width: 780, padding: 30, background: "#fff", fontFamily: "'Inter', -apple-system, sans-serif", color: textMain }}>
+    <div style={{ width: 780, padding: 30, background: "#fff", fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif", color: textMain }}>
       <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 18 }}>{formular.titel}</div>
       {formular.sections.map((section, si) => (
         <div key={si} style={{ marginBottom: 20 }}>

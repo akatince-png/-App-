@@ -28,7 +28,7 @@ function TagesRing({ erledigt, gesamt }) {
             <stop offset="100%" stopColor={logoBlau} />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" style={{ stroke: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)" }} strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -42,7 +42,7 @@ function TagesRing({ erledigt, gesamt }) {
           style={{ transition: "stroke-dashoffset 0.6s ease-out" }}
         />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--gk-text, #fff)" }}>
         <div style={{ fontSize: fertig ? 26 : 22, fontWeight: 800, lineHeight: 1 }}>{fertig ? "🎉" : `${erledigt}/${gesamt}`}</div>
         <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.8, marginTop: 3 }}>{fertig ? "geschafft" : "heute"}</div>
       </div>
@@ -59,8 +59,8 @@ function Chip({ children }) {
         gap: 4,
         padding: "5px 10px",
         borderRadius: 999,
-        background: "rgba(255,255,255,0.1)",
-        color: "#fff",
+        background: "rgba(var(--gk-rgb, 255, 255, 255), 0.1)",
+        color: "var(--gk-text, #fff)",
         fontSize: 12.5,
         fontWeight: 800,
         whiteSpace: "nowrap",
@@ -93,7 +93,7 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
         borderRadius: 24,
         padding: eingebettet ? 2 : 18,
         marginBottom: eingebettet ? 0 : 16,
-        color: "#fff",
+        color: "var(--gk-text, #fff)",
         background: eingebettet ? "transparent" : nachtVerlauf,
         boxShadow: eingebettet ? "none" : nachtSchatten,
         fontFamily: "inherit",
@@ -118,7 +118,7 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <div style={{ height: 8, borderRadius: 99, background: "rgba(255,255,255,0.12)", overflow: "hidden" }}>
+        <div style={{ height: 8, borderRadius: 99, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)", overflow: "hidden" }}>
           <div style={{ width: `${Math.round(fortschritt * 100)}%`, height: "100%", borderRadius: 99, background: logoVerlauf, transition: "width 0.6s ease-out" }} />
         </div>
         <div style={{ fontSize: 11.5, fontWeight: 700, opacity: 0.85, marginTop: 6 }}>

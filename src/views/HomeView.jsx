@@ -10,7 +10,7 @@ import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
-import { accentDark, accentSoft, cardBorder, hexZuRgba, shadow, textMain, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, cardBorder, fontHeading, hexZuRgba, shadow, textMain, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META, ATEM_META } from "../utils/dayItems";
 import { ATEM_START_KEY, atemZeitenHeute, uebungFuerKey } from "../utils/atemBibliothek";
 import { aktuelleSession } from "../data/useAtemSessions";
@@ -91,7 +91,7 @@ function gruppiereFuerAlsNaechstes(items, t, tLabel) {
 const ORDNER = [
   { id: "schlaf", labelKey: "home.ordner.plaene.label", descKey: "home.ordner.plaene.desc", icon: "folder" },
   { id: "archiv", labelKey: "home.ordner.archiv.label", descKey: "home.ordner.archiv.desc", icon: "archive" },
-  { id: "mehr", labelKey: "home.ordner.mehr.label", descKey: "home.ordner.mehr.desc", icon: "sliders" },
+  // „Mehr“ sitzt seit Design 2.0 (28.09.) in der Leiste unten.
 ];
 
 // Morgen-/Abendroutine haben bewusst KEINEN KATEGORIE_META-Eintrag (siehe
@@ -1018,9 +1018,14 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
 
   return (
     <Shell>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <Logo size={44} />
-        <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: 18, fontWeight: 800, letterSpacing: 0.4, color: textMuted }}>AKA</div>
+      {/* Design 2.0 (28.09.): große Begrüßung mit Datum statt Logo-Zeile;
+          rechts das Logo als kleines Markenzeichen. */}
+      <div data-home-kopf style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "4px 2px 16px" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: textMuted }}>{new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}</div>
+          <h1 style={{ fontFamily: fontHeading, fontSize: 27, fontWeight: 800, letterSpacing: -0.6, margin: "2px 0 0", lineHeight: 1.15 }}>{userName ? `${gruss}, ${userName}` : gruss}</h1>
+        </div>
+        <Logo size={40} />
       </div>
 
       {/* Coach-Chat (24.09., Nutzerinnen-Freigabe der Vorschau): ungelesene
@@ -1100,7 +1105,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         phase={phase}
         mitte={kartenMitte}
         kopfUnten
-        gruss={userName ? `${gruss}, ${userName} 👋` : `${gruss} 👋`}
+        gruss={null}
         kopf={
           <SpielstandKarte
             eingebettet
@@ -1118,6 +1123,32 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
+      {/* Spielen & Fokus (Design 2.0, 28.09., Nutzerin: „die Spiele nicht mehr
+          entdecken“): gut sichtbar direkt unter den Quests. */}
+      {!isEmergencyMode && (
+        <div data-spielen style={{ marginBottom: 20 }}>
+          <div style={{ fontFamily: fontHeading, fontSize: 18, fontWeight: 800, letterSpacing: -0.3, margin: "0 2px 10px" }}>🎮 Spielen & Fokus</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+            {[
+              { id: "tagesraetsel", emoji: "🧩", titel: "Tagesrätsel", sub: "5 Fragen am Tag", verlauf: "linear-gradient(135deg, #FF8A5B, #FFB36B)" },
+              { id: "denksport", emoji: "🧠", titel: "Denksport", sub: "Rätsel & Quiz", verlauf: "linear-gradient(135deg, #7C6CFF, #A48BFF)" },
+              { id: "fokus", emoji: "🎯", titel: "Gemeinsam fokussieren", sub: "Body Doubling", verlauf: "linear-gradient(135deg, #1FA99A, #4FD1C5)" },
+            ].map((sp) => (
+              <button
+                key={sp.id}
+                type="button"
+                className="mp-tap"
+                onClick={() => onOpenView(sp.id)}
+                style={{ textAlign: "left", border: "none", borderRadius: 18, padding: "12px 10px", minHeight: 110, background: sp.verlauf, color: "#fff", cursor: "pointer", fontFamily: "inherit", display: "flex", flexDirection: "column", gap: 2, boxShadow: "0 6px 16px rgba(16, 24, 40, 0.12)" }}
+              >
+                <span style={{ fontSize: 24, marginBottom: 4 }}>{sp.emoji}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>{sp.titel}</span>
+                <span style={{ fontSize: 11, opacity: 0.9 }}>{sp.sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Gruppen-Quests des Teams (24.09.) — kompakt, Tippen führt zur Team-Seite. */}
       {!isEmergencyMode &&
         (gruppenprotokolle || []).filter((gp) => !gp.abgelaufen).flatMap((gp) =>
@@ -1371,44 +1402,8 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Tagebuch</div>
           <div style={{ fontSize: 10.5, color: textMuted }}>Frei schreiben</div>
         </button>
-        {/* Denksport nach Wunsch (23.09.): 800 Aufgaben in 4 Kategorien. */}
-        <button
-          type="button"
-          className="mp-tap"
-          onClick={() => onOpenView("denksport")}
-          style={{
-            textAlign: "left",
-            borderRadius: 18,
-            padding: "14px 10px",
-            cursor: "pointer",
-            background: "#fff",
-            boxShadow: shadow,
-            border: `1px solid ${cardBorder}`,
-          }}
-        >
-          <div style={{ marginBottom: 8, fontSize: 20, lineHeight: "22px" }}>🧩</div>
-          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Denksport</div>
-          <div style={{ fontSize: 10.5, color: textMuted }}>Rätsel & Quiz</div>
-        </button>
-        {/* Gemeinsam fokussieren / Body Doubling (27.09.). */}
-        <button
-          type="button"
-          className="mp-tap"
-          onClick={() => onOpenView("fokus")}
-          style={{
-            textAlign: "left",
-            borderRadius: 18,
-            padding: "14px 10px",
-            cursor: "pointer",
-            background: "#fff",
-            boxShadow: shadow,
-            border: `1px solid ${cardBorder}`,
-          }}
-        >
-          <div style={{ marginBottom: 8, fontSize: 20, lineHeight: "22px" }}>🎯</div>
-          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Gemeinsam fokussieren</div>
-          <div style={{ fontSize: 10.5, color: textMuted }}>Nicht allein arbeiten</div>
-        </button>
+        {/* Denksport und Gemeinsam fokussieren stehen seit Design 2.0 (28.09.)
+            im Block „Spielen & Fokus“ unter den Quests. */}
         {/* "Neues Protokoll" (13.09., Nutzerin-Vorgabe): ersetzt den
             früheren schwebenden runden "+"-Knopf oben rechts (Fab.jsx) —
             fiel dort kaum auf und führte wiederholt dazu, dass die

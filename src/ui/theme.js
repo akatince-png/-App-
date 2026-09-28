@@ -59,7 +59,7 @@ export const textMuted = "#636B7A";
 // (Nutzerinnen-Vorgabe, siehe Kommentar oben).
 export const shadow = "0 1px 2px rgba(20, 24, 40, 0.04), 0 8px 24px rgba(20, 24, 40, 0.06)";
 // Überschriften-Schrift (Design 2.0).
-export const fontHeading = "'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
+export const fontHeading = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
 
 // Hilfsfunktionen für dynamische Farbverläufe/Glow-Schatten (siehe
 // PrimaryButton in primitives.jsx) — jede Bereichsfarbe aus KATEGORIE_META

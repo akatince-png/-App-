@@ -11,7 +11,7 @@ export default function Logo({ size = 56, withWordmark = false }) {
       <img src="/logo-mark.png" alt="AKA" width={size} height={size} style={{ display: "block", flexShrink: 0 }} />
       {withWordmark && (
         <div>
-          <div style={{ fontFamily: "'Poppins', 'Inter', sans-serif", fontSize: size * 0.34, fontWeight: 700, color: textMain, lineHeight: 1.1, letterSpacing: -0.2 }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: size * 0.34, fontWeight: 700, color: textMain, lineHeight: 1.1, letterSpacing: -0.2 }}>
             AKA
           </div>
           <div style={{ fontSize: size * 0.15, color: textMuted, fontWeight: 600 }}>Deine exekutive rechte Hand</div>

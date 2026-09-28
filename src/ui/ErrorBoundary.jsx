@@ -42,7 +42,7 @@ export class ErrorBoundary extends React.Component {
           minHeight: "100vh",
           background: bg,
           color: textMain,
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

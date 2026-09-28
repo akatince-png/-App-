@@ -60,10 +60,10 @@ const BEIN_R = "M68 114 C69 138 70 158 71 182";
 export default function KoerperFigur({ werte = null }) {
   const d = useAppData();
   const w = werte || koerperWerte(d);
-  const grund = "rgba(255,255,255,0.14)";
+  const grund = "rgba(var(--gk-rgb, 255, 255, 255), 0.14)";
   const glied = (dPfad, breite, a) => (
     <>
-      <path d={dPfad} stroke={grund} strokeWidth={breite} strokeLinecap="round" fill="none" />
+      <path d={dPfad} style={{ stroke: grund }} strokeWidth={breite} strokeLinecap="round" fill="none" />
       <path d={dPfad} stroke={ZONEN.bewegung} strokeOpacity={deck(a) * 0.9} strokeWidth={breite - 2} strokeLinecap="round" fill="none" filter={a > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "stroke-opacity .6s" }} />
     </>
   );
@@ -101,20 +101,20 @@ export default function KoerperFigur({ werte = null }) {
         {glied(ARM_L, 12, w.bewegung)}
         {glied(ARM_R, 12, w.bewegung)}
         {/* Rumpf: Brust (Atem/Ruhe) und Bauch (Essen + Wasser) */}
-        <path d={RUMPF} fill={grund} />
+        <path d={RUMPF} style={{ fill: grund }} />
         <path d={RUMPF} clipPath="url(#mp-koerper-brust)" fill={ZONEN.brust} fillOpacity={deck(w.brust) * 0.9} filter={w.brust > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
         <path d={RUMPF} clipPath="url(#mp-koerper-bauch)" fill={ZONEN.bauch} fillOpacity={deck(w.bauch) * 0.9} filter={w.bauch > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
-        <path d="M44 80 Q60 84 76 80" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        <path d="M44 80 Q60 84 76 80" style={{ stroke: "rgba(var(--gk-rgb, 255, 255, 255), 0.35)" }} strokeWidth="1.2" fill="none" strokeLinecap="round" />
         <path d={RUMPF} fill="url(#mp-koerper-glanz)" />
         {/* Hals + Kopf (Schlaf) */}
-        <rect x="55" y="34" width="10" height="9" rx="4" fill={grund} />
-        <circle cx="60" cy="22" r="14" fill={grund} />
+        <rect x="55" y="34" width="10" height="9" rx="4" style={{ fill: grund }} />
+        <circle cx="60" cy="22" r="14" style={{ fill: grund }} />
         <circle cx="60" cy="22" r="14" fill={ZONEN.kopf} fillOpacity={deck(w.kopf) * 0.9} filter={w.kopf > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
         <circle cx="60" cy="22" r="14" fill="url(#mp-koerper-glanz)" />
       </svg>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginTop: 4, maxWidth: 200 }}>
         {w.chips.map(([emoji, wert, label]) => (
-          <span key={label} title={label} style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.14)", whiteSpace: "nowrap" }}>
+          <span key={label} title={label} style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)", border: "1px solid rgba(var(--gk-rgb, 255, 255, 255), 0.14)", whiteSpace: "nowrap" }}>
             {emoji} {wert}
           </span>
         ))}
