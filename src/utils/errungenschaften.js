@@ -195,15 +195,15 @@ export const KATEGORIEN = [
     // Kalender „Mein Alltag“ (28.09., Nutzerin: „Einträge sollen ins Gehirn
     // zählen“): Tage mit mindestens einem abgehakten Eintrag. Planung (Arbeit,
     // Haushalt, Termine, eigene Bereiche) lädt „Fokus & Planung“, Ausgleich
-    // (Hobby, Me-Time, Freunde & Familie) lädt „Ruhe & Gefühl“. Bewusst ohne
-    // Punkte (holePunkte leer), weil Punkte auch die Team-Rangliste bestimmen
-    // und der Kalender erst nach der Einstellungsphase freigeschaltet wird.
+    // (Hobby, Me-Time, Freunde & Familie) lädt „Ruhe & Gefühl“. Punkte: 1 je
+    // Tag mit mindestens einem abgehakten Eintrag, nur einmal gezählt (hier).
     key: "alltagPlanung",
     label: "Mein Alltag – Planung",
     icon: "calendarWeek",
     grad: gradAus("#3F5BA9"),
     holeTage: (q) => alltagTage(q, ["arbeit", "haushalt", "termin", "eigen"]),
-    holePunkte: () => [],
+    // 1 Punkt je Tag mit irgendeinem abgehakten Eintrag (wie _punkte_ereignisse, Migration 0119).
+    holePunkte: (q) => alltagTage(q, ["arbeit", "haushalt", "termin", "eigen", "hobby", "metime", "sozial"]),
   },
   {
     key: "alltagAusgleich",

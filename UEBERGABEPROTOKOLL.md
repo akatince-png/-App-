@@ -220,8 +220,8 @@ Coach über Verwalten).
 - **Gehirn (28.09., Nutzerin: „Einträge sollen ins Gehirn zählen“):** Tage mit abgehakten Einträgen zählen über die
   Errungenschaften-Kategorien `alltagPlanung` (Arbeit, Haushalt, Termin, eigene Bereiche → Region „Fokus & Planung“)
   und `alltagAusgleich` (Hobby, Me-Time, Freunde & Familie → „Ruhe & Gefühl“), `utils/errungenschaften.js` +
-  `utils/gehirn.js`. **Ohne Punkte** (holePunkte leer), weil Punkte die Team-Rangliste bestimmen – offen, ob sie später
-  Punkte geben sollen (dann auch `_punkte_ereignisse` per Migration ergänzen).
+  `utils/gehirn.js`. **Punkte (Nutzerin: „Ja“):** 1 Punkt je Tag mit mindestens einem abgehakten Eintrag, auf dem
+  Server in `_punkte_ereignisse` (Migration 0119, live), in der App über `alltagPlanung.holePunkte`.
 - Noch nicht: Handy-Kalender-Import.
 - Tests: `utils/kalender.test.js`, `utils/programme.test.js`, `e2e/mein-alltag.spec.js`; Coach-Handbuch Kapitel
   „Nach den 8 Wochen: Mein Alltag“.

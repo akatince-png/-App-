@@ -62,7 +62,7 @@ describe("Aka-Antwort für den Kalender prüfen", () => {
 });
 
 describe("Mein Alltag im Gehirn", () => {
-  it("abgehakte Einträge laden Fokus & Planung bzw. Ruhe & Gefühl, ohne Punkte", async () => {
+  it("abgehakte Einträge laden Fokus & Planung bzw. Ruhe & Gefühl, 1 Punkt je Tag", async () => {
     const { berechneErrungenschaften } = await import("./errungenschaften");
     const { berechneGehirnZeitraum } = await import("./gehirn");
     const quellen = {
@@ -78,7 +78,8 @@ describe("Mein Alltag im Gehirn", () => {
     const ausgleich = e.kategorien.find((k) => k.key === "alltagAusgleich");
     expect(plan.tageListe.sort()).toEqual(["2026-10-27", "2026-10-28"]);
     expect(ausgleich.tageListe).toEqual(["2026-10-28"]);
-    expect(plan.punkte + ausgleich.punkte).toBe(0);
+    // 1 Punkt je Tag mit irgendeinem abgehakten Eintrag: 27. und 28. = 2.
+    expect(plan.punkte + ausgleich.punkte).toBe(2);
     const g = berechneGehirnZeitraum({ widgets: [], kategorien: e.kategorien, tage: 7, heute: new Date(2026, 9, 28) });
     expect(g.regionen.find((r) => r.key === "fokus").ladung).toBeGreaterThan(0);
     expect(g.regionen.find((r) => r.key === "ruhe").ladung).toBeGreaterThan(0);
