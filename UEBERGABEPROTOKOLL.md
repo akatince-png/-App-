@@ -212,6 +212,9 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Design 2.0 – Richtung (28.09. nachts)
+Nutzerin wollte „wirklich ein gesamtes neues Design, 2026 statt 2010“. Drei Richtungen als Entwürfe (docs/design-2.0/A-, B-, C-abend.png): A Sanft & Warm (Tiimo), B Klar & Ruhig (Structured), C Nacht & Glow (Neuro/Inflow). **Entscheidung: Mischung B (tagsüber/morgens, hell, Plus Jakarta Sans) + C (abends dunkel, Glas-Karten, Outfit), Gehirn + Körper + Spielelemente bleiben.** Entwürfe der Mischung: `docs/design-2.0/M-*.png` (mit/ohne feste Leiste unten: Heute · Plan · Aka · Fortschritt · Mehr) – Nutzerin entscheidet noch über die Leiste. Generator der Entwürfe: `docs/design-2.0/gen.py`, `gen2.py` (Schriften aus @fontsource, lokal gerendert).
+
 ### Design 2.0 – erster Schritt (28.09. nachts, Vorschau auf dem Branch)
 Nutzerin: „Design überarbeiten wie gute ADHS-Apps“. Canva-Board „AKA Design 2.0“: https://canva.link/em43gl9bi11ftn1 (Farben, Schrift, Bausteine, Beispiel-Bildschirme, Grundsätze).
 Umgesetzt im Design-System (wirkt auf alle Seiten): zart getönter Seitenhintergrund je Tagesphase (`--mp-canvas`, `TAGESPHASEN_FARBEN.*.canvas`), weichere Schatten/Ränder, Karten 20 px, Buttons 14 px ohne grellen Glow, weiße Eingabefelder mit Fokus-Ring, Chips weiß, `fontHeading` (Poppins); Kopfzeile mit runden Symbol-Knöpfen (Zurück/Start als SVG) und großem Titel ohne Logo; 💡-Knopf ruhig weiß mit Bernstein-Ring; Tages-Quests mit feinem Rand. Noch offen (nächste Schritte): Startseite entschlacken/umordnen, Emojis → Linien-Icons, Onboarding-Seiten, Tagesplan-Kacheln, Mehr-Seite gliedern.
