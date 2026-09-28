@@ -54,6 +54,7 @@ const TeamView = lazyAnsicht(() => import("./views/TeamView"));
 const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
 const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
+import HilfeWaechter from "./ui/HilfeWaechter";
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const StartTourView = lazyAnsicht(() => import("./views/onboarding/StartTourView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
@@ -494,6 +495,7 @@ export default function AuthenticatedApp() {
     <div className="mp-app-shell">
       <Belohnungsfenster />
       <MomentFrageHost />
+      {!isAdmin && !proband && <HilfeWaechter />}
       <AkutModusGlobal sichtbar={view !== "home" && view !== "form" && view !== "tour"} />
       {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
       <div className="mp-app-main">

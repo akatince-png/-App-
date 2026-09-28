@@ -31,8 +31,10 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   geht danach weiter. Details stehen oben in `UEBERGABEPROTOKOLL.md`.
 - **Lifestyle-App, keine Therapie-/Krisen-App (Nutzerin, 28.09.):** keine
   Notrufnummern, Telefonseelsorge oder Krisen-Abschnitte in Texten und
-  Handbüchern, alles im Verhältnis zum Alltag mit ADHS halten. Details:
-  `UEBERGABEPROTOKOLL.md`, Philosophie Punkt 6b.
+  Handbüchern, alles im Verhältnis zum Alltag mit ADHS halten. Einzige
+  Ausnahme: Schreibt jemand direkt Suizidgedanken, zeigt die App die
+  Hilfen (`ui/HilfeWaechter.jsx`). Details: `UEBERGABEPROTOKOLL.md`,
+  Philosophie Punkt 6b.
 - **Leitprinzip, nicht verhandelbar:** Jede Funktion muss sowohl manuell
   als auch per KI-Coach nutzbar sein — niemals ein manuelles Formular
   entfernen oder verstecken, nur weil es jetzt auch einen KI-Weg gibt.

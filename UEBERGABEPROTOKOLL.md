@@ -97,6 +97,16 @@ Notfalltelefonnummer ist … Es muss schon im Verhältnis bleiben.“ Was bleibt
 ärztliche Behandlung, Medikamente nur mit ärztlicher Absprache“. Schwere Momente löst die App im Alltagston
 („Grad nicht gut?“, Coach anschreiben, Plan kleiner machen). Eine ADHS-spezifische Anlaufstelle wäre in Ordnung,
 wenn es eine passende gibt.
+**Präzisiert am selben Tag:** Zu unterscheiden sind die Nutzerin als Mensch-Coach (Vorname Aka) und die KI Aka. Die KI
+ist in der Lernphase, soll später Teile ersetzen und tritt heute nicht erkennbar selbst mit Coachees in Kontakt. Das
+Hintergrundwissen der KI (`coach_wissen`, u. a. „Was Coaching darf und was nicht“ mit Telefonseelsorge/112) **bleibt**,
+so würde die Nutzerin im Ernstfall auch handeln. **Einzige Ausnahme in der App:** Schreibt jemand direkt Suizid- oder
+Selbstverletzungsgedanken, zeigt die App sofort die richtige Hilfe. Umsetzung: `utils/hilfeHinweis.js` (nur eindeutige
+Formulierungen, „ich sterbe vor Hunger“ löst nichts aus, mit Tests) und `ui/HilfeWaechter.jsx` (liest alle Freitextfelder
+der Coachee-Ansicht mit, nicht beim Admin und nicht in „Verwalten“; zeigt ein Blatt „Du musst da nicht allein durch“ mit
+TelefonSeelsorge 0800 111 0 111 / 0800 111 0 222 und 112 als Anruf-Links; speichert und sendet nichts). Dazu eine
+Grenze im KI-Persona-Block (`aiService.coachPersonaBlock`): im normalen Gespräch keine Notrufnummern, bei solchen
+Äußerungen ruhig auf dieselben Hilfen verweisen. Test `e2e/hilfe-hinweis.spec.js`.
 
 **7. Diese Perspektive regelmäßig auf Bestehendes anwenden.** Erster Kandidat ist das Onboarding.
 Die bildhafte Vorstellung ist im Artefakt „AKA Vorstellung“ (Beispiel 5 vom 26.09.: Tabs antippen, exekutive rechte Hand,
