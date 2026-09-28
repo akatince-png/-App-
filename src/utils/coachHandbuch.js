@@ -94,7 +94,7 @@ export const KAPITEL = [
         ["5 · Festigen", "Nichts Neues muss", "Sonntag: Wochen-Check.", "5 Min."],
         ["6 · Dein Zusatz", "Ein freiwilliger Baustein, den ihr gemeinsam aussucht", "Zusatz mit der Person wählen und einrichten.", "10 Min."],
         ["7 · Nachmessen", "Routinen wieder mit Stoppuhr", "Vergleich mit Woche 1 vorbereiten.", "10 Min."],
-        ["8 · Bilanz", "Vorher und nachher anschauen", "Abschlussgespräch, nächste Etappe festlegen, „Mein Alltag“ freischalten.", "30–45 Min."],
+        ["8 · Bilanz", "Vorher und nachher anschauen", "Abschlussgespräch, nächste Etappe festlegen, „Mein Alltag“ gemeinsam füllen.", "30–45 Min."],
       ],
     },
     schritte: [
@@ -187,11 +187,11 @@ export const KAPITEL = [
   {
     id: "alltag",
     emoji: "🗓️",
-    titel: "Nach den 8 Wochen: Mein Alltag",
+    titel: "Mein Alltag (Kalender)",
     wozu: "Der Kalender bringt das ganze Leben an einen Ort: Tag, Woche als Stundenplan und Monat. Neben Routinen, Training und Essen stehen dort Arbeit, Haushalt, Hobbys, Me-Time, Termine, Freunde & Familie und eigene Bereiche.",
     dauer: "20–30 Minuten beim ersten Einrichten",
     schritte: [
-      "Freischalten: Übersicht → Person → Programme → „Mein Alltag“ → „+ Freischalten“ → Datum → „▶ Starten“. Am besten im Abschlussgespräch nach Woche 8.",
+      "Der Kalender steht jeder Person von Anfang an zur Verfügung. In den ersten Wochen bleibt er meist leer – das ist gewollt. Spätestens nach Woche 8 lohnt es sich, ihn gemeinsam zu füllen.",
       "Gemeinsam einrichten (am Telefon mit Verwalten): Pläne → „Mein Alltag (Kalender)“ → „+ Eintrag“. Zuerst die großen Blöcke (Arbeit, feste Termine), dann Haushalt, dann Hobbys und Me-Time.",
       "Wiederkehrendes über Wochentage, Einmaliges über „Einmalig“ mit Datum. Erinnerung ist an, sie meldet sich zur Startzeit.",
       "Fehlt ein Bereich (z. B. Kinder, Ehrenamt, Garten): „+ Eigener Bereich“ mit Namen und Symbol. Das geht für die Person selbst oder für dich über Verwalten.",

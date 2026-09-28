@@ -203,7 +203,9 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
 
 ### Kalender „Mein Alltag“ (28.09., Vorschau freigegeben, gebaut und live)
 Wunsch: Stundenplan, Woche, Monat, damit Haushalt, Arbeit, Hobbys usw. im selben Plan stehen wie Routinen und Bausteine.
-Entscheidungen: Freischaltung **nach den 8 Wochen** als Programm; Handy-Kalender (Google/Apple) **erst später**;
+Entscheidungen: ~~Freischaltung nach den 8 Wochen als Programm~~ → **seit 28.09. abends für alle von Anfang an da**
+(Nutzerin: „man muss es ja nicht gleich nutzen“; Programm `alltag` im Katalog auf aktiv=false, in der Coach-Ansicht
+ausgeblendet, `alltagFreigeschaltet` wird nicht mehr genutzt); Handy-Kalender (Google/Apple) **erst später**;
 Bereiche Arbeit, Haushalt, Hobby, **Me-Time**, Termin, Freunde & Familie plus **eigene Bereiche** (Person selbst oder
 Coach über Verwalten).
 - DB (Migration 0118, live): `alltag_bereiche` (eigene Bereiche), `alltag_eintraege` (bereich/bereich_id, titel,

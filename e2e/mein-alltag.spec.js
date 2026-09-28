@@ -3,9 +3,9 @@ import { test, expect } from "@playwright/test";
 // Kalender „Mein Alltag“ (28.09.).
 const aufrufe = (page, name) => page.evaluate((n) => (window.__mockAufrufe || []).filter((a) => a.name === n).map((a) => a.args), name);
 
-test("Ohne Freischaltung: freundlicher Hinweis statt Kalender", async ({ page }) => {
+test("Kalender ist für alle da, auch ohne Programm (seit 28.09.)", async ({ page }) => {
   await page.goto("/e2e/harness/index.html?isAdmin=0#/kalender");
-  await expect(page.locator("[data-alltag-gesperrt]")).toContainText("Dein Coach schaltet ihn für dich frei");
+  await expect(page.locator('[data-kalender="woche"]')).toBeVisible();
 });
 
 test("Woche, Tag, Monat; Eintrag mit eigenem Bereich anlegen; Alltags-Eintrag abhaken", async ({ page }) => {

@@ -6,15 +6,14 @@ import { useAppData } from "../context/AppDataContext";
 import { buildDayItems } from "../utils/dayItems";
 import { addDays, sameDay, toLocalISODate } from "../utils/dates";
 import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, bloeckeFuerTag, eigeneBereichMeta, hhmm, monatsRaster, spaltenVerteilen } from "../utils/kalender";
-import { alltagFreigeschaltet } from "../utils/programme";
 
 // Kalender „Mein Alltag“ (28.09., Vorschau freigegeben). Tag als Zeitleiste,
 // Woche als Stundenplan, Monat als Kalenderblatt. Alles aus der App erscheint
 // automatisch (Routinen, Training, Essen, Supplemente, Zeitblöcke …), dazu
 // Alltags-Einträge (Arbeit, Haushalt, Hobby, Me-Time, Termine, Freunde &
 // Familie, eigene Bereiche) – wöchentlich oder einmalig, abhakbar.
-// Freigeschaltet über das Programm „Mein Alltag“ (Coach, nach den 8 Wochen);
-// Admin-Konto sieht ihn immer.
+// Seit 28.09. für alle von Anfang an verfügbar (Nutzerin: „man muss es ja
+// nicht gleich nutzen“).
 
 const VON = 5 * 60;
 const BIS = 24 * 60;
@@ -374,8 +373,6 @@ function BlockDetails({ b, datum, onAendern, onSchliessen }) {
 
 export default function KalenderView({ onHome }) {
   const appData = useAppData();
-  const { isAdmin, programmTeilnahmen = [] } = appData;
-  const freigeschaltet = isAdmin || alltagFreigeschaltet(programmTeilnahmen);
   const bloeckeFuer = useTagesBloecke();
   const [ansicht, setAnsicht] = useState(() => new URLSearchParams(window.location.search).get("kal") || "woche");
   const [datum, setDatum] = useState(() => new Date());
@@ -383,18 +380,6 @@ export default function KalenderView({ onHome }) {
   const [details, setDetails] = useState(null); // { b, datum } | null
   const montag = useMemo(() => startOfWeek(datum), [datum]);
   const tage = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(montag, i)), [montag]);
-
-  if (!freigeschaltet)
-    return (
-      <Shell>
-        <ViewHeader title="🗓️ Mein Alltag" onHome={onHome} />
-        <Card>
-          <div data-alltag-gesperrt style={{ fontSize: 14, lineHeight: 1.55, color: textMain }}>
-            <b>Dein Kalender für den ganzen Alltag</b> – Arbeit, Haushalt, Hobbys, Me-Time und Termine zusammen mit deinen Routinen. Er kommt nach deiner Einstellungsphase dazu. Dein Coach schaltet ihn für dich frei.
-          </div>
-        </Card>
-      </Shell>
-    );
 
   const zumTag = (d) => {
     setDatum(d);

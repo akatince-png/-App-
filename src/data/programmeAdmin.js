@@ -16,7 +16,8 @@ export async function programmeUndTeilnahmenLaden(personIds) {
   if (e1 || e2) console.error(e1 || e2);
   const tabsByUser = {};
   (tabs || []).forEach((r) => r.vorstellung_tabs?.length && (tabsByUser[r.id] = r.vorstellung_tabs));
-  return { programme: (p || []).map(zeileZuProgramm), teilnahmen: (t || []).map(zeileZuTeilnahme), tabsByUser };
+  // „Mein Alltag“ ist seit 28.09. für alle frei (kein Programm mehr), daher ausgeblendet.
+  return { programme: (p || []).filter((x) => x.id !== "alltag").map(zeileZuProgramm), teilnahmen: (t || []).map(zeileZuTeilnahme), tabsByUser };
 }
 
 // Programm für alle an/aus bzw. "neue bekommen es automatisch".
