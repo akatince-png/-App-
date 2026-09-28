@@ -484,6 +484,11 @@ export default function KalenderView({ onHome }) {
           </button>
         )
       )}
+      {!formular && !details && (
+        <button type="button" className="mp-tap" data-dienstplan-link onClick={() => (window.location.hash = "#/dienstplan-foto")} style={{ width: "100%", marginBottom: 10, border: "none", background: "#EEF4FF", color: "#2D6FD6", borderRadius: 12, padding: 9, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+          📷 Dienstplan abfotografieren
+        </button>
+      )}
       <Card style={{ padding: 10 }}>
         {ansicht === "tag" && <TagAnsicht datum={datum} bloecke={tagesBloecke} onBlock={(b) => blockOeffnen(b, datum)} />}
         {ansicht === "woche" && <WochenAnsicht tage={tage} bloeckeFuer={bloeckeFuer} onTag={zumTag} onBlock={blockOeffnen} />}

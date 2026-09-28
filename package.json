@@ -27,7 +27,8 @@
     "jspdf": "^4.2.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "recharts": "^3.9.2"
+    "recharts": "^3.9.2",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",

@@ -59,6 +59,7 @@ import HilfeWaechter from "./ui/HilfeWaechter";
 import { nimmLiveNeuladen } from "./data/liveAktualisierung";
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const KalenderView = lazyAnsicht(() => import("./views/KalenderView"));
+const DienstplanFotoView = lazyAnsicht(() => import("./views/DienstplanFotoView"));
 const StartTourView = lazyAnsicht(() => import("./views/onboarding/StartTourView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
 const NeuesProtokollBestaetigenView = lazyAnsicht(() => import("./views/onboarding/NeuesProtokollBestaetigenView"));
@@ -70,7 +71,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "coaching", "tour", "kalender", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "dienstplan-foto", "tagebuch", "coaching", "tour", "kalender", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams", "admin-handbuch"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -426,6 +427,8 @@ export default function AuthenticatedApp() {
     screen = <TagebuchView onHome={() => setView("home")} />;
   } else if (view === "schichtplan") {
     screen = <SchichtplanView onHome={() => setView("home")} />;
+  } else if (view === "dienstplan-foto") {
+    screen = <DienstplanFotoView onHome={() => setView("home")} />;
   } else if (view === "tagesraetsel") {
     screen = <DenksportView onHome={() => setView("home")} tagesraetselStart />;
   } else if (PLAENE_VIEW_IDS.includes(view)) {

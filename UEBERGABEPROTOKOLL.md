@@ -201,6 +201,15 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Dienstplan abfotografieren (28.09. spätabends, Nutzerin, Vorschau auf dem Branch)
+Wunsch: Wer den Dienstplan nur wöchentlich bekommt, fotografiert ihn ab, die Zeiten werden übernommen – **ohne KI/Gemini-Kontingent**.
+- **Texterkennung auf dem Gerät:** `tesseract.js` (lazy geladen, nur auf dieser Seite). Beim ersten Mal lädt der Browser Programm + deutsche Sprachdaten (~6 MB) von jsDelivr, danach gecacht. Das Foto verlässt das Handy nicht.
+- **Ablauf** (`views/DienstplanFotoView.jsx`, Route `#/dienstplan-foto`): Woche wählen (ab Freitag schlägt die App die nächste Woche vor) → Foto → Rahmen mit dem Finger um die eigenen Dienste ziehen (ohne Namen, 7 oder 14 Tage) → jede Tageszelle wird einzeln gelesen (`utils/ocr.js`, PSM 7, bei 1–2 Zeichen PSM 10) → Prüf-Tabelle (Dienst von–bis / Frei / Urlaub / Krank / „–“ = unverändert), unsichere Tage gelb → Übernehmen.
+- **Speichern:** Schichtplan je Tag (`routineSchichtplanSpeichern`); gleiche Arbeitszeit → vorhandene Zeit-Variante, Kürzel F/S/N → Früh/Spät/Nacht-Variante, sonst neue Variante „Frühdienst 07:30–16:00“ mit berechneten Routine-Zeiten (`routineZeitenFuerDienst`: Morgenroutine 90 Min. vor Dienst, Abendroutine 90 Min. nach spätem Dienstende, Nacht: Morgen 8 h nach Ende). Optional Kalender „Mein Alltag“: einmalige Einträge „Dienst“ (Bereich Arbeit, Notiz „Aus Dienstplan-Foto“); erneutes Übernehmen derselben Woche ersetzt nur diese Einträge.
+- **Manuell:** „✍️ Ohne Foto eintragen“ öffnet dieselbe Tabelle. Coach nutzt die Seite im Verwalten-Modus, jede Woche auch nachträglich.
+- **Grenzen (getestet):** klarer Tabellen-Ausdruck 7/7 Tage richtig; absichtlich unscharf + schief 3/7 – der Rest bleibt leer (gelb), nie falsch befüllt. Handschrift wird kaum gelesen.
+- Links: Schichtplan-Seite (oben) und Kalender. Logik + Tests: `utils/dienstplanFoto.js(.test)`, `e2e/dienstplan-foto.spec.js`.
+
 ### Druck/PDF mit Auswahl + Überschneidungs-Hinweise (28.09. abends, Nutzerin)
 - **Druck/PDF (Wochenübersicht → „🖨️ Druck / PDF zusammenstellen“):** 1. Was soll drauf? Vorlagen „🩺 Nur Gesundheit“
   (Standard) / „🗓️ Kompletter Wochenplan“ plus einzeln an/aus: Gesundheit (Medikation, Supplemente, Training,
