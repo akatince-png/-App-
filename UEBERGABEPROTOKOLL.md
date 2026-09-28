@@ -194,7 +194,8 @@ Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unte
   dem ersten Onboarding und ist in „Mein AKA-Coaching“ über „Tour nochmal ansehen“ erreichbar. Bestehende Konten
   bekommen sie nicht automatisch, damit die Dauertest-Skripte nicht hängen bleiben.
 - **Steckbrief:** Die Karte „👤 Über dich“ fragt Geschlecht, Größe, Gewicht und Geburtsdatum ab (Profil-Spalten über
-  `setPersonal`), dazu Geburtszeit, Geburtsort und „Wie aktiv ist dein Alltag?“ (in `profiles.steckbrief`). Der
+  `setPersonal`), dazu „Wie aktiv ist dein Alltag?“ (in `profiles.steckbrief`). Geburtszeit und -ort waren ein Scherz
+  der Nutzerin und wurden am 28.09. wieder entfernt. Der
   Kalorienrechner `kalorienInfo` in `utils/steckbrief.js` zeigt den Grundumsatz (Mifflin-St-Jeor) und den Tagesbedarf
   (× Aktivitätsfaktor). Der Coach sieht alles zeilenweise in der Einrichtungs-Checkliste (`steckbriefZeilen(s, person)`).
 

@@ -30,8 +30,7 @@ export function steckbriefZeilen(s, person = null) {
   if (person) {
     const teile = [person.geschlecht, k?.alter ? `${k.alter} J.` : null, Number(person.groesse) ? `${person.groesse} cm` : null, Number(person.gewicht) ? `${person.gewicht} kg` : null].filter(Boolean);
     if (teile.length) z.push(`👤 ${teile.join(", ")}`);
-    const geburt = [person.geburtsdatum ? datumDe(person.geburtsdatum) : null, s?.geburtszeit ? `${s.geburtszeit} Uhr` : null, s?.geburtsort || null].filter(Boolean);
-    if (geburt.length) z.push(`🎂 Geboren: ${geburt.join(", ")}`);
+    if (person.geburtsdatum) z.push(`🎂 Geboren: ${datumDe(person.geburtsdatum)}`);
     if (k?.grundumsatz) z.push(`🔥 Grundumsatz ca. ${k.grundumsatz} kcal${k.bedarf ? ` · Tagesbedarf ca. ${k.bedarf} kcal (${s.aktivitaet})` : ""}`);
   }
   if (!s) return z;

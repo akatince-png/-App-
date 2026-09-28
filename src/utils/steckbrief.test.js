@@ -22,9 +22,9 @@ describe("Steckbrief: Kalorien + Coach-Zeilen", () => {
   it("zeigt Profil, Geburt und Kalorien für den Coach", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 8, 27));
-    const z = steckbriefZeilen({ geburtszeit: "07:15", geburtsort: "Köln", aktivitaet: "Mäßig aktiv", supplementeJa: false }, { geschlecht: "Weiblich", geburtsdatum: "1990-05-01", groesse: 170, gewicht: 70 });
+    const z = steckbriefZeilen({ aktivitaet: "Mäßig aktiv", supplementeJa: false }, { geschlecht: "Weiblich", geburtsdatum: "1990-05-01", groesse: 170, gewicht: 70 });
     expect(z[0]).toBe("👤 Weiblich, 36 J., 170 cm, 70 kg");
-    expect(z[1]).toBe("🎂 Geboren: 01.05.1990, 07:15 Uhr, Köln");
+    expect(z[1]).toBe("🎂 Geboren: 01.05.1990");
     expect(z[2]).toMatch(/Grundumsatz ca\. 1422 kcal · Tagesbedarf ca\. 2200 kcal \(Mäßig aktiv\)/);
     expect(z).toContain("💊 Supplemente: keine");
     expect(steckbriefZeilen(null)).toEqual([]);

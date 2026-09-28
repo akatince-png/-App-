@@ -23,7 +23,7 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
     groesse: personalData.groesse ?? "",
     gewichtStart: personalData.gewichtStart ?? "",
   }));
-  const [extra, setExtra] = React.useState(() => ({ geburtszeit: steckbrief.geburtszeit || "", geburtsort: steckbrief.geburtsort || "", aktivitaet: steckbrief.aktivitaet || "" }));
+  const [extra, setExtra] = React.useState(() => ({ aktivitaet: steckbrief.aktivitaet || "" }));
   const extraAendern = (feld, val) => {
     setExtra((e) => ({ ...e, [feld]: val }));
     setSteckbrief({ [feld]: val });
@@ -70,16 +70,6 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
         </div>
         <Label>Geburtsdatum</Label>
         <TextInput type="date" value={person.geburtsdatum} onChange={(v) => aendern("geburtsdatum", v)} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 10 }}>
-          <div>
-            <Label>Uhrzeit (falls bekannt)</Label>
-            <TextInput type="time" value={extra.geburtszeit} onChange={(v) => extraAendern("geburtszeit", v)} />
-          </div>
-          <div>
-            <Label>Geburtsort (optional)</Label>
-            <TextInput value={extra.geburtsort} onChange={(v) => extraAendern("geburtsort", v)} placeholder="z. B. Köln" />
-          </div>
-        </div>
         <Label>Wie aktiv ist dein Alltag?</Label>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
           {AKTIVITAET.map(([n]) => (
