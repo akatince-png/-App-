@@ -8,6 +8,8 @@
   --mp-success-soft: #E7E9F7;
   --mp-highlight: radial-gradient(120% 90% at 30% 20%, #2C3470 0%, #171B3A 60%, #10132B 100%);
   --mp-highlight-schatten: 0 14px 30px rgba(16, 19, 43, 0.35);
+  /* Design 2.0: zart getönter Seitenhintergrund je Tagesphase. */
+  --mp-canvas: #F1F2F9;
 }
 
 * {
@@ -44,6 +46,15 @@ body {
      protokoll-Band, Seitenleiste — die sonst in der Browser-Standard-
      schrift (Serifen) erschienen. */
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--mp-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Design 2.0: Eingabefelder mit sichtbarem, ruhigem Fokus-Ring. */
+.mp-input:focus {
+  border-color: var(--mp-accent) !important;
+  box-shadow: 0 0 0 3px var(--mp-accent-soft);
 }
 
 /* Tablet-/Desktop-Layout: die App war fest auf 420px Inhaltsbreite

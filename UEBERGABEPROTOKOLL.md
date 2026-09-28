@@ -212,6 +212,10 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Design 2.0 – erster Schritt (28.09. nachts, Vorschau auf dem Branch)
+Nutzerin: „Design überarbeiten wie gute ADHS-Apps“. Canva-Board „AKA Design 2.0“: https://canva.link/em43gl9bi11ftn1 (Farben, Schrift, Bausteine, Beispiel-Bildschirme, Grundsätze).
+Umgesetzt im Design-System (wirkt auf alle Seiten): zart getönter Seitenhintergrund je Tagesphase (`--mp-canvas`, `TAGESPHASEN_FARBEN.*.canvas`), weichere Schatten/Ränder, Karten 20 px, Buttons 14 px ohne grellen Glow, weiße Eingabefelder mit Fokus-Ring, Chips weiß, `fontHeading` (Poppins); Kopfzeile mit runden Symbol-Knöpfen (Zurück/Start als SVG) und großem Titel ohne Logo; 💡-Knopf ruhig weiß mit Bernstein-Ring; Tages-Quests mit feinem Rand. Noch offen (nächste Schritte): Startseite entschlacken/umordnen, Emojis → Linien-Icons, Onboarding-Seiten, Tagesplan-Kacheln, Mehr-Seite gliedern.
+
 ### Geplant: Design-Überarbeitung der ganzen App mit Canva (Nutzerin 28.09., „in absehbarer Zeit“, nicht sofort)
 Canva ist als Connector verbunden. Vorgehen wie besprochen: erst Bestandsaufnahme (Screenshots aller Hauptseiten), dann in Canva ein Design-Board (Farben, Schrift, Kacheln, Icons, 2–3 Beispielseiten) zur Auswahl, nach Freigabe schrittweise Umsetzung im Code (Vorschau auf dem Branch, dann main). ADHS-tauglich: ruhig, klar, wenige Elemente je Seite. Nachtblau + Bereichsfarben sind bisherige Freigaben – bei der Überarbeitung bewusst nachfragen, was bleibt.
 

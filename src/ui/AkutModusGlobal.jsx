@@ -79,9 +79,11 @@ export default function AkutModusGlobal({ sichtbar }) {
             width: 48,
             height: 48,
             borderRadius: "50%",
-            border: "none",
-            background: "linear-gradient(135deg, #F59E0B, #FBBF24)",
-            boxShadow: "0 8px 20px rgba(245, 158, 11, 0.35)",
+            // Design 2.0: ruhiger weißer Knopf mit Bernstein-Ring statt
+            // leuchtend gelber Kugel über dem Inhalt.
+            background: "#fff",
+            border: "2px solid #F7C35A",
+            boxShadow: "0 6px 18px rgba(20, 24, 40, 0.14)",
             fontSize: 21,
             cursor: "pointer",
             zIndex: 40,

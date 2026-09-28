@@ -47,7 +47,7 @@ export function Stepper({ step, total }) {
             flex: 1,
             height: 5,
             borderRadius: 3,
-            background: i <= step ? bereichAccent : "#EBEBE8",
+            background: i <= step ? bereichAccent : "#E3E7F0",
             transition: "background 0.3s ease",
           }}
         />
@@ -78,9 +78,9 @@ export const Card = React.forwardRef(function Card({ children, style, akzent, cl
       onClick={onClick}
       style={{
         background: akzent ? bereichAccentSoft : card,
-        border: akzent ? `2px solid ${bereichAccent}` : `1px solid ${cardBorder}`,
-        borderRadius: 24,
-        padding: 22,
+        border: akzent ? `2px solid ${bereichAccent}` : "1px solid rgba(20, 24, 40, 0.05)",
+        borderRadius: 20,
+        padding: 20,
         boxShadow: shadow,
         ...style,
       }}
@@ -101,16 +101,16 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
   const basisFarbe = variant === "success" ? success : bereichAccent;
   const styles = {
     accent: {
-      background: disabled ? "#D8D8D3" : `linear-gradient(135deg, ${basisFarbe}, ${aufhellen(basisFarbe, 20)})`,
-      color: "#fff",
-      boxShadow: disabled ? "none" : `0 8px 20px ${hexZuRgba(basisFarbe, 0.32)}`,
+      background: disabled ? "#DADDE5" : `linear-gradient(180deg, ${aufhellen(basisFarbe, 8)}, ${basisFarbe})`,
+      color: disabled ? "#8A91A0" : "#fff",
+      boxShadow: disabled ? "none" : `0 6px 16px ${hexZuRgba(basisFarbe, 0.24)}`,
     },
     success: {
-      background: disabled ? "#D8D8D3" : `linear-gradient(135deg, ${basisFarbe}, ${aufhellen(basisFarbe, 20)})`,
-      color: "#fff",
-      boxShadow: disabled ? "none" : `0 8px 20px ${hexZuRgba(basisFarbe, 0.32)}`,
+      background: disabled ? "#DADDE5" : `linear-gradient(180deg, ${aufhellen(basisFarbe, 8)}, ${basisFarbe})`,
+      color: disabled ? "#8A91A0" : "#fff",
+      boxShadow: disabled ? "none" : `0 6px 16px ${hexZuRgba(basisFarbe, 0.24)}`,
     },
-    ghost: { background: "transparent", color: textMuted, border: `1px solid ${cardBorder}` },
+    ghost: { background: "#fff", color: textMain, border: `1px solid ${cardBorder}` },
   };
   return (
     <button
@@ -127,11 +127,12 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
         width: "100%",
         minHeight: 52,
         padding: "14px 18px",
-        borderRadius: 16,
+        borderRadius: 14,
         border: "none",
-        fontSize: 15,
+        fontSize: 15.5,
         fontWeight: 700,
-        letterSpacing: 0.2,
+        letterSpacing: 0.1,
+        fontFamily: "inherit",
         cursor: disabled ? "not-allowed" : "pointer",
         transform: gedrueckt && !disabled ? "scale(0.97)" : "scale(1)",
         transition: "transform 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms ease",
@@ -158,7 +159,7 @@ export function CheckRow({ label, checked, onToggle }) {
         borderRadius: 14,
         marginBottom: 8,
         minHeight: 48,
-        background: checked ? bereichAccentSoft : "#FAFBFA",
+        background: checked ? bereichAccentSoft : "#fff",
         cursor: "pointer",
         border: `1px solid ${checked ? bereichAccent : cardBorder}`,
         transition: "background 150ms ease, border-color 150ms ease",
@@ -203,8 +204,9 @@ export function Pill({ label, selected, onClick }) {
         fontWeight: 600,
         minHeight: 38,
         border: `1px solid ${selected ? bereichAccent : cardBorder}`,
-        background: selected ? bereichAccent : "#FAFBFA",
-        color: selected ? "#fff" : textMuted,
+        background: selected ? bereichAccent : "#fff",
+        color: selected ? "#fff" : textMain,
+        fontFamily: "inherit",
         cursor: "pointer",
         marginRight: 6,
         marginBottom: 6,
@@ -217,7 +219,7 @@ export function Pill({ label, selected, onClick }) {
 
 export function Label({ children }) {
   return (
-    <div style={{ fontSize: 12, color: textMuted, marginBottom: 6, marginTop: 14, fontWeight: 600 }}>{children}</div>
+    <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 6, marginTop: 14, fontWeight: 700 }}>{children}</div>
   );
 }
 
@@ -283,9 +285,9 @@ export const TextInput = React.forwardRef(function TextInput(
         boxSizing: "border-box",
         minHeight: 46,
         padding: diktat.verfuegbar ? "12px 42px 12px 14px" : "12px 14px",
-        borderRadius: 14,
-        border: `1px solid ${cardBorder}`,
-        background: "#FAFBFA",
+        borderRadius: 12,
+        border: "1px solid #DCE1EA",
+        background: "#fff",
         color: textMain,
         fontSize: 14.5,
         outline: "none",
@@ -319,9 +321,9 @@ export function TextArea({ value, onChange, placeholder, diktierbar = false }) {
         width: "100%",
         boxSizing: "border-box",
         padding: diktat.verfuegbar ? "12px 42px 12px 14px" : "12px 14px",
-        borderRadius: 14,
-        border: `1px solid ${cardBorder}`,
-        background: "#FAFBFA",
+        borderRadius: 12,
+        border: "1px solid #DCE1EA",
+        background: "#fff",
         color: textMain,
         fontSize: 14.5,
         outline: "none",

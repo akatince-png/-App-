@@ -19,9 +19,12 @@
 // ein bisschen". Jetzt wieder dasselbe Türkis wie KATEGORIE_META.gewohnheit
 // (dot/text/bg) — dieselben drei Werte, damit generische und
 // Gewohnheiten-Bereiche exakt zusammenpassen, statt nur ähnlich zu wirken.
-export const bg = "#FFFFFF";
+// Design 2.0 (28.09., Nutzerin: „flüssigeres Design wie gute ADHS-Apps“):
+// zart getönter Seitenhintergrund (je Tagesphase) statt Reinweiß, damit
+// die weißen Karten sich ruhig abheben; weichere Ränder und Schatten.
+export const bg = "var(--mp-canvas)";
 export const card = "#FFFFFF";
-export const cardBorder = "#EAEAE5";
+export const cardBorder = "#E6E9F0";
 // Seit 23.09. (Nutzerinnen-Wunsch "alle Bereiche, die einheitlich grün waren,
 // sollen in diesem Nachtblau sein"): die generische App-Farbe ist Nachtblau
 // aus dem Logo-/Gehirn-Design statt Türkis/Grün. Die Bereichsfarben aus
@@ -49,12 +52,14 @@ export const danger = "#C24545";
 // vorbehalten bleibt.
 export const warn = "#D97706";
 export const warnSoft = "rgba(217, 119, 6, 0.1)";
-export const textMain = "#15181A";
-export const textMuted = "#6B7178";
+export const textMain = "#141827";
+export const textMuted = "#636B7A";
 // Etwas tiefer/dunkler als zuvor, damit Karten sich sichtbar vom weißen
 // Hintergrund abheben statt "flach" wirkendem Ausschneide-Look
 // (Nutzerinnen-Vorgabe, siehe Kommentar oben).
-export const shadow = "0 10px 30px rgba(20, 23, 26, 0.09)";
+export const shadow = "0 1px 2px rgba(20, 24, 40, 0.04), 0 8px 24px rgba(20, 24, 40, 0.06)";
+// Überschriften-Schrift (Design 2.0).
+export const fontHeading = "'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
 
 // Hilfsfunktionen für dynamische Farbverläufe/Glow-Schatten (siehe
 // PrimaryButton in primitives.jsx) — jede Bereichsfarbe aus KATEGORIE_META
@@ -117,6 +122,7 @@ export const TAGESPHASEN_FARBEN = {
     successSoft: "#FDEBD6",
     highlight: "linear-gradient(165deg, #FFB866 0%, #F08A24 38%, #B24A16 78%, #6E2A10 100%)",
     highlightSchatten: "0 14px 30px rgba(176, 74, 22, 0.35)",
+    canvas: "#FBF5EE",
   },
   tag: {
     accent: "#2A62C9",
@@ -126,6 +132,7 @@ export const TAGESPHASEN_FARBEN = {
     successSoft: "#E2EBFA",
     highlight: "linear-gradient(165deg, #6DB0F5 0%, #2D6FD6 45%, #1B3E8C 100%)",
     highlightSchatten: "0 14px 30px rgba(27, 62, 140, 0.35)",
+    canvas: "#F2F6FC",
   },
   nacht: {
     accent: "#3B4BA8",
@@ -135,6 +142,7 @@ export const TAGESPHASEN_FARBEN = {
     successSoft: "#E7E9F7",
     highlight: nachtVerlaufFest,
     highlightSchatten: "0 14px 30px rgba(16, 19, 43, 0.35)",
+    canvas: "#F1F2F9",
   },
 };
 
@@ -149,6 +157,7 @@ export function setzeTagesphasenFarben(phase) {
   root.style.setProperty("--mp-success-soft", f.successSoft);
   root.style.setProperty("--mp-highlight", f.highlight);
   root.style.setProperty("--mp-highlight-schatten", f.highlightSchatten);
+  root.style.setProperty("--mp-canvas", f.canvas);
   root.dataset.tagesphase = phase;
 }
 

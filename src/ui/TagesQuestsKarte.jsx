@@ -49,7 +49,8 @@ export default function TagesQuestsKarte({ quests, onOpenView }) {
                 gap: 10,
                 padding: "10px 12px",
                 borderRadius: 16,
-                border: `2px solid ${f.dot}`,
+                // Design 2.0: feiner Rand statt 2 px – ruhiger bei vier Quests untereinander.
+                border: `1px solid ${q.geschafft ? f.dot : hexZuRgba(f.dot, 0.35)}`,
                 background: q.geschafft ? f.dot : f.bg,
                 color: q.geschafft ? "#fff" : f.text,
                 transition: "background 0.4s",
