@@ -69,6 +69,18 @@ export function diensteAusText(text) {
   return erg;
 }
 
+// Ist der gelesene Zellen-Text eindeutig genau ein Dienst? Ein Strich
+// („-“, „/“) zählt nur als „frei“, wenn sonst nichts in der Zelle steht –
+// sonst könnte ein Linien-Rest als freier Tag durchgehen.
+export function zelleEindeutig(text) {
+  const t = String(text || "").trim();
+  const d = diensteAusText(t);
+  if (d.length !== 1) return false;
+  if (/^[-–—/]$/.test(t.replace(/\s/g, ""))) return true;
+  if (d[0].art === "frei" && !/frei|ruhe|x/i.test(t)) return false;
+  return true;
+}
+
 // Text je Tages-Zelle → Dienst je Tag. Leere oder unleserliche Zelle → null
 // (der Tag bleibt offen), so verrutscht nichts.
 export function diensteAusZellen(zellen) {

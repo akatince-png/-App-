@@ -5,7 +5,7 @@ import { cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
 import { plusTage, rollenZuordnung } from "../utils/schichtplan";
-import { NOTIZ_MARKER, diensteAusZellen, gueltigeZeit, kalenderEintragFuerTag, standardWochenStart, tageAusDiensten, varianteFuerTag } from "../utils/dienstplanFoto";
+import { NOTIZ_MARKER, diensteAusZellen, zelleEindeutig, gueltigeZeit, kalenderEintragFuerTag, standardWochenStart, tageAusDiensten, varianteFuerTag } from "../utils/dienstplanFoto";
 import { ausschnittVorbereiten, zellenErkennen } from "../utils/ocr";
 
 // Dienstplan abfotografieren (28.09., Nutzerin): Foto → eigene Zeile mit
@@ -109,7 +109,7 @@ export default function DienstplanFotoView({ onHome }) {
     setFortschritt(0);
     try {
       const canvas = ausschnittVorbereiten(bildRef.current, rahmen);
-      const zellen = await zellenErkennen(canvas, anzahl, setFortschritt);
+      const zellen = await zellenErkennen(canvas, anzahl, setFortschritt, zelleEindeutig);
       setErkannt(zellen.map((z, i) => `${tagLabel(plusTage(start, i))}: ${z || "–"}`).join("\n"));
       const dienste = diensteAusZellen(zellen);
       setAusFoto(true);
@@ -204,6 +204,9 @@ export default function DienstplanFotoView({ onHome }) {
               Fotografiere deinen Dienstplan, markiere deine Zeile, und die App liest die Zeiten. Du prüfst sie, bevor etwas gespeichert wird. Die Erkennung läuft auf deinem Handy, das Foto wird nirgends hochgeladen.
             </div>
             <WocheWahl start={start} onChange={setStart} />
+            <div style={{ fontSize: 12, color: textMuted, background: "#F4F7FC", borderRadius: 10, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
+              📐 So klappt es am besten: gerade von oben, gutes Licht ohne Schatten, nah genug, dass deine Zeile gut lesbar ist.
+            </div>
             <label style={{ display: "block", marginTop: 12 }}>
               <input type="file" accept="image/*" capture="environment" onChange={fotoGewaehlt} style={{ display: "none" }} data-dienstplan-datei />
               <span className="mp-btn" style={{ display: "block", textAlign: "center", padding: "14px 18px", borderRadius: 16, background: "#1B2350", color: "#fff", fontWeight: 800, cursor: "pointer" }}>

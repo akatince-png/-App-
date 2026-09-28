@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diensteAusZellen, diensteAusText, kalenderEintragFuerTag, routineZeitenFuerDienst, standardWochenStart, tageAusDiensten, varianteFuerTag } from "./dienstplanFoto";
+import { zelleEindeutig, diensteAusZellen, diensteAusText, kalenderEintragFuerTag, routineZeitenFuerDienst, standardWochenStart, tageAusDiensten, varianteFuerTag } from "./dienstplanFoto";
 
 describe("diensteAusText", () => {
   it("liest Zeitspannen in verschiedenen Schreibweisen", () => {
@@ -29,6 +29,17 @@ describe("diensteAusZellen", () => {
       null,
       { art: "arbeit", von: "07:30", bis: "16:00" },
     ]);
+  });
+});
+
+describe("zelleEindeutig", () => {
+  it("nimmt nur eindeutige Zellen, keinen Linien-Rest als frei", () => {
+    expect(zelleEindeutig("06:00-14:00")).toBe(true);
+    expect(zelleEindeutig("F")).toBe(true);
+    expect(zelleEindeutig("-")).toBe(true);
+    expect(zelleEindeutig("| —")).toBe(false);
+    expect(zelleEindeutig("F S")).toBe(false);
+    expect(zelleEindeutig("")).toBe(false);
   });
 });
 
