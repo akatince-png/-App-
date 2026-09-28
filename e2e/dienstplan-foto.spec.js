@@ -48,11 +48,35 @@ test("Foto, Zeile markieren, Zeiten prüfen und übernehmen", async ({ page }) =
   expect(kalender[0]).toMatchObject({ bereich: "arbeit", titel: "Dienst", datum: "2026-10-05", start: "06:00", ende: "14:00" });
 });
 
+test("selbst eintragen: mehrere Tage auf einmal, dann einzelnen Tag ändern", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 29, 12, 0)); // Di
+  await page.goto("/e2e/harness/index.html?isAdmin=0&schicht=1#/kalender");
+  await page.locator("[data-dienstplan-link]").click();
+  await page.getByRole("button", { name: "✍️ Selbst eintragen" }).click();
+  const sammel = page.locator("[data-dienstplan-sammel]");
+  await sammel.getByRole("button", { name: "Mo–Fr" }).click();
+  await sammel.getByLabel("Sammel von").fill("06:00");
+  await sammel.getByLabel("Sammel bis").fill("14:00");
+  await sammel.getByRole("button", { name: "Für 5 Tage eintragen" }).click();
+  await sammel.getByRole("button", { name: "Sa + So" }).click();
+  await sammel.getByRole("button", { name: "Frei" }).click();
+  await sammel.getByRole("button", { name: "Für 2 Tage eintragen" }).click();
+  // Einzelnen Tag ändern: Mittwoch Spätdienst.
+  const mi = page.locator('[data-dienstplan-tag="2026-09-30"]');
+  await mi.getByLabel("Dienst von").fill("14:00");
+  await mi.getByLabel("Dienst bis").fill("22:00");
+  await expect(mi).toContainText("Spätschicht");
+  await page.getByRole("button", { name: "Übernehmen" }).click();
+  await expect(page.getByText("Dienstplan übernommen")).toBeVisible();
+  const [[tage]] = await aufrufe(page, "routineSchichtplanSpeichern");
+  expect(tage.map((t) => t.varianteId)).toEqual(["vf", "vf", "vs", "vf", "vf", "vx", "vx"]);
+});
+
 test("geht auch ohne Foto (manuell) und vom Kalender aus", async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 8, 29, 12, 0)); // Di
   await page.goto("/e2e/harness/index.html?isAdmin=0#/kalender");
   await page.locator("[data-dienstplan-link]").click();
-  await page.getByRole("button", { name: "✍️ Ohne Foto eintragen" }).click();
+  await page.getByRole("button", { name: "✍️ Selbst eintragen" }).click();
   const mo = page.locator('[data-dienstplan-tag="2026-09-28"]');
   await mo.getByRole("button", { name: "Dienst" }).click();
   await mo.getByLabel("Dienst von").fill("08:00");

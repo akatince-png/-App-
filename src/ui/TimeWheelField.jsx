@@ -6,13 +6,14 @@ import { cardBorder, textMain, textMuted } from "./theme";
 // bewusst zurück zu `input[type="time"]`, nur einheitlich größer gestylt
 // statt der kleinen Standardgröße. Gleicher `value`/`onChange(string)`-
 // Vertrag wie zuvor, also an allen bisherigen Einsatzstellen austauschbar.
-export default function TimeWheelField({ value, onChange }) {
+export default function TimeWheelField({ value, onChange, ariaLabel }) {
   const [fokussiert, setFokussiert] = useState(false);
   return (
     <input
       type="time"
       className="mp-tap"
       value={value || ""}
+      aria-label={ariaLabel}
       onChange={(e) => onChange(e.target.value)}
       onFocus={() => setFokussiert(true)}
       onBlur={() => setFokussiert(false)}

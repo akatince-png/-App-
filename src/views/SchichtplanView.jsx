@@ -75,8 +75,8 @@ export default function SchichtplanView({ onHome }) {
         onClick={() => (window.location.hash = "#/dienstplan-foto")}
         style={{ width: "100%", textAlign: "left", border: `1px solid ${cardBorder}`, background: "#EEF4FF", borderRadius: 16, padding: "12px 14px", marginBottom: 16, cursor: "pointer", fontFamily: "inherit" }}
       >
-        <div style={{ fontSize: 14.5, fontWeight: 900, color: "#1B2350" }}>📷 Dienstplan abfotografieren</div>
-        <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>Jede Woche neu: Foto machen, Zeile markieren, Zeiten prüfen – fertig. Geht auch ohne Foto.</div>
+        <div style={{ fontSize: 14.5, fontWeight: 900, color: "#1B2350" }}>🗓️ Dienstplan eintragen</div>
+        <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>Jede Woche neu: selbst eintragen (auch mehrere Tage auf einmal) oder Dienstplan abfotografieren.</div>
       </button>
 
       <Varianten varianten={routineVarianten} onSpeichern={routineVarianteSpeichern} onEntfernen={routineVarianteEntfernen} vermerken={vermerken} />

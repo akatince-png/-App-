@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
+import TimeWheelField from "../ui/TimeWheelField";
 import { cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
@@ -8,7 +9,9 @@ import { plusTage, rollenZuordnung } from "../utils/schichtplan";
 import { NOTIZ_MARKER, diensteAusZellen, zelleEindeutig, gueltigeZeit, kalenderEintragFuerTag, standardWochenStart, tageAusDiensten, varianteFuerTag } from "../utils/dienstplanFoto";
 import { ausschnittVorbereiten, zellenErkennen } from "../utils/ocr";
 
-// Dienstplan abfotografieren (28.09., Nutzerin): Foto → eigene Zeile mit
+// Dienstplan eintragen (28.09., Nutzerin): zwei gleichwertige Wege –
+// selbst eintragen (Tage einzeln oder mehrere auf einmal, Zeit-Rad) oder
+// abfotografieren: Foto → eigene Zeile mit
 // dem Finger markieren → Texterkennung auf dem Gerät (kein Gemini) →
 // Tabelle prüfen und korrigieren → Schichtplan (Routine-Zeiten je Tag) und
 // Kalender „Mein Alltag“ (Arbeit). Geht genauso ohne Foto (manuell), und der
@@ -65,6 +68,8 @@ export default function DienstplanFotoView({ onHome }) {
   const [inKalender, setInKalender] = useState(true);
   const [fehler, setFehler] = useState(null);
   const [ausFoto, setAusFoto] = useState(false);
+  const [markiert, setMarkiert] = useState([]); // Datums-Liste für „mehrere Tage auf einmal“
+  const [sammel, setSammel] = useState({ art: "arbeit", von: "", bis: "" });
   const [speichert, setSpeichert] = useState(false);
   const [ergebnis, setErgebnis] = useState(null);
   const bildRef = useRef(null);
@@ -196,34 +201,39 @@ export default function DienstplanFotoView({ onHome }) {
 
   return (
     <Shell>
-      <ViewHeader title="📷 Dienstplan übernehmen" onHome={onHome} />
+      <ViewHeader title="🗓️ Dienstplan eintragen" onHome={onHome} />
       <div data-dienstplan-foto={schritt}>
         {schritt === "start" && (
           <Card style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.45, marginBottom: 12 }}>
-              Fotografiere deinen Dienstplan, markiere deine Zeile, und die App liest die Zeiten. Du prüfst sie, bevor etwas gespeichert wird. Die Erkennung läuft auf deinem Handy, das Foto wird nirgends hochgeladen.
+              Trag deine Dienste für die Woche ein – selbst oder per Foto. Deine Morgen- und Abendroutine richten sich dann an jedem Tag nach dem Dienst.
             </div>
             <WocheWahl start={start} onChange={setStart} />
-            <div style={{ fontSize: 12, color: textMuted, background: "#F4F7FC", borderRadius: 10, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
-              📐 So klappt es am besten: gerade von oben, gutes Licht ohne Schatten, nah genug, dass deine Zeile gut lesbar ist.
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
+              <button
+                type="button"
+                data-dienstplan-selbst
+                onClick={() => {
+                  setTage(leereWoche());
+                  setAusFoto(false);
+                  setMarkiert([]);
+                  setSchritt("pruefen");
+                }}
+                className="mp-btn"
+                style={{ border: "none", borderRadius: 16, padding: "16px 10px", background: "#1B2350", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                ✍️ Selbst eintragen
+              </button>
+              <label style={{ display: "block" }}>
+                <input type="file" accept="image/*" capture="environment" onChange={fotoGewaehlt} style={{ display: "none" }} data-dienstplan-datei />
+                <span className="mp-btn" style={{ display: "block", textAlign: "center", borderRadius: 16, padding: "16px 10px", background: "#1B2350", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer" }}>
+                  📷 Foto machen
+                </span>
+              </label>
             </div>
-            <label style={{ display: "block", marginTop: 12 }}>
-              <input type="file" accept="image/*" capture="environment" onChange={fotoGewaehlt} style={{ display: "none" }} data-dienstplan-datei />
-              <span className="mp-btn" style={{ display: "block", textAlign: "center", padding: "14px 18px", borderRadius: 16, background: "#1B2350", color: "#fff", fontWeight: 800, cursor: "pointer" }}>
-                📷 Foto aufnehmen oder auswählen
-              </span>
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setTage(leereWoche());
-                setAusFoto(false);
-                setSchritt("pruefen");
-              }}
-              style={{ ...chip(false), marginTop: 10, width: "100%", padding: "10px 12px" }}
-            >
-              ✍️ Ohne Foto eintragen
-            </button>
+            <div style={{ fontSize: 12, color: textMuted, background: "#F4F7FC", borderRadius: 10, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
+              📷 Beim Foto liest die App die Zeiten auf deinem Handy (ohne KI, nichts wird hochgeladen), du prüfst alles vor dem Speichern. Am besten gerade von oben, gutes Licht, nah genug.
+            </div>
           </Card>
         )}
 
@@ -280,14 +290,25 @@ export default function DienstplanFotoView({ onHome }) {
 
         {schritt === "pruefen" && (
           <Card style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>Passt das so?</div>
-            <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>Tipp an, was nicht stimmt. „–“ lässt den Tag, wie er ist.</div>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4 }}>{ausFoto ? "Passt das so?" : "Deine Woche"}</div>
+            <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>Je Tag antippen: Dienst mit Uhrzeit, Frei, Urlaub oder Krank. „–“ lässt den Tag, wie er ist. Mit ☐ markierst du mehrere Tage und trägst sie auf einmal ein.</div>
             <WocheWahl start={start} onChange={startAendern} />
             {ausFoto && tage.some((t) => t.art === "leer") && (
               <div data-dienstplan-offen style={{ background: "#FFF6DC", color: "#7A5200", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, margin: "10px 0 0" }}>
                 {tage.filter((t) => t.art === "leer").length} Tage konnte ich nicht sicher lesen (gelb). Bitte antippen, oder „–“ lassen, wenn sich dort nichts ändert.
               </div>
             )}
+            <SammelEingabe
+              tage={tage}
+              markiert={markiert}
+              setMarkiert={setMarkiert}
+              sammel={sammel}
+              setSammel={setSammel}
+              onAnwenden={() => {
+                setTage((alt) => alt.map((t) => (markiert.includes(t.datum) ? { ...t, art: sammel.art, von: sammel.art === "arbeit" ? sammel.von : "", bis: sammel.art === "arbeit" ? sammel.bis : "" } : t)));
+                setMarkiert([]);
+              }}
+            />
             <div style={{ marginTop: 10 }} data-dienstplan-tabelle>
               {tage.map((t, i) => {
                 const z = varianteFuerTag(t, routineVarianten, routineEinstellungenStandard);
@@ -295,7 +316,16 @@ export default function DienstplanFotoView({ onHome }) {
                 return (
                   <div key={t.datum} data-dienstplan-tag={t.datum} style={{ borderTop: i ? `1px solid ${cardBorder}` : "none", padding: "10px 6px", margin: "0 -6px", borderRadius: 8, background: ausFoto && t.art === "leer" ? "#FFF6DC" : "transparent" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <div style={{ width: 62, fontWeight: 800, fontSize: 13.5 }}>{tagLabel(t.datum)}</div>
+                      <button
+                        type="button"
+                        aria-pressed={markiert.includes(t.datum)}
+                        aria-label={`${tagLabel(t.datum)} markieren`}
+                        onClick={() => setMarkiert((m) => (m.includes(t.datum) ? m.filter((x) => x !== t.datum) : [...m, t.datum]))}
+                        style={{ width: 74, display: "flex", alignItems: "center", gap: 5, border: "none", background: "none", padding: 0, fontWeight: 800, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+                      >
+                        <span style={{ fontSize: 15 }}>{markiert.includes(t.datum) ? "☑" : "☐"}</span>
+                        {tagLabel(t.datum)}
+                      </button>
                       <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                         {ARTEN.map((a) => (
                           <button key={a.id} type="button" onClick={() => tagAendern(i, "art", a.id)} style={chip(t.art === a.id)}>
@@ -305,14 +335,14 @@ export default function DienstplanFotoView({ onHome }) {
                       </div>
                     </div>
                     {t.art === "arbeit" && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, marginLeft: 70 }}>
-                        <input type="time" value={t.von} onChange={(e) => tagAendern(i, "von", e.target.value)} style={zeitFeld} aria-label="Dienst von" />
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 6, marginTop: 8 }}>
+                        <div style={{ minWidth: 0 }}><TimeWheelField value={t.von} onChange={(v) => tagAendern(i, "von", v)} ariaLabel="Dienst von" /></div>
                         <span>–</span>
-                        <input type="time" value={t.bis} onChange={(e) => tagAendern(i, "bis", e.target.value)} style={zeitFeld} aria-label="Dienst bis" />
+                        <div style={{ minWidth: 0 }}><TimeWheelField value={t.bis} onChange={(v) => tagAendern(i, "bis", v)} ariaLabel="Dienst bis" /></div>
                       </div>
                     )}
                     {routine && (t.art === "arbeit" || t.art === "frei" || t.art === "urlaub") && (
-                      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 5, marginLeft: 70 }}>
+                      <div style={{ fontSize: 11.5, color: textMuted, marginTop: 5 }}>
                         {z.neu ? "neu: " : "→ "}
                         {routine.name}
                         {routine.morgenStart ? ` · ☀ ${routine.morgenStart}` : ""}
@@ -389,6 +419,60 @@ function WocheWahl({ start, onChange }) {
       <button type="button" onClick={() => onChange(plusTage(start, 7))} style={chip(false)} aria-label="Eine Woche später">
         ›
       </button>
+    </div>
+  );
+}
+
+// Mehrere Tage auf einmal (Nutzerin 28.09.: „für die ganze Woche einzeln den
+// Tag wählen oder alle Tage auswählen“): Tage markieren, einmal Dienst und
+// Zeit wählen, auf alle markierten Tage anwenden.
+function SammelEingabe({ tage, markiert, setMarkiert, sammel, setSammel, onAnwenden }) {
+  const wt = (iso) => {
+    const [j, m, d] = iso.split("-").map(Number);
+    return new Date(j, m - 1, d).getDay();
+  };
+  const schnell = [
+    { label: "Alle", tage: tage.map((t) => t.datum) },
+    { label: "Mo–Fr", tage: tage.filter((t) => wt(t.datum) >= 1 && wt(t.datum) <= 5).map((t) => t.datum) },
+    { label: "Sa + So", tage: tage.filter((t) => wt(t.datum) === 0 || wt(t.datum) === 6).map((t) => t.datum) },
+  ];
+  const zeitFehlt = sammel.art === "arbeit" && (!gueltigeZeit(sammel.von) || !gueltigeZeit(sammel.bis));
+  return (
+    <div data-dienstplan-sammel style={{ background: "#F4F7FC", borderRadius: 12, padding: "10px 10px", marginTop: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13 }}>
+        <span style={{ fontWeight: 800 }}>Mehrere Tage:</span>
+        {schnell.map((q) => (
+          <button key={q.label} type="button" onClick={() => setMarkiert(q.tage)} style={chip(q.tage.length > 0 && q.tage.length === markiert.length && q.tage.every((d) => markiert.includes(d)))}>
+            {q.label}
+          </button>
+        ))}
+        {markiert.length > 0 && (
+          <button type="button" onClick={() => setMarkiert([])} style={chip(false)}>
+            keine
+          </button>
+        )}
+      </div>
+      {markiert.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {ARTEN.filter((a) => a.id !== "leer").map((a) => (
+              <button key={a.id} type="button" onClick={() => setSammel((x) => ({ ...x, art: a.id }))} style={chip(sammel.art === a.id)}>
+                {a.label}
+              </button>
+            ))}
+          </div>
+          {sammel.art === "arbeit" && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 6, marginTop: 8 }}>
+              <div style={{ minWidth: 0 }}><TimeWheelField value={sammel.von} onChange={(v) => setSammel((x) => ({ ...x, von: v }))} ariaLabel="Sammel von" /></div>
+              <span>–</span>
+              <div style={{ minWidth: 0 }}><TimeWheelField value={sammel.bis} onChange={(v) => setSammel((x) => ({ ...x, bis: v }))} ariaLabel="Sammel bis" /></div>
+            </div>
+          )}
+          <button type="button" onClick={onAnwenden} disabled={zeitFehlt} style={{ ...chip(true), width: "100%", padding: "11px 12px", marginTop: 8, opacity: zeitFehlt ? 0.5 : 1 }}>
+            Für {markiert.length} {markiert.length === 1 ? "Tag" : "Tage"} eintragen
+          </button>
+        </div>
+      )}
     </div>
   );
 }

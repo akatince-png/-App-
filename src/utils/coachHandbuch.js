@@ -170,7 +170,7 @@ export const KAPITEL = [
       "Programm pausieren: Programme der Person → Pausieren. Beim Fortsetzen geht es in derselben Woche weiter.",
       "Baustein für diese Person weglassen: Programme → „⚙️ Persönlich einstellen“.",
       "Schichtarbeit: Verwalten → Schichtplan. Routinen-Zeiten gelten dann je Schicht.",
-      "Dienstplan kommt wöchentlich? Verwalten → Schichtplan → „📷 Dienstplan abfotografieren“: Foto, Rahmen um die Dienste, prüfen, übernehmen. Geht auch ohne Foto und für jede Woche nachträglich.",
+      "Dienstplan kommt wöchentlich? Verwalten → Schichtplan → „🗓️ Dienstplan eintragen“: selbst eintragen (Tage einzeln oder mehrere auf einmal markieren, Zeit-Rad) oder abfotografieren (Rahmen um die Dienste, prüfen, übernehmen). Für jede Woche, auch nachträglich.",
     ],
   },
   {
