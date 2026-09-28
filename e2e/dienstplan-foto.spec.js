@@ -87,3 +87,52 @@ test("geht auch ohne Foto (manuell) und vom Kalender aus", async ({ page }) => {
   const [[tage]] = await aufrufe(page, "routineSchichtplanSpeichern");
   expect(tage).toHaveLength(1);
 });
+
+test("geteilter Dienst: zwei Einsätze an einem Tag, per Hand und aus dem Foto", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 29, 12, 0)); // Di
+  await page.addInitScript(() => {
+    window.__ocrMock = ["11:00-14:00 17:00-21:00", "F", "", "", "", "", ""];
+  });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&schicht=1#/dienstplan-foto");
+  await page.locator("[data-dienstplan-datei]").setInputFiles({ name: "plan.png", mimeType: "image/png", buffer: PNG });
+  const bild = page.locator("[data-dienstplan-bild]");
+  const box = await bild.boundingBox();
+  await page.mouse.move(box.x + 2, box.y + 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 2, box.y + Math.min(box.height - 2, 40), { steps: 3 });
+  await page.mouse.up();
+  await page.getByRole("button", { name: "Zeiten lesen" }).click();
+
+  // Aus dem Foto: Montag mit zwei Einsätzen und 3 Std. Pause.
+  const mo = page.locator('[data-dienstplan-tag="2026-09-28"]');
+  await expect(mo).toContainText("Pause 3 Std.");
+  await expect(mo).toContainText("neu: Geteilter Dienst 11:00–21:00");
+  // Nachkorrigieren per Hand: Dienstag (gelesen „F“) wird Doppelschicht 06–14 + 14–22.
+  const di = page.locator('[data-dienstplan-tag="2026-09-29"]');
+  await di.getByRole("button", { name: /weiterer Einsatz/ }).click();
+  await di.getByLabel("Dienst von 2").fill("14:00");
+  await di.getByLabel("Dienst bis 2").fill("22:00");
+  // Mittwoch war nicht lesbar: per Hand Pflege mit unbezahlter Pause.
+  const mi = page.locator('[data-dienstplan-tag="2026-09-30"]');
+  await mi.getByRole("button", { name: "Dienst", exact: true }).click();
+  await mi.getByLabel("Dienst von", { exact: true }).fill("07:00");
+  await mi.getByLabel("Dienst bis", { exact: true }).fill("11:00");
+  await mi.getByRole("button", { name: /weiterer Einsatz/ }).click();
+  await expect(page.getByRole("button", { name: "Übernehmen" })).toBeDisabled();
+  await mi.getByLabel("Dienst von 2").fill("14:00");
+  await mi.getByLabel("Dienst bis 2").fill("18:00");
+  await page.getByRole("button", { name: "Übernehmen" }).click();
+  await expect(page.getByText("Dienstplan übernommen")).toBeVisible();
+
+  const neu = (await aufrufe(page, "routineVarianteSpeichern")).map((a) => a[0].name);
+  expect(neu).toEqual(["Geteilter Dienst 11:00–21:00", "Geteilter Dienst 06:00–22:00", "Geteilter Dienst 07:00–18:00"]);
+  const kalender = (await aufrufe(page, "alltagSpeichern")).map((a) => [a[0].datum, a[0].titel, a[0].start, a[0].ende]);
+  expect(kalender).toEqual([
+    ["2026-09-28", "Dienst (1. Einsatz)", "11:00", "14:00"],
+    ["2026-09-28", "Dienst (2. Einsatz)", "17:00", "21:00"],
+    ["2026-09-29", "Dienst (1. Einsatz)", "06:00", "14:00"],
+    ["2026-09-29", "Dienst (2. Einsatz)", "14:00", "22:00"],
+    ["2026-09-30", "Dienst (1. Einsatz)", "07:00", "11:00"],
+    ["2026-09-30", "Dienst (2. Einsatz)", "14:00", "18:00"],
+  ]);
+});

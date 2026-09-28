@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { zelleEindeutig, diensteAusZellen, diensteAusText, kalenderEintragFuerTag, routineZeitenFuerDienst, standardWochenStart, tageAusDiensten, varianteFuerTag } from "./dienstplanFoto";
+import { zelleEindeutig, diensteAusZellen, diensteAusText, kalenderEintraegeFuerTag, mitBloecken, pauseMin, routineZeitenFuerDienst, standardWochenStart, tageAusDiensten, varianteFuerTag } from "./dienstplanFoto";
 
 describe("diensteAusText", () => {
   it("liest Zeitspannen in verschiedenen Schreibweisen", () => {
@@ -32,6 +32,12 @@ describe("diensteAusZellen", () => {
   });
 });
 
+describe("geteilte Dienste aus dem Foto", () => {
+  it("zwei Zeitspannen in einer Zelle werden zu einem Tag mit zwei Einsätzen", () => {
+    expect(diensteAusZellen(["11:00-14:00 17:00-21:00"])[0]).toEqual({ art: "arbeit", von: "11:00", bis: "21:00", bloecke: [{ von: "11:00", bis: "14:00" }, { von: "17:00", bis: "21:00" }] });
+  });
+});
+
 describe("zelleEindeutig", () => {
   it("nimmt nur eindeutige Zellen, keinen Linien-Rest als frei", () => {
     expect(zelleEindeutig("06:00-14:00")).toBe(true);
@@ -39,6 +45,14 @@ describe("zelleEindeutig", () => {
     expect(zelleEindeutig("-")).toBe(true);
     expect(zelleEindeutig("| —")).toBe(false);
     expect(zelleEindeutig("F S")).toBe(false);
+    expect(zelleEindeutig("3 F")).toBe(false);
+    expect(zelleEindeutig(")6:00-14:00 1:")).toBe(false);
+    expect(zelleEindeutig("Urlaub")).toBe(true);
+    expect(zelleEindeutig(")6:00-22:00")).toBe(false);
+    expect(zelleEindeutig("11:00-14:0C")).toBe(false);
+    expect(zelleEindeutig("11:00-14:00\n17:00-21:00")).toBe(true);
+    expect(zelleEindeutig("6.00 – 14.00 Uhr")).toBe(true);
+    expect(zelleEindeutig("11:00-14:00 17:00-21:00")).toBe(true);
     expect(zelleEindeutig("")).toBe(false);
   });
 });
@@ -48,7 +62,7 @@ describe("tageAusDiensten", () => {
   it("legt Dienste ab dem Starttag auf die Tage und füllt bis 7 auf", () => {
     const tage = tageAusDiensten([{ art: "rolle", rolle: "F" }, { art: "frei" }], "2026-10-05", 7, { F: "f" }, varianten);
     expect(tage).toHaveLength(7);
-    expect(tage[0]).toEqual({ datum: "2026-10-05", art: "arbeit", von: "05:45", bis: "13:45" });
+    expect(tage[0]).toMatchObject({ datum: "2026-10-05", art: "arbeit", von: "05:45", bis: "13:45" });
     expect(tage[1].art).toBe("frei");
     expect(tage[6]).toEqual({ datum: "2026-10-11", art: "leer", von: "", bis: "" });
   });
@@ -67,9 +81,17 @@ describe("Zuordnung", () => {
     expect(varianteFuerTag({ art: "frei" }, v, standard).variante.id).toBe("x");
     expect(varianteFuerTag({ art: "arbeit", von: "07:30", bis: "16:00" }, v, standard).neu).toMatchObject({ name: "Frühdienst 07:30–16:00", morgenStart: "06:00" });
   });
-  it("macht aus einem Dienst einen einmaligen Kalender-Eintrag", () => {
-    expect(kalenderEintragFuerTag({ datum: "2026-10-05", art: "arbeit", von: "22:00", bis: "06:00" })).toMatchObject({ bereich: "arbeit", start: "22:00", ende: "23:59", datum: "2026-10-05" });
-    expect(kalenderEintragFuerTag({ datum: "2026-10-05", art: "frei" })).toBeNull();
+  it("macht aus einem Dienst einmalige Kalender-Einträge, je Einsatz einen", () => {
+    expect(kalenderEintraegeFuerTag({ datum: "2026-10-05", art: "arbeit", von: "22:00", bis: "06:00" })[0]).toMatchObject({ bereich: "arbeit", titel: "Dienst", start: "22:00", ende: "23:59", datum: "2026-10-05" });
+    expect(kalenderEintraegeFuerTag({ datum: "2026-10-05", art: "frei" })).toEqual([]);
+    const geteilt = mitBloecken({ datum: "2026-10-05", art: "arbeit" }, [{ von: "11:00", bis: "14:00" }, { von: "17:00", bis: "21:00" }]);
+    expect(kalenderEintraegeFuerTag(geteilt).map((e) => [e.titel, e.start, e.ende])).toEqual([["Dienst (1. Einsatz)", "11:00", "14:00"], ["Dienst (2. Einsatz)", "17:00", "21:00"]]);
+  });
+  it("geteilter Dienst: Tag reicht vom ersten Beginn bis zum letzten Ende, Pause wird berechnet", () => {
+    const t = mitBloecken({ art: "arbeit" }, [{ von: "11:00", bis: "14:00" }, { von: "17:00", bis: "21:00" }]);
+    expect([t.von, t.bis]).toEqual(["11:00", "21:00"]);
+    expect(pauseMin(t.bloecke[0], t.bloecke[1])).toBe(180);
+    expect(varianteFuerTag(t, [], { morgen: { startZeit: "07:00" }, abend: { startZeit: "22:00" } }).neu).toMatchObject({ name: "Geteilter Dienst 11:00–21:00", arbeitVon: "11:00", arbeitBis: "21:00", abendStart: "22:30" });
   });
   it("schlägt ab Freitag die nächste Woche vor", () => {
     expect(standardWochenStart("2026-09-29")).toBe("2026-09-28");

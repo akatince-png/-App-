@@ -6,7 +6,7 @@ import { cardBorder, danger, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
 import { plusTage, rollenZuordnung } from "../utils/schichtplan";
-import { NOTIZ_MARKER, diensteAusZellen, zelleEindeutig, gueltigeZeit, kalenderEintragFuerTag, standardWochenStart, tageAusDiensten, varianteFuerTag } from "../utils/dienstplanFoto";
+import { MAX_EINSAETZE, NOTIZ_MARKER, bloeckeVon, diensteAusZellen, zelleEindeutig, gueltigeZeit, kalenderEintraegeFuerTag, mitBloecken, pauseMin, tagVollstaendig, standardWochenStart, tageAusDiensten, varianteFuerTag } from "../utils/dienstplanFoto";
 import { ausschnittVorbereiten, zellenErkennen } from "../utils/ocr";
 
 // Dienstplan eintragen (28.09., Nutzerin): zwei gleichwertige Wege –
@@ -69,7 +69,7 @@ export default function DienstplanFotoView({ onHome }) {
   const [fehler, setFehler] = useState(null);
   const [ausFoto, setAusFoto] = useState(false);
   const [markiert, setMarkiert] = useState([]); // Datums-Liste für „mehrere Tage auf einmal“
-  const [sammel, setSammel] = useState({ art: "arbeit", von: "", bis: "" });
+  const [sammel, setSammel] = useState({ art: "arbeit", bloecke: [{ von: "", bis: "" }] });
   const [speichert, setSpeichert] = useState(false);
   const [ergebnis, setErgebnis] = useState(null);
   const bildRef = useRef(null);
@@ -135,7 +135,8 @@ export default function DienstplanFotoView({ onHome }) {
     setTage((alt) => alt.map((t, i) => ({ ...t, datum: plusTage(neu, i) })));
   };
 
-  const unvollstaendig = tage.some((t) => t.art === "arbeit" && (!gueltigeZeit(t.von) || !gueltigeZeit(t.bis)));
+  const unvollstaendig = tage.some((t) => !tagVollstaendig(t));
+  const bloeckeSetzen = (i, bloecke) => setTage((alt) => alt.map((t, k) => (k === i ? mitBloecken(t, bloecke) : t)));
 
   const uebernehmen = async () => {
     setSpeichert(true);
@@ -177,10 +178,10 @@ export default function DienstplanFotoView({ onHome }) {
           if (e.notiz === NOTIZ_MARKER && e.datum && e.datum >= von && e.datum <= bis) await alltagLoeschen?.(e.id);
         }
         for (const t of tage) {
-          const eintrag = kalenderEintragFuerTag(t);
-          if (!eintrag) continue;
-          const k = await alltagSpeichern(eintrag);
-          if (k?.ok) kalender++;
+          for (const eintrag of kalenderEintraegeFuerTag(t)) {
+            const k = await alltagSpeichern(eintrag);
+            if (k?.ok) kalender++;
+          }
         }
       }
       const dienste = tage.filter((t) => t.art === "arbeit").length;
@@ -305,7 +306,7 @@ export default function DienstplanFotoView({ onHome }) {
               sammel={sammel}
               setSammel={setSammel}
               onAnwenden={() => {
-                setTage((alt) => alt.map((t) => (markiert.includes(t.datum) ? { ...t, art: sammel.art, von: sammel.art === "arbeit" ? sammel.von : "", bis: sammel.art === "arbeit" ? sammel.bis : "" } : t)));
+                setTage((alt) => alt.map((t) => (markiert.includes(t.datum) ? (sammel.art === "arbeit" ? mitBloecken({ ...t, art: "arbeit" }, sammel.bloecke.map((b) => ({ ...b }))) : { ...t, art: sammel.art, von: "", bis: "", bloecke: [] }) : t)));
                 setMarkiert([]);
               }}
             />
@@ -335,11 +336,7 @@ export default function DienstplanFotoView({ onHome }) {
                       </div>
                     </div>
                     {t.art === "arbeit" && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 6, marginTop: 8 }}>
-                        <div style={{ minWidth: 0 }}><TimeWheelField value={t.von} onChange={(v) => tagAendern(i, "von", v)} ariaLabel="Dienst von" /></div>
-                        <span>–</span>
-                        <div style={{ minWidth: 0 }}><TimeWheelField value={t.bis} onChange={(v) => tagAendern(i, "bis", v)} ariaLabel="Dienst bis" /></div>
-                      </div>
+                      <EinsaetzeEingabe bloecke={bloeckeVon(t)} onChange={(b) => bloeckeSetzen(i, b)} label="Dienst" />
                     )}
                     {routine && (t.art === "arbeit" || t.art === "frei" || t.art === "urlaub") && (
                       <div style={{ fontSize: 11.5, color: textMuted, marginTop: 5 }}>
@@ -436,7 +433,7 @@ function SammelEingabe({ tage, markiert, setMarkiert, sammel, setSammel, onAnwen
     { label: "Mo–Fr", tage: tage.filter((t) => wt(t.datum) >= 1 && wt(t.datum) <= 5).map((t) => t.datum) },
     { label: "Sa + So", tage: tage.filter((t) => wt(t.datum) === 0 || wt(t.datum) === 6).map((t) => t.datum) },
   ];
-  const zeitFehlt = sammel.art === "arbeit" && (!gueltigeZeit(sammel.von) || !gueltigeZeit(sammel.bis));
+  const zeitFehlt = sammel.art === "arbeit" && sammel.bloecke.some((b) => !gueltigeZeit(b.von) || !gueltigeZeit(b.bis));
   return (
     <div data-dienstplan-sammel style={{ background: "#F4F7FC", borderRadius: 12, padding: "10px 10px", marginTop: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13 }}>
@@ -462,16 +459,56 @@ function SammelEingabe({ tage, markiert, setMarkiert, sammel, setSammel, onAnwen
             ))}
           </div>
           {sammel.art === "arbeit" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 6, marginTop: 8 }}>
-              <div style={{ minWidth: 0 }}><TimeWheelField value={sammel.von} onChange={(v) => setSammel((x) => ({ ...x, von: v }))} ariaLabel="Sammel von" /></div>
-              <span>–</span>
-              <div style={{ minWidth: 0 }}><TimeWheelField value={sammel.bis} onChange={(v) => setSammel((x) => ({ ...x, bis: v }))} ariaLabel="Sammel bis" /></div>
-            </div>
+            <EinsaetzeEingabe bloecke={sammel.bloecke} onChange={(b) => setSammel((x) => ({ ...x, bloecke: b }))} label="Sammel" />
           )}
           <button type="button" onClick={onAnwenden} disabled={zeitFehlt} style={{ ...chip(true), width: "100%", padding: "11px 12px", marginTop: 8, opacity: zeitFehlt ? 0.5 : 1 }}>
             Für {markiert.length} {markiert.length === 1 ? "Tag" : "Tage"} eintragen
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+// Ein oder mehrere Einsätze an einem Tag (geteilter Dienst, Doppelschicht,
+// Pflege mit unbezahlter Pause). Zeit-Rad wie überall in der App.
+function EinsaetzeEingabe({ bloecke, onChange, label }) {
+  const setze = (i, feld, wert) => onChange(bloecke.map((b, k) => (k === i ? { ...b, [feld]: wert } : b)));
+  return (
+    <div data-einsaetze>
+      {bloecke.map((b, i) => {
+        const pause = i > 0 ? pauseMin(bloecke[i - 1], b) : null;
+        const zusatz = i === 0 ? "" : ` ${i + 1}`;
+        return (
+          <div key={i}>
+            {i > 0 && (
+              <div style={{ fontSize: 11.5, color: textMuted, margin: "6px 0 0" }}>
+                {pause != null ? `☕ Pause ${Math.floor(pause / 60) ? `${Math.floor(pause / 60)} Std. ` : ""}${pause % 60 ? `${pause % 60} Min.` : ""}`.trim() : "☕ Pause"} · {i + 1}. Einsatz
+              </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", alignItems: "center", gap: 6, marginTop: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <TimeWheelField value={b.von} onChange={(v) => setze(i, "von", v)} ariaLabel={`${label} von${zusatz}`} />
+              </div>
+              <span>–</span>
+              <div style={{ minWidth: 0 }}>
+                <TimeWheelField value={b.bis} onChange={(v) => setze(i, "bis", v)} ariaLabel={`${label} bis${zusatz}`} />
+              </div>
+              {i > 0 ? (
+                <button type="button" aria-label={`${i + 1}. Einsatz entfernen`} onClick={() => onChange(bloecke.filter((_, k) => k !== i))} style={{ border: "none", background: "none", fontSize: 18, color: textMuted, cursor: "pointer", padding: 4 }}>
+                  ✕
+                </button>
+              ) : (
+                <span style={{ width: 26 }} />
+              )}
+            </div>
+          </div>
+        );
+      })}
+      {bloecke.length < MAX_EINSAETZE && (
+        <button type="button" onClick={() => onChange([...bloecke, { von: "", bis: "" }])} style={{ ...chip(false), marginTop: 8, padding: "7px 11px" }}>
+          + weiterer Einsatz (geteilter Dienst / Doppelschicht)
+        </button>
       )}
     </div>
   );

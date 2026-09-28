@@ -19,6 +19,26 @@ const alsZeit = (m) => {
 };
 const uhr = (h, m) => (Number(h) <= 24 && Number(m || 0) < 60 ? `${pad(Number(h) % 24)}:${pad(Number(m || 0))}` : null);
 
+// Geteilte Dienste / Doppelschichten (Nutzerin 28.09.: „11–14 und 17–21 Uhr“,
+// Pflege mit unbezahlter Pause): Ein Arbeitstag hat 1–3 Einsätze
+// (`bloecke`). `von`/`bis` des Tages = Beginn des ersten und Ende des
+// letzten Einsatzes – danach richten sich die Routine-Zeiten.
+export const MAX_EINSAETZE = 3;
+export function bloeckeVon(tag) {
+  return tag?.bloecke?.length ? tag.bloecke : [{ von: tag?.von || "", bis: tag?.bis || "" }];
+}
+export function mitBloecken(tag, bloecke) {
+  const b = (bloecke || []).slice(0, MAX_EINSAETZE);
+  return { ...tag, bloecke: b, von: b[0]?.von || "", bis: b.at(-1)?.bis || "" };
+}
+// Pause zwischen zwei Einsätzen in Minuten (null, wenn Zeiten fehlen).
+export function pauseMin(a, b) {
+  const e = minuten(a?.bis);
+  const s = minuten(b?.von);
+  if (e == null || s == null) return null;
+  return (s - e + 1440) % 1440;
+}
+
 // Kürzel, wie sie auf Dienstplänen üblich sind. Groß-/Kleinschreibung egal.
 const KUERZEL = [
   { re: /^(f|fd|fr[üu]h|fr[üu]hdienst|fr[üu]hschicht)$/i, art: "rolle", rolle: "F" },
@@ -29,14 +49,18 @@ const KUERZEL = [
   { re: /^(k|kr|krank|au)$/i, art: "krank" },
 ];
 
-// Zerlegt den erkannten Text in Dienste in Lese-Reihenfolge.
-// Ergebnis je Dienst: { art: "arbeit", von, bis } | { art: "rolle", rolle } | { art: "frei"|"urlaub"|"krank" }
-export function diensteAusText(text) {
-  const t = String(text || "")
+function normalisiert(text) {
+  return String(text || "")
     .replace(/[–—−]/g, "-")
     .replace(/(\d)\s*[.,;]\s*(\d{2})(?!\d)/g, "$1:$2")
     .replace(/\buhr\b/gi, " ")
     .replace(/\bbis\b/gi, "-");
+}
+
+// Zerlegt den erkannten Text in Dienste in Lese-Reihenfolge.
+// Ergebnis je Dienst: { art: "arbeit", von, bis } | { art: "rolle", rolle } | { art: "frei"|"urlaub"|"krank" }
+export function diensteAusText(text) {
+  const t = normalisiert(text);
   const erg = [];
   const zeitRe = /(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?/y;
   let i = 0;
@@ -74,7 +98,27 @@ export function diensteAusText(text) {
 // sonst könnte ein Linien-Rest als freier Tag durchgehen.
 export function zelleEindeutig(text) {
   const t = String(text || "").trim();
+  // Außer Zeitspannen und bekannten Kürzeln darf nur Satzzeichen-Rauschen
+  // übrig bleiben – „3 F“ oder „1: 06:00-14:00“ sind nicht eindeutig.
+  const rest = normalisiert(t)
+    .replace(/(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?/g, " ")
+    .split(/[\s|]+/)
+    .map((w) => w.replace(/^[([{"'„]+|[)\]}"'“:,;]+$/g, ""))
+    .filter((w) => /[a-z0-9äöü]/i.test(w))
+    .filter((w) => !KUERZEL.some((x) => x.re.test(/^([a-z])\1+$/i.test(w) ? w[0] : w)));
+  if (rest.length) return false;
+  // Zeitspanne muss sauber allein stehen: kein angeschnittenes Zeichen davor
+  // oder dahinter (aus „16:00“ darf nie „06:00“ werden), Minuten bei beiden
+  // Zeiten oder bei keiner.
+  const n = normalisiert(t);
+  for (const m of n.matchAll(/(\d{1,2})(?::(\d{2}))?\s*-\s*(\d{1,2})(?::(\d{2}))?/g)) {
+    const davor = n[m.index - 1];
+    const danach = n[m.index + m[0].length];
+    if ((davor && !/\s/.test(davor)) || (danach && !/\s/.test(danach))) return false;
+    if ((m[2] == null) !== (m[4] == null)) return false;
+  }
   const d = diensteAusText(t);
+  if (d.length > 1 && d.length <= MAX_EINSAETZE && d.every((x) => x.art === "arbeit")) return true;
   if (d.length !== 1) return false;
   if (/^[-–—/]$/.test(t.replace(/\s/g, ""))) return true;
   if (d[0].art === "frei" && !/frei|ruhe|x/i.test(t)) return false;
@@ -84,7 +128,14 @@ export function zelleEindeutig(text) {
 // Text je Tages-Zelle → Dienst je Tag. Leere oder unleserliche Zelle → null
 // (der Tag bleibt offen), so verrutscht nichts.
 export function diensteAusZellen(zellen) {
-  return (zellen || []).map((t) => diensteAusText(t)[0] || null);
+  return (zellen || []).map((t) => {
+    const d = diensteAusText(t);
+    if (d.length > 1 && d.every((x) => x.art === "arbeit")) {
+      const bloecke = d.slice(0, MAX_EINSAETZE).map(({ von, bis }) => ({ von, bis }));
+      return { art: "arbeit", von: bloecke[0].von, bis: bloecke.at(-1).bis, bloecke };
+    }
+    return d[0] || null;
+  });
 }
 
 // Montag der nächsten Woche (ab Freitag) bzw. dieser Woche.
@@ -104,12 +155,10 @@ export function tageAusDiensten(dienste, start, anzahl = 7, rollen = {}, variant
     if (!d) return { datum, art: "leer", von: "", bis: "" };
     if (d.art === "rolle") {
       const v = varianten.find((x) => x.id === rollen[d.rolle]);
-      if (v?.arbeitVon && v?.arbeitBis) return { datum, art: "arbeit", von: v.arbeitVon, bis: v.arbeitBis };
-      if (d.rolle === "F") return { datum, art: "arbeit", von: "06:00", bis: "14:00" };
-      if (d.rolle === "S") return { datum, art: "arbeit", von: "14:00", bis: "22:00" };
-      return { datum, art: "arbeit", von: "22:00", bis: "06:00" };
+      const zeit = v?.arbeitVon && v?.arbeitBis ? [v.arbeitVon, v.arbeitBis] : d.rolle === "F" ? ["06:00", "14:00"] : d.rolle === "S" ? ["14:00", "22:00"] : ["22:00", "06:00"];
+      return mitBloecken({ datum, art: "arbeit" }, [{ von: zeit[0], bis: zeit[1] }]);
     }
-    if (d.art === "arbeit") return { datum, art: "arbeit", von: d.von, bis: d.bis };
+    if (d.art === "arbeit") return mitBloecken({ datum, art: "arbeit" }, d.bloecke || [{ von: d.von, bis: d.bis }]);
     return { datum, art: d.art, von: "", bis: "" };
   });
 }
@@ -143,11 +192,12 @@ export function varianteFuerTag(tag, varianten = [], standard = {}) {
   if (gleich) return { variante: gleich };
   const v = minuten(tag.von);
   const b = minuten(tag.bis);
-  const name = b != null && v != null && b < v ? "Nachtdienst" : v != null && v < 10 * 60 ? "Frühdienst" : v != null && v >= 12 * 60 ? "Spätdienst" : "Dienst";
+  const geteilt = bloeckeVon(tag).length > 1;
+  const name = geteilt ? "Geteilter Dienst" : b != null && v != null && b < v ? "Nachtdienst" : v != null && v < 10 * 60 ? "Frühdienst" : v != null && v >= 12 * 60 ? "Spätdienst" : "Dienst";
   return {
     neu: {
       name: `${name} ${tag.von}–${tag.bis}`,
-      icon: name === "Nachtdienst" ? "🌙" : name === "Frühdienst" ? "🌅" : name === "Spätdienst" ? "🌆" : "💼",
+      icon: geteilt ? "🔀" : name === "Nachtdienst" ? "🌙" : name === "Frühdienst" ? "🌅" : name === "Spätdienst" ? "🌆" : "💼",
       arbeitVon: tag.von,
       arbeitBis: tag.bis,
       ...routineZeitenFuerDienst(tag.von, tag.bis, standard),
@@ -155,11 +205,24 @@ export function varianteFuerTag(tag, varianten = [], standard = {}) {
   };
 }
 
-// Kalender-Eintrag „Arbeit“ für einen Dienst (Nachtdienst bis Mitternacht).
-export function kalenderEintragFuerTag(tag) {
-  if (tag.art !== "arbeit" || !tag.von || !tag.bis) return null;
-  const ende = minuten(tag.bis) < minuten(tag.von) ? "23:59" : tag.bis;
-  return { bereich: "arbeit", titel: "Dienst", start: tag.von, ende, datum: tag.datum, wochentage: [], erinnerung: false, notiz: NOTIZ_MARKER };
+// Kalender-Einträge „Arbeit“ für einen Dienst – je Einsatz einer
+// (Nachtdienst bis Mitternacht).
+export function kalenderEintraegeFuerTag(tag) {
+  if (tag.art !== "arbeit") return [];
+  const bloecke = bloeckeVon(tag).filter((b) => b.von && b.bis);
+  return bloecke.map((b, i) => ({
+    bereich: "arbeit",
+    titel: bloecke.length > 1 ? `Dienst (${i + 1}. Einsatz)` : "Dienst",
+    start: b.von,
+    ende: minuten(b.bis) < minuten(b.von) ? "23:59" : b.bis,
+    datum: tag.datum,
+    wochentage: [],
+    erinnerung: false,
+    notiz: NOTIZ_MARKER,
+  }));
 }
+
+// Alle Einsätze eines Arbeitstags vollständig?
+export const tagVollstaendig = (tag) => tag.art !== "arbeit" || bloeckeVon(tag).every((b) => gueltigeZeit(b.von) && gueltigeZeit(b.bis));
 
 export const gueltigeZeit = (t) => minuten(t) != null;

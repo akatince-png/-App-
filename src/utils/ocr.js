@@ -83,7 +83,50 @@ export function ausschnittVorbereiten(bild, rahmen) {
   // Schwarz/Weiß-Maske nur zum Finden von Linien und Schrift; gelesen wird
   // das Graubild (die Erkennung kommt mit weichen Kanten besser zurecht).
   c.maske = maske;
+  c.spaltenLinien = senkrechteLinien(maske, B, H);
   return c;
+}
+
+// Senkrechte Tabellenlinien finden (x-Mitten): lange, fast durchgehende
+// dunkle Strecken von oben nach unten. Damit werden die Tage an den echten
+// Spaltengrenzen geschnitten – Dienstpläne haben selten gleich breite Spalten.
+function senkrechteLinien(maske, B, H) {
+  const treffer = [];
+  for (let x = 0; x < B; x++) {
+    let lauf = 0;
+    let max = 0;
+    for (let y = 0; y < H; y++) {
+      // 1 px Toleranz nach links/rechts für leicht schräge Linien
+      const dunkel = maske[y * B + x] || (x > 0 && maske[y * B + x - 1]) || (x < B - 1 && maske[y * B + x + 1]);
+      lauf = dunkel ? lauf + 1 : 0;
+      if (lauf > max) max = lauf;
+    }
+    if (max > H * 0.6) treffer.push(x);
+  }
+  const linien = [];
+  for (const x of treffer) {
+    const letzte = linien.at(-1);
+    if (letzte && x - letzte.bis <= 2) letzte.bis = x;
+    else linien.push({ von: x, bis: x });
+  }
+  return linien.map((l) => ({ mitte: (l.von + l.bis) / 2, breite: l.bis - l.von + 1 }));
+}
+
+// Grenzen der Tages-Zellen: echte Spaltenlinien, wenn sie genau `anzahl`
+// Zellen ergeben, sonst gleich breit geteilt.
+export function zellGrenzen(breite, anzahl, linien = []) {
+  const gleich = Array.from({ length: anzahl }, (_, i) => ({ x: (i * breite) / anzahl, w: breite / anzahl }));
+  if (!linien.length) return gleich;
+  const kanten = [0, ...linien.map((l) => l.mitte), breite].sort((a, b) => a - b);
+  // Doppelte (Linie direkt am Rahmenrand) zusammenfassen
+  const k = kanten.filter((x, i) => i === 0 || x - kanten[i - 1] > breite * 0.03);
+  if (breite - k.at(-1) < breite * 0.03) k[k.length - 1] = breite;
+  else k.push(breite);
+  const zellen = [];
+  for (let i = 0; i < k.length - 1; i++) zellen.push({ x: k[i], w: k[i + 1] - k[i] });
+  const mittel = breite / anzahl;
+  const echt = zellen.filter((z) => z.w > mittel * 0.35);
+  return echt.length === anzahl ? echt : gleich;
 }
 
 // Lesedurchgänge je Zelle, vom allgemeinen zum gezielten. Der erste, dessen
@@ -92,8 +135,9 @@ export function ausschnittVorbereiten(bild, rahmen) {
 // `sicher` = Mindest-Zuversicht der Erkennung (0–100); darunter wird nichts
 // übernommen, damit nie ein Dienst geraten wird.
 const DURCHGAENGE = [
+  { sicher: 55, p: { tessedit_pageseg_mode: "6", tessedit_char_whitelist: "" } },
   { sicher: 55, p: { tessedit_pageseg_mode: "7", tessedit_char_whitelist: "" } },
-  { sicher: 60, p: { tessedit_pageseg_mode: "7", tessedit_char_whitelist: "0123456789:.-" } },
+  { sicher: 60, p: { tessedit_pageseg_mode: "6", tessedit_char_whitelist: "0123456789:.- " } },
   { sicher: 70, p: { tessedit_pageseg_mode: "8", tessedit_char_whitelist: "FSNXUKfreiurlaubkrankRLAB" } },
   { sicher: 75, p: { tessedit_pageseg_mode: "10", tessedit_char_whitelist: "FSNXUK" } },
 ];
@@ -158,7 +202,25 @@ export function zelleSaeubern(quelle, sx, sw) {
   const brauchbar = streifen.filter((st) => st.bis - st.von >= H * 0.12 && st.masse >= B * H * 0.002);
   if (!brauchbar.length) return null;
   const mitte = H / 2;
-  const st = brauchbar.sort((a, b) => Math.abs((a.von + a.bis) / 2 - mitte) - Math.abs((b.von + b.bis) / 2 - mitte))[0];
+  const kern = brauchbar.sort((a, b) => Math.abs((a.von + a.bis) / 2 - mitte) - Math.abs((b.von + b.bis) / 2 - mitte))[0];
+  const zeilenHoehe = kern.bis - kern.von;
+  // Zweite/dritte Zeile in derselben Zelle (geteilter Dienst untereinander)
+  // mitnehmen – aber keine angeschnittenen Reste am Zellrand.
+  const st = { ...kern };
+  let gewachsen = true;
+  while (gewachsen) {
+    gewachsen = false;
+    for (const b of brauchbar) {
+      if (b.von >= st.von && b.bis <= st.bis) continue;
+      const amRand = b.von <= 2 || b.bis >= H - 2;
+      const luecke = b.von >= st.bis ? b.von - st.bis : st.von - b.bis;
+      if (!amRand && luecke >= 0 && luecke <= zeilenHoehe * 1.2 && Math.abs(b.bis - b.von - zeilenHoehe) <= zeilenHoehe * 0.5) {
+        st.von = Math.min(st.von, b.von);
+        st.bis = Math.max(st.bis, b.bis);
+        gewachsen = true;
+      }
+    }
+  }
   let x0 = B;
   let x1 = -1;
   for (let y = st.von; y < st.bis; y++) {
@@ -202,7 +264,7 @@ export function zelleSaeubern(quelle, sx, sw) {
     }
   }
   rctx.putImageData(img, 0, 0);
-  const f = Math.min(4, Math.max(0.5, 48 / (st.bis - st.von)));
+  const f = Math.min(4, Math.max(0.5, 48 / zeilenHoehe));
   const out = document.createElement("canvas");
   out.width = Math.round(bw * f) + 60;
   out.height = Math.round(bh * f) + 60;
@@ -240,12 +302,12 @@ export async function zellenErkennen(canvas, anzahl, onFortschritt, passt = (t) 
   if (typeof window !== "undefined" && Array.isArray(window.__ocrMock)) return window.__ocrMock;
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("deu");
-  const breite = canvas.width / anzahl;
-  const rand = Math.round(breite * 0.02);
+  const grenzen = zellGrenzen(canvas.width, anzahl, canvas.spaltenLinien);
   const zellen = [];
   try {
     for (let i = 0; i < anzahl; i++) {
-      const c = zelleSaeubern(canvas, i * breite + rand, breite - 2 * rand);
+      const rand = Math.max(2, Math.round(grenzen[i].w * 0.03));
+      const c = zelleSaeubern(canvas, grenzen[i].x + rand, grenzen[i].w - 2 * rand);
       let text = "";
       if (c) {
         const fassungen = [c, zelleScharf(c)];
