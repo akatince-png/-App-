@@ -201,6 +201,14 @@ auf die Freigabe. Den Ablauf der Einstellungsphase beschreibt das Artefakt „AK
 Kurzüberblick für die nächste Sitzung. Details stehen in den Nachträgen unter
 „Teil 121“ (23.–24.09.). Die älteren Abschnitte darunter sind Historie.
 
+### Coach-Handbuch in der App (28.09., Plan D erledigt)
+Coach-Bereich → „📖 Handbuch“ (`views/admin/CoachHandbuchView.jsx`, Route `admin-handbuch`, nur Admin). Inhalt in
+`utils/coachHandbuch.js` (14 Kapitel: Rolle, Aufnehmen, Wer macht was beim Start, Erstgespräch mit Live-Verwalten,
+8 Wochen aus Coach-Sicht inkl. Messwerte übernehmen, Bausteine, Tag als Coach, Sprechen mit Textbausteinen, Anpassen,
+Etappen-Gespräche, Teams, Aka, Was AKA ist und was nicht, Wenn-dann-Karten). Kapitel aufklappbar, Inhaltsverzeichnis,
+„Drucken oder als PDF speichern“. Keine Notrufnummern (Philosophie 6b). **Bei neuen Funktionen das Handbuch
+mitpflegen.** Das Coachee-Handbuch ist noch offen (Beispiel-Kapitel im Doc „AKA Handbücher – Beispiele“).
+
 ### Live-Aktualisierung beim gemeinsamen Einrichten (28.09., Nutzerin)
 Wunsch: „Während ich mit ihm telefoniere, direkt Veränderungen vornehmen, die er dann eins zu eins gleich sieht.“
 - `data/liveAktualisierung.js`: Im Modus „Verwalten“ meldet jedes erfolgreiche Speichern (POST/PATCH/PUT/DELETE auf

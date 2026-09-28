@@ -40,6 +40,7 @@ const AdminWissenView = lazyAnsicht(() => import("./views/admin/AdminWissenView"
 const AdminFormulareView = lazyAnsicht(() => import("./views/admin/AdminFormulareView"));
 const AdminCoachUebersichtView = lazyAnsicht(() => import("./views/admin/AdminCoachUebersichtView"));
 const AdminQuestsView = lazyAnsicht(() => import("./views/admin/AdminQuestsView"));
+const CoachHandbuchView = lazyAnsicht(() => import("./views/admin/CoachHandbuchView"));
 const AdminTeamsView = lazyAnsicht(() => import("./views/admin/AdminTeamsView"));
 const LexikonView = lazyAnsicht(() => import("./views/LexikonView"));
 const TagesplanView = lazyAnsicht(() => import("./views/TagesplanView"));
@@ -69,7 +70,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
 const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "tagebuch", "coaching", "tour", "mehr", "zusatzprotokoll"];
-const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams"];
+const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams", "admin-handbuch"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
 // von einem geteilten Link nach einem App-Update) soll nie auf einen
@@ -468,6 +469,7 @@ export default function AuthenticatedApp() {
         onOpenFormulare={() => setView("admin-formulare")}
         onOpenUebersicht={() => setView("admin-uebersicht")}
         onOpenQuests={() => setView("admin-quests")}
+        onOpenHandbuch={() => setView("admin-handbuch")}
         onOpenTeams={() => setView("admin-teams")}
       />
     );
@@ -477,6 +479,8 @@ export default function AuthenticatedApp() {
     screen = <AdminFormulareView onHome={() => setView("admin")} />;
   } else if (view === "admin-uebersicht") {
     screen = <AdminCoachUebersichtView onHome={() => setView("admin")} onVerwalteAls={verwalteAls} />;
+  } else if (view === "admin-handbuch") {
+    screen = <CoachHandbuchView onHome={() => setView("admin")} />;
   } else if (view === "admin-quests") {
     screen = <AdminQuestsView onHome={() => setView("admin")} />;
   } else if (view === "admin-teams") {
