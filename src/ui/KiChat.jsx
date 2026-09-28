@@ -357,10 +357,13 @@ export default function KiChat({
   const starteRef = useRef(starteGespraech);
   starteRef.current = starteGespraech;
   useEffect(() => {
+    // Nur der zentrale Aka (ohne eigenen Orb) hört auf den Leisten-Knopf,
+    // eingebettete Chats (z. B. im Onboarding) nicht.
+    if (!ohneOrb) return;
     const oeffnen = () => starteRef.current();
     window.addEventListener("aka-oeffnen", oeffnen);
     return () => window.removeEventListener("aka-oeffnen", oeffnen);
-  }, []);
+  }, [ohneOrb]);
 
   // autoStart: schon eingebettet sichtbar statt hinter einem Trigger-Orb —
   // das Erscheinen dieses Screens gilt bereits als Zustimmung zum Gespräch.
