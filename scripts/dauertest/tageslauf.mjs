@@ -157,26 +157,33 @@ try {
   await page.getByRole("button", { name: "Anmelden" }).click();
   // Einwilligung (seit 28.09.): Testkonten stimmen beim ersten Mal zu
   // (Datenschutz + KI, damit auch die KI-Funktionen mitgetestet werden).
-  const einwilligung = await page.locator("[data-einwilligung]").waitFor({ timeout: 8000 }).then(() => true).catch(() => false);
-  if (einwilligung) {
-    await foto("00a-einwilligung");
-    await page.locator("[data-einwilligung-datenschutz]").check();
-    await page.locator("[data-einwilligung-ki]").check();
-    await page.getByRole("button", { name: "Weiter" }).click();
-    schritt("Einwilligung erteilt (Datenschutz + KI)");
-  }
-  const geladen = await page
-    .getByRole("button", { name: /^Spielstand:/ })
-    .first()
-    .waitFor({ timeout: 20000 })
-    .then(() => true)
-    .catch(() => false);
+  // Startseite (seit 29.09. schlicht, ohne Spielstand-Kasten) erkennen wir
+  // am Kopf `[data-home-kopf]`. Die Einwilligung kann auch erst nach > 8 s
+  // erscheinen – deshalb auf beides gemeinsam warten.
+  const heimOderEinwilligung = async (ms) => {
+    const bis = Date.now() + ms;
+    while (Date.now() < bis) {
+      if (await page.locator("[data-einwilligung]").isVisible().catch(() => false)) {
+        await foto("00a-einwilligung");
+        await page.locator("[data-einwilligung-datenschutz]").check();
+        await page.locator("[data-einwilligung-ki]").check();
+        await page.getByRole("button", { name: "Weiter" }).click();
+        schritt("Einwilligung erteilt (Datenschutz + KI)");
+        await warte(1500);
+        continue;
+      }
+      if (await page.locator("[data-home-kopf]").first().isVisible().catch(() => false)) return true;
+      await warte(500);
+    }
+    return false;
+  };
+  const geladen = await heimOderEinwilligung(30000);
   bericht.loginSekunden = Math.round((Date.now() - t0) / 100) / 10;
   if (!geladen) {
-    befund(`Nach dem Login nach 20 s keine Startseite (Seite zeigt: "${(await text()).slice(0, 80)}") — lade neu.`);
+    befund(`Nach dem Login nach 30 s keine Startseite (Seite zeigt: "${(await text()).slice(0, 80)}") — lade neu.`);
     await foto("00-login-haengt");
     await page.reload();
-    await page.getByRole("button", { name: /^Spielstand:/ }).first().waitFor({ timeout: 20000 });
+    if (!(await heimOderEinwilligung(30000))) throw new Error("Startseite auch nach Neuladen nicht erreicht");
   }
   schritt(`Angemeldet (${bericht.loginSekunden} s)`);
   // In-App-Messung (utils/startzeit.js) zum Vergleich mit der Skript-Messung.

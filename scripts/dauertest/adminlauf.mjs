@@ -64,7 +64,9 @@ const btn = p.getByRole('button',{name:'Verwalten',exact:true});
 const jonasVerwaltenZeile = p.locator("div").filter({ hasText: "claude.dauertest3@example.com" }).filter({ has: btn }).last();
 let geklickt = await jonasVerwaltenZeile.getByRole('button',{name:'Verwalten',exact:true}).first().click().then(()=>true).catch(()=>false);
 if(!geklickt) befund('Verwalten-Knopf für Jonas nicht gefunden');
-await w(5000); await juhu(); aktuell='verwalten-home'; await foto('30-verwalten-home');
+// Laden dauert in der Sandbox manchmal > 5 s (29.09.): bis 20 s auf den Banner warten.
+await p.getByText(/Du verwaltest gerade: Jonas/).first().waitFor({ timeout: 20000 }).catch(() => {});
+await w(1500); await juhu(); aktuell='verwalten-home'; await foto('30-verwalten-home');
 if(!/Du verwaltest gerade: Jonas/.test(await txt())) befund('Verwalten-Banner fehlt');
 for (const v of ['team','tagesplan','training','erfolge','mehr']){ aktuell='verwalten-'+v; await p.evaluate((v)=>{location.hash='#/'+v},v); await w(3500); await juhu(); const t=await txt(); if(!/Du verwaltest gerade/.test(t)) befund('Banner weg in '+v); if(/Etwas ist schiefgelaufen/.test(t)) befund('Absturz'); await foto('31-'+v); }
 await p.getByRole('button',{name:/Zurück zum Dashboard/}).first().click(); await w(3000); aktuell='zurueck';
