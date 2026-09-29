@@ -19,8 +19,7 @@ Ziel der Nutzerin: Antrag bei Apple Mitte der Woche ab 05.10.2026. Hier steht, w
 
 ## 2. Was du noch tun musst (vor dem Antrag)
 
-1. **Deine Angaben** – Name, Anschrift und Aufsichtsbehörde (Niedersachsen) sind seit 29.09. eingetragen. **Es fehlt noch die E-Mail-Adresse** für Datenschutz-Anfragen (Pflicht fürs Impressum); ggf. Telefon, Rechtsform/USt-IdNr.
-   Solange dort noch `[ … ]` steht, **nicht** einreichen.
+1. ~~Deine Angaben eintragen~~ – erledigt 29.09. (Name, Anschrift, E-Mail, Aufsichtsbehörde Niedersachsen). Telefon/Rechtsform optional.
 2. **Texte prüfen lassen** (Anwalt/Datenschutz), besonders wegen Gesundheitsdaten.
 3. **Auftragsverarbeitungsverträge (AVV/DPA)** abschließen bzw. akzeptieren: Supabase, Vercel, Google (Gemini, Text-to-Speech), Groq. Meist als Online-Formular im jeweiligen Konto.
 4. ~~Freigabe Datenbank-Änderung und Edge Function `konto-loeschen`~~ – erledigt 28.09.

@@ -12,7 +12,7 @@ export const DATENSCHUTZ_VERSION = "2026-09-28";
 export const BETREIBER = {
   name: "Aka Tayfun Ince",
   anschrift: "Bergfeldstraße 29, 30457 Hannover",
-  email: "[E-Mail-Adresse für Datenschutz-Anfragen]",
+  email: "aka.t.ince@icloud.com",
   telefon: "",
   zusatz: "", // z. B. Rechtsform, USt-IdNr., Berufsbezeichnung – falls vorhanden
   aufsicht: "der Landesbeauftragten für den Datenschutz Niedersachsen (Prinzenstraße 5, 30159 Hannover)",
