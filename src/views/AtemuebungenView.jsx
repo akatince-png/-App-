@@ -7,7 +7,7 @@ import { textMuted, cardBorder, danger } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
 import { supabase } from "../lib/supabaseClient";
-import { ATEM_BIBLIOTHEK, ATEM_KEY_EIGEN, ATEM_START_KEY, atemZeitenHeute, gefuehlEmoji, uebungFuerKey } from "../utils/atemBibliothek";
+import { ATEM_BIBLIOTHEK, ATEM_KEY_EIGEN, ATEM_ROUTINE_KEY, ATEM_START_KEY, atemZeitenHeute, gefuehlEmoji, uebungFuerKey } from "../utils/atemBibliothek";
 import { aktuelleSession } from "../data/useAtemSessions";
 
 const LEER = { name: "", einatmenSek: "4", haltenSek: "4", ausatmenSek: "6", dauerMinuten: "3" };
@@ -42,6 +42,8 @@ export default function AtemuebungenView({ onHome }) {
     atemTeilnahmen = [],
     atemSessionTeilnehmen,
     aenderungVermerken,
+    routineSchrittErledigt,
+    routineSchrittErledigtUmschalten,
     istAdminKonto,
     userId,
     team,
@@ -50,15 +52,21 @@ export default function AtemuebungenView({ onHome }) {
   const [neu, setNeu] = useState(LEER);
   const [formOffen, setFormOffen] = useState(false);
   const [fehler, setFehler] = useState(null);
-  const [laufend, setLaufend] = useState(null); // { uebung, session? }
+  const [laufend, setLaufend] = useState(null); // { uebung, session?, routineSchritt? }
+  const [routineFertig, setRoutineFertig] = useState(false);
 
   useEffect(() => {
     try {
       const key = sessionStorage.getItem(ATEM_START_KEY);
+      const routineRoh = sessionStorage.getItem(ATEM_ROUTINE_KEY);
+      sessionStorage.removeItem(ATEM_ROUTINE_KEY);
       if (!key) return;
       sessionStorage.removeItem(ATEM_START_KEY);
       const u = uebungFuerKey(key, atemuebungen);
-      if (u) setLaufend({ uebung: u });
+      // Aus einem Routine-Schritt (RoutineHeuteChecklist „Mitmachen“):
+      // Dauer des Schritts übernehmen, am Ende den Schritt abhaken.
+      const routineSchritt = routineRoh ? JSON.parse(routineRoh) : null;
+      if (u) setLaufend({ uebung: routineSchritt?.dauerMinuten ? { ...u, dauerMinuten: routineSchritt.dauerMinuten } : u, routineSchritt });
     } catch {
       // ohne Speicher einfach die Übersicht zeigen
     }
@@ -80,10 +88,15 @@ export default function AtemuebungenView({ onHome }) {
   };
 
   if (laufend) {
-    const { uebung, session } = laufend;
+    const { uebung, session, routineSchritt } = laufend;
     return (
       <Shell>
-        <ViewHeader title={`${uebung.icon || "🌬️"} ${uebung.name}`} onHome={() => setLaufend(null)} homeTitle="Zurück" />
+        <ViewHeader title={`${uebung.icon || "🌬️"} ${uebung.name}`} onHome={routineSchritt ? onHome : () => setLaufend(null)} homeTitle={routineSchritt ? "Zur Startseite" : "Zurück"} />
+        {routineSchritt && (
+          <div data-atem-routine-hinweis style={{ fontSize: 12.5, color: textMuted, margin: "-4px 2px 10px" }}>
+            Aus deiner {routineSchritt.routine === "abend" ? "Abendroutine" : "Morgenroutine"}: {routineSchritt.name}. Wenn du fertig bist, ist der Schritt automatisch abgehakt.
+          </div>
+        )}
         <Card>
           <AtemFuehrung
             uebung={session ? { ...uebung, dauerMinuten: session.dauerMinuten } : uebung}
@@ -100,9 +113,19 @@ export default function AtemuebungenView({ onHome }) {
                 });
               }
               if (session) atemSessionTeilnehmen(session.id, { nachher });
+              if (routineSchritt) setRoutineFertig(true);
+              if (routineSchritt && dauerSek > 0 && !routineSchrittErledigt?.[`${routineSchritt.datum}__${routineSchritt.schrittId}`]) {
+                routineSchrittErledigtUmschalten(routineSchritt.schrittId, routineSchritt.datum);
+                aenderungVermerken?.({ kategorie: routineSchritt.routine === "abend" ? "abendroutine" : "morgenroutine", itemName: routineSchritt.name, aktion: "erledigt", detail: "Geführte Atemübung" });
+              }
             }}
           />
         </Card>
+        {routineSchritt && routineFertig && (
+          <div style={{ marginTop: 12 }}>
+            <PrimaryButton onClick={onHome}>✓ Weiter mit der {routineSchritt.routine === "abend" ? "Abendroutine" : "Morgenroutine"}</PrimaryButton>
+          </div>
+        )}
       </Shell>
     );
   }

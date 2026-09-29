@@ -212,6 +212,11 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Geführte Atemübung aus der Routine (29.09., live)
+Nutzerin: Beim Schritt „Atemübung (2 Min.)“ muss man direkt in eine fest hinterlegte, geführte Übung kommen – ohne KI, ohne selbst suchen. Umsetzung: neue Bibliotheks-Übung `morgen` „Guten-Morgen-Atmung“ (2 Min., 4 ein · 2 halten · 4 aus) in `utils/atemBibliothek.js`; `atemFuerRoutineSchritt(schritt, routine)` ordnet zu (Kernprogramm `atem_morgen` → morgen 2 Min., `atem_abend` → „Gleichmäßig atmen“ 5 Min., sonst jeder Schritt mit „Atem/Atmung/atmen“ im Namen; Dauer aus „(N Min.)“). `RoutineHeuteChecklist` zeigt daneben „▶ Mitmachen“ (Bestätigen bleibt), setzt `ATEM_START_KEY` + `ATEM_ROUTINE_KEY` und springt nach `#/atemuebungen`; dort startet die Übung mit Stimme, nach dem Ende wird der Schritt automatisch abgehakt und „✓ Weiter mit der Morgenroutine“ führt zur Startseite. Tests: `e2e/atem-tagebuch.spec.js`, `atemBibliothek.test.js`, Harness `?kern=1&atemschritt=1`.
+
+**iPad (29.09.):** Foto der Nutzerin zeigte trotz `pointer: fine`-Regel die Seitenleiste (iPad mit Pencil/Trackpad meldet „fein“). Jetzt setzt `utils/touch.js` `data-touch` am `<html>`, sobald `navigator.maxTouchPoints > 0` – dann immer Leiste, keine Seitenleiste.
+
 ### Design 2.0 – Leiste auch auf dem iPad, Kacheln nach „Mehr“ (29.09., live)
 Nutzerin am iPad: „immer noch ohne Leiste“ – iPad quer ist ≥1024 px, dort zeigte die App die Seitenleiste statt der Leiste. Jetzt: Seitenleiste nur noch bei `(min-width: 1024px) and (pointer: fine)` (Computer mit Maus/Trackpad), Touch-Geräte bekommen immer die Leiste unten (`index.css`, `istDesktop` in AuthenticatedApp). Nutzerin: „Unten weg, Leiste reicht“ → die Startseiten-Kacheln Alle Pläne / Archiv / Tagebuch (frei schreiben, TagebuchModal) / Neues Protokoll (Admin) stehen jetzt oben unter Mehr (`MehrView.jsx`, `data-mehr-schnellzugriff`). Tests: `e2e/leiste-unten.spec.js` (iPad quer), Smoke/Onboarding/Zusatzprotokolle gehen über `#/mehr`.
 

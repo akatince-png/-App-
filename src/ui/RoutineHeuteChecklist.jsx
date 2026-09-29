@@ -7,6 +7,7 @@ import { useAppData } from "../context/AppDataContext";
 import { ROUTINE_META } from "../utils/dayItems";
 import TagebuchFormular from "./TagebuchFormular";
 import { istTagebuchSchritt } from "../utils/tagebuch";
+import { ATEM_ROUTINE_KEY, ATEM_START_KEY, atemFuerRoutineSchritt } from "../utils/atemBibliothek";
 
 const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
@@ -51,6 +52,20 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
     if (istTagebuchSchritt(schritt) && !tagebuchVorhanden) return setTagebuchOffen(schritt.id);
     bestaetigen(schritt);
   };
+  // Atem-Schritt (29.09., Nutzerin: „wenn ich draufklicke, in den Bereich
+  // geführt werden, wo die Atemübungen durchgeführt werden“): „Mitmachen“
+  // startet die fest hinterlegte, geführte Übung (ohne KI) auf der
+  // Atem-Seite; ist sie durch, wird der Schritt dort automatisch abgehakt.
+  // „Bestätigen“ bleibt für alle, die schon anders geatmet haben.
+  const atemMitmachen = (schritt, atem) => {
+    try {
+      sessionStorage.setItem(ATEM_START_KEY, atem.key);
+      sessionStorage.setItem(ATEM_ROUTINE_KEY, JSON.stringify({ schrittId: schritt.id, datum: heute, routine, name: schritt.name, dauerMinuten: atem.dauerMinuten }));
+    } catch {
+      // ohne Speicher öffnet sich einfach die Atem-Seite
+    }
+    window.location.hash = "#/atemuebungen";
+  };
   const bestaetigen = (schritt) => {
     routineSchrittErledigtUmschalten(schritt.id, heute);
     aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: schritt.name, aktion: "erledigt", detail: "" });
@@ -92,6 +107,17 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
             {done ? (
               <StatusBadge status="erledigt" />
             ) : (
+              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+              {atemFuerRoutineSchritt(s, routine) && !datum && (
+                <button
+                  type="button"
+                  data-atem-mitmachen
+                  onClick={() => atemMitmachen(s, atemFuerRoutineSchritt(s, routine))}
+                  style={{ padding: "7px 12px", borderRadius: 10, border: `1.5px solid ${farbe}`, background: "var(--mp-karte)", color: farbe, fontSize: 12, fontWeight: 800, cursor: "pointer" }}
+                >
+                  ▶ Mitmachen
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => klick(s)}
@@ -109,6 +135,7 @@ export default function RoutineHeuteChecklist({ routine, datum }) {
               >
                 Bestätigen
               </button>
+              </div>
             )}
           </div>
           {tagebuchOffen === s.id && !done && (

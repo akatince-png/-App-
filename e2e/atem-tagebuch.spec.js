@@ -52,3 +52,27 @@ test("Tagebuch: keine Startseiten-Karte; Seite zeigt Muster ab 14 Einträgen", a
   await expect(page.locator('[data-muster="essen:viel Zucker"]')).toBeVisible();
   await expect(page.getByText("Größter Unterschied")).toBeVisible();
 });
+
+// Atem-Schritt in der Morgenroutine (29.09., Nutzerin: „wenn ich draufklicke,
+// in den Bereich geführt werden, wo die Atemübungen durchgeführt werden …
+// fest eingestellte zweiminütige Atemübung“): „Mitmachen“ startet die feste
+// Guten-Morgen-Atmung (2 Min.), danach ist der Schritt automatisch abgehakt.
+test("Atem-Schritt der Morgenroutine: Mitmachen führt die 2-Minuten-Übung und hakt den Schritt ab", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 8, 29, 6, 40) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1&atemschritt=1#/routinen");
+  await page.locator("[data-atem-mitmachen]").first().click();
+  await expect(page).toHaveURL(/#\/atemuebungen/);
+  await expect(page.getByRole("heading", { name: /Guten-Morgen-Atmung/ })).toBeVisible();
+  await expect(page.locator("[data-atem-routine-hinweis]")).toContainText("Morgenroutine");
+  await expect(page.getByText("4 Sek. ein · 2 halten · 4 aus")).toBeVisible();
+  await page.getByRole("group", { name: "Stimmung vorher" }).getByRole("button").first().click();
+  await page.getByRole("button", { name: "▶ Start" }).click();
+  await page.clock.runFor(2 * 60 * 1000 + 15000);
+  await page.getByRole("group", { name: "Stimmung nachher" }).getByRole("button").last().click();
+  await expect(page.getByRole("status")).toContainText("Im Protokoll vermerkt");
+  expect(await aufrufe(page, "routineSchrittErledigtUmschalten")).toEqual([["ks3", "2026-09-29"]]);
+  const [[, dauerSek]] = await aufrufe(page, "atemuebungAbschliessen");
+  expect(dauerSek).toBeGreaterThanOrEqual(115);
+  await page.getByRole("button", { name: /Weiter mit der Morgenroutine/ }).click();
+  await expect(page).toHaveURL(/#\/home/);
+});

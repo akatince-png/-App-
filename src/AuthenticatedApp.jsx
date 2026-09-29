@@ -57,6 +57,7 @@ const SchichtplanView = lazyAnsicht(() => import("./views/SchichtplanView"));
 const TagebuchView = lazyAnsicht(() => import("./views/TagebuchView"));
 import HilfeWaechter from "./ui/HilfeWaechter";
 import BottomNav from "./ui/BottomNav";
+import { istTouchGeraet } from "./utils/touch";
 import { nimmLiveNeuladen } from "./data/liveAktualisierung";
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const KalenderView = lazyAnsicht(() => import("./views/KalenderView"));
@@ -519,7 +520,7 @@ export default function AuthenticatedApp() {
   // Design 2.0: feste Leiste unten – überall außer im geführten Onboarding
   // und in der Tour (auf großen Bildschirmen blendet CSS sie aus).
   const mitLeiste = view !== "form" && view !== "tour" && onboardingComplete;
-  const istDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px) and (pointer: fine)").matches;
+  const istDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px) and (pointer: fine)").matches && !istTouchGeraet();
 
   // Einwilligung (28.09.): Coachees müssen einmal dem Datenschutz zustimmen,
   // bevor die App startet. Nicht für Admins und nicht im Verwalten-Modus.

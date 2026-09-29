@@ -136,6 +136,10 @@ function leseOverridesAusUrl() {
     ];
     overrides.trainingWochenplan = [];
   }
+  // ?atemschritt=1 (mit ?kern=1): Kernprogramm-Schritt „Atemübung (2 Min.)“ (29.09.).
+  if (params.get("atemschritt") === "1") {
+    overrides.routineSchritte = [...(overrides.routineSchritte || []), { id: "ks3", routine: "morgen", reihenfolge: 2, name: "🌬️ Atemübung (2 Min.)", dauerMin: 2, kernKey: "atem_morgen" }];
+  }
   // ?mess=1 (mit ?kern=1): drei gemessene Morgenroutinen in der Messwoche (26.09.).
   if (params.get("mess") === "1") {
     const h = new Date();

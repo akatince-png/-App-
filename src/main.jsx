@@ -8,6 +8,7 @@ import '@fontsource/plus-jakarta-sans/800.css'
 import './index.css'
 import App from './App.jsx'
 import { initErrorMonitoring } from './services/errorMonitoring.js'
+import { touchMarkieren } from './utils/touch'
 
 initErrorMonitoring()
 
@@ -25,6 +26,8 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
+
+touchMarkieren();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

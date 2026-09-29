@@ -41,3 +41,15 @@ test.describe("iPad quer", () => {
     await expect(page).toHaveURL(/#\/schlaf/);
   });
 });
+
+// iPad mit Pencil/Trackpad (29.09., Foto der Nutzerin: Seitenleiste trotz
+// Umstellung): meldet „pointer: fine“, hat aber einen Touchscreen.
+test.describe("iPad mit feinem Zeiger", () => {
+  test.use({ viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: false });
+  test("trotzdem Leiste unten, keine Seitenleiste", async ({ page }) => {
+    await page.goto("/e2e/harness/index.html?beispiel=1#/home");
+    await expect(page.locator("html")).toHaveAttribute("data-touch", "1");
+    await expect(page.locator("[data-bottomnav]")).toBeVisible();
+    await expect(page.locator(".mp-app-sidebar")).toBeHidden();
+  });
+});

@@ -168,6 +168,17 @@ body {
   }
 }
 
+/* Touch-Geräte (29.09., Nutzerin am iPad: Seitenleiste trotz Umstellung) –
+   ein iPad mit Pencil oder Trackpad meldet „pointer: fine“ wie ein Computer.
+   main.jsx setzt data-touch, sobald das Gerät einen Touchscreen hat; dann
+   immer die Leiste unten und keine Seitenleiste. */
+:root[data-touch] .mp-app-shell {
+  display: block;
+}
+:root[data-touch] .mp-app-sidebar {
+  display: none;
+}
+
 /* Tagesplan (TagesplanView.jsx): auf Tablet/Desktop nutzen mehrere Listen
    die Breite mit einem zweispaltigen Raster statt einer einzelnen, langen
    einspaltigen Liste (Nutzerin-Vorgabe 15.08., Teil 2 des Tablet-Umbaus).
@@ -682,3 +693,10 @@ input[type="time"]::-webkit-date-and-time-value {
     bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+:root[data-touch] .mp-bottomnav {
+  display: flex;
+}
+:root[data-touch] .mp-mit-leiste .mp-akut-knopf {
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+}
+

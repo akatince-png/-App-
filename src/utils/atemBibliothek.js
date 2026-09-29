@@ -74,11 +74,47 @@ export const ATEM_BIBLIOTHEK = [
       { art: "aus", sek: 6, sprache: "Ausatmen" },
     ],
   },
+  {
+    // Feste Übung für den Routine-Schritt „Atemübung (2 Min.)“ in der
+    // Morgenroutine (29.09., Nutzerin: „fest eingestellte zweiminütige
+    // Atemübung … abgespeichert, um die KI nicht zu belasten“). Ruhig genug
+    // für direkt nach dem Aufstehen, mit kurzem Halten.
+    key: "morgen",
+    name: "Guten-Morgen-Atmung",
+    icon: "🌅",
+    wofuer: "Sanft in den Tag starten",
+    beschreibung: "4 Sek. ein · 2 halten · 4 aus",
+    dauerMinuten: 2,
+    farbe: "color-mix(in srgb, #FFF4E5 var(--mp-flaeche), var(--mp-karte))",
+    phasen: [
+      { art: "ein", sek: 4, sprache: "Tief einatmen" },
+      { art: "halten", sek: 2, sprache: "Kurz halten" },
+      { art: "aus", sek: 4, sprache: "Ausatmen" },
+    ],
+  },
 ];
 
 export const ATEM_KEY_EIGEN = "eigen:";
 // Von Home aus direkt eine Übung starten (sessionStorage, einmalig).
 export const ATEM_START_KEY = "atemStart";
+// Aus einem Routine-Schritt gestartet (sessionStorage, einmalig): nach der
+// Übung wird der Schritt automatisch abgehakt.
+export const ATEM_ROUTINE_KEY = "atemRoutineSchritt";
+
+// Welche feste Übung gehört zu einem Routine-Schritt? Kernprogramm-
+// Bausteine fest zugeordnet, sonst jeder Schritt mit „Atem“ im Namen:
+// morgens die Guten-Morgen-Atmung, abends „Gleichmäßig atmen“. Dauer aus
+// dem Namen („(5 Min.)“), sonst die der Übung. null = kein Atem-Schritt.
+export function atemFuerRoutineSchritt(schritt, routine) {
+  if (!schritt) return null;
+  const name = String(schritt.name || "");
+  const kern = { atem_morgen: "morgen", atem_abend: "gleichmaessig" }[schritt.kernKey];
+  if (!kern && !/atem|atmung|atmen/i.test(name)) return null;
+  const key = kern || (routine === "abend" ? "gleichmaessig" : "morgen");
+  const u = bibliotheksUebung(key);
+  const minuten = Number(name.match(/(\d+)\s*Min/i)?.[1]) || u.dauerMinuten;
+  return { key, dauerMinuten: minuten };
+}
 
 export function bibliotheksUebung(key) {
   return ATEM_BIBLIOTHEK.find((u) => u.key === key) || null;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { atemZeitenHeute, taktPosition, uebungFuerKey, bibliotheksUebung } from "./atemBibliothek";
+import { atemFuerRoutineSchritt, atemZeitenHeute, taktPosition, uebungFuerKey, bibliotheksUebung } from "./atemBibliothek";
 
 describe("Atem-Bibliothek", () => {
   it("Takt-Position: Seufzer-Atmung (2+1+6 = 9 Sek.)", () => {
@@ -19,5 +19,24 @@ describe("Atem-Bibliothek", () => {
     const zeiten = [{ id: "b", uhrzeit: "12:30" }, { id: "a", uhrzeit: "07:10" }, { id: "c", uhrzeit: "21:45" }];
     const logs = [{ erstelltAm: new Date(2026, 8, 25, 7, 20).toISOString() }, { erstelltAm: new Date(2026, 8, 24, 21).toISOString() }];
     expect(atemZeitenHeute(zeiten, logs, heute).map((z) => [z.id, z.erledigt])).toEqual([["a", true], ["b", false], ["c", false]]);
+  });
+});
+
+// Routine-Schritt → feste geführte Übung (29.09.).
+describe("atemFuerRoutineSchritt", () => {
+  it("Kernprogramm: morgens 2 Min. Guten-Morgen-Atmung, abends 5 Min. gleichmäßig", () => {
+    expect(atemFuerRoutineSchritt({ kernKey: "atem_morgen", name: "🌬️ Atemübung (2 Min.)" }, "morgen")).toEqual({ key: "morgen", dauerMinuten: 2 });
+    expect(atemFuerRoutineSchritt({ kernKey: "atem_abend", name: "🌬️ Ruhige Atmung (5 Min.)" }, "abend")).toEqual({ key: "gleichmaessig", dauerMinuten: 5 });
+  });
+  it("eigene Schritte mit „Atem“ im Namen, Dauer aus dem Namen oder der Übung", () => {
+    expect(atemFuerRoutineSchritt({ name: "Atmen (3 Min)" }, "morgen")).toEqual({ key: "morgen", dauerMinuten: 3 });
+    expect(atemFuerRoutineSchritt({ name: "Atemübung" }, "abend")).toEqual({ key: "gleichmaessig", dauerMinuten: 5 });
+  });
+  it("andere Schritte: keine Übung", () => {
+    expect(atemFuerRoutineSchritt({ name: "Zähne putzen" }, "morgen")).toBeNull();
+    expect(atemFuerRoutineSchritt(null, "morgen")).toBeNull();
+  });
+  it("Guten-Morgen-Atmung: 4 ein, 2 halten, 4 aus", () => {
+    expect(bibliotheksUebung("morgen").phasen.map((p) => [p.art, p.sek])).toEqual([["ein", 4], ["halten", 2], ["aus", 4]]);
   });
 });
