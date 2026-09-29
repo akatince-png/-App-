@@ -212,14 +212,15 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
-### Design 2.0 – Abendmodus für alle Seiten (29.09., Vorschau auf dem Branch)
+### Design 2.0 – Abendmodus für alle Seiten (29.09., live)
 Nutzerin: „Ja“ zum Abendmodus. Ab der Abendroutine (Tagesphase „nacht“) wird die ganze App dunkel, morgens/tagsüber bleibt alles pixelgleich (per Bildvergleich geprüft).
 - **Mechanik:** `setzeTagesphasenFarben` setzt `data-dunkel` am `<html>`, wenn Phase „nacht“ und nicht abgeschaltet. `index.css` definiert die Grundfarben als Variablen (`--mp-karte`, `--mp-text`, `--mp-text-muted`, `--mp-rand`, `--mp-schatten`, `--mp-accent-text`, `--mp-accent-dark-text`) und die Mischanteile `--mp-flaeche` (100 % tagsüber, 13 % abends) und `--mp-schrift` (100 % / 28 %).
 - **theme.js:** `card`, `cardBorder`, `textMain`, `textMuted`, `shadow` sind jetzt CSS-Variablen. `istVariable` erkennt alles, was nicht mit „#“ beginnt (color-mix!). Farben für SVG-Attribute über `style` oder `aufgeloesteFarbe()` setzen – `fill={var(...)}` wirkt nicht.
 - **Feste Farben in Inline-Styles** wurden per Skript umgestellt (≈600 Stellen): `background: "#fff"` → `var(--mp-karte)`, helle Flächen → `color-mix(in srgb, #HEX var(--mp-flaeche), var(--mp-karte))`, dunkle Schrift → `color-mix(in srgb, #HEX var(--mp-schrift), var(--mp-schrift-hell))`, helle Ränder → Mischung mit `--mp-rand-dunkel`; `color: accent/accentDark` → `var(--mp-accent(-dark)-text)`. Schrift auf kräftigen Flächen bleibt unverändert. **Neue Komponenten bitte gleich so schreiben** (oder die Tokens aus theme.js nutzen), sonst bleiben sie abends hell.
 - Bereichsfarben `KATEGORIE_META`/`ROUTINE_META` (dayItems.js), Kalenderfarben (kalender.js) und Atemübungs-Farben (atemBibliothek.js): `bg`/`text` sind color-mix-Strings; `dot` bleibt Hex (wird mit Alpha-Suffix verkettet).
 - **Schalter:** Mehr → 🌙 Aussehen → „Abends dunkel“ (`ui/AussehenKarte.jsx`, localStorage `mp-abend-dunkel`, nur dieses Gerät). Test `e2e/abendmodus.spec.js`.
-- Offen: Anmeldeseite bleibt hell (vor dem Login gibt es keine Tagesphase); Aka kann den Schalter noch nicht umlegen.
+- **Per Aka** (29.09.): Bereich `aussehen` in `bereichErkennen`, `AIService.aussehenAusChat` → `setzeAbendDunkelErlaubt`; die Karte in Mehr zieht über das Ereignis `mp-aussehen` mit. Unit-Test `src/ui/theme.test.js`.
+- Status: **live auf main** (29.09., Freigabe der Nutzerin). Offen: Anmeldeseite bleibt hell (vor dem Login gibt es keine Tagesphase).
 
 ### Design 2.0 – Umsetzung Schritt 1 (28.09. nachts, Vorschau auf dem Branch)
 Nutzerin: „mit der Leiste, wie du es empfiehlst“. Umgesetzt:

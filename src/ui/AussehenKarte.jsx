@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "./primitives";
 import { abendDunkelErlaubt, accent, setzeAbendDunkelErlaubt, textMuted } from "./theme";
 
@@ -7,9 +7,14 @@ import { abendDunkelErlaubt, accent, setzeAbendDunkelErlaubt, textMuted } from "
 // schaltet es hier ab (gilt für dieses Gerät).
 export default function AussehenKarte() {
   const [an, setAn] = useState(abendDunkelErlaubt);
+  // Auch Aka kann den Schalter umlegen – dann hier mitziehen.
+  useEffect(() => {
+    const neu = () => setAn(abendDunkelErlaubt());
+    window.addEventListener("mp-aussehen", neu);
+    return () => window.removeEventListener("mp-aussehen", neu);
+  }, []);
   const umschalten = () => {
     setzeAbendDunkelErlaubt(!an);
-    setAn(!an);
   };
   return (
     <>

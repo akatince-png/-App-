@@ -94,6 +94,8 @@ export default function AkaErgebnis({ ergebnis }) {
           )}
         </Box>
       );
+    case "aussehen":
+      return <Box>{daten.abendsDunkel ? "🌙 Ab deiner Abendroutine wird die App jetzt dunkel." : "☀️ Die App bleibt jetzt auch abends hell."} Ändern kannst du das jederzeit unter Mehr → Aussehen.</Box>;
     case "tagebuch":
       return <Box>Im Tagebuch festgehalten: {tagebuchZeile(daten)}{daten.notiz ? " · 🔒 Notiz (privat)" : ""}</Box>;
     case "schichtplan":

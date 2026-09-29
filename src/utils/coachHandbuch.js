@@ -227,6 +227,7 @@ export const KAPITEL = [
       "Aka kann aus einem Satz Einträge machen (z. B. Mahlzeiten, Routinen-Schritte, Fokus-Runden).",
       "Aka lernt noch und tritt nicht erkennbar selbst mit Coachees in Kontakt. Gegenüber der Person bist du der Coach.",
       "Hintergrundwissen für Aka pflegst du unter „📚 Wissen“.",
+      "Ab der Abendroutine wird die App dunkel. Wer das nicht mag, schaltet es unter Mehr → 🌙 Aussehen ab (nur für dieses Gerät), oder sagt es Aka.",
     ],
   },
   {

@@ -192,10 +192,11 @@ export const AIService = {
         "atemroutine (feste Zeiten für Atemübungen, z. B. morgens 2 Min. zum Wachwerden),",
         "tagebuch (die Person erzählt, wie ihr Tag war: Stimmung, wo, mit wem, Essen, Besonderes),",
         "fokus (die Person will JETZT eine Weile konzentriert an einer Sache arbeiten, z. B. '25 Minuten Steuer', 'hilf mir, mit der Wäsche anzufangen' – startet eine Runde 'Gemeinsam fokussieren').",
+        "aussehen (die Person möchte, dass die App abends dunkel wird oder lieber hell bleibt, z. B. 'mach die App abends nicht mehr dunkel', 'abends bitte wieder dunkel').",
         "alltag (feste oder einmalige Termine im Kalender 'Mein Alltag': Arbeit, Haushalt, Hobby, Me-Time, Termin, Freunde & Familie, z. B. 'samstags 10 Uhr Staubsaugen', 'Dienstag 15 Uhr Zahnarzt', 'Mo bis Do 8:30 bis 16:30 Arbeit').",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"aussehen"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -366,6 +367,25 @@ export const AIService = {
     );
     const dauer = [15, 25, 50].includes(Number(data.dauerMinuten)) ? Number(data.dauerMinuten) : 25;
     return { ziel: String(data.ziel || "").slice(0, 120), dauerMinuten: dauer };
+  },
+
+  /**
+   * Aussehen (29.09.): Abendmodus an oder aus (Mehr → Aussehen).
+   */
+  async aussehenAusChat({ verlauf, coachName }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App und stellst ein, ob die App ab der Abendroutine dunkel wird.",
+        "abendsDunkel = true, wenn die Person es abends dunkel möchte; false, wenn sie es hell lassen möchte.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "abendsDunkel": true|false }',
+      ],
+      verlauf,
+      "Fasse die gewünschte Einstellung jetzt als JSON zusammen."
+    );
+    if (typeof data.abendsDunkel !== "boolean") throw new Error("Unerwartetes Format: 'abendsDunkel' fehlt.");
+    return { abendsDunkel: data.abendsDunkel };
   },
 
   /**

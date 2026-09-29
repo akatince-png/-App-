@@ -167,6 +167,7 @@ export function setzeAbendDunkelErlaubt(an) {
   }
   const root = typeof document !== "undefined" ? document.documentElement : null;
   if (root?.dataset.tagesphase) setzeTagesphasenFarben(root.dataset.tagesphase);
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("mp-aussehen"));
 }
 
 // Dunkle Werte für den Abendmodus (Akzent heller, damit er auf dunklem Grund lesbar ist).

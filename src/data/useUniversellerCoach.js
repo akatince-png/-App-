@@ -8,6 +8,7 @@ import { VORLAGEN, planErzeugen, plusTage, rollenZuordnung, wochenBeginn } from 
 import { sitzungEnde } from "../utils/fokusGemeinsam";
 import { bloeckeFuerTag, konflikteFuerEintrag } from "../utils/kalender";
 import { timerHinweisPlanen } from "./nativeTimerHinweis";
+import { setzeAbendDunkelErlaubt } from "../ui/theme";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -29,6 +30,7 @@ export const BEREICH_LABELS = {
   tagebuch: "Im Tagebuch festhalten",
   fokus: "Fokus-Runde starten",
   alltag: "In den Kalender eintragen",
+  aussehen: "Einstellung übernehmen",
 };
 
 // Die eine Aktions-Logik von Aka (seit 23.09. der einzige Weg — es gibt
@@ -328,6 +330,11 @@ export function useUniversellerCoach() {
         if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
         aenderungVermerken({ kategorie: "tagebuch", itemName: "Tagebuch", aktion: vorher ? "geändert" : "hinzugefügt", detail: `Per Aka: ${tagebuchZeile(r.eintrag)}` });
         return { bereich: "tagebuch", daten: r.eintrag };
+      }
+      case "aussehen": {
+        const a = await AIService.aussehenAusChat({ verlauf, coachName });
+        setzeAbendDunkelErlaubt(a.abendsDunkel);
+        return { bereich: "aussehen", daten: a };
       }
       default:
         return { bereich: null };
