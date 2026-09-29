@@ -70,6 +70,13 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   `UEBERGABEPROTOKOLL.md`, Teil 121. Produktive DB-Änderungen vorher mit
   der Nutzerin abstimmen. Ohne Connector gilt weiter: Migrationen/Edge
   Functions landen im Code, die Nutzerin spielt sie selbst ein.
+- **Dauerfreigabe Dauertest (Nutzerin, 29.09.2026, wörtlich: „Ich gebe dir
+  auch in Zukunft die Freigabe“):** Für den täglichen Dauertest
+  (`scripts/dauertest/README.md`) darfst du die Passwörter der sechs
+  Testkonten per SQL auf Zufallswerte setzen und dich damit anmelden.
+  Passwörter nie speichern oder ausgeben, nach dem Lauf wieder auf
+  unbekannte Zufallswerte setzen. Gilt nur für diese sechs Testkonten,
+  nicht für echte Konten.
 - **Vor jeder Arbeit `git fetch origin main`:** Der Sitzungs-Arbeitszweig
   kann auf einem uralten Stand basieren — `main` ist immer maßgeblich.
 - **Git-Workflow:** auf dem Feature-Branch arbeiten (siehe
