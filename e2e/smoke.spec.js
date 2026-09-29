@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 
 test("Home lädt ohne Konsolenfehler", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await expect(page.getByText("Tagebuch")).toBeVisible();
+  await expect(page.locator("[data-home-kopf]")).toBeVisible();
   expect(fehler).toEqual([]);
 });
 
@@ -28,7 +28,7 @@ test("Navigation über die Seitenleiste: Archiv, Mehr, Admin, zurück zu Home", 
   await expect(page.getByText("Admin", { exact: false }).first()).toBeVisible();
 
   await nav.getByRole("button", { name: "Home" }).click();
-  await expect(page.getByText("Tagebuch")).toBeVisible();
+  await expect(page.locator("[data-home-kopf]")).toBeVisible();
 
   expect(fehler).toEqual([]);
 });
@@ -59,7 +59,7 @@ test("Echtes Routing: Navigation setzt den URL-Hash, Browser-Zurück/Vorwärts f
   await expect(page).toHaveURL(/#\/tagesplan$/);
   await page.goBack();
   await expect(page).toHaveURL(/#\/home$/);
-  await expect(page.getByText("Tagebuch")).toBeVisible();
+  await expect(page.locator("[data-home-kopf]")).toBeVisible();
 
   // Browser-Vorwärts: wieder zurück zum Tagesplan.
   await page.goForward();
@@ -94,7 +94,9 @@ test("AkutModusGlobal öffnet sich nach Browser-Zurück/Vorwärts nicht von selb
 });
 
 test("Tagebuch-Modal öffnet und lässt sich per Escape schließen (Barrierefreiheits-Regressionstest)", async ({ page }) => {
-  await page.getByText("Tagebuch").click();
+  // Seit Design 2.0 (29.09.) im Schnellzugriff oben unter Mehr.
+  await page.goto("/e2e/harness/index.html#/mehr");
+  await page.locator("[data-mehr-schnellzugriff]").getByRole("button", { name: /Tagebuch/ }).click();
   const textarea = page.getByPlaceholder("Schreib frei drauflos, oder tippe auf das Mikrofon…");
   await expect(textarea).toBeVisible();
 

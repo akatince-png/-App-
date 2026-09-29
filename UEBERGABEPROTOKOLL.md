@@ -212,6 +212,9 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Design 2.0 – Leiste auch auf dem iPad, Kacheln nach „Mehr“ (29.09., live)
+Nutzerin am iPad: „immer noch ohne Leiste“ – iPad quer ist ≥1024 px, dort zeigte die App die Seitenleiste statt der Leiste. Jetzt: Seitenleiste nur noch bei `(min-width: 1024px) and (pointer: fine)` (Computer mit Maus/Trackpad), Touch-Geräte bekommen immer die Leiste unten (`index.css`, `istDesktop` in AuthenticatedApp). Nutzerin: „Unten weg, Leiste reicht“ → die Startseiten-Kacheln Alle Pläne / Archiv / Tagebuch (frei schreiben, TagebuchModal) / Neues Protokoll (Admin) stehen jetzt oben unter Mehr (`MehrView.jsx`, `data-mehr-schnellzugriff`). Tests: `e2e/leiste-unten.spec.js` (iPad quer), Smoke/Onboarding/Zusatzprotokolle gehen über `#/mehr`.
+
 ### Design 2.0 – Abendmodus für alle Seiten (29.09., live)
 Nutzerin: „Ja“ zum Abendmodus. Ab der Abendroutine (Tagesphase „nacht“) wird die ganze App dunkel, morgens/tagsüber bleibt alles pixelgleich (per Bildvergleich geprüft).
 - **Mechanik:** `setzeTagesphasenFarben` setzt `data-dunkel` am `<html>`, wenn Phase „nacht“ und nicht abgeschaltet. `index.css` definiert die Grundfarben als Variablen (`--mp-karte`, `--mp-text`, `--mp-text-muted`, `--mp-rand`, `--mp-schatten`, `--mp-accent-text`, `--mp-accent-dark-text`) und die Mischanteile `--mp-flaeche` (100 % tagsüber, 13 % abends) und `--mp-schrift` (100 % / 28 %).

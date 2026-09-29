@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
-import Icon from "../ui/Icon";
 import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { useErrungenschaften } from "../data/useErrungenschaften";
 import { useTagesphase } from "../utils/useTagesphase";
@@ -10,7 +9,7 @@ import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
 import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
-import { accentDark, accentSoft, cardBorder, fontHeading, hexZuRgba, shadow, textMain, textMuted } from "../ui/theme";
+import { accentSoft, cardBorder, fontHeading, hexZuRgba, textMain, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META, ATEM_META } from "../utils/dayItems";
 import { ATEM_START_KEY, atemZeitenHeute, uebungFuerKey } from "../utils/atemBibliothek";
 import { aktuelleSession } from "../data/useAtemSessions";
@@ -42,7 +41,6 @@ import WochenCheckKarte from "../ui/WochenCheckKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
-import TagebuchModal from "../ui/TagebuchModal";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
@@ -84,15 +82,6 @@ function gruppiereFuerAlsNaechstes(items, t, tLabel) {
 }
 
 // Konzept 4B: die Startseite ist ein knapper Tagesassistent + drei
-// Ordner-Kacheln (Alle Pläne / Archiv / Mehr) statt einer langen Liste
-// aus 17 Einzelkacheln — jede Kategorie liegt jetzt hinter einem Reiter
-// innerhalb dieser Ordner (siehe PlaeneView.jsx / PlanView.jsx).
-const ORDNER = [
-  { id: "schlaf", labelKey: "home.ordner.plaene.label", descKey: "home.ordner.plaene.desc", icon: "folder" },
-  { id: "archiv", labelKey: "home.ordner.archiv.label", descKey: "home.ordner.archiv.desc", icon: "archive" },
-  // „Mehr“ sitzt seit Design 2.0 (28.09.) in der Leiste unten.
-];
-
 // Morgen-/Abendroutine haben bewusst KEINEN KATEGORIE_META-Eintrag (siehe
 // PlaeneView.jsx/RoutineTabView.jsx: sonst tauchen sie als tote Einträge in
 // der Wochenübersicht-Legende auf) — dieselben Farben hier lokal dupliziert,
@@ -111,7 +100,7 @@ const ROUTINE_ICON = { morgenroutine: "sunrise", abendroutine: "moon" };
 const ROUTINE_TEXT = { morgenroutine: ROUTINE_META.morgenroutine.text, abendroutine: ROUTINE_META.abendroutine.text };
 
 
-export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll }) {
+export default function HomeView({ onOpenView, onOpenTraining }) {
   const { t, tLabel } = useT();
   const {
     userId,
@@ -206,7 +195,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // echten Schritte HIER auf der Startseite auf, statt zum Schritte-Editor
   // oder Tagesplan zu springen. null = zugeklappt, sonst "morgen"/"abend".
   const [expandedRoutine, setExpandedRoutine] = useState(null);
-  const [tagebuchOffen, setTagebuchOffen] = useState(false);
 
   // Tap auf die Trainingszeile in "Als Nächstes" soll direkt in den
   // Live-Start-Screen führen (Nutzerin-Korrektur 14.08.: eine reine
@@ -1356,86 +1344,9 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         </div>
       )}
 
-      <div className="mp-ordner-grid">
-        {ORDNER.map((o) => (
-          <button
-            key={o.id}
-            className="mp-tap"
-            onClick={() => onOpenView(o.id)}
-            style={{
-              textAlign: "left",
-              borderRadius: 18,
-              padding: "14px 10px",
-              cursor: "pointer",
-              background: "var(--mp-karte)",
-              boxShadow: shadow,
-              border: `1px solid ${cardBorder}`,
-            }}
-          >
-            <div style={{ marginBottom: 8 }}>
-              <Icon name={o.icon} size={22} color={accentDark} />
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{t(o.labelKey)}</div>
-            <div style={{ fontSize: 10.5, color: textMuted }}>{t(o.descKey)}</div>
-          </button>
-        ))}
-        {/* Tagebuch (13.09., Nutzerin-Vorgabe): gleichgroße Kachel wie die
-            Ordner oben, öffnet TagebuchModal.jsx. Der Text selbst verlässt
-            das Gerät nie in Richtung Supabase (Datenschutz-Vorgabe) —
-            Details dazu in TagebuchModal.jsx/tagebuchStorage.js. */}
-        <button
-          type="button"
-          className="mp-tap"
-          onClick={() => setTagebuchOffen(true)}
-          style={{
-            textAlign: "left",
-            borderRadius: 18,
-            padding: "14px 10px",
-            cursor: "pointer",
-            background: "var(--mp-karte)",
-            boxShadow: shadow,
-            border: `1px solid ${cardBorder}`,
-          }}
-        >
-          <div style={{ marginBottom: 8 }}>
-            <Icon name="book" size={22} color={accentDark} />
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Tagebuch</div>
-          <div style={{ fontSize: 10.5, color: textMuted }}>Frei schreiben</div>
-        </button>
-        {/* Denksport und Gemeinsam fokussieren stehen seit Design 2.0 (28.09.)
-            im Block „Spielen & Fokus“ unter den Quests. */}
-        {/* "Neues Protokoll" (13.09., Nutzerin-Vorgabe): ersetzt den
-            früheren schwebenden runden "+"-Knopf oben rechts (Fab.jsx) —
-            fiel dort kaum auf und führte wiederholt dazu, dass die
-            Nutzerin ihn nicht fand und die App für weniger vollständig
-            hielt, als sie ist. Jetzt als vierte Kachel direkt neben den
-            Ordnern, gleiche Größe/Form (nicht mehr rund, damit es nicht
-            wie ein deplatziertes Icon zwischen den eckigen Kacheln wirkt),
-            bewusst in Blau statt Weiß, damit sofort erkennbar bleibt, dass
-            sie etwas anderes tut als die drei Ordner. */}
-        {istAdminModus && (
-          <button
-            type="button"
-            className="mp-tap"
-            onClick={onNeuesProtokoll}
-            style={{
-              textAlign: "left",
-              borderRadius: 18,
-              padding: "14px 10px",
-              cursor: "pointer",
-              background: accentDark,
-              boxShadow: shadow,
-              border: "none",
-              color: "#fff",
-            }}
-          >
-            <div style={{ marginBottom: 8, fontSize: 22, fontWeight: 800, lineHeight: "22px" }}>+</div>
-            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>Neues Protokoll</div>
-            <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>Von vorn beginnen</div>
-          </button>
-        )}
-      </div>
+      {/* Design 2.0 (29.09., Nutzerin: „Leiste reicht, Kacheln unten weg“):
+          Alle Pläne, Archiv, Tagebuch und Neues Protokoll stehen jetzt oben
+          unter „Mehr“ (MehrView.jsx), erreichbar über die Leiste. */}
 
       {trainingFehler && (
         <div
@@ -1459,7 +1370,6 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         </div>
       )}
 
-      {tagebuchOffen && <TagebuchModal onClose={() => setTagebuchOffen(false)} onOpenArchiv={() => onOpenView("tagebuch")} />}
     </Shell>
   );
 }

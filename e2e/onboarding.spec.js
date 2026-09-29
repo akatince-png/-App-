@@ -116,7 +116,7 @@ test("Onboarding: kompletter Durchlauf von Willkommen bis zurück auf Home", asy
   await expect(page.getByText("Deine ersten 8 Wochen")).toBeVisible({ timeout: 10000 });
   for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Weiter", exact: true }).click();
   await page.getByRole("button", { name: "Alles klar – zur Startseite" }).click();
-  await expect(page.getByText("Tagebuch")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator("[data-home-kopf]")).toBeVisible({ timeout: 10000 });
 
   expect(fehler).toEqual([]);
 });
@@ -152,7 +152,8 @@ test("Onboarding (Coachee, kurz): ohne Bereichswahl über den Steckbrief zum Abs
 // Zwischenschirm (OnboardingWerteAktualisierenView.jsx).
 test("Neues Protokoll (bestehendes Konto): fragt vor dem Archivieren nach, zeigt den Stand des alten Protokolls", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html");
+  // Seit Design 2.0 (29.09.) sitzt „Neues Protokoll“ oben unter Mehr.
+  await page.goto("/e2e/harness/index.html#/mehr");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
 
@@ -168,7 +169,7 @@ test("Neues Protokoll (bestehendes Konto): fragt vor dem Archivieren nach, zeigt
   // "Abbrechen": kein Archivieren, keine Weiterleitung ins Formular —
   // bleibt auf Home.
   await page.getByRole("button", { name: "Abbrechen, beim aktuellen Protokoll bleiben" }).click();
-  await expect(page.getByText("Tagebuch")).toBeVisible();
+  await expect(page.locator("[data-home-kopf]")).toBeVisible();
   await expect(page.getByPlaceholder("z. B. Sommer 2026")).not.toBeVisible();
 
   expect(fehler).toEqual([]);
@@ -176,7 +177,8 @@ test("Neues Protokoll (bestehendes Konto): fragt vor dem Archivieren nach, zeigt
 
 test("Neues Protokoll (bestehendes Konto): nach Bestätigung überspringt Name & Quick-Win, fragt aber weiterhin nach Ziel & Grund", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html");
+  // Seit Design 2.0 (29.09.) sitzt „Neues Protokoll“ oben unter Mehr.
+  await page.goto("/e2e/harness/index.html#/mehr");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
   await expect(page.getByText("Neues Protokoll beginnen?")).toBeVisible();
@@ -219,7 +221,8 @@ test("Neues Protokoll (bestehendes Konto): nach Bestätigung überspringt Name &
 
 test("Neues Protokoll (bestehendes Konto): „Ja, kurz aktualisieren“ führt noch durch Profil & Ausgangslage", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html");
+  // Seit Design 2.0 (29.09.) sitzt „Neues Protokoll“ oben unter Mehr.
+  await page.goto("/e2e/harness/index.html#/mehr");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
   await page.getByRole("button", { name: "Ja, archivieren und neu beginnen" }).click();
@@ -247,7 +250,8 @@ test("Neues Protokoll (bestehendes Konto): „Ja, kurz aktualisieren“ führt n
 // dass getKiAktiv() jetzt false ist.
 test("Neues Protokoll (bestehendes Konto): „Alleine, ohne Aka“ unterdrückt das automatische KI-Popup auf den folgenden Seiten", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html");
+  // Seit Design 2.0 (29.09.) sitzt „Neues Protokoll“ oben unter Mehr.
+  await page.goto("/e2e/harness/index.html#/mehr");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
   await page.getByRole("button", { name: "Ja, archivieren und neu beginnen" }).click();

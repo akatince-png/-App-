@@ -464,6 +464,9 @@ export default function AuthenticatedApp() {
         onOpenLexikon={() => setView("lexikon")}
         onOpenAdmin={isAdmin ? () => setView("admin") : undefined}
         onOpenErfolge={() => setView("erfolge")}
+        onOpenView={setView}
+        onNeuesProtokoll={() => setView("neuesProtokollBestaetigen")}
+        istAdminModus={istAdminModus}
       />
     );
   } else if (view === "admin") {
@@ -504,7 +507,6 @@ export default function AuthenticatedApp() {
           setOffenesTrainingId(id);
           setView("training");
         }}
-        onNeuesProtokoll={() => setView("neuesProtokollBestaetigen")}
       />
     );
   }
@@ -517,7 +519,7 @@ export default function AuthenticatedApp() {
   // Design 2.0: feste Leiste unten – überall außer im geführten Onboarding
   // und in der Tour (auf großen Bildschirmen blendet CSS sie aus).
   const mitLeiste = view !== "form" && view !== "tour" && onboardingComplete;
-  const istDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px)").matches;
+  const istDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px) and (pointer: fine)").matches;
 
   // Einwilligung (28.09.): Coachees müssen einmal dem Datenschutz zustimmen,
   // bevor die App startet. Nicht für Admins und nicht im Verwalten-Modus.

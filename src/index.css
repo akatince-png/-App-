@@ -142,7 +142,10 @@ body {
 .mp-app-main {
   min-width: 0;
 }
-@media (min-width: 1024px) {
+/* Design 2.0 (29.09., Nutzerin am iPad: „immer noch ohne Leiste“): die
+   Seitenleiste nur noch am Computer mit Maus/Trackpad (pointer: fine);
+   Touch-Geräte wie das iPad bekommen auch quer die Leiste unten. */
+@media (min-width: 1024px) and (pointer: fine) {
   .mp-app-shell {
     display: flex;
     align-items: stretch;
@@ -671,7 +674,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .mp-mit-leiste .mp-akut-knopf {
   bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
 }
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (pointer: fine) {
   .mp-bottomnav {
     display: none;
   }

@@ -23,3 +23,21 @@ test("keine Leiste im Onboarding", async ({ page }) => {
   await page.waitForTimeout(800);
   await expect(page.locator("[data-bottomnav]")).toHaveCount(0);
 });
+
+// iPad quer (29.09., Nutzerin: „am iPad immer noch ohne Leiste“): auf
+// Touch-Geräten auch ab 1024 px die Leiste unten statt der Seitenleiste;
+// die früheren Kacheln unten auf Home stehen jetzt oben unter Mehr.
+test.describe("iPad quer", () => {
+  test.use({ viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: true });
+  test("Leiste unten statt Seitenleiste, Kacheln unter Mehr", async ({ page }) => {
+    await page.goto("/e2e/harness/index.html?beispiel=1#/home");
+    await expect(page.locator("[data-bottomnav]")).toBeVisible();
+    await expect(page.locator(".mp-app-sidebar")).toBeHidden();
+    await expect(page.locator(".mp-ordner-grid")).toHaveCount(0);
+    await page.locator("[data-bottomnav]").getByRole("button", { name: "Mehr" }).click();
+    const schnell = page.locator("[data-mehr-schnellzugriff]");
+    for (const name of [/Alle Pläne/, /Archiv/, /Tagebuch/, /Neues Protokoll/]) await expect(schnell.getByRole("button", { name })).toBeVisible();
+    await schnell.getByRole("button", { name: /Alle Pläne/ }).click();
+    await expect(page).toHaveURL(/#\/schlaf/);
+  });
+});

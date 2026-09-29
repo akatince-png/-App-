@@ -7,7 +7,8 @@ import { sammleKonsolenfehler } from "./helpers.js";
 
 test("Neues Protokoll: parallel starten führt zum Zusatzprotokoll-Formular und danach zu den Plänen", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html");
+  // Seit Design 2.0 (29.09.) sitzt „Neues Protokoll“ oben unter Mehr.
+  await page.goto("/e2e/harness/index.html#/mehr");
 
   await page.getByRole("button", { name: "Neues Protokoll" }).click();
   await expect(page.getByText("Neues Protokoll beginnen?")).toBeVisible();
