@@ -10,6 +10,7 @@ import ViewHeader from "../ui/ViewHeader";
 import { SignedPhoto } from "../ui/SignedPhoto";
 import { KATEGORIE_META } from "../utils/dayItems";
 import KategorieErinnerung from "../ui/KategorieErinnerung";
+import Umschalter from "../ui/Umschalter";
 import ItemVerlauf from "../ui/ItemVerlauf";
 import DosisBearbeitenPanel from "../ui/DosisBearbeitenPanel";
 import { supplementToRow } from "../data/useSupplementData";
@@ -144,27 +145,7 @@ export default function SupplementeView({ onHome, embedded = false }) {
         <KategorieErinnerung kategorie="supplemente" label="🔔 Erinnerungen" />
       </Card>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {UNTERTABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              flex: 1,
-              padding: "9px 0",
-              borderRadius: 10,
-              border: `1px solid ${tab === t.id ? accent : cardBorder}`,
-              background: tab === t.id ? accent : "var(--mp-karte)",
-              color: tab === t.id ? "#fff" : textMuted,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <Umschalter name="Supplemente-Bereich" wert={tab} onWahl={setTab} optionen={UNTERTABS.map((t) => [t.id, t.label])} />
 
       {tab === "supplemente" ? <SupplementeSection /> : <RezepteSection />}
     </>

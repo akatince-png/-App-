@@ -30,7 +30,7 @@ test("Kalender: direkt aus dem Plan und aus Mehr erreichbar", async ({ page }) =
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1#/home");
   await page.locator("[data-bottomnav]").getByRole("button", { name: "Plan" }).click();
-  await page.locator('[data-plan-reiter="kalender"]').click();
+  await page.getByRole("group", { name: "Tagesplan-Ansicht" }).getByRole("button", { name: /Kalender/ }).click();
   await expect(page).toHaveURL(/#\/kalender/);
   await page.locator("[data-bottomnav]").getByRole("button", { name: "Mehr" }).click();
   await page.locator("[data-mehr-schnellzugriff]").getByRole("button", { name: /Kalender/ }).click();

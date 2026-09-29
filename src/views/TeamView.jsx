@@ -3,10 +3,11 @@ import { Shell, TextArea, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import Profilbild from "../ui/Profilbild";
 import GruppenprotokollKarte from "../ui/GruppenprotokollKarte";
-import { accentDark, accentSoft, cardBorder, danger, hexZuRgba, logoVerlauf, nachtSchatten, nachtVerlauf, textMain, textMuted } from "../ui/theme";
+import { accentDark, accentSoft, cardBorder, danger, hexZuRgba, logoVerlauf, nachtSchatten, nachtVerlauf, textMuted } from "../ui/theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { levelAusPunkten } from "../utils/level";
 import { useAppData } from "../context/AppDataContext";
+import Umschalter from "../ui/Umschalter";
 import {
   WOCHENZIEL_PRO_PERSON,
   ligaHighlights,
@@ -39,33 +40,9 @@ const NEUIGKEIT_TEXT = {
   tagesraetsel: "hat das Tagesrätsel gelöst 🧩",
 };
 
+// Design 2.0 (29.09.): einheitlicher Umschalter (ui/Umschalter.jsx).
 function Reiter({ wert, setWert, optionen }) {
-  return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-      {optionen.map(([id, label]) => (
-        <button
-          key={id}
-          type="button"
-          className="mp-tap"
-          aria-pressed={wert === id}
-          onClick={() => setWert(id)}
-          style={{
-            border: "none",
-            borderRadius: 99,
-            padding: "7px 13px",
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            background: wert === id ? accentDark : "color-mix(in srgb, #F1F2F6 var(--mp-flaeche), var(--mp-karte))",
-            color: wert === id ? "#fff" : textMain,
-          }}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  );
+  return <Umschalter optionen={optionen} wert={wert} onWahl={setWert} />;
 }
 
 function MotivierenFeld({ name, onSenden, onFertig }) {

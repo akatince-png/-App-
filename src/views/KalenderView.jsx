@@ -6,6 +6,7 @@ import { useAppData } from "../context/AppDataContext";
 import { buildDayItems } from "../utils/dayItems";
 import { addDays, sameDay, toLocalISODate } from "../utils/dates";
 import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, bloeckeFuerTag, eigeneBereichMeta, hhmm, konflikte, konflikteFuerEintrag, monatsRaster, spaltenVerteilen } from "../utils/kalender";
+import Umschalter from "../ui/Umschalter";
 
 // Kalender „Mein Alltag“ (28.09., Vorschau freigegeben). Tag als Zeitleiste,
 // Woche als Stundenplan, Monat als Kalenderblatt. Alles aus der App erscheint
@@ -438,22 +439,17 @@ export default function KalenderView({ onHome }) {
   return (
     <Shell>
       <ViewHeader title="🗓️ Mein Alltag" onHome={onHome} />
-      <div data-kalender={ansicht} style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-        {[
+      <Umschalter
+        name="Kalender-Ansicht"
+        dataAttr={["data-kalender", ansicht]}
+        wert={ansicht}
+        onWahl={setAnsicht}
+        optionen={[
           ["tag", "Tag"],
           ["woche", "Woche"],
           ["monat", "Monat"],
-        ].map(([k, l]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setAnsicht(k)}
-            style={{ flex: 1, border: `1px solid ${ansicht === k ? "#1B2350" : cardBorder}`, background: ansicht === k ? "#1B2350" : "var(--mp-karte)", color: ansicht === k ? "#fff" : textMain, borderRadius: 12, padding: "8px 0", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+        ]}
+      />
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <button type="button" aria-label="Zurück blättern" onClick={() => blaettern(-1)} style={pfeil}>
           ‹

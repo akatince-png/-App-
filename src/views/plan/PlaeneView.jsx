@@ -6,6 +6,7 @@ import { cardBorder, textMuted } from "../../ui/theme";
 import { PLAENE_TABS } from "../../constants";
 import { KATEGORIE_META, ROUTINE_META } from "../../utils/dayItems";
 import Icon from "../../ui/Icon";
+import { ChipReihe } from "../../ui/Umschalter";
 import SchlafView from "../SchlafView";
 import HydrationView from "../HydrationView";
 import TageslichtView from "../TageslichtView";
@@ -108,11 +109,10 @@ function ListenEintrag({ eintrag, onClick }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "13px 16px",
-        borderRadius: 14,
-        border: `1px solid ${cardBorder}`,
-        background: "var(--mp-karte)",
-        marginBottom: 8,
+        padding: "12px 4px",
+        border: "none",
+        borderBottom: `1px solid ${cardBorder}`,
+        background: "transparent",
         cursor: "pointer",
       }}
     >
@@ -154,7 +154,7 @@ export default function PlaeneView({
 
   return (
     <Shell bereich={TAB_ZU_KATEGORIE[planeTab]}>
-      <ViewHeader title="Deine aktiven Systeme" onHome={onHome} />
+      <ViewHeader title="Deine Pläne" onHome={onHome} />
 
       {/* Bug-Fix (12.09., Nutzerinnen-Vorgabe): die drei Bereiche unten
           (Routinen/Pläne/Nachvollziehen) hatten bisher nur eine Textzeile
@@ -166,49 +166,16 @@ export default function PlaeneView({
 
       {zeigeZusatzprotokolle && <ZusatzprotokolleKarte onNeu={onZusatzprotokollNeu} onEintraegeHinzufuegen={onZusatzEintraegeHinzufuegen} />}
 
-      {/* Routinen bewusst VOR den 9 Reitern (Nutzerinnen-Vorgabe, 29.07.:
-          Priorität) — nicht nachträglich angehängt. */}
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Routinen</div>
-        {ROUTINEN_EINTRAEGE.map((r) => (
-          <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
-        ))}
-      </Card>
-
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Pläne</div>
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-          {PLAENE_TABS.map((t) => {
-            const dot = KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || EIGENE_TAB_FARBE[t.id] || "#64748B";
-            const aktiv = planeTab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setPlaneTab(t.id)}
-                style={{
-                  flex: "1 1 30%",
-                  padding: "9px 4px",
-                  borderRadius: 10,
-                  border: `1px solid ${aktiv ? dot : cardBorder}`,
-                  background: aktiv ? dot : "var(--mp-karte)",
-                  color: aktiv ? "#fff" : textMuted,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 5,
-                }}
-              >
-                <Icon name={t.icon} size={14} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </Card>
+      {/* Design 2.0 (29.09., „ganzes Hauptmenü moderner“): statt zwei großer
+          Menü-Karten oben eine wischbare Chip-Zeile – der gewählte Plan steht
+          sofort darunter. Routinen & Co. als ruhige Liste unter dem Inhalt. */}
+      <ChipReihe
+        name="Pläne"
+        wert={planeTab}
+        onWahl={setPlaneTab}
+        renderIcon={(icon) => <Icon name={icon} size={15} />}
+        optionen={PLAENE_TABS.map((t) => ({ id: t.id, label: t.label, icon: t.icon, farbe: KATEGORIE_META[TAB_ZU_KATEGORIE[t.id]]?.dot || EIGENE_TAB_FARBE[t.id] || "#64748B" }))}
+      />
 
       <div style={{ marginBottom: 20 }}>
         <Aktiv
@@ -224,6 +191,13 @@ export default function PlaeneView({
           onNavigateKategorie={setPlaneTab}
         />
       </div>
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Routinen & mehr</div>
+        {ROUTINEN_EINTRAEGE.map((r) => (
+          <ListenEintrag key={r.id} eintrag={r} onClick={() => setPlaneTab(r.id)} />
+        ))}
+      </Card>
 
       <Card>
         <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Nachvollziehen</div>

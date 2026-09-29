@@ -24,6 +24,7 @@ import DenkpauseNudge from "../ui/DenkpauseNudge";
 import BildTagesplan from "../ui/BildTagesplan";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import TagesHinweise from "../ui/TagesHinweise";
+import Umschalter from "../ui/Umschalter";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -688,38 +689,19 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         />
       )}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {/* Kalender als dritter Reiter (29.09., Nutzerin: „Kalender muss
-            leichter einsehbar sein, nicht zu tief versteckt“) – öffnet
-            „Mein Alltag“ direkt. */}
-        {[
-          { id: "tag", label: "Tag" },
-          { id: "woche", label: "Woche" },
-          { id: "kalender", label: "📅 Kalender" },
-        ].map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className="mp-tap"
-            data-plan-reiter={t.id}
-            onClick={() => (t.id === "kalender" ? (window.location.hash = "#/kalender") : setModus(t.id))}
-            style={{
-              flex: 1,
-              minHeight: 44,
-              padding: "9px 0",
-              borderRadius: 13,
-              border: `1px solid ${modus === t.id ? accent : cardBorder}`,
-              background: modus === t.id ? accent : "var(--mp-karte)",
-              color: modus === t.id ? "#fff" : textMuted,
-              fontSize: 13.5,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {/* Kalender als dritter Reiter (29.09., Nutzerin: „Kalender muss
+          leichter einsehbar sein, nicht zu tief versteckt“) – öffnet
+          „Mein Alltag“ direkt. Einheitlicher Umschalter (ui/Umschalter.jsx). */}
+      <Umschalter
+        name="Tagesplan-Ansicht"
+        wert={modus}
+        onWahl={(id) => (id === "kalender" ? (window.location.hash = "#/kalender") : setModus(id))}
+        optionen={[
+          ["tag", "Tag"],
+          ["woche", "Woche"],
+          ["kalender", "📅 Kalender"],
+        ]}
+      />
 
       {modus === "tag" && (
         <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto" }}>

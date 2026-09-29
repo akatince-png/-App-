@@ -36,10 +36,10 @@ export default function AchtWochenPlan({ aktuell = 0, start = null }) {
             {w === 5 && <EtappenKopf farbe="#2E9C86" titel="Festigen" text="Nichts Neues muss – dranbleiben" />}
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 22, flexShrink: 0, paddingTop: 16 }}>
-                <span style={{ width: 14, height: 14, borderRadius: 7, background: vorbei ? "#5CC3A8" : jetzt ? "#F4C542" : einf ? "#1B2350" : "#5CC3A8", boxShadow: jetzt ? "0 0 0 4px rgba(244,197,66,.35)" : "none", fontSize: 9, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ width: 14, height: 14, borderRadius: 7, background: vorbei ? "#5CC3A8" : jetzt ? "var(--mp-accent)" : einf ? "#3E63D6" : "#5CC3A8", boxShadow: jetzt ? "0 0 0 4px var(--mp-accent-soft)" : "none", fontSize: 9, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                   {vorbei ? "✓" : ""}
                 </span>
-                {w < 8 && <span style={{ flex: 1, width: 3, background: w < 4 ? "#1B2350" : "#5CC3A8", opacity: 0.25, borderRadius: 2, marginTop: 2 }} />}
+                {w < 8 && <span style={{ flex: 1, width: 3, background: w < 4 ? "#3E63D6" : "#5CC3A8", opacity: 0.25, borderRadius: 2, marginTop: 2 }} />}
               </div>
               <div
                 data-woche={w}
@@ -48,9 +48,12 @@ export default function AchtWochenPlan({ aktuell = 0, start = null }) {
                   marginBottom: 8,
                   borderRadius: 16,
                   padding: "10px 12px",
-                  background: einf ? "#1B2350" : "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))",
-                  color: einf ? "#fff" : textMain,
-                  boxShadow: jetzt ? "0 0 0 3px #F4C542" : "none",
+                  // Design 2.0 (29.09., „moderner“): helle Karten statt dunkler Blöcke;
+                  // Einführung mit blauem, Erhaltung mit grünem Streifen links.
+                  background: einf ? "var(--mp-karte)" : "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))",
+                  color: textMain,
+                  borderLeft: `4px solid ${einf ? "#3E63D6" : "#2E9C86"}`,
+                  boxShadow: jetzt ? "0 0 0 2px var(--mp-accent), var(--mp-schatten)" : "var(--mp-schatten)",
                   opacity: vorbei ? 0.75 : 1,
                 }}
               >
@@ -63,13 +66,13 @@ export default function AchtWochenPlan({ aktuell = 0, start = null }) {
                     </span>
                     <span style={{ display: "block", fontSize: 15, fontWeight: 900, lineHeight: 1.2 }}>{info.titel}</span>
                   </span>
-                  {jetzt && <span style={{ fontSize: 10.5, fontWeight: 900, color: "#1B2350", background: "#F4C542", borderRadius: 99, padding: "2px 8px" }}>JETZT</span>}
-                  {vorbei && <span style={{ fontSize: 11, fontWeight: 800, color: einf ? "#8FE0C9" : "#2E9C86" }}>✓</span>}
+                  {jetzt && <span style={{ fontSize: 10.5, fontWeight: 900, color: "#fff", background: "var(--mp-accent)", borderRadius: 99, padding: "2px 8px" }}>JETZT</span>}
+                  {vorbei && <span style={{ fontSize: 11, fontWeight: 800, color: "#2E9C86" }}>✓</span>}
                 </div>
                 {einf ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
                     {bausteineIn(w).map((b) => (
-                      <span key={b.key} style={{ fontSize: 11.5, fontWeight: 700, background: "rgba(255,255,255,.13)", borderRadius: 99, padding: "3px 8px" }}>
+                      <span key={b.key} style={{ fontSize: 11.5, fontWeight: 700, background: "color-mix(in srgb, #EEF1F8 var(--mp-flaeche), var(--mp-rand-dunkel))", borderRadius: 99, padding: "3px 8px" }}>
                         {b.icon} {b.name}
                       </span>
                     ))}
@@ -78,7 +81,7 @@ export default function AchtWochenPlan({ aktuell = 0, start = null }) {
                   <div style={{ fontSize: 12.5, color: "color-mix(in srgb, #1E4D40 var(--mp-schrift), var(--mp-schrift-hell))", lineHeight: 1.45, marginTop: 5 }}>{info.text}</div>
                 )}
                 {GESPRAECH.includes(w) && (
-                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 7, color: einf ? "#F4C542" : "color-mix(in srgb, #B5501F var(--mp-schrift), var(--mp-schrift-hell))" }}>💬 Am Ende: Gespräch mit deinem Coach</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 7, color: "color-mix(in srgb, #B5501F var(--mp-schrift), var(--mp-schrift-hell))" }}>💬 Am Ende: Gespräch mit deinem Coach</div>
                 )}
               </div>
             </div>

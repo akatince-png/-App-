@@ -7,14 +7,14 @@ test("Zurück-Knopf geht eine Seite zurück, nicht zur Startseite", async ({ pag
   await page.goto("/e2e/harness/index.html#/home");
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
   await nav.getByRole("button", { name: "Pläne" }).click();
-  await expect(page.getByText("Deine aktiven Systeme")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deine Pläne" })).toBeVisible();
   // Direkt nach der Startseite gibt es nur ⌂ (zurück wäre dasselbe).
   await expect(page.getByRole("button", { name: "Eine Seite zurück" })).toHaveCount(0);
   await page.getByRole("button", { name: /Gewohnheiten/ }).first().click();
   const zurueck = page.getByRole("button", { name: "Eine Seite zurück" });
   await expect(zurueck).toBeVisible();
   await zurueck.click();
-  await expect(page.getByText("Deine aktiven Systeme")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deine Pläne" })).toBeVisible();
   await expect(page).toHaveURL(/#\/(wochenuebersicht|plaene|tageslicht|[a-z-]+)$/);
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });

@@ -212,6 +212,16 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Hauptmenü einheitlich modern (29.09., live)
+Nutzerin: „modernen Stil für das gesamte Hauptmenü, selbstständig, nicht Stück für Stück“. Dafür zentrale Bausteine in `ui/Umschalter.jsx` + `index.css`:
+- **`Umschalter`** (`.mp-segment`): hell hinterlegte Leiste, aktive Wahl als weißes Feld – für wenige Optionen. Eingesetzt: Tagesplan (Tag · Woche · 📅 Kalender, Gruppe „Tagesplan-Ansicht“), Kalender (Tag/Woche/Monat, `data-kalender`), Team/Rangliste (Mein Team/Rangliste, Personen/Teams, Woche/Monat/Gesamt).
+- **`ChipReihe`** (`.mp-chips`): wischbare Chip-Zeile für viele Optionen. Eingesetzt: Archiv-Reiter (PlanView), Pläne (PlaeneView, aktive Chip in Bereichsfarbe).
+- **`Schalter`** (`.mp-schalter`, role=switch): Ein/Aus im iOS-Stil – ersetzt „Aktiv/Inaktiv“ bei den Bausteinen unter Mehr.
+- **Pläne-Seite** heißt „Deine Pläne“: statt zwei großer Menü-Karten oben nur die Chip-Zeile, Inhalt direkt darunter; „Routinen & mehr“ und „Nachvollziehen“ als ruhige Listen unter dem Inhalt.
+- **Kernprogramm-Übersicht** (`AchtWochenPlan`): helle Karten mit Farbstreifen statt dunkler Blöcke, „JETZT“ in Akzentfarbe (Onboarding-Vorstellung nutzt `EtappenBalken hell={false}` weiter).
+- **Pill** (primitives) ohne Rahmen, weich hinterlegt – wirkt überall, wo Auswahl-Pillen genutzt werden.
+Neue Reiter bitte immer mit diesen Bausteinen bauen, nicht mehr mit eigenen Rahmen-Knöpfen.
+
 ### Startseite schlicht + Aufteilung Plan/Mehr (29.09., live)
 Nutzerin: Auf die Startseite nur Kernprogramm, Gehirn + Körper, Wasser-, Spielen- und „Grad nicht gut?“-Knopf sowie Tages-Quests; „Aufteilen“ (Tagesaufgaben → Plan, Rest → Mehr); Coach-Nachricht als gut sichtbare Sprechblase; Denksport und Rätsel zusammenlegen; Kalender leichter erreichbar.
 - **HomeView:** `STARTSEITE_SCHLICHT = true` blendet alle übrigen Blöcke aus (Code bleibt, um zurückschalten zu können). Neu `data-schnellknoepfe`: drei große Verlauf-Knöpfe; „Spielen“ klappt `data-spiele-auswahl` auf (Denksport & Rätsel · Gemeinsam fokussieren).

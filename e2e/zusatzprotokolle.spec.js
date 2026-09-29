@@ -40,6 +40,6 @@ test("Pläne zeigen im Admin-Modus die Zusatzprotokolle-Karte", async ({ page })
 test("Pläne zeigen Coachees keine Zusatzprotokolle-Karte", async ({ page }) => {
   await page.goto("/e2e/harness/index.html?isAdmin=0");
   await page.getByRole("navigation", { name: "Hauptnavigation" }).getByRole("button", { name: "Pläne" }).click();
-  await expect(page.getByText("Deine aktiven Systeme")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deine Pläne" })).toBeVisible();
   await expect(page.getByText("Zusatzprotokolle", { exact: true })).not.toBeVisible();
 });

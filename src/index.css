@@ -621,6 +621,97 @@ input[type="time"]::-webkit-date-and-time-value {
   50% { transform: translateY(-3px); }
 }
 
+/* Design 2.0 (29.09.): einheitliche Reiter für die ganze App (ui/Umschalter.jsx).
+   .mp-segment = wenige Optionen, .mp-chips = viele Optionen, wischbar. */
+.mp-segment {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, #e9ecf3 var(--mp-flaeche), var(--mp-rand-dunkel));
+}
+.mp-segment > button {
+  flex: 1;
+  min-height: 40px;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 6px;
+  background: transparent;
+  color: var(--mp-text-muted);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mp-segment > button[aria-pressed="true"] {
+  background: var(--mp-karte);
+  color: var(--mp-text);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.14);
+}
+.mp-schalter {
+  width: 50px;
+  height: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 99px;
+  padding: 3px;
+  display: flex;
+  justify-content: flex-start;
+  background: color-mix(in srgb, #c9ced9 var(--mp-flaeche), var(--mp-rand-dunkel));
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.mp-schalter[aria-checked="true"] {
+  justify-content: flex-end;
+  background: var(--mp-accent);
+}
+.mp-schalter > span {
+  width: 24px;
+  height: 24px;
+  border-radius: 99px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.mp-schalter:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.mp-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px 14px;
+  padding: 2px 16px 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mp-chips::-webkit-scrollbar {
+  display: none;
+}
+.mp-chips > button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 99px;
+  padding: 9px 15px;
+  background: var(--mp-karte);
+  color: var(--mp-text);
+  box-shadow: var(--mp-schatten);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mp-chips > button[aria-pressed="true"] {
+  background: var(--mp-accent);
+  color: #fff;
+}
+
 /* Design 2.0: feste Leiste unten (ui/BottomNav.jsx). Schwebend mit weichem
    Schatten, abends dunkel (data-tagesphase="nacht"). Ab 1024 px übernimmt
    die Seitenleiste. */

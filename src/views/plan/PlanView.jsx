@@ -1,7 +1,6 @@
 import React from "react";
 import { Shell } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { accent, cardBorder, textMuted } from "../../ui/theme";
 import StatistikTab from "./StatistikTab";
 import ProfilTab from "./ProfilTab";
 import CommunityTab from "./CommunityTab";
@@ -10,6 +9,7 @@ import ErfolgeTab from "./ErfolgeTab";
 import TagebuchTab from "./TagebuchTab";
 import ProtokollLogView from "../ProtokollLogView";
 import BlutzuckerView from "../BlutzuckerView";
+import { ChipReihe } from "../../ui/Umschalter";
 
 const TABS = [
   { id: "verlauf", label: "Protokolle" },
@@ -31,27 +31,7 @@ export default function PlanView({ planTab, setPlanTab, onHome }) {
     <Shell>
       <ViewHeader title="Archiv" onHome={onHome} />
 
-      <div style={{ display: "flex", gap: 5, marginBottom: 16, flexWrap: "wrap" }}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setPlanTab(t.id)}
-            style={{
-              flex: "1 1 30%",
-              padding: "9px 0",
-              borderRadius: 10,
-              border: `1px solid ${planTab === t.id ? accent : cardBorder}`,
-              background: planTab === t.id ? accent : "var(--mp-karte)",
-              color: planTab === t.id ? "#fff" : textMuted,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <ChipReihe name="Archiv-Bereiche" optionen={TABS} wert={planTab} onWahl={setPlanTab} />
 
       {planTab === "verlauf" && <ProtokollLogView embedded />}
       {planTab === "statistik" && <StatistikTab />}

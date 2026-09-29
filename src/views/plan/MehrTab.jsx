@@ -10,6 +10,7 @@ import { CATEGORY_STEPS } from "../onboarding/categorySteps";
 import VorlaufFeld from "../../ui/VorlaufFeld";
 import AnsichtUmschalter from "../../ui/AnsichtUmschalter";
 import AppTempoKarte from "../../ui/AppTempoKarte";
+import { Schalter } from "../../ui/Umschalter";
 import DatenschutzKarte from "../../ui/DatenschutzKarte";
 import AussehenKarte from "../../ui/AussehenKarte";
 
@@ -213,7 +214,7 @@ function AktuellesProtokoll() {
                 >
                   📌
                 </button>
-                <Pill label={aktiv ? "Aktiv" : "Inaktiv"} selected={aktiv} onClick={() => umschalten(b)} />
+                <Schalter an={aktiv} label={`${b.label} ${aktiv ? "aktiv" : "inaktiv"}`} onClick={() => umschalten(b)} />
               </div>
             </div>
           );

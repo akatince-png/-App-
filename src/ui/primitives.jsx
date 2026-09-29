@@ -203,8 +203,9 @@ export function Pill({ label, selected, onClick }) {
         fontSize: 12.5,
         fontWeight: 600,
         minHeight: 38,
-        border: `1px solid ${selected ? bereichAccent : cardBorder}`,
-        background: selected ? bereichAccent : "var(--mp-karte)",
+        // Design 2.0 (29.09.): ohne Rahmen, weich hinterlegt – wie die Chips.
+        border: "none",
+        background: selected ? bereichAccent : "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))",
         color: selected ? "#fff" : textMain,
         fontFamily: "inherit",
         cursor: "pointer",
