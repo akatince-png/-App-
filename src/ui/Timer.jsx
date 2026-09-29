@@ -172,9 +172,12 @@ export default function Timer({
       if (vorwarnungSek && !vorgewarntRef.current && remaining <= vorwarnungSek * 1000 && remaining > 0) {
         vorgewarntRef.current = true;
         playBeep(1);
+        navigator.vibrate?.(200);
       }
       if (remaining <= 0) {
         playBeep(2);
+        // Nutzerin (29.09.): am Ende auch vibrieren, falls man gerade trödelt.
+        navigator.vibrate?.([300, 150, 300]);
         elapsedRef.current = 0;
         anchorRef.current = null;
         setStatus("done");

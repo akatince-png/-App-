@@ -212,6 +212,13 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Stoppuhr in der Tracking-Phase erzwungen + Vibration (29.09., live)
+Nutzerin: „Ich habe die Morgenroutine nur bestätigt, es lief keine Stoppuhr.“ Befund in ihren Daten: Schritte über die Abhak-Liste (`RoutineHeuteChecklist`) bestätigt → Durchlauf ohne Zeiten. Änderungen:
+- **`utils/messwoche.js`:** neu `istNachmessen(stand)` (gesamtWoche 7) und `istMessPhase(stand)` (Woche 1 oder 7); `messTag` zählt in Woche 7 ab Wochenbeginn. **Woche 7 „Nachmessen“ lief vorher gar nicht mit Stoppuhr** (nur im Fahrplan beschrieben) – jetzt schon (`RoutineAblauf` nutzt `istMessPhase`, Titel „Nachmessen“).
+- **Abhak-Liste in Mess-Phase:** Hinweis `data-mess-hinweis`; „Bestätigen“ startet über `onStoppuhrStart` den geführten Ablauf (RoutineTabView, GewohnheitenView, HomeView). Manueller Weg bleibt: „Ohne Stoppuhr abhaken“. „▶ Mitmachen“ (Atem, feste 2 Min.) bleibt – dort gibt es nichts zu messen. Rückblick auf vergangene Tage (`datum`) unverändert.
+- **Timer (Countdown):** Vorwarnung + Ende jetzt auch mit `navigator.vibrate` (Android/Browser; iPhone-Safari kann nicht vibrieren – dafür bräuchte die iOS-App das Capacitor-Haptics-Plugin, offen).
+- Tests: `messwoche.test.js` (Nachmessen), `e2e/kernprogramm.spec.js` (Abhak-Liste → Stoppuhr).
+
 ### Routine-Start direkt auf der Startseite (29.09., live)
 Nutzerin: „Beim Antippen der Morgenroutine läuft keine Stoppuhr, unser Konzept ist nicht wiederzuerkennen.“ Ursache: Seit der schlichten Startseite gab es dort keinen Start mehr; die Stoppuhr (RoutineAblauf) lief nur über Plan → „▶ Starten“ oder die Routine-Seite. Jetzt hat die `KernprogrammKarte` unten einen großen Knopf **„▶ Morgenroutine starten“** (bis 14 Uhr) bzw. **„▶ Abendroutine starten“** (ab 14 Uhr, `aktuelleRoutine()`), mit „N Schritte · mit Stoppuhr“. Er öffnet den geführten Ablauf direkt in `HomeView` (`ablaufRoutine`-State wie im Tagesplan). Ist die Routine heute durch: „✓ … heute geschafft“ (`data-routine-geschafft`). Nicht angezeigt bei fälligem Coach-Gespräch oder ohne Schritte. Tests: `e2e/kernprogramm.spec.js` (2 neue). Hinweis zur Admin-Seite: „🧭 Einrichten“ neben jeder Person ist die Einrichtungs-Checkliste, nicht das 8-Wochen-Programm.
 

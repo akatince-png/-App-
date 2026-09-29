@@ -331,7 +331,7 @@ export default function RoutineTabView({ routine, embedded = false, onHome }) {
           vermerkt ist, was zu tun ist, und daneben, wie ich das
           bestätige"). Die leere-Zustand-Meldung übernimmt die Komponente
           selbst, kein doppelter Hinweis hier nötig. */}
-      <RoutineHeuteChecklist routine={routine} />
+      <RoutineHeuteChecklist routine={routine} onStoppuhrStart={() => setAblaufAktiv(true)} />
 
       <button
         type="button"

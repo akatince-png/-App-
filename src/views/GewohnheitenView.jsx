@@ -348,7 +348,7 @@ export default function GewohnheitenView({ onHome }) {
         {/* Nutzerin-Vorgabe (12.09.): direkt zeigen, was heute ansteht, mit
             Bestätigungspunkt je Schritt — kein Umweg über eine Bearbeiten-
             Maske. Dieselbe Checkliste wie auf der Startseite. */}
-        <RoutineHeuteChecklist routine="morgen" />
+        <RoutineHeuteChecklist routine="morgen" onStoppuhrStart={setAblaufRoutine} />
       </Card>
 
       <Card style={{ marginBottom: 16 }}>
@@ -358,7 +358,7 @@ export default function GewohnheitenView({ onHome }) {
           return name && <div style={{ fontSize: 11.5, color: textMuted, marginBottom: 8 }}>🎵 Playlist: {name}</div>;
         })()}
         <PrimaryButton onClick={() => setAblaufRoutine("abend")}>▶️ Abendroutine starten</PrimaryButton>
-        <RoutineHeuteChecklist routine="abend" />
+        <RoutineHeuteChecklist routine="abend" onStoppuhrStart={setAblaufRoutine} />
       </Card>
 
       <button

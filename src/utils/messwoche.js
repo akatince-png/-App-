@@ -11,10 +11,23 @@ export function istMesswoche(stand) {
   return !!stand?.aktiv && stand.etappe?.art === "einfuehrung" && stand.einfuehrungWoche === 1 && !stand.erhaltung;
 }
 
-// Tag der Messwoche (1–7) oder null.
+// Woche 7 „Nachmessen“ (29.09., Nutzerin: in der Tracking-Phase muss jede
+// Einheit gestoppt werden): Routinen laufen wieder mit Stoppuhr, zum
+// Vergleich mit Woche 1.
+export function istNachmessen(stand) {
+  return !!stand?.aktiv && stand.gesamtWoche === 7;
+}
+
+// Messwoche ODER Nachmessen: dann Stoppuhr statt Countdown.
+export function istMessPhase(stand) {
+  return istMesswoche(stand) || istNachmessen(stand);
+}
+
+// Tag der Messwoche bzw. der Nachmess-Woche (1–7) oder null.
 export function messTag(stand, heute) {
-  if (!istMesswoche(stand)) return null;
-  const t = Math.round((new Date(`${heute}T12:00:00`) - new Date(`${stand.etappe.start}T12:00:00`)) / 86400000) + 1;
+  if (!istMessPhase(stand)) return null;
+  const versatz = istNachmessen(stand) ? ((stand.woche || 1) - 1) * 7 : 0;
+  const t = Math.round((new Date(`${heute}T12:00:00`) - new Date(`${stand.etappe.start}T12:00:00`)) / 86400000) + 1 - versatz;
   return t >= 1 && t <= 7 ? t : null;
 }
 

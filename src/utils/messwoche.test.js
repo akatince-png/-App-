@@ -1,8 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { istMesswoche, messTag, messAuswertung, vorschlagMin, trainingAuswertung } from "./messwoche";
+import { istMesswoche, istMessPhase, istNachmessen, messTag, messAuswertung, vorschlagMin, trainingAuswertung } from "./messwoche";
 
 const stand = { aktiv: true, etappe: { art: "einfuehrung", start: "2026-09-28" }, einfuehrungWoche: 1, erhaltung: false };
 const lauf = (datum, gesamtMin, schritte) => ({ routine: "morgen", datum, gestartetUm: `${datum}T06:00:00Z`, abgeschlossenUm: new Date(new Date(`${datum}T06:00:00Z`).getTime() + gesamtMin * 60000).toISOString(), schritte });
+
+describe("Nachmessen (Woche 7)", () => {
+  it("misst in Woche 7 wieder mit Stoppuhr, zählt die Tage ab Wochenbeginn", () => {
+    const w7 = { aktiv: true, etappe: { art: "erhaltung", start: "2026-10-26" }, woche: 3, gesamtWoche: 7, einfuehrungWoche: 4, erhaltung: true };
+    expect(istMesswoche(w7)).toBe(false);
+    expect(istNachmessen(w7)).toBe(true);
+    expect(istMessPhase(w7)).toBe(true);
+    expect(messTag(w7, "2026-11-09")).toBe(1);
+    expect(messTag(w7, "2026-11-15")).toBe(7);
+    expect(istMessPhase({ ...w7, gesamtWoche: 6, woche: 2 })).toBe(false);
+  });
+});
 
 describe("messwoche", () => {
   it("erkennt die Messwoche und den Tag", () => {

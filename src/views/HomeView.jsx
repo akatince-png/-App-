@@ -951,7 +951,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                     </div>
                     {routineKey && expandedRoutine === routineKey && (
                       <div style={{ padding: "0 12px 10px" }}>
-                        <RoutineHeuteChecklist routine={routineKey} />
+                        <RoutineHeuteChecklist routine={routineKey} onStoppuhrStart={setAblaufRoutine} />
                       </div>
                     )}
                   </React.Fragment>

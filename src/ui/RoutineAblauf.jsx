@@ -11,7 +11,7 @@ import { verspaetungHinweis } from "../utils/routineVerspaetung";
 import TagebuchFormular from "./TagebuchFormular";
 import { istTagebuchSchritt } from "../utils/tagebuch";
 import { toLocalISODate } from "../utils/dates";
-import { istMesswoche, messTag } from "../utils/messwoche";
+import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -43,7 +43,8 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   const [tagebuchNachher, setTagebuchNachher] = useState(false);
   // Messwoche (26.09.): Woche 1 des AKA-Coachings misst statt vorzugeben –
   // Stoppuhr je Schritt statt Countdown, Hauptuhr ab dem Aufwachen.
-  const messmodus = istMesswoche(kernStand);
+  const messmodus = istMessPhase(kernStand);
+  const messName = istNachmessen(kernStand) ? "Nachmessen" : "Messwoche";
   const messTagNr = messTag(kernStand, heute);
   const weckzeit = routineEinstellungen?.[routine]?.startZeit || "";
   const weckMs = weckzeit ? new Date(`${heute}T${weckzeit}:00`).getTime() : null;
@@ -140,7 +141,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       <Shell>
         <Card style={{ textAlign: "center" }}>
           <div style={{ fontSize: 30 }}>📏</div>
-          <div style={{ fontSize: 17, fontWeight: 900, margin: "6px 0 4px" }}>Messwoche{messTagNr ? ` · Tag ${messTagNr} von 7` : ""}</div>
+          <div style={{ fontSize: 17, fontWeight: 900, margin: "6px 0 4px" }}>{messName}{messTagNr ? ` · Tag ${messTagNr} von 7` : ""}</div>
           <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 14 }}>Wir messen nur, wie lange deine Morgenroutine wirklich dauert – nichts muss schnell gehen. Ab wann soll die Hauptuhr laufen?</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <PrimaryButton onClick={() => ab(weckMs)}>⏰ Ab dem Wecker ({weckzeit})</PrimaryButton>
@@ -208,7 +209,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       </div>
       <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 8 }}>
         {ROUTINE_EMOJI[routine]} {ROUTINE_LABEL[routine]} · Schritt {index + 1} von {schritte.length}
-        {messmodus && ` · 📏 Messwoche${messTagNr ? ` Tag ${messTagNr}` : ""}`}
+        {messmodus && ` · 📏 ${messName}${messTagNr ? ` Tag ${messTagNr}` : ""}`}
       </div>
       {musikFehler && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>

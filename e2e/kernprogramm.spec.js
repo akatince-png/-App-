@@ -105,3 +105,19 @@ test("Startseite: abends bietet die Karte die Abendroutine an", async ({ page })
   await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&kern=1#/home");
   await expect(page.getByRole("button", { name: /Abendroutine starten/ })).toBeVisible();
 });
+
+// Nutzerin (29.09.): „Ich habe nur bestätigt, es lief keine Stoppuhr.“ In der
+// Messwoche führt „Bestätigen“ in der Abhak-Liste deshalb in den Ablauf mit Uhr;
+// ohne Uhr abhaken bleibt als manueller Weg.
+test("Messwoche: Bestätigen in der Abhak-Liste startet die Stoppuhr, ohne Uhr bleibt möglich", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 29, 7, 10));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1#/routinen");
+  const hinweis = page.locator("[data-mess-hinweis]").first();
+  await expect(hinweis).toContainText("Messwoche");
+  await page.getByRole("button", { name: "Bestätigen" }).first().click();
+  await expect(page.getByRole("button", { name: /Ab jetzt|Schritt fertig/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Routine abbrechen" }).click();
+  await page.getByRole("button", { name: "Ohne Stoppuhr abhaken" }).first().click();
+  await page.getByRole("button", { name: "Bestätigen" }).first().click();
+  await expect(page.getByText("Gesamtzeit", { exact: false })).toHaveCount(0);
+});
