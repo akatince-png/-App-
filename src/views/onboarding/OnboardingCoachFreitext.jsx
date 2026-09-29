@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
-import { accentDark, danger, hexZuRgba, textMain, textMuted } from "../../ui/theme";
+import { danger, hexZuRgba, textMain, textMuted } from "../../ui/theme";
 import CoachOrb from "../../ui/CoachOrb";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import VorlesenToggle from "../../ui/VorlesenToggle";

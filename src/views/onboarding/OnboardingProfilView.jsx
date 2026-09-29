@@ -1,6 +1,6 @@
 import React from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
-import { accentDark, accentSoft, cardBorder, textMuted } from "../../ui/theme";
+import { accentSoft, cardBorder, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import PersoenlicheDatenCard from "../../ui/PersoenlicheDatenCard";
 import WoechentlicheCheckinsCard from "../../ui/WoechentlicheCheckinsCard";

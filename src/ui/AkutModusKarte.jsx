@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, Pill, PrimaryButton, TextArea } from "./primitives";
-import { accentDark, accentSoft, textMuted, danger } from "./theme";
+import { accentSoft, textMuted, danger } from "./theme";
 import { useAkutModus, AKUT_SYMPTOME, akutmodusEreignisLoggen } from "../data/useAkutModus";
 import { useAppData } from "../context/AppDataContext";
 import AtemTimer from "./AtemTimer";

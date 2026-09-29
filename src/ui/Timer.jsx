@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { PrimaryButton } from "./primitives";
 import ProgressRing from "./ProgressRing";
-import { accentDark, textMuted } from "./theme";
+import { textMuted } from "./theme";
 import { playBeep, playTick } from "../utils/beep";
 
 function fmt(sekunden) {

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { Shell, Card, PrimaryButton } from "./primitives";
 import Timer from "./Timer";
-import { accentDark, cardBorder, danger, textMuted } from "./theme";
+import { cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Label, Pill, PrimaryButton, TextArea } from "./primitives";
-import { accentDark, accentSoft, cardBorder, textMuted } from "./theme";
+import { accentSoft, cardBorder, textMuted } from "./theme";
 import { NEBENWIRKUNGEN_OPTIONEN, VERTRAEGLICHKEIT_OPTIONEN, WIRKUNG_OPTIONEN } from "../constants";
 
 // Ein-Tipp-Rückmeldung nach dem Abhaken (UX-Review 23.09.): Vorher öffnete

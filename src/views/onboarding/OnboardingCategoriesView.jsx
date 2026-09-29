@@ -8,7 +8,7 @@ import TimeWheelField from "../../ui/TimeWheelField";
 import DosierungFields from "../../ui/DosierungFields";
 import { mengeOhneEinheit } from "../../utils/mengeEinheit";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
-import { accentDark, accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
+import { accentSoft, cardBorder, danger, textMuted } from "../../ui/theme";
 import { EINNAHMEARTEN, MEDIKAMENTE_KATEGORIEN, WOCHENTAGE } from "../../constants";
 import { useAppData } from "../../context/AppDataContext";
 import { CATEGORY_STEPS, PROTOKOLL_SCHRITT_OFFSET, PROTOKOLL_SCHRITTE_GESAMT } from "./categorySteps";

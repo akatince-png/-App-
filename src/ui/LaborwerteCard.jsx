@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "./primitives";
-import { accent, accentDark, accentSoft, danger, success, textMuted } from "./theme";
+import { accent, accentSoft, danger, success, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import LaborwerteFelder from "./LaborwerteFelder";
 

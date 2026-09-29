@@ -1,5 +1,5 @@
 import React from "react";
-import { accentDark, danger } from "./theme";
+import { danger } from "./theme";
 
 // Header-Zeile "Alle auswählen"/"Auswahl aufheben" + "X löschen" — geteilt
 // zwischen ArchivAbschnitt.jsx (flache Listen) und ProtokollLogView.jsx

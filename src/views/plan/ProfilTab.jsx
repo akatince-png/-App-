@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "../../ui/primitives";
-import { accentDark, textMuted } from "../../ui/theme";
+import { textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 import PersoenlicheDatenCard from "../../ui/PersoenlicheDatenCard";
 import WoechentlicheCheckinsCard from "../../ui/WoechentlicheCheckinsCard";

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, danger, accentDark, aufhellen, hexZuRgba } from "./theme";
+import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, danger, aufhellen, hexZuRgba } from "./theme";
 import { BereichColorProvider, useBereichColor } from "./BereichColorContext";
 import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
 import { useDiktat } from "./useDiktat";

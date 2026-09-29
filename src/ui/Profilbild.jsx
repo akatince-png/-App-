@@ -1,6 +1,6 @@
 import React from "react";
 import { useProfilbildUrl } from "../data/profilbild";
-import { accentDark, accentSoft } from "./theme";
+import { accentSoft } from "./theme";
 
 // Rundes Profilbild — ohne Foto der Anfangsbuchstabe auf farbigem Kreis.
 export default function Profilbild({ pfad, name, size = 36, rand = false }) {

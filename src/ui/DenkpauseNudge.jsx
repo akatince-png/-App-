@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { accent, accentDark, accentSoft, textMain } from "./theme";
+import { accent, accentSoft, textMain } from "./theme";
 import { zufaelligeDenkpauseAufgabe } from "../data/denkpausen";
 import { useAppData } from "../context/AppDataContext";
 

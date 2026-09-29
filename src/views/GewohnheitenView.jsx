@@ -179,7 +179,6 @@ export default function GewohnheitenView({ onHome }) {
     routineSchrittEntfernen,
     routineSchrittVerschieben,
     routineDurchlaufSpeichern,
-    routineEinstellungen,
     routineZeitrahmenSetzen,
     categoryZiele,
     setCategoryZiel,

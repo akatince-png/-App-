@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "./primitives";
-import { accentDark, accentSoft, cardBorder, textMain, textMuted } from "./theme";
+import { accentSoft, cardBorder, textMain, textMuted } from "./theme";
 import { questRanglisteLaden } from "../data/useQuestData";
 import { useAuth } from "../context/AuthContext";
 import { useCachedQuery } from "../lib/useCachedQuery";

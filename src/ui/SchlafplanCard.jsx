@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Label, Pill, TextArea } from "./primitives";
-import { accentSoft, accentDark, cardBorder, danger, textMuted } from "./theme";
+import { accentSoft, cardBorder, danger, textMuted } from "./theme";
 import TimeWheelField from "./TimeWheelField";
 import ZeitErinnerungenCard from "./ZeitErinnerungenCard";
 import { WOCHENTAGE } from "../constants";

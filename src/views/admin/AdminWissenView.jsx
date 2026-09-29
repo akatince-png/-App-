@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Shell, Card, PrimaryButton, TextInput, TextArea, Label, Pill } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
-import { accentDark, danger, textMuted } from "../../ui/theme";
+import { danger, textMuted } from "../../ui/theme";
 import { useAppData } from "../../context/AppDataContext";
 
 // Dieselben bereich-Werte wie BEREICH_OPTIONEN in AdminDashboardView.jsx

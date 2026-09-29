@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
-import { accent, accentDark, accentSoft, cardBorder, textMuted } from "../../ui/theme";
+import { accent, accentSoft, cardBorder, textMuted } from "../../ui/theme";
 import ViewHeader from "../../ui/ViewHeader";
 
 const SEITEN_TITEL = ["Protokoll-Übersicht", "Wochenplan", "Protokoll-Verlauf", "Wichtige Hinweise"];

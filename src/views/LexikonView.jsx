@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, Pill, TextInput } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
-import { accent, accentDark, textMuted } from "../ui/theme";
+import { accent, textMuted } from "../ui/theme";
 import { LEXIKON_BEISPIELE, LEXIKON_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 

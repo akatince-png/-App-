@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextInput } from "./primitives";
-import { accentDark, textMuted } from "./theme";
+import { textMuted } from "./theme";
 
 // Optionale Grund-Erfassung für Änderungsprotokoll-Einträge — folgt dem
 // Toggle-dann-Inline-Formular-Muster aus GewohnheitenView (kein Modal, das

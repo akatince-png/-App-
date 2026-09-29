@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextInput } from "./primitives";
-import { accentDark, accentSoft, cardBorder, danger, success, textMain, textMuted } from "./theme";
+import { accentSoft, cardBorder, danger, success, textMain, textMuted } from "./theme";
 import { LABORWERTE_ALLE, LABORWERTE_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import { useFrischWert } from "./useFrischWert";

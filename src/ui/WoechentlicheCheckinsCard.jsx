@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, Label, Pill, PrimaryButton, TextInput } from "./primitives";
 import { SignedPhoto } from "./SignedPhoto";
-import { accent, accentDark, accentSoft, cardBorder, textMuted } from "./theme";
+import { accent, accentSoft, cardBorder, textMuted } from "./theme";
 import { ENERGIELEVEL_OPTIONEN, FOTO_KATEGORIEN } from "../constants";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";

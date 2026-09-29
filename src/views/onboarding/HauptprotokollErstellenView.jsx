@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "../../ui/primitives";
-import { accent, accentDark, blue, cardBorder, danger, hexZuRgba, textMuted } from "../../ui/theme";
+import { accent, blue, cardBorder, danger, hexZuRgba, textMuted } from "../../ui/theme";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import { useAppData } from "../../context/AppDataContext";
 import { useT } from "../../i18n/translate";

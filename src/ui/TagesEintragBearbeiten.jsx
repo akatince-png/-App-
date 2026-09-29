@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PrimaryButton, Label, TextInput } from "./primitives";
 import { useEscapeSchliesst } from "./useEscapeSchliesst";
-import { cardBorder, textMain, textMuted, danger, accentDark, accentSoft } from "./theme";
+import { cardBorder, textMain, textMuted, danger, accentSoft } from "./theme";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { useAppData } from "../context/AppDataContext";
 import { fmtDate, verspaetungText } from "../utils/dates";
