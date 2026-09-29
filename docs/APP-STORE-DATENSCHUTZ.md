@@ -19,9 +19,7 @@ Ziel der Nutzerin: Antrag bei Apple Mitte der Woche ab 05.10.2026. Hier steht, w
 
 ## 2. Was du noch tun musst (vor dem Antrag)
 
-1. **Deine Angaben eintragen** – mir einfach schicken, ich trage sie ein:
-   - Name bzw. Firma, Anschrift, E-Mail für Datenschutz-Anfragen (Pflicht fürs Impressum), ggf. Telefon, Rechtsform/USt-IdNr.
-   - Bundesland (für die zuständige Datenschutz-Aufsichtsbehörde).
+1. **Deine Angaben** – Name, Anschrift und Aufsichtsbehörde (Niedersachsen) sind seit 29.09. eingetragen. **Es fehlt noch die E-Mail-Adresse** für Datenschutz-Anfragen (Pflicht fürs Impressum); ggf. Telefon, Rechtsform/USt-IdNr.
    Solange dort noch `[ … ]` steht, **nicht** einreichen.
 2. **Texte prüfen lassen** (Anwalt/Datenschutz), besonders wegen Gesundheitsdaten.
 3. **Auftragsverarbeitungsverträge (AVV/DPA)** abschließen bzw. akzeptieren: Supabase, Vercel, Google (Gemini, Text-to-Speech), Groq. Meist als Online-Formular im jeweiligen Konto.

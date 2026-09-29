@@ -10,12 +10,12 @@ export const DATENSCHUTZ_VERSION = "2026-09-28";
 
 // Angaben der Verantwortlichen – von der Nutzerin einzutragen.
 export const BETREIBER = {
-  name: "[Vor- und Nachname bzw. Firma]",
-  anschrift: "[Straße Hausnummer, PLZ Ort]",
+  name: "Aka Tayfun Ince",
+  anschrift: "Bergfeldstraße 29, 30457 Hannover",
   email: "[E-Mail-Adresse für Datenschutz-Anfragen]",
   telefon: "",
   zusatz: "", // z. B. Rechtsform, USt-IdNr., Berufsbezeichnung – falls vorhanden
-  aufsicht: "[Zuständige Datenschutz-Aufsichtsbehörde des Bundeslandes]",
+  aufsicht: "der Landesbeauftragten für den Datenschutz Niedersachsen (Prinzenstraße 5, 30159 Hannover)",
 };
 
 export const OEFFENTLICHE_URL = "https://akaapp.vercel.app";
