@@ -15,7 +15,26 @@ test("Leiste unten führt zu den Hauptbereichen, Aka öffnet den Coach-Chat", as
   await leiste.getByRole("button", { name: "Chat mit deinem Coach" }).click();
   await expect(page).toHaveURL(/#\/coach-chat/);
   await leiste.getByRole("button", { name: "Heute" }).click();
-  await expect(page.locator("[data-spielen]")).toContainText("Tagesrätsel");
+  // Schlichte Startseite (29.09.): drei große Knöpfe, Spielen klappt auf.
+  const knoepfe = page.locator("[data-schnellknoepfe]");
+  await expect(knoepfe.getByRole("button", { name: "Wasser eintragen" })).toBeVisible();
+  await expect(knoepfe.getByRole("button", { name: "Grad nicht gut?" })).toBeVisible();
+  await knoepfe.getByRole("button", { name: "Spielen", exact: true }).click();
+  await expect(page.locator("[data-spiele-auswahl]")).toContainText("Denksport & Rätsel");
+  await page.locator("[data-spiele-auswahl]").getByRole("button", { name: /Denksport/ }).click();
+  await expect(page).toHaveURL(/#\/denksport/);
+});
+
+// Kalender leicht erreichbar (29.09.): Plan → Reiter „📅 Kalender“, und oben unter Mehr.
+test("Kalender: direkt aus dem Plan und aus Mehr erreichbar", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1#/home");
+  await page.locator("[data-bottomnav]").getByRole("button", { name: "Plan" }).click();
+  await page.locator('[data-plan-reiter="kalender"]').click();
+  await expect(page).toHaveURL(/#\/kalender/);
+  await page.locator("[data-bottomnav]").getByRole("button", { name: "Mehr" }).click();
+  await page.locator("[data-mehr-schnellzugriff]").getByRole("button", { name: /Kalender/ }).click();
+  await expect(page).toHaveURL(/#\/kalender/);
 });
 
 test("keine Leiste im Onboarding", async ({ page }) => {

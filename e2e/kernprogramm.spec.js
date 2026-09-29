@@ -30,7 +30,8 @@ test("Vor dem Start: Karte zeigt das Startdatum; ohne Etappe keine Karte", async
 
 test("Woche 3: Top 3 → erster Schritt → 15 Min. → 'Hast du angefangen?'", async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 9, 6, 8, 0));
-  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=3#/home");
+  // Seit 29.09. stehen die Tageshinweise (Top 3, Wochen-Check) unter „Plan“.
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=3#/tagesplan");
   const karte = page.getByRole("region", { name: "Deine Top 3 für heute" });
   await karte.getByLabel("Top 1").fill("Steuerunterlagen sortieren");
   await karte.getByLabel("Erster kleiner Schritt").fill("Ordner auf den Tisch");
@@ -47,6 +48,7 @@ test("Erhaltung: Karte 'Dranbleiben' und sonntags Wochen-Check", async ({ page }
   await page.clock.setFixedTime(new Date(2026, 10, 1, 18, 0));
   await page.goto("/e2e/harness/index.html?isAdmin=0&kern=erhaltung#/home");
   await expect(page.getByRole("button", { name: "AKA-Kernprogramm öffnen" })).toContainText("Dranbleiben");
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=erhaltung#/tagesplan");
   const check = page.getByRole("region", { name: "Wochen-Check" });
   await expect(check).toBeVisible();
   await check.getByRole("button", { name: "gut", exact: true }).click();

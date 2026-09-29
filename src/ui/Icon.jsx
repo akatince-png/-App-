@@ -83,6 +83,7 @@ const PATHS = {
     </>
   ),
   folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />,
+  chat: <path d="M4 5h16v11H9l-5 4z" />,
   sun: (
     <>
       <circle cx="12" cy="12" r="4.5" />

@@ -92,6 +92,9 @@ const ROUTINE_HINTERGRUND = { morgenroutine: ROUTINE_META.morgenroutine.bg, aben
 const ROUTINE_ICON = { morgenroutine: "sunrise", abendroutine: "moon" };
 
 
+// Startseite schlicht (29.09., Nutzerin): nur das Nötigste auf Home.
+const STARTSEITE_SCHLICHT = true;
+
 export default function HomeView({ onOpenView, onOpenTraining }) {
   const { t, tLabel } = useT();
   const {
@@ -180,6 +183,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   // ADHS Mode State
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
   const [akutOffen, setAkutOffen] = useState(false);
+  const [spieleOffen, setSpieleOffen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
   const [trainingFehler, setTrainingFehler] = useState(null);
   // Direkte Checkliste statt Wegnavigieren (12.09., Nutzerin-Vorgabe): ein
@@ -1004,6 +1008,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         <Logo size={40} />
       </div>
 
+      {!STARTSEITE_SCHLICHT && (
+      <>
       {/* Coach-Chat (24.09., Nutzerinnen-Freigabe der Vorschau): ungelesene
           Nachricht vom Coach steht ganz oben, antippen öffnet den Chat.
           Vorher lag sie bei ~78 % der Seitenhöhe unter dem Eingabefeld. */}
@@ -1032,7 +1038,11 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           sonntags Wochen-Check in der Erhaltung — nur im eigenen Konto. */}
       {/* Fokus-Timer aus dem Bild-Tagesplan läuft weiter (27.09.) */}
       <LaufenderTimerKarte />
+      </>
+      )}
       {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} />}
+      {!STARTSEITE_SCHLICHT && (
+      <>
       {proband === null && <Top3Karte />}
       {proband === null && <WochenCheckKarte />}
       {/* Gruppen-Atem-Session (25.09.): 15 Min. vorher bis zum Ende. */}
@@ -1060,6 +1070,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       {/* Schichtarbeit (25.09.): welche Schicht heute gilt + "Heute anders". */}
       <SchichtHeuteKarte />
       {proband === null && <RoutineZeitHinweisKarte zeigeCoachKnopf={!isAdmin} onCoachChat={() => onOpenView("coach-chat")} />}
+      </>
+      )}
       {/* Seit 25.09. (Nutzerinnen-Wunsch): Begrüßung, dann Gehirn + Balken
           oben, darunter Als Nächstes und der Spielstand (kopfUnten).
           Ursprünglich (24.09.): EINE Karte mit Spielstand
@@ -1079,6 +1091,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         phase={phase}
         balkenKlappbar
       />
+      {!STARTSEITE_SCHLICHT && (
+      <>
       {/* Design 2.0 (28.09., Entwurf „Mischung B+C“): Spielstand als drei
           Kacheln, Schnellknöpfe als eigene Zeile, „Jetzt dran“ als eigene Karte. */}
       <SpielstandReihe
@@ -1098,9 +1112,46 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       </div>
       <div data-jetzt-karte style={{ marginBottom: 20 }}>{kartenMitte}</div>
 
+      </>
+      )}
+      {/* Startseite schlicht (29.09., Nutzerin): nur Kernprogramm, Gehirn +
+          Körper, drei große Knöpfe und die Tages-Quests. Alles andere steht
+          unter Plan bzw. Mehr. */}
+      {STARTSEITE_SCHLICHT && (
+        <div data-schnellknoepfe style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+          {[
+            { key: "wasser", emoji: "💧", titel: "Wasser +", sub: "Glas eintragen", verlauf: "linear-gradient(145deg, #4F8DF5, #2D6FD6)", onClick: () => onOpenView("hydration"), label: "Wasser eintragen" },
+            { key: "spielen", emoji: "🎮", titel: "Spielen", sub: "Rätsel & Fokus", verlauf: "linear-gradient(145deg, #9B8CFF, #6C5CE7)", onClick: () => setSpieleOffen((o) => !o), label: "Spielen" },
+            { key: "akut", emoji: "💡", titel: "Grad nicht gut?", sub: "Hilfe für jetzt", verlauf: "linear-gradient(145deg, #FFC857, #F29F05)", onClick: () => setAkutOffen(true), label: "Grad nicht gut?" },
+          ].map((k) => (
+            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.key === "spielen" ? spieleOffen : undefined} onClick={k.onClick} style={{ border: "none", borderRadius: 22, padding: "16px 8px 14px", minHeight: 108, background: k.verlauf, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: "0 8px 20px rgba(16, 24, 40, 0.14)", fontFamily: "inherit" }}>
+              <span style={{ fontSize: 30, lineHeight: 1 }}>{k.emoji}</span>
+              <span style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4, textAlign: "center", lineHeight: 1.15 }}>{k.titel}</span>
+              <span style={{ fontSize: 11, opacity: 0.9 }}>{k.sub}</span>
+            </button>
+          ))}
+          {spieleOffen && (
+            // Denksport und Tagesrätsel zusammengelegt (29.09., Nutzerin: „führen
+            // in den gleichen Reiter“) – das Tagesrätsel steht oben in Denksport.
+            <div data-spiele-auswahl style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 10, borderRadius: 20, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" }}>
+              {[
+                ["denksport", "🧠", "Denksport & Rätsel"],
+                ["fokus", "🎯", "Gemeinsam fokussieren"],
+              ].map(([id, emoji, titel]) => (
+                <button key={id} type="button" className="mp-tap" onClick={() => onOpenView(id)} style={{ border: "none", borderRadius: 14, padding: "12px 6px", background: "color-mix(in srgb, #F1EDFF var(--mp-flaeche), var(--mp-karte))", cursor: "pointer", fontSize: 12.5, fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 22 }}>{emoji}</span>
+                  {titel}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
+      {!STARTSEITE_SCHLICHT && (
+      <>
       {/* Spielen & Fokus (Design 2.0, 28.09., Nutzerin: „die Spiele nicht mehr
           entdecken“): gut sichtbar direkt unter den Quests. */}
       {!isEmergencyMode && (
@@ -1152,6 +1203,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             );
           })
         )}
+      </>
+      )}
       {/* Akut-Hilfe als Fenster über dem Bildschirm (24.09.): der 💡-Knopf
           sitzt jetzt oben im Gehirnfeld — inline weiter unten wäre das
           Panel nach dem Tippen gar nicht zu sehen. Aufbau wie in
@@ -1178,6 +1231,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           document.body
         )}
 
+      {!STARTSEITE_SCHLICHT && (
+      <>
       {/* Notfallmodus-Umschalter: eigene volle Zeile (13.09., Nutzerin-
           Vorgabe) — vorher schmal neben dem Akutmodus-Knopf, der jetzt
           stattdessen oben neben Hydration sitzt (beides häufigere
@@ -1279,6 +1334,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         </>
       )}
 
+      </>
+      )}
       {/* „Deine Bereiche“ (Ringe) und „Weitere Pläne – einrichten“ sind seit
           29.09. nicht mehr auf der Startseite (Nutzerin: „Kacheln unten weg“).
           Alle Bereiche: Mehr → Alle Pläne. */}

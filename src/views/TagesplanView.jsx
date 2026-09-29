@@ -23,6 +23,7 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 import DenkpauseNudge from "../ui/DenkpauseNudge";
 import BildTagesplan from "../ui/BildTagesplan";
 import LaufenderTimerKarte from "../ui/TimerRing";
+import TagesHinweise from "../ui/TagesHinweise";
 
 function hourLabel(hour) {
   return hour ? `${hour}:00` : "Sonstige Zeiten";
@@ -650,6 +651,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   return (
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
+      <TagesHinweise ohneTimer={modus === "tag" && ansicht === "bild" && sameDay(selectedDate, new Date())} />
 
       {trainingFehler && (
         <Card style={{ marginBottom: 16, borderColor: danger }}>
@@ -687,14 +689,20 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {/* Kalender als dritter Reiter (29.09., Nutzerin: „Kalender muss
+            leichter einsehbar sein, nicht zu tief versteckt“) – öffnet
+            „Mein Alltag“ direkt. */}
         {[
           { id: "tag", label: "Tag" },
           { id: "woche", label: "Woche" },
+          { id: "kalender", label: "📅 Kalender" },
         ].map((t) => (
           <button
             key={t.id}
+            type="button"
             className="mp-tap"
-            onClick={() => setModus(t.id)}
+            data-plan-reiter={t.id}
+            onClick={() => (t.id === "kalender" ? (window.location.hash = "#/kalender") : setModus(t.id))}
             style={{
               flex: 1,
               minHeight: 44,

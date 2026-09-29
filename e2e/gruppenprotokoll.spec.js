@@ -16,10 +16,13 @@ test("Team-Seite zeigt das Gruppenprotokoll mit Quest, Heute und letzten Tagen",
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
 
-test("Startseite: offene Gruppen-Gewohnheit unter Als Nächstes und Gruppen-Quest-Karte", async ({ page }) => {
+// Seit 29.09. (schlichte Startseite): Gruppen-Gewohnheit im Tagesplan,
+// Gruppen-Quest unter Mehr.
+test("Tagesplan zeigt die offene Gruppen-Gewohnheit, Mehr die Gruppen-Quest-Karte", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html?team=1&gruppe=1");
-  await expect(page.getByText("🌱 10 Min. frische Luft").first()).toBeVisible();
+  await page.goto("/e2e/harness/index.html?team=1&gruppe=1#/tagesplan");
+  await expect(page.locator("[data-gruppen-gewohnheit]")).toContainText("10 Min. frische Luft");
+  await page.goto("/e2e/harness/index.html?team=1&gruppe=1&isAdmin=0#/mehr");
   await expect(page.getByText("🎯 Gruppen-Quest")).toBeVisible();
   await expect(page.getByText("3 / 10 – dein Beitrag: 1", { exact: false })).toBeVisible();
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);

@@ -16,13 +16,15 @@ test("Denksport: Coachees sehen nur das Tagesrätsel", async ({ page }) => {
 test("Denksport: Admin-Konto spielt frei eine Runde Rätsel", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html");
-  await page.getByRole("button", { name: /Denksport/ }).first().click();
+  // Schlichte Startseite (29.09.): Spielen → Denksport & Rätsel.
+  await page.locator("[data-schnellknoepfe]").getByRole("button", { name: "Spielen", exact: true }).click();
+  await page.locator("[data-spiele-auswahl]").getByRole("button", { name: /Denksport/ }).click();
   await expect(page.getByText("Freies Training")).toBeVisible();
   await page.getByRole("button", { name: /^🧩 Rätsel/ }).click();
   for (let i = 1; i <= 5; i++) {
     await expect(page.getByText(`Frage ${i} von 5`)).toBeVisible();
     await page.getByRole("group", { name: "Antworten" }).getByRole("button").first().click();
-    await page.getByRole("button", { name: i < 5 ? "Weiter" : "Zur Auswertung" }).click();
+    await page.getByRole("button", { name: i < 5 ? "Weiter" : "Zur Auswertung", exact: true }).click();
   }
   await page.getByRole("button", { name: /Juhu, weiter/ }).click();
   await expect(page.getByRole("button", { name: "Noch eine Runde Rätsel" })).toBeVisible();
@@ -39,7 +41,7 @@ test("Tagesrätsel: von Home aus starten und 5 Fragen lösen", async ({ page }) 
   for (let i = 1; i <= 5; i++) {
     await expect(page.getByText(`Frage ${i} von 5`)).toBeVisible();
     await page.getByRole("group", { name: "Antworten" }).getByRole("button").first().click();
-    await page.getByRole("button", { name: i < 5 ? "Weiter" : "Zur Auswertung" }).click();
+    await page.getByRole("button", { name: i < 5 ? "Weiter" : "Zur Auswertung", exact: true }).click();
   }
   await expect(page.getByText("Tagesrätsel geschafft! 🧩")).toBeVisible();
   await page.getByRole("button", { name: /Juhu, weiter/ }).click();

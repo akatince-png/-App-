@@ -65,6 +65,14 @@ export default function AppSidebar({ view, onNavigate, isAdmin }) {
             </button>
           );
         })}
+        {/* Coach-Chat (29.09.): seit der schlichten Startseite hier für
+            Coachees am Computer (auf Touch-Geräten: Mittelknopf der Leiste). */}
+        {!isAdmin && (
+          <button type="button" onClick={() => onNavigate("coach-chat")} className="mp-tap" style={navButtonStyle(view === "coach-chat")}>
+            <Icon name="chat" size={19} color={view === "coach-chat" ? accentDark : textMuted} />
+            Coach-Chat
+          </button>
+        )}
         {isAdmin && (
           <button
             type="button"

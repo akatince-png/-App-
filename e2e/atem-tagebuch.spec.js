@@ -16,11 +16,16 @@ test("Atem: Übungen mit 'wofür', geführter Start fragt Stimmung, feste Zeit a
   await expect(page.getByText("nie im Wasser oder am Steuer")).toBeVisible();
 });
 
-test("Atem: feste Zeit steht auf der Startseite unter 'Als Nächstes'", async ({ page }) => {
+// Seit 29.09. (schlichte Startseite) als Hinweis oben im Tagesplan.
+test("Atem: feste Zeit steht als Atem-Pause oben im Tagesplan und startet die Übung", async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 8, 25, 7, 5));
-  await page.goto("/e2e/harness/index.html?isAdmin=0&atem=1#/home");
-  await expect(page.getByText("🌬️ Atem-Pause").first()).toBeVisible();
-  await expect(page.getByText("Energie-Atmung · 2 Min.").first()).toBeVisible();
+  await page.goto("/e2e/harness/index.html?isAdmin=0&atem=1#/tagesplan");
+  const pause = page.locator("[data-atem-pause]").first();
+  await expect(pause).toContainText("🌬️ Atem-Pause");
+  await expect(pause).toContainText("Energie-Atmung · 2 Min.");
+  await pause.click();
+  await expect(page).toHaveURL(/#\/atemuebungen/);
+  await expect(page.getByRole("group", { name: "Stimmung vorher" })).toBeVisible();
 });
 
 // 25.09.: "Wie war dein Tag?" ist keine Startseiten-Karte mehr (kommt in

@@ -212,6 +212,15 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Startseite schlicht + Aufteilung Plan/Mehr (29.09., live)
+Nutzerin: Auf die Startseite nur Kernprogramm, Gehirn + Körper, Wasser-, Spielen- und „Grad nicht gut?“-Knopf sowie Tages-Quests; „Aufteilen“ (Tagesaufgaben → Plan, Rest → Mehr); Coach-Nachricht als gut sichtbare Sprechblase; Denksport und Rätsel zusammenlegen; Kalender leichter erreichbar.
+- **HomeView:** `STARTSEITE_SCHLICHT = true` blendet alle übrigen Blöcke aus (Code bleibt, um zurückschalten zu können). Neu `data-schnellknoepfe`: drei große Verlauf-Knöpfe; „Spielen“ klappt `data-spiele-auswahl` auf (Denksport & Rätsel · Gemeinsam fokussieren).
+- **Plan (TagesplanView):** oben `ui/TagesHinweise.jsx`: offene Gruppen-Gewohnheiten, fällige Atem-Pausen (▶ Starten), laufender Timer (nicht doppelt in der Bild-Ansicht, `ohneTimer`), Top 3, Wochen-Check, Gruppen-Atmung, Gemeinsam fokussieren, Schicht heute, „Passt deine Zeit noch?“. Abhaken im Tagesplan (BildTagesplan-Knöpfe mit `aria-label „… erledigt“`). Reiter „Tag · Woche · 📅 Kalender“ (`data-plan-reiter`).
+- **Mehr (MehrView):** Schnellzugriff jetzt Alle Pläne · Kalender · Archiv · Tagebuch (+ Neues Protokoll); darunter `ui/MehrHeuteKarten.jsx`: Umschalter „Heute zeigen: Alles / Nur Basics“, Gruppen-Quests, Quests, Rangliste, Team.
+- **Coach-Nachricht:** `BottomNav` zeigt `.mp-coach-blase` über dem Mittelknopf (Anfang der Nachricht, Anzahl); am Computer unten rechts. Seitenleiste hat für Coachees „Coach-Chat“.
+- Tests angepasst (u. a. kernprogramm, routine-verspaetung, schichtplan, fokus-gemeinsam, gruppenprotokoll, protokoll-abhaken, bild-tagesplan, coach-chat, leiste-unten, atem-tagebuch). **Ursache des sporadischen Denksport-Testfehlers:** Knopfsuche „Weiter“ traf auch Rätsel-Antworten wie „Zweiter Platz“ → jetzt `exact: true`.
+- Bilder: `docs/design-2.0/startseite-schlicht*.png`.
+
 ### Startseite entschlackt + moderner (29.09., live)
 Nutzerin (Foto iPad): „Kacheln unten weg, Design wirkt alt“. Entfernt von Home: „Deine Bereiche“ (MiniPlanWidget-Ringe) und „Weitere Pläne – einrichten“ (alles über Mehr → Alle Pläne erreichbar). Neu gestaltet: Kernprogramm-Karte hell mit Etiketten-Chip und Textlink statt dunklem Block mit gelbem Knopf; „Jetzt dran“ ohne dicken Rahmen, Farbstreifen links; statt großem Balken „Vollständige Ansicht“ ein schlanker Umschalter „Heute zeigen: ✨ Alles / 🌿 Nur Basics“ (`data-ansicht-umschalter`); „Chat mit deinem Coach“-Zeile nur noch ohne Leiste (Computer), sonst Mittelknopf. **Safari-Fehler behoben:** Knöpfe ohne eigene Farbe waren blau (index.css `button { color: inherit }`).
 

@@ -52,7 +52,9 @@ test("Coachee ohne neue Nachricht: Karte 'Chat mit deinem Coach' statt altem For
   await chatMocks(page, []);
   await page.goto("/e2e/harness/index.html?isAdmin=0#/home");
   await expect(page.getByRole("button", { name: /Dein Coach hat geschrieben/ })).toHaveCount(0);
-  await page.getByRole("button", { name: /Chat mit deinem Coach/ }).click();
+  // Seit der schlichten Startseite (29.09.): am Computer über die
+  // Seitenleiste, auf Touch-Geräten über den Mittelknopf der Leiste.
+  await page.getByRole("navigation", { name: "Hauptnavigation" }).getByRole("button", { name: "Coach-Chat" }).click();
   const chat = page.getByRole("dialog", { name: "Chat: Dein Coach" });
   await expect(chat.getByText("Noch keine Nachrichten", { exact: false })).toBeVisible();
   await chat.getByLabel("Nachricht an deinen Coach …").fill("Hallo!");

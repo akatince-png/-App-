@@ -11,8 +11,8 @@ test("Gemeinsam fokussieren: Team sehen, starten, Zeit um, Ergebnis eintragen", 
   const fehler = sammleKonsolenfehler(page);
   const heute = new Date();
   await page.clock.install({ time: new Date(heute.getFullYear(), heute.getMonth(), heute.getDate(), 10, 0) });
-  await page.goto("/e2e/harness/index.html?fokus=1&isAdmin=0#/home");
-  // Startseite: Karte, weil Anna und Jonas gerade fokussieren.
+  await page.goto("/e2e/harness/index.html?fokus=1&isAdmin=0#/tagesplan");
+  // Tagesplan (seit 29.09., vorher Startseite): Karte, weil Anna und Jonas gerade fokussieren.
   const karte = page.locator("[data-fokus-karte]");
   await expect(karte).toContainText("Jonas und Anna fokussieren gerade");
   await karte.click();
@@ -45,7 +45,9 @@ test("Gemeinsam fokussieren: ohne Team trotzdem allein nutzbar, Kachel auf der S
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html?isAdmin=0#/home");
   await expect(page.locator("[data-fokus-karte]")).toHaveCount(0);
-  await page.getByRole("button", { name: /Gemeinsam fokussieren/ }).click();
+  // Schlichte Startseite (29.09.): Spielen → Gemeinsam fokussieren.
+  await page.locator("[data-schnellknoepfe]").getByRole("button", { name: "Spielen", exact: true }).click();
+  await page.locator("[data-spiele-auswahl]").getByRole("button", { name: /Gemeinsam fokussieren/ }).click();
   await expect(page.getByText("Woran arbeitest du?")).toBeVisible();
   await expect(page.getByText("👥 Gerade dabei")).toHaveCount(0);
   await page.getByRole("button", { name: "▶ Los geht's (25 Min.)" }).click();

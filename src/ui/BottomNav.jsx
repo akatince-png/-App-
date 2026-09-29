@@ -47,7 +47,22 @@ export function aktiverReiter(view, planIds = []) {
   return null;
 }
 
-export default function BottomNav({ view, planIds, onNavigate, istAdminModus }) {
+// Neue Coach-Nachricht (29.09., Nutzerin: „als Sprechbläschen im Bild, nicht
+// nur ein roter Punkt, den man übersieht“): Sprechblase über dem Mittelknopf
+// mit dem Anfang der Nachricht, auf jeder Seite mit Leiste.
+function CoachBlase({ nachricht, anzahl, onOeffnen }) {
+  return (
+    <button type="button" className="mp-tap mp-coach-blase" data-coach-blase onClick={onOeffnen} aria-label={`Dein Coach hat geschrieben: ${nachricht.text}`}>
+      <span style={{ fontSize: 20, flexShrink: 0 }}>🧑‍🏫</span>
+      <span style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
+        <span style={{ display: "block", fontSize: 12, fontWeight: 800 }}>Dein Coach hat geschrieben{anzahl > 1 ? ` (${anzahl})` : ""}</span>
+        <span style={{ display: "block", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>„{nachricht.text}“</span>
+      </span>
+    </button>
+  );
+}
+
+export default function BottomNav({ view, planIds, onNavigate, istAdminModus, coachNachrichten = [] }) {
   const aktiv = aktiverReiter(view, planIds);
   const reiter = [
     { id: "heute", label: "Heute", ziel: "home" },
@@ -58,6 +73,10 @@ export default function BottomNav({ view, planIds, onNavigate, istAdminModus }) 
   ];
   const akaName = getCoachName();
   return (
+    <>
+    {!istAdminModus && coachNachrichten.length > 0 && view !== "coach-chat" && (
+      <CoachBlase nachricht={coachNachrichten[0]} anzahl={coachNachrichten.length} onOeffnen={() => onNavigate("coach-chat")} />
+    )}
     <nav className="mp-bottomnav" aria-label="Hauptnavigation" data-bottomnav>
       {reiter.map((r) =>
         r.id === "aka" ? (
@@ -84,5 +103,6 @@ export default function BottomNav({ view, planIds, onNavigate, istAdminModus }) 
         )
       )}
     </nav>
+    </>
   );
 }

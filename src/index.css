@@ -688,6 +688,60 @@ input[type="time"]::-webkit-date-and-time-value {
   background: linear-gradient(135deg, var(--mp-accent), color-mix(in srgb, var(--mp-accent), #2ac3c9 45%));
   box-shadow: 0 8px 20px color-mix(in srgb, var(--mp-accent) 40%, transparent);
 }
+/* Sprechblase „Dein Coach hat geschrieben“ (29.09.) über dem Mittelknopf
+   der Leiste, mit Spitze nach unten; ohne Leiste (Computer) unten rechts. */
+.mp-coach-blase {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  z-index: 61;
+  width: min(360px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 18px;
+  background: #fff8e6;
+  color: #3d2c00;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.22);
+  cursor: pointer;
+  font-family: inherit;
+  animation: mpBlaseRein 0.35s ease-out;
+}
+.mp-coach-blase::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px;
+  height: 16px;
+  background: #fff8e6;
+  border-radius: 3px;
+}
+:root[data-dunkel] .mp-coach-blase,
+:root[data-dunkel] .mp-coach-blase::after {
+  background: #3a3218;
+  color: #fff3cf;
+}
+@keyframes mpBlaseRein {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (min-width: 1024px) and (pointer: fine) {
+  :root:not([data-touch]) .mp-coach-blase {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    transform: none;
+    animation: none;
+  }
+  :root:not([data-touch]) .mp-coach-blase::after {
+    display: none;
+  }
+}
 /* Hilfe-Knopf (💡) über die Leiste heben. */
 .mp-mit-leiste .mp-akut-knopf {
   bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;

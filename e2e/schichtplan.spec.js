@@ -9,9 +9,10 @@ const heuteIso = () => {
 };
 const ohneNetz = (f) => f.filter((x) => !x.includes("Failed to fetch"));
 
-test("Startseite zeigt die heutige Schicht und den Wechsel morgen; 'Heute anders' setzt nur heute", async ({ page }) => {
+// Seit 29.09. (schlichte Startseite) steht die Schicht-Karte oben im Tagesplan.
+test("Tagesplan zeigt die heutige Schicht und den Wechsel morgen; 'Heute anders' setzt nur heute", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
-  await page.goto("/e2e/harness/index.html?isAdmin=0&schicht=1#/home");
+  await page.goto("/e2e/harness/index.html?isAdmin=0&schicht=1#/tagesplan");
   const karte = page.getByRole("region", { name: "Heute im Schichtplan" });
   await expect(karte).toContainText("HEUTE · 🌅 FRÜHSCHICHT");
   await expect(karte).toContainText("☀ Morgenroutine 04:30 · 🌙 Abendroutine 21:00");
@@ -25,7 +26,7 @@ test("Startseite zeigt die heutige Schicht und den Wechsel morgen; 'Heute anders
 });
 
 test("Ohne Varianten: keine Karte auf der Startseite, Einrichtung legt Früh/Spät/Frei mit einem Tipp an", async ({ page }) => {
-  await page.goto("/e2e/harness/index.html?isAdmin=0#/home");
+  await page.goto("/e2e/harness/index.html?isAdmin=0#/tagesplan");
   await expect(page.getByRole("region", { name: "Heute im Schichtplan" })).toHaveCount(0);
   await page.goto("/e2e/harness/index.html?isAdmin=0#/schichtplan");
   await page.getByRole("button", { name: "Früh · Spät · Frei anlegen" }).click();

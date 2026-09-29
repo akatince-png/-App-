@@ -88,6 +88,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
               type="button"
               className="mp-tap"
               onClick={() => onAktion(b)}
+              aria-label={istRoutine ? `${b.name} starten` : b.kategorie === "training" ? undefined : `${b.name} erledigt`}
               style={{ border: "none", borderRadius: 11, padding: "7px 10px", fontSize: 12, fontWeight: 800, background: f.dot, color: "#fff", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
             >
               {aktionText}

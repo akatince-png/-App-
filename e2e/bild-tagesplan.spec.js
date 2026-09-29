@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { sammleKonsolenfehler } from "./helpers.js";
 
 // Bild-Tagesplan + Timer-Ring (27.09., nach dem Marktvergleich mit Tiimo).
-test("Bild-Tagesplan: Bilder, Dauer, Jetzt-Linie, Timer läuft auf der Startseite weiter", async ({ page }) => {
+test("Bild-Tagesplan: Bilder, Dauer, Jetzt-Linie, Timer läuft in der Listenansicht weiter", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   const heute = new Date();
   await page.clock.install({ time: new Date(heute.getFullYear(), heute.getMonth(), heute.getDate(), 9, 40) });
@@ -20,12 +20,10 @@ test("Bild-Tagesplan: Bilder, Dauer, Jetzt-Linie, Timer läuft auf der Startseit
   await waesche.getByRole("button", { name: "Timer für Wäsche machen starten" }).click();
   await expect(page.locator("[data-fokus-timer]")).toContainText("Wäsche machen");
   await expect(page.locator("[data-fokus-timer]")).toContainText("noch 30 Min");
-  // Liste bleibt erreichbar.
+  // Liste bleibt erreichbar; dort steht der laufende Timer oben bei den
+  // Tageshinweisen (seit 29.09. nicht mehr auf der schlichten Startseite).
   await page.getByRole("button", { name: "☰ Liste" }).click();
   await expect(plan).toHaveCount(0);
-  await page.getByRole("button", { name: "🖼️ Bild" }).click();
-  // Auf der Startseite läuft der Timer weiter.
-  await page.goto("/e2e/harness/index.html?beispiel=1#/home");
   await expect(page.locator("[data-fokus-timer]")).toContainText("LÄUFT GERADE");
   await page.locator("[data-fokus-timer]").getByRole("button", { name: "✓ Fertig" }).click();
   await expect(page.locator("[data-fokus-timer]")).toHaveCount(0);

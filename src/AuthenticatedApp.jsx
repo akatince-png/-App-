@@ -600,7 +600,7 @@ export default function AuthenticatedApp() {
           </ErrorBoundary>
         </div>
       </div>
-      {mitLeiste && <BottomNav view={view} planIds={PLAENE_VIEW_IDS} onNavigate={setView} istAdminModus={istAdminModus} />}
+      {mitLeiste && <BottomNav view={view} planIds={PLAENE_VIEW_IDS} onNavigate={setView} istAdminModus={istAdminModus} coachNachrichten={(appData.coacheeNachrichten || []).filter((n) => n.absender === "coach" && !n.gelesen)} />}
     </div>
   );
 }
