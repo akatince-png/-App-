@@ -505,7 +505,7 @@ function SeiteStart() {
       <div style={{ borderRadius: 18, padding: 14, background: "#1B2350", color: "#fff" }}>
         <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.75, letterSpacing: 0.3 }}>DEIN AKA-COACHING</div>
         <div style={{ fontWeight: 900, fontSize: 17, marginTop: 4 }}>🧭 Die Einstellungsphase</div>
-        <EtappenBalken stand={{ woche: 1 }} />
+        <EtappenBalken stand={{ woche: 1 }} hell={false} />
         <div style={{ display: "grid", gap: 7, marginTop: 8 }}>
           {schritte.map(([icon, meta, titel, text]) => (
             <div key={titel} style={{ display: "flex", alignItems: "center", gap: 10 }}>

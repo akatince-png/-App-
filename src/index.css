@@ -43,6 +43,13 @@
 * {
   box-sizing: border-box;
 }
+/* Safari (iPad/iPhone) färbt Text in Knöpfen ohne eigene Farbe blau
+   (29.09., Foto der Nutzerin: „Morgenroutine“ blau) – Knöpfe übernehmen
+   Schrift und Farbe ihrer Umgebung, eigene Inline-Farben gewinnen weiter. */
+button {
+  color: inherit;
+  font-family: inherit;
+}
 
 /* iPhone (27.09., Nutzerinnen-Fund in der Home-Bildschirm-App: "die
    Bildschirme verschieben sich"): iOS zoomt automatisch in die Seite, sobald
@@ -695,6 +702,16 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 :root[data-touch] .mp-bottomnav {
   display: flex;
+}
+/* Nur wo keine Leiste ist (Computer): z. B. „Chat mit deinem Coach“ auf
+   Home – sonst übernimmt das der Mittelknopf der Leiste. */
+.mp-mit-leiste .mp-nur-ohne-leiste {
+  display: none !important;
+}
+@media (min-width: 1024px) and (pointer: fine) {
+  :root:not([data-touch]) .mp-mit-leiste .mp-nur-ohne-leiste {
+    display: flex !important;
+  }
 }
 :root[data-touch] .mp-mit-leiste .mp-akut-knopf {
   bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;

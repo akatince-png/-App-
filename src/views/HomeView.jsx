@@ -2,12 +2,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
-import MiniPlanWidget from "../ui/MiniPlanWidget";
 import { useErrungenschaften } from "../data/useErrungenschaften";
 import { useTagesphase } from "../utils/useTagesphase";
 import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
-import { ordenFuerWidgetKategorie } from "../utils/errungenschaften";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import { accentSoft, cardBorder, fontHeading, hexZuRgba, textMain, textMuted } from "../ui/theme";
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META, ATEM_META } from "../utils/dayItems";
@@ -26,7 +24,6 @@ import { toLocalISODate, addDays, sameDay, verspaetungText } from "../utils/date
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
 import { useT } from "../i18n/translate";
-import ADHSModeToggle from "../ui/ADHSModeToggle";
 import { AkutModusPanel } from "../ui/AkutModusKarte";
 import { getCoachName } from "../utils/coachStorage";
 import QuickTaskList from "../ui/QuickTaskList";
@@ -93,11 +90,6 @@ const ROUTINE_HINTERGRUND = { morgenroutine: ROUTINE_META.morgenroutine.bg, aben
 // Abendroutine stecken nicht in KATEGORIE_META (siehe Kommentar dort),
 // brauchen ihr Icon also wie Farbe/Hintergrund als eigene, kleine Map.
 const ROUTINE_ICON = { morgenroutine: "sunrise", abendroutine: "moon" };
-// Dunklere, besser lesbare Text-Variante von ROUTINE_FARBE (13.09.) — gleiche
-// Rolle wie KATEGORIE_META[...].text gegenüber .dot, für die "Weitere
-// Pläne"-Kacheln unten, die jetzt vollflächig eingefärbt sind statt nur
-// einen kleinen Punkt zu zeigen.
-const ROUTINE_TEXT = { morgenroutine: ROUTINE_META.morgenroutine.text, abendroutine: ROUTINE_META.abendroutine.text };
 
 
 export default function HomeView({ onOpenView, onOpenTraining }) {
@@ -750,7 +742,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     [supplementErledigt, mahlzeitErledigt, hormonErledigt, gewohnheitErledigt, trainingEintraege, routineDurchlaeufe,
       schlafEintraege, atemuebungLogs, hydrationEintraege, hydrationZielMl, tageslichtEintraege, tageslichtZielMinuten, denkpauseErgebnisse, kognitivErgebnisse, eigeneGruppenLogs, eigeneFokusSitzungen, alltagEintraege, alltagErledigt]
   );
-  const { kategorien: ordenKategorien, verdiente: ordenVerdiente, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
+  const { kategorien: ordenKategorien, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
   const tagesQuests = useMemo(
     () => baueTagesQuests({ items: heuteItems, hydrationHeuteMl, hydrationZielMl, raetselHeute, raetselZiel: TAGESRAETSEL_ZIEL }),
@@ -792,12 +784,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     () => widgetsFuerZeitraum(effektiverZeitraum, miniWidgetData, errungenschaftenQuellen, aktivesHauptprotokoll?.startdatum),
     [effektiverZeitraum, miniWidgetData, errungenschaftenQuellen, aktivesHauptprotokoll]
   );
-
-  // Direktzugriff (aktive Pläne) vs. Weitere Pläne (noch nicht eingerichtet)
-  // — im Notfallmodus wie bisher: nur essenzielle UND tatsächlich genutzte
-  // Kategorien, "Weitere Pläne" bleibt dort ganz leer (nur Basics zählen).
-  const direktzugriffWidgets = isEmergencyMode ? miniWidgetData.filter((w) => w.isEssential && w.aktiv) : miniWidgetData.filter((w) => w.aktiv);
-  const weiterePlaeneWidgets = isEmergencyMode ? [] : miniWidgetData.filter((w) => !w.aktiv);
 
   // Als-Nächstes-Liste als Baustein (24.09.): steht jetzt im weißen Feld
   // der großen Karte oben (siehe kartenMitte). "Tagesplan ›" führt zur
@@ -858,11 +844,12 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                         gap: 10,
                         padding: istErste ? "15px 14px" : "11px 14px",
                         borderRadius: 16,
-                        border: `2px solid ${k.dot}`,
+                        // Design 2.0 (29.09., „wirkt alt“): kein dicker Rahmen
+                        // mehr, sondern zarte Fläche mit Farbstreifen links.
+                        border: "none",
+                        borderLeft: `4px solid ${k.dot}`,
                         background: k.bg,
-                        // "Jetzt dran": der oberste Punkt etwas größer und
-                        // mit leichtem Schein in seiner Farbe.
-                        boxShadow: istErste ? `0 6px 16px ${hexZuRgba(k.dot, 0.22)}` : "none",
+                        boxShadow: istErste ? `0 4px 14px ${hexZuRgba(k.dot, 0.14)}` : "none",
                       }}
                     >
                       <button
@@ -884,6 +871,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                           cursor: "pointer",
                           padding: 0,
                           minWidth: 0,
+                          color: "inherit",
+                          fontFamily: "inherit",
                         }}
                       >
                         <div style={{ width: istErste ? 10 : 8, height: istErste ? 10 : 8, borderRadius: 5, background: k.dot, flexShrink: 0 }} />
@@ -1196,8 +1185,26 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           bekommt deshalb wieder seine volle, ausführlichere Darstellung
           statt der schmalen `compact`-Variante — Design wird bei
           Gelegenheit noch weiter überarbeitet. */}
-      <div style={{ marginBottom: 18 }}>
-        <ADHSModeToggle compact isEmergencyMode={isEmergencyMode} onToggle={handleToggleEmergencyMode} />
+      {/* Design 2.0 (29.09., „wirkt alt“): statt des großen farbigen Balkens
+          ein schlanker Umschalter „Alles / Nur Basics“. */}
+      <div role="group" aria-label="Ansicht heute" data-ansicht-umschalter style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 18, padding: "10px 12px 10px 16px", borderRadius: 18, background: "var(--mp-karte)", border: "1px solid rgba(16, 24, 40, 0.05)", boxShadow: "var(--mp-schatten)" }}>
+        <span style={{ fontSize: 13.5, fontWeight: 700 }}>Heute zeigen</span>
+        <span style={{ display: "flex", gap: 4, padding: 3, borderRadius: 99, background: "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
+          {[
+            [false, "✨ Alles"],
+            [true, "🌿 Nur Basics"],
+          ].map(([wert, label]) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={isEmergencyMode === wert}
+              onClick={() => isEmergencyMode !== wert && handleToggleEmergencyMode(wert)}
+              style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", background: isEmergencyMode === wert ? "var(--mp-karte)" : "transparent", boxShadow: isEmergencyMode === wert ? "0 1px 3px rgba(16, 24, 40, 0.12)" : "none" }}
+            >
+              {label}
+            </button>
+          ))}
+        </span>
       </div>
 
       {/* Emergency Mode Info Banner */}
@@ -1258,7 +1265,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           />
           <button
             type="button"
-            className="mp-tap"
+            className="mp-tap mp-nur-ohne-leiste"
             onClick={() => onOpenView("coach-chat")}
             style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 24, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
           >
@@ -1272,78 +1279,9 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         </>
       )}
 
-      {/* Direktzugriff: nur die aktiven Pläne (schon eingerichtet, echte
-          Daten) — Gewohnheiten/Morgen-/Abendroutine stecken jetzt mit drin,
-          genau wie jede andere Kategorie. */}
-      {direktzugriffWidgets.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ margin: "0 2px 10px", display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontFamily: fontHeading, fontSize: 18, fontWeight: 800, letterSpacing: -0.3, color: textMain }}>Deine Bereiche</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: textMuted }}>{t("home.direktzugriff.desc")}</span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
-            {direktzugriffWidgets.map((widget) => (
-              <MiniPlanWidget
-                key={widget.kategorie}
-                name={widget.name}
-                dailyCount={widget.dailyCount}
-                dailyTotal={widget.dailyTotal}
-                weeklyCount={widget.weeklyCount}
-                weeklyTotal={widget.weeklyTotal}
-                kategorie={widget.kategorie}
-                unit={widget.unit}
-                aktiv={widget.aktiv}
-                farbe={widget.farbe}
-                hintergrund={widget.hintergrund}
-                statusText={widget.statusText}
-                onClick={() => onOpenView(widget.viewId)}
-                actionLabel={widget.actionLabel}
-                onAction={widget.onAction}
-                orden={ordenFuerWidgetKategorie(widget.kategorie, ordenKategorien, ordenVerdiente)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Weitere Pläne: die inaktiven, noch nicht eingerichteten — klein und
-          gedeckt, laden aber weiter zum Einrichten ein. */}
-      {weiterePlaeneWidgets.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>{t("home.weiterePlaene")}</span>{" "}
-            <span style={{ fontSize: 11, color: textMuted }}>— {t("home.weiterePlaene.desc")}</span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(108px, 1fr))", gap: 8 }}>
-            {weiterePlaeneWidgets.map((widget) => {
-              // Bug-Fix/Verbesserung (13.09., Nutzerin-Vorgabe): vorher nur
-              // ein winziger 7px-Punkt in der Kategorie-Farbe — kaum zu
-              // erkennen, und half nicht dabei, die Farben mit dem
-              // Tagesfortschritt-Balkendiagramm oben zu verknüpfen. Jetzt
-              // trägt die ganze Kachel Hintergrund- und Textfarbe der
-              // Kategorie. Grid statt Flex-Wrap (13.09., Nutzerin-Vorgabe):
-              // unterschiedlich breite Pillen liefen auf dem Handy nur noch
-              // 1 pro Zeile untereinander — mit gleich breiten Kacheln
-              // ordnen sie sich stattdessen sauber in Reihen.
-              const bg = widget.hintergrund || KATEGORIE_META[widget.kategorie]?.bg || "#F7F7F5";
-              const textFarbe = ROUTINE_TEXT[widget.kategorie] || KATEGORIE_META[widget.kategorie]?.text || textMuted;
-              return (
-                <button
-                  key={widget.kategorie}
-                  type="button"
-                  className="mp-tap"
-                  onClick={() => onOpenView(widget.viewId)}
-                  style={{ textAlign: "left", background: bg, border: "none", borderRadius: 14, padding: "9px 12px", cursor: "pointer" }}
-                >
-                  <div style={{ fontSize: 11, fontWeight: 700, color: textFarbe }}>{widget.name}</div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: textFarbe, opacity: 0.75 }}>{t("home.weiterePlaene.einrichten")}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
+      {/* „Deine Bereiche“ (Ringe) und „Weitere Pläne – einrichten“ sind seit
+          29.09. nicht mehr auf der Startseite (Nutzerin: „Kacheln unten weg“).
+          Alle Bereiche: Mehr → Alle Pläne. */}
       {/* Design 2.0 (29.09., Nutzerin: „Leiste reicht, Kacheln unten weg“):
           Alle Pläne, Archiv, Tagebuch und Neues Protokoll stehen jetzt oben
           unter „Mehr“ (MehrView.jsx), erreichbar über die Leiste. */}

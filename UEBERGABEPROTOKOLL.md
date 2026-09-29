@@ -212,6 +212,9 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Startseite entschlackt + moderner (29.09., live)
+Nutzerin (Foto iPad): „Kacheln unten weg, Design wirkt alt“. Entfernt von Home: „Deine Bereiche“ (MiniPlanWidget-Ringe) und „Weitere Pläne – einrichten“ (alles über Mehr → Alle Pläne erreichbar). Neu gestaltet: Kernprogramm-Karte hell mit Etiketten-Chip und Textlink statt dunklem Block mit gelbem Knopf; „Jetzt dran“ ohne dicken Rahmen, Farbstreifen links; statt großem Balken „Vollständige Ansicht“ ein schlanker Umschalter „Heute zeigen: ✨ Alles / 🌿 Nur Basics“ (`data-ansicht-umschalter`); „Chat mit deinem Coach“-Zeile nur noch ohne Leiste (Computer), sonst Mittelknopf. **Safari-Fehler behoben:** Knöpfe ohne eigene Farbe waren blau (index.css `button { color: inherit }`).
+
 ### Geführte Atemübung aus der Routine (29.09., live)
 Nutzerin: Beim Schritt „Atemübung (2 Min.)“ muss man direkt in eine fest hinterlegte, geführte Übung kommen – ohne KI, ohne selbst suchen. Umsetzung: neue Bibliotheks-Übung `morgen` „Guten-Morgen-Atmung“ (2 Min., 4 ein · 2 halten · 4 aus) in `utils/atemBibliothek.js`; `atemFuerRoutineSchritt(schritt, routine)` ordnet zu (Kernprogramm `atem_morgen` → morgen 2 Min., `atem_abend` → „Gleichmäßig atmen“ 5 Min., sonst jeder Schritt mit „Atem/Atmung/atmen“ im Namen; Dauer aus „(N Min.)“). `RoutineHeuteChecklist` zeigt daneben „▶ Mitmachen“ (Bestätigen bleibt), setzt `ATEM_START_KEY` + `ATEM_ROUTINE_KEY` und springt nach `#/atemuebungen`; dort startet die Übung mit Stimme, nach dem Ende wird der Schritt automatisch abgehakt und „✓ Weiter mit der Morgenroutine“ führt zur Startseite. Tests: `e2e/atem-tagebuch.spec.js`, `atemBibliothek.test.js`, Harness `?kern=1&atemschritt=1`.
 
