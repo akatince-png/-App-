@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { Shell, Card, PrimaryButton } from "./primitives";
-import Timer from "./Timer";
 import { cardBorder, danger, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
@@ -11,6 +10,7 @@ import { verspaetungHinweis } from "../utils/routineVerspaetung";
 import TagebuchFormular from "./TagebuchFormular";
 import { istTagebuchSchritt } from "../utils/tagebuch";
 import { toLocalISODate } from "../utils/dates";
+import { playBeep } from "../utils/beep";
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
@@ -91,6 +91,32 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   }, []);
 
   const aktuell = schritte[index];
+
+  // Schritt-Uhr (29.09., Nutzerin): jeder Schritt hat eine Soll-Zeit als
+  // Rahmen – auch in der Messwoche. Sie läuft rückwärts; ist sie um, gibt es
+  // Ton + Vibration und die Uhr zählt sichtbar weiter („+1:20 länger“),
+  // statt automatisch weiterzuspringen. Gespeichert wird die echte Dauer,
+  // damit kürzer/länger dokumentiert ist und nachjustiert werden kann.
+  const sollSek = (Number(aktuell?.dauerMin) || 5) * 60;
+  const schrittSek = Math.max(0, Math.round((Date.now() - startZeitRef.current) / 1000));
+  const restSek = sollSek - schrittSek;
+  const signalRef = useRef({ index: -1, vorwarnung: false, ende: false });
+  useEffect(() => {
+    if (fertig || !wachGefragt || !aktuell || istTagebuchSchritt(aktuell)) return;
+    const sig = signalRef.current;
+    if (sig.index !== index) signalRef.current = { index, vorwarnung: false, ende: false };
+    const r = signalRef.current;
+    if (!r.vorwarnung && sollSek > 60 && restSek <= 30 && restSek > 0) {
+      r.vorwarnung = true;
+      playBeep(1);
+      navigator.vibrate?.(200);
+    }
+    if (!r.ende && restSek <= 0) {
+      r.ende = true;
+      playBeep(2);
+      navigator.vibrate?.([300, 150, 300]);
+    }
+  });
 
   const weiter = () => {
     const tatsaechlichSek = Math.round((Date.now() - startZeitRef.current) / 1000);
@@ -236,14 +262,13 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>
-        {messmodus ? (
-          <div aria-label="Stoppuhr Schritt" style={{ fontSize: 44, fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
-            {fmtDauer((Date.now() - startZeitRef.current) / 1000)}
-            <div style={{ fontSize: 12, fontWeight: 700, color: textMuted }}>📏 wird gemessen – in deinem Tempo</div>
+        <div aria-label="Uhr Schritt" data-schritt-uhr={restSek > 0 ? "laeuft" : "drueber"} style={{ fontSize: 44, fontWeight: 900, fontVariantNumeric: "tabular-nums", color: restSek > 0 ? "inherit" : "color-mix(in srgb, #D9822B var(--mp-schrift), var(--mp-schrift-hell))" }}>
+          {restSek > 0 ? fmtDauer(restSek) : `+${fmtDauer(-restSek)}`}
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: textMuted }}>
+            {restSek > 0 ? `noch · geplant ${aktuell.dauerMin || 5} Min.` : `länger als geplant (${aktuell.dauerMin || 5} Min.) – kein Problem, wird notiert`}
           </div>
-        ) : (
-          <Timer key={aktuell.id} mode="countdown" initialSeconds={(Number(aktuell.dauerMin) || 5) * 60} autoStart vorwarnungSek={30} onFertig={weiter} />
-        )}
+          {messmodus && <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginTop: 2 }}>📏 wird gemessen – in deinem Tempo</div>}
+        </div>
         <div style={{ marginTop: 14 }}>
           <PrimaryButton onClick={weiter} variant="success">
             Schritt fertig

@@ -81,3 +81,17 @@ test("Atem-Schritt der Morgenroutine: Mitmachen führt die 2-Minuten-Übung und 
   await page.getByRole("button", { name: /Weiter mit der Morgenroutine/ }).click();
   await expect(page).toHaveURL(/#\/home/);
 });
+
+// Nutzerin (29.09.): bei „Mit wem“ und „Wo“ selbst etwas eintragen können,
+// dazu ein größeres Textfeld, das immer sichtbar ist.
+test("Tagebuch: eigene Person und eigener Ort als Chip, Textfeld direkt sichtbar", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 29, 21, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0#/tagebuch");
+  await page.getByLabel("Andere Person eintragen").fill("Tante Rosi");
+  await page.getByLabel("Andere Person eintragen").press("Enter");
+  await expect(page.getByRole("group", { name: "Mit wem?" }).getByRole("button", { name: "Tante Rosi" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Anderen Ort eintragen").fill("Fitnessstudio");
+  await page.getByRole("button", { name: "+ Dazu" }).first().click();
+  await expect(page.getByRole("group", { name: "Wo warst du vor allem?" }).getByRole("button", { name: "Fitnessstudio" })).toBeVisible();
+  await expect(page.getByLabel("Was war besonders?")).toBeVisible();
+});

@@ -33,6 +33,17 @@ export default function TagebuchFormular({ datum, vorhanden, kompakt = false, on
   const diktat = useDiktat({ value: e.notiz, onChange: (v) => setE((x) => ({ ...x, notiz: v })) });
   const auto = useMemo(() => autoWerte(datum, appData), [datum, appData]);
 
+  // Eigene Einträge (29.09., Nutzerin: „bei Mit wem und Wo auch selber
+  // eintragen, falls jemand nicht in der Liste steht“): werden als
+  // zusätzliche, ausgewählte Chips gespeichert.
+  const [eigen, setEigen] = useState({ orte: "", personen: "" });
+  const eigenesHinzufuegen = (feld) => {
+    const wert = (eigen[feld] || "").trim();
+    if (!wert) return;
+    setE((x) => ({ ...x, [feld]: x[feld].includes(wert) ? x[feld] : [...x[feld], wert] }));
+    setEigen((x) => ({ ...x, [feld]: "" }));
+  };
+
   const umschalten = (feld, wert) => setE((x) => ({ ...x, [feld]: x[feld].includes(wert) ? x[feld].filter((w) => w !== wert) : [...x[feld], wert] }));
 
   const speichern = async () => {
@@ -49,12 +60,27 @@ export default function TagebuchFormular({ datum, vorhanden, kompakt = false, on
     <div key={feld}>
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "12px 0 6px" }}>{TITEL[feld].toUpperCase()}</div>
       <div role="group" aria-label={TITEL[feld]} style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {OPTIONEN[feld].map((w) => (
+        {[...OPTIONEN[feld], ...e[feld].filter((w) => !OPTIONEN[feld].includes(w))].map((w) => (
           <button key={w} type="button" aria-pressed={e[feld].includes(w)} className="mp-tap" style={chip(e[feld].includes(w))} onClick={() => umschalten(feld, w)}>
             {w}
           </button>
         ))}
       </div>
+      {feld in eigen && (
+        <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+          <input
+            value={eigen[feld]}
+            onChange={(ev) => setEigen((x) => ({ ...x, [feld]: ev.target.value }))}
+            onKeyDown={(ev) => ev.key === "Enter" && (ev.preventDefault(), eigenesHinzufuegen(feld))}
+            aria-label={feld === "personen" ? "Andere Person eintragen" : "Anderen Ort eintragen"}
+            placeholder={feld === "personen" ? "Jemand anderes? z. B. Tante Rosi" : "Woanders? z. B. Fitnessstudio"}
+            style={{ flex: 1, minWidth: 0, border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 10px", fontSize: 13.5, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" }}
+          />
+          <button type="button" onClick={() => eigenesHinzufuegen(feld)} disabled={!eigen[feld].trim()} style={{ ...chip(false), opacity: eigen[feld].trim() ? 1 : 0.5 }}>
+            + Dazu
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -95,34 +121,35 @@ export default function TagebuchFormular({ datum, vorhanden, kompakt = false, on
           {gruppe("essen")}
           {gruppe("tagesart")}
           {gruppe("koerper")}
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "12px 0 6px" }}>WAS WAR BESONDERS? (OPTIONAL)</div>
-          <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-            <textarea
-              value={diktat.interim ? `${e.notiz} ${diktat.interim}`.trim() : e.notiz}
-              onChange={(ev) => setE((x) => ({ ...x, notiz: ev.target.value }))}
-              rows={3}
-              aria-label="Was war besonders?"
-              placeholder="z. B. Spaziergang mit Lena, danach richtig klarer Kopf"
-              style={{ flex: 1, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "9px 11px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
-            />
-            {diktat.verfuegbar && (
-              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
-                {diktat.hoert ? "⏹" : "🎤"}
-              </button>
-            )}
-          </div>
-          <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, marginTop: 8 }}>
-            <input type="checkbox" checked={e.notizTeilen} onChange={(ev) => setE((x) => ({ ...x, notizTeilen: ev.target.checked }))} />
-            <span>
-              🔒 Notiz auch für meinen Coach sichtbar <span style={{ color: textMuted }}>(sonst nur für dich)</span>
-            </span>
-          </label>
         </>
       ) : (
         <button type="button" onClick={() => setMehr(true)} style={{ ...chip(false), marginTop: 12, background: "transparent", color: textMuted, padding: "6px 0" }}>
-          + Essen, Tagesart, Notiz (optional)
+          + Essen, Tagesart, Körper (optional)
         </button>
       )}
+      {/* Freitext immer sichtbar und größer (29.09., Nutzerin: „mehr Textbereich, ein Fenster zum Reinschreiben“). */}
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "12px 0 6px" }}>WAS WAR BESONDERS? (OPTIONAL)</div>
+      <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+        <textarea
+          value={diktat.interim ? `${e.notiz} ${diktat.interim}`.trim() : e.notiz}
+          onChange={(ev) => setE((x) => ({ ...x, notiz: ev.target.value }))}
+          rows={5}
+          aria-label="Was war besonders?"
+          placeholder="z. B. Spaziergang mit Lena, danach richtig klarer Kopf"
+          style={{ flex: 1, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "9px 11px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
+        />
+        {diktat.verfuegbar && (
+          <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
+            {diktat.hoert ? "⏹" : "🎤"}
+          </button>
+        )}
+      </div>
+      <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, marginTop: 8 }}>
+        <input type="checkbox" checked={e.notizTeilen} onChange={(ev) => setE((x) => ({ ...x, notizTeilen: ev.target.checked }))} />
+        <span>
+          🔒 Notiz auch für meinen Coach sichtbar <span style={{ color: textMuted }}>(sonst nur für dich)</span>
+        </span>
+      </label>
       {(fehler || diktat.fehler) && <div style={{ color: danger, fontSize: 12.5, marginTop: 8 }}>{fehler || diktat.fehler}</div>}
       <div style={{ marginTop: 12 }}>
         <PrimaryButton onClick={speichern} disabled={!e.stimmung || speichert}>

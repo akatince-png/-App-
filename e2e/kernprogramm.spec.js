@@ -121,3 +121,20 @@ test("Messwoche: Bestätigen in der Abhak-Liste startet die Stoppuhr, ohne Uhr b
   await page.getByRole("button", { name: "Bestätigen" }).first().click();
   await expect(page.getByText("Gesamtzeit", { exact: false })).toHaveCount(0);
 });
+
+// Nutzerin (29.09.): Soll-Zeit als Rahmen, danach läuft die Uhr weiter und
+// die längere Dauer wird notiert – kein automatisches Weiterspringen.
+test("Routine-Uhr: nach der Soll-Zeit zählt sie weiter, der Schritt bleibt stehen", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 8, 29, 7, 10) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1#/home");
+  await page.getByRole("button", { name: /Morgenroutine starten/ }).click();
+  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  if (await abJetzt.isVisible()) await abJetzt.click();
+  const uhr = page.locator("[data-schritt-uhr]");
+  await expect(uhr).toHaveAttribute("data-schritt-uhr", "laeuft");
+  await expect(uhr).toContainText("geplant 1 Min.");
+  await page.clock.runFor(75_000);
+  await expect(uhr).toHaveAttribute("data-schritt-uhr", "drueber");
+  await expect(uhr).toContainText("+0:");
+  await expect(page.getByText("Glas Wasser")).toBeVisible();
+});

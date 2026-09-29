@@ -212,6 +212,12 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Routine-Uhr: Soll-Zeit + Weiterlaufen, Tagebuch mit eigenen Einträgen (29.09., live)
+Nutzerin: auch in der Messwoche vorher Soll-Werte als Rahmen; läuft es länger/kürzer, soll die Uhr weiterlaufen und das dokumentiert werden, um nachzujustieren. Tagebuch: bei „Mit wem“/„Wo“ selbst eintragen, größeres Textfeld.
+- **`RoutineAblauf`:** eine Schritt-Uhr für alle Wochen (`data-schritt-uhr` = `laeuft`/`drueber`): Soll-Zeit (`dauerMin`) läuft rückwärts, 30 s vorher Ton + kurzes Vibrieren, bei 0 Doppelton + Vibrieren, danach zählt sie orange weiter („+1:20 – länger als geplant, wird notiert“). **Kein automatisches Weiterspringen mehr** (vorher sprang der Countdown bei 0 zum nächsten Schritt, die Überzeit ging verloren). In Mess-Phase zusätzlich „📏 wird gemessen“. Gespeichert wird wie bisher die echte Dauer (`tatsaechlichSek`), die Auswertung „geplant vs. tatsächlich“ und die Messwochen-Vorschläge bleiben.
+- **`TagebuchFormular`:** bei Orte/Personen ein Eingabefeld „+ Dazu“ – eigene Werte werden als ausgewählte Chips in `orte`/`personen` (text[]) gespeichert. Freitext „Was war besonders?“ jetzt immer sichtbar (5 Zeilen); Essen/Tagesart/Körper bleiben aufklappbar.
+- Tests: `e2e/kernprogramm.spec.js` (Uhr läuft weiter), `e2e/atem-tagebuch.spec.js` (eigene Einträge).
+
 ### Stoppuhr in der Tracking-Phase erzwungen + Vibration (29.09., live)
 Nutzerin: „Ich habe die Morgenroutine nur bestätigt, es lief keine Stoppuhr.“ Befund in ihren Daten: Schritte über die Abhak-Liste (`RoutineHeuteChecklist`) bestätigt → Durchlauf ohne Zeiten. Änderungen:
 - **`utils/messwoche.js`:** neu `istNachmessen(stand)` (gesamtWoche 7) und `istMessPhase(stand)` (Woche 1 oder 7); `messTag` zählt in Woche 7 ab Wochenbeginn. **Woche 7 „Nachmessen“ lief vorher gar nicht mit Stoppuhr** (nur im Fahrplan beschrieben) – jetzt schon (`RoutineAblauf` nutzt `istMessPhase`, Titel „Nachmessen“).
