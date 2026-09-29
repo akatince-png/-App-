@@ -169,16 +169,17 @@ export default function AtemuebungenView({ onHome }) {
           className="mp-tap"
           aria-label={`${u.name} starten`}
           onClick={() => setLaufend({ uebung: u })}
-          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "none", borderRadius: 14, padding: "10px 12px", marginBottom: 8, background: u.farbe, cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "none", borderRadius: 18, padding: "12px 14px", marginBottom: 10, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
         >
-          <span style={{ fontSize: 22 }}>{u.icon}</span>
+          {/* Design 2.0 (29.09.): helle Karte, Farbe nur noch im Symbol-Feld. */}
+          <span style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, background: u.farbe }}>{u.icon}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontWeight: 800, fontSize: 14 }}>{u.name}</span>
             <span style={{ display: "block", fontSize: 12, color: "color-mix(in srgb, #4A5170 var(--mp-schrift), var(--mp-schrift-hell))" }}>
               {u.beschreibung} · {u.wofuer}
             </span>
           </span>
-          <span style={{ fontSize: 11.5, fontWeight: 800, background: "var(--mp-karte)", borderRadius: 8, padding: "4px 7px", whiteSpace: "nowrap" }}>▶ {u.dauerMinuten} Min.</span>
+          <span style={{ fontSize: 11.5, fontWeight: 800, background: "var(--mp-accent)", color: "#fff", borderRadius: 99, padding: "6px 10px", whiteSpace: "nowrap" }}>▶ {u.dauerMinuten} Min.</span>
         </button>
       ))}
 

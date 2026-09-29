@@ -221,6 +221,7 @@ Nutzerin: „modernen Stil für das gesamte Hauptmenü, selbstständig, nicht St
 - **Kernprogramm-Übersicht** (`AchtWochenPlan`): helle Karten mit Farbstreifen statt dunkler Blöcke, „JETZT“ in Akzentfarbe (Onboarding-Vorstellung nutzt `EtappenBalken hell={false}` weiter).
 - **Pill** (primitives) ohne Rahmen, weich hinterlegt – wirkt überall, wo Auswahl-Pillen genutzt werden.
 Neue Reiter bitte immer mit diesen Bausteinen bauen, nicht mehr mit eigenen Rahmen-Knöpfen.
+- **Nachzug (29.09.):** Tagesplan-Datumsband als helle Leiste ohne Kästchen (`.mp-tagesleiste`, gewählter Tag als Akzent-Kapsel, heute mit Punkt, `aria-pressed`/`aria-current="date"`), „Bild/Liste“ jetzt `Umschalter` (Gruppe „Ansicht“). Denksport: Tagesrätsel als helle Karte mit Farbstreifen + Zähler-Chip, Spiel-Kacheln ohne Rahmen mit Symbol-Feld und Level-Chip. Atemübungen: helle Karten, Farbe nur im Symbol-Feld, „▶ N Min.“ als Akzent-Kapsel.
 
 ### Startseite schlicht + Aufteilung Plan/Mehr (29.09., live)
 Nutzerin: Auf die Startseite nur Kernprogramm, Gehirn + Körper, Wasser-, Spielen- und „Grad nicht gut?“-Knopf sowie Tages-Quests; „Aufteilen“ (Tagesaufgaben → Plan, Rest → Mehr); Coach-Nachricht als gut sichtbare Sprechblase; Denksport und Rätsel zusammenlegen; Kalender leichter erreichbar.

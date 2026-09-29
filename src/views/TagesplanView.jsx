@@ -6,7 +6,7 @@ import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
-import { accent, accentDark, accentSoft, cardBorder, danger, textMuted, verdunkeln } from "../ui/theme";
+import { accent, accentSoft, cardBorder, danger, textMuted, verdunkeln } from "../ui/theme";
 import Icon from "../ui/Icon";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
@@ -704,31 +704,25 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       />
 
       {modus === "tag" && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto" }}>
+        <div className="mp-tagesleiste" style={{ marginBottom: 14 }}>
           {wochentage.map((d, i) => {
             const active = sameDay(d, selectedDate);
+            const heute = sameDay(d, today);
             return (
               <button
                 key={i}
+                type="button"
                 className="mp-tap"
+                aria-pressed={active}
+                aria-current={heute ? "date" : undefined}
                 onClick={() => {
                   setSelectedDate(d);
                   setModus("tag");
                 }}
-                style={{
-                  flex: "1 0 44px",
-                  minHeight: 52,
-                  padding: "8px 4px",
-                  borderRadius: 13,
-                  border: `1px solid ${active ? accent : cardBorder}`,
-                  background: active ? accent : "var(--mp-karte)",
-                  color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
-                  cursor: "pointer",
-                  textAlign: "center",
-                }}
               >
-                <div style={{ fontSize: 10, fontWeight: 700 }}>{WOCHENTAGE[(d.getDay() + 6) % 7]}</div>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>{d.getDate()}</div>
+                <span className="mp-tagesleiste-wt">{WOCHENTAGE[(d.getDay() + 6) % 7]}</span>
+                <span className="mp-tagesleiste-nr">{d.getDate()}</span>
+                <span className="mp-tagesleiste-punkt" aria-hidden="true" />
               </button>
             );
           })}
@@ -736,23 +730,16 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       )}
 
       {modus === "tag" && (
-        <div role="group" aria-label="Ansicht" style={{ display: "flex", gap: 4, marginBottom: 14, background: "color-mix(in srgb, #F1F2F6 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: 3 }}>
-          {[
+        <Umschalter
+          name="Ansicht"
+          wert={ansicht}
+          onWahl={setAnsicht}
+          style={{ marginBottom: 14 }}
+          optionen={[
             ["bild", "🖼️ Bild"],
             ["liste", "☰ Liste"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              className="mp-tap"
-              aria-pressed={ansicht === id}
-              onClick={() => setAnsicht(id)}
-              style={{ flex: 1, border: "none", borderRadius: 10, padding: "8px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: ansicht === id ? "var(--mp-karte)" : "transparent", color: ansicht === id ? "var(--mp-accent-dark-text)" : textMuted, boxShadow: ansicht === id ? "0 2px 6px rgba(0,0,0,0.08)" : "none" }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          ]}
+        />
       )}
 
       {modus === "tag" && ansicht === "bild" && (

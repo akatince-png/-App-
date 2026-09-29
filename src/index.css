@@ -650,6 +650,61 @@ input[type="time"]::-webkit-date-and-time-value {
   color: var(--mp-text);
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.14);
 }
+/* Datumsband im Tagesplan (29.09.): ohne Kästchen, gewählter Tag als
+   farbige Kapsel, heute mit Punkt darunter. */
+.mp-tagesleiste {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 18px;
+  background: var(--mp-karte);
+  box-shadow: var(--mp-schatten);
+}
+.mp-tagesleiste > button {
+  flex: 1 0 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 7px 0 5px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--mp-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mp-tagesleiste-wt {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--mp-text-muted);
+}
+.mp-tagesleiste-nr {
+  font-size: 15px;
+  font-weight: 800;
+}
+.mp-tagesleiste-punkt {
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  background: transparent;
+}
+.mp-tagesleiste > button[aria-current="date"] .mp-tagesleiste-punkt {
+  background: var(--mp-accent);
+}
+.mp-tagesleiste > button[aria-pressed="true"] {
+  background: var(--mp-accent);
+  color: #fff;
+}
+.mp-tagesleiste > button[aria-pressed="true"] .mp-tagesleiste-wt {
+  color: rgba(255, 255, 255, 0.85);
+}
+.mp-tagesleiste > button[aria-pressed="true"] .mp-tagesleiste-punkt {
+  background: #fff;
+}
 .mp-schalter {
   width: 50px;
   height: 30px;

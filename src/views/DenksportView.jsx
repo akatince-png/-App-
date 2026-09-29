@@ -183,12 +183,12 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
                 className="mp-tap"
                 aria-label={`${sp.name} spielen`}
                 onClick={() => setSpiel({ id: sp.id, level, runde: 0 })}
-                style={{ textAlign: "left", border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: "14px 12px", background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit", color: textMain }}
+                style={{ textAlign: "left", border: "none", borderRadius: 18, padding: "14px 12px", background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)", cursor: "pointer", fontFamily: "inherit", color: textMain }}
               >
-                <div style={{ fontSize: 24 }}>{sp.emoji}</div>
+                <div style={{ width: 42, height: 42, borderRadius: 13, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, background: "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))" }}>{sp.emoji}</div>
                 <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4 }}>{sp.name}</div>
                 <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2, lineHeight: 1.35 }}>{sp.uebt}</div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 6 }}>Level {level}</div>
+                <div style={{ display: "inline-block", fontSize: 11, fontWeight: 800, color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", background: "color-mix(in srgb, #E8F0FC var(--mp-flaeche), var(--mp-rand-dunkel))", padding: "3px 9px", borderRadius: 99, marginTop: 8 }}>Level {level}</div>
               </button>
             );
           })}
@@ -336,14 +336,15 @@ function TagesraetselKarte({ heute, onStart }) {
   const geschafft = heute >= TAGESRAETSEL_ZIEL;
   const anteil = Math.min(1, heute / TAGESRAETSEL_ZIEL);
   return (
-    <div style={{ borderRadius: 20, border: `2px solid ${f.dot}`, background: geschafft ? f.dot : f.bg, color: geschafft ? "#fff" : f.text, padding: "14px 16px" }}>
+    // Design 2.0 (29.09.): helle Karte mit Farbstreifen statt dickem Rahmen.
+    <div style={{ borderRadius: 20, background: geschafft ? f.dot : "var(--mp-karte)", boxShadow: "var(--mp-schatten)", borderLeft: `5px solid ${f.dot}`, color: geschafft ? "#fff" : textMain, padding: "14px 16px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
         <div style={{ fontSize: 16, fontWeight: 900 }}>{geschafft ? "✓ Tagesrätsel geschafft" : "🧩 Tagesrätsel"}</div>
-        <div style={{ fontSize: 13, fontWeight: 800 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, padding: "3px 10px", borderRadius: 99, background: geschafft ? "rgba(255,255,255,0.25)" : f.bg, color: geschafft ? "#fff" : f.text }}>
           {Math.min(heute, TAGESRAETSEL_ZIEL)}/{TAGESRAETSEL_ZIEL}
         </div>
       </div>
-      <div style={{ fontSize: 12.5, marginTop: 4, lineHeight: 1.45, opacity: 0.9 }}>
+      <div style={{ fontSize: 12.5, marginTop: 4, lineHeight: 1.45, color: geschafft ? "rgba(255,255,255,0.92)" : textMuted }}>
         {geschafft
           ? "Super, für heute erledigt! Morgen warten 5 neue Fragen."
           : `Deine Tagesaufgabe: ${TAGESRAETSEL_ZIEL} Fragen, davon 3 Knobelaufgaben, die mit dir schwerer werden. Geschafft gibt's einen Bonuspunkt, jede richtige Antwort zählt extra.`}
