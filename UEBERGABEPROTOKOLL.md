@@ -212,6 +212,9 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Routine-Start direkt auf der Startseite (29.09., live)
+Nutzerin: „Beim Antippen der Morgenroutine läuft keine Stoppuhr, unser Konzept ist nicht wiederzuerkennen.“ Ursache: Seit der schlichten Startseite gab es dort keinen Start mehr; die Stoppuhr (RoutineAblauf) lief nur über Plan → „▶ Starten“ oder die Routine-Seite. Jetzt hat die `KernprogrammKarte` unten einen großen Knopf **„▶ Morgenroutine starten“** (bis 14 Uhr) bzw. **„▶ Abendroutine starten“** (ab 14 Uhr, `aktuelleRoutine()`), mit „N Schritte · mit Stoppuhr“. Er öffnet den geführten Ablauf direkt in `HomeView` (`ablaufRoutine`-State wie im Tagesplan). Ist die Routine heute durch: „✓ … heute geschafft“ (`data-routine-geschafft`). Nicht angezeigt bei fälligem Coach-Gespräch oder ohne Schritte. Tests: `e2e/kernprogramm.spec.js` (2 neue). Hinweis zur Admin-Seite: „🧭 Einrichten“ neben jeder Person ist die Einrichtungs-Checkliste, nicht das 8-Wochen-Programm.
+
 ### Hauptmenü einheitlich modern (29.09., live)
 Nutzerin: „modernen Stil für das gesamte Hauptmenü, selbstständig, nicht Stück für Stück“. Dafür zentrale Bausteine in `ui/Umschalter.jsx` + `index.css`:
 - **`Umschalter`** (`.mp-segment`): hell hinterlegte Leiste, aktive Wahl als weißes Feld – für wenige Optionen. Eingesetzt: Tagesplan (Tag · Woche · 📅 Kalender, Gruppe „Tagesplan-Ansicht“), Kalender (Tag/Woche/Monat, `data-kalender`), Team/Rangliste (Mein Team/Rangliste, Personen/Teams, Woche/Monat/Gesamt).

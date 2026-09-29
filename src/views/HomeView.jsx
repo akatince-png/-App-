@@ -38,6 +38,7 @@ import WochenCheckKarte from "../ui/WochenCheckKarte";
 import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
+import RoutineAblauf from "../ui/RoutineAblauf";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
@@ -134,6 +135,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     gruppenprotokolleNeuLaden,
     routineEinstellungen,
     routineSchrittErledigt,
+    routineDurchlaufSpeichern,
     confirmAlleTageszeit,
     toggleSupplementErledigt,
     toggleHormonErledigt,
@@ -184,6 +186,10 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
   const [akutOffen, setAkutOffen] = useState(false);
   const [spieleOffen, setSpieleOffen] = useState(false);
+  // Routine direkt von der Startseite starten (29.09., Nutzerin: „die
+  // Stoppuhr muss man sofort finden“): "morgen"/"abend" öffnet den
+  // geführten Ablauf wie im Tagesplan, null = normale Startseite.
+  const [ablaufRoutine, setAblaufRoutine] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
   const [trainingFehler, setTrainingFehler] = useState(null);
   // Direkte Checkliste statt Wegnavigieren (12.09., Nutzerin-Vorgabe): ein
@@ -996,6 +1002,18 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     </>
   );
 
+  if (ablaufRoutine) {
+    return (
+      <RoutineAblauf
+        routine={ablaufRoutine}
+        schritte={routineSchritte.filter((x) => x.routine === ablaufRoutine).sort((x, y) => x.reihenfolge - y.reihenfolge)}
+        onAbschluss={() => setAblaufRoutine(null)}
+        onAbbrechen={() => setAblaufRoutine(null)}
+        routineDurchlaufSpeichern={routineDurchlaufSpeichern}
+      />
+    );
+  }
+
   return (
     <Shell>
       {/* Design 2.0 (28.09.): große Begrüßung mit Datum statt Logo-Zeile;
@@ -1040,7 +1058,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       <LaufenderTimerKarte />
       </>
       )}
-      {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} />}
+      {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} onRoutineStart={setAblaufRoutine} />}
       {!STARTSEITE_SCHLICHT && (
       <>
       {proband === null && <Top3Karte />}

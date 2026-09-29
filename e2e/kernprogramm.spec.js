@@ -86,3 +86,22 @@ test("Mein AKA-Coaching: die 8 Wochen als Fahrplan, laufende Woche markiert, Tou
   await page.getByRole("button", { name: "Überspringen" }).click();
   await expect(page.getByText("Guten", { exact: false }).first()).toBeVisible();
 });
+
+// Nutzerin (29.09.): „Ich finde die Stoppuhr nicht“ – die Kernprogramm-Karte
+// startet die Routine jetzt direkt: morgens die Morgen-, abends die Abendroutine.
+test("Startseite: Kernprogramm-Karte startet die Morgenroutine mit Stoppuhr", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 29, 7, 10));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1#/home");
+  const start = page.getByRole("button", { name: /Morgenroutine starten/ });
+  await expect(start).toBeVisible();
+  await start.click();
+  await expect(page.getByText("Gesamtzeit Morgenroutine", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Routine abbrechen" }).click();
+  await expect(page.locator("[data-routine-start=morgen]")).toBeVisible();
+});
+
+test("Startseite: abends bietet die Karte die Abendroutine an", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 29, 21, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&kern=1#/home");
+  await expect(page.getByRole("button", { name: /Abendroutine starten/ })).toBeVisible();
+});
