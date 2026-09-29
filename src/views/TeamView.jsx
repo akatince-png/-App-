@@ -57,7 +57,7 @@ function Reiter({ wert, setWert, optionen }) {
             fontWeight: 800,
             cursor: "pointer",
             fontFamily: "inherit",
-            background: wert === id ? accentDark : "#F1F2F6",
+            background: wert === id ? accentDark : "color-mix(in srgb, #F1F2F6 var(--mp-flaeche), var(--mp-karte))",
             color: wert === id ? "#fff" : textMain,
           }}
         >
@@ -85,7 +85,7 @@ function MotivierenFeld({ name, onSenden, onFertig }) {
       <TextArea value={text} onChange={setText} placeholder={`Ein paar liebe Worte an ${name} …`} />
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "8px 0" }}>
         {["Du packst das! 💛", "Denk an dich heute 🌱", "Wir sind für dich da 🤝"].map((v) => (
-          <button key={v} type="button" onClick={() => setText(v)} style={{ border: `1px solid ${cardBorder}`, background: "#fff", borderRadius: 99, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+          <button key={v} type="button" onClick={() => setText(v)} style={{ border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", borderRadius: 99, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
             {v}
           </button>
         ))}
@@ -168,7 +168,7 @@ function MeinTeam({ team, onMotivieren, ichId }) {
           const serie = serieAusTagen(m.aktiveTage);
           const level = m.punkteGesamt != null ? levelAusPunkten(m.punkteGesamt).level : null;
           return (
-            <div key={m.userId} style={{ borderTop: i > 0 ? "1px solid #F0F1F5" : "none", padding: "9px 0" }}>
+            <div key={m.userId} style={{ borderTop: i > 0 ? "1px solid color-mix(in srgb, #F0F1F5 var(--mp-flaeche), var(--mp-rand-dunkel))" : "none", padding: "9px 0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Profilbild pfad={m.profilbildPfad} name={m.vorname} size={40} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -189,7 +189,7 @@ function MeinTeam({ team, onMotivieren, ichId }) {
                 ) : gesendetAn.includes(m.userId) ? (
                   <span style={{ fontSize: 12, fontWeight: 800, color: textMuted }}>Gesendet 💛</span>
                 ) : m.privat ? null : (
-                  <span style={{ fontSize: 11.5, fontWeight: 800, padding: "4px 9px", borderRadius: 99, background: accentSoft, color: accentDark }}>{m.punkteZeitraum} P.</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, padding: "4px 9px", borderRadius: 99, background: accentSoft, color: "var(--mp-accent-dark-text)" }}>{m.punkteZeitraum} P.</span>
                 )}
               </div>
               {motiviereId === m.userId && (
@@ -211,7 +211,7 @@ function MeinTeam({ team, onMotivieren, ichId }) {
         <>
           <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 8 }}>Was im Team passiert</div>
           {neuigkeiten.slice(0, 8).map((n, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 12, background: "#F5F6FA", marginBottom: 6, fontSize: 13 }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 12, background: "color-mix(in srgb, #F5F6FA var(--mp-flaeche), var(--mp-karte))", marginBottom: 6, fontSize: 13 }}>
               <Profilbild pfad={n.profilbildPfad} name={n.vorname} size={26} />
               <span>
                 <b>{n.userId === ichId ? "Du" : n.vorname}</b>{" "}
@@ -271,8 +271,8 @@ function TeamLiga({ zeitraum, meinTeamId }) {
               borderRadius: 16,
               padding: "10px 12px",
               marginBottom: 8,
-              border: `2px solid ${hervor ? (i === 0 ? GOLD.dot : farbe) : "#E3E6EE"}`,
-              background: i === 0 ? GOLD.bg : t.istMeinTeam ? hexZuRgba(farbe, 0.1) : "#fff",
+              border: `2px solid ${hervor ? (i === 0 ? GOLD.dot : farbe) : "color-mix(in srgb, #E3E6EE var(--mp-flaeche), var(--mp-rand-dunkel))"}`,
+              background: i === 0 ? GOLD.bg : t.istMeinTeam ? hexZuRgba(farbe, 0.1) : "var(--mp-karte)",
             }}
           >
             <span style={{ fontSize: MEDAILLEN[i] ? 22 : 15, width: 24, textAlign: "center", fontWeight: 800 }}>{MEDAILLEN[i] || i + 1}</span>
@@ -283,7 +283,7 @@ function TeamLiga({ zeitraum, meinTeamId }) {
               </div>
               <div style={{ display: "flex", marginTop: 4 }}>
                 {t.initialen.slice(0, 6).map((ini, j) => (
-                  <span key={j} style={{ width: 22, height: 22, borderRadius: 99, marginLeft: j ? -6 : 0, background: LIGA_FARBEN[(j + i) % LIGA_FARBEN.length], color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff" }}>
+                  <span key={j} style={{ width: 22, height: 22, borderRadius: 99, marginLeft: j ? -6 : 0, background: LIGA_FARBEN[(j + i) % LIGA_FARBEN.length], color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", border: "2px solid color-mix(in srgb, #fff var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
                     {ini.toUpperCase()}
                   </span>
                 ))}
@@ -291,7 +291,7 @@ function TeamLiga({ zeitraum, meinTeamId }) {
               <div style={{ fontSize: 12, color: textMuted, marginTop: 3 }}>
                 {t.mitglieder} {t.mitglieder === 1 ? "Person" : "Personen"} · {t.summe} Punkte gesamt
               </div>
-              <div style={{ height: 8, borderRadius: 99, background: "#EEF0F5", overflow: "hidden", marginTop: 5 }}>
+              <div style={{ height: 8, borderRadius: 99, background: "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))", overflow: "hidden", marginTop: 5 }}>
                 <div style={{ width: `${Math.round((t.schnitt / max) * 100)}%`, height: "100%", borderRadius: 99, background: i === 0 ? GOLD.dot : farbe }} />
               </div>
             </div>
@@ -306,7 +306,7 @@ function TeamLiga({ zeitraum, meinTeamId }) {
         <>
           <div style={{ fontSize: 15, fontWeight: 800, margin: "16px 0 8px" }}>Highlights</div>
           {highlights.map((h) => (
-            <div key={h.text} style={{ padding: "8px 10px", borderRadius: 12, background: "#F5F6FA", marginBottom: 6, fontSize: 13 }}>
+            <div key={h.text} style={{ padding: "8px 10px", borderRadius: 12, background: "color-mix(in srgb, #F5F6FA var(--mp-flaeche), var(--mp-karte))", marginBottom: 6, fontSize: 13 }}>
               {h.icon} {h.text}: <b>{h.wert}</b>
             </div>
           ))}
@@ -361,8 +361,8 @@ function PersonenRangliste({ zeitraum, ichId, teilt, onFreischalten }) {
               borderRadius: 16,
               padding: "10px 12px",
               marginBottom: 8,
-              border: ich ? `2px solid ${accentDark}` : i === 0 ? `2px solid ${GOLD.dot}` : "1.5px solid #E3E6EE",
-              background: ich ? accentSoft : i === 0 ? GOLD.bg : "#fff",
+              border: ich ? `2px solid ${accentDark}` : i === 0 ? `2px solid ${GOLD.dot}` : "1.5px solid color-mix(in srgb, #E3E6EE var(--mp-flaeche), var(--mp-rand-dunkel))",
+              background: ich ? accentSoft : i === 0 ? GOLD.bg : "var(--mp-karte)",
             }}
           >
             <span style={{ fontSize: MEDAILLEN[i] ? 22 : 15, width: 26, textAlign: "center", fontWeight: 800, color: textMuted }}>{MEDAILLEN[i] || i + 1}</span>
@@ -388,7 +388,7 @@ function PersonenRangliste({ zeitraum, ichId, teilt, onFreischalten }) {
       {!teilt && onFreischalten && (
         <div style={{ borderRadius: 16, padding: "12px 14px", background: GOLD.bg, border: `1.5px solid ${GOLD.dot}`, fontSize: 13, marginBottom: 10 }}>
           Du teilst deine Punkte noch nicht – du siehst die Rangliste, stehst aber selbst nicht drin.{" "}
-          <button type="button" onClick={onFreischalten} style={{ border: "none", background: "none", padding: 0, color: accentDark, fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+          <button type="button" onClick={onFreischalten} style={{ border: "none", background: "none", padding: 0, color: "var(--mp-accent-dark-text)", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
             Jetzt freischalten ›
           </button>
         </div>

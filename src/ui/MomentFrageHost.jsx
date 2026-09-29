@@ -34,14 +34,14 @@ export default function MomentFrageHost() {
   };
   const knopf = { flex: 1, border: "none", borderRadius: 12, padding: "11px 10px", fontSize: 14.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" };
   return (
-    <div role="dialog" aria-label="Kurze Frage" style={{ position: "fixed", left: 12, right: 12, bottom: 86, zIndex: 60, maxWidth: 460, margin: "0 auto", background: "#fff", borderRadius: 18, padding: 14, boxShadow: "0 12px 34px rgba(20,23,26,.22)", border: "1.5px solid #E4E6EE" }}>
+    <div role="dialog" aria-label="Kurze Frage" style={{ position: "fixed", left: 12, right: 12, bottom: 86, zIndex: 60, maxWidth: 460, margin: "0 auto", background: "var(--mp-karte)", borderRadius: 18, padding: 14, boxShadow: "0 12px 34px rgba(20,23,26,.22)", border: "1.5px solid color-mix(in srgb, #E4E6EE var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
       <div style={{ fontWeight: 900, fontSize: 15 }}>🍳 War bei „{frage.name}“ Eiweiß dabei?</div>
-      <div style={{ fontSize: 12, color: "#6B7178", margin: "2px 0 10px" }}>z. B. Ei, Quark, Joghurt, Fisch, Fleisch, Tofu, Hülsenfrüchte</div>
+      <div style={{ fontSize: 12, color: "color-mix(in srgb, #6B7178 var(--mp-schrift), var(--mp-schrift-hell))", margin: "2px 0 10px" }}>z. B. Ei, Quark, Joghurt, Fisch, Fleisch, Tofu, Hülsenfrüchte</div>
       <div style={{ display: "flex", gap: 8 }}>
         <button type="button" onClick={() => antworten(true)} style={{ ...knopf, background: "#1B2350", color: "#fff" }}>
           Ja
         </button>
-        <button type="button" onClick={() => antworten(false)} style={{ ...knopf, background: "#EEF4FF", color: "#2D6FD6" }}>
+        <button type="button" onClick={() => antworten(false)} style={{ ...knopf, background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" }}>
           Nein
         </button>
       </div>

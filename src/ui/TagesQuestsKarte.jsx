@@ -27,11 +27,11 @@ export default function TagesQuestsKarte({ quests, onOpenView }) {
     <div data-tages-quests style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "0 2px 10px" }}>
         <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.3 }}>🎯 Tages-Quests</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#667085" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "color-mix(in srgb, #667085 var(--mp-schrift), var(--mp-schrift-hell))" }}>
           {geschafft}/{quests.length} {alle ? "— alle geschafft! 🎉" : "geschafft"}
         </div>
       </div>
-      <div style={{ borderRadius: 22, background: "#fff", border: "1px solid rgba(16, 24, 40, 0.05)", boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.06)", padding: "4px 14px" }}>
+      <div style={{ borderRadius: 22, background: "var(--mp-karte)", border: "1px solid rgba(16, 24, 40, 0.05)", boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.06)", padding: "4px 14px" }}>
       <div style={{ display: "flex", flexDirection: "column" }}>
         {quests.map((q, i) => {
           const f = QUEST_FARBE[q.key] || ALLGEMEIN;
@@ -51,8 +51,8 @@ export default function TagesQuestsKarte({ quests, onOpenView }) {
                 alignItems: "center",
                 gap: 12,
                 padding: "11px 0",
-                borderTop: i ? "1px solid #EEF1F6" : "none",
-                color: "#101828",
+                borderTop: i ? "1px solid color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))" : "none",
+                color: "color-mix(in srgb, #101828 var(--mp-schrift), var(--mp-schrift-hell))",
               }}
             >
               <div style={{ width: 36, height: 36, borderRadius: 12, background: q.geschafft ? f.dot : f.bg, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
@@ -61,12 +61,12 @@ export default function TagesQuestsKarte({ quests, onOpenView }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 14.5, fontWeight: 700 }}>
                   <span>{q.titel}</span>
-                  <span style={{ whiteSpace: "nowrap", color: "#667085", fontSize: 13 }}>
+                  <span style={{ whiteSpace: "nowrap", color: "color-mix(in srgb, #667085 var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 13 }}>
                     {q.aktuell}/{q.ziel}
                     {q.einheit ? ` ${q.einheit}` : ""}
                   </span>
                 </div>
-                <div style={{ height: 6, borderRadius: 99, background: "#EEF1F6", marginTop: 6, overflow: "hidden" }}>
+                <div style={{ height: 6, borderRadius: 99, background: "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-karte))", marginTop: 6, overflow: "hidden" }}>
                   <div style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", borderRadius: 99, background: f.dot, transition: "width 0.5s ease-out" }} />
                 </div>
               </div>

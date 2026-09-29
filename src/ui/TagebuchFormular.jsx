@@ -17,7 +17,7 @@ const chip = (an) => ({
   fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 
@@ -70,7 +70,7 @@ export default function TagebuchFormular({ datum, vorhanden, kompakt = false, on
             aria-pressed={e.stimmung === s.wert}
             className="mp-tap"
             onClick={() => setE((x) => ({ ...x, stimmung: s.wert }))}
-            style={{ fontSize: 30, border: "none", borderRadius: 14, padding: 6, cursor: "pointer", background: e.stimmung === s.wert ? "#FFF1D6" : "transparent", outline: e.stimmung === s.wert ? "2px solid #E0A21B" : "none" }}
+            style={{ fontSize: 30, border: "none", borderRadius: 14, padding: 6, cursor: "pointer", background: e.stimmung === s.wert ? "color-mix(in srgb, #FFF1D6 var(--mp-flaeche), var(--mp-karte))" : "transparent", outline: e.stimmung === s.wert ? "2px solid #E0A21B" : "none" }}
           >
             {s.emoji}
           </button>
@@ -83,7 +83,7 @@ export default function TagebuchFormular({ datum, vorhanden, kompakt = false, on
           <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "12px 0 6px" }}>WEISS DIE APP SCHON</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {zeilen.map((z) => (
-              <div key={z} style={{ background: "#F4F6FA", borderRadius: 10, padding: "6px 8px", fontSize: 12 }}>
+              <div key={z} style={{ background: "color-mix(in srgb, #F4F6FA var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "6px 8px", fontSize: 12 }}>
                 {z}
               </div>
             ))}
@@ -106,7 +106,7 @@ export default function TagebuchFormular({ datum, vorhanden, kompakt = false, on
               style={{ flex: 1, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "9px 11px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
             />
             {diktat.verfuegbar && (
-              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "#FBEAE7" : "#EEF4FF", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
+              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
                 {diktat.hoert ? "⏹" : "🎤"}
               </button>
             )}

@@ -11,7 +11,7 @@ export const ATEM_BIBLIOTHEK = [
     wofuer: "Runterkommen, Stimmung heben",
     beschreibung: "2× kurz durch die Nase ein, dann lang durch den Mund aus",
     dauerMinuten: 3,
-    farbe: "#E8F7F2",
+    farbe: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))",
     phasen: [
       { art: "ein", sek: 2, sprache: "Einatmen" },
       { art: "ein", sek: 1, sprache: "Noch ein Stück" },
@@ -25,7 +25,7 @@ export const ATEM_BIBLIOTHEK = [
     wofuer: "Stress, vor Terminen",
     beschreibung: "4 ein · 4 halten · 4 aus · 4 halten",
     dauerMinuten: 4,
-    farbe: "#EEF4FF",
+    farbe: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
     phasen: [
       { art: "ein", sek: 4, sprache: "Einatmen" },
       { art: "halten", sek: 4, sprache: "Halten" },
@@ -40,7 +40,7 @@ export const ATEM_BIBLIOTHEK = [
     wofuer: "Ausgleich, vor dem Schlafen",
     beschreibung: "5,5 Sek. ein · 5,5 Sek. aus",
     dauerMinuten: 5,
-    farbe: "#F3EEFF",
+    farbe: "color-mix(in srgb, #F3EEFF var(--mp-flaeche), var(--mp-karte))",
     phasen: [
       { art: "ein", sek: 5.5, sprache: "Einatmen" },
       { art: "aus", sek: 5.5, sprache: "Ausatmen" },
@@ -53,7 +53,7 @@ export const ATEM_BIBLIOTHEK = [
     wofuer: "Wach werden",
     beschreibung: "Zügig ein, locker aus",
     dauerMinuten: 2,
-    farbe: "#FFF1D6",
+    farbe: "color-mix(in srgb, #FFF1D6 var(--mp-flaeche), var(--mp-karte))",
     hinweis: "Nur im Sitzen oder Liegen, nie im Wasser oder am Steuer. Bei Schwindel aufhören und normal weiteratmen.",
     phasen: [
       { art: "ein", sek: 2, sprache: "Kräftig ein" },
@@ -67,7 +67,7 @@ export const ATEM_BIBLIOTHEK = [
     wofuer: "Kurz sammeln, zwischendurch",
     beschreibung: "4 ein · 4 halten · 6 aus",
     dauerMinuten: 3,
-    farbe: "#E6F5EC",
+    farbe: "color-mix(in srgb, #E6F5EC var(--mp-flaeche), var(--mp-karte))",
     phasen: [
       { art: "ein", sek: 4, sprache: "Einatmen" },
       { art: "halten", sek: 4, sprache: "Halten" },

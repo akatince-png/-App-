@@ -245,7 +245,7 @@ export default function Timer({
         <div style={{ fontSize: 12, fontWeight: 800, color: textMuted, marginBottom: 4 }}>BEREIT MACHEN…</div>
       )}
       {mode === "interval" && status !== "idle" && status !== "vorbereitung" && (
-        <div style={{ fontSize: 12, fontWeight: 800, color: phase === "arbeit" ? accentDark : textMuted, marginBottom: 4 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: phase === "arbeit" ? "var(--mp-accent-dark-text)" : textMuted, marginBottom: 4 }}>
           {phase === "arbeit" ? arbeitLabel : pauseLabel} · Runde {rundeAktuell}/{runden}
         </div>
       )}
@@ -256,7 +256,7 @@ export default function Timer({
       )}
       <div style={{ fontSize: 36, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{fmt(remainingSecondsDisplay())}</div>
       {status === "done" && mode !== "stopwatch" && (
-        <div style={{ fontSize: 12, color: accentDark, fontWeight: 700, marginTop: 4 }}>Fertig! 🎉</div>
+        <div style={{ fontSize: 12, color: "var(--mp-accent-dark-text)", fontWeight: 700, marginTop: 4 }}>Fertig! 🎉</div>
       )}
       <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
         {status === "vorbereitung" && (

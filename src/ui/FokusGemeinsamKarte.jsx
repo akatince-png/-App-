@@ -44,12 +44,12 @@ export default function FokusGemeinsamKarte({ onOeffnen }) {
       className="mp-tap"
       onClick={onOeffnen}
       data-fokus-karte
-      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#F1EDFF", border: `2px solid ${LILA}`, cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #F1EDFF var(--mp-flaeche), var(--mp-karte))", border: `2px solid ${LILA}`, cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
     >
       <span style={{ fontSize: 26 }}>🎯</span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "block", fontWeight: 900, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{titel}</span>
-        <span style={{ display: "block", fontSize: 12.5, color: "#5B3FC4" }}>{zeile}</span>
+        <span style={{ display: "block", fontSize: 12.5, color: "color-mix(in srgb, #5B3FC4 var(--mp-schrift), var(--mp-schrift-hell))" }}>{zeile}</span>
       </span>
     </button>
   );

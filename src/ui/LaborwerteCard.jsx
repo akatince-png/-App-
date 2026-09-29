@@ -39,7 +39,7 @@ export default function LaborwerteCard({ titel = "Laborwerte (optional)", inputI
             borderRadius: 10,
             border: `1.5px dashed ${accent}`,
             background: accentSoft,
-            color: accentDark,
+            color: "var(--mp-accent-dark-text)",
             fontSize: 13,
             fontWeight: 700,
             cursor: "pointer",

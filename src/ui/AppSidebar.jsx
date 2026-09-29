@@ -30,7 +30,7 @@ function navButtonStyle(aktiv) {
     gap: 12,
     border: "none",
     background: aktiv ? accentSoft : "transparent",
-    color: aktiv ? accentDark : textMuted,
+    color: aktiv ? "var(--mp-accent-dark-text)" : textMuted,
     fontWeight: aktiv ? 800 : 600,
     fontSize: 14,
     borderRadius: 12,

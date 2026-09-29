@@ -81,7 +81,7 @@ export default function AkutModusGlobal({ sichtbar }) {
             borderRadius: "50%",
             // Design 2.0: ruhiger weißer Knopf mit Bernstein-Ring statt
             // leuchtend gelber Kugel über dem Inhalt.
-            background: "#fff",
+            background: "var(--mp-karte)",
             border: "2px solid #F7C35A",
             boxShadow: "0 6px 18px rgba(20, 24, 40, 0.14)",
             fontSize: 21,

@@ -121,7 +121,7 @@ export default function DosierungFields({ value, onChange, showMenge = true, men
         style={{
           padding: "7px 12px",
           borderRadius: 10,
-          border: "1px dashed #C7D8D2",
+          border: "1px dashed color-mix(in srgb, #C7D8D2 var(--mp-flaeche), var(--mp-rand-dunkel))",
           background: "transparent",
           color: textMuted,
           fontSize: 12,

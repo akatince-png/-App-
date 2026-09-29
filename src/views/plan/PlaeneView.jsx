@@ -111,7 +111,7 @@ function ListenEintrag({ eintrag, onClick }) {
         padding: "13px 16px",
         borderRadius: 14,
         border: `1px solid ${cardBorder}`,
-        background: "#fff",
+        background: "var(--mp-karte)",
         marginBottom: 8,
         cursor: "pointer",
       }}
@@ -190,7 +190,7 @@ export default function PlaeneView({
                   padding: "9px 4px",
                   borderRadius: 10,
                   border: `1px solid ${aktiv ? dot : cardBorder}`,
-                  background: aktiv ? dot : "#fff",
+                  background: aktiv ? dot : "var(--mp-karte)",
                   color: aktiv ? "#fff" : textMuted,
                   fontSize: 12,
                   fontWeight: 700,

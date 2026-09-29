@@ -368,7 +368,7 @@ export default function WochenplanEditor({
               type="button"
               onClick={reset}
               className="mp-tap"
-              style={{ flex: 1, minHeight: 48, padding: "12px", borderRadius: 14, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+              style={{ flex: 1, minHeight: 48, padding: "12px", borderRadius: 14, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: textMuted, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
             >
               Abbrechen
             </button>
@@ -420,14 +420,14 @@ export default function WochenplanEditor({
               <button
                 type="button"
                 onClick={() => wochenplanErinnerungenAlleSetzen(true)}
-                style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
               >
                 🔔 Für alle Tage an
               </button>
               <button
                 type="button"
                 onClick={() => wochenplanErinnerungenAlleSetzen(false)}
-                style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
               >
                 🔕 Für alle Tage aus
               </button>
@@ -500,7 +500,7 @@ export default function WochenplanEditor({
                             style={{
                               fontSize: 10.5,
                               fontWeight: 700,
-                              color: accentDark,
+                              color: "var(--mp-accent-dark-text)",
                               background: accentSoft,
                               borderRadius: 8,
                               padding: "2px 7px",
@@ -540,7 +540,7 @@ export default function WochenplanEditor({
                             type="button"
                             onClick={() => starteBearbeiten(e)}
                             title="Bearbeiten"
-                            style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: "0 4px" }}
+                            style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 15, cursor: "pointer", padding: "0 4px" }}
                           >
                             ✏️
                           </button>

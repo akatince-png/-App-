@@ -112,7 +112,7 @@ function TrainingProtokollKarte({ e, ausgewaehlt, onUmschalten, onLoeschen }) {
             .map((u, i) => (
               <div key={i} style={{ padding: "8px 0", borderTop: i > 0 ? `1px solid ${cardBorder}` : "none" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>{u.name}</div>
-                <div style={{ fontSize: 12, color: accentDark, fontWeight: 700, marginTop: 1 }}>
+                <div style={{ fontSize: 12, color: "var(--mp-accent-dark-text)", fontWeight: 700, marginTop: 1 }}>
                   {u.saetze || "?"} Sätze × {uebungWiederholungenText(u) || "?"} Wdh.{uebungGewichtText(u) && ` · ${uebungGewichtText(u)}`}
                 </div>
                 {u.pauseSekunden && <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>Pause: {u.pauseSekunden}s zwischen den Sätzen</div>}

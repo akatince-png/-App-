@@ -119,7 +119,7 @@ export default function TagebuchTab() {
                   border: "none",
                   borderRadius: 10,
                   background: accentSoft,
-                  color: accentDark,
+                  color: "var(--mp-accent-dark-text)",
                   fontWeight: 700,
                   fontSize: 12,
                   padding: "8px 12px",
@@ -158,18 +158,18 @@ export default function TagebuchTab() {
               // minHeight endet die Seite einfach dort, wo der Text endet
               // (darunter bleibt die A4-Seite schlicht weiß) — bei langen
               // Einträgen paginiert exportElementAsPdf ganz normal weiter.
-              background: "#fff",
+              background: "var(--mp-karte)",
               width: 794,
               boxSizing: "border-box",
               padding: "70px 64px",
               fontFamily: "Georgia, 'Times New Roman', serif",
             }}
           >
-            <div style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#8A8A85", marginBottom: 6 }}>Tagebuch</div>
-            <div style={{ fontSize: 20, fontStyle: "italic", color: "#3A3A36", marginBottom: 24, paddingBottom: 18, borderBottom: "1px solid #E4E4DF" }}>
+            <div style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "color-mix(in srgb, #8A8A85 var(--mp-schrift), var(--mp-schrift-hell))", marginBottom: 6 }}>Tagebuch</div>
+            <div style={{ fontSize: 20, fontStyle: "italic", color: "color-mix(in srgb, #3A3A36 var(--mp-schrift), var(--mp-schrift-hell))", marginBottom: 24, paddingBottom: 18, borderBottom: "1px solid color-mix(in srgb, #E4E4DF var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
               {datumLang(exportEintrag.erstelltAm)}
             </div>
-            <div style={{ fontSize: 16, lineHeight: 1.9, color: "#20201D", whiteSpace: "pre-wrap" }}>{exportEintrag.text}</div>
+            <div style={{ fontSize: 16, lineHeight: 1.9, color: "color-mix(in srgb, #20201D var(--mp-schrift), var(--mp-schrift-hell))", whiteSpace: "pre-wrap" }}>{exportEintrag.text}</div>
           </div>
         </div>
       )}

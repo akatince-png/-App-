@@ -16,7 +16,7 @@ export function EtappenBalken({ stand, hell = false }) {
             flex: 1,
             height: 7,
             borderRadius: 4,
-            background: w < aktuell ? "#5CC3A8" : w === aktuell ? "#F4C542" : hell ? "#E4E6EE" : "rgba(255,255,255,.22)",
+            background: w < aktuell ? "#5CC3A8" : w === aktuell ? "#F4C542" : hell ? "color-mix(in srgb, #E4E6EE var(--mp-flaeche), var(--mp-karte))" : "rgba(255,255,255,.22)",
           }}
         />
       ))}

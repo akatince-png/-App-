@@ -36,7 +36,7 @@ export default function TagebuchView({ onHome }) {
                 setDatum(d);
                 setNeuKey((k) => k + 1);
               }}
-              style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: datum === d ? "#1B2350" : "#EEF4FF", color: datum === d ? "#fff" : "#2D6FD6" }}
+              style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: datum === d ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: datum === d ? "#fff" : "#2D6FD6" }}
             >
               {label}
               {tagebuchEintraege.some((e) => e.datum === d) ? " ✓" : ""}
@@ -66,13 +66,13 @@ export default function TagebuchView({ onHome }) {
                     gut {x.gut}/{x.gutVon} · schwer {x.schwer}/{x.schwerVon}
                   </b>
                 </div>
-                <div style={{ height: 7, borderRadius: 5, background: "#E4E6EE", marginTop: 3 }}>
+                <div style={{ height: 7, borderRadius: 5, background: "color-mix(in srgb, #E4E6EE var(--mp-flaeche), var(--mp-karte))", marginTop: 3 }}>
                   <div style={{ width: `${Math.round(Math.abs(x.unterschied) * 100)}%`, height: "100%", borderRadius: 5, background: x.richtung === "gut" ? "#1E8E5A" : "#E0352B" }} />
                 </div>
               </div>
             ))}
             {m.muster[0] && (
-              <div style={{ fontSize: 12.5, background: "#FFF6E0", borderRadius: 12, padding: "8px 10px", marginTop: 10 }}>
+              <div style={{ fontSize: 12.5, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", marginTop: 10 }}>
                 💡 Größter Unterschied: <b>{m.muster[0].label.replace(/^[^\p{L}\d]+\s/u, "")}</b>
                 {m.muster[0].richtung === "gut" ? " – kommt an deinen guten Tagen deutlich öfter vor." : " – kommt an deinen schweren Tagen deutlich öfter vor."}
               </div>

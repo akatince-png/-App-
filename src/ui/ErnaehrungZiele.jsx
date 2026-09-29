@@ -17,7 +17,7 @@ const chip = (an) => ({
   fontWeight: 800,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 
@@ -62,7 +62,7 @@ export default function ErnaehrungZiele({ onGespeichert }) {
 
   return (
     <div>
-      {alt.vomCoach && <div style={{ fontSize: 12, background: "#FFF6E0", borderRadius: 10, padding: "6px 9px", marginBottom: 6 }}>🧑‍🏫 Von deinem Coach empfohlen – Änderungen am besten gemeinsam besprechen.</div>}
+      {alt.vomCoach && <div style={{ fontSize: 12, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "6px 9px", marginBottom: 6 }}>🧑‍🏫 Von deinem Coach empfohlen – Änderungen am besten gemeinsam besprechen.</div>}
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "4px 0 6px" }}>ZIEL</div>
       <div role="group" aria-label="Ziel" style={{ display: "flex", gap: 6 }}>
         {ZIELARTEN.map(([id, label, p]) => (
@@ -107,7 +107,7 @@ export default function ErnaehrungZiele({ onGespeichert }) {
         </div>
       ))}
 
-      <div style={{ fontSize: 13, background: "#F4F6FA", borderRadius: 12, padding: "10px 12px", marginTop: 14, lineHeight: 1.6 }} data-makro-ziele>
+      <div style={{ fontSize: 13, background: "color-mix(in srgb, #F4F6FA var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "10px 12px", marginTop: 14, lineHeight: 1.6 }} data-makro-ziele>
         <b>So rechnet die App{gewicht ? ` (${String(gewicht).replace(".", ",")} kg)` : ""}:</b>
         <br />
         🥚 Eiweiß {z.eiweiss != null ? `${z.eiweiss} g` : "– (Gewicht fehlt)"} · 🥑 Fett {z.fett != null ? `${z.fett} g` : "–"} · 🍞 Kohlenhydrate {z.kh != null ? `${z.kh} g` : "–"}

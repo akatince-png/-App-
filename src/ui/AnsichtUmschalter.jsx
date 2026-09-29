@@ -31,7 +31,7 @@ export default function AnsichtUmschalter() {
         padding: "13px 16px",
         borderRadius: 14,
         border: coacheeAnsicht ? `2px solid ${accentDark}` : `1px solid ${cardBorder}`,
-        background: coacheeAnsicht ? accentSoft : "#fff",
+        background: coacheeAnsicht ? accentSoft : "var(--mp-karte)",
         marginBottom: 20,
         cursor: "pointer",
         fontFamily: "inherit",
@@ -39,7 +39,7 @@ export default function AnsichtUmschalter() {
     >
       <span style={{ fontSize: 22 }}>{coacheeAnsicht ? "🛠️" : "👤"}</span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "block", fontSize: 14, fontWeight: 800, color: coacheeAnsicht ? accentDark : "inherit" }}>
+        <span style={{ display: "block", fontSize: 14, fontWeight: 800, color: coacheeAnsicht ? "var(--mp-accent-dark-text)" : "inherit" }}>
           {coacheeAnsicht ? "Zurück zur Admin-Ansicht" : "Als Coachee nutzen"}
         </span>
         <span style={{ display: "block", fontSize: 12, color: textMuted, marginTop: 2 }}>

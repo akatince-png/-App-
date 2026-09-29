@@ -19,7 +19,7 @@ export default function ProfilTab() {
       <Card style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: accentDark }}>{schlafDurchschnitt7Tage !== null ? `${schlafDurchschnitt7Tage} h` : "—"}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--mp-accent-dark-text)" }}>{schlafDurchschnitt7Tage !== null ? `${schlafDurchschnitt7Tage} h` : "—"}</div>
             <div style={{ fontSize: 11, color: textMuted }}>Ø Schlaf / Woche</div>
           </div>
           {gewichtsEintraege.length > 0 &&

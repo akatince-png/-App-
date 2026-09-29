@@ -36,7 +36,7 @@ export default function LaufenderTimerKarte({ onFertig }) {
   const min = Math.floor(restSek / 60);
   const sek = restSek % 60;
   return (
-    <div role="timer" aria-label={`${timer.name}: noch ${restText(restSek)}`} data-fokus-timer style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: `1.5px solid ${abgelaufen ? "#2E9C86" : cardBorder}`, borderRadius: 18, padding: "10px 12px", marginBottom: 14, boxShadow: shadow }}>
+    <div role="timer" aria-label={`${timer.name}: noch ${restText(restSek)}`} data-fokus-timer style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--mp-karte)", border: `1.5px solid ${abgelaufen ? "#2E9C86" : cardBorder}`, borderRadius: 18, padding: "10px 12px", marginBottom: 14, boxShadow: shadow }}>
       <Ring anteil={anteil} groesse={58} farbe={abgelaufen ? "#2E9C86" : accentDark}>
         {abgelaufen ? "✓" : `${min}:${String(sek).padStart(2, "0")}`}
       </Ring>
@@ -62,7 +62,7 @@ export default function LaufenderTimerKarte({ onFertig }) {
         >
           ✓ Fertig
         </button>
-        <button type="button" className="mp-tap" onClick={() => verlaengern(5)} style={{ border: "none", borderRadius: 10, padding: "6px 10px", fontSize: 11.5, fontWeight: 800, background: "#EEF0F5", color: textMain, cursor: "pointer", fontFamily: "inherit" }}>
+        <button type="button" className="mp-tap" onClick={() => verlaengern(5)} style={{ border: "none", borderRadius: 10, padding: "6px 10px", fontSize: 11.5, fontWeight: 800, background: "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))", color: textMain, cursor: "pointer", fontFamily: "inherit" }}>
           +5 Min
         </button>
       </div>

@@ -18,7 +18,7 @@ const chip = (an) => ({
   fontWeight: 800,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 
@@ -95,7 +95,7 @@ export default function SportBausteinFormular({ onGespeichert }) {
         onChange={(e) => setUhrzeit(e.target.value)}
         style={{ border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "9px 11px", fontSize: 15, fontFamily: "inherit" }}
       />
-      <div style={{ fontSize: 12, background: "#E8F7F2", borderRadius: 12, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 12, background: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
         💡 Sportarten mit Reaktion und Koordination (Kampfsport, Tanzen, Ballsport, Klettern) fordern zusätzlich Konzentration und Umschalten. Jede Bewegung zählt.
       </div>
       {fehler && <div style={{ color: danger, fontSize: 12.5, marginTop: 8 }}>{fehler}</div>}

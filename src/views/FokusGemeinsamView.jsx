@@ -19,7 +19,7 @@ import { DAUER_OPTIONEN, ERGEBNISSE, aktuelleRunde, gradeDabei, heuteErledigt, l
 // Auch per Aka startbar ("Ich will jetzt 25 Minuten an der Steuer sitzen").
 
 const LILA = "#7C5CE0";
-const LILA_HELL = "#F1EDFF";
+const LILA_HELL = "color-mix(in srgb, #F1EDFF var(--mp-flaeche), var(--mp-karte))";
 
 const chip = (an) => ({
   border: "none",
@@ -68,7 +68,7 @@ function Kopf({ name, farbe = LILA, groesse = 34 }) {
         fontWeight: 900,
         fontSize: groesse * 0.42,
         flexShrink: 0,
-        border: "2px solid #fff",
+        border: "2px solid color-mix(in srgb, #fff var(--mp-flaeche), var(--mp-rand-dunkel))",
         boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
       }}
     >
@@ -295,11 +295,11 @@ export default function FokusGemeinsamView({ onHome }) {
           <Card
             style={{
               marginBottom: 12,
-              background: "#E8F7F2",
+              background: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))",
               border: "2px solid #2E9C86",
             }}
           >
-            <div style={{ fontSize: 14.5, fontWeight: 900, color: "#1E6E57" }}>
+            <div style={{ fontSize: 14.5, fontWeight: 900, color: "color-mix(in srgb, #1E6E57 var(--mp-schrift), var(--mp-schrift-hell))" }}>
               {fertigText.punkt ? "+1 Punkt · " : ""}
               {fertigText.text}
             </div>

@@ -39,7 +39,7 @@ const chip = (an) => ({
   fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 const zeitFeld = { border: `1px solid ${cardBorder}`, borderRadius: 10, padding: "6px 6px", fontSize: 14, fontFamily: "inherit", width: 112 };
@@ -232,7 +232,7 @@ export default function DienstplanFotoView({ onHome }) {
                 </span>
               </label>
             </div>
-            <div style={{ fontSize: 12, color: textMuted, background: "#F4F7FC", borderRadius: 10, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 12, color: textMuted, background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "8px 10px", marginTop: 12, lineHeight: 1.45 }}>
               📷 Beim Foto liest die App die Zeiten auf deinem Handy (ohne KI, nichts wird hochgeladen), du prüfst alles vor dem Speichern. Am besten gerade von oben, gutes Licht, nah genug.
             </div>
           </Card>
@@ -295,7 +295,7 @@ export default function DienstplanFotoView({ onHome }) {
             <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>Je Tag antippen: Dienst mit Uhrzeit, Frei, Urlaub oder Krank. „–“ lässt den Tag, wie er ist. Mit ☐ markierst du mehrere Tage und trägst sie auf einmal ein.</div>
             <WocheWahl start={start} onChange={startAendern} />
             {ausFoto && tage.some((t) => t.art === "leer") && (
-              <div data-dienstplan-offen style={{ background: "#FFF6DC", color: "#7A5200", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, margin: "10px 0 0" }}>
+              <div data-dienstplan-offen style={{ background: "color-mix(in srgb, #FFF6DC var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #7A5200 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 10, padding: "8px 10px", fontSize: 12.5, margin: "10px 0 0" }}>
                 {tage.filter((t) => t.art === "leer").length} Tage konnte ich nicht sicher lesen (gelb). Bitte antippen, oder „–“ lassen, wenn sich dort nichts ändert.
               </div>
             )}
@@ -315,7 +315,7 @@ export default function DienstplanFotoView({ onHome }) {
                 const z = varianteFuerTag(t, routineVarianten, routineEinstellungenStandard);
                 const routine = z.variante || z.neu;
                 return (
-                  <div key={t.datum} data-dienstplan-tag={t.datum} style={{ borderTop: i ? `1px solid ${cardBorder}` : "none", padding: "10px 6px", margin: "0 -6px", borderRadius: 8, background: ausFoto && t.art === "leer" ? "#FFF6DC" : "transparent" }}>
+                  <div key={t.datum} data-dienstplan-tag={t.datum} style={{ borderTop: i ? `1px solid ${cardBorder}` : "none", padding: "10px 6px", margin: "0 -6px", borderRadius: 8, background: ausFoto && t.art === "leer" ? "color-mix(in srgb, #FFF6DC var(--mp-flaeche), var(--mp-karte))" : "transparent" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <button
                         type="button"
@@ -435,7 +435,7 @@ function SammelEingabe({ tage, markiert, setMarkiert, sammel, setSammel, onAnwen
   ];
   const zeitFehlt = sammel.art === "arbeit" && sammel.bloecke.some((b) => !gueltigeZeit(b.von) || !gueltigeZeit(b.bis));
   return (
-    <div data-dienstplan-sammel style={{ background: "#F4F7FC", borderRadius: 12, padding: "10px 10px", marginTop: 10 }}>
+    <div data-dienstplan-sammel style={{ background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "10px 10px", marginTop: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 13 }}>
         <span style={{ fontWeight: 800 }}>Mehrere Tage:</span>
         {schnell.map((q) => (

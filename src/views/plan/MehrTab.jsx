@@ -11,6 +11,7 @@ import VorlaufFeld from "../../ui/VorlaufFeld";
 import AnsichtUmschalter from "../../ui/AnsichtUmschalter";
 import AppTempoKarte from "../../ui/AppTempoKarte";
 import DatenschutzKarte from "../../ui/DatenschutzKarte";
+import AussehenKarte from "../../ui/AussehenKarte";
 
 // Morgen-/Abendroutine und Workout-Flow sind keine der 8 Onboarding-
 // Kategorien (categorySteps.js — die haben je eigene Einrichtungs-Screens,
@@ -201,7 +202,7 @@ function AktuellesProtokoll() {
                   title="Aktuelle Einstellung als Version festhalten"
                   style={{
                     border: `1px solid ${cardBorder}`,
-                    background: "#fff",
+                    background: "var(--mp-karte)",
                     borderRadius: 8,
                     width: 28,
                     height: 28,
@@ -244,7 +245,7 @@ function AktuellesProtokoll() {
               title="Aktuelle Einstellung als Version festhalten"
               style={{
                 border: `1px solid ${cardBorder}`,
-                background: "#fff",
+                background: "var(--mp-karte)",
                 borderRadius: 8,
                 width: 28,
                 height: 28,
@@ -464,7 +465,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
             padding: "13px 16px",
             borderRadius: 14,
             border: `1px solid ${cardBorder}`,
-            background: "#fff",
+            background: "var(--mp-karte)",
             marginBottom: 20,
             cursor: "pointer",
           }}
@@ -486,7 +487,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
             padding: "13px 16px",
             borderRadius: 14,
             border: `1px solid ${cardBorder}`,
-            background: "#fff",
+            background: "var(--mp-karte)",
             marginBottom: 20,
             cursor: "pointer",
           }}
@@ -510,7 +511,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
             padding: "13px 16px",
             borderRadius: 14,
             border: `1px solid ${cardBorder}`,
-            background: "#fff",
+            background: "var(--mp-karte)",
             marginBottom: 20,
             cursor: "pointer",
           }}
@@ -550,7 +551,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Meine Punkte mit anderen teilen</div>
             {/* Teilen-Freigabe (24.09.): Startzustand aus, jede Person schaltet
                 selbst frei. Ansehen der Ranglisten geht immer. */}
-            <div style={{ fontSize: 12, color: ranglisteSichtbar ? accentDark : textMuted, fontWeight: ranglisteSichtbar ? 700 : 400 }}>
+            <div style={{ fontSize: 12, color: ranglisteSichtbar ? "var(--mp-accent-dark-text)" : textMuted, fontWeight: ranglisteSichtbar ? 700 : 400 }}>
               {ranglisteSichtbar
                 ? "✓ Du bist in der Rangliste sichtbar – mit Vorname, Bild, Team und Punkten."
                 : "Eingeschaltet erscheinst du mit Vorname, Bild und Punkten in der Rangliste aller Coachees. Ausgeschaltet bist du dort unsichtbar – ansehen kannst du die Rangliste trotzdem. Team-Ergebnisse werden immer gezeigt."}
@@ -566,7 +567,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
               height: 26,
               borderRadius: 13,
               border: "none",
-              background: ranglisteSichtbar ? accent : "#D9EEE7",
+              background: ranglisteSichtbar ? accent : "color-mix(in srgb, #D9EEE7 var(--mp-flaeche), var(--mp-karte))",
               position: "relative",
               cursor: "pointer",
               flexShrink: 0,
@@ -577,7 +578,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                 width: 20,
                 height: 20,
                 borderRadius: 10,
-                background: "#fff",
+                background: "var(--mp-karte)",
                 position: "absolute",
                 top: 3,
                 left: ranglisteSichtbar ? 23 : 3,
@@ -606,7 +607,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                 fontSize: 15,
                 fontWeight: 700,
                 cursor: pushLadend ? "not-allowed" : "pointer",
-                background: pushAktiv ? "#fff" : accentDark,
+                background: pushAktiv ? "var(--mp-karte)" : accentDark,
                 color: pushAktiv ? danger : "#fff",
               }}
             >
@@ -617,7 +618,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
               <div style={{ marginTop: 10 }}>
                 <button
                   onClick={handleTestSenden}
-                  style={{ width: "100%", padding: "11px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
+                  style={{ width: "100%", padding: "11px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)" }}
                 >
                   {t("mehr.push.test")}
                 </button>
@@ -721,7 +722,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
             <div style={{ fontSize: 10.5, color: textMuted, marginTop: 6 }}>
               Falls der Knopf oben nicht reagiert, tippe direkt auf diesen Link:
             </div>
-            <a href={spotifyAutorisierenUrl()} style={{ fontSize: 10.5, color: accentDark, wordBreak: "break-all", display: "block", marginTop: 2 }}>
+            <a href={spotifyAutorisierenUrl()} style={{ fontSize: 10.5, color: "var(--mp-accent-dark-text)", wordBreak: "break-all", display: "block", marginTop: 2 }}>
               {spotifyAutorisierenUrl()}
             </a>
           </>
@@ -748,7 +749,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                   <button
                     onClick={() => handlePlaylistTesten(p)}
                     disabled={spotifyTestet}
-                    style={{ padding: "7px 12px", borderRadius: 10, border: `1px solid ${accentDark}`, fontSize: 12, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
+                    style={{ padding: "7px 12px", borderRadius: 10, border: `1px solid ${accentDark}`, fontSize: 12, fontWeight: 700, cursor: "pointer", background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)" }}
                   >
                     {testetPlaylistId === p.id ? "Startet…" : "Testen"}
                   </button>
@@ -793,7 +794,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                     style={{
                       fontSize: 11.5,
                       wordBreak: "break-all",
-                      background: "#FAFBFA",
+                      background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))",
                       border: `1px solid ${cardBorder}`,
                       borderRadius: 10,
                       padding: "10px 12px",
@@ -806,7 +807,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
                       onClick={handleAutoPlayUrlKopieren}
-                      style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${accentDark}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                      style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${accentDark}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
                     >
                       {autoPlayKopiert ? "Kopiert ✓" : "Link kopieren"}
                     </button>
@@ -844,6 +845,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         )}
       </Card>
 
+      <AussehenKarte />
+
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.datenschutz")}</div>
       <Card style={{ marginBottom: 14 }}>
         {DATENSCHUTZ.map((key) => (
@@ -869,7 +872,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.konto.angemeldet", { email: user?.email })}</div>
         <button
           onClick={signOut}
-          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: "#FDE9EC", color: danger }}
+          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))", color: danger }}
         >
           {t("mehr.konto.abmelden")}
         </button>
@@ -926,8 +929,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
             fontWeight: 700,
             opacity: kiAktiv ? 1 : 0.5,
             cursor: kiLadend || !kiAktiv ? "not-allowed" : "pointer",
-            background: "#fff",
-            color: accentDark,
+            background: "var(--mp-karte)",
+            color: "var(--mp-accent-dark-text)",
           }}
         >
           {kiLadend ? "Frage Ollama…" : "Morgen-Impuls testen"}
@@ -943,7 +946,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.testen.intro")}</div>
         <button
           onClick={handleResetOnboarding}
-          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "#fff", color: accentDark }}
+          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: `1px solid ${accentDark}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)" }}
         >
           {t("mehr.testen.reset")}
         </button>
@@ -1031,7 +1034,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           onClick={() => setResetBestaetigen(null)}
           style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(21, 24, 26, 0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 400, background: "#fff", borderRadius: 22, padding: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 400, background: "var(--mp-karte)", borderRadius: 22, padding: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
             <div style={{ fontSize: 34, textAlign: "center" }}>⚠️</div>
             <div style={{ fontSize: 18, fontWeight: 900, textAlign: "center", marginTop: 6 }}>Bist du dir sicher?</div>
             <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, textAlign: "center", marginTop: 8 }}>
@@ -1056,7 +1059,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
                   if (art === "fortschritt") handleFortschrittZuruecksetzen();
                   else handleAllesZuruecksetzen();
                 }}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 14, border: `1.5px solid ${danger}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "#fff", color: danger, fontFamily: "inherit" }}
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 14, border: `1.5px solid ${danger}`, fontSize: 14, fontWeight: 700, cursor: "pointer", background: "var(--mp-karte)", color: danger, fontFamily: "inherit" }}
               >
                 {resetBestaetigen === "fortschritt" ? "Ja, Fortschritt endgültig löschen" : "Ja, alles endgültig löschen"}
               </button>

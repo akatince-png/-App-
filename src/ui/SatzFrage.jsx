@@ -14,7 +14,7 @@ const chip = (an) => ({
   fontWeight: 800,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 

@@ -17,7 +17,7 @@ import { merkeZielNachVerwalten } from "../../utils/verwaltungRueckkehr";
 const STUFE_TEXT = { pflicht: "Pflicht", empfohlen: "Empfohlen", optional: "Nur falls nötig" };
 const knopf = (farbe = "#1B2350", voll = false) => ({
   border: voll ? "none" : `1.5px solid ${farbe}`,
-  background: voll ? farbe : "#fff",
+  background: voll ? farbe : "var(--mp-karte)",
   color: voll ? "#fff" : farbe,
   borderRadius: 10,
   padding: "6px 10px",
@@ -82,7 +82,7 @@ export default function EinrichtungsCheckliste({ person, onVerwalteAls }) {
           gap: 10,
           padding: "10px 12px",
           borderRadius: 14,
-          background: stand.bereit ? "#E8F7F2" : "#FFF6E5",
+          background: stand.bereit ? "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #FFF6E5 var(--mp-flaeche), var(--mp-karte))",
           border: `1.5px solid ${stand.bereit ? "#2E9C86" : "#E8B04A"}`,
           marginBottom: 10,
         }}
@@ -108,13 +108,13 @@ export default function EinrichtungsCheckliste({ person, onVerwalteAls }) {
 
       {schritte.map((s) => (
         <div key={s.key} data-schritt={s.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 2px", borderBottom: `1px solid ${cardBorder}` }}>
-          <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 15, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, background: s.fertig ? "#E8F7F2" : "#F3F4F8", flexShrink: 0 }}>
+          <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 15, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, background: s.fertig ? "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #F3F4F8 var(--mp-flaeche), var(--mp-karte))", flexShrink: 0 }}>
             {s.fertig ? "✓" : s.emoji}
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontSize: 13.5, fontWeight: 800, color: textMain }}>
               {s.emoji} {s.titel}{" "}
-              <span style={{ fontSize: 10.5, fontWeight: 800, color: s.stufe === "pflicht" ? "#B5501F" : textMuted, marginLeft: 4 }}>{STUFE_TEXT[s.stufe]}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 800, color: s.stufe === "pflicht" ? "color-mix(in srgb, #B5501F var(--mp-schrift), var(--mp-schrift-hell))" : textMuted, marginLeft: 4 }}>{STUFE_TEXT[s.stufe]}</span>
             </span>
             <span style={{ display: "block", fontSize: 12, color: s.fertig ? success : textMuted, whiteSpace: "pre-line", lineHeight: 1.5 }}>{s.detail}</span>
             {s.art === "team" && (

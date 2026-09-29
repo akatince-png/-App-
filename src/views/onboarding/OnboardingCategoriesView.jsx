@@ -163,9 +163,9 @@ function AddZeile({ label, onClick, disabled }) {
         width: "100%",
         padding: "8px",
         borderRadius: 10,
-        border: "1px dashed #C7D8D2",
+        border: "1px dashed color-mix(in srgb, #C7D8D2 var(--mp-flaeche), var(--mp-rand-dunkel))",
         background: "transparent",
-        color: disabled ? textMuted : accentDark,
+        color: disabled ? textMuted : "var(--mp-accent-dark-text)",
         fontSize: 12,
         fontWeight: 700,
         cursor: disabled ? "not-allowed" : "pointer",
@@ -823,7 +823,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               Aktionen. */}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 15, fontWeight: 700, color: accentDark, cursor: "pointer", padding: "8px 12px" }}>
+          <div className="mp-tap" onClick={() => onFinished(eingerichtet)} style={{ fontSize: 15, fontWeight: 700, color: "var(--mp-accent-dark-text)", cursor: "pointer", padding: "8px 12px" }}>
             {tLabel("Alles überspringen")}
           </div>
         </div>
@@ -877,7 +877,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   padding: "12px 20px",
                   borderRadius: 12,
                   border: `1px solid ${cardBorder}`,
-                  background: "#fff",
+                  background: "var(--mp-karte)",
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: "pointer",
@@ -917,7 +917,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
         <Card>
           {ISTZUSTAND_FRAGEN[step.key] && (
             <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${cardBorder}` }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: accentDark, marginBottom: 10 }}>{tLabel("Dein aktueller Stand")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "var(--mp-accent-dark-text)", marginBottom: 10 }}>{tLabel("Dein aktueller Stand")}</div>
               {ISTZUSTAND_FRAGEN[step.key].map((f) => (
                 <div key={f.key} style={{ marginBottom: 10 }}>
                   <Label>{tLabel(f.frage)}</Label>
@@ -990,7 +990,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
               <Label>{t("onboarding.gewohnheiten.zieltage.label")}</Label>
               <TextInput type="number" value={gZielTage} onChange={setGZielTage} placeholder={t("onboarding.gewohnheiten.zieltage.placeholder")} />
               <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: accentSoft, border: `1px solid ${cardBorder}`, fontSize: 12, color: textMuted, lineHeight: 1.5 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4, color: accentDark }}>✓ Häufig verwendete Ziele</div>
+                <div style={{ fontWeight: 700, marginBottom: 4, color: "var(--mp-accent-dark-text)" }}>✓ Häufig verwendete Ziele</div>
                 <div>21–66 Tage sind etablierte Richtwerte — du kannst aber jedes Ziel wählen, das zu dir passt.</div>
               </div>
             </>
@@ -1264,7 +1264,7 @@ export default function OnboardingCategoriesView({ onFinished, onCancel, onBackT
                   padding: "12px 20px",
                   borderRadius: 12,
                   border: `1px solid ${cardBorder}`,
-                  background: "#fff",
+                  background: "var(--mp-karte)",
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: "pointer",

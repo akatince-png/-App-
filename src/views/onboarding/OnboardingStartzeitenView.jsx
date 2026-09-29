@@ -74,7 +74,7 @@ export default function OnboardingStartzeitenView({ onDone, onBack, onCancel }) 
           {laeuft ? "Speichere …" : "Weiter"}
         </PrimaryButton>
         {onCancel && (
-          <button type="button" onClick={onCancel} style={{ padding: "12px 20px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <button type="button" onClick={onCancel} style={{ padding: "12px 20px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
             Abbrechen
           </button>
         )}

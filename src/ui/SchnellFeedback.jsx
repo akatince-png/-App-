@@ -35,7 +35,7 @@ export default function SchnellFeedback({ kategorie, istInjektion = false, onSpe
   if (!details) {
     return (
       <div role="group" aria-label="Kurze Rückmeldung" style={{ marginTop: 12, padding: "12px 14px", borderRadius: 16, background: accentSoft, border: `1px solid ${cardBorder}` }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: accentDark, marginBottom: 8 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--mp-accent-dark-text)", marginBottom: 8 }}>
           ✓ Erledigt! <span style={{ fontWeight: 600, color: textMuted }}>Wirkung bemerkt? (optional)</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap" }}>
@@ -44,7 +44,7 @@ export default function SchnellFeedback({ kategorie, istInjektion = false, onSpe
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 2 }}>
-          <button type="button" className="mp-tap" onClick={() => setDetails(true)} style={{ ...linkStil, color: accentDark }}>
+          <button type="button" className="mp-tap" onClick={() => setDetails(true)} style={{ ...linkStil, color: "var(--mp-accent-dark-text)" }}>
             Nebenwirkung / Details notieren
           </button>
           <button type="button" className="mp-tap" onClick={onSchliessen} style={{ ...linkStil, color: textMuted }}>

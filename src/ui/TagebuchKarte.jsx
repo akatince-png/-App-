@@ -24,9 +24,9 @@ export default function TagebuchKarte({ onOeffnen }) {
   const vorhanden = tagebuchEintraege.find((e) => e.datum === heute);
   if (gespeichert) {
     return (
-      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#EAF7F0", border: "1.5px solid #BFE5D0", fontSize: 13.5, fontWeight: 700 }}>
+      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #EAF7F0 var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid color-mix(in srgb, #BFE5D0 var(--mp-flaeche), var(--mp-rand-dunkel))", fontSize: 13.5, fontWeight: 700 }}>
         {stimmungEmoji(gespeichert.stimmung)} Danke – dein Tag ist festgehalten.{" "}
-        <button type="button" onClick={onOeffnen} style={{ border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+        <button type="button" onClick={onOeffnen} style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
           Tagebuch ›
         </button>
       </div>
@@ -34,7 +34,7 @@ export default function TagebuchKarte({ onOeffnen }) {
   }
   if (vorhanden || ausgeblendet || new Date().getHours() < 17) return null;
   return (
-    <section aria-label="Wie war dein Tag?" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: "2px solid #2D3A7A" }}>
+    <section aria-label="Wie war dein Tag?" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: "2px solid #2D3A7A" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <div style={{ flex: 1, fontWeight: 900, fontSize: 15.5 }}>🌙 Wie war dein Tag?</div>
         <button

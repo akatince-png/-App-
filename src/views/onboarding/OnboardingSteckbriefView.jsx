@@ -77,7 +77,7 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
           ))}
         </div>
         {kalorien.grundumsatz && (
-          <div data-steckbrief-kalorien style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "#F3F4F8", fontSize: 13, lineHeight: 1.5 }}>
+          <div data-steckbrief-kalorien style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "color-mix(in srgb, #F3F4F8 var(--mp-flaeche), var(--mp-karte))", fontSize: 13, lineHeight: 1.5 }}>
             <b>🔥 Grundumsatz ca. {kalorien.grundumsatz} kcal</b>
             {kalorien.bedarf ? (
               <>
@@ -174,7 +174,7 @@ export default function OnboardingSteckbriefView({ onDone, onBack, onCancel }) {
               padding: "12px 20px",
               borderRadius: 12,
               border: `1px solid ${cardBorder}`,
-              background: "#fff",
+              background: "var(--mp-karte)",
               fontSize: 14,
               fontWeight: 600,
               cursor: "pointer",

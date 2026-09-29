@@ -39,7 +39,7 @@ export default function KernprogrammView({ onHome, onTour }) {
           <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 8 }}>DEINE ERSTEN 8 WOCHEN</div>
           <AchtWochenPlan aktuell={stand.aktiv ? stand.gesamtWoche : 0} start={kernEtappen[0]?.start || stand.geplant?.start || null} />
           {onTour && (
-            <button type="button" className="mp-tap" onClick={onTour} style={{ marginTop: 10, width: "100%", border: `1.5px solid #1B2350`, background: "#fff", color: "#1B2350", borderRadius: 14, padding: 10, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+            <button type="button" className="mp-tap" onClick={onTour} style={{ marginTop: 10, width: "100%", border: `1.5px solid #1B2350`, background: "var(--mp-karte)", color: "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 14, padding: 10, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
               ▶ So geht&apos;s – Tour nochmal ansehen
             </button>
           )}
@@ -70,9 +70,9 @@ export default function KernprogrammView({ onHome, onTour }) {
       )}
 
       {stand?.aktiv && stand.erhaltung && (
-        <Card style={{ marginBottom: 14, background: "#E8F7F2", border: "none" }}>
+        <Card style={{ marginBottom: 14, background: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))", border: "none" }}>
           <div style={{ fontWeight: 900, fontSize: 14.5 }}>🔁 Erhaltung: nichts Neues dazu</div>
-          <div style={{ fontSize: 12.5, color: "#1E4D40", lineHeight: 1.45, marginTop: 3 }}>Alle Bausteine laufen weiter. Sonntags gibt es einen kurzen Wochen-Check auf der Startseite.</div>
+          <div style={{ fontSize: 12.5, color: "color-mix(in srgb, #1E4D40 var(--mp-schrift), var(--mp-schrift-hell))", lineHeight: 1.45, marginTop: 3 }}>Alle Bausteine laufen weiter. Sonntags gibt es einen kurzen Wochen-Check auf der Startseite.</div>
         </Card>
       )}
 
@@ -95,7 +95,7 @@ export default function KernprogrammView({ onHome, onTour }) {
         <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 4 }}>ALLE PFLICHT-BAUSTEINE 🔒</div>
         {[1, 2, 3, 4].map((w) => (
           <div key={w} style={{ padding: "6px 0", borderBottom: `1px solid ${cardBorder}` }}>
-            <div style={{ fontSize: 12.5, fontWeight: 800, color: stand?.aktiv && stand.einfuehrungWoche >= w ? "#1B2350" : textMuted }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: stand?.aktiv && stand.einfuehrungWoche >= w ? "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))" : textMuted }}>
               Woche {w} · {WOCHEN[w].icon} {WOCHEN[w].titel}
               {stand?.aktiv && stand.einfuehrungWoche < w && " (kommt noch)"}
             </div>
@@ -138,7 +138,7 @@ export default function KernprogrammView({ onHome, onTour }) {
           <div style={{ fontSize: 12.5, color: textMuted, margin: "3px 0 8px", lineHeight: 1.45 }}>
             Vier kurze Spiele (Bälle verfolgen, Stopp-Spiel, Zahlen merken, Regel-Wechsel), je 1–2 Minuten – gut als Start in einen Fokusblock. Diese Woche: {kognitivErgebnisse.filter((e) => String(e.erstelltAm).slice(0, 10) >= plusTage(heute, -6)).length} Runden.
           </div>
-          <a href="#/denksport" style={{ color: "#2D6FD6", fontWeight: 800, fontSize: 13.5, textDecoration: "none" }}>
+          <a href="#/denksport" style={{ color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 13.5, textDecoration: "none" }}>
             Zu den Spielen ›
           </a>
         </Card>
@@ -158,7 +158,7 @@ export default function KernprogrammView({ onHome, onTour }) {
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={() => setSportOffen(true)} style={{ border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: "8px 0 0" }}>
+              <button type="button" onClick={() => setSportOffen(true)} style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: "8px 0 0" }}>
                 ＋ weitere Sportart hinzufügen
               </button>
             </>

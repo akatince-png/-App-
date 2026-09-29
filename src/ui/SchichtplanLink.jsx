@@ -15,7 +15,7 @@ export default function SchichtplanLink({ heutePlan, anzahlVarianten }) {
       type="button"
       className="mp-tap"
       onClick={zumSchichtplan}
-      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginTop: 12, border: `1.5px solid ${cardBorder}`, borderRadius: 14, padding: "10px 12px", background: "#fff", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginTop: 12, border: `1.5px solid ${cardBorder}`, borderRadius: 14, padding: "10px 12px", background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
     >
       <span style={{ fontSize: 20 }}>📅</span>
       <span style={{ flex: 1 }}>

@@ -32,7 +32,7 @@ export default function ViewHeader({ title, onHome, homeTitle = "Zur Startseite"
     minWidth: 44,
     borderRadius: 999,
     border: `1px solid ${cardBorder}`,
-    background: "#fff",
+    background: "var(--mp-karte)",
     boxShadow: "0 1px 2px rgba(20, 24, 40, 0.05)",
     cursor: "pointer",
     display: "flex",

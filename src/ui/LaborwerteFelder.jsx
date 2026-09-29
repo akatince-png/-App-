@@ -49,7 +49,7 @@ function LaborwertZeile({ name, value, onChange, borderBottom }) {
             style={{
               border: "none",
               background: "transparent",
-              color: offen ? accentDark : textMuted,
+              color: offen ? "var(--mp-accent-dark-text)" : textMuted,
               fontSize: 14,
               cursor: "pointer",
               padding: "2px 4px",
@@ -183,7 +183,7 @@ export default function LaborwerteFelder({ biomarker, setBiomarkerWert, frisch =
         <button
           type="button"
           onClick={laborwertHinzufuegen}
-          style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
+          style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", fontWeight: 700, cursor: "pointer" }}
         >
           +
         </button>

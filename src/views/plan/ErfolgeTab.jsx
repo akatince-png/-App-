@@ -238,7 +238,7 @@ export default function ErfolgeTab() {
               >
                 <span style={{ fontSize: 13, fontWeight: 700 }}>{k.label}</span>
                 <span style={{ fontSize: 12, color: textMuted }}>
-                  <span style={{ color: accent, fontWeight: 700 }}>{k.geloest} gelöst</span>
+                  <span style={{ color: "var(--mp-accent-text)", fontWeight: 700 }}>{k.geloest} gelöst</span>
                   {k.nichtGeloest > 0 && <> · {k.nichtGeloest} nicht</>}
                 </span>
               </div>

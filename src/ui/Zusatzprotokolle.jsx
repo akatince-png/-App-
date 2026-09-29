@@ -9,7 +9,7 @@ import { fmtDate, toLocalISODate } from "../utils/dates";
 // Violett der Belohnungs-/Punkte-Welt, damit sich "Experiment" klar vom
 // Petrol des Hauptprotokolls absetzt.
 const ZUSATZ_FARBE = "#6D4FC2";
-const ZUSATZ_FARBE_SOFT = "#EFEAFB";
+const ZUSATZ_FARBE_SOFT = "color-mix(in srgb, #EFEAFB var(--mp-flaeche), var(--mp-karte))";
 
 function datum(iso) {
   return iso ? fmtDate(new Date(`${iso}T12:00:00`)) : "";
@@ -112,7 +112,7 @@ function ZusatzprotokollZeile({ z, onEintraegeHinzufuegen }) {
           type="button"
           className="mp-tap"
           onClick={() => onEintraegeHinzufuegen(z.id)}
-          style={{ border: `1px solid ${ZUSATZ_FARBE}`, background: "#fff", color: ZUSATZ_FARBE, borderRadius: 10, padding: "7px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+          style={{ border: `1px solid ${ZUSATZ_FARBE}`, background: "var(--mp-karte)", color: ZUSATZ_FARBE, borderRadius: 10, padding: "7px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
         >
           + Einträge
         </button>

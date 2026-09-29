@@ -118,7 +118,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
                 padding: "12px 20px",
                 borderRadius: 12,
                 border: `1px solid ${cardBorder}`,
-                background: "#fff",
+                background: "var(--mp-karte)",
                 fontSize: 14,
                 fontWeight: 600,
                 cursor: "pointer",
@@ -203,7 +203,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
             <button
               type="button"
               onClick={() => setModus("bestehend")}
-              style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "transparent", color: accentDark, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               {t("hauptprotokoll.neu.zurueck")}
             </button>
@@ -216,7 +216,7 @@ export default function HauptprotokollErstellenView({ onDone, onBack, onCancel, 
                 padding: "12px 20px",
                 borderRadius: 12,
                 border: `1px solid ${cardBorder}`,
-                background: "#fff",
+                background: "var(--mp-karte)",
                 fontSize: 14,
                 fontWeight: 600,
                 cursor: "pointer",

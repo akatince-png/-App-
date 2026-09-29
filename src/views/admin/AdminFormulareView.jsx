@@ -52,7 +52,7 @@ function RasterFeld({ feld, werte, setFeldWert }) {
                       className="mp-input"
                       value={werte[cellKey] || ""}
                       onChange={(e) => setFeldWert(cellKey, e.target.value)}
-                      style={{ width: "100%", minWidth: 90, boxSizing: "border-box", padding: "8px 8px", borderRadius: 8, border: `1px solid ${cardBorder}`, background: "#FAFBFA", fontSize: 13 }}
+                      style={{ width: "100%", minWidth: 90, boxSizing: "border-box", padding: "8px 8px", borderRadius: 8, border: `1px solid ${cardBorder}`, background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))", fontSize: 13 }}
                     />
                   </td>
                 );
@@ -210,7 +210,7 @@ function ExportFeld({ feld, werte }) {
 
 function ExportAnsicht({ formular, werte }) {
   return (
-    <div style={{ width: 780, padding: 30, background: "#fff", fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif", color: textMain }}>
+    <div style={{ width: 780, padding: 30, background: "var(--mp-karte)", fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif", color: textMain }}>
       <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 18 }}>{formular.titel}</div>
       {formular.sections.map((section, si) => (
         <div key={si} style={{ marginBottom: 20 }}>

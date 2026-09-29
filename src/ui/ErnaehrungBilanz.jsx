@@ -21,7 +21,7 @@ function Balken({ label, ist, soll, farbe, einheit = "g" }) {
           {soll ? ` / ${fmt(soll)}` : ""} {einheit}
         </b>
       </div>
-      <div style={{ height: 8, borderRadius: 5, background: "#E4E6EE", marginTop: 3 }}>
+      <div style={{ height: 8, borderRadius: 5, background: "color-mix(in srgb, #E4E6EE var(--mp-flaeche), var(--mp-karte))", marginTop: 3 }}>
         <div style={{ width: `${p}%`, height: "100%", borderRadius: 5, background: farbe }} />
       </div>
     </div>
@@ -63,7 +63,7 @@ export default function ErnaehrungBilanz() {
   const heuteEintraege = essenEintraege.filter((e) => e.datum === heute);
 
   return (
-    <section aria-label="Ernährung heute" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: `1.5px solid ${cardBorder}` }}>
+    <section aria-label="Ernährung heute" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: `1.5px solid ${cardBorder}` }}>
       <div style={{ fontWeight: 900, fontSize: 15.5 }}>📊 Heute</div>
       <Balken label="🥚 Eiweiß" ist={ist.eiweiss} soll={z.eiweiss} farbe="#2E9C86" />
       <Balken label="🥑 Fett" ist={ist.fett} soll={z.fett} farbe="#E0A21B" />
@@ -72,7 +72,7 @@ export default function ErnaehrungBilanz() {
       <div style={{ fontSize: 12.5, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "8px 10px", marginTop: 10, lineHeight: 1.8 }}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <span>🐟 Omega-3 EPA/DHA heute</span>
-          <b style={{ color: ist.epaDha >= z.omega3Mg ? "#1E8E5A" : "#15181A" }}>
+          <b style={{ color: ist.epaDha >= z.omega3Mg ? "#1E8E5A" : "color-mix(in srgb, #15181A var(--mp-schrift), var(--mp-schrift-hell))" }}>
             {ist.epaDha} / {z.omega3Mg} mg{ist.epaDha >= z.omega3Mg ? " ✓" : ""}
           </b>
         </div>
@@ -87,8 +87,8 @@ export default function ErnaehrungBilanz() {
           </b>
         </div>
       </div>
-      {tipp && <div style={{ fontSize: 12.5, background: "#FFF6E0", borderRadius: 12, padding: "8px 10px", marginTop: 8 }}>💡 {tipp}</div>}
-      {neuro && <div style={{ fontSize: 12.5, background: "#E8F7F2", borderRadius: 12, padding: "8px 10px", marginTop: 8 }}>{neuro}</div>}
+      {tipp && <div style={{ fontSize: 12.5, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", marginTop: 8 }}>💡 {tipp}</div>}
+      {neuro && <div style={{ fontSize: 12.5, background: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", marginTop: 8 }}>{neuro}</div>}
       {heuteEintraege.length > 0 && (
         <div style={{ marginTop: 10 }}>
           <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 4 }}>HEUTE EINGETRAGEN</div>
@@ -102,7 +102,7 @@ export default function ErnaehrungBilanz() {
                   · {Math.round(e.werte.kcal)} kcal · {fmt(e.werte.eiweiss)} g E
                 </span>
               </span>
-              <button type="button" aria-label={`${e.text} löschen`} onClick={() => window.confirm("Eintrag löschen?") && essenEntfernen?.(e.id)} style={{ border: "none", background: "transparent", color: "#E0352B", fontSize: 18, cursor: "pointer" }}>
+              <button type="button" aria-label={`${e.text} löschen`} onClick={() => window.confirm("Eintrag löschen?") && essenEntfernen?.(e.id)} style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #E0352B var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 18, cursor: "pointer" }}>
                 ×
               </button>
             </div>

@@ -50,7 +50,7 @@ export default function LexikonView({ onHome }) {
         const istNeueste = i === lexikonVerlauf.length - 1;
         return (
           <Card key={i} ref={istNeueste ? neuesteKarteRef : null} style={{ marginBottom: 12, animation: istNeueste ? "fadeInUp 0.4s ease-out" : "none" }}>
-            <div style={{ fontSize: 10, color: accentDark, fontWeight: 700, marginBottom: 4 }}>{item.kategorie}</div>
+            <div style={{ fontSize: 10, color: "var(--mp-accent-dark-text)", fontWeight: 700, marginBottom: 4 }}>{item.kategorie}</div>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>{item.frage}</div>
             <div style={{ fontSize: 13, color: textMuted, lineHeight: 1.5 }}>
               {item.antwort === null ? "🔎 Antwort wird geladen..." : item.antwort}
@@ -71,7 +71,7 @@ export default function LexikonView({ onHome }) {
               padding: "0 18px",
               borderRadius: 10,
               border: "none",
-              background: lexikonLoading || !lexikonFrage.trim() ? "#CDEAE3" : accent,
+              background: lexikonLoading || !lexikonFrage.trim() ? "color-mix(in srgb, #CDEAE3 var(--mp-flaeche), var(--mp-karte))" : accent,
               color: "#fff",
               fontWeight: 700,
               cursor: "pointer",

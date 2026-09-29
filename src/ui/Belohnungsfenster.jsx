@@ -222,7 +222,7 @@ export default function Belohnungsfenster() {
         gap: 10,
         padding: "12px 18px",
         borderRadius: 16,
-        background: "#fff",
+        background: "var(--mp-karte)",
         boxShadow: shadow,
         border: `1px solid ${hexZuRgba(accentDark, 0.13)}`,
         maxWidth: "calc(100vw - 32px)",
@@ -234,8 +234,8 @@ export default function Belohnungsfenster() {
     >
       {symbol(34, 18)}
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#15181A" }}>{eintrag.text}</div>
-        {eintrag.untertitel && <div style={{ fontSize: 12, color: "#6B7178", marginTop: 2 }}>{eintrag.untertitel}</div>}
+        <div style={{ fontSize: 13, fontWeight: 800, color: "color-mix(in srgb, #15181A var(--mp-schrift), var(--mp-schrift-hell))" }}>{eintrag.text}</div>
+        {eintrag.untertitel && <div style={{ fontSize: 12, color: "color-mix(in srgb, #6B7178 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 2 }}>{eintrag.untertitel}</div>}
         {punkteText && <div style={{ fontSize: 11.5, color: success, fontWeight: 700 }}>{punkteText}</div>}
       </div>
     </button>

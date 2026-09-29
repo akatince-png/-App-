@@ -93,7 +93,7 @@ export default function MiniPlanWidget({
       style={{
         position: "relative",
         // Design 2.0 (28.09.): weiße Kachel, Farbe nur im Ring und Titel.
-        background: aktiv ? "#fff" : kartenHintergrund,
+        background: aktiv ? "var(--mp-karte)" : kartenHintergrund,
         border: "1px solid rgba(16, 24, 40, 0.05)",
         borderRadius: 18,
         padding: "12px",
@@ -144,7 +144,7 @@ export default function MiniPlanWidget({
             height: 20,
             borderRadius: "50%",
             background: orden.freigeschaltet ? `linear-gradient(135deg, ${orden.grad[0]}, ${orden.grad[1]})` : "#E4E4DF",
-            border: "2px solid #fff",
+            border: "2px solid color-mix(in srgb, #fff var(--mp-flaeche), var(--mp-rand-dunkel))",
             boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
             display: "flex",
             alignItems: "center",
@@ -267,7 +267,7 @@ export default function MiniPlanWidget({
       <div
         style={{
           fontSize: "9px",
-          color: "#888",
+          color: "color-mix(in srgb, #888 var(--mp-schrift), var(--mp-schrift-hell))",
           marginTop: "4px",
         }}
       >

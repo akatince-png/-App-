@@ -14,7 +14,7 @@ export default function GrundEingabe({ grund, onChange, label = "Grund (optional
       <button
         type="button"
         onClick={() => setOffen(true)}
-        style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0, marginTop: 6 }}
+        style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0, marginTop: 6 }}
       >
         + Grund notieren (optional)
       </button>

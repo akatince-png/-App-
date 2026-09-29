@@ -18,7 +18,7 @@ const knopf = (farbe, hell) => ({
   fontWeight: 800,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: hell ? "#EEF0F5" : farbe,
+  background: hell ? "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))" : farbe,
   color: hell ? textMain : "#fff",
 });
 
@@ -43,7 +43,7 @@ function VideoZeile({ n, name, kopf, aktionen, fehlerSetzen }) {
     a.remove();
   };
   return (
-    <div style={{ borderTop: "1px solid #F0F1F5", marginTop: 8, paddingTop: 8 }} data-video-zeile>
+    <div style={{ borderTop: "1px solid color-mix(in srgb, #F0F1F5 var(--mp-flaeche), var(--mp-rand-dunkel))", marginTop: 8, paddingTop: 8 }} data-video-zeile>
       {kopf}
       <div style={{ fontSize: 12.5, color: textMain }}>{n.titel}</div>
       <div style={{ fontSize: 11.5, color: textMuted }}>
@@ -90,7 +90,7 @@ export default function NachweiseCoach({ namen }) {
   };
 
   return (
-    <div style={{ borderRadius: 14, border: `1.5px solid ${cardBorder}`, background: "#fff", padding: "10px 12px", marginBottom: 10 }} data-nachweise>
+    <div style={{ borderRadius: 14, border: `1.5px solid ${cardBorder}`, background: "var(--mp-karte)", padding: "10px 12px", marginBottom: 10 }} data-nachweise>
       <button type="button" data-programme-toggle aria-expanded={offen} onClick={() => setOffen((o) => !o)} style={{ width: "100%", display: "flex", justifyContent: "space-between", border: "none", background: "transparent", padding: 0, cursor: "pointer", fontFamily: "inherit", color: textMain }}>
         <span style={{ fontSize: 13.5, fontWeight: 800 }}>🎥 Video-Nachweise: {liste.length} warten auf dich</span>
         <span style={{ color: textMuted }}>{offen ? "▾" : "›"}</span>
@@ -167,7 +167,7 @@ export function VideoArchivPerson({ personId, vorname }) {
     setListe(await archivLaden(personId));
   };
   return (
-    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, background: "#fff", padding: "10px 12px", marginBottom: 10 }} data-video-archiv>
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, background: "var(--mp-karte)", padding: "10px 12px", marginBottom: 10 }} data-video-archiv>
       <div style={{ fontSize: 13, fontWeight: 800 }}>🎞️ Video-Archiv von {vorname || "dieser Person"}</div>
       <div style={{ fontSize: 11.5, color: ok === true ? "#2E9C86" : textMuted, marginTop: 2 }}>
         {ok === true ? "✓ Einverständnis zum Aufbewahren liegt vor." : ok === false ? "Einverständnis widerrufen – die Videos werden heute Nacht gelöscht." : "Kein Einverständnis – 📌-Videos werden nach 7 Tagen gelöscht."}

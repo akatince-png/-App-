@@ -48,7 +48,7 @@ export default function UebungenEditor({ uebungen, optionen, gewichtPlatzhalter,
     <>
       <Label>Übungen</Label>
       {uebungen.map((u, i) => (
-        <div key={i} style={{ marginBottom: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+        <div key={i} style={{ marginBottom: 10, padding: 10, borderRadius: 12, background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))", border: `1px solid ${cardBorder}` }}>
           <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
             <div style={{ flex: 1 }}>
               <AutocompleteInput value={u.name} onChange={(v) => onAendern(i, "name", v)} options={optionen} placeholder="Übung" />

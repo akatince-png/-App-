@@ -18,7 +18,7 @@ export default function DosisBearbeitenPanel({ dosierung, onSpeichern }) {
     setEntwurf((p) => (feld === "intervallPreset" ? { ...p, intervallTyp: "fixed", intervallDays: val } : { ...p, [feld]: val }));
 
   return (
-    <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+    <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))", border: `1px solid ${cardBorder}` }}>
       {entwurf.kategorie === "Cannabis" && <CannabisFelder value={entwurf} onChange={handleChange} />}
       <DosierungFields
         value={entwurf}

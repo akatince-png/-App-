@@ -8,7 +8,7 @@ import { textMain, textMuted } from "./theme";
 export default function Logo({ size = 56, withWordmark = false }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: withWordmark ? 12 : 0 }}>
-      <img src="/logo-mark.png" alt="AKA" width={size} height={size} style={{ display: "block", flexShrink: 0 }} />
+      <img src="/logo-mark.png" alt="AKA" width={size} height={size} style={{ display: "block", flexShrink: 0, borderRadius: Math.round(size * 0.24) }} />
       {withWordmark && (
         <div>
           <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: size * 0.34, fontWeight: 700, color: textMain, lineHeight: 1.1, letterSpacing: -0.2 }}>

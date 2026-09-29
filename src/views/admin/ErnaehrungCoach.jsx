@@ -69,7 +69,7 @@ export default function ErnaehrungCoach({ personId, vorname, onChat }) {
   };
 
   return (
-    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "#fff" }} data-ernaehrung-coach>
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "var(--mp-karte)" }} data-ernaehrung-coach>
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>🍽️ ERNÄHRUNG · Ø LETZTE 7 TAGE{zielE.ziel ? ` · ZIEL ${ZIELARTEN.find((x) => x[0] === zielE.ziel)?.[1]?.toUpperCase() || ""}` : ""}</div>
       {mitDaten.length === 0 ? (
         <div style={{ fontSize: 12.5, color: textMuted, marginTop: 4 }}>Noch nichts eingetragen.</div>
@@ -80,14 +80,14 @@ export default function ErnaehrungCoach({ personId, vorname, onChat }) {
           {z.kcal ? ` (Ziel ${z.kcal})` : ""}
           <br />
           ⚖️ Ω6 : 3 {ratio == null ? "–" : `${fmt(ratio)} : 1`}{" "}
-          {ratio != null && <span style={{ color: ratio <= z.omega6zu3Max ? "#1E8E5A" : "#E0352B" }}>{ratio <= z.omega6zu3Max ? "✓" : "▲"}</span>} · 🐟 Fisch-Tage {fischTage}/{z.fischProWoche} · an {mitDaten.length} von 7 Tagen eingetragen
+          {ratio != null && <span style={{ color: ratio <= z.omega6zu3Max ? "#1E8E5A" : "color-mix(in srgb, #E0352B var(--mp-schrift), var(--mp-schrift-hell))" }}>{ratio <= z.omega6zu3Max ? "✓" : "▲"}</span>} · 🐟 Fisch-Tage {fischTage}/{z.fischProWoche} · an {mitDaten.length} von 7 Tagen eingetragen
         </div>
       )}
       {!eiweissOk && mitDaten.length > 0 && (
         <button
           type="button"
           onClick={() => onChat(`Hallo${vorname ? ` ${vorname}` : ""}, ich habe auf deine Ernährung geschaut: Eiweiß lag zuletzt im Schnitt bei ${eiweissProKg != null ? `${fmt(eiweissProKg)} g pro kg` : `${fmt(schnitt("eiweiss"))} g`}. Wollen wir schauen, wo sich leicht mehr einbauen lässt, z. B. beim Frühstück?`)}
-          style={{ border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: "4px 0" }}
+          style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: "4px 0" }}
         >
           Ansprechen ›
         </button>
@@ -119,7 +119,7 @@ export default function ErnaehrungCoach({ personId, vorname, onChat }) {
         <button
           type="button"
           onClick={() => setBearbeiten({ ...ZIEL_STANDARD, ...zielE })}
-          style={{ display: "block", border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: "4px 0" }}
+          style={{ display: "block", border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: "4px 0" }}
         >
           🎯 Ziele setzen ›
         </button>

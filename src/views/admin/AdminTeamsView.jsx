@@ -59,12 +59,12 @@ function TeamWoche({ mitglieder }) {
         stille.map((m) => {
           const r = tageRuhig(m.letzteAktivitaet);
           return (
-            <div key={m.userId} style={{ background: "#FFF4E5", color: "#8A4B08", borderRadius: 12, padding: "8px 10px", fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>
+            <div key={m.userId} style={{ background: "color-mix(in srgb, #FFF4E5 var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #8A4B08 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 12, padding: "8px 10px", fontSize: 12.5, fontWeight: 700, marginTop: 6 }}>
               ⚠️ {m.vorname || "—"}: {r === null ? "noch nichts abgehakt" : `seit ${r} Tagen nichts abgehakt`} ·{" "}
               {status[m.userId] === "ok" ? (
                 <span>Nachricht gesendet 💛</span>
               ) : (
-                <button type="button" onClick={() => setSchreibeAn(schreibeAn === m.userId ? null : m.userId)} style={{ border: "none", background: "transparent", color: "#8A4B08", textDecoration: "underline", fontWeight: 800, cursor: "pointer", padding: 0, fontSize: 12.5, fontFamily: "inherit" }}>
+                <button type="button" onClick={() => setSchreibeAn(schreibeAn === m.userId ? null : m.userId)} style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #8A4B08 var(--mp-schrift), var(--mp-schrift-hell))", textDecoration: "underline", fontWeight: 800, cursor: "pointer", padding: 0, fontSize: 12.5, fontFamily: "inherit" }}>
                   Nachricht schreiben
                 </button>
               )}
@@ -170,7 +170,7 @@ export default function AdminTeamsView({ onHome, onOpenLiga }) {
           type="button"
           className="mp-tap"
           onClick={onOpenLiga}
-          style={{ width: "100%", marginBottom: 16, border: `1.5px solid ${cardBorder}`, borderRadius: 14, padding: "12px 14px", background: "#fff", fontSize: 14, fontWeight: 800, color: textMain, cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+          style={{ width: "100%", marginBottom: 16, border: `1.5px solid ${cardBorder}`, borderRadius: 14, padding: "12px 14px", background: "var(--mp-karte)", fontSize: 14, fontWeight: 800, color: textMain, cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
         >
           🏆 Team-Liga ansehen ›
         </button>

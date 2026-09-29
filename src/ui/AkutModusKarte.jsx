@@ -192,9 +192,9 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
   };
 
   return (
-    <Card style={{ marginBottom: 18, background: "#FFF7ED", border: "1px solid rgba(217, 119, 6, 0.25)" }}>
+    <Card style={{ marginBottom: 18, background: "color-mix(in srgb, #FFF7ED var(--mp-flaeche), var(--mp-karte))", border: "1px solid rgba(217, 119, 6, 0.25)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#B45309" }}>💡 Was hilft mir jetzt?</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))" }}>💡 Was hilft mir jetzt?</div>
         <button
           type="button"
           onClick={onClose}
@@ -220,7 +220,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
           <button
             type="button"
             onClick={() => setAtemModusAktiv(false)}
-            style={{ border: "none", background: "transparent", color: "#B45309", fontSize: 12.5, fontWeight: 700, cursor: "pointer", marginTop: 10 }}
+            style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 12.5, fontWeight: 700, cursor: "pointer", marginTop: 10 }}
           >
             🔁 Zurück zur Übersicht
           </button>
@@ -241,13 +241,13 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
             </>
           ) : (
             <>
-              <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: accentDark }}>
+              <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: "var(--mp-accent-dark-text)" }}>
                 Notiert: „{massnahmeText.trim()}"
               </div>
               {!massnahmeGefuehlProtokolliert ? (
                 <GefuehlAbfrage onWaehlen={massnahmeGefuehlWaehlen} />
               ) : (
-                <div style={{ fontSize: 12, color: "#B45309", marginTop: 8 }}>Danke, festgehalten ✓</div>
+                <div style={{ fontSize: 12, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 8 }}>Danke, festgehalten ✓</div>
               )}
             </>
           )}
@@ -255,7 +255,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
             type="button"
             onClick={zuruecksetzenKomplett}
             className="mp-tap"
-            style={{ border: "none", background: "transparent", color: "#B45309", fontSize: 12.5, fontWeight: 700, cursor: "pointer", marginTop: 10, padding: "6px 4px" }}
+            style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 12.5, fontWeight: 700, cursor: "pointer", marginTop: 10, padding: "6px 4px" }}
           >
             🔁 Zurück zur Übersicht
           </button>
@@ -268,7 +268,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
             type="button"
             onClick={() => setMomentOffen(true)}
             className="mp-tap"
-            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "12px 14px", marginBottom: 10, borderRadius: 14, border: "1px solid rgba(217, 119, 6, 0.35)", background: "#fff", color: "#B45309", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textAlign: "left" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "12px 14px", marginBottom: 10, borderRadius: 14, border: "1px solid rgba(217, 119, 6, 0.35)", background: "var(--mp-karte)", color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textAlign: "left" }}
           >
             <span style={{ fontSize: 18 }}>📝</span> Moment festhalten (was ist los, wer war dabei?)
           </button>
@@ -285,8 +285,8 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
               marginBottom: 10,
               borderRadius: 14,
               border: "1px solid rgba(217, 119, 6, 0.35)",
-              background: "#fff",
-              color: "#B45309",
+              background: "var(--mp-karte)",
+              color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))",
               fontSize: 13.5,
               fontWeight: 700,
               cursor: "pointer",
@@ -314,8 +314,8 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
                     marginBottom: 8,
                     borderRadius: 14,
                     border: "1px solid rgba(217, 119, 6, 0.35)",
-                    background: "#fff",
-                    color: "#B45309",
+                    background: "var(--mp-karte)",
+                    color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))",
                     fontSize: 13.5,
                     fontWeight: 700,
                     cursor: "pointer",
@@ -344,7 +344,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
           <button
             type="button"
             onClick={() => setMassnahmeOffen(true)}
-            style={{ border: "none", background: "transparent", color: "#B45309", fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 12, padding: 0 }}
+            style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 12, padding: 0 }}
           >
             ✍️ Ich hab schon selbst was gemacht — eintragen
           </button>
@@ -362,13 +362,13 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
 
       {antwort && (
         <div ref={antwortRef} style={{ marginTop: 4, animation: "fadeInUp 0.4s ease-out" }}>
-          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: accentDark }}>
+          <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 13.5, lineHeight: 1.6, color: "var(--mp-accent-dark-text)" }}>
             {antwort}
           </div>
           {!gefuehlProtokolliert ? (
             <GefuehlAbfrage onWaehlen={gefuehlWaehlen} />
           ) : (
-            <div style={{ fontSize: 12, color: "#B45309", marginTop: 8 }}>Danke, festgehalten ✓</div>
+            <div style={{ fontSize: 12, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 8 }}>Danke, festgehalten ✓</div>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
             <button
@@ -378,7 +378,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
               style={{
                 border: "none",
                 background: "transparent",
-                color: "#B45309",
+                color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))",
                 fontSize: 12.5,
                 fontWeight: 700,
                 cursor: "pointer",
@@ -395,7 +395,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
                 style={{
                   border: "none",
                   background: "transparent",
-                  color: "#B45309",
+                  color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))",
                   fontSize: 12.5,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -405,7 +405,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
                 ✉️ An {coachName} schicken
               </button>
             )}
-            {anCoachGesendet && <div style={{ fontSize: 12, color: "#B45309", padding: "6px 4px" }}>Gesendet ✓</div>}
+            {anCoachGesendet && <div style={{ fontSize: 12, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", padding: "6px 4px" }}>Gesendet ✓</div>}
           </div>
         </div>
       )}

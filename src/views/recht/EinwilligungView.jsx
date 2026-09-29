@@ -38,14 +38,14 @@ export default function EinwilligungView({ onAbmelden }) {
             <input type="checkbox" checked={datenschutz} onChange={(e) => setDatenschutz(e.target.checked)} style={{ marginTop: 4, width: 20, height: 20 }} data-einwilligung-datenschutz />
             <span>
               <b>Ich willige ein</b>, dass AKA meine Angaben zu Gesundheit und Alltag (z. B. Medikation, Schlaf, Stimmung, Training) speichert, damit die App und mein Coach mich unterstützen können. Ich habe die{" "}
-              <button type="button" onClick={() => setZeigeText((x) => !x)} style={{ border: "none", background: "none", padding: 0, color: "#2D6FD6", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", fontSize: "inherit" }}>
+              <button type="button" onClick={() => setZeigeText((x) => !x)} style={{ border: "none", background: "none", padding: 0, color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", fontSize: "inherit" }}>
                 Datenschutzerklärung
               </button>{" "}
               gelesen. Widerruf jederzeit möglich, indem ich mein Konto lösche. <span style={{ color: textMuted }}>(Pflicht)</span>
             </span>
           </label>
           {zeigeText && (
-            <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 12, borderTop: "1px solid #EAEAE5", paddingTop: 10 }} data-einwilligung-text>
+            <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 12, borderTop: "1px solid color-mix(in srgb, #EAEAE5 var(--mp-flaeche), var(--mp-rand-dunkel))", paddingTop: 10 }} data-einwilligung-text>
               <RechtstextInhalt abschnitte={DATENSCHUTZ} />
             </div>
           )}

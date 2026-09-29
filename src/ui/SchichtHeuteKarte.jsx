@@ -10,7 +10,7 @@ import { zumSchichtplan } from "./SchichtplanLink";
 // Schicht heute gilt, wann die Routinen starten, was morgen kommt — und
 // "Heute anders" mit einem Tipp (andere Schicht, normal, krank, eigene
 // Zeit). Gilt nur für diesen Tag und wird protokolliert.
-const chip = { border: "none", borderRadius: 99, padding: "8px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "#2D6FD6" };
+const chip = { border: "none", borderRadius: 99, padding: "8px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", background: "var(--mp-karte)", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" };
 
 export default function SchichtHeuteKarte() {
   const { routineVarianten = [], routinePlanFuer, routineSchichtplanTagSetzen, aenderungVermerken, routineEinstellungenStandard = {} } = useAppData();
@@ -36,14 +36,14 @@ export default function SchichtHeuteKarte() {
 
   return (
     <section aria-label="Heute im Schichtplan" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "linear-gradient(135deg, #FFE8B8, #FFF6E0)" }}>
-      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#8A5A00", letterSpacing: 0.3 }}>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: "color-mix(in srgb, #8A5A00 var(--mp-schrift), var(--mp-schrift-hell))", letterSpacing: 0.3 }}>
         HEUTE · {p.icon ? `${p.icon} ` : ""}
         {titel.toUpperCase()}
       </div>
       <div style={{ fontWeight: 900, fontSize: 15.5, marginTop: 4 }}>
         {p.art === "krank" ? "Heute zählt nur Erholung – keine Zeiten." : `☀ Morgenroutine ${p.morgen || "–"} · 🌙 Abendroutine ${p.abend || "–"}`}
       </div>
-      <div style={{ fontSize: 12.5, color: "#5A4A20", marginTop: 3, fontWeight: morgenAnders ? 800 : 500 }}>
+      <div style={{ fontSize: 12.5, color: "color-mix(in srgb, #5A4A20 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 3, fontWeight: morgenAnders ? 800 : 500 }}>
         {morgenAnders
           ? `Morgen: ${m.icon ? `${m.icon} ` : ""}${m.art === "standard" ? "normale Zeiten" : m.label}${m.morgen ? ` – Morgenroutine um ${m.morgen}` : ""}`
           : `Morgen: gleiche Zeiten`}

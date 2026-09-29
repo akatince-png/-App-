@@ -500,10 +500,10 @@ export default function WochenuebersichtView({
     return (
       <>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{nurGesundheit ? "Gesundheitsprotokoll" : "Wochenplan"}</div>
-        <div style={{ fontSize: 12, color: "#6B7178", marginBottom: 4 }}>
+        <div style={{ fontSize: 12, color: "color-mix(in srgb, #6B7178 var(--mp-schrift), var(--mp-schrift-hell))", marginBottom: 4 }}>
           Protokoll-Zeitraum: {fmtDate(startDatumObj)} – {fmtDate(endDatumObj)} · Woche vom {fmtDate(montag)}
         </div>
-        <div style={{ fontSize: 11, color: "#6B7178", marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: "color-mix(in srgb, #6B7178 var(--mp-schrift), var(--mp-schrift-hell))", marginBottom: 16 }}>
           Enthalten:{" "}
           {EXPORT_BEREICHE.filter((x) => auswahl.bereiche.has(x.key))
             .map((x) => x.label)
@@ -515,7 +515,7 @@ export default function WochenuebersichtView({
             {wochentage.map((d, i) => {
               const items = wochenItemsProTag[i].filter((it) => drin(it.kategorie));
               return (
-                <div key={i} style={{ border: "1px solid #EAEAE5", borderRadius: 10, padding: 8, minHeight: 140 }}>
+                <div key={i} style={{ border: "1px solid color-mix(in srgb, #EAEAE5 var(--mp-flaeche), var(--mp-rand-dunkel))", borderRadius: 10, padding: 8, minHeight: 140 }}>
                   <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 6 }}>
                     {WOCHENTAG_KURZ[i]} {fmtDate(d)}
                   </div>
@@ -524,7 +524,7 @@ export default function WochenuebersichtView({
                       <div style={{ fontWeight: 700 }}>
                         {item.uhrzeit} {item.name} {item.done ? "✓" : ""}
                       </div>
-                      {item.detail && <div style={{ color: "#6B7178" }}>{item.detail}</div>}
+                      {item.detail && <div style={{ color: "color-mix(in srgb, #6B7178 var(--mp-schrift), var(--mp-schrift-hell))" }}>{item.detail}</div>}
                     </div>
                   ))}
                 </div>
@@ -620,7 +620,7 @@ export default function WochenuebersichtView({
                 padding: "8px 4px",
                 borderRadius: 10,
                 border: `1px solid ${active ? accent : cardBorder}`,
-                background: active ? accent : "#fff",
+                background: active ? accent : "var(--mp-karte)",
                 color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
                 cursor: "pointer",
                 textAlign: "center",
@@ -758,7 +758,7 @@ export default function WochenuebersichtView({
             padding: "8px 12px",
             borderRadius: 10,
             border: `1px solid ${viewMode === "day" ? accent : cardBorder}`,
-            background: viewMode === "day" ? accent : "#fff",
+            background: viewMode === "day" ? accent : "var(--mp-karte)",
             color: viewMode === "day" ? "#fff" : textMuted,
             fontSize: 12,
             fontWeight: 700,
@@ -774,7 +774,7 @@ export default function WochenuebersichtView({
             padding: "8px 12px",
             borderRadius: 10,
             border: `1px solid ${viewMode === "week" ? accent : cardBorder}`,
-            background: viewMode === "week" ? accent : "#fff",
+            background: viewMode === "week" ? accent : "var(--mp-karte)",
             color: viewMode === "week" ? "#fff" : textMuted,
             fontSize: 12,
             fontWeight: 700,
@@ -790,7 +790,7 @@ export default function WochenuebersichtView({
             padding: "8px 12px",
             borderRadius: 10,
             border: `1px solid ${viewMode === "month" ? accent : cardBorder}`,
-            background: viewMode === "month" ? accent : "#fff",
+            background: viewMode === "month" ? accent : "var(--mp-karte)",
             color: viewMode === "month" ? "#fff" : textMuted,
             fontSize: 12,
             fontWeight: 700,
@@ -892,14 +892,14 @@ export default function WochenuebersichtView({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <button
               onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}
-              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
+              style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
             >
               ‹
             </button>
             <div style={{ fontSize: 14, fontWeight: 800 }}>{monthDate.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}</div>
             <button
               onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
-              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
+              style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 16, cursor: "pointer", padding: "4px 8px" }}
             >
               ›
             </button>
@@ -937,7 +937,7 @@ export default function WochenuebersichtView({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    background: sameDay(d, today) ? accentSoft : "#fff",
+                    background: sameDay(d, today) ? accentSoft : "var(--mp-karte)",
                   }}
                 >
                   <div style={{ color: textMuted }}>{d.getDate()}</div>
@@ -1036,7 +1036,7 @@ export default function WochenuebersichtView({
         {compliance !== null && (
           <div>
             <div style={{ fontSize: 11, color: textMuted }}>Compliance (bis {fmtDate(heuteCap)})</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: accentDark }}>{compliance}%</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--mp-accent-dark-text)" }}>{compliance}%</div>
           </div>
         )}
       </Card>
@@ -1224,9 +1224,9 @@ export default function WochenuebersichtView({
                   .join(", ")}
                 . Alles andere ist nicht im Dokument.
               </div>
-              <div data-export-vorschau style={{ border: `1px solid ${cardBorder}`, borderRadius: 10, overflow: "auto", maxHeight: 460, background: "#F3F4F8", padding: 6 }}>
+              <div data-export-vorschau style={{ border: `1px solid ${cardBorder}`, borderRadius: 10, overflow: "auto", maxHeight: 460, background: "color-mix(in srgb, #F3F4F8 var(--mp-flaeche), var(--mp-karte))", padding: 6 }}>
                 <div style={{ zoom: 0.33, width: 900 }}>
-                  <div style={{ background: "#fff", padding: 24, fontFamily: "sans-serif" }}>{exportInhalt()}</div>
+                  <div style={{ background: "var(--mp-karte)", padding: 24, fontFamily: "sans-serif" }}>{exportInhalt()}</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
@@ -1251,7 +1251,7 @@ export default function WochenuebersichtView({
           nur für html2canvas fotografiert, nie direkt sichtbar. Inhalt nach
           Auswahl gefiltert (exportInhalt). */}
       <div style={{ position: "absolute", left: -9999, top: 0, width: 900 }}>
-        <div ref={exportRef} style={{ background: "#fff", padding: 24, fontFamily: "sans-serif" }}>
+        <div ref={exportRef} style={{ background: "var(--mp-karte)", padding: 24, fontFamily: "sans-serif" }}>
           {exportInhalt()}
         </div>
       </div>
@@ -1275,7 +1275,7 @@ export default function WochenuebersichtView({
 
 const exportKnopf = (voll) => ({
   border: voll ? "none" : `1.5px solid ${cardBorder}`,
-  background: voll ? "#1B2350" : "#fff",
+  background: voll ? "#1B2350" : "var(--mp-karte)",
   color: voll ? "#fff" : "#15181A",
   borderRadius: 12,
   padding: "10px 12px",

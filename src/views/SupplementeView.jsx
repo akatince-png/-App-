@@ -80,7 +80,7 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto, onInter
         </button>
       </div>
       {offen && (
-        <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+        <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))", border: `1px solid ${cardBorder}` }}>
           <Label>Name</Label>
           <TextInput value={entwurf.name} onChange={(v) => setEntwurf((p) => ({ ...p, name: v }))} />
           <Label>Tageszeit(en)</Label>
@@ -154,7 +154,7 @@ export default function SupplementeView({ onHome, embedded = false }) {
               padding: "9px 0",
               borderRadius: 10,
               border: `1px solid ${tab === t.id ? accent : cardBorder}`,
-              background: tab === t.id ? accent : "#fff",
+              background: tab === t.id ? accent : "var(--mp-karte)",
               color: tab === t.id ? "#fff" : textMuted,
               fontSize: 13,
               fontWeight: 700,
@@ -364,7 +364,7 @@ function SupplementeSection() {
           </div>
           <button
             onClick={eigeneZeitHinzufuegen}
-            style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
+            style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: accentDark, fontWeight: 700, cursor: "pointer" }}
           >
             +
           </button>
@@ -428,7 +428,7 @@ function SupplementeSection() {
                     padding: "8px 4px",
                     borderRadius: 10,
                     border: `1px solid ${active ? accent : cardBorder}`,
-                    background: active ? accent : "#fff",
+                    background: active ? accent : "var(--mp-karte)",
                     color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
                     cursor: "pointer",
                     textAlign: "center",

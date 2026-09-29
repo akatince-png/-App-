@@ -37,7 +37,7 @@ export default function WelcomeView({ onDone, onCancel }) {
                 padding: "6px 10px",
                 borderRadius: 6,
                 border: `1px solid ${cardBorder}`,
-                background: lang === langCode ? "#1E2B29" : "#fff",
+                background: lang === langCode ? "#1E2B29" : "var(--mp-karte)",
                 color: lang === langCode ? "#fff" : "#6B7280",
                 fontSize: 11,
                 fontWeight: 600,
@@ -87,7 +87,7 @@ export default function WelcomeView({ onDone, onCancel }) {
         <div style={{ fontSize: 15, color: textMuted, textAlign: "center", lineHeight: 1.7, maxWidth: 300, marginTop: 16, whiteSpace: "pre-wrap" }}>
           {t(slide.textKey)}
         </div>
-        <div style={{ marginTop: 22, width: "100%", maxWidth: 320, background: "#F5F6FA", borderRadius: 18, padding: "14px 16px" }}>
+        <div style={{ marginTop: 22, width: "100%", maxWidth: 320, background: "color-mix(in srgb, #F5F6FA var(--mp-flaeche), var(--mp-karte))", borderRadius: 18, padding: "14px 16px" }}>
           <div style={{ fontSize: 14.5, fontWeight: 800, color: textMain, marginBottom: 6 }}>{t("welcome.kurz.titel")}</div>
           {["welcome.kurz.schritt1", "welcome.kurz.schritt2", "welcome.kurz.schritt3"].map((key, i) => (
             <div key={key} style={{ fontSize: 14, color: textMain, lineHeight: 1.9 }}>

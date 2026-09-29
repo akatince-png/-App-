@@ -492,7 +492,7 @@ export default function KiChat({
           maxWidth: 460,
           maxHeight: "88vh",
           overflowY: "auto",
-          background: "#fff",
+          background: "var(--mp-karte)",
           borderRadius: "22px 22px 0 0",
           padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
           boxShadow: "0 -8px 30px rgba(0, 0, 0, 0.25)",
@@ -511,7 +511,7 @@ export default function KiChat({
                 height: 36,
                 borderRadius: 10,
                 border: `1px solid ${cardBorder}`,
-                background: "#fff",
+                background: "var(--mp-karte)",
                 fontSize: 16,
                 cursor: "pointer",
               }}
@@ -556,7 +556,7 @@ export default function KiChat({
             <button
               type="button"
               onClick={() => sprich(letzteCoachNachricht.text)}
-              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 2 }}
+              style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 2 }}
             >
               🔊 Vorlesen
             </button>
@@ -604,7 +604,7 @@ export default function KiChat({
                     type="button"
                     onClick={() => sprich(n.text)}
                     title="Vorlesen"
-                    style={{ border: "none", background: "transparent", color: accentDark, fontSize: 15, cursor: "pointer", padding: 2, flexShrink: 0 }}
+                    style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 15, cursor: "pointer", padding: 2, flexShrink: 0 }}
                   >
                     🔊
                   </button>
@@ -627,8 +627,8 @@ export default function KiChat({
                 justifyContent: "center",
                 borderRadius: 10,
                 border: `1px solid ${hoert ? danger : cardBorder}`,
-                background: hoert ? "#FDE9EC" : "#fff",
-                color: hoert ? danger : accentDark,
+                background: hoert ? "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))" : "var(--mp-karte)",
+                color: hoert ? danger : "var(--mp-accent-dark-text)",
                 cursor: "pointer",
                 flexShrink: 0,
               }}

@@ -214,7 +214,7 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
       <ViewHeader title={`🏋️ ${session.art}`} onHome={homeVerlassen} homeTitle="Zurück" />
 
       {musikFehler && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
           <span>🎵 Playlist konnte nicht gestartet werden: {musikFehler}</span>
           <button
             type="button"
@@ -245,7 +245,7 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                   key={n}
                   type="button"
                   onClick={() => rundenAntworten(n)}
-                  style={{ border: "none", borderRadius: 99, padding: "8px 13px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: "#EEF4FF", color: "#2D6FD6" }}
+                  style={{ border: "none", borderRadius: 99, padding: "8px 13px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" }}
                 >
                   {n}
                 </button>
@@ -324,7 +324,7 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                       <>
                         <PrimaryButton onClick={satzFertig}>Satz fertig</PrimaryButton>
                         {kameraUebungFuer(aktuelleUebung.name) && (
-                          <button type="button" onClick={() => setKamera(true)} style={{ marginTop: 10, border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
+                          <button type="button" onClick={() => setKamera(true)} style={{ marginTop: 10, border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
                             📷 Mit Kamera zählen
                           </button>
                         )}
@@ -378,7 +378,7 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
                   entwurf && (
                     <div style={{ textAlign: "left" }}>
                       {naechstesMalHinweis(satzErgebnisse[uebungIndex], aktuelleUebung.wiederholungen) && (
-                        <div style={{ fontSize: 12.5, background: "#E8F7F2", borderRadius: 12, padding: "8px 10px", marginBottom: 10 }}>
+                        <div style={{ fontSize: 12.5, background: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", marginBottom: 10 }}>
                           {(satzErgebnisse[uebungIndex] || []).map((e, i) => (e ? `Satz ${i + 1}: ${e.wdh}` : null)).filter(Boolean).join(" · ")}
                           <br />
                           {naechstesMalHinweis(satzErgebnisse[uebungIndex], aktuelleUebung.wiederholungen)}

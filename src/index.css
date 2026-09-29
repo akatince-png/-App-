@@ -10,6 +10,34 @@
   --mp-highlight-schatten: 0 14px 30px rgba(16, 19, 43, 0.35);
   /* Design 2.0: zart getönter Seitenhintergrund je Tagesphase. */
   --mp-canvas: #F1F2F9;
+  /* Design 2.0 Abendmodus (29.09.): Grundfarben als Variablen. Tagsüber
+     die bisherigen Werte; "Anteil 100 %" heißt: feste Farben aus den
+     Komponenten (color-mix, siehe ui/theme.js) bleiben unverändert. */
+  --mp-karte: #FFFFFF;
+  --mp-text: #141827;
+  --mp-text-muted: #636B7A;
+  --mp-rand: #E6E9F0;
+  --mp-schatten: 0 1px 2px rgba(20, 24, 40, 0.04), 0 8px 24px rgba(20, 24, 40, 0.06);
+  --mp-accent-text: var(--mp-accent);
+  --mp-accent-dark-text: var(--mp-accent-dark);
+  --mp-flaeche: 100%;
+  --mp-schrift: 100%;
+  --mp-schrift-hell: #EEF0FA;
+  --mp-rand-dunkel: #2A2F4F;
+}
+/* Abends dunkel (data-dunkel, gesetzt von setzeTagesphasenFarben). Helle
+   Flächen werden zu dunklen, leicht getönten Karten, dunkle Schrift hell. */
+:root[data-dunkel] {
+  color-scheme: dark;
+  --mp-karte: #181C34;
+  --mp-text: #EEF0FA;
+  --mp-text-muted: #A3A9C6;
+  --mp-rand: #2A2F4F;
+  --mp-schatten: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.28);
+  --mp-accent-text: #A9B3FF;
+  --mp-accent-dark-text: #C7CDFF;
+  --mp-flaeche: 13%;
+  --mp-schrift: 28%;
 }
 
 * {
@@ -47,6 +75,7 @@ body {
      schrift (Serifen) erschienen. */
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--mp-canvas);
+  color: var(--mp-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -52,7 +52,7 @@ const BEISPIEL_KOERPER = {
 
 const TABS = ["📅 Termin vergessen", "💊 Genommen?", "🥤 Nichts getrunken", "😴 Zu spät ins Bett", "⏰ Morgens Chaos", "🔥 Hyperfokus", "🏋️ Sport? Irgendwann …", "🍝 Essen vergessen", "📱 Nur kurz aufs Handy", "🔑 Wo ist mein Schlüssel?"];
 
-const kartenStil = { background: "#fff", border: `1px solid ${cardBorder}`, borderRadius: 20, boxShadow: shadow };
+const kartenStil = { background: "var(--mp-karte)", border: `1px solid ${cardBorder}`, borderRadius: 20, boxShadow: shadow };
 
 function Titel({ children, unter }) {
   return (
@@ -85,7 +85,7 @@ function SeiteWillkommen({ gewaehlt, setGewaehlt }) {
           <Pill key={t} label={t} selected={gewaehlt.includes(t)} onClick={() => setGewaehlt((g) => (g.includes(t) ? g.filter((x) => x !== t) : [...g, t]))} />
         ))}
       </div>
-      <div aria-live="polite" style={{ marginTop: 10, borderRadius: 16, padding: "12px 14px", background: "#F5F6FA", fontSize: 14, lineHeight: 1.5, color: textMain, minHeight: 48 }}>
+      <div aria-live="polite" style={{ marginTop: 10, borderRadius: 16, padding: "12px 14px", background: "color-mix(in srgb, #F5F6FA var(--mp-flaeche), var(--mp-karte))", fontSize: 14, lineHeight: 1.5, color: textMain, minHeight: 48 }}>
         {n === 0 ? (
           <span style={{ color: textMuted }}>Nichts davon? Auch gut – AKA macht den Alltag trotzdem leichter.</span>
         ) : (
@@ -143,7 +143,7 @@ function SeiteUebernimmt() {
               <Icon name={icon} size={15} color="#fff" strokeWidth={2.2} />
             </span>
           ))}
-          <span style={{ fontWeight: 900, color: accentDark, margin: "0 4px" }}>→</span>
+          <span style={{ fontWeight: 900, color: "var(--mp-accent-dark-text)", margin: "0 4px" }}>→</span>
           <span className="mp-vs-puls">
             <Logo size={38} />
           </span>
@@ -169,8 +169,8 @@ function RoutinenKarte({ meta, nummer, titel, zeit, schritte, bereit }) {
       </div>
       <div style={{ padding: "6px 14px 10px" }}>
         {schritte.map(([name, min, fertig], i) => (
-          <div key={name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderTop: i ? "1px solid #F1F1EE" : "none" }}>
-            <span style={{ width: 20, height: 20, borderRadius: 10, border: `2px solid ${meta.dot}`, background: fertig ? meta.dot : "#fff", color: "#fff", fontSize: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{fertig ? "✓" : ""}</span>
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderTop: i ? "1px solid color-mix(in srgb, #F1F1EE var(--mp-flaeche), var(--mp-rand-dunkel))" : "none" }}>
+            <span style={{ width: 20, height: 20, borderRadius: 10, border: `2px solid ${meta.dot}`, background: fertig ? meta.dot : "var(--mp-karte)", color: "#fff", fontSize: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{fertig ? "✓" : ""}</span>
             <span style={{ flex: 1, fontSize: 13.5, color: textMain }}>{name}</span>
             {bereit && bereit[i] ? <span style={{ fontSize: 11, fontWeight: 800, color: K.gewohnheit.text, background: K.gewohnheit.bg, borderRadius: 99, padding: "2px 8px" }}>liegt bereit</span> : <span style={{ fontSize: 12, color: textMuted }}>{min} Min.</span>}
           </div>
@@ -217,7 +217,7 @@ function SeiteAbendMorgen() {
         ]}
         bereit={[false, false, true, true]}
       />
-      <div style={{ textAlign: "center", marginTop: 14, fontSize: 17, fontWeight: 800, color: accentDark }}>Immer einen Schritt voraus.</div>
+      <div style={{ textAlign: "center", marginTop: 14, fontSize: 17, fontWeight: 800, color: "var(--mp-accent-dark-text)" }}>Immer einen Schritt voraus.</div>
     </>
   );
 }
@@ -322,11 +322,11 @@ function SeiteTag() {
           const erledigt = i < schritt;
           const jetzt = i === schritt;
           return (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 14, background: jetzt ? meta.bg : "#fff", border: `1px solid ${jetzt ? meta.dot : cardBorder}`, transition: "background .3s, border-color .3s", fontStyle: i === 0 ? "italic" : "normal" }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 14, background: jetzt ? meta.bg : "var(--mp-karte)", border: `1px solid ${jetzt ? meta.dot : cardBorder}`, transition: "background .3s, border-color .3s", fontStyle: i === 0 ? "italic" : "normal" }}>
               <span style={{ width: 42, fontSize: 12, fontWeight: 800, color: textMuted }}>{zeit}</span>
               <IconPunkt meta={meta} icon={icon} size={24} />
               <span style={{ flex: 1, fontSize: 13, color: textMain }}>{text}</span>
-              <span style={{ width: 18, height: 18, borderRadius: 9, background: erledigt ? meta.dot : "transparent", border: `2px solid ${erledigt ? meta.dot : "#DADCE4"}`, color: "#fff", fontSize: 11, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{erledigt ? "✓" : ""}</span>
+              <span style={{ width: 18, height: 18, borderRadius: 9, background: erledigt ? meta.dot : "transparent", border: `2px solid ${erledigt ? meta.dot : "color-mix(in srgb, #DADCE4 var(--mp-flaeche), var(--mp-rand-dunkel))"}`, color: "#fff", fontSize: 11, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{erledigt ? "✓" : ""}</span>
             </div>
           );
         })}
@@ -347,14 +347,14 @@ function SeiteAkut() {
         </div>
         <MenschFigur pose="sitzen" typ={1} size={78} label="Eine Person atmet ruhig" />
       </div>
-      <div style={{ ...kartenStil, padding: 16, background: "#FFF7ED", border: "1px solid rgba(217, 119, 6, 0.25)" }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#B45309", marginBottom: 10 }}>💡 Was hilft mir jetzt?</div>
+      <div style={{ ...kartenStil, padding: 16, background: "color-mix(in srgb, #FFF7ED var(--mp-flaeche), var(--mp-karte))", border: "1px solid rgba(217, 119, 6, 0.25)" }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))", marginBottom: 10 }}>💡 Was hilft mir jetzt?</div>
         {[
           ["wind", K.atemuebung, "Atemübung", "2 Minuten mit Stimme – jetzt sofort"],
           ["book", R.abendroutine, "Moment festhalten", null],
           ["sun", K.tageslicht, "Tag kleiner machen", "1 Sache statt 3 – der Rest darf warten"],
         ].map(([icon, meta, titel, text]) => (
-          <div key={titel} style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#fff", borderRadius: 14, padding: "9px 11px", marginBottom: 7 }}>
+          <div key={titel} style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "var(--mp-karte)", borderRadius: 14, padding: "9px 11px", marginBottom: 7 }}>
             <IconPunkt meta={meta} icon={icon} size={28} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: textMain }}>{titel}</div>
@@ -380,11 +380,11 @@ function SeiteAkut() {
 // ⑧ Dich kennenlernen + Coach (Chat im Stil von ChatFenster)
 function Blase({ ich, text, zeit }) {
   return (
-    <div style={{ alignSelf: ich ? "flex-end" : "flex-start", maxWidth: "80%", padding: "8px 11px 5px", borderRadius: 14, borderBottomRightRadius: ich ? 4 : 14, borderBottomLeftRadius: ich ? 14 : 4, background: ich ? "#DCE6FF" : "#fff", boxShadow: "0 1px 1px rgba(0,0,0,0.06)", fontSize: 14, lineHeight: 1.35, color: textMain }}>
+    <div style={{ alignSelf: ich ? "flex-end" : "flex-start", maxWidth: "80%", padding: "8px 11px 5px", borderRadius: 14, borderBottomRightRadius: ich ? 4 : 14, borderBottomLeftRadius: ich ? 14 : 4, background: ich ? "color-mix(in srgb, #DCE6FF var(--mp-flaeche), var(--mp-karte))" : "var(--mp-karte)", boxShadow: "0 1px 1px rgba(0,0,0,0.06)", fontSize: 14, lineHeight: 1.35, color: textMain }}>
       {text}
-      <span style={{ display: "block", textAlign: "right", fontSize: 10.5, color: "#7A8199", marginTop: 2 }}>
+      <span style={{ display: "block", textAlign: "right", fontSize: 10.5, color: "color-mix(in srgb, #7A8199 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 2 }}>
         {zeit}
-        {ich && <span style={{ marginLeft: 4, color: "#2D6FD6" }}>✓✓</span>}
+        {ich && <span style={{ marginLeft: 4, color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" }}>✓✓</span>}
       </span>
     </div>
   );
@@ -424,14 +424,14 @@ function SeiteKennenlernen() {
         </div>
       </div>
       <div style={{ marginTop: 12, borderRadius: 18, overflow: "hidden", border: `1px solid ${cardBorder}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "#fff", borderBottom: "1px solid #EEF0F5" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "var(--mp-karte)", borderBottom: "1px solid color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
           <span style={{ width: 30, height: 30, borderRadius: 15, background: K.gewohnheit.dot, color: "#fff", fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>C</span>
           <div>
             <div style={{ fontWeight: 800, fontSize: 14 }}>Dein Coach</div>
             <div style={{ fontSize: 11.5, color: textMuted }}>schreibt dir in der App</div>
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 10, background: "#F3F1EC", backgroundImage: "radial-gradient(rgba(27,35,80,0.04) 1px, transparent 1px)", backgroundSize: "14px 14px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 10, background: "color-mix(in srgb, #F3F1EC var(--mp-flaeche), var(--mp-karte))", backgroundImage: "radial-gradient(rgba(27,35,80,0.04) 1px, transparent 1px)", backgroundSize: "14px 14px" }}>
           <Blase text="An den Tagen mit Abendroutine lief dein Morgen deutlich ruhiger! 🙌 Sollen wir sie 15 Min. früher legen?" zeit="18:02" />
           <Blase ich text="Ja, gute Idee 👍" zeit="18:10" />
         </div>
@@ -473,7 +473,7 @@ function SeiteCommunity() {
         ].map(([name, punkte, breite, farbe]) => (
           <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, fontWeight: 700, marginTop: 5 }}>
             <span style={{ width: 94 }}>{name}</span>
-            <span style={{ flex: 1, height: 10, borderRadius: 99, background: "#EEF0F5", overflow: "hidden" }}>
+            <span style={{ flex: 1, height: 10, borderRadius: 99, background: "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))", overflow: "hidden" }}>
               <i className="mp-vs-fuell" style={{ display: "block", height: "100%", width: `${breite}%`, borderRadius: 99, background: farbe }} />
             </span>
             <span>{punkte}</span>
@@ -564,7 +564,7 @@ export default function VorstellungView({ onDone, onCancel }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 4 }} aria-label={`Seite ${index + 1} von ${SEITEN.length}`}>
           {SEITEN.map((_, i) => (
-            <button key={i} type="button" aria-label={`Seite ${i + 1}`} onClick={() => setIndex(i)} style={{ width: i === index ? 20 : 8, height: 8, borderRadius: 99, border: "none", padding: 0, cursor: "pointer", background: i === index ? accentDark : "#E1E3EA", transition: "width .3s" }} />
+            <button key={i} type="button" aria-label={`Seite ${i + 1}`} onClick={() => setIndex(i)} style={{ width: i === index ? 20 : 8, height: 8, borderRadius: 99, border: "none", padding: 0, cursor: "pointer", background: i === index ? accentDark : "color-mix(in srgb, #E1E3EA var(--mp-flaeche), var(--mp-karte))", transition: "width .3s" }} />
           ))}
         </div>
         <button type="button" onClick={fertig} style={{ border: "none", background: "transparent", color: textMuted, fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "6px 4px", fontFamily: "inherit" }}>
@@ -578,7 +578,7 @@ export default function VorstellungView({ onDone, onCancel }) {
 
       <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
         {index > 0 && (
-          <button type="button" onClick={() => setIndex((i) => i - 1)} aria-label="Zurück" className="mp-tap" style={{ minWidth: 52, borderRadius: 16, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 20, cursor: "pointer" }}>
+          <button type="button" onClick={() => setIndex((i) => i - 1)} aria-label="Zurück" className="mp-tap" style={{ minWidth: 52, borderRadius: 16, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: textMuted, fontSize: 20, cursor: "pointer" }}>
             ‹
           </button>
         )}

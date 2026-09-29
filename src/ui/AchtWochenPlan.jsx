@@ -48,7 +48,7 @@ export default function AchtWochenPlan({ aktuell = 0, start = null }) {
                   marginBottom: 8,
                   borderRadius: 16,
                   padding: "10px 12px",
-                  background: einf ? "#1B2350" : "#E8F7F2",
+                  background: einf ? "#1B2350" : "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))",
                   color: einf ? "#fff" : textMain,
                   boxShadow: jetzt ? "0 0 0 3px #F4C542" : "none",
                   opacity: vorbei ? 0.75 : 1,
@@ -75,10 +75,10 @@ export default function AchtWochenPlan({ aktuell = 0, start = null }) {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ fontSize: 12.5, color: "#1E4D40", lineHeight: 1.45, marginTop: 5 }}>{info.text}</div>
+                  <div style={{ fontSize: 12.5, color: "color-mix(in srgb, #1E4D40 var(--mp-schrift), var(--mp-schrift-hell))", lineHeight: 1.45, marginTop: 5 }}>{info.text}</div>
                 )}
                 {GESPRAECH.includes(w) && (
-                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 7, color: einf ? "#F4C542" : "#B5501F" }}>💬 Am Ende: Gespräch mit deinem Coach</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, marginTop: 7, color: einf ? "#F4C542" : "color-mix(in srgb, #B5501F var(--mp-schrift), var(--mp-schrift-hell))" }}>💬 Am Ende: Gespräch mit deinem Coach</div>
                 )}
               </div>
             </div>

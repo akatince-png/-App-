@@ -23,7 +23,7 @@ export default function ProtokollSeitenView({ snapshot, onHome }) {
 
       <div
         style={{
-          background: "#fff",
+          background: "var(--mp-karte)",
           borderRadius: 20,
           border: `1px solid ${cardBorder}`,
           boxShadow: "0 16px 40px rgba(20, 23, 26, 0.14)",
@@ -137,7 +137,7 @@ function Seite3({ daten }) {
       )}
       {daten.compliance !== null && (
         <div style={{ marginTop: 16, textAlign: "center" }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: accentDark }}>{daten.compliance}%</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: "var(--mp-accent-dark-text)" }}>{daten.compliance}%</div>
           <div style={{ fontSize: 11, color: textMuted }}>Compliance (erste Woche)</div>
         </div>
       )}
@@ -151,7 +151,7 @@ function Seite4({ daten }) {
       <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>Wichtige Hinweise</div>
       {daten.hinweise.map((h) => (
         <div key={h} style={{ display: "flex", gap: 8, fontSize: 12.5, marginBottom: 6 }}>
-          <span style={{ color: accent, fontWeight: 700 }}>✓</span>
+          <span style={{ color: "var(--mp-accent-text)", fontWeight: 700 }}>✓</span>
           <span>{h}</span>
         </div>
       ))}

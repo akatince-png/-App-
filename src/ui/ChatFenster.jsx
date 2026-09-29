@@ -35,9 +35,9 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
   };
 
   const fenster = (
-    <div role="dialog" aria-label={`Chat: ${titel}`} style={{ position: "fixed", inset: 0, zIndex: 150, display: "flex", flexDirection: "column", background: "#fff", fontFamily: "inherit" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 14px 10px", borderBottom: "1px solid #EEF0F5", paddingTop: "max(14px, env(safe-area-inset-top))" }}>
-        <button type="button" onClick={onZurueck} aria-label="Zurück" className="mp-tap" style={{ border: "none", background: "transparent", fontSize: 26, fontWeight: 800, color: accentDark, cursor: "pointer", padding: "0 6px" }}>
+    <div role="dialog" aria-label={`Chat: ${titel}`} style={{ position: "fixed", inset: 0, zIndex: 150, display: "flex", flexDirection: "column", background: "var(--mp-karte)", fontFamily: "inherit" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 14px 10px", borderBottom: "1px solid color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-rand-dunkel))", paddingTop: "max(14px, env(safe-area-inset-top))" }}>
+        <button type="button" onClick={onZurueck} aria-label="Zurück" className="mp-tap" style={{ border: "none", background: "transparent", fontSize: 26, fontWeight: 800, color: "var(--mp-accent-dark-text)", cursor: "pointer", padding: "0 6px" }}>
           ‹
         </button>
         {avatar}
@@ -53,7 +53,7 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
           flex: 1,
           overflowY: "auto",
           padding: "12px 12px 16px",
-          background: "#F3F1EC",
+          background: "color-mix(in srgb, #F3F1EC var(--mp-flaeche), var(--mp-karte))",
           backgroundImage: "radial-gradient(rgba(27,35,80,0.04) 1px, transparent 1px)",
           backgroundSize: "14px 14px",
           display: "flex",
@@ -61,17 +61,17 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
           gap: 6,
         }}
       >
-        {fehler && <div style={{ alignSelf: "center", fontSize: 12.5, color: danger, background: "#fff", borderRadius: 10, padding: "6px 10px" }}>{fehler}</div>}
+        {fehler && <div style={{ alignSelf: "center", fontSize: 12.5, color: danger, background: "var(--mp-karte)", borderRadius: 10, padding: "6px 10px" }}>{fehler}</div>}
         {!nachrichten && !fehler && <div style={{ alignSelf: "center", fontSize: 13, color: textMuted, marginTop: 20 }}>Lädt…</div>}
         {nachrichten && nachrichten.length === 0 && (
-          <div style={{ alignSelf: "center", textAlign: "center", fontSize: 13, color: textMuted, background: "#fff", borderRadius: 12, padding: "10px 14px", marginTop: 20, maxWidth: 280 }}>
+          <div style={{ alignSelf: "center", textAlign: "center", fontSize: 13, color: textMuted, background: "var(--mp-karte)", borderRadius: 12, padding: "10px 14px", marginTop: 20, maxWidth: 280 }}>
             Noch keine Nachrichten. Schreib einfach los – oder tipp unten auf eine Vorlage.
           </div>
         )}
         {nachrichten &&
           nachTagenGruppieren(nachrichten).map((g) => (
             <React.Fragment key={g.label}>
-              <div style={{ alignSelf: "center", fontSize: 11, fontWeight: 700, color: "#6B7390", background: "#fff", borderRadius: 8, padding: "3px 9px", margin: "6px 0" }}>{g.label}</div>
+              <div style={{ alignSelf: "center", fontSize: 11, fontWeight: 700, color: "color-mix(in srgb, #6B7390 var(--mp-schrift), var(--mp-schrift-hell))", background: "var(--mp-karte)", borderRadius: 8, padding: "3px 9px", margin: "6px 0" }}>{g.label}</div>
               {g.nachrichten.map((n) => {
                 const meine = n.absender === ich;
                 return (
@@ -86,7 +86,7 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
                       borderRadius: 14,
                       borderBottomRightRadius: meine ? 4 : 14,
                       borderBottomLeftRadius: meine ? 14 : 4,
-                      background: meine ? "#DCE6FF" : "#fff",
+                      background: meine ? "color-mix(in srgb, #DCE6FF var(--mp-flaeche), var(--mp-karte))" : "var(--mp-karte)",
                       boxShadow: "0 1px 1px rgba(0,0,0,0.06)",
                       fontSize: 14.5,
                       lineHeight: 1.35,
@@ -95,10 +95,10 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
                     }}
                   >
                     {n.text}
-                    <span style={{ display: "block", textAlign: "right", fontSize: 10.5, color: "#7A8199", marginTop: 2 }}>
+                    <span style={{ display: "block", textAlign: "right", fontSize: 10.5, color: "color-mix(in srgb, #7A8199 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 2 }}>
                       {new Date(n.erstelltAm).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                       {meine && (
-                        <span aria-label={n.gelesen ? "gelesen" : "zugestellt"} style={{ marginLeft: 4, color: n.gelesen ? "#2D6FD6" : "#7A8199" }}>
+                        <span aria-label={n.gelesen ? "gelesen" : "zugestellt"} style={{ marginLeft: 4, color: n.gelesen ? "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" : "color-mix(in srgb, #7A8199 var(--mp-schrift), var(--mp-schrift-hell))" }}>
                           {n.gelesen ? "✓✓" : "✓"}
                         </span>
                       )}
@@ -111,7 +111,7 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
       </div>
 
       {vorlagen.length > 0 && (
-        <div style={{ display: "flex", gap: 6, padding: "8px 12px 0", overflowX: "auto", background: "#fff" }}>
+        <div style={{ display: "flex", gap: 6, padding: "8px 12px 0", overflowX: "auto", background: "var(--mp-karte)" }}>
           {vorlagen.map((v) => (
             <button
               key={v}
@@ -119,22 +119,22 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
               className="mp-tap"
               disabled={sendet}
               onClick={() => absenden(v)}
-              style={{ whiteSpace: "nowrap", border: "none", fontSize: 12.5, padding: "7px 11px", borderRadius: 99, background: "#EEF4FF", color: "#2D6FD6", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+              style={{ whiteSpace: "nowrap", border: "none", fontSize: 12.5, padding: "7px 11px", borderRadius: 99, background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
             >
               {v}
             </button>
           ))}
         </div>
       )}
-      {(sendeFehler || diktat.fehler) && <div style={{ fontSize: 12, color: danger, padding: "6px 14px 0", background: "#fff" }}>{sendeFehler || diktat.fehler}</div>}
-      <div style={{ display: "flex", gap: 8, alignItems: "flex-end", padding: "10px 12px", paddingBottom: "max(14px, env(safe-area-inset-bottom))", background: "#fff" }}>
+      {(sendeFehler || diktat.fehler) && <div style={{ fontSize: 12, color: danger, padding: "6px 14px 0", background: "var(--mp-karte)" }}>{sendeFehler || diktat.fehler}</div>}
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-end", padding: "10px 12px", paddingBottom: "max(14px, env(safe-area-inset-bottom))", background: "var(--mp-karte)" }}>
         {diktat.verfuegbar && (
           <button
             type="button"
             onClick={diktat.umschalten}
             aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"}
             className="mp-tap"
-            style={{ border: "none", background: diktat.hoert ? "#FBEAE7" : "transparent", borderRadius: 99, width: 40, height: 44, fontSize: 20, cursor: "pointer", flexShrink: 0 }}
+            style={{ border: "none", background: diktat.hoert ? "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))" : "transparent", borderRadius: 99, width: 40, height: 44, fontSize: 20, cursor: "pointer", flexShrink: 0 }}
           >
             {diktat.hoert ? "⏹" : "🎤"}
           </button>
@@ -151,7 +151,7 @@ export default function ChatFenster({ titel, untertitel, avatar, ich, nachrichte
           rows={1}
           placeholder={platzhalter}
           aria-label={platzhalter}
-          style={{ flex: 1, minWidth: 0, resize: "none", border: "1.5px solid #D5D9E6", borderRadius: 22, padding: "11px 14px", fontSize: 15, fontFamily: "inherit", maxHeight: 120, outline: "none" }}
+          style={{ flex: 1, minWidth: 0, resize: "none", border: "1.5px solid color-mix(in srgb, #D5D9E6 var(--mp-flaeche), var(--mp-rand-dunkel))", borderRadius: 22, padding: "11px 14px", fontSize: 15, fontFamily: "inherit", maxHeight: 120, outline: "none" }}
         />
         <button
           type="button"

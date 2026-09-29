@@ -104,7 +104,7 @@ function Deko({ phase }) {
           <span
             key={i}
             className="mp-stern"
-            style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: 99, background: "#fff", animationDelay: `${verz}s`, boxShadow: "0 0 6px rgba(var(--gk-rgb, 255, 255, 255), 0.9)" }}
+            style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: 99, background: "var(--mp-karte)", animationDelay: `${verz}s`, boxShadow: "0 0 6px rgba(var(--gk-rgb, 255, 255, 255), 0.9)" }}
           />
         ))}
         <span style={{ position: "absolute", right: 16, top: 150, fontSize: 28, filter: "drop-shadow(0 0 10px rgba(255,236,170,0.8))" }}>🌙</span>
@@ -149,8 +149,8 @@ function Zeitraumwahl({ zeitraum, setZeitraum, zeigeGesamt }) {
             fontWeight: 800,
             cursor: "pointer",
             fontFamily: "inherit",
-            background: zeitraum === id ? "#fff" : "transparent",
-            color: zeitraum === id ? "#171B3A" : "rgba(var(--gk-rgb, 255, 255, 255), 0.75)",
+            background: zeitraum === id ? "var(--mp-karte)" : "transparent",
+            color: zeitraum === id ? "color-mix(in srgb, #171B3A var(--mp-schrift), var(--mp-schrift-hell))" : "rgba(var(--gk-rgb, 255, 255, 255), 0.75)",
           }}
         >
           {label}
@@ -377,7 +377,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             const gedimmt = gewaehlt && WIDGET_REGION[w.kategorie] !== gewaehlt;
             return (
               <div key={w.kategorie} style={{ flex: 1, maxWidth: 26, display: "flex", justifyContent: "center", opacity: gedimmt ? 0.3 : w.aktiv ? 0.9 : 0.4 }}>
-                {icon ? <Icon name={icon} size={14} color={stimmung.hell ? "#667085" : "#fff"} strokeWidth={2} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: stimmung.hell ? "#667085" : "#fff" }} />}
+                {icon ? <Icon name={icon} size={14} color={stimmung.hell ? "#667085" : "#fff"} strokeWidth={2} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: stimmung.hell ? "#667085" : "var(--mp-karte)" }} />}
               </div>
             );
           })}

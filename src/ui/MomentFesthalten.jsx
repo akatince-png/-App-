@@ -16,7 +16,7 @@ const chip = (an) => ({
   fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#B45309" : "#fff",
+  background: an ? "#B45309" : "var(--mp-karte)",
   color: an ? "#fff" : "#B45309",
   boxShadow: "inset 0 0 0 1px rgba(217,119,6,.35)",
 });
@@ -47,7 +47,7 @@ export default function MomentFesthalten({ onFertig, onAtmen }) {
   if (gespeichert) {
     return (
       <div>
-        <div role="status" style={{ padding: 12, borderRadius: 12, background: "#fff", fontSize: 13.5, fontWeight: 700, color: "#B45309" }}>
+        <div role="status" style={{ padding: 12, borderRadius: 12, background: "var(--mp-karte)", fontSize: 13.5, fontWeight: 700, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))" }}>
           📝 Festgehalten. Das hilft später zu sehen, was solche Momente auslöst.
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
@@ -71,7 +71,7 @@ export default function MomentFesthalten({ onFertig, onAtmen }) {
 
   return (
     <section aria-label="Moment festhalten">
-      <div style={{ fontSize: 14, fontWeight: 800, color: "#B45309" }}>📝 Moment festhalten</div>
+      <div style={{ fontSize: 14, fontWeight: 800, color: "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))" }}>📝 Moment festhalten</div>
       <Gruppe titel="WAS IST GERADE LOS?" werte={MOMENT_GEFUEHLE} gewaehlt={m.gefuehle} onUmschalten={umschalten("gefuehle")} />
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "10px 0 6px" }}>WIE STARK? (1 = LEICHT, 5 = SEHR)</div>
       <div role="group" aria-label="Wie stark?" style={{ display: "flex", gap: 6 }}>
@@ -92,7 +92,7 @@ export default function MomentFesthalten({ onFertig, onAtmen }) {
           style={{ flex: 1, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "8px 10px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
         />
         {diktat.verfuegbar && (
-          <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: "#fff", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
+          <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: "var(--mp-karte)", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
             {diktat.hoert ? "⏹" : "🎤"}
           </button>
         )}

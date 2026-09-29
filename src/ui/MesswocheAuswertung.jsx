@@ -61,7 +61,7 @@ export default function MesswocheAuswertung({ durchlaeufe = [], schritte = [], t
                   </div>
                 ))}
                 {offen.length > 1 && onUebernehmen && (
-                  <button type="button" onClick={() => alleUebernehmen(a)} style={{ marginTop: 6, border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+                  <button type="button" onClick={() => alleUebernehmen(a)} style={{ marginTop: 6, border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
                     Alle {offen.length} Vorschläge übernehmen
                   </button>
                 )}

@@ -28,7 +28,7 @@ export default function CoachChatView({ onHome }) {
     <ChatFenster
       titel="Dein Coach"
       untertitel="Nachrichten bleiben in der App"
-      avatar={<div style={{ width: 40, height: 40, borderRadius: 99, background: "#E4E8F5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🧑‍🏫</div>}
+      avatar={<div style={{ width: 40, height: 40, borderRadius: 99, background: "color-mix(in srgb, #E4E8F5 var(--mp-flaeche), var(--mp-karte))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🧑‍🏫</div>}
       ich="coachee"
       startText={entwurf}
       nachrichten={nachrichten}

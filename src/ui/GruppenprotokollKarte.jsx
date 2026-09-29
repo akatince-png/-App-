@@ -137,7 +137,7 @@ export default function GruppenprotokollKarte({ gp, userId, onUmschalten, darfAb
                 disabled={laedt === b.id}
                 onClick={() => umschalten(b.id)}
                 aria-label={ichSchon ? `${b.name} zurücknehmen` : `${b.name} erledigt`}
-                style={{ border: ichSchon ? `2px solid ${k.dot}` : "none", borderRadius: 10, padding: "7px 10px", fontWeight: 800, fontSize: 12, cursor: "pointer", fontFamily: "inherit", background: ichSchon ? "#fff" : k.dot, color: ichSchon ? k.dot : "#fff", flexShrink: 0 }}
+                style={{ border: ichSchon ? `2px solid ${k.dot}` : "none", borderRadius: 10, padding: "7px 10px", fontWeight: 800, fontSize: 12, cursor: "pointer", fontFamily: "inherit", background: ichSchon ? "var(--mp-karte)" : k.dot, color: ichSchon ? k.dot : "#fff", flexShrink: 0 }}
               >
                 {ichSchon ? "✓ Erledigt" : "Erledigt?"}
               </button>
@@ -167,7 +167,7 @@ export default function GruppenprotokollKarte({ gp, userId, onUmschalten, darfAb
                       <span
                         key={t}
                         title={`${t}: ${anzahl}/${gp.bausteine.length}`}
-                        style={{ width: 12, height: 12, borderRadius: 3, background: anzahl === 0 ? "#E3E6EE" : alle ? ROUTINE_META.morgenroutine.dot : hexZuRgba(ROUTINE_META.morgenroutine.dot, 0.45) }}
+                        style={{ width: 12, height: 12, borderRadius: 3, background: anzahl === 0 ? "color-mix(in srgb, #E3E6EE var(--mp-flaeche), var(--mp-karte))" : alle ? ROUTINE_META.morgenroutine.dot : hexZuRgba(ROUTINE_META.morgenroutine.dot, 0.45) }}
                       />
                     );
                   })}

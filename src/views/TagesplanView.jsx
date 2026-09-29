@@ -440,7 +440,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         <div key={hour || "sonstige"}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? accentDark : textMuted }}>{hourLabel(hour)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: istJetzt ? "var(--mp-accent-dark-text)" : textMuted }}>{hourLabel(hour)}</div>
               {istJetzt && (
                 <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: accent, padding: "2px 8px", borderRadius: 8 }}>
                   JETZT
@@ -461,7 +461,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                     offeneSupplemente.map((e) => e.refId)
                   );
                 }}
-                style={{ border: "none", background: "transparent", color: accentDark, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Alle bestätigen
               </button>
@@ -503,13 +503,13 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: erledigt ? "rgba(255, 255, 255, 0.28)" : "#fff",
+                            background: erledigt ? "rgba(255, 255, 255, 0.28)" : "var(--mp-karte)",
                           }}
                         >
                           {k.icon ? (
                             <Icon name={k.icon} size={16} color={erledigt ? "#fff" : kFarbe} />
                           ) : (
-                            <div style={{ width: 8, height: 8, borderRadius: 4, background: erledigt ? "#fff" : kFarbe }} />
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: erledigt ? "var(--mp-karte)" : kFarbe }} />
                           )}
                         </div>
                         <div style={{ minWidth: 0 }}>
@@ -537,7 +537,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                               height: 32,
                               borderRadius: 10,
                               border: "none",
-                              background: erledigt ? "rgba(255, 255, 255, 0.28)" : "#fff",
+                              background: erledigt ? "rgba(255, 255, 255, 0.28)" : "var(--mp-karte)",
                               fontSize: 13,
                               cursor: "pointer",
                             }}
@@ -563,7 +563,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                           >
                             📝
                             {(item.kategorie === "mahlzeit" ? mahlzeitNotizen[notizSchluessel(item)] : gewohnheitNotizen[notizSchluessel(item)]) && (
-                              <div style={{ position: "absolute", top: 2, right: 2, width: 7, height: 7, borderRadius: 4, background: kFarbe, border: "1px solid #fff" }} />
+                              <div style={{ position: "absolute", top: 2, right: 2, width: 7, height: 7, borderRadius: 4, background: kFarbe, border: "1px solid color-mix(in srgb, #fff var(--mp-flaeche), var(--mp-rand-dunkel))" }} />
                             )}
                           </button>
                         )}
@@ -658,7 +658,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           <button
             className="mp-tap"
             onClick={() => setTrainingFehler(null)}
-            style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: accentDark, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: "var(--mp-accent-dark-text)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
             Verstanden
           </button>
@@ -701,7 +701,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
               padding: "9px 0",
               borderRadius: 13,
               border: `1px solid ${modus === t.id ? accent : cardBorder}`,
-              background: modus === t.id ? accent : "#fff",
+              background: modus === t.id ? accent : "var(--mp-karte)",
               color: modus === t.id ? "#fff" : textMuted,
               fontSize: 13.5,
               fontWeight: 700,
@@ -731,7 +731,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   padding: "8px 4px",
                   borderRadius: 13,
                   border: `1px solid ${active ? accent : cardBorder}`,
-                  background: active ? accent : "#fff",
+                  background: active ? accent : "var(--mp-karte)",
                   color: active ? "#fff" : sameDay(d, today) ? accentDark : textMuted,
                   cursor: "pointer",
                   textAlign: "center",
@@ -746,7 +746,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       )}
 
       {modus === "tag" && (
-        <div role="group" aria-label="Ansicht" style={{ display: "flex", gap: 4, marginBottom: 14, background: "#F1F2F6", borderRadius: 12, padding: 3 }}>
+        <div role="group" aria-label="Ansicht" style={{ display: "flex", gap: 4, marginBottom: 14, background: "color-mix(in srgb, #F1F2F6 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: 3 }}>
           {[
             ["bild", "🖼️ Bild"],
             ["liste", "☰ Liste"],
@@ -757,7 +757,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
               className="mp-tap"
               aria-pressed={ansicht === id}
               onClick={() => setAnsicht(id)}
-              style={{ flex: 1, border: "none", borderRadius: 10, padding: "8px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: ansicht === id ? "#fff" : "transparent", color: ansicht === id ? accentDark : textMuted, boxShadow: ansicht === id ? "0 2px 6px rgba(0,0,0,0.08)" : "none" }}
+              style={{ flex: 1, border: "none", borderRadius: 10, padding: "8px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: ansicht === id ? "var(--mp-karte)" : "transparent", color: ansicht === id ? "var(--mp-accent-dark-text)" : textMuted, boxShadow: ansicht === id ? "0 2px 6px rgba(0,0,0,0.08)" : "none" }}
             >
               {label}
             </button>
@@ -819,7 +819,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   <button
                     type="button"
                     onClick={() => setSchritteBearbeiten((p) => ({ ...p, morgen: !p.morgen }))}
-                    style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "#fff", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
+                    style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "var(--mp-karte)", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
                   >
                     ⚙️
                   </button>
@@ -869,7 +869,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   <button
                     type="button"
                     onClick={() => setSchritteBearbeiten((p) => ({ ...p, abend: !p.abend }))}
-                    style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "#fff", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
+                    style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, background: "var(--mp-karte)", color: textMuted, fontSize: 18, cursor: "pointer", padding: "0 12px" }}
                   >
                     ⚙️
                   </button>
@@ -929,7 +929,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                   textAlign: "left",
                   border: `1px solid ${sameDay(d, today) ? accent : cardBorder}`,
                   borderRadius: 18,
-                  background: "#fff",
+                  background: "var(--mp-karte)",
                   padding: "14px 18px",
                   marginBottom: 10,
                   cursor: "pointer",

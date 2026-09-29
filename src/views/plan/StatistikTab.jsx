@@ -82,7 +82,7 @@ export default function StatistikTab() {
           <div style={{ fontSize: 13, color: textMuted }}>Trag mindestens 2 Check-ins im Profil-Tab ein, um einen Verlauf zu sehen.</div>
         ) : (
           <>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: gewichtChange <= 0 ? success : "#1E2B29" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: gewichtChange <= 0 ? success : "color-mix(in srgb, #1E2B29 var(--mp-schrift), var(--mp-schrift-hell))" }}>
               {gewichtChange > 0 ? "+" : ""}
               {gewichtChange} kg seit Start
             </div>

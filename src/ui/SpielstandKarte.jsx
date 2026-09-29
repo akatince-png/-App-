@@ -101,7 +101,7 @@ export default function SpielstandKarte({ gruss, statusZeile, erledigt, gesamt, 
     >
       <div style={{ display: "flex", justifyContent: gruss ? "space-between" : "flex-end", alignItems: "center", gap: 10, marginBottom: gruss ? 12 : 4 }}>
         {gruss && <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9, minWidth: 0 }}>{gruss}</div>}
-        <span style={{ padding: "5px 11px", borderRadius: 999, background: GOLD, color: "#3B2A00", fontSize: 12, fontWeight: 900, whiteSpace: "nowrap" }}>
+        <span style={{ padding: "5px 11px", borderRadius: 999, background: GOLD, color: "color-mix(in srgb, #3B2A00 var(--mp-schrift), var(--mp-schrift-hell))", fontSize: 12, fontWeight: 900, whiteSpace: "nowrap" }}>
           Level {lvl.level}
         </span>
       </div>
@@ -149,7 +149,7 @@ export function SpielstandReihe({ erledigt, gesamt, punkte, serie, onOpenErfolge
     minWidth: 0,
   };
   const wert = { fontSize: 18, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.2 };
-  const unter = { fontSize: 11.5, color: "#667085", fontWeight: 600 };
+  const unter = { fontSize: 11.5, color: "color-mix(in srgb, #667085 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 600 };
   return (
     <div data-spielstand-reihe style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }} aria-label={`Spielstand: ${erledigt} von ${gesamt} heute erledigt, Serie ${serie} Tage, ${punkte} Punkte, Level ${lvl.level}`}>
       <button type="button" className="mp-tap" onClick={onOpenErfolge} style={{ ...kachel, display: "flex", alignItems: "center", gap: 8 }}>
@@ -169,7 +169,7 @@ export function SpielstandReihe({ erledigt, gesamt, punkte, serie, onOpenErfolge
       </button>
       <button type="button" className="mp-tap" onClick={onOpenErfolge} style={kachel}>
         <span style={{ ...wert, display: "block" }}>Level {lvl.level}</span>
-        <span style={{ display: "block", height: 5, borderRadius: 9, background: "#E6EAF2", margin: "5px 0 3px", overflow: "hidden" }}>
+        <span style={{ display: "block", height: 5, borderRadius: 9, background: "color-mix(in srgb, #E6EAF2 var(--mp-flaeche), var(--mp-karte))", margin: "5px 0 3px", overflow: "hidden" }}>
           <span style={{ display: "block", width: `${Math.round(fortschritt * 100)}%`, height: "100%", background: logoVerlauf, borderRadius: 9 }} />
         </span>
         <span style={{ ...unter, display: "block" }}>⚡ {punkte} Punkte</span>

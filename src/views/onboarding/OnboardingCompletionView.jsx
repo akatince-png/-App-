@@ -93,7 +93,7 @@ export default function OnboardingCompletionView({ eingerichteteBereiche, onDone
                       height: 26,
                       borderRadius: 8,
                       background: accentSoft,
-                      color: accentDark,
+                      color: "var(--mp-accent-dark-text)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -111,17 +111,17 @@ export default function OnboardingCompletionView({ eingerichteteBereiche, onDone
                   <div style={{ marginTop: 8, marginLeft: 36, fontSize: 12.5, color: textMuted, lineHeight: 1.6 }}>
                     {beantwortet?.map((f) => (
                       <div key={f.key}>
-                        <span style={{ fontWeight: 700, color: accentDark }}>{tLabel(f.frage)}</span> {ziel.istZustand[f.key]}
+                        <span style={{ fontWeight: 700, color: "var(--mp-accent-dark-text)" }}>{tLabel(f.frage)}</span> {ziel.istZustand[f.key]}
                       </div>
                     ))}
                     {dauer && (
                       <div>
-                        <span style={{ fontWeight: 700, color: accentDark }}>{tLabel("Ziel:")}</span> {dauer}
+                        <span style={{ fontWeight: 700, color: "var(--mp-accent-dark-text)" }}>{tLabel("Ziel:")}</span> {dauer}
                       </div>
                     )}
                     {inhalt && (
                       <div>
-                        <span style={{ fontWeight: 700, color: accentDark }}>{tLabel("Plan:")}</span> {inhalt}
+                        <span style={{ fontWeight: 700, color: "var(--mp-accent-dark-text)" }}>{tLabel("Plan:")}</span> {inhalt}
                       </div>
                     )}
                   </div>

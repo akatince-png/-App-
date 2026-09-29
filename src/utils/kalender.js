@@ -9,21 +9,21 @@ import { KATEGORIE_META, ROUTINE_META } from "./dayItems";
 // werden Blöcke mit Anfang und Ende für Tag/Woche/Monat.
 
 export const ALLTAG_BEREICHE = {
-  arbeit: { label: "Arbeit", icon: "💼", bg: "#E3E8F4", text: "#26345C", dot: "#3F5BA9" },
-  haushalt: { label: "Haushalt", icon: "🧹", bg: "#F3EADF", text: "#6B4A22", dot: "#B7843E" },
-  hobby: { label: "Hobby", icon: "🎨", bg: "#F6E3F1", text: "#7A2767", dot: "#C04BA6" },
-  metime: { label: "Me-Time", icon: "🛁", bg: "#E6F3F8", text: "#155A70", dot: "#2A9BBF" },
-  termin: { label: "Termin", icon: "📅", bg: "#FDE9E4", text: "#8C2F1C", dot: "#E0613F" },
-  sozial: { label: "Freunde & Familie", icon: "👥", bg: "#E4F4EA", text: "#1F5E38", dot: "#3A9A62" },
+  arbeit: { label: "Arbeit", icon: "💼", bg: "color-mix(in srgb, #E3E8F4 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #26345C var(--mp-schrift), var(--mp-schrift-hell))", dot: "#3F5BA9" },
+  haushalt: { label: "Haushalt", icon: "🧹", bg: "color-mix(in srgb, #F3EADF var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #6B4A22 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#B7843E" },
+  hobby: { label: "Hobby", icon: "🎨", bg: "color-mix(in srgb, #F6E3F1 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #7A2767 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#C04BA6" },
+  metime: { label: "Me-Time", icon: "🛁", bg: "color-mix(in srgb, #E6F3F8 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #155A70 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#2A9BBF" },
+  termin: { label: "Termin", icon: "📅", bg: "color-mix(in srgb, #FDE9E4 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #8C2F1C var(--mp-schrift), var(--mp-schrift-hell))", dot: "#E0613F" },
+  sozial: { label: "Freunde & Familie", icon: "👥", bg: "color-mix(in srgb, #E4F4EA var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #1F5E38 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#3A9A62" },
 };
 
 // Farben für eigene Bereiche (Person oder Coach legt sie an).
 const EIGENE_FARBEN = [
-  { bg: "#EFE7FB", text: "#4B2A86", dot: "#7A4FD1" },
-  { bg: "#FFF1D6", text: "#7A5200", dot: "#D99A00" },
-  { bg: "#E2F4F1", text: "#16594F", dot: "#2A9C86" },
-  { bg: "#FBE3E8", text: "#8A2240", dot: "#D2466E" },
-  { bg: "#E7EEF6", text: "#2A4A6E", dot: "#4F7FB5" },
+  { bg: "color-mix(in srgb, #EFE7FB var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #4B2A86 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#7A4FD1" },
+  { bg: "color-mix(in srgb, #FFF1D6 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #7A5200 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#D99A00" },
+  { bg: "color-mix(in srgb, #E2F4F1 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #16594F var(--mp-schrift), var(--mp-schrift-hell))", dot: "#2A9C86" },
+  { bg: "color-mix(in srgb, #FBE3E8 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #8A2240 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#D2466E" },
+  { bg: "color-mix(in srgb, #E7EEF6 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #2A4A6E var(--mp-schrift), var(--mp-schrift-hell))", dot: "#4F7FB5" },
 ];
 export const ICON_VORSCHLAEGE = ["⭐", "👶", "🐶", "🎓", "🙏", "🌱", "🚗", "💰", "🧘", "🎮", "📚", "🏡"];
 

@@ -113,7 +113,7 @@ export default function TrainingsplaeneVerwaltung({
         <button
           type="button"
           onClick={onSchliessen}
-          style={{ border: `1px solid ${cardBorder}`, borderRadius: 10, background: "#fff", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: "7px 12px" }}
+          style={{ border: `1px solid ${cardBorder}`, borderRadius: 10, background: "var(--mp-karte)", color: textMuted, fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: "7px 12px" }}
         >
           Fertig
         </button>

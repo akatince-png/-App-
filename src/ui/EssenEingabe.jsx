@@ -99,7 +99,7 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
 
   const s = ergebnis ? summe(ergebnis.posten) : null;
   return (
-    <section aria-label="Was hast du gegessen?" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: `1.5px solid ${cardBorder}` }}>
+    <section aria-label="Was hast du gegessen?" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: `1.5px solid ${cardBorder}` }}>
       <div style={{ fontWeight: 900, fontSize: 15.5, marginBottom: 8 }}>🍽️ Was hast du gegessen?</div>
       {!ergebnis && (
         <>
@@ -113,7 +113,7 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
               style={{ flex: 1, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "9px 11px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
             />
             {diktat.verfuegbar && (
-              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "#FBEAE7" : "#EEF4FF", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
+              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}>
                 {diktat.hoert ? "⏹" : "🎤"}
               </button>
             )}
@@ -128,7 +128,7 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
               ["etikett", "📷 Nährwerttabelle", "Foto der Verpackung – oben dazuschreiben, wie viel (z. B. „2 Scheiben“)"],
               ["mahlzeit", "📷 Mahlzeit", "Foto vom Teller – die App schätzt Mengen und Werte"],
             ].map(([art, label, titel]) => (
-              <label key={art} title={titel} style={{ flex: 1, textAlign: "center", borderRadius: 12, padding: "10px 8px", background: "#EEF4FF", color: "#2D6FD6", fontWeight: 800, fontSize: 13.5, cursor: rechnet ? "default" : "pointer", opacity: rechnet ? 0.6 : 1 }}>
+              <label key={art} title={titel} style={{ flex: 1, textAlign: "center", borderRadius: 12, padding: "10px 8px", background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 13.5, cursor: rechnet ? "default" : "pointer", opacity: rechnet ? 0.6 : 1 }}>
                 {label}
                 <input
                   type="file"
@@ -172,7 +172,7 @@ export default function EssenEingabe({ datum: festesDatum, kompakt = false }) {
           ))}
           {ergebnis.offen.length > 0 && <div style={{ fontSize: 12.5, color: danger, marginTop: 6 }}>Nicht erkannt: {ergebnis.offen.join(", ")} – bitte genauer eingeben (z. B. „150 g …“).</div>}
           {ergebnis.posten.length > 0 && (
-            <div style={{ fontSize: 13.5, fontWeight: 800, background: "#F4F6FA", borderRadius: 12, padding: "8px 10px", marginTop: 8 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, background: "color-mix(in srgb, #F4F6FA var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", marginTop: 8 }}>
               Zusammen: ≈ {s.kcal} kcal · {fmt(s.eiweiss)} g Eiweiß · {fmt(s.fett)} g Fett · {fmt(s.kh)} g KH
               <div style={{ fontSize: 11.5, fontWeight: 600, color: textMuted }}>
                 Omega-3 {s.omega3} mg (davon EPA/DHA {s.epaDha} mg) · Omega-6 {s.omega6} mg · Richtwerte

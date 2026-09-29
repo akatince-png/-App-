@@ -19,7 +19,7 @@ export function VideoNachweisKnopf({ art, bezugId, titel, label = "🎥 Video-Na
         type="button"
         onClick={() => setOffen(true)}
         className="mp-tap"
-        style={{ border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", padding: "4px 0", ...style }}
+        style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", padding: "4px 0", ...style }}
       >
         {gesendet ? "🎥 ✓ gesendet" : label}
       </button>
@@ -163,7 +163,7 @@ export default function VideoNachweis({ art, bezugId, titel, onFertig, onSchlies
     onFertig?.();
   };
 
-  const knopf = (hell) => ({ flex: 1, border: "none", borderRadius: 14, padding: "13px 12px", fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: hell ? "#fff" : accentDark, color: hell ? accentDark : "#fff" });
+  const knopf = (hell) => ({ flex: 1, border: "none", borderRadius: 14, padding: "13px 12px", fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: hell ? "var(--mp-karte)" : accentDark, color: hell ? accentDark : "#fff" });
 
   return createPortal(
     <div role="dialog" aria-label="Video-Nachweis aufnehmen" style={{ position: "fixed", inset: 0, zIndex: 160, background: "#0E1230", color: "#fff", display: "flex", flexDirection: "column", fontFamily: "inherit" }}>

@@ -170,7 +170,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
           <Card style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 8 }}>📓 Wie war dein Tag?</div>
             {tagebuchNachher ? (
-              <div role="status" style={{ fontSize: 13, fontWeight: 700, color: accentDark }}>✓ Festgehalten. Gute Nacht!</div>
+              <div role="status" style={{ fontSize: 13, fontWeight: 700, color: "var(--mp-accent-dark-text)" }}>✓ Festgehalten. Gute Nacht!</div>
             ) : (
               <TagebuchFormular datum={heute} kompakt onGespeichert={() => setTagebuchNachher(true)} />
             )}
@@ -188,7 +188,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
                   style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: i > 0 ? `1px solid ${cardBorder}` : "none", fontSize: 12.5 }}
                 >
                   <div>{p.name}</div>
-                  <div style={{ color: Math.abs(abweichung) > 60 ? (abweichung > 0 ? danger : accentDark) : textMuted, fontWeight: 700 }}>
+                  <div style={{ color: Math.abs(abweichung) > 60 ? (abweichung > 0 ? danger : "var(--mp-accent-dark-text)") : textMuted, fontWeight: 700 }}>
                     {fmtDauer(p.tatsaechlichSek)} <span style={{ color: textMuted, fontWeight: 400 }}>(geplant {p.geplantMin} Min.)</span>
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
         {messmodus && ` · 📏 Messwoche${messTagNr ? ` Tag ${messTagNr}` : ""}`}
       </div>
       {musikFehler && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
           <span>🎵 Playlist konnte nicht gestartet werden: {musikFehler}</span>
           <button
             type="button"

@@ -218,7 +218,7 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
           }}
         >
           {orbKlickbar && (
-            <div style={{ fontSize: 11.5, color: textMuted, fontWeight: 700, background: "#fff", padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+            <div style={{ fontSize: 11.5, color: textMuted, fontWeight: 700, background: "var(--mp-karte)", padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
               {hoert ? "Ich höre zu…" : "Tippen zum Sprechen"}
             </div>
           )}
@@ -268,7 +268,7 @@ export default function OnboardingCoachGuide({ onFertig, onBack }) {
             <button
               type="button"
               onClick={korrigieren}
-              style={{ border: "none", background: "transparent", color: accentDark, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 8 }}
+              style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 8 }}
             >
               Korrigieren
             </button>

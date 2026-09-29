@@ -81,7 +81,7 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
               height: 28,
               minWidth: 28,
               borderRadius: 8,
-              border: `2px solid ${item.done ? success : "#D1D5DB"}`,
+              border: `2px solid ${item.done ? success : "color-mix(in srgb, #D1D5DB var(--mp-flaeche), var(--mp-rand-dunkel))"}`,
               background: item.done ? `linear-gradient(135deg, ${accent}, ${success})` : "transparent",
               display: "flex",
               alignItems: "center",
@@ -100,7 +100,7 @@ export default function QuickTaskList({ items = [], maxItems = 4, soundEnabled =
               style={{
                 fontSize: 15,
                 fontWeight: 700,
-                color: item.done ? "#9CA3AF" : "#1F2937",
+                color: item.done ? "#9CA3AF" : "color-mix(in srgb, #1F2937 var(--mp-schrift), var(--mp-schrift-hell))",
                 textDecoration: item.done ? "line-through" : "none",
                 transition: "all 200ms ease-out",
                 lineHeight: 1.3,

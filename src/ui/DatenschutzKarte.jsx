@@ -44,7 +44,7 @@ export default function DatenschutzKarte() {
     }
   };
 
-  const link = { color: "#2D6FD6", fontWeight: 700, fontSize: 13, textDecoration: "none" };
+  const link = { color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 700, fontSize: 13, textDecoration: "none" };
   return (
     <Card style={{ marginBottom: 14 }}>
       <div data-datenschutz-karte>
@@ -53,7 +53,7 @@ export default function DatenschutzKarte() {
             <span style={{ color: success, fontWeight: 700 }}>✓</span> Datenschutz-Einwilligung {einwilligung?.datenschutzAm ? `vom ${datum(einwilligung.datenschutzAm)}` : isAdmin ? "(Admin-Konto)" : "noch offen"}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "12px 0", padding: "10px 12px", background: "#F4F7FC", borderRadius: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "12px 0", padding: "10px 12px", background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))", borderRadius: 12 }}>
           <div style={{ flex: 1, fontSize: 13, lineHeight: 1.45 }}>
             <b>KI-Funktionen</b> {kiAn ? `erlaubt seit ${datum(einwilligung.kiAm)}` : "aus"}
             <div style={{ fontSize: 12, color: textMuted }}>Aka-Chat, Lexikon, Foto-Auslesen, Vorlese-Stimme (Google, Groq). Ohne KI geht alles per Hand.</div>
@@ -64,9 +64,9 @@ export default function DatenschutzKarte() {
             aria-checked={kiAn}
             aria-label="KI-Funktionen erlauben"
             onClick={kiUmschalten}
-            style={{ width: 50, height: 30, borderRadius: 99, border: "none", cursor: "pointer", background: kiAn ? "#1B2350" : "#D8D8D3", position: "relative", flexShrink: 0 }}
+            style={{ width: 50, height: 30, borderRadius: 99, border: "none", cursor: "pointer", background: kiAn ? "var(--mp-accent)" : "#C9CED9", position: "relative", flexShrink: 0 }}
           >
-            <span style={{ position: "absolute", top: 3, left: kiAn ? 23 : 3, width: 24, height: 24, borderRadius: 99, background: "#fff", transition: "left .15s" }} />
+            <span style={{ position: "absolute", top: 3, left: kiAn ? 23 : 3, width: 24, height: 24, borderRadius: 99, background: "var(--mp-karte)", transition: "left .15s" }} />
           </button>
         </div>
         <div style={{ display: "flex", gap: 16, marginBottom: loeschenMoeglich ? 14 : 0 }}>
@@ -78,7 +78,7 @@ export default function DatenschutzKarte() {
           </a>
         </div>
         {loeschenMoeglich && (
-          <div style={{ borderTop: "1px solid #EAEAE5", paddingTop: 12 }} data-konto-loeschen>
+          <div style={{ borderTop: "1px solid color-mix(in srgb, #EAEAE5 var(--mp-flaeche), var(--mp-rand-dunkel))", paddingTop: 12 }} data-konto-loeschen>
             <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 4, color: danger }}>🗑️ {proband ? `Konto von ${proband.vorname || proband.email} löschen` : "Konto löschen"}</div>
             <div style={{ fontSize: 12.5, color: textMuted, lineHeight: 1.45, marginBottom: 8 }}>
               Löscht {proband ? "den Zugang und alle Einträge und Fotos dieser Person" : "deinen Zugang und alle deine Einträge und Fotos"} endgültig. Das lässt sich nicht rückgängig machen.

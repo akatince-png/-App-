@@ -164,7 +164,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
               type="button"
               className="mp-tap"
               onClick={w.onClick}
-              style={{ border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, borderRadius: 99, padding: "8px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+              style={{ border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", borderRadius: 99, padding: "8px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
             >
               {w.label}
             </button>
@@ -249,7 +249,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14.5, fontWeight: 800, color: textMain }}>
                 <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.vorname || p.email}</span>
                 {p.is_admin && (
-                  <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: accentDark, background: accentSoft, padding: "2px 8px", borderRadius: 8 }}>
+                  <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "var(--mp-accent-dark-text)", background: accentSoft, padding: "2px 8px", borderRadius: 8 }}>
                     Admin
                   </span>
                 )}
@@ -262,8 +262,8 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
                     fontWeight: 700,
                     padding: "3px 9px",
                     borderRadius: 10,
-                    background: p.onboarding_complete ? successSoft : "#F5F1E8",
-                    color: p.onboarding_complete ? success : "#8A6D1E",
+                    background: p.onboarding_complete ? successSoft : "color-mix(in srgb, #F5F1E8 var(--mp-flaeche), var(--mp-karte))",
+                    color: p.onboarding_complete ? success : "color-mix(in srgb, #8A6D1E var(--mp-schrift), var(--mp-schrift-hell))",
                   }}
                 >
                   {p.onboarding_complete ? "Eingerichtet" : "Onboarding offen"}
@@ -279,7 +279,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
                       padding: "3px 9px",
                       borderRadius: 10,
                       border: `1px solid ${cardBorder}`,
-                      background: "#fff",
+                      background: "var(--mp-karte)",
                       color: textMuted,
                       cursor: "pointer",
                     }}
@@ -314,7 +314,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
                 <button
                   onClick={() => setNotizFuer((v) => (v === p.id ? null : p.id))}
                   className="mp-tap"
-                  style={{ padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                  style={{ padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
                 >
                   {notizFuer === p.id ? "Schließen" : "Hinweis"}
                 </button>
@@ -322,7 +322,7 @@ export default function AdminDashboardView({ onHome, onVerwalteAls, onOpenWissen
               <button
                 onClick={() => setNachrichtenFuer(p)}
                 className="mp-tap"
-                style={{ position: "relative", padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ position: "relative", padding: "9px 16px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
               >
                 💬 Chat
                 {p.ungelesene_nachrichten > 0 && (

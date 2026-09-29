@@ -67,7 +67,7 @@ export default function ArchivAbschnitt({ titel, leerText, items, getId, onLoesc
                 type="button"
                 onClick={() => einzelnLoeschen(item)}
                 title="Endgültig löschen"
-                style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, border: "none", background: "#FDE9EC", color: danger, fontSize: 14, cursor: "pointer" }}
+                style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, border: "none", background: "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))", color: danger, fontSize: 14, cursor: "pointer" }}
               >
                 🗑
               </button>

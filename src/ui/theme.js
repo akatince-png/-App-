@@ -23,8 +23,10 @@
 // zart getönter Seitenhintergrund (je Tagesphase) statt Reinweiß, damit
 // die weißen Karten sich ruhig abheben; weichere Ränder und Schatten.
 export const bg = "var(--mp-canvas)";
-export const card = "#FFFFFF";
-export const cardBorder = "#E6E9F0";
+// Design 2.0 Abendmodus (29.09.): Karten, Ränder und Schrift sind CSS-
+// Variablen (index.css) – tagsüber exakt die bisherigen Werte, abends dunkel.
+export const card = "var(--mp-karte)";
+export const cardBorder = "var(--mp-rand)";
 // Seit 23.09. (Nutzerinnen-Wunsch "alle Bereiche, die einheitlich grün waren,
 // sollen in diesem Nachtblau sein"): die generische App-Farbe ist Nachtblau
 // aus dem Logo-/Gehirn-Design statt Türkis/Grün. Die Bereichsfarben aus
@@ -52,12 +54,12 @@ export const danger = "#C24545";
 // vorbehalten bleibt.
 export const warn = "#D97706";
 export const warnSoft = "rgba(217, 119, 6, 0.1)";
-export const textMain = "#141827";
-export const textMuted = "#636B7A";
+export const textMain = "var(--mp-text)";
+export const textMuted = "var(--mp-text-muted)";
 // Etwas tiefer/dunkler als zuvor, damit Karten sich sichtbar vom weißen
 // Hintergrund abheben statt "flach" wirkendem Ausschneide-Look
 // (Nutzerinnen-Vorgabe, siehe Kommentar oben).
-export const shadow = "0 1px 2px rgba(20, 24, 40, 0.04), 0 8px 24px rgba(20, 24, 40, 0.06)";
+export const shadow = "var(--mp-schatten)";
 // Überschriften-Schrift (Design 2.0).
 export const fontHeading = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
 
@@ -73,7 +75,7 @@ function hexZuRgb(hex) {
   return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
 
-const istVariable = (farbe) => typeof farbe === "string" && farbe.startsWith("var(");
+const istVariable = (farbe) => typeof farbe === "string" && !farbe.startsWith("#");
 
 export function hexZuRgba(hex, alpha) {
   if (istVariable(hex)) return `color-mix(in srgb, ${hex} ${Math.round(alpha * 100)}%, transparent)`;
@@ -146,8 +148,39 @@ export const TAGESPHASEN_FARBEN = {
   },
 };
 
+// Abendmodus (Design 2.0, 29.09.): ab der Abendroutine wird die ganze App
+// dunkel. Abschaltbar unter Mehr → Aussehen (nur auf diesem Gerät).
+export const ABEND_DUNKEL_KEY = "mp-abend-dunkel";
+export function abendDunkelErlaubt() {
+  try {
+    return localStorage.getItem(ABEND_DUNKEL_KEY) !== "aus";
+  } catch {
+    return true;
+  }
+}
+export function setzeAbendDunkelErlaubt(an) {
+  try {
+    if (an) localStorage.removeItem(ABEND_DUNKEL_KEY);
+    else localStorage.setItem(ABEND_DUNKEL_KEY, "aus");
+  } catch {
+    // Speicher nicht verfügbar – Einstellung gilt nur bis zum Neuladen.
+  }
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  if (root?.dataset.tagesphase) setzeTagesphasenFarben(root.dataset.tagesphase);
+}
+
+// Dunkle Werte für den Abendmodus (Akzent heller, damit er auf dunklem Grund lesbar ist).
+const NACHT_DUNKEL = {
+  accent: "#5D6BD6",
+  accentSoft: "#262C52",
+  success: "#6F7DE0",
+  successSoft: "#262C52",
+  canvas: "#0E1124",
+};
+
 export function setzeTagesphasenFarben(phase) {
-  const f = TAGESPHASEN_FARBEN[phase] || TAGESPHASEN_FARBEN.nacht;
+  const dunkel = phase === "nacht" && abendDunkelErlaubt();
+  const f = { ...(TAGESPHASEN_FARBEN[phase] || TAGESPHASEN_FARBEN.nacht), ...(dunkel ? NACHT_DUNKEL : {}) };
   const root = typeof document !== "undefined" ? document.documentElement : null;
   if (!root) return;
   root.style.setProperty("--mp-accent", f.accent);
@@ -159,6 +192,8 @@ export function setzeTagesphasenFarben(phase) {
   root.style.setProperty("--mp-highlight-schatten", f.highlightSchatten);
   root.style.setProperty("--mp-canvas", f.canvas);
   root.dataset.tagesphase = phase;
+  if (dunkel) root.dataset.dunkel = "1";
+  else delete root.dataset.dunkel;
 }
 
 // Für Bibliotheken, die Farben als SVG-Attribut setzen (z. B. recharts):

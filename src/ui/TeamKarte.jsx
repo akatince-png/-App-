@@ -42,7 +42,7 @@ export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSende
             type="button"
             className="mp-tap"
             onClick={onOpenTeam}
-            style={{ border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 800, cursor: "pointer", padding: "2px 0", whiteSpace: "nowrap", fontFamily: "inherit" }}
+            style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 12, fontWeight: 800, cursor: "pointer", padding: "2px 0", whiteSpace: "nowrap", fontFamily: "inherit" }}
           >
             Team-Seite ›
           </button>
@@ -57,8 +57,8 @@ export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSende
               onClick={() => setZielId(k.id)}
               style={{
                 border: `1px solid ${zielId === k.id ? accentDark : cardBorder}`,
-                background: zielId === k.id ? accentSoft : "#fff",
-                color: zielId === k.id ? accentDark : textMain,
+                background: zielId === k.id ? accentSoft : "var(--mp-karte)",
+                color: zielId === k.id ? "var(--mp-accent-dark-text)" : textMain,
                 borderRadius: 999,
                 padding: "4px 12px 4px 4px",
                 fontSize: 12.5,
@@ -97,7 +97,7 @@ export default function TeamKarte({ team, teamKollegen, teamNachrichten, onSende
                   padding: "8px 10px",
                   marginBottom: 6,
                   borderRadius: 10,
-                  background: eingehendUngelesen ? accentSoft : "#F5F5F3",
+                  background: eingehendUngelesen ? accentSoft : "color-mix(in srgb, #F5F5F3 var(--mp-flaeche), var(--mp-karte))",
                   color: textMain,
                   cursor: eingehendUngelesen ? "pointer" : "default",
                 }}

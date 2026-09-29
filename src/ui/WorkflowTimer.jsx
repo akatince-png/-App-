@@ -260,7 +260,7 @@ export default function WorkflowTimer({ onSchliessen }) {
                     ))}
 
                     {zeitplanOffenFuer === preset.id ? (
-                      <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#FAFBFA", border: `1px solid ${cardBorder}` }}>
+                      <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))", border: `1px solid ${cardBorder}` }}>
                         <Label>Wochentage</Label>
                         <div style={{ display: "flex", flexWrap: "wrap" }}>
                           {WOCHENTAGE.map((tag) => (
@@ -355,7 +355,7 @@ export default function WorkflowTimer({ onSchliessen }) {
       ) : (
         <Card style={{ textAlign: "center" }}>
           {musikFehler && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12, textAlign: "left" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12, textAlign: "left" }}>
               <span>🎵 Playlist konnte nicht gestartet werden: {musikFehler}</span>
               <button
                 type="button"

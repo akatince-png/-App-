@@ -43,7 +43,7 @@ export default function RoutineZeitHinweisKarte({ zeigeCoachKnopf, onCoachChat }
 
   if (erledigt) {
     return (
-      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#EAF7F0", border: "1.5px solid #BFE5D0", fontSize: 13.5, fontWeight: 700 }}>
+      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #EAF7F0 var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid color-mix(in srgb, #BFE5D0 var(--mp-flaeche), var(--mp-rand-dunkel))", fontSize: 13.5, fontWeight: 700 }}>
         {erledigt}
       </div>
     );
@@ -88,11 +88,11 @@ export default function RoutineZeitHinweisKarte({ zeigeCoachKnopf, onCoachChat }
   const knopf = { width: "100%", border: "none", borderRadius: 14, padding: "12px 14px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", marginTop: 8 };
 
   return (
-    <section aria-label={`Passt deine ${muster.label}-Zeit${muster.variante ? ` bei ${muster.variante.name}` : ""} noch?`} style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: `2px solid ${FARBE.spaet}` }}>
+    <section aria-label={`Passt deine ${muster.label}-Zeit${muster.variante ? ` bei ${muster.variante.name}` : ""} noch?`} style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: `2px solid ${FARBE.spaet}` }}>
       <div style={{ fontWeight: 900, fontSize: 15 }}>
         {muster.routine === "morgen" ? "🌅" : "🌙"} Passt deine {muster.label}-Zeit{muster.variante ? ` bei ${muster.variante.name}` : ""} noch?
       </div>
-      <div style={{ fontSize: 13, color: "#4A5170", marginTop: 4, lineHeight: 1.4 }}>
+      <div style={{ fontSize: 13, color: "color-mix(in srgb, #4A5170 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 4, lineHeight: 1.4 }}>
         An {muster.spaetAnzahl} der letzten {muster.tage.length} Tage hat sie erst später geklappt – meist gegen <b>{muster.vorschlag}</b> statt um {muster.startZeit}. Das ist okay, geschafft ist geschafft.
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 10 }} aria-hidden="true">
@@ -121,7 +121,7 @@ export default function RoutineZeitHinweisKarte({ zeigeCoachKnopf, onCoachChat }
         Auf {muster.vorschlag} umstellen
       </button>
       {zeigeCoachKnopf && (
-        <button type="button" className="mp-tap" onClick={mitCoach} style={{ ...knopf, background: "#EEF4FF", color: "#2D6FD6" }}>
+        <button type="button" className="mp-tap" onClick={mitCoach} style={{ ...knopf, background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" }}>
           💬 Mit meinem Coach besprechen
         </button>
       )}

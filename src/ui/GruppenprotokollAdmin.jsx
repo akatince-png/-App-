@@ -25,7 +25,7 @@ function Chip({ an, onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      style={{ padding: "7px 11px", borderRadius: 99, border: `1.5px solid ${an ? accentDark : cardBorder}`, background: an ? accentDark : "#fff", color: an ? "#fff" : textMain, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+      style={{ padding: "7px 11px", borderRadius: 99, border: `1.5px solid ${an ? accentDark : cardBorder}`, background: an ? accentDark : "var(--mp-karte)", color: an ? "#fff" : textMain, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
     >
       {children}
     </button>
@@ -71,7 +71,7 @@ function Formular({ teamId, onFertig, onAbbrechen }) {
   };
 
   return (
-    <div style={{ background: "#F7F8FC", borderRadius: 16, padding: 12, marginTop: 10 }}>
+    <div style={{ background: "color-mix(in srgb, #F7F8FC var(--mp-flaeche), var(--mp-karte))", borderRadius: 16, padding: 12, marginTop: 10 }}>
       <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>+ Neues Gruppenprotokoll</div>
       <Label>Name</Label>
       <TextInput value={name} onChange={setName} placeholder="z. B. 21 Tage Morgenroutine" />
@@ -209,7 +209,7 @@ export default function GruppenprotokollAdmin({ teamId }) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                <button type="button" onClick={() => setAnsehen(ansehen === g.id ? null : g.id)} style={{ border: `1px solid ${cardBorder}`, background: "#fff", borderRadius: 10, padding: "6px 9px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                <button type="button" onClick={() => setAnsehen(ansehen === g.id ? null : g.id)} style={{ border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", borderRadius: 10, padding: "6px 9px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                   {ansehen === g.id ? "Zuklappen" : "Stand"}
                 </button>
                 <button type="button" onClick={() => beenden(g)} style={{ border: "none", background: "transparent", color: danger, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
@@ -242,7 +242,7 @@ export default function GruppenprotokollAdmin({ teamId }) {
           type="button"
           className="mp-tap"
           onClick={() => setOffen(true)}
-          style={{ marginTop: 8, border: `1.5px dashed ${accentDark}`, background: "#fff", color: accentDark, borderRadius: 12, padding: "9px 12px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", width: "100%" }}
+          style={{ marginTop: 8, border: `1.5px dashed ${accentDark}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", borderRadius: 12, padding: "9px 12px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", width: "100%" }}
         >
           + Gruppenprotokoll
         </button>

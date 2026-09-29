@@ -113,7 +113,7 @@ export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFerti
           aria-pressed={gewaehlt === g.wert}
           onClick={() => onWahl(g.wert)}
           className="mp-tap"
-          style={{ fontSize: 28, border: "none", borderRadius: 14, padding: 6, cursor: "pointer", background: gewaehlt === g.wert ? "#FFF1D6" : "transparent", outline: gewaehlt === g.wert ? "2px solid #E0A21B" : "none" }}
+          style={{ fontSize: 28, border: "none", borderRadius: 14, padding: 6, cursor: "pointer", background: gewaehlt === g.wert ? "color-mix(in srgb, #FFF1D6 var(--mp-flaeche), var(--mp-karte))" : "transparent", outline: gewaehlt === g.wert ? "2px solid #E0A21B" : "none" }}
         >
           {g.emoji}
         </button>
@@ -126,7 +126,7 @@ export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFerti
       {status === "vorher" && (
         <>
           <div style={{ fontSize: 13, color: textMuted, marginBottom: 6 }}>{uebung.beschreibung || ""}</div>
-          {uebung.hinweis && <div style={{ fontSize: 12, background: "#FFF6E0", borderRadius: 12, padding: "8px 10px", margin: "6px 0 10px", textAlign: "left" }}>⚠️ {uebung.hinweis}</div>}
+          {uebung.hinweis && <div style={{ fontSize: 12, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", margin: "6px 0 10px", textAlign: "left" }}>⚠️ {uebung.hinweis}</div>}
           <div style={{ fontSize: 13.5, fontWeight: 800, margin: "8px 0" }}>Wie fühlst du dich gerade?</div>
           {gefuehle(vorherWaehlen, vorher, "Stimmung vorher")}
           <label style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, color: textMuted, marginTop: 10 }}>

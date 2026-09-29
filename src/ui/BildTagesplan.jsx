@@ -52,7 +52,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
           position: "relative",
         }}
       >
-        <span style={{ position: "relative", zIndex: 3, width: 48, height: 48, borderRadius: 15, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 27, flexShrink: 0, boxShadow: "0 3px 8px rgba(0,0,0,0.08)" }} aria-hidden="true">
+        <span style={{ position: "relative", zIndex: 3, width: 48, height: 48, borderRadius: 15, background: "var(--mp-karte)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 27, flexShrink: 0, boxShadow: "0 3px 8px rgba(0,0,0,0.08)" }} aria-hidden="true">
           {b.symbol}
         </span>
         <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
@@ -77,7 +77,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
                   {Math.ceil(restSek / 60)}′
                 </Ring>
               ) : (
-                <span style={{ width: 42, height: 42, borderRadius: 21, background: "#fff", border: `2px solid ${f.dot}`, color: verdunkeln(f.dot, 10), display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900 }}>▶</span>
+                <span style={{ width: 42, height: 42, borderRadius: 21, background: "var(--mp-karte)", border: `2px solid ${f.dot}`, color: verdunkeln(f.dot, 10), display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900 }}>▶</span>
               )}
             </button>
           )}
@@ -134,7 +134,7 @@ export default function BildTagesplan({ items, routinen = [], heute, onRoutineSt
   return (
     <div data-bild-tagesplan>
       <div style={{ position: "relative", paddingLeft: 58 }}>
-        <div aria-hidden="true" style={{ position: "absolute", left: 50, top: 6, bottom: 6, width: 2, background: "#ECEDF3", borderRadius: 2 }} />
+        <div aria-hidden="true" style={{ position: "absolute", left: 50, top: 6, bottom: 6, width: 2, background: "color-mix(in srgb, #ECEDF3 var(--mp-flaeche), var(--mp-karte))", borderRadius: 2 }} />
         {mitZeit.map((b) => (
           <div key={b.key} style={{ position: "relative" }}>
             {linieVor === b.key && (

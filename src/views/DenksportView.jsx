@@ -183,12 +183,12 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
                 className="mp-tap"
                 aria-label={`${sp.name} spielen`}
                 onClick={() => setSpiel({ id: sp.id, level, runde: 0 })}
-                style={{ textAlign: "left", border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: "14px 12px", background: "#fff", cursor: "pointer", fontFamily: "inherit", color: textMain }}
+                style={{ textAlign: "left", border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: "14px 12px", background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit", color: textMain }}
               >
                 <div style={{ fontSize: 24 }}>{sp.emoji}</div>
                 <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4 }}>{sp.name}</div>
                 <div style={{ fontSize: 11.5, color: textMuted, marginTop: 2, lineHeight: 1.35 }}>{sp.uebt}</div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#2D6FD6", marginTop: 6 }}>Level {level}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 6 }}>Level {level}</div>
               </button>
             );
           })}
@@ -277,7 +277,7 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
               flex: 1,
               height: 6,
               borderRadius: 99,
-              background: i < ergebnisse.length ? (ergebnisse[i] ? success : "#C9CCC8") : i === index ? textMain : "#E6E8E4",
+              background: i < ergebnisse.length ? (ergebnisse[i] ? success : "#C9CCC8") : i === index ? textMain : "color-mix(in srgb, #E6E8E4 var(--mp-flaeche), var(--mp-karte))",
             }}
           />
         ))}
@@ -306,7 +306,7 @@ export default function DenksportView({ onHome, tagesraetselStart = false }) {
                 fontFamily: "inherit",
                 cursor: ausgewertet ? "default" : "pointer",
                 border: `2px solid ${ausgewertet && istRichtig ? success : cardBorder}`,
-                background: ausgewertet && istRichtig ? success : "#fff",
+                background: ausgewertet && istRichtig ? success : "var(--mp-karte)",
                 color: ausgewertet && istRichtig ? "#fff" : textMain,
                 opacity: ausgewertet && !markiert ? 0.55 : 1,
               }}
@@ -349,7 +349,7 @@ function TagesraetselKarte({ heute, onStart }) {
           : `Deine Tagesaufgabe: ${TAGESRAETSEL_ZIEL} Fragen, davon 3 Knobelaufgaben, die mit dir schwerer werden. Geschafft gibt's einen Bonuspunkt, jede richtige Antwort zählt extra.`}
       </div>
       <div style={{ height: 7, borderRadius: 99, background: geschafft ? "rgba(255,255,255,0.3)" : "rgba(228,100,63,0.18)", marginTop: 10, overflow: "hidden" }}>
-        <div style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", borderRadius: 99, background: geschafft ? "#fff" : f.dot }} />
+        <div style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", borderRadius: 99, background: geschafft ? "var(--mp-karte)" : f.dot }} />
       </div>
       {!geschafft && (
         <button type="button" className="mp-tap" onClick={onStart} style={{ ...knopf(f.dot, "#fff"), marginTop: 12 }}>

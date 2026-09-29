@@ -20,7 +20,7 @@ const chip = (an) => ({
   fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 
@@ -151,11 +151,11 @@ export default function AtemuebungenView({ onHome }) {
           <span style={{ fontSize: 22 }}>{u.icon}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontWeight: 800, fontSize: 14 }}>{u.name}</span>
-            <span style={{ display: "block", fontSize: 12, color: "#4A5170" }}>
+            <span style={{ display: "block", fontSize: 12, color: "color-mix(in srgb, #4A5170 var(--mp-schrift), var(--mp-schrift-hell))" }}>
               {u.beschreibung} · {u.wofuer}
             </span>
           </span>
-          <span style={{ fontSize: 11.5, fontWeight: 800, background: "#fff", borderRadius: 8, padding: "4px 7px", whiteSpace: "nowrap" }}>▶ {u.dauerMinuten} Min.</span>
+          <span style={{ fontSize: 11.5, fontWeight: 800, background: "var(--mp-karte)", borderRadius: 8, padding: "4px 7px", whiteSpace: "nowrap" }}>▶ {u.dauerMinuten} Min.</span>
         </button>
       ))}
 
@@ -318,12 +318,12 @@ function GruppenKarte({ session, teilnahmen, ichDabei, onMitmachen }) {
   const laeuft = Date.now() >= start.getTime() - 15 * 60000;
   const u = uebungFuerKey(session.uebungKey) || ATEM_BIBLIOTHEK[0];
   return (
-    <section aria-label="Gemeinsam atmen" style={{ borderRadius: 18, padding: 14, marginBottom: 12, background: laeuft ? "#E8F7F2" : "#F4F6FA" }}>
-      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#1E6E57" }}>👥 GEMEINSAM ATMEN</div>
+    <section aria-label="Gemeinsam atmen" style={{ borderRadius: 18, padding: 14, marginBottom: 12, background: laeuft ? "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #F4F6FA var(--mp-flaeche), var(--mp-karte))" }}>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: "color-mix(in srgb, #1E6E57 var(--mp-schrift), var(--mp-schrift-hell))" }}>👥 GEMEINSAM ATMEN</div>
       <div style={{ fontWeight: 900, fontSize: 15, marginTop: 3 }}>
         {start.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · {u.name} · {session.dauerMinuten} Min.
       </div>
-      <div style={{ fontSize: 12.5, color: "#4A5170", marginTop: 2 }}>{teilnahmen.length} dabei{ichDabei ? " (du auch)" : ""}</div>
+      <div style={{ fontSize: 12.5, color: "color-mix(in srgb, #4A5170 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 2 }}>{teilnahmen.length} dabei{ichDabei ? " (du auch)" : ""}</div>
       {laeuft && (
         <div style={{ marginTop: 10 }}>
           <PrimaryButton onClick={onMitmachen}>Mitmachen</PrimaryButton>

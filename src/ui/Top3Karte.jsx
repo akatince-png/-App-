@@ -23,7 +23,7 @@ export default function Top3Karte() {
   if (!faelligeBausteine(kernStand).some((b) => b.key === "top3")) return null;
   if (danke) {
     return (
-      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#EAF7F0", border: "1.5px solid #BFE5D0", fontSize: 13.5, fontWeight: 700 }}>
+      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #EAF7F0 var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid color-mix(in srgb, #BFE5D0 var(--mp-flaeche), var(--mp-rand-dunkel))", fontSize: 13.5, fontWeight: 700 }}>
         {danke}
       </div>
     );
@@ -47,7 +47,7 @@ export default function Top3Karte() {
 
   const feld = { width: "100%", boxSizing: "border-box", border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "9px 11px", fontSize: 14, fontFamily: "inherit", marginBottom: 6 };
   return (
-    <section aria-label="Deine Top 3 für heute" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: "2px solid #1B2350" }}>
+    <section aria-label="Deine Top 3 für heute" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: "2px solid #1B2350" }}>
       <div style={{ fontWeight: 900, fontSize: 15.5 }}>📝 Deine Top 3 für heute</div>
       {phase === "planen" && (
         <>

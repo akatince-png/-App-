@@ -50,7 +50,7 @@ export default function OnboardingProfilView({ onDone, onBack, onCancel }) {
             marginBottom: 14,
           }}
         >
-          <div style={{ fontWeight: 700, color: accentDark, marginBottom: 2 }}>
+          <div style={{ fontWeight: 700, color: "var(--mp-accent-dark-text)", marginBottom: 2 }}>
             {t("onboarding.profil.kalorien.ist", { kalorien: grundumsatz })}
           </div>
           <div>{t("onboarding.profil.kalorien.hinweis")}</div>
@@ -69,7 +69,7 @@ export default function OnboardingProfilView({ onDone, onBack, onCancel }) {
               padding: "12px 20px",
               borderRadius: 12,
               border: `1px solid ${cardBorder}`,
-              background: "#fff",
+              background: "var(--mp-karte)",
               fontSize: 14,
               fontWeight: 600,
               cursor: "pointer",

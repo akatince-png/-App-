@@ -34,7 +34,7 @@ export default function TrainingVorschau({ art, name, tag, uhrzeit, uebungen, wa
           maxWidth: 460,
           maxHeight: "85vh",
           overflowY: "auto",
-          background: "#fff",
+          background: "var(--mp-karte)",
           borderRadius: "22px 22px 0 0",
           padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
           boxShadow: "0 -8px 30px rgba(0, 0, 0, 0.25)",
@@ -53,7 +53,7 @@ export default function TrainingVorschau({ art, name, tag, uhrzeit, uebungen, wa
             type="button"
             onClick={onSchliessen}
             aria-label="Schließen"
-            style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
+            style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
           >
             ✕
           </button>
@@ -67,7 +67,7 @@ export default function TrainingVorschau({ art, name, tag, uhrzeit, uebungen, wa
 
         {liste.length > 0 ? (
           <div style={{ border: `1px solid ${cardBorder}`, borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ display: "flex", padding: "8px 10px", background: "#FAFBFA", fontSize: 11, fontWeight: 700, color: textMuted }}>
+            <div style={{ display: "flex", padding: "8px 10px", background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))", fontSize: 11, fontWeight: 700, color: textMuted }}>
               <div style={{ flex: 1 }}>Übung</div>
               <div style={{ width: 46, textAlign: "center" }}>Sätze</div>
               <div style={{ width: 60, textAlign: "center" }}>Wdh.</div>

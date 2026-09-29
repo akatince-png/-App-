@@ -62,7 +62,7 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
                 type="button"
                 onClick={() => onVerschieben(s.id, "hoch")}
                 disabled={i === 0}
-                style={{ border: "none", background: "transparent", color: i === 0 ? cardBorder : accentDark, fontSize: 14, cursor: i === 0 ? "default" : "pointer", padding: 0, lineHeight: 1.3 }}
+                style={{ border: "none", background: "transparent", color: i === 0 ? cardBorder : "var(--mp-accent-dark-text)", fontSize: 14, cursor: i === 0 ? "default" : "pointer", padding: 0, lineHeight: 1.3 }}
               >
                 ▲
               </button>
@@ -70,7 +70,7 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
                 type="button"
                 onClick={() => onVerschieben(s.id, "runter")}
                 disabled={i === sortiert.length - 1}
-                style={{ border: "none", background: "transparent", color: i === sortiert.length - 1 ? cardBorder : accentDark, fontSize: 14, cursor: i === sortiert.length - 1 ? "default" : "pointer", padding: 0, lineHeight: 1.3 }}
+                style={{ border: "none", background: "transparent", color: i === sortiert.length - 1 ? cardBorder : "var(--mp-accent-dark-text)", fontSize: 14, cursor: i === sortiert.length - 1 ? "default" : "pointer", padding: 0, lineHeight: 1.3 }}
               >
                 ▼
               </button>
@@ -120,7 +120,7 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
                 type="button"
                 aria-label={`${s.name} einstellen`}
                 onClick={() => setBearbeiten(bearbeiten?.id === s.id ? null : { id: s.id, name: s.name, dauerMin: s.dauerMin })}
-                style={{ border: "none", background: "transparent", color: accentDark, fontSize: 17, cursor: "pointer", padding: "0 4px", flexShrink: 0 }}
+                style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 17, cursor: "pointer", padding: "0 4px", flexShrink: 0 }}
               >
                 🔒✎
               </button>

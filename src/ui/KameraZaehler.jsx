@@ -95,12 +95,12 @@ export default function KameraZaehler({ uebung, ziel, onFertig, onAbbrechen }) {
           {status === "laden" ? "Erkennung lädt …" : status === "fehler" ? "Fehler" : sichtbar ? `● ${meta?.label} erkannt` : "Körper nicht ganz im Bild"}
         </div>
       </div>
-      <div style={{ fontSize: 12, color: "#6B7280", margin: "8px 0" }}>{fehler || meta?.hinweis} Das Bild bleibt auf deinem Gerät.</div>
+      <div style={{ fontSize: 12, color: "color-mix(in srgb, #6B7280 var(--mp-schrift), var(--mp-schrift-hell))", margin: "8px 0" }}>{fehler || meta?.hinweis} Das Bild bleibt auf deinem Gerät.</div>
       <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
         <button type="button" onClick={() => onFertig?.(zaehler.anzahl)} style={{ border: "none", borderRadius: 14, padding: "12px 18px", background: "#1E8E5A", color: "#fff", fontWeight: 900, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>
           ✓ Satz fertig ({zaehler.anzahl})
         </button>
-        <button type="button" onClick={onAbbrechen} style={{ border: "1.5px solid #D6D9E0", borderRadius: 14, padding: "12px 14px", background: "#fff", fontWeight: 800, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
+        <button type="button" onClick={onAbbrechen} style={{ border: "1.5px solid color-mix(in srgb, #D6D9E0 var(--mp-flaeche), var(--mp-rand-dunkel))", borderRadius: 14, padding: "12px 14px", background: "var(--mp-karte)", fontWeight: 800, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
           Ohne Kamera
         </button>
       </div>

@@ -237,7 +237,7 @@ export default function OnboardingRoutinenView({ onDone, onBack, onCancel, forts
               padding: "12px 20px",
               borderRadius: 12,
               border: `1px solid ${cardBorder}`,
-              background: "#fff",
+              background: "var(--mp-karte)",
               fontSize: 14,
               fontWeight: 600,
               cursor: "pointer",

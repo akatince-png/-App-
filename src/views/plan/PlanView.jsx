@@ -41,7 +41,7 @@ export default function PlanView({ planTab, setPlanTab, onHome }) {
               padding: "9px 0",
               borderRadius: 10,
               border: `1px solid ${planTab === t.id ? accent : cardBorder}`,
-              background: planTab === t.id ? accent : "#fff",
+              background: planTab === t.id ? accent : "var(--mp-karte)",
               color: planTab === t.id ? "#fff" : textMuted,
               fontSize: 13,
               fontWeight: 700,

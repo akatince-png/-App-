@@ -36,20 +36,22 @@ export const TAGESZEIT_STUNDE = { Morgens: "08", Mittags: "13", Abends: "20" };
 // Gewohnheiten türkis · Atemübungen cyan · Hydration blau · Abendroutine
 // nachtblau · Schlaf indigo · Medikamente violett · Workflow magenta ·
 // Supplemente bernstein · Bildschirmzeit grau.
+// Abendmodus (29.09.): bg/text als color-mix – tagsüber exakt die Farbe,
+// abends dunkel getönt bzw. hell (index.css, --mp-flaeche/--mp-schrift).
 export const KATEGORIE_META = {
-  hormon: { bg: "#F1E3FA", text: "#5E2A8A", dot: "#8436C2", label: "Medikament", icon: "cross" },
-  supplement: { bg: "#F5EBD8", text: "#7A4F12", dot: "#B7791F", label: "Supplement", icon: "capsule" },
-  mahlzeit: { bg: "#E2F2DF", text: "#255E22", dot: "#3E9B3A", label: "Mahlzeit", icon: "utensils" },
-  training: { bg: "#FBE4E1", text: "#9E2319", dot: "#E0352B", label: "Training", icon: "dumbbell" },
-  gewohnheit: { bg: "#D9F3F0", text: "#13615C", dot: "#1FA39A", label: "Gewohnheit", icon: "target" },
-  workflow: { bg: "#F8E0EE", text: "#86285F", dot: "#C43A8E", label: "Workflow" },
-  hydration: { bg: "#E0EAFA", text: "#1B4686", dot: "#2D6FD6", label: "Wasser", icon: "droplet" },
-  tageslicht: { bg: "#FBF3D2", text: "#7D6206", dot: "#E8B90C", label: "Tageslicht", icon: "sun" },
-  schlaf: { bg: "#E6E6FA", text: "#34348F", dot: "#5B5BD6", label: "Schlaf", icon: "moon" },
-  atemuebung: { bg: "#D9F2F8", text: "#0B6378", dot: "#12A5C6", label: "Atemübung", icon: "wind" },
-  bildschirmzeit: { bg: "#E7EAEF", text: "#414F63", dot: "#5B6B84", label: "Bildschirmzeit", icon: "smartphone" },
-  notfallmodus: { bg: "#F7E4E0", text: "#A23026", dot: "#D12121", label: "Notfallmodus" },
-  zeitblock: { bg: "#EEF0E8", text: "#4A5240", dot: "#6B7660", label: "Zeitblock" },
+  hormon: { bg: "color-mix(in srgb, #F1E3FA var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #5E2A8A var(--mp-schrift), var(--mp-schrift-hell))", dot: "#8436C2", label: "Medikament", icon: "cross" },
+  supplement: { bg: "color-mix(in srgb, #F5EBD8 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #7A4F12 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#B7791F", label: "Supplement", icon: "capsule" },
+  mahlzeit: { bg: "color-mix(in srgb, #E2F2DF var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #255E22 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#3E9B3A", label: "Mahlzeit", icon: "utensils" },
+  training: { bg: "color-mix(in srgb, #FBE4E1 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #9E2319 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#E0352B", label: "Training", icon: "dumbbell" },
+  gewohnheit: { bg: "color-mix(in srgb, #D9F3F0 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #13615C var(--mp-schrift), var(--mp-schrift-hell))", dot: "#1FA39A", label: "Gewohnheit", icon: "target" },
+  workflow: { bg: "color-mix(in srgb, #F8E0EE var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #86285F var(--mp-schrift), var(--mp-schrift-hell))", dot: "#C43A8E", label: "Workflow" },
+  hydration: { bg: "color-mix(in srgb, #E0EAFA var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #1B4686 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#2D6FD6", label: "Wasser", icon: "droplet" },
+  tageslicht: { bg: "color-mix(in srgb, #FBF3D2 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #7D6206 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#E8B90C", label: "Tageslicht", icon: "sun" },
+  schlaf: { bg: "color-mix(in srgb, #E6E6FA var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #34348F var(--mp-schrift), var(--mp-schrift-hell))", dot: "#5B5BD6", label: "Schlaf", icon: "moon" },
+  atemuebung: { bg: "color-mix(in srgb, #D9F2F8 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #0B6378 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#12A5C6", label: "Atemübung", icon: "wind" },
+  bildschirmzeit: { bg: "color-mix(in srgb, #E7EAEF var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #414F63 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#5B6B84", label: "Bildschirmzeit", icon: "smartphone" },
+  notfallmodus: { bg: "color-mix(in srgb, #F7E4E0 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #A23026 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#D12121", label: "Notfallmodus" },
+  zeitblock: { bg: "color-mix(in srgb, #EEF0E8 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #4A5240 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#6B7660", label: "Zeitblock" },
   // Morgen-/Abendroutine bekamen bewusst KEINEN Eintrag hier, solange
   // buildDayItems() für sie keine Tagesplan-Einträge erzeugt (siehe
   // RoutineTabView.jsx/ROUTINE_FARBE-Kommentar) — sonst wären es "tote"
@@ -59,8 +61,8 @@ export const KATEGORIE_META = {
   // die Farbe für den Punkt vor jedem Änderungsprotokoll-Eintrag, unabhängig
   // davon, ob Routine-Schritte auch als eigene dayItems auftauchen. Gleiche
   // Farben wie ROUTINE_FARBE (HomeView.jsx/RoutineTabView.jsx/PlaeneView.jsx).
-  morgenroutine: { bg: "#FBE8D3", text: "#8A4E12", dot: "#E08A3E", label: "Morgenroutine", icon: "sunrise" },
-  abendroutine: { bg: "#E1E7F0", text: "#2E3E5C", dot: "#4E6690", label: "Abendroutine", icon: "moon" },
+  morgenroutine: { bg: "color-mix(in srgb, #FBE8D3 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #8A4E12 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#E08A3E", label: "Morgenroutine", icon: "sunrise" },
+  abendroutine: { bg: "color-mix(in srgb, #E1E7F0 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #2E3E5C var(--mp-schrift), var(--mp-schrift-hell))", dot: "#4E6690", label: "Abendroutine", icon: "moon" },
 };
 
 // Morgen-/Abendroutine haben bewusst KEINEN KATEGORIE_META-Eintrag (sonst
@@ -69,12 +71,12 @@ export const KATEGORIE_META = {
 // Tagesrätsel (24.09.): feste Tagesaufgabe aus dem Denksport — eigene
 // Farbe wie die "Gemischt"-Kachel der Denksport-Seite.
 // Atem-Pausen aus der festen Atem-Routine (25.09.) — Türkis wie der Atem-Kreis.
-export const ATEM_META = { dot: "#2E9C86", bg: "#E8F7F2", text: "#1E6E57" };
-export const TAGESRAETSEL_META = { bg: "#FCE6DE", text: "#9C3417", dot: "#E4643F", label: "Tagesrätsel", icon: "trophy" };
+export const ATEM_META = { dot: "#2E9C86", bg: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #1E6E57 var(--mp-schrift), var(--mp-schrift-hell))" };
+export const TAGESRAETSEL_META = { bg: "color-mix(in srgb, #FCE6DE var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #9C3417 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#E4643F", label: "Tagesrätsel", icon: "trophy" };
 
 export const ROUTINE_META = {
-  morgenroutine: { bg: "#FDEBD6", text: "#9A4F08", dot: "#F08A24", label: "Morgenroutine", icon: "sunrise" },
-  abendroutine: { bg: "#E2E4F3", text: "#1F255E", dot: "#2B3480", label: "Abendroutine", icon: "moon" },
+  morgenroutine: { bg: "color-mix(in srgb, #FDEBD6 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #9A4F08 var(--mp-schrift), var(--mp-schrift-hell))", dot: "#F08A24", label: "Morgenroutine", icon: "sunrise" },
+  abendroutine: { bg: "color-mix(in srgb, #E2E4F3 var(--mp-flaeche), var(--mp-karte))", text: "color-mix(in srgb, #1F255E var(--mp-schrift), var(--mp-schrift-hell))", dot: "#2B3480", label: "Abendroutine", icon: "moon" },
 };
 
 // Farbrotation für Projekte (14.08., Nutzerin-Vorgabe: "sollen dann

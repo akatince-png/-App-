@@ -73,12 +73,12 @@ export default function RanglisteKarte() {
                 <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                   <span style={{ fontSize: 14, width: 22, textAlign: "center", flexShrink: 0 }}>{MEDAILLEN[i] || i + 1}</span>
                   <Profilbild pfad={r.profilbildPfad} name={r.vorname} size={28} />
-                  <span style={{ fontSize: 13.5, fontWeight: istIch ? 800 : 700, color: istIch ? accentDark : textMain }}>
+                  <span style={{ fontSize: 13.5, fontWeight: istIch ? 800 : 700, color: istIch ? "var(--mp-accent-dark-text)" : textMain }}>
                     {r.vorname || "—"}
                     {istIch ? " (du)" : ""}
                   </span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: istIch ? accentDark : textMain, flexShrink: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: istIch ? "var(--mp-accent-dark-text)" : textMain, flexShrink: 0 }}>
                   {r.questsErledigt} abgeschlossen
                 </div>
               </div>

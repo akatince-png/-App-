@@ -30,7 +30,7 @@ export default function RoutineTagesPeek({ routine, datum, onClose }) {
           maxWidth: 460,
           maxHeight: "85vh",
           overflowY: "auto",
-          background: "#fff",
+          background: "var(--mp-karte)",
           borderRadius: "22px 22px 0 0",
           padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
           boxShadow: "0 -8px 30px rgba(0, 0, 0, 0.25)",

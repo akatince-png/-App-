@@ -104,7 +104,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
     await laden();
     onGeaendert?.();
   };
-  const box = { borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "#fff" };
+  const box = { borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "var(--mp-karte)" };
 
   if (!d.etappen.length) {
     return (
@@ -189,12 +189,12 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       )}
 
       {wackeln.map((w) => (
-        <div key={w.key} style={{ fontSize: 12.5, background: "#FFF6E0", borderRadius: 10, padding: "7px 9px", marginTop: 6 }}>
+        <div key={w.key} style={{ fontSize: 12.5, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "7px 9px", marginTop: 6 }}>
           ⚠️ {w.icon} <b>{w.name}</b> wackelt seit 2 Wochen ({w.erledigt}/{w.von}).{" "}
           <button
             type="button"
             onClick={() => onChat(`Hallo${vorname ? ` ${vorname}` : ""}, mir ist aufgefallen, dass „${w.name}“ die letzten zwei Wochen oft nicht geklappt hat. Was stört gerade? Wollen wir Uhrzeit oder Art anpassen?`)}
-            style={{ border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+            style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
           >
             Ansprechen ›
           </button>
@@ -233,7 +233,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       )}
 
       {aktivePausen.map((p) => (
-        <div key={p.id} style={{ fontSize: 12.5, background: "#F4F6FA", borderRadius: 10, padding: "7px 9px", marginTop: 6 }}>
+        <div key={p.id} style={{ fontSize: 12.5, background: "color-mix(in srgb, #F4F6FA var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "7px 9px", marginTop: 6 }}>
           ⏸ <b>{bausteinFuer(p.kernKey)?.name || p.kernKey}</b> pausiert bis {datumKurz(p.bis)} · {p.begruendung}{" "}
           <button
             type="button"
@@ -242,7 +242,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
               if (error) return setFehler(error.message);
               neu();
             }}
-            style={{ border: "none", background: "transparent", color: "#2D6FD6", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+            style={{ border: "none", background: "transparent", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
           >
             aufheben
           </button>
@@ -250,7 +250,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
       ))}
 
       {stand.gespraechFaellig && !gespraech && (
-        <div style={{ fontSize: 13, fontWeight: 800, background: "#FFFBEF", border: "1.5px solid #F4C542", borderRadius: 10, padding: "8px 10px", marginTop: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, background: "color-mix(in srgb, #FFFBEF var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid #F4C542", borderRadius: 10, padding: "8px 10px", marginTop: 8 }}>
           💬 Etappen-Gespräch fällig (Etappe endet {datumKurz(stand.etappe.ende)})
         </div>
       )}
@@ -279,7 +279,7 @@ export default function KernprogrammCoach({ personId, vorname, onChat, onGeaende
                 type="button"
                 aria-pressed={gespraech.weiter === k}
                 onClick={() => setGespraech((g) => ({ ...g, weiter: k }))}
-                style={{ border: "none", borderRadius: 99, padding: "7px 11px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: gespraech.weiter === k ? "#1B2350" : "#EEF4FF", color: gespraech.weiter === k ? "#fff" : "#2D6FD6" }}
+                style={{ border: "none", borderRadius: 99, padding: "7px 11px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: gespraech.weiter === k ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: gespraech.weiter === k ? "#fff" : "#2D6FD6" }}
               >
                 {label}
               </button>

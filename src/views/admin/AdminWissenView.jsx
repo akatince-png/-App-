@@ -91,7 +91,7 @@ export default function AdminWissenView({ onHome }) {
         <Card key={w.id} style={{ marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 11, color: accentDark, fontWeight: 700, marginBottom: 3 }}>{bereichLabel(w.bereich)}</div>
+              <div style={{ fontSize: 11, color: "var(--mp-accent-dark-text)", fontWeight: 700, marginBottom: 3 }}>{bereichLabel(w.bereich)}</div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{w.titel}</div>
               <div style={{ fontSize: 12.5, color: textMuted, whiteSpace: "pre-wrap" }}>{w.text}</div>
             </div>

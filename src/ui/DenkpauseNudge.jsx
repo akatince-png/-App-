@@ -52,7 +52,7 @@ export default function DenkpauseNudge({ text, onDismiss }) {
             width: 34,
             height: 34,
             borderRadius: 999,
-            background: "#fff",
+            background: "var(--mp-karte)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -62,7 +62,7 @@ export default function DenkpauseNudge({ text, onDismiss }) {
         >
           🧠
         </div>
-        <div style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: accentDark, lineHeight: 1.4 }}>
+        <div style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: "var(--mp-accent-dark-text)", lineHeight: 1.4 }}>
           {text || "Kurze Denkpause gefällig?"}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
@@ -78,7 +78,7 @@ export default function DenkpauseNudge({ text, onDismiss }) {
             type="button"
             className="mp-tap"
             onClick={onDismiss}
-            style={{ background: "transparent", color: accentDark, border: "none", fontSize: 11, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "2px", cursor: "pointer" }}
+            style={{ background: "transparent", color: "var(--mp-accent-dark-text)", border: "none", fontSize: 11, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "2px", cursor: "pointer" }}
           >
             Nee, weiter
           </button>
@@ -97,7 +97,7 @@ export default function DenkpauseNudge({ text, onDismiss }) {
         marginBottom: 14,
       }}
     >
-      <div style={{ fontSize: 11, fontWeight: 700, color: accentDark, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 8 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--mp-accent-dark-text)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 8 }}>
         🧠 Denkpause
       </div>
       <div style={{ fontSize: 14.5, fontWeight: 700, color: textMain, marginBottom: 12 }}>{aufgabe.frage}</div>
@@ -113,8 +113,8 @@ export default function DenkpauseNudge({ text, onDismiss }) {
               onClick={() => antworten(i)}
               disabled={ausgewertet}
               style={{
-                border: `1.5px solid ${ausgewertet && istRichtig ? accent : "#EAEAE5"}`,
-                background: ausgewertet && istRichtig ? accent : "#fff",
+                border: `1.5px solid ${ausgewertet && istRichtig ? accent : "color-mix(in srgb, #EAEAE5 var(--mp-flaeche), var(--mp-rand-dunkel))"}`,
+                background: ausgewertet && istRichtig ? accent : "var(--mp-karte)",
                 color: ausgewertet && istRichtig ? "#fff" : textMain,
                 borderRadius: 12,
                 padding: "10px 8px",
@@ -134,12 +134,12 @@ export default function DenkpauseNudge({ text, onDismiss }) {
           type="button"
           className="mp-tap"
           onClick={onDismiss}
-          style={{ background: "transparent", color: accentDark, border: "none", fontSize: 11, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "2px", cursor: "pointer", padding: 0 }}
+          style={{ background: "transparent", color: "var(--mp-accent-dark-text)", border: "none", fontSize: 11, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "2px", cursor: "pointer", padding: 0 }}
         >
           Nee, weiter
         </button>
       )}
-      {gewaehlt !== null && <div style={{ fontSize: 11.5, fontWeight: 700, color: accentDark }}>{aufgabe.antworten[gewaehlt] === aufgabe.antworten[aufgabe.richtig] ? "Genau richtig! 🎉" : "Kein Ding — weiter geht's."}</div>}
+      {gewaehlt !== null && <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mp-accent-dark-text)" }}>{aufgabe.antworten[gewaehlt] === aufgabe.antworten[aufgabe.richtig] ? "Genau richtig! 🎉" : "Kein Ding — weiter geht's."}</div>}
     </div>
   );
 }

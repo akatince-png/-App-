@@ -11,7 +11,7 @@ import AchtWochenPlan from "../../ui/AchtWochenPlan";
 // wird" + die 8 Wochen sichtbar machen). Fünf kurze Seiten im App-Look,
 // jederzeit überspringbar; später erneut aufrufbar über "Mein AKA-Coaching".
 
-const karte = { background: "#fff", border: `1px solid ${cardBorder}`, borderRadius: 18, boxShadow: shadow };
+const karte = { background: "var(--mp-karte)", border: `1px solid ${cardBorder}`, borderRadius: 18, boxShadow: shadow };
 
 function Titel({ children, unter }) {
   return (
@@ -58,7 +58,7 @@ function SeiteAbend({ abend, morgen }) {
         <span style={{ display: "block", fontSize: 15, fontWeight: 900, color: textMain }}>{name}</span>
         <span style={{ display: "block", fontSize: 12.5, color: textMuted }}>ab {zeit} · Uhr läuft mit</span>
       </span>
-      <span style={{ fontSize: 13, fontWeight: 800, color: textMain, background: "#F3F4F8", borderRadius: 10, padding: "5px 9px", fontVariantNumeric: "tabular-nums" }}>⏱ 00:00</span>
+      <span style={{ fontSize: 13, fontWeight: 800, color: textMain, background: "color-mix(in srgb, #F3F4F8 var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "5px 9px", fontVariantNumeric: "tabular-nums" }}>⏱ 00:00</span>
     </div>
   );
   return (
@@ -119,7 +119,7 @@ function SeiteStart({ start, abend }) {
   const { pushUnterstuetzt, pushAktiv, pushAktivieren, pushLadend } = useAppData();
   const punkt = (fertig, icon, text, knopf) => (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderTop: `1px solid ${cardBorder}` }}>
-      <span style={{ width: 30, height: 30, borderRadius: 15, background: fertig ? "#E8F7F2" : "#F3F4F8", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{fertig ? "✓" : icon}</span>
+      <span style={{ width: 30, height: 30, borderRadius: 15, background: fertig ? "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #F3F4F8 var(--mp-flaeche), var(--mp-karte))", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{fertig ? "✓" : icon}</span>
       <span style={{ flex: 1, fontSize: 14, color: textMain, lineHeight: 1.4 }}>{text}</span>
       {knopf}
     </div>
@@ -170,7 +170,7 @@ export default function StartTourView({ onDone }) {
       <div data-start-tour style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 4 }} aria-label={`Seite ${index + 1} von ${seiten.length}`}>
           {seiten.map((_, i) => (
-            <button key={i} type="button" aria-label={`Seite ${i + 1}`} onClick={() => setIndex(i)} style={{ width: i === index ? 20 : 8, height: 8, borderRadius: 99, border: "none", padding: 0, cursor: "pointer", background: i === index ? accentDark : "#E1E3EA", transition: "width .3s" }} />
+            <button key={i} type="button" aria-label={`Seite ${i + 1}`} onClick={() => setIndex(i)} style={{ width: i === index ? 20 : 8, height: 8, borderRadius: 99, border: "none", padding: 0, cursor: "pointer", background: i === index ? accentDark : "color-mix(in srgb, #E1E3EA var(--mp-flaeche), var(--mp-karte))", transition: "width .3s" }} />
           ))}
         </div>
         <button type="button" onClick={onDone} style={{ border: "none", background: "transparent", color: textMuted, fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "6px 4px", fontFamily: "inherit" }}>
@@ -182,7 +182,7 @@ export default function StartTourView({ onDone }) {
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         {index > 0 && (
-          <button type="button" onClick={() => setIndex((i) => i - 1)} aria-label="Zurück" className="mp-tap" style={{ minWidth: 52, borderRadius: 16, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 20, cursor: "pointer" }}>
+          <button type="button" onClick={() => setIndex((i) => i - 1)} aria-label="Zurück" className="mp-tap" style={{ minWidth: 52, borderRadius: 16, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: textMuted, fontSize: 20, cursor: "pointer" }}>
             ‹
           </button>
         )}

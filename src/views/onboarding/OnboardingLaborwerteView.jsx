@@ -53,7 +53,7 @@ export default function OnboardingLaborwerteView({ onDone, onBack, onCancel }) {
         onUebernehmen={handleLaborwerteUebernehmen}
         uebernehmenLabel="Werte eintragen"
         renderErgebnis={(werte) => (
-          <div style={{ padding: 12, borderRadius: 12, background: "#EAF3F8", fontSize: 12.5, lineHeight: 1.6 }}>
+          <div style={{ padding: 12, borderRadius: 12, background: "color-mix(in srgb, #EAF3F8 var(--mp-flaeche), var(--mp-karte))", fontSize: 12.5, lineHeight: 1.6 }}>
             {Object.keys(werte).length} Wert{Object.keys(werte).length === 1 ? "" : "e"} eingetragen.
           </div>
         )}
@@ -71,7 +71,7 @@ export default function OnboardingLaborwerteView({ onDone, onBack, onCancel }) {
               padding: "12px 20px",
               borderRadius: 12,
               border: `1px solid ${cardBorder}`,
-              background: "#fff",
+              background: "var(--mp-karte)",
               fontSize: 14,
               fontWeight: 600,
               cursor: "pointer",

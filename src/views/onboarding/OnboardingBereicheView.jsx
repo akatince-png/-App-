@@ -70,7 +70,7 @@ export default function OnboardingBereicheView({ ziele, onDone, onBack, onCancel
               }}
             >
               {an && (
-                <span style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 99, background: "#fff", color: b.meta.dot, fontWeight: 900, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>
+                <span style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: 99, background: "var(--mp-karte)", color: b.meta.dot, fontWeight: 900, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>
               )}
               <div style={{ fontSize: 20 }}>{b.icon}</div>
               <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4 }}>{b.label}</div>
@@ -81,7 +81,7 @@ export default function OnboardingBereicheView({ ziele, onDone, onBack, onCancel
       </div>
 
       {zeigeProtokollName && (
-        <Card style={{ marginBottom: 14, background: "#F5F6FA", border: "none" }}>
+        <Card style={{ marginBottom: 14, background: "color-mix(in srgb, #F5F6FA var(--mp-flaeche), var(--mp-karte))", border: "none" }}>
           {!nameOffen ? (
             <div style={{ fontSize: 13, color: textMain, lineHeight: 1.5 }}>
               📋 Dein Protokoll heißt <b>„{protokollName.trim() || "Mein Start"}“</b> und beginnt <b>heute</b>.{" "}
@@ -109,7 +109,7 @@ export default function OnboardingBereicheView({ ziele, onDone, onBack, onCancel
         <button
           type="button"
           onClick={onCancel}
-          style={{ width: "100%", marginTop: 10, padding: "12px 20px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+          style={{ width: "100%", marginTop: 10, padding: "12px 20px", borderRadius: 12, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
         >
           {tLabel("Abbrechen")}
         </button>

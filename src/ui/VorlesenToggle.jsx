@@ -22,8 +22,8 @@ export default function VorlesenToggle({ aktiv, onChange }) {
       title={aktiv ? "Antworten vorlesen: an" : "Antworten vorlesen: aus"}
       style={{
         border: `1px solid ${aktiv ? accentDark : cardBorder}`,
-        background: aktiv ? accentSoft : "#fff",
-        color: aktiv ? accentDark : textMuted,
+        background: aktiv ? accentSoft : "var(--mp-karte)",
+        color: aktiv ? "var(--mp-accent-dark-text)" : textMuted,
         borderRadius: 20,
         padding: "4px 12px",
         fontSize: 11.5,

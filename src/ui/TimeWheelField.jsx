@@ -24,7 +24,7 @@ export default function TimeWheelField({ value, onChange, ariaLabel, kompakt = f
         padding: kompakt ? "10px 8px" : "14px 18px",
         borderRadius: 16,
         border: `1.5px solid ${fokussiert ? textMain : cardBorder}`,
-        background: "#FAFBFA",
+        background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))",
         color: value ? textMain : textMuted,
         fontSize: kompakt ? 16 : 18,
         fontWeight: 700,

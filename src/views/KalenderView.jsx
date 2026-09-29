@@ -214,9 +214,9 @@ function MonatsAnsicht({ jahr, monat, bloeckeFuer, onTag }) {
                 key={i}
                 type="button"
                 onClick={() => onTag(d)}
-                style={{ minHeight: 64, border: `1px solid ${heute ? "#1B2350" : cardBorder}`, borderRadius: 8, background: "#fff", padding: 3, textAlign: "left", cursor: "pointer", fontFamily: "inherit", display: "flex", flexDirection: "column", gap: 2, overflow: "hidden" }}
+                style={{ minHeight: 64, border: `1px solid ${heute ? "#1B2350" : cardBorder}`, borderRadius: 8, background: "var(--mp-karte)", padding: 3, textAlign: "left", cursor: "pointer", fontFamily: "inherit", display: "flex", flexDirection: "column", gap: 2, overflow: "hidden" }}
               >
-                <span style={{ fontSize: 11, fontWeight: 800, color: heute ? "#1B2350" : textMain }}>{d.getDate()}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: heute ? "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))" : textMain }}>{d.getDate()}</span>
                 {b.slice(0, 3).map((x) => (
                   <span key={x.key} style={{ display: "block", fontSize: 8.5, fontWeight: 700, background: x.farbe.bg, color: x.farbe.text, borderRadius: 3, padding: "0 2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {x.icon || ""}
@@ -289,7 +289,7 @@ function EintragFormular({ start, datum, onFertig, bloeckeFuer }) {
           <TextInput value={neuerBereich.name} onChange={(v) => setNeuerBereich((n) => ({ ...n, name: v }))} placeholder="Name, z. B. Kinder, Ehrenamt, Garten" />
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, margin: "8px 0" }}>
             {ICON_VORSCHLAEGE.map((i) => (
-              <button key={i} type="button" onClick={() => setNeuerBereich((n) => ({ ...n, icon: i }))} aria-label={`Symbol ${i}`} style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${neuerBereich.icon === i ? "#1B2350" : cardBorder}`, background: "#fff", fontSize: 17, cursor: "pointer" }}>
+              <button key={i} type="button" onClick={() => setNeuerBereich((n) => ({ ...n, icon: i }))} aria-label={`Symbol ${i}`} style={{ width: 34, height: 34, borderRadius: 10, border: `1.5px solid ${neuerBereich.icon === i ? "#1B2350" : cardBorder}`, background: "var(--mp-karte)", fontSize: 17, cursor: "pointer" }}>
                 {i}
               </button>
             ))}
@@ -333,7 +333,7 @@ function EintragFormular({ start, datum, onFertig, bloeckeFuer }) {
       </label>
       <div style={{ fontSize: 12, color: textMuted, marginBottom: 8 }}>Tipp: Auch per Aka, z. B. „Samstags 10 Uhr Staubsaugen“.</div>
       {warnung && (
-        <div data-konflikt-warnung style={{ background: "#FFF6E5", border: "1.5px solid #E8B04A", borderRadius: 12, padding: "10px 12px", fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>
+        <div data-konflikt-warnung style={{ background: "color-mix(in srgb, #FFF6E5 var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid #E8B04A", borderRadius: 12, padding: "10px 12px", fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>
           ⚠️ Zu dieser Zeit ist schon etwas geplant:{" "}
           {warnung.map((t) => `${t.icon ? `${t.icon} ` : ""}${t.titel} (${t.tag} ${hhmm(t.start)}–${hhmm(t.ende)})`).join(", ")}.
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -387,7 +387,7 @@ function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
         </button>
       </div>
       {mit.length > 0 && (
-        <div data-konflikt-details style={{ marginTop: 8, fontSize: 12.5, color: "#7A5200", background: "#FFF6E5", borderRadius: 10, padding: "6px 10px" }}>
+        <div data-konflikt-details style={{ marginTop: 8, fontSize: 12.5, color: "color-mix(in srgb, #7A5200 var(--mp-schrift), var(--mp-schrift-hell))", background: "color-mix(in srgb, #FFF6E5 var(--mp-flaeche), var(--mp-karte))", borderRadius: 10, padding: "6px 10px" }}>
           ⚠️ Überschneidet sich mit {mit.map((x) => `${x.titel} (${hhmm(x.start)}–${hhmm(x.ende)})`).join(", ")}. Über „Ändern“ eine andere Zeit wählen.
         </div>
       )}
@@ -448,7 +448,7 @@ export default function KalenderView({ onHome }) {
             key={k}
             type="button"
             onClick={() => setAnsicht(k)}
-            style={{ flex: 1, border: `1px solid ${ansicht === k ? "#1B2350" : cardBorder}`, background: ansicht === k ? "#1B2350" : "#fff", color: ansicht === k ? "#fff" : textMain, borderRadius: 12, padding: "8px 0", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ flex: 1, border: `1px solid ${ansicht === k ? "#1B2350" : cardBorder}`, background: ansicht === k ? "#1B2350" : "var(--mp-karte)", color: ansicht === k ? "#fff" : textMain, borderRadius: 12, padding: "8px 0", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
           >
             {l}
           </button>
@@ -479,13 +479,13 @@ export default function KalenderView({ onHome }) {
         <EintragFormular key={formular.id || "neu"} start={formular} datum={datum} bloeckeFuer={bloeckeFuer} onFertig={() => setFormular(null)} />
       ) : (
         !details && (
-          <button type="button" className="mp-tap" onClick={() => setFormular(leer(datum))} style={{ width: "100%", marginBottom: 10, border: "1.5px dashed #1B2350", background: "#fff", color: "#1B2350", borderRadius: 12, padding: 9, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+          <button type="button" className="mp-tap" onClick={() => setFormular(leer(datum))} style={{ width: "100%", marginBottom: 10, border: "1.5px dashed #1B2350", background: "var(--mp-karte)", color: "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 12, padding: 9, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
             + Eintrag: Arbeit, Haushalt, Hobby, Me-Time, Termin …
           </button>
         )
       )}
       {!formular && !details && (
-        <button type="button" className="mp-tap" data-dienstplan-link onClick={() => (window.location.hash = "#/dienstplan-foto")} style={{ width: "100%", marginBottom: 10, border: "none", background: "#EEF4FF", color: "#2D6FD6", borderRadius: 12, padding: 9, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+        <button type="button" className="mp-tap" data-dienstplan-link onClick={() => (window.location.hash = "#/dienstplan-foto")} style={{ width: "100%", marginBottom: 10, border: "none", background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 12, padding: 9, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
           🗓️ Dienstplan eintragen (selbst oder per Foto)
         </button>
       )}
@@ -506,5 +506,5 @@ export default function KalenderView({ onHome }) {
   );
 }
 
-const pfeil = { width: 36, height: 36, borderRadius: 18, border: `1px solid ${cardBorder}`, background: "#fff", fontSize: 18, cursor: "pointer", color: textMain };
-const knopf = (voll) => ({ border: voll ? "none" : `1.5px solid #1B2350`, background: voll ? "#1B2350" : "#fff", color: voll ? "#fff" : "#1B2350", borderRadius: 12, padding: "8px 12px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" });
+const pfeil = { width: 36, height: 36, borderRadius: 18, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", fontSize: 18, cursor: "pointer", color: textMain };
+const knopf = (voll) => ({ border: voll ? "none" : `1.5px solid #1B2350`, background: voll ? "#1B2350" : "var(--mp-karte)", color: voll ? "#fff" : "#1B2350", borderRadius: 12, padding: "8px 12px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" });

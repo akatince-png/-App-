@@ -833,7 +833,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             <button
               className="mp-tap"
               onClick={() => onOpenView("tagesplan")}
-              style={{ display: "flex", alignItems: "center", gap: 3, border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "2px 0" }}
+              style={{ display: "flex", alignItems: "center", gap: 3, border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "2px 0" }}
             >
               {t("home.tagesplan")}
               <span style={{ fontSize: 14 }}>›</span>
@@ -923,7 +923,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                             borderRadius: 10,
                             border: "none",
                             background: accentSoft,
-                            color: accentDark,
+                            color: "var(--mp-accent-dark-text)",
                             fontSize: 11.5,
                             fontWeight: 700,
                             cursor: "pointer",
@@ -943,7 +943,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                           style={
                             istErste
                               ? { flexShrink: 0, padding: "10px 14px", borderRadius: 12, border: "none", background: k.dot, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer" }
-                              : { flexShrink: 0, width: 34, height: 34, borderRadius: "50%", border: `2px solid ${k.dot}`, background: "#fff", color: k.dot, fontSize: 15, fontWeight: 800, cursor: "pointer" }
+                              : { flexShrink: 0, width: 34, height: 34, borderRadius: "50%", border: `2px solid ${k.dot}`, background: "var(--mp-karte)", color: k.dot, fontSize: 15, fontWeight: 800, cursor: "pointer" }
                           }
                         >
                           {istErste ? "✓ Erledigt" : "✓"}
@@ -981,7 +981,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
   // sie sich vom farbigen Kartenhintergrund klar abhebt; die folgenden als
   // kleine Chips in ihrer Bereichsfarbe. Die volle Liste steht im Tagesplan.
   const weissesFeld = (kinder) => (
-    <div style={{ background: "#fff", color: textMain, borderRadius: 22, padding: 14, border: "1px solid rgba(16, 24, 40, 0.05)", boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.06)" }}>{kinder}</div>
+    <div style={{ background: "var(--mp-karte)", color: textMain, borderRadius: 22, padding: 14, border: "1px solid rgba(16, 24, 40, 0.05)", boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.06)" }}>{kinder}</div>
   );
   const naechsteChips = angezeigteItems.slice(1, 4);
   const kartenMitte = weissesFeld(
@@ -1035,12 +1035,12 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           type="button"
           className="mp-tap"
           onClick={() => onOpenView("coach-chat")}
-          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#FFF6E0", border: "2px solid #F2C94C", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", border: "2px solid color-mix(in srgb, #F2C94C var(--mp-flaeche), var(--mp-rand-dunkel))", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
         >
-          <span style={{ width: 40, height: 40, borderRadius: 99, background: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🧑‍🏫</span>
+          <span style={{ width: 40, height: 40, borderRadius: 99, background: "var(--mp-karte)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🧑‍🏫</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontWeight: 900, fontSize: 14 }}>Dein Coach hat geschrieben</span>
-            <span style={{ display: "block", fontSize: 13, color: "#4A5170", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ display: "block", fontSize: 13, color: "color-mix(in srgb, #4A5170 var(--mp-schrift), var(--mp-schrift-hell))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               „{ungeleseneCoachNachrichten[0].text}“
             </span>
           </span>
@@ -1064,12 +1064,12 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
           type="button"
           className="mp-tap"
           onClick={() => onOpenView("atemuebungen")}
-          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#E8F7F2", border: "2px solid #2E9C86", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #E8F7F2 var(--mp-flaeche), var(--mp-karte))", border: "2px solid #2E9C86", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
         >
           <span style={{ fontSize: 26 }}>👥</span>
           <span style={{ flex: 1 }}>
             <span style={{ display: "block", fontWeight: 900, fontSize: 14 }}>Gemeinsam atmen</span>
-            <span style={{ display: "block", fontSize: 12.5, color: "#1E6E57" }}>
+            <span style={{ display: "block", fontSize: 12.5, color: "color-mix(in srgb, #1E6E57 var(--mp-schrift), var(--mp-schrift-hell))" }}>
               {new Date(aktuelleSession(atemSessions).startUm) > new Date()
                 ? `startet um ${new Date(aktuelleSession(atemSessions).startUm).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
                 : "läuft gerade"}{" "}
@@ -1112,10 +1112,10 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
         onOpenErfolge={() => onOpenView("erfolge")}
       />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-        <button type="button" className="mp-tap" data-schnell-wasser aria-label="Wasser eintragen" onClick={() => onOpenView("hydration")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "none", borderRadius: 16, padding: "12px 10px", background: "#E6F0FF", color: "#1F4FAF", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+        <button type="button" className="mp-tap" data-schnell-wasser aria-label="Wasser eintragen" onClick={() => onOpenView("hydration")} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "none", borderRadius: 16, padding: "12px 10px", background: "color-mix(in srgb, #E6F0FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #1F4FAF var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
           💧 Wasser +
         </button>
-        <button type="button" className="mp-tap" aria-label="Grad nicht gut?" onClick={() => setAkutOffen(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "none", borderRadius: 16, padding: "12px 10px", background: "#FFF3D6", color: "#8A5A00", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+        <button type="button" className="mp-tap" aria-label="Grad nicht gut?" onClick={() => setAkutOffen(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "none", borderRadius: 16, padding: "12px 10px", background: "color-mix(in srgb, #FFF3D6 var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #8A5A00 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
           💡 Grad nicht gut?
         </button>
       </div>
@@ -1161,11 +1161,11 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
                 type="button"
                 className="mp-tap"
                 onClick={() => onOpenView("team")}
-                style={{ width: "100%", textAlign: "left", marginBottom: 14, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "#fff", cursor: "pointer", fontFamily: "inherit" }}
+                style={{ width: "100%", textAlign: "left", marginBottom: 14, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit" }}
               >
                 <div style={{ fontSize: 14.5, fontWeight: 800 }}>🎯 Gruppen-Quest {f.geschafft ? "🏅" : ""}</div>
                 <div style={{ fontSize: 13, marginTop: 2 }}>{q.titel}</div>
-                <div style={{ height: 8, borderRadius: 99, background: "#EEF0F5", marginTop: 8, overflow: "hidden" }}>
+                <div style={{ height: 8, borderRadius: 99, background: "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))", marginTop: 8, overflow: "hidden" }}>
                   <div style={{ width: `${Math.min(100, Math.round((f.gesamt / f.ziel) * 100))}%`, height: "100%", borderRadius: 99, background: TAGESRAETSEL_META.dot }} />
                 </div>
                 <div style={{ fontSize: 12, color: textMuted, marginTop: 6 }}>
@@ -1251,7 +1251,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             type="button"
             className="mp-tap"
             onClick={() => onOpenView("team")}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 20, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "#fff", cursor: "pointer", fontFamily: "inherit" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 20, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit" }}
           >
             <span style={{ fontSize: 24 }}>🏆</span>
             <span style={{ flex: 1 }}>
@@ -1272,7 +1272,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             type="button"
             className="mp-tap"
             onClick={() => onOpenView("coach-chat")}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 24, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "#fff", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 24, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}
           >
             <span style={{ fontSize: 24 }}>💬</span>
             <span style={{ flex: 1 }}>
@@ -1367,7 +1367,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
               borderRadius: 18,
               padding: "14px 10px",
               cursor: "pointer",
-              background: "#fff",
+              background: "var(--mp-karte)",
               boxShadow: shadow,
               border: `1px solid ${cardBorder}`,
             }}
@@ -1392,7 +1392,7 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             borderRadius: 18,
             padding: "14px 10px",
             cursor: "pointer",
-            background: "#fff",
+            background: "var(--mp-karte)",
             boxShadow: shadow,
             border: `1px solid ${cardBorder}`,
           }}
@@ -1445,12 +1445,12 @@ export default function HomeView({ onOpenView, onOpenTraining, onNeuesProtokoll 
             left: 16,
             right: 16,
             bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
-            background: "#fff",
+            background: "var(--mp-karte)",
             border: "1px solid #E8B4AE",
             borderRadius: 14,
             padding: "12px 14px",
             fontSize: 12.5,
-            color: "#A63B32",
+            color: "color-mix(in srgb, #A63B32 var(--mp-schrift), var(--mp-schrift-hell))",
             boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
             zIndex: 60,
           }}

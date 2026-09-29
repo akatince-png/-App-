@@ -17,7 +17,7 @@ export function SignedPhoto({ path, alt, size = 52 }) {
   }, [path]);
 
   if (!url) {
-    return <div style={{ width: size, height: size, borderRadius: 8, background: "#EEF5F2", border: `1px solid ${cardBorder}` }} />;
+    return <div style={{ width: size, height: size, borderRadius: 8, background: "color-mix(in srgb, #EEF5F2 var(--mp-flaeche), var(--mp-karte))", border: `1px solid ${cardBorder}` }} />;
   }
   return <img src={url} alt={alt} style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: `1px solid ${cardBorder}` }} />;
 }

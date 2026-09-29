@@ -130,7 +130,7 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
           maxWidth: 460,
           maxHeight: "85vh",
           overflowY: "auto",
-          background: "#fff",
+          background: "var(--mp-karte)",
           borderRadius: "22px 22px 0 0",
           padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
           boxShadow: "0 -8px 30px rgba(0, 0, 0, 0.25)",
@@ -146,7 +146,7 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
           </button>
         </div>
 
-        <div style={{ fontSize: 11.5, color: accentDark, background: accentSoft, borderRadius: 10, padding: "6px 10px", marginBottom: 12 }}>
+        <div style={{ fontSize: 11.5, color: "var(--mp-accent-dark-text)", background: accentSoft, borderRadius: 10, padding: "6px 10px", marginBottom: 12 }}>
           🔒 Wird nur auf diesem Gerät gespeichert, nie in der Cloud.
         </div>
 
@@ -172,7 +172,7 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
               <button
                 type="button"
                 onClick={() => setGespeichertHinweis(false)}
-                style={{ border: "none", background: "transparent", color: accentDark, fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 8 }}
+                style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 8 }}
               >
                 Noch eine Seite schreiben
               </button>
@@ -211,7 +211,7 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
                 padding: "14px",
                 borderRadius: 14,
                 border: `1px solid ${cardBorder}`,
-                background: "#FFFDF8",
+                background: "color-mix(in srgb, #FFFDF8 var(--mp-flaeche), var(--mp-karte))",
                 color: textMain,
                 fontSize: 14.5,
                 lineHeight: 1.6,
@@ -235,8 +235,8 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
                     justifyContent: "center",
                     borderRadius: "50%",
                     border: "none",
-                    background: hoert ? "#FDE9EC" : "rgba(0,0,0,0.05)",
-                    color: hoert ? danger : accentDark,
+                    background: hoert ? "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))" : "rgba(0,0,0,0.05)",
+                    color: hoert ? danger : "var(--mp-accent-dark-text)",
                     cursor: "pointer",
                     flexShrink: 0,
                   }}
@@ -251,7 +251,7 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
                 style={{
                   border: "none",
                   background: "transparent",
-                  color: !text.trim() || ueberarbeitenLaden ? textMuted : accentDark,
+                  color: !text.trim() || ueberarbeitenLaden ? textMuted : "var(--mp-accent-dark-text)",
                   fontWeight: 700,
                   fontSize: 13,
                   cursor: !text.trim() || ueberarbeitenLaden ? "not-allowed" : "pointer",
@@ -264,7 +264,7 @@ export default function TagebuchModal({ onClose, onOpenArchiv }) {
 
             {vorschau && (
               <div style={{ marginTop: 12, padding: 12, borderRadius: 14, border: `1px solid ${accentSoft}`, background: accentSoft }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: accentDark, marginBottom: 6 }}>Vorschlag von {coachName} — noch nicht gespeichert:</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--mp-accent-dark-text)", marginBottom: 6 }}>Vorschlag von {coachName} — noch nicht gespeichert:</div>
                 <div style={{ fontSize: 13.5, color: textMain, lineHeight: 1.55, whiteSpace: "pre-wrap", marginBottom: 10 }}>{vorschau}</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button

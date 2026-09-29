@@ -19,7 +19,7 @@ const knopf = (aktiv) => ({
   fontWeight: 800,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: aktiv ? accentDark : "#EEF0F5",
+  background: aktiv ? accentDark : "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))",
   color: aktiv ? "#fff" : textMain,
 });
 const datumFeld = { border: `1.5px solid ${cardBorder}`, borderRadius: 10, padding: "7px 9px", fontSize: 13.5, fontFamily: "inherit" };
@@ -29,7 +29,7 @@ function Umschalter({ an, label, onClick }) {
   return (
     <button type="button" role="switch" aria-checked={an} onClick={onClick} className="mp-tap" style={{ display: "inline-flex", alignItems: "center", gap: 7, border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, color: textMain, padding: "2px 0" }}>
       <span style={{ width: 34, height: 20, borderRadius: 99, background: an ? "#2E9C86" : "#D5D8E2", position: "relative", transition: "background .2s" }}>
-        <span style={{ position: "absolute", top: 2, left: an ? 16 : 2, width: 16, height: 16, borderRadius: 99, background: "#fff", transition: "left .2s" }} />
+        <span style={{ position: "absolute", top: 2, left: an ? 16 : 2, width: 16, height: 16, borderRadius: 99, background: "var(--mp-karte)", transition: "left .2s" }} />
       </span>
       {label}
     </button>
@@ -49,7 +49,7 @@ export function ProgrammeLeiste({ personen, etappenByUser, programme, teilnahmen
     : [];
   const faellig = personen.filter((p) => programmStand(etappenByUser[p.id] || [], heute).gespraechFaellig);
   return (
-    <div style={{ borderRadius: 14, border: `1.5px solid ${cardBorder}`, background: "#fff", padding: "10px 12px", marginBottom: 10 }} data-programme-leiste>
+    <div style={{ borderRadius: 14, border: `1.5px solid ${cardBorder}`, background: "var(--mp-karte)", padding: "10px 12px", marginBottom: 10 }} data-programme-leiste>
       <button type="button" data-programme-toggle onClick={() => setOffen((o) => !o)} aria-expanded={offen} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", border: "none", background: "transparent", padding: 0, cursor: "pointer", fontFamily: "inherit", color: textMain }}>
         <span style={{ fontSize: 13.5, fontWeight: 800 }}>🧭 Programme</span>
         <span style={{ fontSize: 12, color: textMuted }}>
@@ -60,7 +60,7 @@ export function ProgrammeLeiste({ personen, etappenByUser, programme, teilnahmen
         programme.map((p) => {
           const z = teilnahmenZaehlen(teilnahmen, p.id);
           return (
-            <div key={p.id} style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #F0F1F5" }}>
+            <div key={p.id} style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid color-mix(in srgb, #F0F1F5 var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
               <div style={{ fontSize: 14, fontWeight: 800 }}>
                 {p.emoji} {p.name}
                 {p.wochen ? <span style={{ fontWeight: 600, color: textMuted, fontSize: 12 }}> · ca. {p.wochen} Wochen</span> : null}
@@ -112,7 +112,7 @@ export function ProgrammePerson({ person, programme, teilnahmen, etappen = [], t
     if (r && !r.ok) setFehler(r.error || "Hat nicht geklappt.");
   };
   return (
-    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, background: "#fff", padding: "10px 12px", marginBottom: 10 }} data-programme-person>
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, background: "var(--mp-karte)", padding: "10px 12px", marginBottom: 10 }} data-programme-person>
       <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>🧭 Programme von {person.vorname || "dieser Person"}</div>
       {tabs?.length > 0 && (
         <div style={{ fontSize: 12, color: textMuted, marginBottom: 8 }}>
@@ -127,7 +127,7 @@ export function ProgrammePerson({ person, programme, teilnahmen, etappen = [], t
         const ab = stand?.aktiv ? wiederholungAb(stand) : null;
         const schonGeplant = ab && verschiebungen.some((v) => v.ab === ab);
         return (
-          <div key={p.id} style={{ padding: "7px 0", borderTop: "1px solid #F0F1F5" }}>
+          <div key={p.id} style={{ padding: "7px 0", borderTop: "1px solid color-mix(in srgb, #F0F1F5 var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
               <span style={{ fontSize: 13.5, fontWeight: 700 }}>
                 {p.emoji} {p.name}
@@ -212,7 +212,7 @@ function PersoenlichEinstellen({ teilnahme, mitBausteinen, onSpeichern }) {
   const [notiz, setNotiz] = useState(teilnahme.notiz || "");
   const [gespeichert, setGespeichert] = useState(false);
   return (
-    <div style={{ marginTop: 8, borderRadius: 10, background: "#F7F8FB", padding: "10px 11px" }} data-persoenlich>
+    <div style={{ marginTop: 8, borderRadius: 10, background: "color-mix(in srgb, #F7F8FB var(--mp-flaeche), var(--mp-karte))", padding: "10px 11px" }} data-persoenlich>
       {mitBausteinen && (
         <>
           <div style={{ fontSize: 12.5, fontWeight: 800 }}>Bausteine für diese Person</div>
@@ -226,7 +226,7 @@ function PersoenlichEinstellen({ teilnahme, mitBausteinen, onSpeichern }) {
                   type="button"
                   aria-pressed={!weg}
                   onClick={() => setAus((a) => (weg ? a.filter((k) => k !== b.key) : [...a, b.key]))}
-                  style={{ border: `1px solid ${weg ? "#D5D8E2" : "#9CC9B0"}`, background: weg ? "#fff" : "#EAF6EF", color: weg ? textMuted : textMain, textDecoration: weg ? "line-through" : "none", borderRadius: 99, padding: "4px 9px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                  style={{ border: `1px solid ${weg ? "color-mix(in srgb, #D5D8E2 var(--mp-flaeche), var(--mp-rand-dunkel))" : "#9CC9B0"}`, background: weg ? "var(--mp-karte)" : "color-mix(in srgb, #EAF6EF var(--mp-flaeche), var(--mp-karte))", color: weg ? textMuted : textMain, textDecoration: weg ? "line-through" : "none", borderRadius: 99, padding: "4px 9px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
                 >
                   {b.icon} {b.name} · W{b.woche}
                 </button>

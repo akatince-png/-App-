@@ -17,9 +17,9 @@ export default function CommunityTab() {
           </div>
           <button
             onClick={toggleDatenteilung}
-            style={{ width: 46, height: 26, borderRadius: 13, border: "none", background: datenteilung ? accent : "#D9EEE7", position: "relative", cursor: "pointer", flexShrink: 0 }}
+            style={{ width: 46, height: 26, borderRadius: 13, border: "none", background: datenteilung ? accent : "color-mix(in srgb, #D9EEE7 var(--mp-flaeche), var(--mp-karte))", position: "relative", cursor: "pointer", flexShrink: 0 }}
           >
-            <div style={{ width: 20, height: 20, borderRadius: 10, background: "#fff", position: "absolute", top: 3, left: datenteilung ? 23 : 3, transition: "left 0.2s ease" }} />
+            <div style={{ width: 20, height: 20, borderRadius: 10, background: "var(--mp-karte)", position: "absolute", top: 3, left: datenteilung ? 23 : 3, transition: "left 0.2s ease" }} />
           </button>
         </div>
       </Card>

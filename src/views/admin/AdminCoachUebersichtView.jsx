@@ -215,7 +215,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             className="mp-tap"
             aria-pressed={reiter === id}
             onClick={() => setReiter(id)}
-            style={{ flex: 1, border: "none", borderRadius: 12, padding: "10px 12px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: reiter === id ? accentDark : "#EEF0F5", color: reiter === id ? "#fff" : textMain }}
+            style={{ flex: 1, border: "none", borderRadius: 12, padding: "10px 12px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: reiter === id ? accentDark : "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))", color: reiter === id ? "#fff" : textMain }}
           >
             {label}
           </button>
@@ -234,7 +234,7 @@ export default function AdminCoachUebersichtView({ onHome, onVerwalteAls }) {
             className="mp-tap"
             aria-pressed={filter === id}
             onClick={() => setFilter(id)}
-            style={{ border: "none", borderRadius: 99, padding: "6px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: filter === id ? accentDark : "#EEF0F5", color: filter === id ? "#fff" : textMain }}
+            style={{ border: "none", borderRadius: 99, padding: "6px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: filter === id ? accentDark : "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-karte))", color: filter === id ? "#fff" : textMain }}
           >
             {label}
           </button>
@@ -348,7 +348,7 @@ function ChatListe({ eintraege, teamName, onOeffnen }) {
             <span style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 2 }}>
               <span style={{ fontSize: 13, color: textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: ungelesen > 0 ? 700 : 400 }}>
                 {letzte.absender === "coach" ? (
-                  <span style={{ color: letzte.gelesen ? "#2D6FD6" : textMuted }}>{letzte.gelesen ? "✓✓ " : "✓ "}</span>
+                  <span style={{ color: letzte.gelesen ? "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))" : textMuted }}>{letzte.gelesen ? "✓✓ " : "✓ "}</span>
                 ) : null}
                 {letzte.absender === "coach" ? "Du: " : ""}
                 {letzte.text}
@@ -393,7 +393,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
   const farbe = s.ampel === "rot" ? danger : s.ampel === "gelb" ? "#B7791F" : AMPEL.gruen;
   const verwalten = () => onVerwalteAls({ id: p.id, email: p.email, vorname: p.vorname });
   return (
-    <div style={{ borderRadius: 16, border: offen ? `2px solid ${accentDark}` : `1.5px solid ${cardBorder}`, background: offen ? "#F4F8FF" : "#fff", marginBottom: 8 }}>
+    <div style={{ borderRadius: 16, border: offen ? `2px solid ${accentDark}` : `1.5px solid ${cardBorder}`, background: offen ? "color-mix(in srgb, #F4F8FF var(--mp-flaeche), var(--mp-karte))" : "var(--mp-karte)", marginBottom: 8 }}>
       <button
         type="button"
         onClick={onToggle}
@@ -403,7 +403,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
       >
         <span style={{ position: "relative", flexShrink: 0 }}>
           <Profilbild pfad={p.profilbild_pfad} name={p.vorname || p.email} size={40} />
-          <span style={{ position: "absolute", right: -1, bottom: -1, width: 12, height: 12, borderRadius: 99, border: "2px solid #fff", background: AMPEL[s.ampel] }} />
+          <span style={{ position: "absolute", right: -1, bottom: -1, width: 12, height: 12, borderRadius: 99, border: "2px solid color-mix(in srgb, #fff var(--mp-flaeche), var(--mp-rand-dunkel))", background: AMPEL[s.ampel] }} />
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: "block", fontWeight: 800, fontSize: 14.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -428,7 +428,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
           <div style={{ display: "flex", gap: 4 }}>
             {letzteSiebenTage(p.aktive_tage_7).map((t) => (
               <div key={t.iso} title={t.iso} style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ height: 24, borderRadius: 5, background: t.aktiv ? "#9CC9B0" : "#E3E6EE" }} />
+                <div style={{ height: 24, borderRadius: 5, background: t.aktiv ? "#9CC9B0" : "color-mix(in srgb, #E3E6EE var(--mp-flaeche), var(--mp-karte))" }} />
                 <div style={{ fontSize: 10, color: textMuted, marginTop: 2 }}>{t.kurz}</div>
               </div>
             ))}
@@ -447,7 +447,7 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
             setTimeout(() => (window.location.hash = "#/schichtplan"), 300);
           }} />}
           {s.verspaetung && (
-            <div style={{ borderRadius: 12, background: "#FFF6E0", border: "1.5px solid #F2C94C", padding: "10px 12px", marginBottom: 10 }}>
+            <div style={{ borderRadius: 12, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid color-mix(in srgb, #F2C94C var(--mp-flaeche), var(--mp-rand-dunkel))", padding: "10px 12px", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 800 }}>
                 {s.verspaetung.labelLang || s.verspaetung.label}: an {s.verspaetung.spaetAnzahl} von {s.verspaetung.tage.length} Tagen deutlich später
               </div>
@@ -543,14 +543,14 @@ function SchichtKurz({ schicht, onBearbeiten }) {
   const puenktlich = puenktlichkeitJeVariante(schicht.laeufe, "morgen", ctx, new Date(), 28);
   const letzter = Object.keys(schicht.plan).sort().at(-1);
   return (
-    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "#fff" }}>
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "var(--mp-karte)" }}>
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>
         SCHICHTPLAN · heute {tags(tage[0])}
         {letzter && letzter >= heute ? ` · läuft bis ${letzter.slice(8, 10)}.${letzter.slice(5, 7)}.` : " · kein Plan"}
       </div>
       <div style={{ display: "flex", gap: 3, margin: "6px 0" }} aria-label="Schichten der nächsten 14 Tage">
         {tage.map((t) => (
-          <span key={t.datum} title={`${t.datum}: ${t.label}`} style={{ flex: 1, textAlign: "center", fontSize: 12, borderRadius: 5, padding: "2px 0", background: t.art === "standard" ? "#F1F2F6" : "#FFF1D6" }}>
+          <span key={t.datum} title={`${t.datum}: ${t.label}`} style={{ flex: 1, textAlign: "center", fontSize: 12, borderRadius: 5, padding: "2px 0", background: t.art === "standard" ? "color-mix(in srgb, #F1F2F6 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #FFF1D6 var(--mp-flaeche), var(--mp-karte))" }}>
             {t.icon || "–"}
           </span>
         ))}
@@ -608,7 +608,7 @@ function TagebuchKurz({ personId, vorname, onChat }) {
   const geteilt = eintraege.filter((e) => e.notiz).slice(-3).reverse();
   const top = m.muster.slice(0, 3);
   return (
-    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "#fff" }}>
+    <div style={{ borderRadius: 12, border: `1.5px solid ${cardBorder}`, padding: "10px 12px", marginBottom: 10, background: "var(--mp-karte)" }}>
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted }}>TAGEBUCH · letzte {Math.min(14, eintraege.length)} Einträge</div>
       <div aria-label="Stimmungsverlauf" style={{ fontSize: 19, letterSpacing: 2, margin: "4px 0" }}>
         {eintraege.slice(-14).map((e) => (

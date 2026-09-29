@@ -17,7 +17,7 @@ function Tabelle({ kopf, zeilen }) {
         <thead>
           <tr>
             {kopf.map((k) => (
-              <th key={k} style={{ textAlign: "left", padding: "6px 8px", background: "#F3F4F8", color: textMuted, fontSize: 11, letterSpacing: 0.3, textTransform: "uppercase" }}>
+              <th key={k} style={{ textAlign: "left", padding: "6px 8px", background: "color-mix(in srgb, #F3F4F8 var(--mp-flaeche), var(--mp-karte))", color: textMuted, fontSize: 11, letterSpacing: 0.3, textTransform: "uppercase" }}>
                 {k}
               </th>
             ))}
@@ -131,7 +131,7 @@ export default function CoachHandbuchView({ onHome }) {
               type="button"
               className="mp-tap"
               onClick={() => springen(k.id)}
-              style={{ border: `1px solid ${cardBorder}`, background: "#fff", borderRadius: 99, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: textMain, cursor: "pointer", fontFamily: "inherit" }}
+              style={{ border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", borderRadius: 99, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: textMain, cursor: "pointer", fontFamily: "inherit" }}
             >
               {i + 1}. {k.emoji} {k.titel}
             </button>
@@ -141,7 +141,7 @@ export default function CoachHandbuchView({ onHome }) {
           type="button"
           className="mp-tap"
           onClick={drucken}
-          style={{ marginTop: 12, width: "100%", border: "1.5px solid #1B2350", background: "#fff", color: "#1B2350", borderRadius: 14, padding: 10, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
+          style={{ marginTop: 12, width: "100%", border: "1.5px solid #1B2350", background: "var(--mp-karte)", color: "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 14, padding: 10, fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}
         >
           🖨️ Drucken oder als PDF speichern
         </button>

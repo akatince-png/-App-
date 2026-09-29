@@ -88,7 +88,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
                       lineHeight: "16px",
                       borderRadius: "50%",
                       border: "none",
-                      background: "#fff",
+                      background: "var(--mp-karte)",
                       boxShadow: `0 0 0 1px ${cardBorder}`,
                       color: textMuted,
                       fontSize: 10,
@@ -109,7 +109,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
           </div>
           <button
             onClick={variableHinzufuegen}
-            style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "#fff", color: accentDark, fontWeight: 700, cursor: "pointer" }}
+            style={{ padding: "0 14px", borderRadius: 10, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: "var(--mp-accent-dark-text)", fontWeight: 700, cursor: "pointer" }}
           >
             +
           </button>
@@ -138,7 +138,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
                         borderRadius: 8,
                         fontSize: 16,
                         border: `1px solid ${neuerEintrag[id] === e ? accent : cardBorder}`,
-                        background: neuerEintrag[id] === e ? accentSoft : "#FAFEFC",
+                        background: neuerEintrag[id] === e ? accentSoft : "color-mix(in srgb, #FAFEFC var(--mp-flaeche), var(--mp-karte))",
                         cursor: "pointer",
                       }}
                     >
@@ -168,7 +168,7 @@ export default function WoechentlicheCheckinsCard({ frisch = false }) {
         <input type="file" accept="image/*" id="eintrag-foto" style={{ display: "none" }} onChange={handleEintragFoto} />
         <label
           htmlFor="eintrag-foto"
-          style={{ display: "block", textAlign: "center", padding: "10px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: accentSoft, color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          style={{ display: "block", textAlign: "center", padding: "10px", borderRadius: 10, border: `1.5px dashed ${accent}`, background: accentSoft, color: "var(--mp-accent-dark-text)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
         >
           📷 {fotoKategorie}-Foto aufnehmen
         </label>

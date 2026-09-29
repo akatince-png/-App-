@@ -559,7 +559,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
 
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Nur ein Timer? (ohne Eintrag)</div>
       {kurzTimerMusikFehler && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "#FBEAE7", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))", color: danger, borderRadius: 12, padding: "8px 12px", fontSize: 12, marginBottom: 12 }}>
           <span>🎵 Playlist konnte nicht gestartet werden: {kurzTimerMusikFehler}</span>
           <button
             type="button"
@@ -591,7 +591,7 @@ export default function TrainingView({ onHome, initialSessionId, onConsumedIniti
                   padding: "16px 6px",
                   borderRadius: 14,
                   border: `1px solid ${cardBorder}`,
-                  background: "#FAFBFA",
+                  background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))",
                   cursor: "pointer",
                 }}
               >

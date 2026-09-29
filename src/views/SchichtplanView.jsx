@@ -31,7 +31,7 @@ const chip = (an) => ({
   fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 
@@ -73,9 +73,9 @@ export default function SchichtplanView({ onHome }) {
         type="button"
         data-dienstplan-link
         onClick={() => (window.location.hash = "#/dienstplan-foto")}
-        style={{ width: "100%", textAlign: "left", border: `1px solid ${cardBorder}`, background: "#EEF4FF", borderRadius: 16, padding: "12px 14px", marginBottom: 16, cursor: "pointer", fontFamily: "inherit" }}
+        style={{ width: "100%", textAlign: "left", border: `1px solid ${cardBorder}`, background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", borderRadius: 16, padding: "12px 14px", marginBottom: 16, cursor: "pointer", fontFamily: "inherit" }}
       >
-        <div style={{ fontSize: 14.5, fontWeight: 900, color: "#1B2350" }}>🗓️ Dienstplan eintragen</div>
+        <div style={{ fontSize: 14.5, fontWeight: 900, color: "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))" }}>🗓️ Dienstplan eintragen</div>
         <div style={{ fontSize: 12, color: textMuted, marginTop: 2 }}>Jede Woche neu: selbst eintragen (auch mehrere Tage auf einmal) oder Dienstplan abfotografieren.</div>
       </button>
 
@@ -156,9 +156,9 @@ function Varianten({ varianten, onSpeichern, onEntfernen, vermerken }) {
             <span style={{ fontSize: 22 }}>{v.icon}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontWeight: 800, fontSize: 14 }}>{v.name}</span>
-              <span style={{ display: "block", fontSize: 12, color: "#4A5170" }}>{v.arbeitVon && v.arbeitBis ? `Arbeit ${v.arbeitVon}–${v.arbeitBis}` : "kein Dienst"}</span>
+              <span style={{ display: "block", fontSize: 12, color: "color-mix(in srgb, #4A5170 var(--mp-schrift), var(--mp-schrift-hell))" }}>{v.arbeitVon && v.arbeitBis ? `Arbeit ${v.arbeitVon}–${v.arbeitBis}` : "kein Dienst"}</span>
             </span>
-            <span style={{ fontWeight: 800, fontSize: 12.5, background: "#fff", borderRadius: 10, padding: "5px 8px", whiteSpace: "nowrap" }}>
+            <span style={{ fontWeight: 800, fontSize: 12.5, background: "var(--mp-karte)", borderRadius: 10, padding: "5px 8px", whiteSpace: "nowrap" }}>
               ☀ {v.morgenStart || "–"} · 🌙 {v.abendStart || "–"}
             </span>
           </button>
@@ -366,7 +366,7 @@ function PlanEditor({ heute, varianten, plan, onSpeichern, vermerken }) {
                 borderRadius: 8,
                 height: 38,
                 padding: 0,
-                background: v ? farbe(v.id) : "#F1F2F6",
+                background: v ? farbe(v.id) : "color-mix(in srgb, #F1F2F6 var(--mp-flaeche), var(--mp-karte))",
                 opacity: t.datum < heute ? 0.5 : 1,
                 cursor: "pointer",
                 fontFamily: "inherit",

@@ -36,7 +36,7 @@ export default function PraeparatFoto({ art, onUebernehmen }) {
   const stoffEntfernen = (i) => setErgebnis((e) => ({ ...e, inhaltsstoffe: e.inhaltsstoffe.filter((_, j) => j !== i) }));
 
   return (
-    <section aria-label="Per Foto eintragen" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: `1.5px solid ${cardBorder}` }}>
+    <section aria-label="Per Foto eintragen" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: `1.5px solid ${cardBorder}` }}>
       <div style={{ fontWeight: 900, fontSize: 15, marginBottom: 4 }}>📷 Per Foto eintragen</div>
       <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 8 }}>
         {art === "medikament" ? "Packung oder Beipackzettel abfotografieren" : "Dose oder Etikett mit den Inhaltsstoffen abfotografieren"} – die App liest alles ab und rechnet es auf deine Einnahme um.
@@ -52,12 +52,12 @@ export default function PraeparatFoto({ art, onUebernehmen }) {
               style={{ flex: 1, border: `1.5px solid ${cardBorder}`, borderRadius: 12, padding: "10px 11px", fontSize: 14, fontFamily: "inherit" }}
             />
             {diktat.verfuegbar && (
-              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "#FBEAE7" : "#EEF4FF", borderRadius: 12, width: 44, height: 42, fontSize: 20, cursor: "pointer" }}>
+              <button type="button" onClick={diktat.umschalten} aria-label={diktat.hoert ? "Aufnahme stoppen" : "Diktieren"} style={{ border: "none", background: diktat.hoert ? "color-mix(in srgb, #FBEAE7 var(--mp-flaeche), var(--mp-karte))" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, width: 44, height: 42, fontSize: 20, cursor: "pointer" }}>
                 {diktat.hoert ? "⏹" : "🎤"}
               </button>
             )}
           </div>
-          <label style={{ display: "block", textAlign: "center", marginTop: 8, borderRadius: 12, padding: "11px 8px", background: "#EEF4FF", color: "#2D6FD6", fontWeight: 800, fontSize: 14, cursor: laeuft ? "default" : "pointer", opacity: laeuft ? 0.6 : 1 }}>
+          <label style={{ display: "block", textAlign: "center", marginTop: 8, borderRadius: 12, padding: "11px 8px", background: "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #2D6FD6 var(--mp-schrift), var(--mp-schrift-hell))", fontWeight: 800, fontSize: 14, cursor: laeuft ? "default" : "pointer", opacity: laeuft ? 0.6 : 1 }}>
             {laeuft ? "Liest ab…" : art === "medikament" ? "📷 Packung abfotografieren" : "📷 Dose abfotografieren"}
             <input
               type="file"

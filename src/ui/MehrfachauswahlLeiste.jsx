@@ -19,7 +19,7 @@ export default function MehrfachauswahlLeiste({ anzahlAusgewaehlt, alleAusgewaeh
       <button
         type="button"
         onClick={onAlleUmschalten}
-        style={{ border: "none", background: "transparent", color: accentDark, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 0 }}
+        style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 0 }}
       >
         {alleAusgewaehlt ? "Auswahl aufheben" : "Alle auswählen"}
       </button>

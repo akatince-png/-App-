@@ -141,7 +141,7 @@ export default function BildschirmzeitView({ onHome, embedded = false }) {
                 minHeight: 64,
                 borderRadius: 16,
                 border: `1px solid ${cardBorder}`,
-                background: "#FAFBFA",
+                background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))",
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",

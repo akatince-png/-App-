@@ -155,7 +155,7 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
           maxWidth: 460,
           maxHeight: "85vh",
           overflowY: "auto",
-          background: "#fff",
+          background: "var(--mp-karte)",
           borderRadius: "22px 22px 0 0",
           padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
           boxShadow: "0 -8px 30px rgba(0, 0, 0, 0.25)",
@@ -180,7 +180,7 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
         {item.detail && <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 10 }}>{item.detail}</div>}
 
         {item.ausnahmeId && (
-          <div style={{ fontSize: 11.5, color: accentDark, background: accentSoft, borderRadius: 10, padding: "6px 10px", marginBottom: 10 }}>
+          <div style={{ fontSize: 11.5, color: "var(--mp-accent-dark-text)", background: accentSoft, borderRadius: 10, padding: "6px 10px", marginBottom: 10 }}>
             Für diesen Tag ist eine Ausnahme gespeichert (weicht vom sonst geplanten Ablauf ab).
           </div>
         )}
@@ -206,7 +206,7 @@ export default function TagesEintragBearbeiten({ item, datum, onNavigateKategori
                   padding: "12px 0",
                   fontSize: 13.5,
                   fontWeight: 700,
-                  color: accentDark,
+                  color: "var(--mp-accent-dark-text)",
                   cursor: "pointer",
                 }}
               >

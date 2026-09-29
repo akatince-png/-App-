@@ -18,7 +18,7 @@ const chip = (an) => ({
   fontWeight: 700,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: an ? "#1B2350" : "#EEF4FF",
+  background: an ? "#1B2350" : "color-mix(in srgb, #EEF4FF var(--mp-flaeche), var(--mp-karte))",
   color: an ? "#fff" : "#2D6FD6",
 });
 
@@ -36,7 +36,7 @@ export default function WochenCheckKarte() {
 
   if (fertig) {
     return (
-      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "#EAF7F0", border: "1.5px solid #BFE5D0", fontSize: 13.5, fontWeight: 700 }}>
+      <div role="status" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "color-mix(in srgb, #EAF7F0 var(--mp-flaeche), var(--mp-karte))", border: "1.5px solid color-mix(in srgb, #BFE5D0 var(--mp-flaeche), var(--mp-rand-dunkel))", fontSize: 13.5, fontWeight: 700 }}>
         🔁 Wochen-Check gespeichert – dein Coach sieht ihn. Gute neue Woche!
       </div>
     );
@@ -52,11 +52,11 @@ export default function WochenCheckKarte() {
   };
 
   return (
-    <section aria-label="Wochen-Check" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "#fff", border: "2px solid #2E9C86" }}>
+    <section aria-label="Wochen-Check" style={{ marginBottom: 14, borderRadius: 18, padding: 14, background: "var(--mp-karte)", border: "2px solid #2E9C86" }}>
       <div style={{ fontWeight: 900, fontSize: 15.5 }}>🔁 Wochen-Check · 2 Minuten</div>
       {schwach ? (
         <>
-          <div style={{ fontSize: 13, background: "#FFF6E0", borderRadius: 12, padding: "8px 10px", margin: "8px 0" }}>
+          <div style={{ fontSize: 13, background: "color-mix(in srgb, #FFF6E0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", margin: "8px 0" }}>
             {schwach.icon} <b>{schwach.name}</b> hat diese Woche an {schwach.erledigt} von {schwach.von} Tagen geklappt.
           </div>
           <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "10px 0 6px" }}>WAS HAT GESTÖRT?</div>
@@ -77,7 +77,7 @@ export default function WochenCheckKarte() {
           </div>
         </>
       ) : (
-        <div style={{ fontSize: 13, background: "#EAF7F0", borderRadius: 12, padding: "8px 10px", margin: "8px 0" }}>💪 Alle Bausteine liefen diese Woche stabil.</div>
+        <div style={{ fontSize: 13, background: "color-mix(in srgb, #EAF7F0 var(--mp-flaeche), var(--mp-karte))", borderRadius: 12, padding: "8px 10px", margin: "8px 0" }}>💪 Alle Bausteine liefen diese Woche stabil.</div>
       )}
       <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, margin: "12px 0 6px" }}>WIE LIEF DIE WOCHE INSGESAMT?</div>
       <div role="group" aria-label="Wie lief die Woche?" style={{ display: "flex", justifyContent: "space-between" }}>
@@ -88,7 +88,7 @@ export default function WochenCheckKarte() {
             aria-label={s.label}
             aria-pressed={stimmung === s.wert}
             onClick={() => setStimmung(s.wert)}
-            style={{ fontSize: 28, border: "none", borderRadius: 14, padding: 6, cursor: "pointer", background: stimmung === s.wert ? "#FFF1D6" : "transparent", outline: stimmung === s.wert ? "2px solid #E0A21B" : "none" }}
+            style={{ fontSize: 28, border: "none", borderRadius: 14, padding: 6, cursor: "pointer", background: stimmung === s.wert ? "color-mix(in srgb, #FFF1D6 var(--mp-flaeche), var(--mp-karte))" : "transparent", outline: stimmung === s.wert ? "2px solid #E0A21B" : "none" }}
           >
             {s.emoji}
           </button>

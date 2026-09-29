@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Shell, PrimaryButton } from "../../ui/primitives";
-import { accentDark, danger, textMain, textMuted } from "../../ui/theme";
+import { accentDark, danger, hexZuRgba, textMain, textMuted } from "../../ui/theme";
 import CoachOrb from "../../ui/CoachOrb";
 import OnboardingNavArrows from "../../ui/OnboardingNavArrows";
 import VorlesenToggle from "../../ui/VorlesenToggle";
@@ -199,7 +199,7 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
           <button
             type="button"
             onClick={() => setVorschau(null)}
-            style={{ border: "none", background: "transparent", color: accentDark, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 8 }}
+            style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 13, fontWeight: 700, cursor: "pointer", padding: 8 }}
           >
             Zurück zum Gespräch
           </button>
@@ -247,8 +247,8 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
               justifyContent: "center",
               borderRadius: "50%",
               border: "none",
-              background: hoert ? "#FDE9EC" : "rgba(0,0,0,0.05)",
-              color: hoert ? danger : accentDark,
+              background: hoert ? "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))" : "rgba(0,0,0,0.05)",
+              color: hoert ? danger : "var(--mp-accent-dark-text)",
               cursor: "pointer",
               flexShrink: 0,
             }}
@@ -264,7 +264,7 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
           style={{
             flex: 1,
             border: "none",
-            borderBottom: `1.5px solid ${textMuted}55`,
+            borderBottom: `1.5px solid ${hexZuRgba(textMuted, 0.33)}`,
             background: "transparent",
             padding: "8px 2px",
             fontSize: 15,
@@ -279,7 +279,7 @@ export default function OnboardingCoachFreitext({ onFertig, onBack }) {
           style={{
             border: "none",
             background: "transparent",
-            color: laden || !eingabe.trim() ? textMuted : accentDark,
+            color: laden || !eingabe.trim() ? textMuted : "var(--mp-accent-dark-text)",
             fontWeight: 700,
             fontSize: 14,
             cursor: laden || !eingabe.trim() ? "not-allowed" : "pointer",

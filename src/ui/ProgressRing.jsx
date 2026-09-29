@@ -22,7 +22,7 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
   const circumference = 2 * Math.PI * r;
   const cx = size / 2;
   const cy = size / 2;
-  const dark = color.startsWith("var(") ? verdunkeln(color, 32) : darken(color);
+  const dark = color.startsWith("#") ? darken(color) : verdunkeln(color, 32);
   const gradientId = useId();
   const glowId = useId();
 
@@ -46,7 +46,7 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
           </feMerge>
         </filter>
       </defs>
-      <circle cx={cx} cy={cy} r={r} fill="none" style={{ stroke: color.startsWith("var(") ? hexZuRgba(color, 0.13) : `${color}22` }} strokeWidth={stroke} />
+      <circle cx={cx} cy={cy} r={r} fill="none" style={{ stroke: color.startsWith("#") ? `${color}22` : hexZuRgba(color, 0.13) }} strokeWidth={stroke} />
       {pct > 0 && (
         <circle
           cx={cx}
@@ -64,7 +64,7 @@ export default function ProgressRing({ done, total, size = 76, stroke = 8, color
         />
       )}
       {pct > 0 && <circle cx={dotX} cy={dotY} r={stroke * 0.65} style={{ fill: dark }} className="mp-ring-dot" />}
-      <text x="50%" y="53%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.24} fontWeight="800" fill={textMain}>
+      <text x="50%" y="53%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.24} fontWeight="800" style={{ fill: textMain }}>
         {total > 0 ? `${Math.round(pct * 100)}%` : "—"}
       </text>
     </svg>

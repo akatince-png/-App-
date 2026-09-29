@@ -107,7 +107,7 @@ export default function NeuesProtokollBestaetigenView({ onBestaetigt, onParallel
             padding: "12px 20px",
             borderRadius: 12,
             border: `1px solid ${cardBorder}`,
-            background: "#fff",
+            background: "var(--mp-karte)",
             fontSize: 14,
             fontWeight: 600,
             cursor: laedt ? "not-allowed" : "pointer",

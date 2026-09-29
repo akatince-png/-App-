@@ -33,7 +33,7 @@ const LEERE_GEWOHNHEIT = { name: "", icon: "🌱", uhrzeit: "", urzeitVon: "", u
 function Fortschrittsbalken({ tage, ziel }) {
   const pct = ziel ? Math.min(100, Math.round((tage / ziel) * 100)) : 0;
   return (
-    <div style={{ height: 8, borderRadius: 4, background: "#EEF1EE", overflow: "hidden" }}>
+    <div style={{ height: 8, borderRadius: 4, background: "color-mix(in srgb, #EEF1EE var(--mp-flaeche), var(--mp-karte))", overflow: "hidden" }}>
       <div style={{ height: "100%", width: `${pct}%`, background: "#5E9468", borderRadius: 4, transition: "width 0.2s" }} />
     </div>
   );
@@ -120,7 +120,7 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
           </button>
           <button
             onClick={() => setZielEditOpen(false)}
-            style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${cardBorder}`, background: "#fff", color: textMuted, fontSize: 12, cursor: "pointer" }}
+            style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${cardBorder}`, background: "var(--mp-karte)", color: textMuted, fontSize: 12, cursor: "pointer" }}
           >
             Abbrechen
           </button>
@@ -139,7 +139,7 @@ function GewohnheitKarte({ g, heuteErledigt, onToggleHeute, onEntfernen, onZielA
             <button
               onClick={() => onAkutFavoritUmschalten(g.id, g.akutFavorit)}
               title="Wird im Akutmodus auf der Startseite vorgeschlagen"
-              style={{ border: "none", background: "transparent", color: g.akutFavorit ? "#B45309" : textMuted, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+              style={{ border: "none", background: "transparent", color: g.akutFavorit ? "color-mix(in srgb, #B45309 var(--mp-schrift), var(--mp-schrift-hell))" : textMuted, fontSize: 11.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
             >
               {g.akutFavorit ? "⭐ Akut-Übung ✓" : "⭐ Als Akut-Übung merken"}
             </button>

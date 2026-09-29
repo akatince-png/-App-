@@ -25,7 +25,7 @@ export default function NumberWheelField({ value, onChange, min, max, step = 1, 
           padding: "14px 18px",
           borderRadius: 16,
           border: `1.5px solid ${offen ? textMain : cardBorder}`,
-          background: "#FAFBFA",
+          background: "color-mix(in srgb, #FAFBFA var(--mp-flaeche), var(--mp-karte))",
           color: aktuell ? textMain : textMuted,
           fontSize: 18,
           fontWeight: 700,
@@ -40,7 +40,7 @@ export default function NumberWheelField({ value, onChange, min, max, step = 1, 
         <span style={{ fontSize: 14, color: textMuted }}>{offen ? "▲" : "▼"}</span>
       </button>
       {offen && (
-        <div style={{ marginTop: 8, border: `1px solid ${cardBorder}`, borderRadius: 16, background: "#fff", padding: "4px 14px" }}>
+        <div style={{ marginTop: 8, border: `1px solid ${cardBorder}`, borderRadius: 16, background: "var(--mp-karte)", padding: "4px 14px" }}>
           <WheelPicker values={values} value={aktuell || values[0]} onChange={onChange} />
         </div>
       )}
