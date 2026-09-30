@@ -43,6 +43,9 @@ import { TrainingStartAuswahl, WorkflowStartAuswahl } from "../ui/SpontanStart";
 import { workflowStartMerken } from "../utils/workflowStart";
 import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
+import HeutePlanKarte from "../ui/HeutePlanKarte";
+import WocheKarte from "../ui/WocheKarte";
+import { useTagesBloecke } from "../data/useTagesBloecke";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
@@ -346,6 +349,15 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   );
 
   useTagGeschafftFeier(heuteItems);
+  // Wochen-Kalender auf der Startseite (30.09.): Mo–So der laufenden Woche.
+  const bloeckeFuer = useTagesBloecke();
+  const wocheTage = useMemo(() => {
+    const montag = addDays(new Date(today.getFullYear(), today.getMonth(), today.getDate()), -((today.getDay() + 6) % 7));
+    return Array.from({ length: 7 }, (_, i) => {
+      const datum = addDays(montag, i);
+      return { datum, bloecke: bloeckeFuer(datum) };
+    });
+  }, [bloeckeFuer, today]);
   const zusatzEtikett = useZusatzEtikett();
 
   // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
@@ -1119,6 +1131,16 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
           Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
           Akut-Knopf. Als Nächstes und Quests folgen darunter. */}
+      {/* Startseite (30.09., Nutzerin): Tagesplan zum Abhaken, Kalender für die
+          Woche, darunter das Diagramm (Gehirn) – alles schnell im Blick. */}
+      <HeutePlanKarte
+        items={displayItems}
+        tagStr={tagStr}
+        direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
+        onToggle={(i) => (i.bundleIds ? buendelErledigen(i) : direktErledigbar(i) ? direktErledigen(i) : onOpenView("tagesplan"))}
+        onOpenPlan={() => onOpenView("tagesplan")}
+      />
+      {!isEmergencyMode && <WocheKarte tage={wocheTage} heute={today} onOeffnen={() => onOpenView("kalender")} />}
       <GehirnKarte
         kategorien={ordenKategorien}
         widgets={zeitraumWidgets}

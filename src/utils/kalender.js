@@ -54,7 +54,7 @@ export function alltagAmTag(eintrag, date) {
 const STANDARD_DAUER = { mahlzeit: 30, training: 60, supplement: 10, hormon: 10, gewohnheit: 15, workflow: 30, zeitblock: 60 };
 
 // Alle Blöcke eines Tages, nach Beginn sortiert.
-export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, alltagEintraege = [], alltagBereiche = [], alltagErledigt = {} } = {}) {
+export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, alltagEintraege = [], alltagBereiche = [], alltagErledigt = {}, ereignisse = [] } = {}) {
   const bloecke = [];
   for (const [key, meta] of [
     ["abend", ROUTINE_META.abendroutine],
@@ -80,6 +80,10 @@ export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, al
     const meta = bereichMeta(e, alltagBereiche);
     const tag = toLocalISODate(date);
     bloecke.push({ key: `a-${e.id}`, start, ende: minuten(e.ende) ?? start + 60, titel: e.titel, icon: meta.icon, farbe: meta, art: e.bereich, alltag: e, done: !!alltagErledigt[`${e.id}|${tag}`] });
+  }
+  // Spontan Passiertes (30.09., utils/ereignisse.js) – schon geschehen, daher „erledigt“.
+  for (const e of ereignisse) {
+    bloecke.push({ key: e.key, start: e.start, ende: e.ende, titel: e.titel, icon: null, symbol: e.symbol, farbe: KATEGORIE_META[e.kategorie] || KATEGORIE_META.zeitblock, art: "ereignis", ereignis: true, done: true });
   }
   return bloecke.sort((a, b) => a.start - b.start || b.ende - a.ende);
 }

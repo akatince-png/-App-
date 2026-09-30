@@ -172,6 +172,16 @@ function leseOverridesAusUrl() {
       { id: "es2", datum: heute, uhrzeit: "12:45", text: "125 g Lachs, 250 g Kartoffeln, Brokkoli", posten: [], werte: { kcal: 520, eiweiss: 38, fett: 16, kh: 52, zucker: 3, ballast: 8, omega3: 3100, epaDha: 2900, omega6: 2500 } },
     ];
   }
+  // ?ereignisse=1: spontan Passiertes heute (30.09.) – Getränk, Snack, Nickerchen.
+  if (params.get("ereignisse") === "1") {
+    const h = new Date();
+    const heute = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-${String(h.getDate()).padStart(2, "0")}`;
+    overrides.spontanEintraege = [
+      { id: "sp1", art: "getraenk", datum: heute, uhrzeit: "08:10", mengeMl: 330, name: "Kaffee" },
+      { id: "sp2", art: "nickerchen", datum: heute, uhrzeit: "13:30", dauerMin: 20, name: "" },
+    ];
+    overrides.essenEintraege = [...(overrides.essenEintraege || []), { id: "es9", datum: heute, uhrzeit: "10:15", text: "Apfel und Handvoll Nüsse", posten: [], werte: { kcal: 260 } }];
+  }
   // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).

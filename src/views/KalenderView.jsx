@@ -3,9 +3,10 @@ import { Shell, Card, Pill, TextInput, Label } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
-import { buildDayItems } from "../utils/dayItems";
+import { useTagesBloecke } from "../data/useTagesBloecke";
+import SchnellIcon from "../ui/SchnellIcon";
 import { addDays, sameDay, toLocalISODate } from "../utils/dates";
-import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, bloeckeFuerTag, eigeneBereichMeta, hhmm, konflikte, konflikteFuerEintrag, monatsRaster, spaltenVerteilen } from "../utils/kalender";
+import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, eigeneBereichMeta, hhmm, konflikte, konflikteFuerEintrag, monatsRaster, spaltenVerteilen } from "../utils/kalender";
 import Umschalter from "../ui/Umschalter";
 
 // Kalender „Mein Alltag“ (28.09., Vorschau freigegeben). Tag als Zeitleiste,
@@ -21,38 +22,13 @@ const BIS = 24 * 60;
 const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const startOfWeek = (d) => addDays(new Date(d.getFullYear(), d.getMonth(), d.getDate()), -((d.getDay() + 6) % 7));
 
-function useTagesBloecke() {
-  const a = useAppData();
-  return (date) => {
-    const items = buildDayItems(date, {
-      hormonPlan: a.hormonPlan || [],
-      hormonErledigt: a.hormonErledigt || {},
-      hormonDosierung: a.hormonDosierung || {},
-      supplemente: a.supplemente || [],
-      supplementErledigt: a.supplementErledigt || {},
-      mahlzeiten: a.mahlzeiten || [],
-      mahlzeitErledigt: a.mahlzeitErledigt || {},
-      mealWochenplan: a.mealWochenplan || [],
-      trainingEintraege: a.trainingEintraege || [],
-      trainingNachDatum: a.trainingNachDatum || null,
-      trainingWochenplan: a.trainingWochenplan || [],
-      trainingTemplates: a.trainingTemplates || [],
-      gewohnheiten: a.gewohnheiten || [],
-      gewohnheitErledigt: a.gewohnheitErledigt || {},
-      workflowPlaene: a.workflowPlaene || [],
-      workflowPresets: a.workflowPresets || [],
-      projekte: a.projekte || [],
-      zeitbloecke: a.zeitbloecke || [],
-      ausnahmenNachSchluessel: a.ausnahmenNachSchluessel || null,
-    });
-    return bloeckeFuerTag(date, {
-      items,
-      routineEinstellungen: a.routineEinstellungen || {},
-      alltagEintraege: a.alltagEintraege || [],
-      alltagBereiche: a.alltagBereiche || [],
-      alltagErledigt: a.alltagErledigt || {},
-    });
-  };
+// Kleines Linien-Symbol vor dem Titel (Ereignisse, 30.09.).
+function SymbolInline({ name, groesse }) {
+  return (
+    <span style={{ display: "inline-flex", verticalAlign: "-2px", marginRight: 3 }}>
+      <SchnellIcon name={name} size={groesse} strich={2.4} />
+    </span>
+  );
 }
 
 function Block({ b, pxProMin, klein, onClick, konflikt = false }) {
@@ -75,7 +51,7 @@ function Block({ b, pxProMin, klein, onClick, konflikt = false }) {
         width: `calc(${breite}% - 2px)`,
         background: b.farbe.bg,
         border: "none",
-        borderLeft: `3px solid ${b.farbe.dot}`,
+        borderLeft: b.ereignis ? `3px dotted ${b.farbe.dot}` : `3px solid ${b.farbe.dot}`,
         color: b.farbe.text,
         borderRadius: klein ? 4 : 8,
         padding: klein ? "1px 3px" : "3px 6px",
@@ -83,7 +59,7 @@ function Block({ b, pxProMin, klein, onClick, konflikt = false }) {
         fontSize: klein ? 9 : 12,
         lineHeight: 1.25,
         fontWeight: 700,
-        opacity: b.done ? 0.55 : 1,
+        opacity: b.done && !b.ereignis ? 0.55 : 1,
         boxSizing: "border-box",
         outline: konflikt ? "2px solid #E8A33B" : "none",
         outlineOffset: -1,
@@ -95,15 +71,15 @@ function Block({ b, pxProMin, klein, onClick, konflikt = false }) {
     >
       {klein ? (
         <span>
-          {konflikt ? "⚠️ " : b.done ? "✓ " : b.icon ? `${b.icon} ` : ""}
+          {b.symbol ? <SymbolInline name={b.symbol} groesse={9} /> : konflikt ? "⚠️ " : b.done ? "✓ " : b.icon ? `${b.icon} ` : ""}
           {b.titel}
         </span>
       ) : (
         <>
           <span style={{ display: "block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
-            {konflikt ? "⚠️ " : b.icon ? `${b.icon} ` : ""}
+            {b.symbol ? <SymbolInline name={b.symbol} groesse={12} /> : konflikt ? "⚠️ " : b.icon ? `${b.icon} ` : ""}
             {b.titel}
-            {b.done ? " ✓" : ""}
+            {b.done && !b.ereignis ? " ✓" : ""}
           </span>
           {hoehe > 30 && <span style={{ display: "block", fontWeight: 500, opacity: 0.8 }}>{hhmm(b.start)}–{hhmm(b.ende)}</span>}
         </>

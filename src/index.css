@@ -646,9 +646,9 @@ input[type="time"]::-webkit-date-and-time-value {
   transition: background 0.15s, color 0.15s;
 }
 .mp-segment > button[aria-pressed="true"] {
-  background: var(--mp-karte);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mp-karte), white 18%) 0%, var(--mp-karte) 100%);
   color: var(--mp-text);
-  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.14);
+  box-shadow: 0 6px 14px -6px rgba(16, 24, 40, 0.3), 0 1px 2px rgba(16, 24, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 /* Datumsband im Tagesplan (29.09.): ohne Kästchen, gewählter Tag als
    farbige Kapsel, heute mit Punkt darunter. */
@@ -831,8 +831,11 @@ input[type="time"]::-webkit-date-and-time-value {
   place-items: center;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, var(--mp-accent), color-mix(in srgb, var(--mp-accent), #2ac3c9 45%));
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--mp-accent) 40%, transparent);
+  /* Plastisch (30.09.) wie die Kreise im Schnellmenü. */
+  background: radial-gradient(120% 100% at 28% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 52%),
+    linear-gradient(160deg, color-mix(in srgb, var(--mp-accent), white 22%), var(--mp-accent) 58%, color-mix(in srgb, var(--mp-accent), black 10%));
+  box-shadow: 0 14px 24px -8px color-mix(in srgb, var(--mp-accent) 60%, transparent), 0 3px 8px rgba(16, 24, 40, 0.14),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -5px 10px rgba(0, 0, 0, 0.14);
 }
 /* Sprechblase „Dein Coach hat geschrieben“ (29.09.) über dem Mittelknopf
    der Leiste, mit Spitze nach unten; ohne Leiste (Computer) unten rechts. */

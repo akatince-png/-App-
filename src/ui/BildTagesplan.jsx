@@ -3,7 +3,10 @@ import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
 import { blockHoehe, dauerText, minZuZeit, planBloecke } from "../utils/bildTagesplan";
 import { useFokusTimer } from "../data/useFokusTimer";
 import { Ring } from "./TimerRing";
-import { textMain, textMuted, verdunkeln } from "./theme";
+import { textMain, textMuted, verdunkeln, hexZuRgba } from "./theme";
+import PlastikSymbol from "./PlastikSymbol";
+import SchnellIcon from "./SchnellIcon";
+import { plastikFarbe, plastikHell } from "./plastik";
 
 // Bild-Tagesplan (27.09., Nutzerinnen-Wunsch nach dem Marktvergleich): der
 // Tag als senkrechte Zeitleiste mit großen Bild-Symbolen (🧺 Wäsche · 30 Min),
@@ -48,12 +51,16 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
           background: erledigt ? verdunkeln(f.dot, 6) : f.bg,
           border: b.laeuft || meinTimer ? `2.5px solid ${verdunkeln(f.dot, 10)}` : `1.5px solid ${f.dot}55`,
           opacity: b.vorbei && !erledigt ? 0.72 : 1,
-          boxShadow: b.laeuft ? `0 8px 18px ${f.dot}40` : "none",
+          // Plastisch (30.09.): jeder Block liegt mit weichem Schatten auf.
+          boxShadow: b.laeuft
+            ? `0 12px 24px -8px ${hexZuRgba(f.dot, 0.45)}, inset 0 1px 0 rgba(255,255,255,.55)`
+            : `0 6px 16px -8px ${hexZuRgba(f.dot, 0.4)}, 0 1px 2px rgba(16,24,40,.05), inset 0 1px 0 rgba(255,255,255,.55)`,
           position: "relative",
         }}
       >
-        <span style={{ position: "relative", zIndex: 3, width: 48, height: 48, borderRadius: 15, background: "var(--mp-karte)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 27, flexShrink: 0, boxShadow: "0 3px 8px rgba(0,0,0,0.08)" }} aria-hidden="true">
-          {b.symbol}
+        {/* Bereichs-Symbol als plastische Kugel (30.09., Nutzerin) statt Emoji. */}
+        <span style={{ position: "relative", zIndex: 3 }}>
+          <PlastikSymbol kategorie={b.kategorie} farbe={f.dot} size={46} eckig />
         </span>
         <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: erledigt ? "#fff" : f.text, lineHeight: 1.25 }}>{b.name}</div>
@@ -77,19 +84,21 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
                   {Math.ceil(restSek / 60)}′
                 </Ring>
               ) : (
-                <span style={{ width: 42, height: 42, borderRadius: 21, background: "var(--mp-karte)", border: `2px solid ${f.dot}`, color: verdunkeln(f.dot, 10), display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900 }}>▶</span>
+                <span style={{ width: 42, height: 42, borderRadius: 21, ...plastikHell(), color: verdunkeln(f.dot, 10), display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  <SchnellIcon name="play" size={16} />
+                </span>
               )}
             </button>
           )}
           {erledigt ? (
-            <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 10, background: "rgba(255,255,255,0.92)", color: verdunkeln(f.dot, 12) }}>✓ Erledigt</span>
+            <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>✓ Erledigt</span>
           ) : (istRoutine || b.kategorie === "training" || b.onConfirm) && b.kategorie !== "zeitblock" && b.kategorie !== "workflow" ? (
             <button
               type="button"
               className="mp-tap"
               onClick={() => onAktion(b)}
               aria-label={istRoutine ? `${b.name} starten` : b.kategorie === "training" ? undefined : `${b.name} erledigt`}
-              style={{ border: "none", borderRadius: 11, padding: "7px 10px", fontSize: 12, fontWeight: 800, background: f.dot, color: "#fff", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+              style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
             >
               {aktionText}
             </button>

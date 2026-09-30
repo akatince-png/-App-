@@ -7,7 +7,9 @@ import { useTagGeschafftFeier } from "../ui/useTagGeschafftFeier";
 import ViewHeader from "../ui/ViewHeader";
 import ProgressRing from "../ui/ProgressRing";
 import { accent, accentSoft, cardBorder, danger, textMuted, verdunkeln } from "../ui/theme";
-import Icon from "../ui/Icon";
+import PlastikSymbol from "../ui/PlastikSymbol";
+import SchnellIcon from "../ui/SchnellIcon";
+import { istZuFrueh } from "../utils/fruehAbhaken";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
 import { statusText } from "../utils/motivation";
@@ -42,15 +44,6 @@ function hourLabel(hour) {
 // werden: Sicher, dass du das schon erledigt hast?“). Gilt für alles mit
 // Uhrzeit, das mehr als 15 Min. vor der geplanten Zeit (oder an einem
 // späteren Tag) abgehakt wird. Zurücknehmen fragt nie nach.
-const FRUEH_TOLERANZ_MIN = 15;
-function istZuFrueh(item, tagStr, jetzt = new Date()) {
-  if (!item || item.done || !item.uhrzeit || !/^\d{1,2}:\d{2}/.test(item.uhrzeit)) return false;
-  const heute = toLocalISODate(jetzt);
-  if (tagStr > heute) return true;
-  if (tagStr < heute) return false;
-  const [h, m] = item.uhrzeit.split(":").map(Number);
-  return h * 60 + m - (jetzt.getHours() * 60 + jetzt.getMinutes()) > FRUEH_TOLERANZ_MIN;
-}
 function mitFruehFrage(item, tagStr, setFruehFrage) {
   if (!item.onConfirm || ["training", "zeitblock", "workflow"].includes(item.kategorie)) return item;
   const weiter = item.onConfirm;
@@ -528,14 +521,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: erledigt ? "rgba(255, 255, 255, 0.28)" : "var(--mp-karte)",
+                            background: "transparent",
                           }}
                         >
-                          {k.icon ? (
-                            <Icon name={k.icon} size={16} color={erledigt ? "#fff" : kFarbe} />
-                          ) : (
-                            <div style={{ width: 8, height: 8, borderRadius: 4, background: erledigt ? "var(--mp-karte)" : kFarbe }} />
-                          )}
+                          <PlastikSymbol kategorie={item.kategorie} farbe={kFarbe} size={32} stufe="flach" />
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 14.5, fontWeight: 700, color: erledigt ? "#fff" : undefined }}>
@@ -745,7 +734,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         optionen={[
           ["tag", "Tag"],
           ["woche", "Woche"],
-          ["kalender", "📅 Kalender"],
+          ["kalender", <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><SchnellIcon name="kalender" size={16} />Kalender</span>],
         ]}
       />
 
@@ -782,8 +771,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           onWahl={setAnsicht}
           style={{ marginBottom: 14 }}
           optionen={[
-            ["bild", "🖼️ Bild"],
-            ["liste", "☰ Liste"],
+            ["bild", <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><SchnellIcon name="raster" size={16} />Bild</span>],
+            ["liste", <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><SchnellIcon name="liste" size={16} />Liste</span>],
           ]}
         />
       )}

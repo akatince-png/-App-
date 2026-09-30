@@ -115,4 +115,4 @@ testen, aber realistisch. Deshalb:
   Abend (die App schreibt sie sofort) – im Bericht nicht als echtes Verhalten werten.
 - `AKA_TEIL=morgen|abend` gibt es im Skript noch, wird aber nicht mehr genutzt.
 - Der Tagesplan startet in der Bild-Ansicht; das Skript fotografiert sie (02a) und
-  schaltet auf „☰ Liste“. `AKA_NUR_TAGESPLAN=1` holt nur den Tagesplan nach.
+  schaltet auf „Liste“. `AKA_NUR_TAGESPLAN=1` holt nur den Tagesplan nach.

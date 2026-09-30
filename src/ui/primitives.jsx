@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, danger, aufhellen, hexZuRgba } from "./theme";
+import { blue, blueSoft, bg, card, cardBorder, shadow, success, successSoft, textMain, textMuted, warn, warnSoft, danger, hexZuRgba } from "./theme";
+import { plastikFarbe, plastikHell } from "./plastik";
 import { BereichColorProvider, useBereichColor } from "./BereichColorContext";
 import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
 import { useDiktat } from "./useDiktat";
@@ -101,16 +102,16 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
   const basisFarbe = variant === "success" ? success : bereichAccent;
   const styles = {
     accent: {
-      background: disabled ? "color-mix(in srgb, #DADDE5 var(--mp-flaeche), var(--mp-rand-dunkel))" : `linear-gradient(180deg, ${aufhellen(basisFarbe, 8)}, ${basisFarbe})`,
+      // Plastisch (30.09., Nutzerin: „Gefühl von 2026“): wie die Kreise im Schnellmenü.
+      ...(disabled ? { background: "color-mix(in srgb, #DADDE5 var(--mp-flaeche), var(--mp-rand-dunkel))", boxShadow: "none" } : plastikFarbe(basisFarbe)),
       color: disabled ? "color-mix(in srgb, #8A91A0 var(--mp-schrift), #6B7197)" : "#fff",
-      boxShadow: disabled ? "none" : `0 6px 16px ${hexZuRgba(basisFarbe, 0.24)}`,
     },
     success: {
-      background: disabled ? "color-mix(in srgb, #DADDE5 var(--mp-flaeche), var(--mp-rand-dunkel))" : `linear-gradient(180deg, ${aufhellen(basisFarbe, 8)}, ${basisFarbe})`,
+      // Plastisch (30.09., Nutzerin: „Gefühl von 2026“): wie die Kreise im Schnellmenü.
+      ...(disabled ? { background: "color-mix(in srgb, #DADDE5 var(--mp-flaeche), var(--mp-rand-dunkel))", boxShadow: "none" } : plastikFarbe(basisFarbe)),
       color: disabled ? "color-mix(in srgb, #8A91A0 var(--mp-schrift), #6B7197)" : "#fff",
-      boxShadow: disabled ? "none" : `0 6px 16px ${hexZuRgba(basisFarbe, 0.24)}`,
     },
-    ghost: { background: "var(--mp-karte)", color: textMain, border: `1px solid ${cardBorder}` },
+    ghost: { ...plastikHell(), color: textMain },
   };
   return (
     <button
@@ -127,7 +128,7 @@ export function PrimaryButton({ children, onClick, disabled, variant = "accent",
         width: "100%",
         minHeight: 52,
         padding: "14px 18px",
-        borderRadius: 14,
+        borderRadius: 16,
         border: "none",
         fontSize: 15.5,
         fontWeight: 700,

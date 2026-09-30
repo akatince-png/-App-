@@ -251,7 +251,7 @@ try {
   // Seit 27.09. startet der Tagesplan in der Bild-Ansicht (Zeitleiste). Ein
   // Foto davon, dann auf die Liste umschalten – dort liegen die Abhak-Knöpfe,
   // die dieses Skript bedient (die Wahl bleibt für spätere Aufrufe gespeichert).
-  const listeKnopf = page.getByRole("button", { name: "☰ Liste" });
+  const listeKnopf = page.getByRole("button", { name: "Liste", exact: true });
   if (await listeKnopf.isVisible().catch(() => false)) {
     await foto("02a-tagesplan-bild");
     await listeKnopf.click();

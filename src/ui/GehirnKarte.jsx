@@ -269,12 +269,22 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
               ))}
             </g>
           </mask>
+          {/* Nachtmodus (30.09., Nutzerin: „Rechteck um das Gehirn“): Das
+              Überblenden (screen) wirkt auf dem iPhone bei Bildern im SVG
+              nicht zuverlässig, dann steht der dunkle Bildhintergrund als
+              Kasten da. Dieser Filter macht Dunkles direkt durchsichtig –
+              je heller ein Bildpunkt leuchtet, desto deckender bleibt er. */}
+          <filter id={`${uid}-leuchten`} colorInterpolationFilters="sRGB">
+            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.4 1.4 1.4 0 -0.12" />
+          </filter>
         </defs>
 
+        <g filter={stimmung.hell ? undefined : `url(#${uid}-leuchten)`}>
         {/* Grundbild blass (tagsüber entsättigt, abends gedimmt) … */}
-        <image href={bild.src} x="0" y="0" width={bild.b} height={bild.h} style={{ filter: stimmung.hell ? "saturate(0.3) brightness(1.06) opacity(0.72)" : "brightness(0.38) saturate(0.6)", mixBlendMode: stimmung.hell ? undefined : "screen" }} />
+        <image href={bild.src} x="0" y="0" width={bild.b} height={bild.h} style={{ filter: stimmung.hell ? "saturate(0.3) brightness(1.06) opacity(0.72)" : "brightness(0.38) saturate(0.6)" }} />
         {/* … und darüber in voller Farbe, nur wo geladen ist */}
-        <image href={bild.src} x="0" y="0" width={bild.b} height={bild.h} mask={`url(#${uid}-maske)`} style={{ mixBlendMode: stimmung.hell ? undefined : "screen" }} />
+        <image href={bild.src} x="0" y="0" width={bild.b} height={bild.h} mask={`url(#${uid}-maske)`} />
+        </g>
 
         {/* Tippflächen je Region */}
         {gehirn.regionen.map((r) => (

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { cardBorder, fontHeading, textMain } from "./theme";
+import { fontHeading, textMain } from "./theme";
+import PlastikSymbol from "./PlastikSymbol";
+import { plastikHell } from "./plastik";
+import { titelSymbol } from "../utils/bereichSymbol";
 
 // Einheitliche Kopfzeile für alle Screens: Home-Button links neben dem Logo
 // (statt wie früher rechts, klein, einzeln pro Screen dupliziert), Titel
@@ -25,15 +28,16 @@ export default function ViewHeader({ title, onHome, homeTitle = "Zur Startseite"
       window.removeEventListener("popstate", pruefen);
     };
   }, []);
+  const sym = titelSymbol(title);
   // Design 2.0 (28.09.): runde Symbol-Knöpfe (Zurück/Start) und ein großer,
   // ruhiger Titel – das Logo sitzt nur noch auf der Startseite.
   const knopf = {
     height: 44,
     minWidth: 44,
     borderRadius: 999,
-    border: `1px solid ${cardBorder}`,
-    background: "var(--mp-karte)",
-    boxShadow: "0 1px 2px rgba(20, 24, 40, 0.05)",
+    border: "none",
+    // Plastisch (30.09.): heller Knopf mit weichem Schatten.
+    ...plastikHell(),
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
@@ -58,7 +62,8 @@ export default function ViewHeader({ title, onHome, homeTitle = "Zur Startseite"
           <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
         </svg>
       </button>
-      {title && <h1 style={{ fontFamily: fontHeading, fontSize: 20, fontWeight: 700, margin: "0 0 0 4px", lineHeight: 1.25, letterSpacing: -0.2, minWidth: 0 }}>{title}</h1>}
+      {sym && <PlastikSymbol icon={sym.icon} farbe={sym.farbe} size={36} eckig />}
+      {title && <h1 style={{ fontFamily: fontHeading, fontSize: 20, fontWeight: 700, margin: sym ? 0 : "0 0 0 4px", lineHeight: 1.25, letterSpacing: -0.2, minWidth: 0 }}>{sym ? sym.rest : title}</h1>}
     </div>
   );
 }

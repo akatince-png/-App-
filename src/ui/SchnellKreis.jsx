@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import EssenEingabe from "./EssenEingabe";
 import SchnellIcon from "./SchnellIcon";
+import { plastikFarbe, plastikHell } from "./plastik";
+import { dauerAusVonBis, nickerchenBeginn } from "../utils/ereignisse";
 
 // Kreis-Schnellmenü (30.09., Nutzerin: „die Sachen, die spontan passieren
 // können, in einem Kreis – was ich anwähle, erscheint am größten“). Öffnet
@@ -43,8 +45,7 @@ const chip = (farbe) => ({
   fontWeight: 800,
   cursor: "pointer",
   fontFamily: "inherit",
-  background: farbe,
-  color: "#fff",
+  ...plastikFarbe(farbe, "flach"),
 });
 const feld = {
   flex: 1,
@@ -69,18 +70,25 @@ export default function SchnellKreis({ onSchliessen, onOeffnen }) {
   const [fertig, setFertig] = useState(null);
   const [fehler, setFehler] = useState(null);
   const [name, setName] = useState("");
+  const [getraenk, setGetraenk] = useState("Wasser");
+  const [von, setVon] = useState("");
+  const [bis, setBis] = useState("");
   const aktiv = KREIS.find((k) => k.id === wahl);
 
   const erledigt = (text) => {
     setFertig(text);
     setTimeout(onSchliessen, 1100);
   };
+  // Getränk (30.09.): zählt wie bisher zur Tagesmenge und wird zusätzlich
+  // mit Uhrzeit als Ereignis festgehalten (Kalender/Wochenansicht).
   const trinken = async (ml) => {
     await hydrationHinzufuegen?.(ml);
-    erledigt(`+${ml} ml eingetragen 💧`);
+    spontanSpeichern?.({ art: "getraenk", mengeMl: ml, name: getraenk });
+    erledigt(`+${ml} ml ${getraenk} eingetragen 💧`);
   };
-  const nickerchen = async (min) => {
-    const r = await spontanSpeichern?.({ art: "nickerchen", dauerMin: min });
+  // Nickerchen: Dauer antippen (Beginn = jetzt minus Dauer) oder von–bis.
+  const nickerchen = async (min, beginn = null) => {
+    const r = await spontanSpeichern?.({ art: "nickerchen", dauerMin: min, uhrzeit: beginn || nickerchenBeginn(new Date(), min) });
     if (r && r.ok === false) return setFehler(r.error);
     aenderungVermerken?.({
       kategorie: "schlaf",
@@ -234,7 +242,20 @@ export default function SchnellKreis({ onSchliessen, onOeffnen }) {
           ) : wahl === "trinken" ? (
             <>
               <div style={{ fontWeight: 800, marginBottom: 8 }}>
-                Wie viel hast du getrunken?
+                Was und wie viel hast du getrunken?
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                {["Wasser", "Kaffee", "Tee", "Saft", "Anderes"].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    aria-pressed={getraenk === g}
+                    onClick={() => setGetraenk(g)}
+                    style={{ ...(getraenk === g ? chip(aktiv.farbe) : { ...chip(aktiv.farbe), ...plastikHell() }), padding: "7px 12px", fontSize: 13 }}
+                  >
+                    {g}
+                  </button>
+                ))}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {[200, 330, 500].map((ml) => (
@@ -272,6 +293,20 @@ export default function SchnellKreis({ onSchliessen, onOeffnen }) {
                     {m} Min.
                   </button>
                 ))}
+              </div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mp-text-muted)", margin: "10px 0 6px" }}>oder von – bis</div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input type="time" value={von} onChange={(e) => setVon(e.target.value)} aria-label="Nickerchen von" style={feld} />
+                <span>–</span>
+                <input type="time" value={bis} onChange={(e) => setBis(e.target.value)} aria-label="Nickerchen bis" style={feld} />
+                <button
+                  type="button"
+                  disabled={!dauerAusVonBis(von, bis)}
+                  onClick={() => nickerchen(dauerAusVonBis(von, bis), von)}
+                  style={{ ...chip(aktiv.farbe), opacity: dauerAusVonBis(von, bis) ? 1 : 0.5 }}
+                >
+                  Dazu
+                </button>
               </div>
             </>
           ) : wahl === "einnahme" ? (
@@ -369,11 +404,11 @@ export default function SchnellKreis({ onSchliessen, onOeffnen }) {
         type="button"
         onClick={onSchliessen}
         style={{
-          marginTop: 12,
+          marginTop: 14,
           border: "none",
-          background: "rgba(255,255,255,.9)",
+          ...plastikHell(),
           borderRadius: 99,
-          padding: "8px 18px",
+          padding: "10px 22px",
           fontWeight: 800,
           cursor: "pointer",
           fontFamily: "inherit",

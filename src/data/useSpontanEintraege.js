@@ -4,7 +4,7 @@ import { addDays, toLocalISODate } from "../utils/dates";
 
 // Spontan-Einträge (30.09., Migration 0122): Nickerchen und zusätzliche
 // Einnahmen außerhalb des Plans (z. B. Pre-Workout). Letzte 30 Tage.
-const zuEintrag = (r) => ({ id: r.id, art: r.art, datum: r.datum, uhrzeit: r.uhrzeit ? String(r.uhrzeit).slice(0, 5) : "", dauerMin: r.dauer_min || null, name: r.name || "" });
+const zuEintrag = (r) => ({ id: r.id, art: r.art, datum: r.datum, uhrzeit: r.uhrzeit ? String(r.uhrzeit).slice(0, 5) : "", dauerMin: r.dauer_min || null, mengeMl: r.menge_ml || null, name: r.name || "" });
 
 export function useSpontanEintraege(userId) {
   const [spontanEintraege, setEintraege] = useState([]);
@@ -24,13 +24,15 @@ export function useSpontanEintraege(userId) {
   }, [userId]);
 
   const spontanSpeichern = useCallback(
-    async ({ art, dauerMin = null, name = "" }) => {
+    async ({ art, dauerMin = null, mengeMl = null, name = "", uhrzeit = null, datum = null }) => {
       const jetzt = new Date();
       const row = {
         user_id: userId,
         art,
-        datum: toLocalISODate(jetzt),
-        uhrzeit: `${String(jetzt.getHours()).padStart(2, "0")}:${String(jetzt.getMinutes()).padStart(2, "0")}`,
+        // Uhrzeit = wann es passiert ist (beim Nickerchen der Beginn).
+        datum: datum || toLocalISODate(jetzt),
+        uhrzeit: uhrzeit || `${String(jetzt.getHours()).padStart(2, "0")}:${String(jetzt.getMinutes()).padStart(2, "0")}`,
+        menge_ml: mengeMl ? Number(mengeMl) : null,
         dauer_min: dauerMin ? Number(dauerMin) : null,
         name: String(name || "").trim().slice(0, 80) || null,
       };

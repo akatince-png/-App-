@@ -10,7 +10,8 @@ test("Bild-Tagesplan: Bilder, Dauer, Jetzt-Linie, Timer läuft in der Listenansi
   const plan = page.locator("[data-bild-tagesplan]");
   await expect(plan).toBeVisible();
   const waesche = page.locator('[data-bild-block^="g-"]').filter({ hasText: "Wäsche machen" });
-  await expect(waesche).toContainText("🧺");
+  // Seit 30.09. Bereichs-Symbol als plastische Kugel statt Emoji.
+  await expect(waesche.locator('[data-plastik-symbol="gewohnheit"]')).toBeVisible();
   await expect(waesche).toContainText("30 Min");
   // 9:40 liegt in "Wäsche 9:30–10:00" → dort steht die Jetzt-Linie.
   await expect(waesche.getByText("jetzt", { exact: true })).toBeVisible();
@@ -22,7 +23,7 @@ test("Bild-Tagesplan: Bilder, Dauer, Jetzt-Linie, Timer läuft in der Listenansi
   await expect(page.locator("[data-fokus-timer]")).toContainText("noch 30 Min");
   // Liste bleibt erreichbar; dort steht der laufende Timer oben bei den
   // Tageshinweisen (seit 29.09. nicht mehr auf der schlichten Startseite).
-  await page.getByRole("button", { name: "☰ Liste" }).click();
+  await page.getByRole("button", { name: "Liste", exact: true }).click();
   await expect(plan).toHaveCount(0);
   await expect(page.locator("[data-fokus-timer]")).toContainText("LÄUFT GERADE");
   await page.locator("[data-fokus-timer]").getByRole("button", { name: "✓ Fertig" }).click();
