@@ -57,7 +57,24 @@ const BEIN_R = "M68 114 C69 138 70 158 71 182";
 
 // `werte` (optional): feste Beispielwerte statt der eigenen Tagesdaten,
 // z. B. in der Vorstellung vor dem Start (VorstellungView).
-export default function KoerperFigur({ werte = null }) {
+// Werte flach in einer Zeile (30.09., Nutzerin: „die kleinen Daten unter
+// dem Mannequin flach nebeneinander“) – unter Gehirn und Figur, über die
+// ganze Kartenbreite, bei Platzmangel seitlich wischbar.
+export function KoerperChips({ werte = null }) {
+  const d = useAppData();
+  const w = werte || koerperWerte(d);
+  return (
+    <div data-koerper-chips style={{ display: "flex", flexWrap: "nowrap", gap: 6, justifyContent: "center", overflowX: "auto", scrollbarWidth: "none", margin: "8px -4px 0", padding: "0 4px" }}>
+      {w.chips.map(([emoji, wert, label]) => (
+        <span key={label} title={label} style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 700, padding: "4px 9px", borderRadius: 99, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)", border: "1px solid rgba(var(--gk-rgb, 255, 255, 255), 0.14)", whiteSpace: "nowrap" }}>
+          {emoji} {wert}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export default function KoerperFigur({ werte = null, ohneChips = false }) {
   const d = useAppData();
   const w = werte || koerperWerte(d);
   const grund = "rgba(var(--gk-rgb, 255, 255, 255), 0.14)";
@@ -112,6 +129,7 @@ export default function KoerperFigur({ werte = null }) {
         <circle cx="60" cy="22" r="14" fill={ZONEN.kopf} fillOpacity={deck(w.kopf) * 0.9} filter={w.kopf > 0.6 ? "url(#mp-koerper-glow)" : undefined} style={{ transition: "fill-opacity .6s" }} />
         <circle cx="60" cy="22" r="14" fill="url(#mp-koerper-glanz)" />
       </svg>
+      {!ohneChips && (
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginTop: 4, maxWidth: 200 }}>
         {w.chips.map(([emoji, wert, label]) => (
           <span key={label} title={label} style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.12)", border: "1px solid rgba(var(--gk-rgb, 255, 255, 255), 0.14)", whiteSpace: "nowrap" }}>
@@ -119,6 +137,7 @@ export default function KoerperFigur({ werte = null }) {
           </span>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -15,10 +15,12 @@ test("Leiste unten führt zu den Hauptbereichen, Aka öffnet den Coach-Chat", as
   await leiste.getByRole("button", { name: "Chat mit deinem Coach" }).click();
   await expect(page).toHaveURL(/#\/coach-chat/);
   await leiste.getByRole("button", { name: "Heute" }).click();
-  // Schlichte Startseite (29.09.): drei große Knöpfe, Spielen klappt auf.
+  // Startseite (30.09.): runde Glühbirne über vier Knöpfen, Spielen klappt auf.
   const knoepfe = page.locator("[data-schnellknoepfe]");
   await expect(knoepfe.getByRole("button", { name: "Wasser eintragen" })).toBeVisible();
-  await expect(knoepfe.getByRole("button", { name: "Grad nicht gut?" })).toBeVisible();
+  await expect(knoepfe.getByRole("button", { name: "Training starten" })).toBeVisible();
+  await expect(knoepfe.getByRole("button", { name: "Workflow starten" })).toBeVisible();
+  await expect(page.locator("[data-akut-rund]")).toBeVisible();
   await knoepfe.getByRole("button", { name: "Spielen", exact: true }).click();
   await expect(page.locator("[data-spiele-auswahl]")).toContainText("Denksport & Rätsel");
   await page.locator("[data-spiele-auswahl]").getByRole("button", { name: /Denksport/ }).click();
@@ -71,4 +73,18 @@ test.describe("iPad mit feinem Zeiger", () => {
     await expect(page.locator("[data-bottomnav]")).toBeVisible();
     await expect(page.locator(".mp-app-sidebar")).toBeHidden();
   });
+});
+
+// Variante B (30.09., Vorschau): Schnellzugriff in der Leiste statt Fortschritt.
+test("Variante B: ⚡ Schnell in der Leiste öffnet Wasser, Training, Workflow, Spielen", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&spontan=1&startvariante=b#/home");
+  const leiste = page.locator("[data-bottomnav]");
+  await expect(leiste.getByRole("button", { name: "Fortschritt" })).toHaveCount(0);
+  await expect(page.locator("[data-schnellknoepfe]").getByRole("button")).toHaveCount(0);
+  await leiste.getByRole("button", { name: "Schnell" }).click();
+  await page.locator("[data-schnell-menue]").getByRole("menuitem", { name: /Training/ }).click();
+  await expect(page.locator("[data-training-auswahl]")).toBeVisible();
+  await leiste.getByRole("button", { name: "Mehr" }).click();
+  await expect(page.locator("[data-mehr-schnellzugriff]")).toContainText("Fortschritt");
 });

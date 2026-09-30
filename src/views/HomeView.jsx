@@ -41,6 +41,7 @@ import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import { TrainingStartAuswahl, WorkflowStartAuswahl } from "../ui/SpontanStart";
 import { workflowStartMerken } from "../utils/workflowStart";
+import { startVariante } from "../utils/startVariante";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
@@ -190,6 +191,23 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [spieleOffen, setSpieleOffen] = useState(false);
   // Spontan starten (30.09.): „training“ | „workflow“ | null – klappt unter den Knöpfen auf.
   const [spontanOffen, setSpontanOffen] = useState(null);
+  const variante = startVariante();
+  // Variante B: die Leiste unten öffnet Training/Workflow/Spielen hier.
+  useEffect(() => {
+    const auf = (e) => {
+      const was = e.detail;
+      if (was === "spielen") {
+        setSpontanOffen(null);
+        setSpieleOffen(true);
+      } else {
+        setSpieleOffen(false);
+        setSpontanOffen(was);
+      }
+      setTimeout(() => document.querySelector("[data-spontan-bereich]")?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
+    };
+    window.addEventListener("mp-schnell", auf);
+    return () => window.removeEventListener("mp-schnell", auf);
+  }, []);
   // Routine direkt von der Startseite starten (29.09., Nutzerin: „die
   // Stoppuhr muss man sofort finden“): "morgen"/"abend" öffnet den
   // geführten Ablauf wie im Tagesplan, null = normale Startseite.
@@ -1112,6 +1130,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         onOpenView={onOpenView}
         phase={phase}
         balkenKlappbar
+        chipsFlach
       />
       {!STARTSEITE_SCHLICHT && (
       <>
@@ -1140,19 +1159,25 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           Körper, drei große Knöpfe und die Tages-Quests. Alles andere steht
           unter Plan bzw. Mehr. */}
       {STARTSEITE_SCHLICHT && (
-        <div data-schnellknoepfe style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 20 }}>
-          {[
-            { key: "wasser", emoji: "💧", titel: "Wasser +", sub: "Glas eintragen", verlauf: "linear-gradient(145deg, #4F8DF5, #2D6FD6)", onClick: () => onOpenView("hydration"), label: "Wasser eintragen", breit: 2 },
+        <>
+        {/* Runde Glühbirne zwischen Gehirn-Karte und Knöpfen (30.09., Nutzerin). */}
+        <div style={{ display: "flex", justifyContent: "center", margin: "-2px 0 14px" }}>
+          <button type="button" className="mp-tap" aria-label="Grad nicht gut?" data-akut-rund onClick={() => setAkutOffen(true)} style={{ display: "flex", alignItems: "center", gap: 10, border: "none", background: "var(--mp-karte)", borderRadius: 99, padding: "6px 16px 6px 6px", boxShadow: "var(--mp-schatten)", cursor: "pointer", fontFamily: "inherit", color: "var(--mp-text)" }}>
+            <span aria-hidden="true" style={{ width: 46, height: 46, borderRadius: 99, background: "linear-gradient(145deg, #FFC857, #F29F05)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 4px 12px rgba(242, 159, 5, 0.35)" }}>💡</span>
+            <span style={{ fontSize: 14, fontWeight: 800 }}>Grad nicht gut?</span>
+          </button>
+        </div>
+        <div data-schnellknoepfe data-spontan-bereich style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20 }}>
+          {variante === "a" && [
+            { key: "wasser", emoji: "💧", titel: "Wasser", verlauf: "linear-gradient(145deg, #4F8DF5, #2D6FD6)", onClick: () => onOpenView("hydration"), label: "Wasser eintragen" },
+            { key: "spielen", emoji: "🎮", titel: "Spielen", verlauf: "linear-gradient(145deg, #9B8CFF, #6C5CE7)", onClick: () => { setSpontanOffen(null); setSpieleOffen((o) => !o); }, label: "Spielen", offen: spieleOffen },
             // Spontan-Knöpfe (30.09., Nutzerin: „wenn man gerade Power oder Fokus hat“).
-            { key: "training", emoji: "🏋️", titel: "Training", sub: "jetzt loslegen", verlauf: "linear-gradient(145deg, #F2685A, #D9432F)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "training" ? null : "training")); }, label: "Training starten", breit: 2, offen: spontanOffen === "training" },
-            { key: "workflow", emoji: "⏱️", titel: "Workflow", sub: "Fokus-Session", verlauf: "linear-gradient(145deg, #D45BA3, #A8327D)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "workflow" ? null : "workflow")); }, label: "Workflow starten", breit: 2, offen: spontanOffen === "workflow" },
-            { key: "spielen", emoji: "🎮", titel: "Spielen", sub: "Rätsel & Fokus", verlauf: "linear-gradient(145deg, #9B8CFF, #6C5CE7)", onClick: () => { setSpontanOffen(null); setSpieleOffen((o) => !o); }, label: "Spielen", breit: 3, offen: spieleOffen },
-            { key: "akut", emoji: "💡", titel: "Grad nicht gut?", sub: "Hilfe für jetzt", verlauf: "linear-gradient(145deg, #FFC857, #F29F05)", onClick: () => setAkutOffen(true), label: "Grad nicht gut?", breit: 3 },
+            { key: "training", emoji: "🏋️", titel: "Training", verlauf: "linear-gradient(145deg, #F2685A, #D9432F)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "training" ? null : "training")); }, label: "Training starten", offen: spontanOffen === "training" },
+            { key: "workflow", emoji: "⏱️", titel: "Workflow", verlauf: "linear-gradient(145deg, #D45BA3, #A8327D)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "workflow" ? null : "workflow")); }, label: "Workflow starten", offen: spontanOffen === "workflow" },
           ].map((k) => (
-            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.offen} onClick={k.onClick} style={{ gridColumn: `span ${k.breit}`, border: "none", borderRadius: 22, padding: "14px 8px 12px", minHeight: k.breit === 2 ? 104 : 84, background: k.verlauf, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: "0 8px 20px rgba(16, 24, 40, 0.14)", fontFamily: "inherit" }}>
-              <span style={{ fontSize: 28, lineHeight: 1 }}>{k.emoji}</span>
-              <span style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4, textAlign: "center", lineHeight: 1.15 }}>{k.titel}</span>
-              <span style={{ fontSize: 11, opacity: 0.9 }}>{k.sub}</span>
+            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.offen} onClick={k.onClick} style={{ border: "none", borderRadius: 20, padding: "12px 4px 10px", minHeight: 86, background: k.verlauf, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: "0 8px 20px rgba(16, 24, 40, 0.14)", fontFamily: "inherit" }}>
+              <span style={{ fontSize: 26, lineHeight: 1 }}>{k.emoji}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2 }}>{k.titel}</span>
             </button>
           ))}
           {spontanOffen === "training" && (
@@ -1188,6 +1213,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             </div>
           )}
         </div>
+        </>
       )}
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}

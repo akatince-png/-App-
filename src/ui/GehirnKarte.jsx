@@ -1,4 +1,4 @@
-import KoerperFigur from "./KoerperFigur";
+import KoerperFigur, { KoerperChips } from "./KoerperFigur";
 import React, { useId, useMemo, useState } from "react";
 import { berechneGehirnZeitraum, WIDGET_REGION } from "../utils/gehirn";
 import { KATEGORIEN } from "../utils/errungenschaften";
@@ -199,7 +199,7 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null, balkenKlappbar = false }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null, balkenKlappbar = false, chipsFlach = false }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
@@ -324,9 +324,10 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
       </svg>
       </div>
       <div style={{ flex: "1 1 0", minWidth: 0 }}>
-        <KoerperFigur werte={koerper} />
+        <KoerperFigur werte={koerper} ohneChips={chipsFlach} />
       </div>
       </div>
+      {chipsFlach && <KoerperChips werte={koerper} />}
       <Schnellknoepfe onWasser={onWasser} onAkut={onAkut} />
 
       {balkenKlappbar && (

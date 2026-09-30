@@ -30,6 +30,13 @@ const mockAuthValue = {
 // für e2e/*.spec.js gedacht, wirkt sich auf die echte App nicht aus.
 function leseOverridesAusUrl() {
   const params = new URLSearchParams(window.location.search);
+  // ?startvariante=b: Schnellzugriff in der Leiste (30.09., Vorschau).
+  try {
+    if (params.get("startvariante")) localStorage.setItem("mp-start-variante", params.get("startvariante"));
+    else localStorage.removeItem("mp-start-variante");
+  } catch {
+    /* ohne Speicher: Variante A */
+  }
   const overrides = {};
   // Einwilligungen (28.09.): standardmäßig erteilt; ?einwilligung=0 zeigt den
   // Einwilligungs-Schritt, ?ki=0 = KI nicht erlaubt.

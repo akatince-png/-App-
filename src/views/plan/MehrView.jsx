@@ -7,6 +7,7 @@ import TagebuchModal from "../../ui/TagebuchModal";
 import MehrHeuteKarten from "../../ui/MehrHeuteKarten";
 import { accentDark, cardBorder, shadow, textMuted } from "../../ui/theme";
 import { useT } from "../../i18n/translate";
+import { startVariante } from "../../utils/startVariante";
 
 // Dünner Shell/Header-Wrapper um MehrTab.jsx. Seit Design 2.0 (29.09.,
 // Nutzerin: „Leiste reicht, Kacheln unten weg“) stehen hier oben die
@@ -21,6 +22,8 @@ export default function MehrView({ onHome, onOpenLexikon, onOpenAdmin, onOpenErf
     { id: "kalender", icon: "calendarWeek", titel: "Kalender", sub: "Mein Alltag", onClick: () => onOpenView?.("kalender") },
     { id: "archiv", icon: "archive", titel: t("home.ordner.archiv.label"), sub: t("home.ordner.archiv.desc"), onClick: () => onOpenView?.("archiv") },
     { id: "tagebuch", icon: "book", titel: "Tagebuch", sub: "Frei schreiben", onClick: () => setTagebuchOffen(true) },
+    // Variante B: „Fortschritt“ weicht in der Leiste dem Schnellzugriff.
+    ...(startVariante() === "b" ? [{ id: "fortschritt", icon: "trophy", titel: "Fortschritt", sub: "Punkte & Erfolge", onClick: () => onOpenView?.("erfolge") }] : []),
   ];
   return (
     <Shell>
