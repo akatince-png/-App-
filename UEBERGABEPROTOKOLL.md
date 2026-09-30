@@ -212,6 +212,11 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Sicherheit + Aufräumen (30.09., live)
+- **Migration 0124 (eingespielt):** `is_admin` nicht mehr ohne Anmeldung aufrufbar; Trigger-Funktionen (`programme_fuer_neue_zuweisen`, `handle_new_user`, `profiles_is_admin_schutz`) für niemanden direkt aufrufbar. Getestet: angemeldetes Konto liest/ändert eigenes Profil wie vorher. Die übrigen Hinweise „angemeldete Nutzer können SECURITY-DEFINER-Funktion aufrufen“ sind gewollt (alle prüfen intern `is_admin(auth.uid())` bzw. `auth.uid()`). **Offen, macht die Nutzerin selbst:** „Leaked Password Protection“ im Supabase-Dashboard (Authentication → Passwort-Einstellungen) einschalten.
+- `ui/AtemTimer.jsx` gelöscht (seit `AtemFuehrung` überall ungenutzt).
+- **Farbpunkte/Priorität im Tagesplan:** nur als Beispielbild gezeigt (`docs/prioritaet/beispiel-farbpunkte.png`), noch NICHT gebaut – wartet auf Nutzerinnen-Entscheidung.
+
 ### Startseite „Heute + Woche“, Ereignisse, plastischer Look (30.09., live auf main)
 - **Startseite (Nutzerin: „Tagesplan abhaken, Kalender für die Woche, Diagramm – alles schnell zugreifbar“):** Reihenfolge Kernprogramm → **`ui/HeutePlanKarte.jsx`** (nächste 5 offene Punkte, ein Tipp = erledigt, Training/Workflow/Zeitblock öffnen den Tagesplan, zu früh → Rückfrage wie im Tagesplan) → **`ui/WocheKarte.jsx`** (Mo–So, farbige Streifen = geplant, gestrichelt = spontan; Chips mit den heutigen Ereignissen; tippen → Kalender) → Gehirn → Glühbirne → Quests. Der Kreis bleibt Standard (Nutzerin: „nicht wieder zurück auf die Knöpfe“).
 - **Ereignisse (`utils/ereignisse.js`, Test):** Getränk, Snack/Essen, Nickerchen, Extra-Einnahme erscheinen mit Uhrzeit im Kalender (Tag/Woche/Monat, `data-block="ereignis"`, gepunkteter Rand) und auf der Startseite. `bloeckeFuerTag` nimmt `ereignisse`; der Block-Hook liegt jetzt in `data/useTagesBloecke.js` (Kalender + Startseite).
@@ -249,7 +254,7 @@ Nutzerin: „den atmenden Kreis überall einbauen, wo eine Atemübung stattfinde
 - **Atem-Seite, Atem-Pausen (Tagesplan/Home), Gruppen-Atmung, „▶ Mitmachen“ in der Abhak-Liste:** liefen schon über `AtemFuehrung`.
 - **Geführter Morgen-/Abendroutine-Ablauf:** seit heute ebenfalls `AtemFuehrung` (siehe unten), abends „Gleichmäßig atmen“ (`atem_abend`, ab Woche 2) bzw. jeder Schritt mit „Atem“ im Namen.
 - **Notfall „Grad nicht gut?“ (`AkutModusKarte`, auch über „Moment festhalten → Jetzt eine Atemübung“):** nutzte noch den alten Zahlen-Timer `AtemTimer` – jetzt `AtemFuehrung`; Übung = erste eigene Übung, sonst „Ruhig werden“ aus der Bibliothek. Protokoll unverändert (`aus_akutmodus`, Gefühl danach).
-- `ui/AtemTimer.jsx` wird damit nirgends mehr benutzt (Datei bleibt vorerst, Löschen mit der Nutzerin abstimmen).
+- `ui/AtemTimer.jsx` wurde nirgends mehr benutzt und am 30.09. mit Freigabe der Nutzerin gelöscht.
 
 ### Geführte Atmung im Routine-Ablauf (30.09., live)
 Nutzerin (Foto iPad): Im geführten Ablauf mit Stoppuhr stand beim Schritt „Atemübung (2 Min.)“ nur eine Uhr, keine geführte Übung. Jetzt erkennt `RoutineAblauf` Atem-Schritte über `atemFuerRoutineSchritt` (kern_key `atem_morgen`/`atem_abend` oder „Atem/Atmung/atmen“ im Namen) und zeigt direkt `AtemFuehrung` (Kreis + Stimme, fest hinterlegte Übung, ohne KI/Video) in `[data-routine-atem]`. Nach dem Ende wird die Atemübung geloggt (`atemuebungAbschliessen`) und es geht automatisch weiter; „Schon geatmet – weiter“ überspringt. Die Soll-Uhr-Signale ruhen in diesem Schritt. Test: `e2e/atem-tagebuch.spec.js`. YouTube-Links bewusst nicht: eigene Führung läuft offline, ohne Werbung und ohne Datenweitergabe.
