@@ -8,6 +8,7 @@ import SchichtHeuteKarte from "./SchichtHeuteKarte";
 import LaufenderTimerKarte from "./TimerRing";
 import Top3Karte from "./Top3Karte";
 import WochenCheckKarte from "./WochenCheckKarte";
+import MatrixHeuteKarte from "./MatrixHeuteKarte";
 import { ATEM_START_KEY, atemZeitenHeute, uebungFuerKey } from "../utils/atemBibliothek";
 import { getADHSMode } from "../utils/adhsStorage";
 import { werHatHeute } from "../data/gruppenprotokoll";
@@ -93,6 +94,7 @@ export default function TagesHinweise({ onOpenView = oeffne, ohneTimer = false }
         </button>
       ))}
       {!ohneTimer && <LaufenderTimerKarte />}
+      <MatrixHeuteKarte onOeffnen={() => onOpenView("matrix")} />
       {proband === null && <Top3Karte />}
       {proband === null && <WochenCheckKarte />}
       {session && (

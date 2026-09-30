@@ -47,7 +47,7 @@ const BEKANNTE_FUNKTIONEN = new Set([
   "setCategoryZiel", "setDauer", "setDose", "setDoseBatch", "setEinnahmeart", "setErinnerung", "setHormonDose",
   "setHormonDoseBatch", "setHormonEinnahmeart", "setHormonFoto", "setHormonKategorie", "setMahlzeitFoto",
   "setNotizen", "setPeptidFoto", "setPersonal", "setStartdatum", "setSteckbrief", "setSupplementFoto",
-  "einwilligungSetzen", "alltagSpeichern", "alltagLoeschen", "alltagAbhaken", "alltagBereichAnlegen", "alltagBereichLoeschen",
+  "einwilligungSetzen", "alltagSpeichern", "alltagLoeschen", "alltagAbhaken", "alltagBereichAnlegen", "alltagBereichLoeschen", "matrixAufgabeSpeichern", "matrixAufgabeLoeschen",
   "skipHormonFeedback", "skipSupplementFeedback", "spotifyAbspielen", "spotifyAnlassEntfernen",
   "spotifyAnlassSetzen", "spotifyAutoPlayTokenErzeugen", "spotifyFortsetzen", "spotifyLautstaerke",
   "spotifyPausieren", "spotifyPlaylistHinzufuegen", "spotifyPlaylistLoeschen", "spotifyVerbindungNeuLaden",

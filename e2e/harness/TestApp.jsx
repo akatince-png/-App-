@@ -215,6 +215,23 @@ function leseOverridesAusUrl() {
   }
   // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
   // Supplement, Gewohnheit) für Design-Vorschauen.
+  // ?matrix=1: Aufgaben-Matrix mit Beispiel-Projekt (30.09., Vorschau).
+  if (params.get("matrix") === "1") {
+    const tagIso = (n) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    overrides.projekte = [{ id: "p-steuer", name: "Steuer 2025", farbeIndex: 0 }, { id: "p-umzug", name: "Umzug", farbeIndex: 1 }];
+    overrides.matrixAufgaben = [
+      { id: "m1", projektId: "p-steuer", titel: "Antrag abschicken", wichtig: true, frist: tagIso(1), dauerMin: 20, naechsterSchritt: "", verschoben: 0 },
+      { id: "m2", projektId: "p-steuer", titel: "Belege fotografieren", wichtig: true, frist: tagIso(0), dauerMin: 10, naechsterSchritt: "Schuhkarton mit Belegen holen", verschoben: 0 },
+      { id: "m3", projektId: "p-steuer", titel: "Ordner sortieren", wichtig: true, frist: tagIso(9), dauerMin: 30, geplantAm: tagIso(0), naechsterSchritt: "", verschoben: 3 },
+      { id: "m4", projektId: "p-steuer", titel: "Steuerberater fragen", wichtig: true, frist: null, naechsterSchritt: "", verschoben: 0 },
+      { id: "m5", projektId: "p-umzug", titel: "Mail an Vermieter", wichtig: false, frist: tagIso(0), dauerMin: 5, naechsterSchritt: "", verschoben: 0 },
+      { id: "m6", projektId: "p-umzug", titel: "Alte Quittungen scannen", wichtig: false, frist: null, naechsterSchritt: "", verschoben: 0 },
+    ];
+  }
   // ?alltag=1: Kalender „Mein Alltag“ mit Beispiel-Einträgen (28.09., Vorschau).
   if (params.get("alltag") === "1") {
     const iso0 = (n) => {

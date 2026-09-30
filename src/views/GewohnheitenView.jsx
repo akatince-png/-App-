@@ -473,6 +473,16 @@ export default function GewohnheitenView({ onHome }) {
             Konzentriert arbeiten in Intervallen — z. B. 25 Minuten Arbeit, 5 Minuten Pause — mit eigener Playlist.
           </div>
           <PrimaryButton onClick={() => setWorkflowOffen(true)}>▶️ Workflow starten</PrimaryButton>
+          {/* Aufgaben-Matrix (30.09.): Aufgaben eines Projekts nach Wichtig/Dringend. */}
+          <button
+            type="button"
+            className="mp-tap"
+            data-matrix-oeffnen
+            onClick={() => (window.location.hash = "#/matrix")}
+            style={{ width: "100%", marginTop: 8, border: "none", borderRadius: 14, padding: "11px 14px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))", color: "var(--mp-text)" }}
+          >
+            🗂️ Aufgaben-Matrix <span style={{ fontWeight: 600, color: "var(--mp-text-muted)" }}>· 🔴🟢🟡⚪</span>
+          </button>
         </Card>
 
         <Card style={{ marginBottom: 16 }}>

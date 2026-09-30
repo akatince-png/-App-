@@ -212,6 +212,13 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Aufgaben-Matrix im Workflow-Bereich (30.09., VORSCHAU – nur Branch, nicht main)
+Nutzerin (nach Eisenhower-PDF): keinen neuen Reiter, sondern im Workflow-Bereich eine eigene Matrix je Projekt, Farben, und sie soll sich automatisch im Alltag zeigen.
+- **Logik `utils/matrix.js`:** Feld aus „wichtig?“ (Standard ja) + Frist (≤ 2 Tage = dringend): 🔴 JETZT · 🟢 PLANEN · 🟡 KURZ HALTEN · ⚪ SPÄTER/WEG. Eigene Wahl (`quadrantManuell`) bleibt, bis „wieder automatisch“. Frist nähert sich → wandert von selbst nach Rot. `alltagAusMatrix`: nur Rot + an dem Tag eingeplantes Grün. Hinweise: > 3 rot (Überlastung), ≥ 3× verschoben (freundlich: kleiner machen/streichen). Keine KI nötig.
+- **UI:** `views/MatrixView.jsx` (`#/matrix`, Knopf „🗂️ Aufgaben-Matrix“ im Workflow-Kasten unter Routinen): Projekt-Chips (vorhandene `projekte`, „＋ Projekt“), Schnelleingabe mit Vorschau „→ landet in …“, 2×2-Felder, Karte je Aufgabe (Warum hier?, nächster kleiner Schritt, Dauer, Feld wählen, in den Tagesplan heute/morgen/Datum, Fokus-Timer, Erledigt, Auf morgen, Streichen). `ui/MatrixHeuteKarte.jsx` oben im Tagesplan (TagesHinweise) mit Abhaken.
+- **Daten:** `data/useMatrixAufgaben.js`, Migration **`0121_matrix_aufgaben.sql` – noch NICHT eingespielt** (vor dem Übernehmen nach main mit der Nutzerin abstimmen und einspielen, sonst lädt die App eine fehlende Tabelle).
+- Tests: `matrix.test.js`, `e2e/matrix.spec.js`, Harness `?matrix=1`. Bild: `docs/matrix/vorschau.png`.
+
 ### Atmender Kreis überall (30.09., live)
 Nutzerin: „den atmenden Kreis überall einbauen, wo eine Atemübung stattfindet – Abendroutine, Notfallübungen usw.“ Durchsicht aller Stellen:
 - **Atem-Seite, Atem-Pausen (Tagesplan/Home), Gruppen-Atmung, „▶ Mitmachen“ in der Abhak-Liste:** liefen schon über `AtemFuehrung`.

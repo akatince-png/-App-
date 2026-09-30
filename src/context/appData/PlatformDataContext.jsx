@@ -4,6 +4,7 @@ import { useCoreData } from "./CoreDataContext";
 import { usePushNotifications } from "../../data/usePushNotifications";
 import { useFokusGemeinsam } from "../../data/useFokusGemeinsam";
 import { useAlltag } from "../../data/useAlltag";
+import { useMatrixAufgaben } from "../../data/useMatrixAufgaben";
 import { useAenderungsprotokoll } from "../../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../../data/useLexikon";
@@ -69,6 +70,8 @@ export function PlatformDataProvider({ children }) {
   const fokusGemeinsamData = useFokusGemeinsam(userId);
   // Kalender „Mein Alltag“ (28.09., Migration 0118).
   const alltagData = useAlltag(userId);
+  // Aufgaben-Matrix im Workflow-Bereich (30.09., Migration 0121).
+  const matrixData = useMatrixAufgaben(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -87,6 +90,7 @@ export function PlatformDataProvider({ children }) {
     ...routinenData,
     ...zeitbloeckeData,
     ...alltagData,
+    ...matrixData,
     ...coacheeNachrichtenData,
     ...coachWissenData,
     ...workflowData,
