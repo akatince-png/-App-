@@ -351,8 +351,10 @@ try {
       await warte(1500);
       await foto("04-routine-start");
       let klicks = 0;
+      // Seit 30.09. läuft der Atem-Schritt als geführte Übung: dort heißt der
+      // Knopf „Schon geatmet – weiter“ (die 2 Min. wartet das Skript nicht ab).
       for (; klicks < 20; klicks++) {
-        const weiter = page.getByRole("button", { name: /^(Schritt fertig|Erledigt|Weiter|Fertig|Abschließen|Routine abschließen|Geschafft|Nächster Schritt|✓.*)$/ }).first();
+        const weiter = page.getByRole("button", { name: /^(Schritt fertig|Erledigt|Weiter|Fertig|Abschließen|Routine abschließen|Geschafft|Nächster Schritt|Ab jetzt|Schon geatmet – weiter|✓.*)$/ }).first();
         if (!(await weiter.isVisible().catch(() => false))) break;
         await weiter.click();
         await warte(900);
