@@ -37,6 +37,26 @@ function hourLabel(hour) {
 // AuthenticatedApp.jsx) wieder bei "heute"/"Tag", egal welches Datum
 // zuletzt angeschaut wurde. Rest der Datei unverändert, da die Props
 // dieselben Namen wie die vorherigen lokalen State-Variablen tragen.
+// Zu früh abhaken (30.09., Nutzerin: „wenn man die Medikamente eine halbe
+// Stunde vorher nimmt … egal was man früher erledigt, soll man gefragt
+// werden: Sicher, dass du das schon erledigt hast?“). Gilt für alles mit
+// Uhrzeit, das mehr als 15 Min. vor der geplanten Zeit (oder an einem
+// späteren Tag) abgehakt wird. Zurücknehmen fragt nie nach.
+const FRUEH_TOLERANZ_MIN = 15;
+function istZuFrueh(item, tagStr, jetzt = new Date()) {
+  if (!item || item.done || !item.uhrzeit || !/^\d{1,2}:\d{2}/.test(item.uhrzeit)) return false;
+  const heute = toLocalISODate(jetzt);
+  if (tagStr > heute) return true;
+  if (tagStr < heute) return false;
+  const [h, m] = item.uhrzeit.split(":").map(Number);
+  return h * 60 + m - (jetzt.getHours() * 60 + jetzt.getMinutes()) > FRUEH_TOLERANZ_MIN;
+}
+function mitFruehFrage(item, tagStr, setFruehFrage) {
+  if (!item.onConfirm || ["training", "zeitblock", "workflow"].includes(item.kategorie)) return item;
+  const weiter = item.onConfirm;
+  return { ...item, onConfirm: () => (istZuFrueh(item, tagStr) ? setFruehFrage({ item, tagStr, weiter }) : weiter()) };
+}
+
 export default function TagesplanView({ onHome, onOpenTraining, onEditItem, selectedDate, onSelectedDateChange: setSelectedDate, modus, onModusChange: setModus }) {
   const {
     hormonPlan,
@@ -87,6 +107,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   // Ansicht, sonst "morgen"/"abend" — ersetzt dann den kompletten Screen,
   // bis die Routine abgeschlossen oder abgebrochen wird.
   const [ablaufRoutine, setAblaufRoutine] = useState(null);
+  // Zu früh abhaken (30.09., Nutzerin): „Sicher, dass du das schon erledigt hast?“
+  const [fruehFrage, setFruehFrage] = useState(null); // { item, weiter }
   const [schritteBearbeiten, setSchritteBearbeiten] = useState({ morgen: false, abend: false });
   // Morgen-/Abendroutine: rein visuelle Gruppierung der ohnehin geplanten
   // Punkte nach Uhrzeit, kein eigenes Datenmodell — zugeklappt nur eine
@@ -279,7 +301,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         zeitbloecke,
         ausnahmenNachSchluessel,
       });
-      return items.map((item) => {
+      const fertig = items.map((item) => {
         if (item.kategorie === "hormon") return { ...item, doseRef: item.raw, onConfirm: () => openFeedbackRef.current(item.raw, item.key, "hormon") };
         if (item.kategorie === "supplement") {
           // Log-Schlüssel wie in buildDayItems(): ursprünglich geplante Uhrzeit,
@@ -308,6 +330,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           },
         };
       });
+      return fertig.map((item) => mitFruehFrage(item, tagStr, setFruehFrage));
     },
     [
       hormonPlan,
@@ -653,6 +676,29 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
       <TagesHinweise ohneTimer={modus === "tag" && ansicht === "bild" && sameDay(selectedDate, new Date())} />
+      {fruehFrage && (
+        <div data-frueh-frage role="dialog" aria-label="Schon erledigt?" style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(16, 24, 40, 0.45)" }}>
+          <div style={{ width: "min(92vw, 380px)", borderRadius: 22, padding: 18, background: "var(--mp-karte)", color: "var(--mp-text)", boxShadow: "0 12px 32px rgba(0,0,0,.25)", textAlign: "center" }}>
+            <div style={{ fontSize: 30 }}>⏰</div>
+            <div style={{ fontSize: 16, fontWeight: 800, margin: "6px 0 4px" }}>Schon erledigt?</div>
+            <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.45, marginBottom: 14 }}>
+              „{fruehFrage.item.name}“ ist {fruehFrage.tagStr > toLocalISODate(new Date()) ? `erst am ${fmtDate(new Date(`${fruehFrage.tagStr}T12:00:00`))}` : `erst um ${fruehFrage.item.uhrzeit} Uhr`} geplant. Sicher, dass du es schon erledigt hast?
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <PrimaryButton variant="ghost" onClick={() => setFruehFrage(null)}>Noch nicht</PrimaryButton>
+              <PrimaryButton
+                onClick={() => {
+                  const { weiter } = fruehFrage;
+                  setFruehFrage(null);
+                  weiter();
+                }}
+              >
+                Ja, erledigt
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+      )}
 
       {trainingFehler && (
         <Card style={{ marginBottom: 16, borderColor: danger }}>

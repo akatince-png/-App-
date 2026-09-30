@@ -212,6 +212,13 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Startseite A/B, Kreis-Schnellmenü, Rückfrage bei zu frühem Abhaken (30.09., VORSCHAU – nur Branch)
+- **Startseite:** Körperwerte flach in einer Zeile unter Gehirn + Figur (`KoerperChips`, `GehirnKarte chipsFlach`), „Grad nicht gut?“ als runder Glühbirnen-Knopf (`data-akut-rund`). Umschaltbar über `utils/startVariante.js` (localStorage `mp-start-variante`, Harness `?startvariante=b`): **A** = vier Knöpfe Wasser · Spielen · Training · Workflow auf der Startseite; **B** = keine Knöpfe, dafür „⚡ Schnell“ in der Leiste statt „Fortschritt“ (Fortschritt dann als Kachel unter Mehr).
+- **Kreis-Schnellmenü `ui/SchnellKreis.jsx` (Variante B):** 7 Kreise rund um die Mitte – Getränk (+200/330/500 ml direkt), Snack (`EssenEingabe` direkt), Nickerchen (10–90 Min., neue Tabelle), Training, Pre-Workout & Co. (zusätzliche Einnahme außerhalb des Plans, Vorschläge + eigene Supplemente), Workflow, Spielen. Der gewählte Kreis wandert groß in die Mitte; Training/Workflow/Spielen öffnen über das Ereignis `mp-schnell` die Auswahl auf der Startseite. Feste Abläufe (Routinen, geplante Medikamente/Supplemente) bewusst nicht im Menü.
+- **Neue Tabelle `spontan_eintraege`** (Migration **0122, noch NICHT eingespielt**; `data/useSpontanEintraege.js`): art `nickerchen`/`einnahme`. Nickerchen erscheinen im Schlaf-Wert unter der Figur („7,5 h +20′“) und im Tagesverlauf.
+- **Zu früh abhaken (`TagesplanView`, `mitFruehFrage`/`istZuFrueh`):** alles mit Uhrzeit, das > 15 Min. vor der geplanten Zeit (oder für einen späteren Tag) abgehakt wird, fragt „Schon erledigt? … erst um 08:00 Uhr geplant“ (Noch nicht / Ja, erledigt). Gilt für Medikamente, Supplemente, Mahlzeiten, Gewohnheiten; nicht für Training/Workflow/Zeitblöcke.
+- Tests: `e2e/schnellkreis.spec.js`, `e2e/leiste-unten.spec.js`.
+
 ### Spontan Training / Workflow von der Startseite (30.09., VORSCHAU – nur Branch)
 Nutzerin: neben Wasser/Spielen/„Grad nicht gut?“ je ein offensichtlicher Knopf für Training und Workflow – bei Fokus/Power spontan loslegen; steht heute schon etwas an, fragen „vorziehen?“; Workflow mit eigenen Intervallen, Playlist, offenem Ende; Training aus Plänen oder spontan (Kettlebell zählen, auf Zeit, Intervall, Kamera).
 - **Startseite:** `data-schnellknoepfe` jetzt 5 Knöpfe (Raster 6 Spalten: Wasser · Training · Workflow / Spielen · Grad nicht gut?). Training/Workflow klappen `ui/SpontanStart.jsx` auf.

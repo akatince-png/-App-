@@ -22,6 +22,8 @@ export function koerperWerte(d, heute = toLocalISODate(new Date())) {
   const eiweiss = essen.reduce((s, e) => s + (Number(e.werte?.eiweiss) || 0), 0);
   const atem = (d.atemuebungLogs || []).some((l) => toLocalISODate(new Date(l.erstelltAm)) === heute);
   const gewicht = (d.gewichtsEintraege || []).filter((e) => Number(e.gewicht)).at(-1)?.gewicht;
+  // Nickerchen aus dem Kreis-Schnellmenü (30.09.) zählen zum Schlaf-Wert dazu.
+  const nickerchenMin = (d.spontanEintraege || []).filter((e) => e.art === "nickerchen" && e.datum === heute).reduce((s, e) => s + (e.dauerMin || 0), 0);
   return {
     kopf: clamp(schlafH / 7.5),
     brust: atem ? 1 : 0,
@@ -29,7 +31,7 @@ export function koerperWerte(d, heute = toLocalISODate(new Date())) {
     bewegung: trainingOk ? 1 : trainingHeute.length ? 0.2 : clamp(lichtMin / 60),
     licht: clamp(lichtMin / lichtZiel),
     chips: [
-      ["😴", schlafH ? `${String(Math.round(schlafH * 10) / 10).replace(".", ",")} h` : "–", "Schlaf"],
+      ["😴", `${schlafH ? `${String(Math.round(schlafH * 10) / 10).replace(".", ",")} h` : "–"}${nickerchenMin ? ` +${nickerchenMin}′` : ""}`, "Schlaf"],
       ["💧", `${String(Math.round(wasserMl / 100) / 10).replace(".", ",")}/${String(wasserZiel / 1000).replace(".", ",")} l`, "Wasser"],
       ["☀️", `${lichtMin}/${lichtZiel} min`, "Tageslicht"],
       ["🏋️", trainingOk ? "✓" : trainingHeute.length ? "offen" : "–", "Training"],

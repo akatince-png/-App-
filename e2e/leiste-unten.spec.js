@@ -76,14 +76,16 @@ test.describe("iPad mit feinem Zeiger", () => {
 });
 
 // Variante B (30.09., Vorschau): Schnellzugriff in der Leiste statt Fortschritt.
-test("Variante B: ⚡ Schnell in der Leiste öffnet Wasser, Training, Workflow, Spielen", async ({ page }) => {
+test("Variante B: ⚡ Schnell in der Leiste öffnet das Kreis-Menü, Training führt zur Auswahl", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&spontan=1&startvariante=b#/home");
   const leiste = page.locator("[data-bottomnav]");
   await expect(leiste.getByRole("button", { name: "Fortschritt" })).toHaveCount(0);
   await expect(page.locator("[data-schnellknoepfe]").getByRole("button")).toHaveCount(0);
   await leiste.getByRole("button", { name: "Schnell" }).click();
-  await page.locator("[data-schnell-menue]").getByRole("menuitem", { name: /Training/ }).click();
+  const kreis = page.locator("[data-schnell-kreis]");
+  await kreis.getByRole("button", { name: "Training" }).click();
+  await kreis.getByRole("button", { name: "▶ Training öffnen" }).click();
   await expect(page.locator("[data-training-auswahl]")).toBeVisible();
   await leiste.getByRole("button", { name: "Mehr" }).click();
   await expect(page.locator("[data-mehr-schnellzugriff]")).toContainText("Fortschritt");

@@ -5,6 +5,7 @@ import { usePushNotifications } from "../../data/usePushNotifications";
 import { useFokusGemeinsam } from "../../data/useFokusGemeinsam";
 import { useAlltag } from "../../data/useAlltag";
 import { useMatrixAufgaben } from "../../data/useMatrixAufgaben";
+import { useSpontanEintraege } from "../../data/useSpontanEintraege";
 import { useAenderungsprotokoll } from "../../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../../data/useWochenprotokollMeilenstein";
 import { useLexikon } from "../../data/useLexikon";
@@ -72,6 +73,8 @@ export function PlatformDataProvider({ children }) {
   const alltagData = useAlltag(userId);
   // Aufgaben-Matrix im Workflow-Bereich (30.09., Migration 0121).
   const matrixData = useMatrixAufgaben(userId);
+  // Spontan-Einträge aus dem Kreis-Schnellmenü (30.09., Migration 0122).
+  const spontanData = useSpontanEintraege(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -91,6 +94,7 @@ export function PlatformDataProvider({ children }) {
     ...zeitbloeckeData,
     ...alltagData,
     ...matrixData,
+    ...spontanData,
     ...coacheeNachrichtenData,
     ...coachWissenData,
     ...workflowData,
