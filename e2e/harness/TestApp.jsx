@@ -33,7 +33,8 @@ function leseOverridesAusUrl() {
   // ?startvariante=b: Schnellzugriff in der Leiste (30.09., Vorschau).
   try {
     if (params.get("startvariante")) localStorage.setItem("mp-start-variante", params.get("startvariante"));
-    else localStorage.removeItem("mp-start-variante");
+    // Ohne Angabe Variante A, damit die älteren Tests die vier Knöpfe finden.
+    else localStorage.setItem("mp-start-variante", "a");
   } catch {
     /* ohne Speicher: Variante A */
   }

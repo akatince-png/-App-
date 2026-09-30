@@ -42,6 +42,7 @@ import RoutineAblauf from "../ui/RoutineAblauf";
 import { TrainingStartAuswahl, WorkflowStartAuswahl } from "../ui/SpontanStart";
 import { workflowStartMerken } from "../utils/workflowStart";
 import { startVariante } from "../utils/startVariante";
+import SchnellIcon from "../ui/SchnellIcon";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
@@ -1163,20 +1164,20 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         {/* Runde Glühbirne zwischen Gehirn-Karte und Knöpfen (30.09., Nutzerin). */}
         <div style={{ display: "flex", justifyContent: "center", margin: "-2px 0 14px" }}>
           <button type="button" className="mp-tap" aria-label="Grad nicht gut?" data-akut-rund onClick={() => setAkutOffen(true)} style={{ display: "flex", alignItems: "center", gap: 10, border: "none", background: "var(--mp-karte)", borderRadius: 99, padding: "6px 16px 6px 6px", boxShadow: "var(--mp-schatten)", cursor: "pointer", fontFamily: "inherit", color: "var(--mp-text)" }}>
-            <span aria-hidden="true" style={{ width: 46, height: 46, borderRadius: 99, background: "linear-gradient(145deg, #FFC857, #F29F05)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 4px 12px rgba(242, 159, 5, 0.35)" }}>💡</span>
+            <span aria-hidden="true" style={{ width: 46, height: 46, borderRadius: 99, background: "radial-gradient(circle at 30% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(155deg, #FFD36E, #EE8F00)", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 18px -6px rgba(238, 143, 0, 0.6), inset 0 2px 1px rgba(255,255,255,.55), inset 0 -5px 10px rgba(0,0,0,.15)" }}><SchnellIcon name="akut" size={24} strich={2.2} /></span>
             <span style={{ fontSize: 14, fontWeight: 800 }}>Grad nicht gut?</span>
           </button>
         </div>
         <div data-schnellknoepfe data-spontan-bereich style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 20 }}>
           {variante === "a" && [
-            { key: "wasser", emoji: "💧", titel: "Wasser", verlauf: "linear-gradient(145deg, #4F8DF5, #2D6FD6)", onClick: () => onOpenView("hydration"), label: "Wasser eintragen" },
-            { key: "spielen", emoji: "🎮", titel: "Spielen", verlauf: "linear-gradient(145deg, #9B8CFF, #6C5CE7)", onClick: () => { setSpontanOffen(null); setSpieleOffen((o) => !o); }, label: "Spielen", offen: spieleOffen },
+            { key: "wasser", icon: "trinken", titel: "Wasser", hell: "#6FB2FF", farbe: "#2D6FD6", onClick: () => onOpenView("hydration"), label: "Wasser eintragen" },
+            { key: "spielen", icon: "spielen", titel: "Spielen", hell: "#9D8BFF", farbe: "#5B47E0", onClick: () => { setSpontanOffen(null); setSpieleOffen((o) => !o); }, label: "Spielen", offen: spieleOffen },
             // Spontan-Knöpfe (30.09., Nutzerin: „wenn man gerade Power oder Fokus hat“).
-            { key: "training", emoji: "🏋️", titel: "Training", verlauf: "linear-gradient(145deg, #F2685A, #D9432F)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "training" ? null : "training")); }, label: "Training starten", offen: spontanOffen === "training" },
-            { key: "workflow", emoji: "⏱️", titel: "Workflow", verlauf: "linear-gradient(145deg, #D45BA3, #A8327D)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "workflow" ? null : "workflow")); }, label: "Workflow starten", offen: spontanOffen === "workflow" },
+            { key: "training", icon: "training", titel: "Training", hell: "#FF8A73", farbe: "#D13A26", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "training" ? null : "training")); }, label: "Training starten", offen: spontanOffen === "training" },
+            { key: "workflow", icon: "workflow", titel: "Workflow", hell: "#F07BC0", farbe: "#A12A74", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "workflow" ? null : "workflow")); }, label: "Workflow starten", offen: spontanOffen === "workflow" },
           ].map((k) => (
-            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.offen} onClick={k.onClick} style={{ border: "none", borderRadius: 20, padding: "12px 4px 10px", minHeight: 86, background: k.verlauf, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: "0 8px 20px rgba(16, 24, 40, 0.14)", fontFamily: "inherit" }}>
-              <span style={{ fontSize: 26, lineHeight: 1 }}>{k.emoji}</span>
+            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.offen} onClick={k.onClick} style={{ border: "none", borderRadius: 20, padding: "12px 4px 10px", minHeight: 86, background: `radial-gradient(circle at 28% 20%, rgba(255,255,255,.45), rgba(255,255,255,0) 50%), linear-gradient(155deg, ${k.hell}, ${k.farbe} 80%)`, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: `0 12px 22px -8px ${k.farbe}99, 0 3px 8px rgba(16,24,40,.12), inset 0 2px 1px rgba(255,255,255,.45), inset 0 -6px 12px rgba(0,0,0,.14)`, transform: k.offen ? "translateY(-2px)" : "none", outline: k.offen ? "3px solid rgba(255,255,255,.9)" : "none", outlineOffset: -5, fontFamily: "inherit" }}>
+              <span style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,.25))" }}><SchnellIcon name={k.icon} size={28} strich={2.1} /></span>
               <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2 }}>{k.titel}</span>
             </button>
           ))}

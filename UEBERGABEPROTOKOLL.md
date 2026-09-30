@@ -212,14 +212,16 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
-### Startseite A/B, Kreis-Schnellmenü, Rückfrage bei zu frühem Abhaken (30.09., VORSCHAU – nur Branch)
+### Startseite A/B, Kreis-Schnellmenü, Rückfrage bei zu frühem Abhaken (30.09., live auf main)
 - **Startseite:** Körperwerte flach in einer Zeile unter Gehirn + Figur (`KoerperChips`, `GehirnKarte chipsFlach`), „Grad nicht gut?“ als runder Glühbirnen-Knopf (`data-akut-rund`). Umschaltbar über `utils/startVariante.js` (localStorage `mp-start-variante`, Harness `?startvariante=b`): **A** = vier Knöpfe Wasser · Spielen · Training · Workflow auf der Startseite; **B** = keine Knöpfe, dafür „⚡ Schnell“ in der Leiste statt „Fortschritt“ (Fortschritt dann als Kachel unter Mehr).
 - **Kreis-Schnellmenü `ui/SchnellKreis.jsx` (Variante B):** 7 Kreise rund um die Mitte – Getränk (+200/330/500 ml direkt), Snack (`EssenEingabe` direkt), Nickerchen (10–90 Min., neue Tabelle), Training, Pre-Workout & Co. (zusätzliche Einnahme außerhalb des Plans, Vorschläge + eigene Supplemente), Workflow, Spielen. Der gewählte Kreis wandert groß in die Mitte; Training/Workflow/Spielen öffnen über das Ereignis `mp-schnell` die Auswahl auf der Startseite. Feste Abläufe (Routinen, geplante Medikamente/Supplemente) bewusst nicht im Menü.
-- **Neue Tabelle `spontan_eintraege`** (Migration **0122, noch NICHT eingespielt**; `data/useSpontanEintraege.js`): art `nickerchen`/`einnahme`. Nickerchen erscheinen im Schlaf-Wert unter der Figur („7,5 h +20′“) und im Tagesverlauf.
+- **Neue Tabelle `spontan_eintraege`** (Migration **0122, am 30.09. eingespielt**; `data/useSpontanEintraege.js`): art `nickerchen`/`einnahme`. Nickerchen erscheinen im Schlaf-Wert unter der Figur („7,5 h +20′“) und im Tagesverlauf.
 - **Zu früh abhaken (`TagesplanView`, `mitFruehFrage`/`istZuFrueh`):** alles mit Uhrzeit, das > 15 Min. vor der geplanten Zeit (oder für einen späteren Tag) abgehakt wird, fragt „Schon erledigt? … erst um 08:00 Uhr geplant“ (Noch nicht / Ja, erledigt). Gilt für Medikamente, Supplemente, Mahlzeiten, Gewohnheiten; nicht für Training/Workflow/Zeitblöcke.
+- **Standard seit 30.09. = Variante B (Kreis)**, Nutzerin hat sich für den Kreis entschieden. Die Harness setzt ohne `?startvariante=` Variante A, damit ältere Tests die vier Knöpfe finden.
+- **Symbole/Look (30.09., Nutzerin: „Icons altbacken, Kreis plastischer, mit Schatten, räumlicher Abstand“):** `ui/SchnellIcon.jsx` = moderne Linien-Symbole (gleicher Stil wie die Leiste) statt Emojis – im Kreis, in den vier Startseiten-Knöpfen und in der Glühbirne. Kreise mit Farbverlauf, Lichtkante, Innen- und Farbschatten; der gewählte wird groß, bekommt weißen Ring + Leuchtrand, die anderen treten leicht zurück. Radius 132 statt 118 für mehr Abstand. Fotos: `docs/schnellkreis/`.
 - Tests: `e2e/schnellkreis.spec.js`, `e2e/leiste-unten.spec.js`.
 
-### Spontan Training / Workflow von der Startseite (30.09., VORSCHAU – nur Branch)
+### Spontan Training / Workflow von der Startseite (30.09., live auf main)
 Nutzerin: neben Wasser/Spielen/„Grad nicht gut?“ je ein offensichtlicher Knopf für Training und Workflow – bei Fokus/Power spontan loslegen; steht heute schon etwas an, fragen „vorziehen?“; Workflow mit eigenen Intervallen, Playlist, offenem Ende; Training aus Plänen oder spontan (Kettlebell zählen, auf Zeit, Intervall, Kamera).
 - **Startseite:** `data-schnellknoepfe` jetzt 5 Knöpfe (Raster 6 Spalten: Wasser · Training · Workflow / Spielen · Grad nicht gut?). Training/Workflow klappen `ui/SpontanStart.jsx` auf.
 - **`TrainingStartAuswahl`:** „Heute steht noch an – vorziehen?“ (offene Trainings aus `heuteItems`, startet über `starteTrainingVonItem` live), gespeicherte Trainingspläne (`trainingTemplates`) mit ▶, spontan: Wiederholungen (Krafttraining mit einer Übung, Sätze×Wdh. – LiveWorkout bietet „📷 Mit Kamera zählen“ für Kettlebell/Kniebeuge/Liegestütz), Auf Zeit (Art „Sonstiges“ → Stoppuhr), Intervall (Bodyweight, Belastung/Pause/Runden). Legt einen Trainings-Eintrag für heute an und öffnet ihn live. „Alle Möglichkeiten im Trainingsbereich ›“.
@@ -227,11 +229,11 @@ Nutzerin: neben Wasser/Spielen/„Grad nicht gut?“ je ein offensichtlicher Kno
 - Trainingspläne (Vorlagen, Ordner, Playlist, Wochenplan) gab es schon – jetzt direkt von der Startseite startbar.
 - Tests: `e2e/spontan.spec.js`, Harness `?spontan=1`.
 
-### Aufgaben-Matrix im Workflow-Bereich (30.09., VORSCHAU – nur Branch, nicht main)
+### Aufgaben-Matrix im Workflow-Bereich (30.09., live auf main)
 Nutzerin (nach Eisenhower-PDF): keinen neuen Reiter, sondern im Workflow-Bereich eine eigene Matrix je Projekt, Farben, und sie soll sich automatisch im Alltag zeigen.
 - **Logik `utils/matrix.js`:** Feld aus „wichtig?“ (Standard ja) + Frist (≤ 2 Tage = dringend): 🔴 JETZT · 🟢 PLANEN · 🟡 KURZ HALTEN · ⚪ SPÄTER/WEG. Eigene Wahl (`quadrantManuell`) bleibt, bis „wieder automatisch“. Frist nähert sich → wandert von selbst nach Rot. `alltagAusMatrix`: nur Rot + an dem Tag eingeplantes Grün. Hinweise: > 3 rot (Überlastung), ≥ 3× verschoben (freundlich: kleiner machen/streichen). Keine KI nötig.
 - **UI:** `views/MatrixView.jsx` (`#/matrix`, Knopf „🗂️ Aufgaben-Matrix“ im Workflow-Kasten unter Routinen): Projekt-Chips (vorhandene `projekte`, „＋ Projekt“), Schnelleingabe mit Vorschau „→ landet in …“, 2×2-Felder, Karte je Aufgabe (Warum hier?, nächster kleiner Schritt, Dauer, Feld wählen, in den Tagesplan heute/morgen/Datum, Fokus-Timer, Erledigt, Auf morgen, Streichen). `ui/MatrixHeuteKarte.jsx` oben im Tagesplan (TagesHinweise) mit Abhaken.
-- **Daten:** `data/useMatrixAufgaben.js`, Migration **`0121_matrix_aufgaben.sql` – noch NICHT eingespielt** (vor dem Übernehmen nach main mit der Nutzerin abstimmen und einspielen, sonst lädt die App eine fehlende Tabelle).
+- **Daten:** `data/useMatrixAufgaben.js`, Migration **`0121_matrix_aufgaben.sql` – am 30.09. eingespielt**.
 - Tests: `matrix.test.js`, `e2e/matrix.spec.js`, Harness `?matrix=1`. Bild: `docs/matrix/vorschau.png`.
 
 ### Atmender Kreis überall (30.09., live)
