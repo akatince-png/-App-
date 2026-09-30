@@ -25,6 +25,7 @@ export default function Timer({
   arbeitSek = 40,
   pauseSek = 20,
   runden = 5,
+  rundenOffen = false, // offenes Ende (Spontan-Workflow): „Runde 3“ statt „3/99“
   onFertig,
   autoStart = false,
   vorwarnungSek = null,
@@ -249,7 +250,7 @@ export default function Timer({
       )}
       {mode === "interval" && status !== "idle" && status !== "vorbereitung" && (
         <div style={{ fontSize: 12, fontWeight: 800, color: phase === "arbeit" ? "var(--mp-accent-dark-text)" : textMuted, marginBottom: 4 }}>
-          {phase === "arbeit" ? arbeitLabel : pauseLabel} · Runde {rundeAktuell}/{runden}
+          {phase === "arbeit" ? arbeitLabel : pauseLabel} · Runde {rundeAktuell}{rundenOffen ? "" : `/${runden}`}
         </div>
       )}
       {ringTotal != null && (

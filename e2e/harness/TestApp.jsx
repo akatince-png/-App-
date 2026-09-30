@@ -215,6 +215,17 @@ function leseOverridesAusUrl() {
   }
   // ?beispiel=1: ein realistischer Tag (Morgenroutine, Medikament,
   // Supplement, Gewohnheit) für Design-Vorschauen.
+  // ?spontan=1: Training + Workflow für heute geplant, dazu Pläne (30.09.).
+  if (params.get("spontan") === "1") {
+    const wt = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][new Date().getDay()];
+    overrides.trainingWochenplan = [{ id: "tw-heute", wochentag: wt, name: "Laufen", uhrzeit: "17:00", arten: ["Cardio"] }];
+    overrides.trainingTemplates = [
+      { id: "tp1", name: "30-Min-Ganzkörper", art: "Krafttraining", uebungen: [{ name: "Kniebeugen", saetze: "3", wiederholungen: "12", gewicht: "", pauseSekunden: "60" }] },
+      { id: "tp2", name: "HIIT 20", art: "Bodyweight", uebungen: [], intervallArbeitSek: 40, intervallPauseSek: 20, runden: 10 },
+    ];
+    overrides.workflowPresets = [{ id: "wp1", name: "Deep Work", arbeitMin: 50, pauseMin: 10, gesamtMin: 120, modus: "durchgehend" }];
+    overrides.workflowPlaene = [{ id: "pl1", presetId: "wp1", wochentage: [], uhrzeit: "14:00", aktiv: true }];
+  }
   // ?matrix=1: Aufgaben-Matrix mit Beispiel-Projekt (30.09., Vorschau).
   if (params.get("matrix") === "1") {
     const tagIso = (n) => {

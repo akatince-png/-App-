@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Shell, Card, Label, Pill, PrimaryButton, TextInput } from "./primitives";
 import ViewHeader from "./ViewHeader";
 import Timer from "./Timer";
@@ -11,6 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useIntervallMusikSync } from "../data/useIntervallMusikSync";
 import { WOCHENTAGE } from "../constants";
 import { toLocalISODate } from "../utils/dates";
+import { workflowStartHolen } from "../utils/workflowStart";
 
 const FADE_SEK = 5;
 
@@ -66,7 +67,14 @@ export default function WorkflowTimer({ onSchliessen }) {
     workflowPresetLoeschen,
     workflowPlanHinzufuegen,
     workflowPlanEntfernen,
+    aenderungVermerken,
   } = useAppData();
+  // Spontan-Workflow (30.09., Nutzerin: „spontan 25 Minuten mit 5 Minuten
+  // Pause, offenes Ende, Playlist wählen“): ohne vorher einen benannten
+  // Workflow anzulegen. Offenes Ende = läuft, bis man „Fertig“ tippt.
+  const [spontan, setSpontan] = useState({ arbeitMin: 25, pauseMin: 5, gesamtMin: 60, offen: true, modus: "durchgehend" });
+  const spontanRef = useRef(null);
+  const startZeitRef = useRef(null);
   const [bearbeitetId, setBearbeitetId] = useState(null);
   const [laufendesPreset, setLaufendesPreset] = useState(null);
   const [neuerName, setNeuerName] = useState("");
@@ -116,10 +124,26 @@ export default function WorkflowTimer({ onSchliessen }) {
     setZeitplanOffenFuer(null);
   };
 
+  // Schnellstart von der Startseite: Preset sofort starten bzw. zum
+  // Spontan-Kasten springen.
+  useEffect(() => {
+    const ziel = workflowStartHolen();
+    if (!ziel) return;
+    if (ziel === "spontan") {
+      setTimeout(() => spontanRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 50);
+      return;
+    }
+    const preset = (workflowPresets || []).find((p) => p.id === ziel);
+    if (preset) starten(preset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const arbeitSekZahl = laufendesPreset ? Math.max(60, Math.round((Number(laufendesPreset.arbeitMin) || 25) * 60)) : 0;
   const pauseSekZahl = laufendesPreset ? Math.max(0, Math.round((Number(laufendesPreset.pauseMin) || 0) * 60)) : 0;
   const rundenZahl = laufendesPreset
-    ? Math.max(1, Math.round(((Number(laufendesPreset.gesamtMin) || 25) * 60) / (arbeitSekZahl + pauseSekZahl)) || 1)
+    ? laufendesPreset.offen
+      ? 99
+      : Math.max(1, Math.round(((Number(laufendesPreset.gesamtMin) || 25) * 60) / (arbeitSekZahl + pauseSekZahl)) || 1)
     : 0;
   const tatsaechlicheGesamtMin = laufendesPreset ? Math.round((rundenZahl * (arbeitSekZahl + pauseSekZahl)) / 60) : 0;
 
@@ -139,6 +163,7 @@ export default function WorkflowTimer({ onSchliessen }) {
       const result = await spotifyAbspielen(playlist.uri);
       if (!result?.ok) setMusikFehler(result?.error || "Wiedergabe fehlgeschlagen.");
     }
+    startZeitRef.current = Date.now();
     setLaufendesPreset(preset);
   };
 
@@ -150,6 +175,11 @@ export default function WorkflowTimer({ onSchliessen }) {
     // einfach weiter". Gilt für Fertig- UND Abbrechen-Weg gleichermaßen, da
     // beide hier zusammenlaufen.
     spotifyPausieren();
+    // Im Tagesverlauf festhalten (30.09.), damit auch spontane Sessions
+    // dokumentiert sind – ab 1 Minute.
+    const min = startZeitRef.current ? Math.round((Date.now() - startZeitRef.current) / 60000) : 0;
+    if (laufendesPreset && min >= 1) aenderungVermerken?.({ kategorie: "workflow", itemName: laufendesPreset.name, aktion: "erledigt", detail: `${min} Min.` });
+    startZeitRef.current = null;
     setLaufendesPreset(null);
   };
 
@@ -180,6 +210,37 @@ export default function WorkflowTimer({ onSchliessen }) {
             Arbeitsphasen in Intervallen mit Pausen dazwischen — z. B. 25 Minuten Arbeit, 5 Minuten Pause. Lege dir mehrere
             benannte Workflows an, jeder mit eigener Playlist (z. B. "Deep Work" mit ruhiger Musik, "E-Mails" mit was
             Flotterem) und optional festen Tagen/Uhrzeiten, dann taucht er auch im Tagesplan auf.
+          </div>
+
+          <div ref={spontanRef} data-spontan-workflow>
+            <Card style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>⚡ Spontan-Workflow</div>
+              <div style={{ fontSize: 12, color: textMuted, marginBottom: 10 }}>Einstellen und los – ohne vorher etwas anzulegen.</div>
+              <Label>Arbeiten</Label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                {[15, 25, 45, 50].map((m) => (
+                  <Pill key={m} label={`${m} Min.`} selected={spontan.arbeitMin === m} onClick={() => setSpontan((x) => ({ ...x, arbeitMin: m }))} />
+                ))}
+              </div>
+              <Label>Pause dazwischen</Label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                {[0, 5, 10, 15].map((m) => (
+                  <Pill key={m} label={m ? `${m} Min.` : "Keine"} selected={spontan.pauseMin === m} onClick={() => setSpontan((x) => ({ ...x, pauseMin: m }))} />
+                ))}
+              </div>
+              <Label>Wie lange?</Label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                <Pill label="Offenes Ende" selected={spontan.offen} onClick={() => setSpontan((x) => ({ ...x, offen: true }))} />
+                {[60, 90, 120].map((m) => (
+                  <Pill key={m} label={`${m} Min.`} selected={!spontan.offen && spontan.gesamtMin === m} onClick={() => setSpontan((x) => ({ ...x, offen: false, gesamtMin: m }))} />
+                ))}
+              </div>
+              <SpotifyAnlassPicker anlass={praesetAnlass("spontan")} label="🎵 Playlist (optional)" />
+              <MusikModusToggle modus={spontan.modus} onChange={(v) => setSpontan((x) => ({ ...x, modus: v }))} />
+              <div style={{ marginTop: 10 }}>
+                <PrimaryButton onClick={() => starten({ id: "spontan", name: "⚡ Spontan-Workflow", ...spontan })}>▶ Jetzt starten</PrimaryButton>
+              </div>
+            </Card>
           </div>
 
           {workflowPresets.map((preset) => {
@@ -367,12 +428,13 @@ export default function WorkflowTimer({ onSchliessen }) {
             </div>
           )}
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>{laufendesPreset.name}</div>
-          <div style={{ fontSize: 11, color: textMuted, marginBottom: 8 }}>{tatsaechlicheGesamtMin} Min. insgesamt</div>
+          <div style={{ fontSize: 11, color: textMuted, marginBottom: 8 }}>{laufendesPreset.offen ? `Offenes Ende · ${laufendesPreset.arbeitMin} Min. Arbeit / ${laufendesPreset.pauseMin} Min. Pause` : `${tatsaechlicheGesamtMin} Min. insgesamt`}</div>
           <Timer
             mode="interval"
             arbeitSek={arbeitSekZahl}
             pauseSek={pauseSekZahl}
             runden={rundenZahl}
+            rundenOffen={!!laufendesPreset.offen}
             autoStart
             fadeVorlaufSek={FADE_SEK}
             onPhaseStart={musikSync.onPhaseStart}
@@ -380,8 +442,8 @@ export default function WorkflowTimer({ onSchliessen }) {
             onFertig={beenden}
           />
           <div style={{ marginTop: 14 }}>
-            <PrimaryButton variant="ghost" onClick={beenden}>
-              Abbrechen
+            <PrimaryButton variant={laufendesPreset.offen ? "success" : "ghost"} onClick={beenden}>
+              {laufendesPreset.offen ? "✓ Fertig für heute" : "Abbrechen"}
             </PrimaryButton>
           </div>
         </Card>

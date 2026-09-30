@@ -39,6 +39,8 @@ import TeamKarte from "../ui/TeamKarte";
 import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "../utils/adhsStorage";
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineAblauf from "../ui/RoutineAblauf";
+import { TrainingStartAuswahl, WorkflowStartAuswahl } from "../ui/SpontanStart";
+import { workflowStartMerken } from "../utils/workflowStart";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
@@ -186,6 +188,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [isEmergencyMode, setIsEmergencyMode] = useState(() => getADHSMode());
   const [akutOffen, setAkutOffen] = useState(false);
   const [spieleOffen, setSpieleOffen] = useState(false);
+  // Spontan starten (30.09.): „training“ | „workflow“ | null – klappt unter den Knöpfen auf.
+  const [spontanOffen, setSpontanOffen] = useState(null);
   // Routine direkt von der Startseite starten (29.09., Nutzerin: „die
   // Stoppuhr muss man sofort finden“): "morgen"/"abend" öffnet den
   // geführten Ablauf wie im Tagesplan, null = normale Startseite.
@@ -1136,18 +1140,38 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           Körper, drei große Knöpfe und die Tages-Quests. Alles andere steht
           unter Plan bzw. Mehr. */}
       {STARTSEITE_SCHLICHT && (
-        <div data-schnellknoepfe style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+        <div data-schnellknoepfe style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 20 }}>
           {[
-            { key: "wasser", emoji: "💧", titel: "Wasser +", sub: "Glas eintragen", verlauf: "linear-gradient(145deg, #4F8DF5, #2D6FD6)", onClick: () => onOpenView("hydration"), label: "Wasser eintragen" },
-            { key: "spielen", emoji: "🎮", titel: "Spielen", sub: "Rätsel & Fokus", verlauf: "linear-gradient(145deg, #9B8CFF, #6C5CE7)", onClick: () => setSpieleOffen((o) => !o), label: "Spielen" },
-            { key: "akut", emoji: "💡", titel: "Grad nicht gut?", sub: "Hilfe für jetzt", verlauf: "linear-gradient(145deg, #FFC857, #F29F05)", onClick: () => setAkutOffen(true), label: "Grad nicht gut?" },
+            { key: "wasser", emoji: "💧", titel: "Wasser +", sub: "Glas eintragen", verlauf: "linear-gradient(145deg, #4F8DF5, #2D6FD6)", onClick: () => onOpenView("hydration"), label: "Wasser eintragen", breit: 2 },
+            // Spontan-Knöpfe (30.09., Nutzerin: „wenn man gerade Power oder Fokus hat“).
+            { key: "training", emoji: "🏋️", titel: "Training", sub: "jetzt loslegen", verlauf: "linear-gradient(145deg, #F2685A, #D9432F)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "training" ? null : "training")); }, label: "Training starten", breit: 2, offen: spontanOffen === "training" },
+            { key: "workflow", emoji: "⏱️", titel: "Workflow", sub: "Fokus-Session", verlauf: "linear-gradient(145deg, #D45BA3, #A8327D)", onClick: () => { setSpieleOffen(false); setSpontanOffen((o) => (o === "workflow" ? null : "workflow")); }, label: "Workflow starten", breit: 2, offen: spontanOffen === "workflow" },
+            { key: "spielen", emoji: "🎮", titel: "Spielen", sub: "Rätsel & Fokus", verlauf: "linear-gradient(145deg, #9B8CFF, #6C5CE7)", onClick: () => { setSpontanOffen(null); setSpieleOffen((o) => !o); }, label: "Spielen", breit: 3, offen: spieleOffen },
+            { key: "akut", emoji: "💡", titel: "Grad nicht gut?", sub: "Hilfe für jetzt", verlauf: "linear-gradient(145deg, #FFC857, #F29F05)", onClick: () => setAkutOffen(true), label: "Grad nicht gut?", breit: 3 },
           ].map((k) => (
-            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.key === "spielen" ? spieleOffen : undefined} onClick={k.onClick} style={{ border: "none", borderRadius: 22, padding: "16px 8px 14px", minHeight: 108, background: k.verlauf, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: "0 8px 20px rgba(16, 24, 40, 0.14)", fontFamily: "inherit" }}>
-              <span style={{ fontSize: 30, lineHeight: 1 }}>{k.emoji}</span>
+            <button key={k.key} type="button" className="mp-tap" aria-label={k.label} aria-expanded={k.offen} onClick={k.onClick} style={{ gridColumn: `span ${k.breit}`, border: "none", borderRadius: 22, padding: "14px 8px 12px", minHeight: k.breit === 2 ? 104 : 84, background: k.verlauf, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, boxShadow: "0 8px 20px rgba(16, 24, 40, 0.14)", fontFamily: "inherit" }}>
+              <span style={{ fontSize: 28, lineHeight: 1 }}>{k.emoji}</span>
               <span style={{ fontSize: 14.5, fontWeight: 800, marginTop: 4, textAlign: "center", lineHeight: 1.15 }}>{k.titel}</span>
               <span style={{ fontSize: 11, opacity: 0.9 }}>{k.sub}</span>
             </button>
           ))}
+          {spontanOffen === "training" && (
+            <TrainingStartAuswahl
+              heuteOffen={heuteItems.filter((i) => i.kategorie === "training" && !i.done)}
+              onVorziehen={starteTrainingVonItem}
+              onGestartet={(id) => onOpenTraining(id)}
+              onMehr={() => onOpenView("training")}
+            />
+          )}
+          {spontanOffen === "workflow" && (
+            <WorkflowStartAuswahl
+              heuteGeplant={heuteItems.filter((i) => i.kategorie === "workflow")}
+              onStart={(ziel) => {
+                workflowStartMerken(ziel);
+                onOpenView("workflow");
+              }}
+            />
+          )}
           {spieleOffen && (
             // Denksport und Tagesrätsel zusammengelegt (29.09., Nutzerin: „führen
             // in den gleichen Reiter“) – das Tagesrätsel steht oben in Denksport.

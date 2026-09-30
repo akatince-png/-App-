@@ -212,6 +212,14 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Spontan Training / Workflow von der Startseite (30.09., VORSCHAU – nur Branch)
+Nutzerin: neben Wasser/Spielen/„Grad nicht gut?“ je ein offensichtlicher Knopf für Training und Workflow – bei Fokus/Power spontan loslegen; steht heute schon etwas an, fragen „vorziehen?“; Workflow mit eigenen Intervallen, Playlist, offenem Ende; Training aus Plänen oder spontan (Kettlebell zählen, auf Zeit, Intervall, Kamera).
+- **Startseite:** `data-schnellknoepfe` jetzt 5 Knöpfe (Raster 6 Spalten: Wasser · Training · Workflow / Spielen · Grad nicht gut?). Training/Workflow klappen `ui/SpontanStart.jsx` auf.
+- **`TrainingStartAuswahl`:** „Heute steht noch an – vorziehen?“ (offene Trainings aus `heuteItems`, startet über `starteTrainingVonItem` live), gespeicherte Trainingspläne (`trainingTemplates`) mit ▶, spontan: Wiederholungen (Krafttraining mit einer Übung, Sätze×Wdh. – LiveWorkout bietet „📷 Mit Kamera zählen“ für Kettlebell/Kniebeuge/Liegestütz), Auf Zeit (Art „Sonstiges“ → Stoppuhr), Intervall (Bodyweight, Belastung/Pause/Runden). Legt einen Trainings-Eintrag für heute an und öffnet ihn live. „Alle Möglichkeiten im Trainingsbereich ›“.
+- **`WorkflowStartAuswahl`:** heute geplante Workflows „vorziehen“, eigene Workflows ▶, „⚡ Spontan-Workflow“. Neue Route `#/workflow` (WorkflowTimer eigenständig), Übergabe per `utils/workflowStart.js` (sessionStorage). WorkflowTimer: Kasten „⚡ Spontan-Workflow“ (Arbeit 15/25/45/50, Pause 0/5/10/15, Offenes Ende oder 60/90/120 Min., Playlist `workflow:spontan`, Musik-Modus), offenes Ende = 99 Runden mit Anzeige „Runde n“ (`Timer` Prop `rundenOffen`) und Knopf „✓ Fertig für heute“; jede Session ≥ 1 Min. wird im Tagesverlauf vermerkt.
+- Trainingspläne (Vorlagen, Ordner, Playlist, Wochenplan) gab es schon – jetzt direkt von der Startseite startbar.
+- Tests: `e2e/spontan.spec.js`, Harness `?spontan=1`.
+
 ### Aufgaben-Matrix im Workflow-Bereich (30.09., VORSCHAU – nur Branch, nicht main)
 Nutzerin (nach Eisenhower-PDF): keinen neuen Reiter, sondern im Workflow-Bereich eine eigene Matrix je Projekt, Farben, und sie soll sich automatisch im Alltag zeigen.
 - **Logik `utils/matrix.js`:** Feld aus „wichtig?“ (Standard ja) + Frist (≤ 2 Tage = dringend): 🔴 JETZT · 🟢 PLANEN · 🟡 KURZ HALTEN · ⚪ SPÄTER/WEG. Eigene Wahl (`quadrantManuell`) bleibt, bis „wieder automatisch“. Frist nähert sich → wandert von selbst nach Rot. `alltagAusMatrix`: nur Rot + an dem Tag eingeplantes Grün. Hinweise: > 3 rot (Überlastung), ≥ 3× verschoben (freundlich: kleiner machen/streichen). Keine KI nötig.

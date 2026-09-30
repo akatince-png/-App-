@@ -51,6 +51,7 @@ const GewohnheitenView = lazyAnsicht(() => import("./views/GewohnheitenView"));
 const AtemuebungenView = lazyAnsicht(() => import("./views/AtemuebungenView"));
 const FokusGemeinsamView = lazyAnsicht(() => import("./views/FokusGemeinsamView"));
 const MatrixView = lazyAnsicht(() => import("./views/MatrixView"));
+const WorkflowTimer = lazyAnsicht(() => import("./ui/WorkflowTimer"));
 const DenksportView = lazyAnsicht(() => import("./views/DenksportView"));
 const TeamView = lazyAnsicht(() => import("./views/TeamView"));
 const CoachChatView = lazyAnsicht(() => import("./views/CoachChatView"));
@@ -76,7 +77,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "matrix", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "dienstplan-foto", "datenschutz", "impressum", "tagebuch", "coaching", "tour", "kalender", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "matrix", "workflow", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "dienstplan-foto", "datenschutz", "impressum", "tagebuch", "coaching", "tour", "kalender", "mehr", "zusatzprotokoll"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams", "admin-handbuch"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -418,6 +419,9 @@ export default function AuthenticatedApp() {
     screen = <FokusGemeinsamView onHome={() => setView("home")} />;
   } else if (view === "matrix") {
     screen = <MatrixView onHome={() => setView("home")} />;
+  } else if (view === "workflow") {
+    // Schnellstart von der Startseite (30.09.).
+    screen = <WorkflowTimer onSchliessen={() => setView("home")} />;
   } else if (view === "denksport") {
     screen = <DenksportView onHome={() => setView("home")} />;
   } else if (view === "team") {
