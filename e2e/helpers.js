@@ -8,7 +8,13 @@
 // Hintergrund-Traffic. Ein echter App-Fehler äußert sich als JS-Exception
 // (pageerror) oder ein React-/App-eigener console.error-Text, nicht als
 // generischer net::-Fehler.
-const IGNORIERTE_MUSTER = [/net::ERR_/];
+//
+// „TypeError: Failed to fetch“ (30.09.): Der Harness hat bewusst kein
+// Backend – echte Supabase-Aufrufe (z. B. quest_rangliste der Rangliste,
+// die seit 29.09. unter „Mehr“ sitzt) gehen an die Platzhalter-Adresse
+// e2e-test.supabase.co und scheitern je nach Timing vor oder nach dem
+// Test-Ende. Das machte coachee-ansicht.spec.js sporadisch rot.
+const IGNORIERTE_MUSTER = [/net::ERR_/, /TypeError: Failed to fetch/];
 
 export function sammleKonsolenfehler(page) {
   const fehler = [];

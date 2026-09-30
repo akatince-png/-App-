@@ -212,6 +212,9 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Geführte Atmung im Routine-Ablauf (30.09., live)
+Nutzerin (Foto iPad): Im geführten Ablauf mit Stoppuhr stand beim Schritt „Atemübung (2 Min.)“ nur eine Uhr, keine geführte Übung. Jetzt erkennt `RoutineAblauf` Atem-Schritte über `atemFuerRoutineSchritt` (kern_key `atem_morgen`/`atem_abend` oder „Atem/Atmung/atmen“ im Namen) und zeigt direkt `AtemFuehrung` (Kreis + Stimme, fest hinterlegte Übung, ohne KI/Video) in `[data-routine-atem]`. Nach dem Ende wird die Atemübung geloggt (`atemuebungAbschliessen`) und es geht automatisch weiter; „Schon geatmet – weiter“ überspringt. Die Soll-Uhr-Signale ruhen in diesem Schritt. Test: `e2e/atem-tagebuch.spec.js`. YouTube-Links bewusst nicht: eigene Führung läuft offline, ohne Werbung und ohne Datenweitergabe.
+
 ### Routine-Uhr: Soll-Zeit + Weiterlaufen, Tagebuch mit eigenen Einträgen (29.09., live)
 Nutzerin: auch in der Messwoche vorher Soll-Werte als Rahmen; läuft es länger/kürzer, soll die Uhr weiterlaufen und das dokumentiert werden, um nachzujustieren. Tagebuch: bei „Mit wem“/„Wo“ selbst eintragen, größeres Textfeld.
 - **`RoutineAblauf`:** eine Schritt-Uhr für alle Wochen (`data-schritt-uhr` = `laeuft`/`drueber`): Soll-Zeit (`dauerMin`) läuft rückwärts, 30 s vorher Ton + kurzes Vibrieren, bei 0 Doppelton + Vibrieren, danach zählt sie orange weiter („+1:20 – länger als geplant, wird notiert“). **Kein automatisches Weiterspringen mehr** (vorher sprang der Countdown bei 0 zum nächsten Schritt, die Überzeit ging verloren). In Mess-Phase zusätzlich „📏 wird gemessen“. Gespeichert wird wie bisher die echte Dauer (`tatsaechlichSek`), die Auswertung „geplant vs. tatsächlich“ und die Messwochen-Vorschläge bleiben.

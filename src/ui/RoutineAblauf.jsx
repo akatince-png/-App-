@@ -11,6 +11,8 @@ import TagebuchFormular from "./TagebuchFormular";
 import { istTagebuchSchritt } from "../utils/tagebuch";
 import { toLocalISODate } from "../utils/dates";
 import { playBeep } from "../utils/beep";
+import AtemFuehrung from "./AtemFuehrung";
+import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBibliothek";
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
@@ -37,7 +39,7 @@ function fmtDauer(sekunden) {
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
   useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand, atemuebungAbschliessen, aenderungVermerken } = useAppData();
   const heute = toLocalISODate(new Date());
   const tagebuchHeute = (tagebuchEintraege || []).find((e) => e.datum === heute);
   const [tagebuchNachher, setTagebuchNachher] = useState(false);
@@ -91,6 +93,12 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   }, []);
 
   const aktuell = schritte[index];
+  // Atem-Schritt (30.09., Nutzerin: „die Atemübung ploppt auf, aber es
+  // findet keine geführte Übung statt“): hier direkt die fest hinterlegte
+  // Übung mit Kreis + Stimme (ohne KI, ohne Video). Ist sie durch, geht
+  // es automatisch zum nächsten Schritt.
+  const atemInfo = atemFuerRoutineSchritt(aktuell, routine);
+  const atemUebung = atemInfo ? { ...bibliotheksUebung(atemInfo.key), dauerMinuten: atemInfo.dauerMinuten } : null;
 
   // Schritt-Uhr (29.09., Nutzerin): jeder Schritt hat eine Soll-Zeit als
   // Rahmen – auch in der Messwoche. Sie läuft rückwärts; ist sie um, gibt es
@@ -102,7 +110,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   const restSek = sollSek - schrittSek;
   const signalRef = useRef({ index: -1, vorwarnung: false, ende: false });
   useEffect(() => {
-    if (fertig || !wachGefragt || !aktuell || istTagebuchSchritt(aktuell)) return;
+    if (fertig || !wachGefragt || !aktuell || istTagebuchSchritt(aktuell) || atemUebung) return;
     const sig = signalRef.current;
     if (sig.index !== index) signalRef.current = { index, vorwarnung: false, ende: false };
     const r = signalRef.current;
@@ -259,6 +267,28 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
             </button>
           </div>
         </Card>
+      ) : atemUebung ? (
+        <div data-routine-atem>
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10, textAlign: "center" }}>{aktuell.name}</div>
+          <AtemFuehrung
+            key={aktuell.id}
+            uebung={atemUebung}
+            onFertig={({ dauerSek, vorher, nachher }) => {
+              if (dauerSek > 0) {
+                atemuebungAbschliessen?.(atemUebung, dauerSek, { gefuehlVorher: vorher, gefuehlDanach: nachher, sessionId: null });
+                aenderungVermerken?.({ kategorie: "atemuebung", itemName: atemUebung.name, aktion: "erledigt", detail: `${Math.round(dauerSek / 60) || 1} Min. · aus der ${ROUTINE_LABEL[routine]}` });
+              }
+              weiter();
+            }}
+          />
+          <div style={{ textAlign: "center", marginTop: 8 }}>
+            <button type="button" onClick={weiter} style={{ border: "none", background: "transparent", color: textMuted, fontSize: 12.5, cursor: "pointer", padding: 6 }}>
+              Schon geatmet – weiter
+            </button>
+          </div>
+        </Card>
+        </div>
       ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>

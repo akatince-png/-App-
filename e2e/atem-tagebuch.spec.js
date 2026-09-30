@@ -95,3 +95,22 @@ test("Tagebuch: eigene Person und eigener Ort als Chip, Textfeld direkt sichtbar
   await expect(page.getByRole("group", { name: "Wo warst du vor allem?" }).getByRole("button", { name: "Fitnessstudio" })).toBeVisible();
   await expect(page.getByLabel("Was war besonders?")).toBeVisible();
 });
+
+// Nutzerin (30.09.): Im geführten Ablauf mit Stoppuhr stand beim Atem-Schritt
+// nur eine Uhr – jetzt läuft dort direkt die geführte Übung (Kreis + Stimme).
+test("Morgenroutine mit Stoppuhr: Atem-Schritt zeigt die geführte Übung", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 8, 30, 7, 20) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1&atemschritt=1#/home");
+  await page.getByRole("button", { name: /Morgenroutine starten/ }).click();
+  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  if (await abJetzt.isVisible()) await abJetzt.click();
+  // Harness: Glas Wasser → Zähne putzen → Atemübung
+  await page.getByRole("button", { name: "Schritt fertig" }).click();
+  await expect(page.getByText("Schritt 2 von 3", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Schritt fertig" }).click();
+  const atem = page.locator("[data-routine-atem]");
+  await expect(atem).toBeVisible();
+  await expect(atem).toContainText("Atemübung");
+  await atem.getByRole("button", { name: "Schon geatmet – weiter" }).click();
+  await expect(page.getByText("Morgenroutine abgeschlossen!")).toBeVisible();
+});
