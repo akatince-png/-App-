@@ -3,14 +3,17 @@ import { Card, Pill, PrimaryButton, TextArea } from "./primitives";
 import { accentSoft, textMuted, danger } from "./theme";
 import { useAkutModus, AKUT_SYMPTOME, akutmodusEreignisLoggen } from "../data/useAkutModus";
 import { useAppData } from "../context/AppDataContext";
-import AtemTimer from "./AtemTimer";
+import AtemFuehrung from "./AtemFuehrung";
+import { ATEM_KEY_EIGEN, bibliotheksUebung, uebungFuerKey } from "../utils/atemBibliothek";
 import MomentFesthalten from "./MomentFesthalten";
 
 // Standard-Atemübung, falls unter "Atemübungen" noch keine eigene
-// angelegt wurde — 4-4-6 ist ein gängiges, leicht zu merkendes Muster
-// (Box-Breathing-Variante), niemand soll erst eine Übung anlegen müssen,
-// bevor der Akutmodus nutzbar ist.
-const STANDARD_ATEMUEBUNG = { name: "Ruhig werden", icon: "🌬️", einatmenSek: 4, haltenSek: 4, ausatmenSek: 6, dauerMinuten: 3 };
+// angelegt wurde — „Ruhig werden“ (4-4-6) aus der Bibliothek, niemand soll
+// erst eine Übung anlegen müssen, bevor der Akutmodus nutzbar ist.
+// Seit 30.09. (Nutzerin: „den atmenden Kreis überall, wo eine Atemübung
+// stattfindet“) läuft hier dieselbe geführte Übung wie auf der Atem-Seite
+// und in den Routinen: Kreis + Stimme statt des alten Zahlen-Timers.
+const STANDARD_ATEMUEBUNG = bibliotheksUebung("ruhig");
 
 // Akutmodus (16.08., mehrfach erweitert: eigener, schmalerer Knopf statt
 // Untertitel-Karte, vorab festlegbare "Akut-Übung", jetzt zusätzlich
@@ -172,7 +175,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
     if (userId && aktuelleAktion) akutmodusEreignisLoggen(userId, aktuelleAktion, null, gefuehl);
   };
 
-  const atemUebungFuerAkutmodus = atemuebungen?.[0] || STANDARD_ATEMUEBUNG;
+  const atemUebungFuerAkutmodus = (atemuebungen?.[0] && uebungFuerKey(`${ATEM_KEY_EIGEN}${atemuebungen[0].id}`, atemuebungen)) || STANDARD_ATEMUEBUNG;
 
   const atemFertig = (dauerSek, gefuehlDanach) => {
     if (dauerSek == null) return;
@@ -216,7 +219,7 @@ export function AkutModusPanel({ onClose, onSendenAnCoach, coachName, zeigeCoach
 
       {atemModusAktiv && (
         <div>
-          <AtemTimer uebung={atemUebungFuerAkutmodus} onFertig={atemFertig} kompakt />
+          <AtemFuehrung uebung={atemUebungFuerAkutmodus} onFertig={({ dauerSek, nachher }) => atemFertig(dauerSek, nachher)} />
           <button
             type="button"
             onClick={() => setAtemModusAktiv(false)}

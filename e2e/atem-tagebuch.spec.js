@@ -46,6 +46,9 @@ test("Moment festhalten: gelber Knopf → Gefühl, Stärke, Auslöser, wer dabei
   expect(m).toMatchObject({ gefuehle: ["⚡ impulsiv"], staerke: 4, ausloeser: "Streit wegen Termin", personen: ["Freunde"], notizTeilen: false });
   await page.getByRole("button", { name: "🌬️ Jetzt eine Atemübung" }).click();
   await expect(page.getByText("Zurück zur Übersicht")).toBeVisible();
+  // Seit 30.09. dieselbe geführte Übung (Kreis + Stimme) wie überall sonst.
+  await expect(page.getByText("Aka sagt die Phasen an")).toBeVisible();
+  await expect(page.getByRole("button", { name: "▶ Start" })).toBeVisible();
 });
 
 test("Tagebuch: keine Startseiten-Karte; Seite zeigt Muster ab 14 Einträgen", async ({ page }) => {

@@ -212,6 +212,13 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Atmender Kreis überall (30.09., live)
+Nutzerin: „den atmenden Kreis überall einbauen, wo eine Atemübung stattfindet – Abendroutine, Notfallübungen usw.“ Durchsicht aller Stellen:
+- **Atem-Seite, Atem-Pausen (Tagesplan/Home), Gruppen-Atmung, „▶ Mitmachen“ in der Abhak-Liste:** liefen schon über `AtemFuehrung`.
+- **Geführter Morgen-/Abendroutine-Ablauf:** seit heute ebenfalls `AtemFuehrung` (siehe unten), abends „Gleichmäßig atmen“ (`atem_abend`, ab Woche 2) bzw. jeder Schritt mit „Atem“ im Namen.
+- **Notfall „Grad nicht gut?“ (`AkutModusKarte`, auch über „Moment festhalten → Jetzt eine Atemübung“):** nutzte noch den alten Zahlen-Timer `AtemTimer` – jetzt `AtemFuehrung`; Übung = erste eigene Übung, sonst „Ruhig werden“ aus der Bibliothek. Protokoll unverändert (`aus_akutmodus`, Gefühl danach).
+- `ui/AtemTimer.jsx` wird damit nirgends mehr benutzt (Datei bleibt vorerst, Löschen mit der Nutzerin abstimmen).
+
 ### Geführte Atmung im Routine-Ablauf (30.09., live)
 Nutzerin (Foto iPad): Im geführten Ablauf mit Stoppuhr stand beim Schritt „Atemübung (2 Min.)“ nur eine Uhr, keine geführte Übung. Jetzt erkennt `RoutineAblauf` Atem-Schritte über `atemFuerRoutineSchritt` (kern_key `atem_morgen`/`atem_abend` oder „Atem/Atmung/atmen“ im Namen) und zeigt direkt `AtemFuehrung` (Kreis + Stimme, fest hinterlegte Übung, ohne KI/Video) in `[data-routine-atem]`. Nach dem Ende wird die Atemübung geloggt (`atemuebungAbschliessen`) und es geht automatisch weiter; „Schon geatmet – weiter“ überspringt. Die Soll-Uhr-Signale ruhen in diesem Schritt. Test: `e2e/atem-tagebuch.spec.js`. YouTube-Links bewusst nicht: eigene Führung läuft offline, ohne Werbung und ohne Datenweitergabe.
 
