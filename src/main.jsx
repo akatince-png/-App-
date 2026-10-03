@@ -9,6 +9,7 @@ import './index.css'
 import App from './App.jsx'
 import { initErrorMonitoring } from './services/errorMonitoring.js'
 import { touchMarkieren } from './utils/touch'
+import { plastikAutoStarten } from './utils/plastikAuto'
 
 initErrorMonitoring()
 
@@ -28,6 +29,7 @@ if ('serviceWorker' in navigator) {
 }
 
 touchMarkieren();
+plastikAutoStarten();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

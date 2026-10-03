@@ -212,6 +212,12 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Startseite „Dein Überblick“ + alle Knöpfe plastisch (30.09., live)
+- **Nutzerin:** „Dein Gehirn“ klingt zu krass → Titel **„Dein Überblick“** (`GehirnKarte` Prop `titel`). Der Tagesplan steckt jetzt **oben im selben Fenster** (`GehirnKarte` Prop `oben` = `HeutePlanKarte eingebettet` + `RoutineStart` aus `KernprogrammKarte`, jetzt exportiert). Überblick = oberstes Fenster; das Kernprogramm steht darunter (ohne eigenen Routine-Knopf).
+- **Kalender nicht mehr groß oben**, sondern unter „Bereiche einzeln ansehen“ je Zeitraum (`ui/ZeitraumKalender.jsx`): Tag = Ablauf mit Uhrzeiten (`data-kalender-tag`), Woche = Mo–So (`WocheKarte eingebettet`), Monat = Monatsraster (`data-kalender-monat`), Gesamt = Hinweis + Kalender-Knopf.
+- **Alle Knöpfe plastisch:** `utils/plastikAuto.js` (in `main.jsx` und Harness gestartet) schaut per MutationObserver die echte Hintergrundfarbe jedes Knopfs an: kräftige Farbe → Klasse `mp-plastik-farbig` (Glanz + Farbschatten über `::before`), helle Fläche → `mp-plastik-hell` (weicher Schatten). Durchsichtige Knöpfe, eigene Verläufe, Segment-Umschalter, Leiste und `data-plastik="nein"` bleiben unberührt; eigene Inline-Schatten gehen vor (`:not([style*="box-shadow"])`).
+- Kernprogramm-Karte bleibt sichtbar, solange das Coaching läuft (Einführung W1–4, danach Erhaltung „Dranbleiben“).
+
 ### Sicherheit + Aufräumen (30.09., live)
 - **Migration 0124 (eingespielt):** `is_admin` nicht mehr ohne Anmeldung aufrufbar; Trigger-Funktionen (`programme_fuer_neue_zuweisen`, `handle_new_user`, `profiles_is_admin_schutz`) für niemanden direkt aufrufbar. Getestet: angemeldetes Konto liest/ändert eigenes Profil wie vorher. Die übrigen Hinweise „angemeldete Nutzer können SECURITY-DEFINER-Funktion aufrufen“ sind gewollt (alle prüfen intern `is_admin(auth.uid())` bzw. `auth.uid()`). **Offen, macht die Nutzerin selbst:** „Leaked Password Protection“ im Supabase-Dashboard (Authentication → Passwort-Einstellungen) einschalten.
 - `ui/AtemTimer.jsx` gelöscht (seit `AtemFuehrung` überall ungenutzt).

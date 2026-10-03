@@ -3,6 +3,7 @@ import { useAppData } from "../context/AppDataContext";
 import { ETAPPEN_NAME, WOCHEN, datumKurz } from "../utils/kernprogramm";
 import { routineTagesStatus } from "../utils/routineStatus";
 import { toLocalISODate } from "../utils/dates";
+import { plastikFarbe } from "./plastik";
 
 // Startseite (25.09., Vorschau freigegeben): wo stehe ich im AKA-Coaching?
 // Einführung: "Woche 2 von 4 – Bewegung" mit dem, was neu dazukommt.
@@ -45,7 +46,7 @@ function aktuelleRoutine(jetzt = new Date()) {
   return jetzt.getHours() < 14 ? "morgen" : "abend";
 }
 
-function RoutineStart({ onRoutineStart }) {
+export function RoutineStart({ onRoutineStart }) {
   const {
     routineSchritte,
     routineDurchlaeufe,
@@ -95,14 +96,11 @@ function RoutineStart({ onRoutineStart }) {
         minHeight: 50,
         border: "none",
         borderRadius: 16,
-        background: "var(--mp-accent)",
-        color: "#fff",
+        ...plastikFarbe("var(--mp-accent)"),
         fontSize: 15.5,
         fontWeight: 800,
         cursor: "pointer",
         fontFamily: "inherit",
-        boxShadow:
-          "0 6px 14px color-mix(in srgb, var(--mp-accent) 30%, transparent)",
       }}
     >
       ▶ {ROUTINE_TEXT[routine]} starten

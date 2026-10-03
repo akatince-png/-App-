@@ -31,7 +31,7 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 import RanglisteKarte from "../ui/RanglisteKarte";
 import RoutineZeitHinweisKarte from "../ui/RoutineZeitHinweisKarte";
 import SchichtHeuteKarte from "../ui/SchichtHeuteKarte";
-import KernprogrammKarte from "../ui/KernprogrammKarte";
+import KernprogrammKarte, { RoutineStart } from "../ui/KernprogrammKarte";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import Top3Karte from "../ui/Top3Karte";
 import WochenCheckKarte from "../ui/WochenCheckKarte";
@@ -44,7 +44,7 @@ import { workflowStartMerken } from "../utils/workflowStart";
 import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
-import WocheKarte from "../ui/WocheKarte";
+import ZeitraumKalender from "../ui/ZeitraumKalender";
 import { useTagesBloecke } from "../data/useTagesBloecke";
 
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
@@ -349,15 +349,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   );
 
   useTagGeschafftFeier(heuteItems);
-  // Wochen-Kalender auf der Startseite (30.09.): Mo–So der laufenden Woche.
+  // Kalender im Überblick (30.09.): Blöcke je Tag für Tag/Woche/Monat.
   const bloeckeFuer = useTagesBloecke();
-  const wocheTage = useMemo(() => {
-    const montag = addDays(new Date(today.getFullYear(), today.getMonth(), today.getDate()), -((today.getDay() + 6) % 7));
-    return Array.from({ length: 7 }, (_, i) => {
-      const datum = addDays(montag, i);
-      return { datum, bloecke: bloeckeFuer(datum) };
-    });
-  }, [bloeckeFuer, today]);
   const zusatzEtikett = useZusatzEtikett();
 
   // Im Notfallmodus: nur Medikamente/Hormone und Hydration anzeigen — die
@@ -1093,7 +1086,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       <LaufenderTimerKarte />
       </>
       )}
-      {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} onRoutineStart={setAblaufRoutine} />}
       {!STARTSEITE_SCHLICHT && (
       <>
       {proband === null && <Top3Karte />}
@@ -1131,16 +1123,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           (Tagesring, Serie, Punkte, Level — ersetzt seit 23.09. die reine
           Text-Begrüßung) und darunter "Dein Gehirn" mit Wasser-Tropfen und
           Akut-Knopf. Als Nächstes und Quests folgen darunter. */}
-      {/* Startseite (30.09., Nutzerin): Tagesplan zum Abhaken, Kalender für die
-          Woche, darunter das Diagramm (Gehirn) – alles schnell im Blick. */}
-      <HeutePlanKarte
-        items={displayItems}
-        tagStr={tagStr}
-        direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
-        onToggle={(i) => (i.bundleIds ? buendelErledigen(i) : direktErledigbar(i) ? direktErledigen(i) : onOpenView("tagesplan"))}
-        onOpenPlan={() => onOpenView("tagesplan")}
-      />
-      {!isEmergencyMode && <WocheKarte tage={wocheTage} heute={today} onOeffnen={() => onOpenView("kalender")} />}
       <GehirnKarte
         kategorien={ordenKategorien}
         widgets={zeitraumWidgets}
@@ -1154,7 +1136,23 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         phase={phase}
         balkenKlappbar
         chipsFlach
+        titel="Dein Überblick"
+        oben={
+          <HeutePlanKarte
+            eingebettet
+            items={displayItems}
+            tagStr={tagStr}
+            direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
+            onToggle={(i) => (i.bundleIds ? buendelErledigen(i) : direktErledigbar(i) ? direktErledigen(i) : onOpenView("tagesplan"))}
+            onOpenPlan={() => onOpenView("tagesplan")}
+          >
+            {proband === null && <RoutineStart onRoutineStart={setAblaufRoutine} />}
+          </HeutePlanKarte>
+        }
+        kalender={!isEmergencyMode && <ZeitraumKalender zeitraum={effektiverZeitraum} bloeckeFuer={bloeckeFuer} heute={today} onOeffnen={() => onOpenView("kalender")} />}
       />
+      {/* AKA-Coaching (30.09.): unter dem Überblick; der Routine-Start sitzt jetzt oben im Tagesplan. */}
+      {proband === null && <KernprogrammKarte onOeffnen={() => onOpenView("coaching")} />}
       {!STARTSEITE_SCHLICHT && (
       <>
       {/* Design 2.0 (28.09., Entwurf „Mischung B+C“): Spielstand als drei

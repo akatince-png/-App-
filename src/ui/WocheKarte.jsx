@@ -16,6 +16,7 @@ export default function WocheKarte({
   tage = [],
   heute = new Date(),
   onOeffnen,
+  eingebettet = false,
 }) {
   const heuteTag = tage.find((t) => sameDay(t.datum, heute));
   const geplant = heuteTag
@@ -27,13 +28,17 @@ export default function WocheKarte({
   return (
     <div
       data-woche-karte
-      style={{
-        background: "var(--mp-karte)",
-        borderRadius: 24,
-        padding: 16,
-        marginBottom: 16,
-        boxShadow: "var(--mp-schatten)",
-      }}
+      style={
+        eingebettet
+          ? { marginTop: 10 }
+          : {
+              background: "var(--mp-karte)",
+              borderRadius: 24,
+              padding: 16,
+              marginBottom: 16,
+              boxShadow: "var(--mp-schatten)",
+            }
+      }
     >
       <div
         style={{
@@ -43,10 +48,10 @@ export default function WocheKarte({
           marginBottom: 12,
         }}
       >
-        <PlastikSymbol icon="kalender" farbe="#7A63B0" size={34} eckig />
+        <PlastikSymbol icon="kalender" farbe="#7A63B0" size={eingebettet ? 28 : 34} eckig />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
-            style={{ fontFamily: fontHeading, fontSize: 17, fontWeight: 800 }}
+            style={{ fontFamily: fontHeading, fontSize: eingebettet ? 15 : 17, fontWeight: 800 }}
           >
             Deine Woche
           </div>

@@ -4,13 +4,14 @@ import { sammleKonsolenfehler } from "./helpers.js";
 const aufrufe = (page, name) => page.evaluate((n) => (window.__mockAufrufe || []).filter((a) => a.name === n).map((a) => a.args), name);
 
 // Startseite (30.09.): Tagesplan zum Abhaken, Wochen-Kalender, Ereignisse.
-test("Startseite: Heute abhaken (mit Rückfrage bei zu früh), Woche mit spontanen Ereignissen", async ({ page }) => {
+test("Startseite: Überblick mit Tagesplan oben (Abhaken, Rückfrage bei zu früh), Kalender je Zeitraum mit spontanen Ereignissen", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.install({ time: new Date(2026, 8, 30, 6, 0) });
   await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&ereignisse=1&startvariante=b#/home");
   const heute = page.locator("[data-heute-plan]");
   await expect(heute).toBeVisible();
+  await expect(page.getByText("Dein Überblick")).toBeVisible();
   await expect(heute.locator("[data-plastik-symbol]").first()).toBeVisible();
   // Elvanse ist um 08:00 geplant – um 06:00 fragt die App nach.
   await heute.getByRole("button", { name: "Elvanse erledigt" }).click();
@@ -21,6 +22,13 @@ test("Startseite: Heute abhaken (mit Rückfrage bei zu früh), Woche mit spontan
   await heute.getByRole("button", { name: "Ja, erledigt" }).click();
   expect((await aufrufe(page, "toggleHormonErledigt")).length).toBe(1);
 
+  // Kalender steckt im Überblick unter „Bereiche einzeln ansehen“ (30.09.)
+  // und folgt Tag/Woche/Monat.
+  await page.locator("[data-balken-umschalter]").click();
+  await expect(page.locator("[data-kalender-tag]")).toContainText("Kaffee");
+  await page.getByRole("button", { name: "Monat", exact: true }).click();
+  await expect(page.locator("[data-kalender-monat]")).toBeVisible();
+  await page.getByRole("button", { name: "Woche", exact: true }).click();
   const woche = page.locator("[data-woche-karte]");
   await expect(woche).toContainText("Deine Woche");
   await expect(woche).toContainText("330 ml Kaffee");

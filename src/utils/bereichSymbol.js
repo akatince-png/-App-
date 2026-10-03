@@ -64,6 +64,7 @@ const TITEL_SYMBOL = {
   "🩸": ["tropfen", "#D12121"],
   "🌅": ["sonnenaufgang", "#F08A24"],
   "🌙": ["mond", "#2B3480"],
+  "⚙️": ["zahnrad", "#5B6B84"],
 };
 
 export function titelSymbol(titel) {

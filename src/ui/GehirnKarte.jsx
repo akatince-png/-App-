@@ -199,7 +199,7 @@ function Schnellknoepfe({ onWasser, onAkut }) {
   );
 }
 
-export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null, balkenKlappbar = false, chipsFlach = false }) {
+export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum, tage, zeigeGesamt, onOpenErfolge, onDenksport, onOpenView, onWasser, onAkut, kopf = null, mitte = null, phase = "nacht", kopfUnten = false, gruss = null, koerper = null, balkenKlappbar = false, chipsFlach = false, titel = "🧠 Dein Gehirn", oben = null, kalender = null }) {
   const stimmung = STIMMUNG[phase] || STIMMUNG.nacht;
   const gehirn = useMemo(() => berechneGehirnZeitraum({ widgets, kategorien, tage }), [widgets, kategorien, tage]);
   const [gewaehlt, setGewaehlt] = useState(null);
@@ -231,8 +231,15 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
 
       {/* Begrüßung als kleine Zeile ganz oben (25.09.), wenn der Spielstand unten steht. */}
       {kopfUnten && gruss && <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.9, marginBottom: 10 }}>{gruss}</div>}
+      {/* Startseite (30.09., Nutzerin): Tagesplan oben im selben Fenster. */}
+      {oben && (
+        <>
+          {oben}
+          <div style={{ height: 1, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.14)", margin: "12px 0 14px" }} />
+        </>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <div style={{ fontSize: 15, fontWeight: 800 }}>🧠 Dein Gehirn</div>
+        <div style={{ fontSize: 15, fontWeight: 800 }}>{titel}</div>
         <Zeitraumwahl zeitraum={zeitraum} setZeitraum={setZeitraum} zeigeGesamt={zeigeGesamt} />
       </div>
 
@@ -393,6 +400,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
             );
           })}
         </div>
+        {kalender}
       </div>
       )}
 

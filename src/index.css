@@ -920,3 +920,28 @@ input[type="time"]::-webkit-date-and-time-value {
   bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
+
+/* Alle Knöpfe plastisch (30.09., utils/plastikAuto.js): farbige Knöpfe
+   bekommen Glanz oben links, Innenschatten und einen Farbschatten darunter,
+   helle Knöpfe einen weichen Schatten. Eigene Schatten im Code gehen vor. */
+.mp-plastik-farbig {
+  position: relative;
+  isolation: isolate;
+}
+.mp-plastik-farbig::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(120% 100% at 28% 0%, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.1));
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 8px rgba(0, 0, 0, 0.12);
+}
+.mp-plastik-farbig:not([style*="box-shadow"]) {
+  box-shadow: 0 8px 16px -8px rgb(var(--pl-rgb, 16 24 40) / 0.7), 0 2px 4px rgba(16, 24, 40, 0.1);
+}
+.mp-plastik-hell:not([style*="box-shadow"]) {
+  box-shadow: 0 6px 14px -8px rgba(16, 24, 40, 0.35), 0 1px 2px rgba(16, 24, 40, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}

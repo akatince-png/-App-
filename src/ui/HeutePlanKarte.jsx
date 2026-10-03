@@ -19,6 +19,8 @@ export default function HeutePlanKarte({
   direkt,
   onToggle,
   onOpenPlan,
+  eingebettet = false,
+  children = null,
 }) {
   const [frage, setFrage] = useState(null);
   const offen = items
@@ -36,13 +38,17 @@ export default function HeutePlanKarte({
   return (
     <div
       data-heute-plan
-      style={{
-        background: "var(--mp-karte)",
-        borderRadius: 24,
-        padding: 16,
-        marginBottom: 16,
-        boxShadow: "var(--mp-schatten)",
-      }}
+      style={
+        eingebettet
+          ? { marginBottom: 6 }
+          : {
+              background: "var(--mp-karte)",
+              borderRadius: 24,
+              padding: 16,
+              marginBottom: 16,
+              boxShadow: "var(--mp-schatten)",
+            }
+      }
     >
       <div
         style={{
@@ -52,7 +58,7 @@ export default function HeutePlanKarte({
           marginBottom: 10,
         }}
       >
-        <PlastikSymbol icon="liste" farbe="#3F63D8" size={34} eckig />
+        <PlastikSymbol icon="liste" farbe="#3F63D8" size={eingebettet ? 30 : 34} eckig />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{ fontFamily: fontHeading, fontSize: 17, fontWeight: 800 }}
@@ -83,6 +89,7 @@ export default function HeutePlanKarte({
           Tagesplan ›
         </button>
       </div>
+      {children}
       {items.length > 0 && (
         <div
           style={{
