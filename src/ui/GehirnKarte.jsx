@@ -217,7 +217,7 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
 
   return (
     <div style={{ "--gk-rgb": stimmung.hell ? "20, 30, 60" : "255, 255, 255", "--gk-text": stimmung.hell ? "#101828" : "#fff", position: "relative", marginBottom: 20, borderRadius: 24, padding: 16, color: "var(--gk-text)", background: stimmung.hintergrund, boxShadow: stimmung.schatten, border: stimmung.hell ? "1px solid rgba(16, 24, 40, 0.05)" : "none", transition: "background 1s" }}>
-      <Deko phase={phase} />
+      {!oben && <Deko phase={phase} />}
       <div style={{ position: "relative" }}>
       {/* Spielstand oben in derselben Karte (24.09.), durch eine feine Linie
           vom Gehirn-Teil getrennt. */}
@@ -238,6 +238,11 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           <div style={{ height: 1, background: "rgba(var(--gk-rgb, 255, 255, 255), 0.14)", margin: "12px 0 14px" }} />
         </>
       )}
+      {/* Mit Tagesplan oben: Sonne/Sterne erst ab dem Überblick-Teil, damit sie
+          nicht über den Haken liegen (03.10.). */}
+      <div style={{ position: "relative" }}>
+      {oben && <Deko phase={phase} />}
+      <div style={{ position: "relative" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <div style={{ fontSize: 15, fontWeight: 800 }}>{titel}</div>
         <Zeitraumwahl zeitraum={zeitraum} setZeitraum={setZeitraum} zeigeGesamt={zeigeGesamt} />
@@ -447,6 +452,8 @@ export default function GehirnKarte({ kategorien, widgets, zeitraum, setZeitraum
           <div style={{ marginTop: 14 }}>{kopf}</div>
         </>
       )}
+      </div>
+      </div>
       </div>
     </div>
   );

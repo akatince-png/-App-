@@ -5,6 +5,7 @@ import { useFokusTimer } from "../data/useFokusTimer";
 import { Ring } from "./TimerRing";
 import { textMain, textMuted, verdunkeln, hexZuRgba } from "./theme";
 import PlastikSymbol from "./PlastikSymbol";
+import AmpelPunkt, { AmpelLegende } from "./AmpelPunkt";
 import SchnellIcon from "./SchnellIcon";
 import { plastikFarbe, plastikHell } from "./plastik";
 
@@ -69,6 +70,9 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
             {b.start != null ? ` · bis ${minZuZeit(b.ende)}` : ""}
           </div>
           {b.detail && <div style={{ fontSize: 11.5, color: erledigt ? "rgba(255,255,255,0.8)" : textMuted, marginTop: 2 }}>{b.detail}</div>}
+          <div style={{ marginTop: 5, color: erledigt ? "#fff" : textMain }}>
+            <AmpelPunkt item={b} />
+          </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0, position: "relative", zIndex: 3 }}>
           {!erledigt && !istRoutine && (
@@ -143,6 +147,7 @@ export default function BildTagesplan({ items, routinen = [], heute, onRoutineSt
 
   return (
     <div data-bild-tagesplan>
+      <AmpelLegende />
       <div style={{ position: "relative", paddingLeft: 58 }}>
         <div aria-hidden="true" style={{ position: "absolute", left: 50, top: 6, bottom: 6, width: 2, background: "color-mix(in srgb, #ECEDF3 var(--mp-flaeche), var(--mp-karte))", borderRadius: 2 }} />
         {mitZeit.map((b) => (

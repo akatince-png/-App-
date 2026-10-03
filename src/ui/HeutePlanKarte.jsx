@@ -3,6 +3,8 @@ import PlastikSymbol from "./PlastikSymbol";
 import SchnellIcon from "./SchnellIcon";
 import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
 import { istZuFrueh } from "../utils/fruehAbhaken";
+import { nachPrioritaet } from "../utils/prioritaet";
+import AmpelPunkt from "./AmpelPunkt";
 import { plastikFarbe, plastikHell } from "./plastik";
 import { fontHeading, textMuted } from "./theme";
 
@@ -23,9 +25,7 @@ export default function HeutePlanKarte({
   children = null,
 }) {
   const [frage, setFrage] = useState(null);
-  const offen = items
-    .filter((i) => !i.done)
-    .sort((a, b) => (a.uhrzeit || "99").localeCompare(b.uhrzeit || "99"));
+  const offen = nachPrioritaet(items.filter((i) => !i.done));
   const erledigt = items.length - offen.length;
   const anteil = items.length ? erledigt / items.length : 0;
 
@@ -161,10 +161,13 @@ export default function HeutePlanKarte({
                   {item.name}
                 </div>
                 <div
-                  style={{ fontSize: 12, color: textMuted, fontWeight: 600 }}
+                  style={{ fontSize: 12, color: textMuted, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}
                 >
-                  {item.uhrzeit ? `${item.uhrzeit} · ` : ""}
-                  {meta.label || ""}
+                  <AmpelPunkt item={item} mitText={false} />
+                  <span>
+                    {item.uhrzeit ? `${item.uhrzeit} · ` : ""}
+                    {meta.label || ""}
+                  </span>
                 </div>
               </div>
               <button

@@ -4,6 +4,8 @@ import { ETAPPEN_NAME, WOCHEN, datumKurz } from "../utils/kernprogramm";
 import { routineTagesStatus } from "../utils/routineStatus";
 import { toLocalISODate } from "../utils/dates";
 import { plastikFarbe } from "./plastik";
+import AmpelPunkt from "./AmpelPunkt";
+import { STUFEN } from "../utils/prioritaet";
 
 // Startseite (25.09., Vorschau freigegeben): wo stehe ich im AKA-Coaching?
 // Einführung: "Woche 2 von 4 – Bewegung" mit dem, was neu dazukommt.
@@ -116,7 +118,7 @@ export function RoutineStart({ onRoutineStart }) {
         {status.anzahlErledigt > 0
           ? `${status.anzahlErledigt} von ${status.anzahlGesamt} Schritten erledigt · `
           : `${status.anzahlGesamt} Schritte · `}
-        mit Stoppuhr
+        mit Stoppuhr · <span style={{ display: "inline-flex", verticalAlign: "-1px" }}><AmpelPunkt stufe={STUFEN.pflicht} /></span>
       </span>
     </button>
   );
