@@ -120,6 +120,7 @@ test("Home: gelber Akut-Knopf öffnet die Hilfe ohne Absturz", async ({ page }) 
 test("Mehr: beide Neustart-Knöpfe sind da und erst nach Bestätigungswort aktiv", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html#/mehr");
+  await page.locator('[data-abschnitt-kopf="neustart"]').click();
   const fortschritt = page.getByRole("button", { name: "Fortschritt auf Null setzen" });
   const alles = page.getByRole("button", { name: "Wirklich alles zurücksetzen" });
   await expect(fortschritt).toBeDisabled();

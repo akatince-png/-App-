@@ -23,6 +23,7 @@ test("Admins sehen den Einwilligungs-Schritt nicht", async ({ page }) => {
 
 test("Mehr: KI-Schalter, Datenschutzerklärung, Konto löschen mit Bestätigung", async ({ page }) => {
   await page.goto("/e2e/harness/index.html?isAdmin=0#/mehr");
+  await page.locator('[data-abschnitt-kopf="datenschutz"]').click();
   const karte = page.locator("[data-datenschutz-karte]");
   await expect(karte).toContainText("Datenschutz-Einwilligung vom");
   const schalter = karte.getByRole("switch", { name: "KI-Funktionen erlauben" });

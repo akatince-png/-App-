@@ -4,6 +4,7 @@ import { useAdmin } from "../context/AdminContext";
 import { getADHSMode, saveADHSMode } from "../utils/adhsStorage";
 import { QuestsKarte } from "./QuestsKarte";
 import RanglisteKarte from "./RanglisteKarte";
+import { LinkZeile } from "./Abschnitt";
 import TeamKarte from "./TeamKarte";
 import { cardBorder, textMuted } from "./theme";
 import { questFortschritt } from "../data/gruppenprotokoll";
@@ -84,19 +85,7 @@ export default function MehrHeuteKarten({ onOpenView }) {
             )}
           <QuestsKarte quests={quests} onFortschritt={questFortschrittSpeichern} />
           <RanglisteKarte />
-          <button
-            type="button"
-            className="mp-tap"
-            onClick={() => onOpenView?.("team")}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", marginBottom: 20, border: `1.5px solid ${cardBorder}`, borderRadius: 18, padding: 14, background: "var(--mp-karte)", cursor: "pointer", fontFamily: "inherit" }}
-          >
-            <span style={{ fontSize: 24 }}>🏆</span>
-            <span style={{ flex: 1 }}>
-              <span style={{ display: "block", fontSize: 14.5, fontWeight: 800 }}>Rangliste</span>
-              <span style={{ display: "block", fontSize: 12, color: textMuted }}>Personen und Teams nach Punkten</span>
-            </span>
-            <span style={{ fontSize: 18, color: textMuted }}>›</span>
-          </button>
+          <LinkZeile icon="gruppe" farbe="#7A63B0" titel="Rangliste" sub="Personen und Teams nach Punkten" onClick={() => onOpenView?.("team")} />
           <TeamKarte team={team} teamKollegen={teamKollegen} teamNachrichten={teamNachrichten} onSenden={teamNachrichtSenden} onGelesen={teamNachrichtGelesen} onOpenTeam={() => onOpenView?.("team")} />
         </div>
       )}

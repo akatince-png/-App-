@@ -11,7 +11,7 @@ import MehrfachauswahlLeiste from "./MehrfachauswahlLeiste";
 // jede ausgewählte Zeile auf (dieselbe Funktion wie beim einzelnen 🗑,
 // der bewusst erhalten bleibt — schnelles Löschen eines einzelnen
 // Eintrags soll weiterhin ohne Auswahlmodus gehen).
-export default function ArchivAbschnitt({ titel, leerText, items, getId, onLoeschen, confirmEinzeln, confirmMehrfach, renderZeile }) {
+export default function ArchivAbschnitt({ titel, leerText, items, getId, onLoeschen, confirmEinzeln, confirmMehrfach, renderZeile, zeigeLeer = false }) {
   const { ausgewaehlt, alleAusgewaehlt, umschalten, alleUmschalten, entfernenAusAuswahl, zuruecksetzen } = useMehrfachauswahl(items, getId);
 
   const einzelnLoeschen = (item) => {
@@ -28,6 +28,9 @@ export default function ArchivAbschnitt({ titel, leerText, items, getId, onLoesc
     zuruecksetzen();
   };
 
+  // Leere Abschnitte ausblenden (04.10., Nutzerin: „cleaner“) – das Archiv
+  // zeigt dann einmal „Noch nichts im Archiv“ statt vier leerer Kästen.
+  if (!items.length && !zeigeLeer) return null;
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>

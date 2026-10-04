@@ -21,6 +21,7 @@ export default function ArchivTab() {
   } = useAppData();
 
   const archivierteHauptprotokolle = hauptprotokolle.filter((h) => h.status === "archived");
+  const allesLeer = !abgeschlosseneProtokolle.length && !archivierteHauptprotokolle.length && !blutwerteArchiv.length && !gewichtsEintraege.length;
 
   return (
     <>
@@ -33,6 +34,14 @@ export default function ArchivTab() {
           Protokoll abschließen & archivieren
         </PrimaryButton>
       </Card>
+
+      {allesLeer && (
+        <Card style={{ marginBottom: 14 }}>
+          <div data-archiv-leer style={{ fontSize: 13, color: textMuted }}>
+            Noch nichts im Archiv. Abgeschlossene Protokolle, Blutwerte und Check-ins erscheinen hier, sobald es welche gibt.
+          </div>
+        </Card>
+      )}
 
       <ArchivAbschnitt
         titel="Abgeschlossene Protokolle"

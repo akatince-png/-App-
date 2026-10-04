@@ -1,3 +1,4 @@
+import Abschnitt, { LinkZeile } from "../../ui/Abschnitt";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { Card, Label, Pill, TextInput } from "../../ui/primitives";
@@ -454,49 +455,8 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
       {/* Nutzerinnen-Vorgabe (12.09.): eigener Einstiegspunkt für die
           Punkte-/Abzeichen-Übersicht unter "Mehr", nicht nur versteckt im
           Archiv-Hub-Reiter "Erfolge". */}
-      {onOpenErfolge && (
-        <button
-          onClick={onOpenErfolge}
-          className="mp-tap"
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "13px 16px",
-            borderRadius: 14,
-            border: `1px solid ${cardBorder}`,
-            background: "var(--mp-karte)",
-            marginBottom: 20,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 700 }}>🏆 Erfolge & Abzeichen</span>
-          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
-        </button>
-      )}
-
-      {onOpenLexikon && (
-        <button
-          onClick={onOpenLexikon}
-          className="mp-tap"
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "13px 16px",
-            borderRadius: 14,
-            border: `1px solid ${cardBorder}`,
-            background: "var(--mp-karte)",
-            marginBottom: 20,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 700 }}>{t("mehr.lexikon")}</span>
-          <span style={{ color: textMuted, fontSize: 16 }}>›</span>
-        </button>
-      )}
+      {onOpenErfolge && <LinkZeile icon="ziel" farbe="#E0A21B" titel="Erfolge & Abzeichen" sub="Punkte, Serien und Abzeichen" onClick={onOpenErfolge} />}
+      {onOpenLexikon && <LinkZeile icon="tagebuch" farbe="#B25A8C" titel="Lexikon" sub="Wissen rund um ADHS" onClick={onOpenLexikon} />}
 
       <AnsichtUmschalter />
 
@@ -522,74 +482,11 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         </button>
       )}
 
+      <Abschnitt id="bausteine" icon="raster" farbe="#3F63D8" titel="Meine Bausteine" sub="Welche Bereiche du gerade nutzt">
       <AktuellesProtokoll />
+      </Abschnitt>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.sprache")}</div>
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex" }}>
-          <Pill label={t("common.language.de")} selected={lang === "de"} onClick={() => setLang("de")} />
-          <Pill label={t("common.language.en")} selected={lang === "en"} onClick={() => setLang("en")} />
-          <Pill label={t("common.language.tr")} selected={lang === "tr"} onClick={() => setLang("tr")} />
-        </div>
-      </Card>
-
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.belohnung")}</div>
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 12 }}>{t("mehr.belohnung.intro")}</div>
-        <Label>{t("mehr.belohnung.puffer")}</Label>
-        <TextInput
-          type="number"
-          value={String(belohnungPufferMin ?? 10)}
-          onChange={(v) => setBelohnungPufferMin(v)}
-          placeholder="10"
-        />
-      </Card>
-
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🏆 Rangliste</div>
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ maxWidth: 280 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Meine Punkte mit anderen teilen</div>
-            {/* Teilen-Freigabe (24.09.): Startzustand aus, jede Person schaltet
-                selbst frei. Ansehen der Ranglisten geht immer. */}
-            <div style={{ fontSize: 12, color: ranglisteSichtbar ? "var(--mp-accent-dark-text)" : textMuted, fontWeight: ranglisteSichtbar ? 700 : 400 }}>
-              {ranglisteSichtbar
-                ? "✓ Du bist in der Rangliste sichtbar – mit Vorname, Bild, Team und Punkten."
-                : "Eingeschaltet erscheinst du mit Vorname, Bild und Punkten in der Rangliste aller Coachees. Ausgeschaltet bist du dort unsichtbar – ansehen kannst du die Rangliste trotzdem. Team-Ergebnisse werden immer gezeigt."}
-            </div>
-          </div>
-          <button
-            onClick={toggleRanglisteSichtbar}
-            role="switch"
-            aria-checked={!!ranglisteSichtbar}
-            aria-label="Meine Punkte mit anderen teilen"
-            style={{
-              width: 46,
-              height: 26,
-              borderRadius: 13,
-              border: "none",
-              background: ranglisteSichtbar ? accent : "color-mix(in srgb, #D9EEE7 var(--mp-flaeche), var(--mp-karte))",
-              position: "relative",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                background: "var(--mp-karte)",
-                position: "absolute",
-                top: 3,
-                left: ranglisteSichtbar ? 23 : 3,
-                transition: "left 0.2s ease",
-              }}
-            />
-          </button>
-        </div>
-      </Card>
-
+      <Abschnitt id="erinnerungen" icon="uhr" farbe="#E0A21B" titel="Erinnerungen" sub="Wann dich die App erinnert">
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erinnerungen")}</div>
       <Card style={{ marginBottom: 14 }}>
         {!pushUnterstuetzt ? (
@@ -677,7 +574,9 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           );
         })}
       </Card>
+      </Abschnitt>
 
+      <Abschnitt id="musik" icon="play" farbe="#1DB954" titel="Musik" sub="Spotify-Playlists für Training & Fokus">
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Musik (Spotify)</div>
       <Card style={{ marginBottom: 20 }}>
         {!spotifyVerbunden ? (
@@ -845,40 +744,81 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
           </>
         )}
       </Card>
+      </Abschnitt>
 
+      <Abschnitt id="darstellung" icon="sonne" farbe="#F08A24" titel="Aussehen & Sprache" sub="Sprache, Abendmodus, Tempo, Belohnungen">
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.sprache")}</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex" }}>
+          <Pill label={t("common.language.de")} selected={lang === "de"} onClick={() => setLang("de")} />
+          <Pill label={t("common.language.en")} selected={lang === "en"} onClick={() => setLang("en")} />
+          <Pill label={t("common.language.tr")} selected={lang === "tr"} onClick={() => setLang("tr")} />
+        </div>
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.belohnung")}</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12.5, color: textMuted, marginBottom: 12 }}>{t("mehr.belohnung.intro")}</div>
+        <Label>{t("mehr.belohnung.puffer")}</Label>
+        <TextInput
+          type="number"
+          value={String(belohnungPufferMin ?? 10)}
+          onChange={(v) => setBelohnungPufferMin(v)}
+          placeholder="10"
+        />
+      </Card>
       <AussehenKarte />
+      <AppTempoKarte />
+      </Abschnitt>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.datenschutz")}</div>
-      <Card style={{ marginBottom: 14 }}>
-        {DATENSCHUTZ.map((key) => (
-          <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
-            <span style={{ color: success, fontWeight: 700 }}>✓</span>
-            <span style={{ fontSize: 13 }}>{t(key)}</span>
+      <Abschnitt id="rangliste" icon="gruppe" farbe="#7A63B0" titel="Rangliste & Team" sub="Ob du mit Punkten sichtbar bist">
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>🏆 Rangliste</div>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ maxWidth: 280 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Meine Punkte mit anderen teilen</div>
+            {/* Teilen-Freigabe (24.09.): Startzustand aus, jede Person schaltet
+                selbst frei. Ansehen der Ranglisten geht immer. */}
+            <div style={{ fontSize: 12, color: ranglisteSichtbar ? "var(--mp-accent-dark-text)" : textMuted, fontWeight: ranglisteSichtbar ? 700 : 400 }}>
+              {ranglisteSichtbar
+                ? "✓ Du bist in der Rangliste sichtbar – mit Vorname, Bild, Team und Punkten."
+                : "Eingeschaltet erscheinst du mit Vorname, Bild und Punkten in der Rangliste aller Coachees. Ausgeschaltet bist du dort unsichtbar – ansehen kannst du die Rangliste trotzdem. Team-Ergebnisse werden immer gezeigt."}
+            </div>
           </div>
-        ))}
+          <button
+            onClick={toggleRanglisteSichtbar}
+            role="switch"
+            aria-checked={!!ranglisteSichtbar}
+            aria-label="Meine Punkte mit anderen teilen"
+            style={{
+              width: 46,
+              height: 26,
+              borderRadius: 13,
+              border: "none",
+              background: ranglisteSichtbar ? accent : "color-mix(in srgb, #D9EEE7 var(--mp-flaeche), var(--mp-karte))",
+              position: "relative",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                background: "var(--mp-karte)",
+                position: "absolute",
+                top: 3,
+                left: ranglisteSichtbar ? 23 : 3,
+                transition: "left 0.2s ease",
+              }}
+            />
+          </button>
+        </div>
       </Card>
-      <DatenschutzKarte />
+      </Abschnitt>
 
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erweiterungen")}</div>
-      <Card style={{ marginBottom: 14 }}>
-        {ERWEITERUNGEN.map((key) => (
-          <div key={key} style={{ fontSize: 13, padding: "5px 0", color: textMuted }}>
-            • {t(key)}
-          </div>
-        ))}
-      </Card>
-
-      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.konto")}</div>
-      <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.konto.angemeldet", { email: user?.email })}</div>
-        <button
-          onClick={signOut}
-          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))", color: danger }}
-        >
-          {t("mehr.konto.abmelden")}
-        </button>
-      </Card>
-
+      <Abschnitt id="assistent" icon="ziel" farbe="#12A5C6" titel="Dein Assistent" sub="KI-Assistent ein- oder ausschalten">
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Dein Assistent</div>
       <Card style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${cardBorder}` }}>
@@ -941,7 +881,42 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         )}
         {kiFehler && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{kiFehler}</div>}
       </Card>
+      </Abschnitt>
 
+      <Abschnitt id="datenschutz" icon="handy" farbe="#5B6B84" titel="Datenschutz & Konto" sub="Einwilligungen, Daten, Abmelden">
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.datenschutz")}</div>
+      <Card style={{ marginBottom: 14 }}>
+        {DATENSCHUTZ.map((key) => (
+          <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
+            <span style={{ color: success, fontWeight: 700 }}>✓</span>
+            <span style={{ fontSize: 13 }}>{t(key)}</span>
+          </div>
+        ))}
+      </Card>
+      <DatenschutzKarte />
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.erweiterungen")}</div>
+      <Card style={{ marginBottom: 14 }}>
+        {ERWEITERUNGEN.map((key) => (
+          <div key={key} style={{ fontSize: 13, padding: "5px 0", color: textMuted }}>
+            • {t(key)}
+          </div>
+        ))}
+      </Card>
+
+      <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.konto")}</div>
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.konto.angemeldet", { email: user?.email })}</div>
+        <button
+          onClick={signOut}
+          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", background: "color-mix(in srgb, #FDE9EC var(--mp-flaeche), var(--mp-karte))", color: danger }}
+        >
+          {t("mehr.konto.abmelden")}
+        </button>
+      </Card>
+      </Abschnitt>
+
+      <Abschnitt id="testen" icon="liste" farbe="#8A90A6" titel="App neu einrichten" sub="Einführung noch einmal starten">
       <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>{t("mehr.testen")}</div>
       <Card>
         <div style={{ fontSize: 13, color: textMuted, marginBottom: 12 }}>{t("mehr.testen.intro")}</div>
@@ -953,9 +928,9 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         </button>
         {resetMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetMsg}</div>}
       </Card>
+      </Abschnitt>
 
-      <AppTempoKarte />
-
+      <Abschnitt id="neustart" icon="akut" farbe="#C24545" titel="Neustart" sub="Fortschritt oder alles zurücksetzen" warnung>
       {/* Gefahrenzone (12.09., Nutzerin-Vorgabe: "Ich muss doch alles auf
           Null setzen können und neue Protokolle starten können, kann ich
           nicht") — echter, kompletter Reset über alle Kategorien hinweg,
@@ -1025,6 +1000,7 @@ export default function MehrTab({ onOpenLexikon, onOpenAdmin, onOpenErfolge }) {
         </div>
         {resetAllesMsg && <div style={{ fontSize: 12, color: danger, marginTop: 10 }}>{resetAllesMsg}</div>}
       </Card>
+      </Abschnitt>
 
       {resetBestaetigen &&
         createPortal(

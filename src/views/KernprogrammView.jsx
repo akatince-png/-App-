@@ -1,3 +1,4 @@
+import Abschnitt from "../ui/Abschnitt";
 import React, { useMemo, useState } from "react";
 import { Shell, Card } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
@@ -91,6 +92,8 @@ export default function KernprogrammView({ onHome, onTour }) {
         </Card>
       )}
 
+      {/* Eingeklappt (04.10., Nutzerin: „cleaner“) – der Fahrplan oben zeigt dasselbe schon je Woche. */}
+      <Abschnitt id="pflicht-bausteine" icon="liste" farbe="#E04F3E" titel="Alle Pflicht-Bausteine" sub="Was in Woche 1–4 dazukommt">
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 4 }}>ALLE PFLICHT-BAUSTEINE 🔒</div>
         {[1, 2, 3, 4].map((w) => (
@@ -110,6 +113,7 @@ export default function KernprogrammView({ onHome, onTour }) {
           Uhrzeit, Art und Dauer stellst du selbst ein (in deiner Morgen-/Abendroutine auf 🔒✎ tippen). Pausieren kann nur dein Coach, z. B. bei einer Verletzung.
         </div>
       </Card>
+      </Abschnitt>
 
       {/* Messwoche (26.09.): Woche 1 misst, danach feste Zeiten aus den Messwerten. */}
       {stand?.aktiv && stand.etappe?.art === "einfuehrung" && heute <= plusTage(stand.etappe.start, 20) && (

@@ -6,6 +6,8 @@ test("abends dunkel, unter Mehr abschaltbar", async ({ page }) => {
   await page.clock.install({ time: new Date("2026-09-28T21:45:00") });
   await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1#/mehr");
   await expect(page.locator("html")).toHaveAttribute("data-dunkel", "1");
+  // Seit 04.10. steckt die Einstellung im Abschnitt „Aussehen & Sprache“.
+  await page.locator('[data-abschnitt-kopf="darstellung"]').click();
   const schalter = page.getByRole("switch", { name: "Abends dunkel" });
   await expect(schalter).toHaveAttribute("aria-checked", "true");
   await schalter.click();

@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { Shell } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
 import MehrTab from "./MehrTab";
-import Icon from "../../ui/Icon";
+import PlastikSymbol from "../../ui/PlastikSymbol";
 import TagebuchModal from "../../ui/TagebuchModal";
 import MehrHeuteKarten from "../../ui/MehrHeuteKarten";
-import { accentDark, cardBorder, shadow, textMuted } from "../../ui/theme";
+import { accentDark, shadow, textMuted } from "../../ui/theme";
 import { useT } from "../../i18n/translate";
 import { startVariante } from "../../utils/startVariante";
 
@@ -16,14 +16,14 @@ import { startVariante } from "../../utils/startVariante";
 export default function MehrView({ onHome, onOpenLexikon, onOpenAdmin, onOpenErfolge, onOpenView, onNeuesProtokoll, istAdminModus }) {
   const { t } = useT();
   const [tagebuchOffen, setTagebuchOffen] = useState(false);
-  const kachel = { textAlign: "left", borderRadius: 18, padding: "14px 10px", cursor: "pointer", background: "var(--mp-karte)", boxShadow: shadow, border: `1px solid ${cardBorder}`, fontFamily: "inherit", color: "inherit" };
+  const kachel = { textAlign: "left", borderRadius: 20, padding: "14px 10px", cursor: "pointer", background: "var(--mp-karte)", boxShadow: shadow, border: "none", fontFamily: "inherit", color: "inherit" };
   const eintraege = [
-    { id: "schlaf", icon: "folder", titel: t("home.ordner.plaene.label"), sub: t("home.ordner.plaene.desc"), onClick: () => onOpenView?.("schlaf") },
-    { id: "kalender", icon: "calendarWeek", titel: "Kalender", sub: "Mein Alltag", onClick: () => onOpenView?.("kalender") },
-    { id: "archiv", icon: "archive", titel: t("home.ordner.archiv.label"), sub: t("home.ordner.archiv.desc"), onClick: () => onOpenView?.("archiv") },
-    { id: "tagebuch", icon: "book", titel: "Tagebuch", sub: "Frei schreiben", onClick: () => setTagebuchOffen(true) },
+    { id: "schlaf", icon: "raster", farbe: "#3F63D8", titel: t("home.ordner.plaene.label"), sub: t("home.ordner.plaene.desc"), onClick: () => onOpenView?.("schlaf") },
+    { id: "kalender", icon: "kalender", farbe: "#7A63B0", titel: "Kalender", sub: "Mein Alltag", onClick: () => onOpenView?.("kalender") },
+    { id: "archiv", icon: "liste", farbe: "#5B6B84", titel: t("home.ordner.archiv.label"), sub: t("home.ordner.archiv.desc"), onClick: () => onOpenView?.("archiv") },
+    { id: "tagebuch", icon: "tagebuch", farbe: "#B25A8C", titel: "Tagebuch", sub: "Frei schreiben", onClick: () => setTagebuchOffen(true) },
     // Variante B: „Fortschritt“ weicht in der Leiste dem Schnellzugriff.
-    ...(startVariante() === "b" ? [{ id: "fortschritt", icon: "trophy", titel: "Fortschritt", sub: "Punkte & Erfolge", onClick: () => onOpenView?.("erfolge") }] : []),
+    ...(startVariante() === "b" ? [{ id: "fortschritt", icon: "ziel", farbe: "#E0A21B", titel: "Fortschritt", sub: "Punkte & Erfolge", onClick: () => onOpenView?.("erfolge") }] : []),
   ];
   return (
     <Shell>
@@ -33,7 +33,7 @@ export default function MehrView({ onHome, onOpenLexikon, onOpenAdmin, onOpenErf
           {eintraege.map((e) => (
             <button key={e.id} type="button" className="mp-tap" onClick={e.onClick} style={kachel}>
               <div style={{ marginBottom: 8 }}>
-                <Icon name={e.icon} size={22} color={accentDark} />
+                <PlastikSymbol icon={e.icon} farbe={e.farbe} size={34} eckig stufe="flach" />
               </div>
               <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{e.titel}</div>
               <div style={{ fontSize: 10.5, color: textMuted }}>{e.sub}</div>

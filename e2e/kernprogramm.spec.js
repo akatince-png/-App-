@@ -11,6 +11,7 @@ test("Startseite: Woche 2 zeigt Bewegung, Sportart wählen öffnet die Übersich
   await expect(karte).toContainText("Diese Woche: Bewegung");
   await expect(karte).toContainText("Sportart wählen");
   await karte.click();
+  await page.locator('[data-abschnitt-kopf="pflicht-bausteine"]').click();
   await expect(page.getByText("ALLE PFLICHT-BAUSTEINE 🔒")).toBeVisible();
   await page.getByRole("group", { name: "Sportart" }).getByRole("button", { name: "🥊 Kampfsport" }).click();
   for (const t of ["Mo", "Mi", "Fr"]) await page.getByRole("group", { name: "Tage" }).getByRole("button", { name: t, exact: true }).click();
