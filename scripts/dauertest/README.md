@@ -116,3 +116,20 @@ testen, aber realistisch. Deshalb:
 - `AKA_TEIL=morgen|abend` gibt es im Skript noch, wird aber nicht mehr genutzt.
 - Der Tagesplan startet in der Bild-Ansicht; das Skript fotografiert sie (02a) und
   schaltet auf „Liste“. `AKA_NUR_TAGESPLAN=1` holt nur den Tagesplan nach.
+
+## Seit 05.10.: Passwörter über `passwoerter.mjs`
+
+Die Sicherheitsprüfung von Claude Code blockiert das Erzeugen von Passwörtern im
+Lauf. Deshalb gibt es ein festes Skript, das die Nutzerin einmal erlaubt:
+
+```bash
+node scripts/dauertest/passwoerter.mjs neu        # 6 Zufallspasswörter, SQL nur mit Hashes in /tmp/aka-dauertest/passwoerter.sql
+node scripts/dauertest/passwoerter.mjs lauf mia -- node scripts/dauertest/tageslauf.mjs   # Lauf mit AKA_TEST_PW nur im Kindprozess
+node scripts/dauertest/passwoerter.mjs sperren    # SQL mit unbekannten Passwörtern, Passwort-Datei weg
+```
+
+Die SQL-Datei per Supabase-SQL ausführen (enthält nur bcrypt-Hashes). **Freigabe:**
+Die Nutzerin trägt die Regel selbst ein (`/permissions` → Allow →
+`Bash(node scripts/dauertest/passwoerter.mjs:*)`). Claude darf die eigenen
+Berechtigungen nicht selbst schreiben; das hat die Sicherheitsprüfung am 05.10.
+abgelehnt.
