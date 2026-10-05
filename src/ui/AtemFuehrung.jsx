@@ -17,18 +17,39 @@ import { ATEM_GEFUEHLE, taktPosition } from "../utils/atemBibliothek";
 const ART_TEXT = { ein: "EINATMEN", halten: "HALTEN", aus: "AUSATMEN" };
 const VORLAUF_MS = 5000;
 
+// Stimme (05.10., Nutzerin: „die Stimme funktioniert noch nicht“): Auf dem
+// iPhone spricht der Browser nur, wenn das erste Sprechen direkt aus einem
+// Tipp kommt. Deshalb sagt „Start“ sofort etwas (schaltet die Stimme frei),
+// und wir wählen ausdrücklich eine deutsche Stimme, sobald die Liste da ist.
+function deutscheStimme() {
+  try {
+    const alle = window.speechSynthesis?.getVoices?.() || [];
+    return alle.find((v) => /^de(-|_)DE/i.test(v.lang) && /siri|anna|helena|google/i.test(v.name)) || alle.find((v) => /^de/i.test(v.lang)) || null;
+  } catch {
+    return null;
+  }
+}
+
 function sprechen(text) {
   try {
     if (!("speechSynthesis" in window) || !text) return;
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "de-DE";
+    const v = deutscheStimme();
+    if (v) u.voice = v;
     u.rate = 0.9;
+    window.speechSynthesis.resume?.();
     window.speechSynthesis.speak(u);
   } catch {
     // ohne Sprachausgabe läuft die Übung einfach mit Kreis + Ton
   }
 }
+
+const mmss = (ms) => {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
 
 export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFertig }) {
   const [status, setStatus] = useState(startUm ? "vorher" : "vorher"); // vorher | bereit | laeuft | nachher | fertig
@@ -38,6 +59,9 @@ export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFerti
   const startRef = useRef(startUm);
   const letztePhaseRef = useRef(null);
   const dauerMs = (uebung?.dauerMinuten || 3) * 60000;
+  // „Runde 2 von 6“ (05.10., Nutzerin): Gesamtzahl aus Dauer und Zyklus.
+  const zyklusMs = (uebung?.phasen || []).reduce((sum, p) => sum + p.sek * 1000, 0) || 1;
+  const rundenGesamt = Math.max(1, Math.ceil(dauerMs / zyklusMs));
 
   useEffect(() => {
     if (status !== "laeuft" && status !== "bereit") return;
@@ -76,6 +100,8 @@ export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFerti
   useEffect(() => () => window.speechSynthesis?.cancel?.(), []);
 
   const starten = () => {
+    // Erstes Sprechen direkt im Tipp – sonst bleibt die Stimme auf dem iPhone stumm.
+    if (stimme) sprechen("Mach es dir bequem. Gleich geht's los.");
     if (!startRef.current) startRef.current = Date.now() + VORLAUF_MS;
     setJetzt(Date.now());
     setStatus("bereit");
@@ -141,9 +167,17 @@ export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFerti
       {(status === "bereit" || status === "laeuft") && (
         <>
           <div style={{ fontSize: 12, fontWeight: 800, color: textMuted }} data-atem-phase={pos?.phase.art || "warten"}>
-            {pos ? `${uebung.name.toUpperCase()} · Runde ${pos.runde}` : `GLEICH GEHT'S LOS … ${Math.ceil(-vergangen / 1000)}`}
+            {pos ? `${uebung.name.toUpperCase()} · Runde ${Math.min(pos.runde, rundenGesamt)} von ${rundenGesamt}` : `GLEICH GEHT'S LOS … ${Math.ceil(-vergangen / 1000)}`}
           </div>
-          <div style={{ height: 230, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {pos && (
+            <div data-atem-rest style={{ marginTop: 6 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: textMuted }}>noch {mmss(dauerMs - vergangen)} min</div>
+              <div style={{ height: 6, borderRadius: 99, background: "rgba(92,195,168,0.18)", margin: "6px auto 0", maxWidth: 240, overflow: "hidden" }}>
+                <div style={{ width: `${Math.min(100, (vergangen / dauerMs) * 100)}%`, height: "100%", borderRadius: 99, background: "#5CC3A8", transition: "width 0.3s linear" }} />
+              </div>
+            </div>
+          )}
+          <div style={{ height: 230, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
             <div
               aria-hidden="true"
               style={{
@@ -156,9 +190,13 @@ export default function AtemFuehrung({ uebung, startUm = null, onVorher, onFerti
                 boxShadow: "0 0 0 16px rgba(92,195,168,0.18), 0 0 0 32px rgba(92,195,168,0.08)",
               }}
             />
+            {/* Sekunden der Phase groß in der Mitte – zum Mitzählen (05.10.). */}
+            <div data-atem-sekunden style={{ position: "absolute", fontSize: 56, fontWeight: 900, color: "#fff", textShadow: "0 2px 10px rgba(0,80,70,.35)", pointerEvents: "none" }}>
+              {pos ? Math.max(1, Math.ceil((pos.dauerMs - pos.vergangenMs) / 1000)) : Math.max(1, Math.ceil(-vergangen / 1000))}
+            </div>
           </div>
           <div style={{ fontSize: 22, fontWeight: 900 }}>{pos ? ART_TEXT[pos.phase.art] : "Bereit machen"}</div>
-          <div style={{ fontSize: 13, color: textMuted, minHeight: 18 }}>{pos ? `${Math.max(1, Math.ceil((pos.dauerMs - pos.vergangenMs) / 1000))} …` : ""}</div>
+          <div style={{ fontSize: 13, color: textMuted, minHeight: 18 }}>{pos ? `${pos.phase.sek} Sekunden` : ""}</div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <div style={{ flex: 1 }}>
               <PrimaryButton variant="ghost" onClick={() => setStimme((s) => !s)}>
