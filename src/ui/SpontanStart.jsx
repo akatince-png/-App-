@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { LEERE_UEBUNG } from "./UebungenEditor";
 import { toLocalISODate } from "../utils/dates";
+import { QUADRANT, fristText, quadrantVon } from "../utils/matrix";
 
 // Spontan starten (30.09., Nutzerin: „wenn man gerade Fokus, Inspiration
 // oder Power hat“): Knöpfe „Training“ und „Workflow“ auf der Startseite.
@@ -175,6 +176,7 @@ export function WorkflowStartAuswahl({ heuteGeplant = [], onStart }) {
           </div>
         </>
       )}
+      <MatrixWahl onWahl={(a) => onStart(`matrix:${a.id}`)} max={4} />
       <button type="button" className="mp-tap" onClick={() => onStart("spontan")} style={zeile("#E3E8FF")}>
         <span style={{ fontSize: 22 }}>⚡</span>
         <span style={{ flex: 1 }}>
@@ -183,6 +185,56 @@ export function WorkflowStartAuswahl({ heuteGeplant = [], onStart }) {
         </span>
         <b style={{ fontSize: 13, color: "var(--mp-accent-dark-text)" }}>›</b>
       </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- Matrix
+// Aufgaben aus der Matrix für einen Workflow wählen (05.10., Nutzerin: „wenn
+// ich Spontan-Workflow starte, Zugriff auf meine Matrix, um eine Aufgabe zu
+// wählen – damit ich die auch abgearbeitet habe“). Offene Aufgaben, rot zuerst.
+const REIHENFOLGE = { jetzt: 0, planen: 1, kurz: 2, spaeter: 3 };
+
+export function MatrixWahl({ gewaehlt = null, onWahl, max = 8 }) {
+  const { matrixAufgaben = [], projekte = [] } = useAppData();
+  const offen = matrixAufgaben
+    .filter((a) => !a.erledigtAm)
+    .sort((a, b) => REIHENFOLGE[quadrantVon(a)] - REIHENFOLGE[quadrantVon(b)] || (a.frist || "9").localeCompare(b.frist || "9"));
+  const projektName = (id) => projekte.find((p) => p.id === id)?.name;
+  return (
+    <div data-matrix-wahl>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "4px 2px 6px" }}>
+        <span style={titel}>AUS DEINER MATRIX</span>
+        <button type="button" onClick={() => (window.location.hash = "#/matrix")} style={{ border: "none", background: "none", padding: 0, fontSize: 12, fontWeight: 800, color: "var(--mp-accent-dark-text)", cursor: "pointer", fontFamily: "inherit" }}>
+          Matrix öffnen ›
+        </button>
+      </div>
+      {!offen.length && <div style={{ fontSize: 12.5, color: "var(--mp-text-muted)", margin: "0 2px 8px" }}>Noch keine offenen Aufgaben in deiner Matrix.</div>}
+      {offen.slice(0, max).map((a) => {
+        const q = QUADRANT[quadrantVon(a)];
+        const an = gewaehlt === a.id;
+        return (
+          <button
+            key={a.id}
+            type="button"
+            className="mp-tap"
+            aria-pressed={an}
+            data-matrix-aufgabe={a.id}
+            onClick={() => onWahl(a)}
+            style={{ ...zeile(q.bg), outline: an ? `2px solid ${q.farbe}` : "none", outlineOffset: -2 }}
+          >
+            <span style={{ width: 12, height: 12, borderRadius: 99, background: q.farbe, flexShrink: 0 }} />
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ display: "block", fontSize: 14 }}>{a.titel}</b>
+              <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>
+                {[q.titel, a.naechsterSchritt && `Nächster Schritt: ${a.naechsterSchritt}`, a.frist && fristText(a.frist), projektName(a.projektId)].filter(Boolean).join(" · ")}
+              </span>
+            </span>
+            <b style={{ fontSize: 13, color: q.schrift }}>{an ? "✓" : "▶"}</b>
+          </button>
+        );
+      })}
+      {offen.length > max && <div style={{ fontSize: 12, color: "var(--mp-text-muted)", margin: "0 2px 6px" }}>+ {offen.length - max} weitere in der Matrix</div>}
     </div>
   );
 }

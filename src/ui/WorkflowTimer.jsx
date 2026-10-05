@@ -12,6 +12,7 @@ import { useIntervallMusikSync } from "../data/useIntervallMusikSync";
 import { WOCHENTAGE } from "../constants";
 import { toLocalISODate } from "../utils/dates";
 import { workflowStartHolen } from "../utils/workflowStart";
+import { MatrixWahl } from "./SpontanStart";
 
 const FADE_SEK = 5;
 
@@ -68,7 +69,14 @@ export default function WorkflowTimer({ onSchliessen }) {
     workflowPlanHinzufuegen,
     workflowPlanEntfernen,
     aenderungVermerken,
+    matrixAufgaben = [],
+    matrixAufgabeSpeichern,
   } = useAppData();
+  // Aufgabe aus der Matrix (05.10.): woran im Spontan-Workflow gearbeitet wird;
+  // nach dem Ende kommt die Frage, ob sie erledigt ist.
+  const [matrixAufgabeId, setMatrixAufgabeId] = useState(null);
+  const [erledigtFrage, setErledigtFrage] = useState(null);
+  const matrixAufgabe = matrixAufgaben.find((a) => a.id === matrixAufgabeId) || null;
   // Spontan-Workflow (30.09., Nutzerin: „spontan 25 Minuten mit 5 Minuten
   // Pause, offenes Ende, Playlist wählen“): ohne vorher einen benannten
   // Workflow anzulegen. Offenes Ende = läuft, bis man „Fertig“ tippt.
@@ -129,7 +137,8 @@ export default function WorkflowTimer({ onSchliessen }) {
   useEffect(() => {
     const ziel = workflowStartHolen();
     if (!ziel) return;
-    if (ziel === "spontan") {
+    if (ziel.startsWith("matrix:")) setMatrixAufgabeId(ziel.slice(7));
+    if (ziel === "spontan" || ziel.startsWith("matrix:")) {
       setTimeout(() => spontanRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 50);
       return;
     }
@@ -179,6 +188,7 @@ export default function WorkflowTimer({ onSchliessen }) {
     // dokumentiert sind – ab 1 Minute.
     const min = startZeitRef.current ? Math.round((Date.now() - startZeitRef.current) / 60000) : 0;
     if (laufendesPreset && min >= 1) aenderungVermerken?.({ kategorie: "workflow", itemName: laufendesPreset.name, aktion: "erledigt", detail: `${min} Min.` });
+    if (laufendesPreset?.matrixAufgabeId) setErledigtFrage(laufendesPreset.matrixAufgabeId);
     startZeitRef.current = null;
     setLaufendesPreset(null);
   };
@@ -212,10 +222,39 @@ export default function WorkflowTimer({ onSchliessen }) {
             Flotterem) und optional festen Tagen/Uhrzeiten, dann taucht er auch im Tagesplan auf.
           </div>
 
+          {erledigtFrage && (
+            <Card style={{ marginBottom: 14 }}>
+              <div data-matrix-erledigt-frage style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>
+                Ist „{matrixAufgaben.find((x) => x.id === erledigtFrage)?.titel}“ erledigt?
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <PrimaryButton variant="ghost" onClick={() => setErledigtFrage(null)}>Noch nicht</PrimaryButton>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <PrimaryButton
+                    variant="success"
+                    onClick={async () => {
+                      const x = matrixAufgaben.find((m) => m.id === erledigtFrage);
+                      if (x) {
+                        await matrixAufgabeSpeichern?.({ ...x, erledigtAm: new Date().toISOString() });
+                        aenderungVermerken?.({ kategorie: "workflow", itemName: x.titel, aktion: "erledigt", detail: "Aufgabe aus der Matrix" });
+                      }
+                      setErledigtFrage(null);
+                      setMatrixAufgabeId(null);
+                    }}
+                  >
+                    ✓ Ja, erledigt
+                  </PrimaryButton>
+                </div>
+              </div>
+            </Card>
+          )}
           <div ref={spontanRef} data-spontan-workflow>
             <Card style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>⚡ Spontan-Workflow</div>
               <div style={{ fontSize: 12, color: textMuted, marginBottom: 10 }}>Einstellen und los – ohne vorher etwas anzulegen.</div>
+              <MatrixWahl gewaehlt={matrixAufgabeId} onWahl={(x) => setMatrixAufgabeId((id) => (id === x.id ? null : x.id))} max={6} />
               <Label>Arbeiten</Label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
                 {[15, 25, 45, 50].map((m) => (
@@ -238,7 +277,9 @@ export default function WorkflowTimer({ onSchliessen }) {
               <SpotifyAnlassPicker anlass={praesetAnlass("spontan")} label="🎵 Playlist (optional)" />
               <MusikModusToggle modus={spontan.modus} onChange={(v) => setSpontan((x) => ({ ...x, modus: v }))} />
               <div style={{ marginTop: 10 }}>
-                <PrimaryButton onClick={() => starten({ id: "spontan", name: "⚡ Spontan-Workflow", ...spontan })}>▶ Jetzt starten</PrimaryButton>
+                <PrimaryButton onClick={() => starten({ id: "spontan", name: matrixAufgabe ? `⚡ ${matrixAufgabe.titel}` : "⚡ Spontan-Workflow", ...spontan, matrixAufgabeId: matrixAufgabe?.id || null })}>
+                  {matrixAufgabe ? `▶ „${matrixAufgabe.titel}“ starten` : "▶ Jetzt starten"}
+                </PrimaryButton>
               </div>
             </Card>
           </div>

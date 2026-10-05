@@ -212,6 +212,12 @@ Entscheidungen der Nutzerin: KI-Einwilligung **eigene, freiwillige** Zustimmung;
 - Anleitung für App Store Connect (Datenschutz-Angaben, Prüfnotiz, To-dos der Nutzerin): **`docs/APP-STORE-DATENSCHUTZ.md`**.
 - Dauertest-Skript klickt die Einwilligung einmal durch (Foto 00a).
 
+### Matrix im Workflow + Verschieben, Atemübung (05.10., live)
+- **Workflow mit Matrix-Aufgabe (`MatrixWahl` in `ui/SpontanStart.jsx`):** Im Workflow-Knopf der Startseite und im Spontan-Kasten der Workflow-Seite stehen die offenen Matrix-Aufgaben (rot zuerst, mit Feld, nächstem Schritt, Frist, Projekt) und „Matrix öffnen ›“. Wahl → `workflowStartMerken("matrix:<id>")` bzw. Auswahl im Kasten → Start heißt „▶ „<Titel>“ starten“. Nach dem Ende fragt die Workflow-Seite „Ist „…“ erledigt?“ (`data-matrix-erledigt-frage`) → `erledigtAm` + Tagesprotokoll.
+- **Matrix verschieben (`MatrixView`):** Aufgabe antippen → in jedem anderen Feld erscheint „➜ „…“ hierher“ (`data-matrix-hierher`); am Computer auch Ziehen und Ablegen. Setzt `quadrantManuell`.
+- **Atemübung (`AtemFuehrung`):** „Runde X von Y“, „noch m:ss min“ mit Balken, Sekunden groß im Kreis; Stimme sagt beim Tippen auf „Start“ sofort etwas (iPhone schaltet Sprache nur aus einem Tipp frei) und wählt eine deutsche Stimme.
+- **Dauertest:** `scripts/dauertest/passwoerter.mjs` (neu / lauf / sperren; nur Hashes an die DB). Die Proxy-CA der Cloud heißt jetzt „CCR agent-proxy interception CA“ – Skripte erkennen beide Namen.
+
 ### Coachee-Ansicht aufgeräumt (04.10., live)
 - Nutzerin: „Coachee-Ansicht in den Ordnern cleaner“. **„Mehr“** war ~6700 px lang (acht Bildschirme) → jetzt ~1400 px: oben Kacheln (jetzt mit Symbol-Kugeln), „Heute zeigen“, Rangliste/Erfolge/Lexikon als einheitliche Zeilen (`LinkZeile`), darunter **aufklappbare Abschnitte** (`ui/Abschnitt.jsx`, `data-abschnitt-kopf=…`): Meine Bausteine · Erinnerungen · Musik · Aussehen & Sprache (Sprache, Belohnungsfenster, Abends dunkel, App-Tempo) · Rangliste & Team · Dein Assistent · Datenschutz & Konto · App neu einrichten · Neustart (rot). Inhalte unverändert, nur eingeklappt.
 - **Archiv:** leere Abschnitte werden ausgeblendet; sind alle leer, steht einmal „Noch nichts im Archiv“ (`ArchivAbschnitt` Prop `zeigeLeer`).

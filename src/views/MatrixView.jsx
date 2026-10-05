@@ -59,6 +59,15 @@ export default function MatrixView({ onHome }) {
   };
 
   const aufgabe = matrixAufgaben.find((a) => a.id === offen);
+  // Verschieben (05.10., Nutzerin: „Dinge von Feld zu Feld verschieben, wenn
+  // sich Prioritäten ändern“): Aufgabe antippen → in jedem anderen Feld
+  // erscheint „Hierher“; am Computer geht auch Ziehen und Ablegen.
+  const [ziehen, setZiehen] = useState(null);
+  const verschieben = async (id, ziel) => {
+    const a = matrixAufgaben.find((x) => x.id === id);
+    if (!a || quadrantVon(a) === ziel) return;
+    await speichern({ ...a, quadrantManuell: ziel });
+  };
 
   return (
     <Shell>
@@ -130,15 +139,39 @@ export default function MatrixView({ onHome }) {
 
       <div data-matrix style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {QUADRANTEN.map((q) => (
-          <section key={q.id} data-quadrant={q.id} aria-label={q.titel} style={{ borderRadius: 18, padding: 10, minHeight: 120, background: `color-mix(in srgb, ${q.bg} var(--mp-flaeche), var(--mp-rand-dunkel))` }}>
+          <section
+            key={q.id}
+            data-quadrant={q.id}
+            aria-label={q.titel}
+            onDragOver={(e) => ziehen && e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (ziehen) verschieben(ziehen, q.id);
+              setZiehen(null);
+            }}
+            style={{ borderRadius: 18, padding: 10, minHeight: 120, background: `color-mix(in srgb, ${q.bg} var(--mp-flaeche), var(--mp-rand-dunkel))`, outline: ziehen ? `2px dashed ${q.farbe}88` : "none", outlineOffset: -4 }}
+          >
             <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.3, color: `color-mix(in srgb, ${q.schrift} var(--mp-schrift), var(--mp-schrift-hell))` }}>
               {q.icon} {q.titel} <span style={{ opacity: 0.7 }}>{felder[q.id].length || ""}</span>
             </div>
             <div style={{ fontSize: 10.5, opacity: 0.75, marginBottom: 8, color: `color-mix(in srgb, ${q.schrift} var(--mp-schrift), var(--mp-schrift-hell))` }}>{q.text}</div>
+            {aufgabe && quadrantVon(aufgabe) !== q.id && (
+              <button
+                type="button"
+                data-matrix-hierher={q.id}
+                onClick={() => verschieben(aufgabe.id, q.id)}
+                style={{ display: "block", width: "100%", border: `2px dashed ${q.farbe}`, borderRadius: 10, padding: "6px 8px", marginBottom: 6, background: "transparent", color: `color-mix(in srgb, ${q.schrift} var(--mp-schrift), var(--mp-schrift-hell))`, fontFamily: "inherit", fontSize: 12, fontWeight: 800, cursor: "pointer" }}
+              >
+                ➜ „{aufgabe.titel.length > 18 ? `${aufgabe.titel.slice(0, 17)}…` : aufgabe.titel}“ hierher
+              </button>
+            )}
             {felder[q.id].map((a) => (
               <button
                 key={a.id}
                 type="button"
+                draggable
+                onDragStart={() => setZiehen(a.id)}
+                onDragEnd={() => setZiehen(null)}
                 onClick={() => setOffen(offen === a.id ? null : a.id)}
                 aria-expanded={offen === a.id}
                 style={{ display: "block", width: "100%", textAlign: "left", border: offen === a.id ? `2px solid ${q.farbe}` : "none", borderRadius: 10, padding: "6px 8px", marginBottom: 5, background: "var(--mp-karte)", color: "var(--mp-text)", fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,.06)" }}

@@ -47,3 +47,29 @@ test("Tagesplan: nur Rot und heute eingeplantes Grün aus der Matrix", async ({ 
   expect(a.id).toBe("m1");
   expect(a.erledigtAm).toBeTruthy();
 });
+
+// 05.10. (Nutzerin): Aufgaben von Feld zu Feld verschieben – antippen, dann „hierher“.
+test("Matrix: Aufgabe antippen und per „hierher“ in ein anderes Feld verschieben", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/matrix");
+  await page.locator('[data-quadrant="kurz"]').getByRole("button", { name: /Mail an Vermieter/ }).click();
+  await expect(page.locator('[data-matrix-hierher="kurz"]')).toHaveCount(0);
+  await page.locator('[data-matrix-hierher="planen"]').click();
+  const liste = await aufrufe(page, "matrixAufgabeSpeichern");
+  expect(liste.at(-1)[0]).toMatchObject({ titel: "Mail an Vermieter", quadrantManuell: "planen" });
+});
+
+// 05.10. (Nutzerin): Spontan-Workflow mit einer Aufgabe aus der Matrix, danach „erledigt?“.
+test("Workflow: Aufgabe aus der Matrix wählen, starten, danach als erledigt abhaken", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/workflow");
+  const box = page.locator("[data-spontan-workflow]");
+  await box.locator("[data-matrix-wahl]").getByRole("button", { name: /Antrag abschicken/ }).click();
+  await box.getByRole("button", { name: "▶ „Antrag abschicken“ starten" }).click();
+  await page.getByRole("button", { name: "✓ Fertig für heute" }).click();
+  await expect(page.locator("[data-matrix-erledigt-frage]")).toContainText("Antrag abschicken");
+  await page.getByRole("button", { name: "✓ Ja, erledigt" }).click();
+  const liste = await aufrufe(page, "matrixAufgabeSpeichern");
+  expect(liste.at(-1)[0]).toMatchObject({ id: "m1" });
+  expect(liste.at(-1)[0].erledigtAm).toBeTruthy();
+});
