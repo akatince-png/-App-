@@ -94,7 +94,7 @@ function proxySpkiPins() {
   const pems = fs.readFileSync(bundle, "utf8").match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g) || [];
   return pems
     .map((pem) => new crypto.X509Certificate(pem))
-    .filter((c) => /Proxy CA/i.test(c.subject))
+    .filter((c) => /Proxy CA|agent-proxy/i.test(c.subject))
     .map((c) => crypto.createHash("sha256").update(c.publicKey.export({ type: "spki", format: "der" })).digest("base64"));
 }
 const pins = process.env.AKA_SPKI ? [process.env.AKA_SPKI] : proxySpkiPins();

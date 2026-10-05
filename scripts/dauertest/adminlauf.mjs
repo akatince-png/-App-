@@ -11,7 +11,7 @@ const OUT = process.env.AKA_OUT || 'dauertest-out/admin-' + new Date().toISOStri
 const URL=(process.env.AKA_URL||'https://akaapp.vercel.app').replace(/\/$/,'');
 const bundle = process.env.AKA_CA_BUNDLE || '/root/.ccr/ca-bundle.crt';
 const pems = fs.existsSync(bundle) ? fs.readFileSync(bundle,'utf8').match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/g) || [] : [];
-const pins = pems.map(p=>new crypto.X509Certificate(p)).filter(c=>/Proxy CA/i.test(c.subject)).map(c=>crypto.createHash('sha256').update(c.publicKey.export({type:'spki',format:'der'})).digest('base64'));
+const pins = pems.map(p=>new crypto.X509Certificate(p)).filter(c=>/Proxy CA|agent-proxy/i.test(c.subject)).map(c=>crypto.createHash('sha256').update(c.publicKey.export({type:'spki',format:'der'})).digest('base64'));
 const b = await chromium.launch({ executablePath: process.env.AKA_CHROMIUM || '/opt/pw-browsers/chromium', args: pins.length ? [`--ignore-certificate-errors-spki-list=${pins.join(',')}`] : [] });
 const ctx = await b.newContext({ viewport:{width:390,height:844}, deviceScaleFactor:2, isMobile:true, hasTouch:true, locale:'de-DE', timezoneId:'Europe/Berlin' });
 const p = await ctx.newPage(); const log=[]; let aktuell='start';
