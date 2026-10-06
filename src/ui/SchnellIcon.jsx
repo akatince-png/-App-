@@ -83,9 +83,9 @@ const PFADE = {
   ),
   sonnenaufgang: (
     <>
-      <path d="M6 17a6 6 0 0 1 12 0" />
+      <path d="M7.5 17a4.5 4.5 0 0 1 9 0" />
       {/* Fünf Strahlen, weiter aufgefächert (06.10., Nutzerin). */}
-      <path d="M12 9V6.5M17.1 10.9l1.6-1.9M6.9 10.9 5.3 9M19.9 15.6l2.4-.4M4.1 15.6l-2.4-.4M3 20.5h18" />
+      <path d="M12 10V7.5M16.5 11.6l1.6-1.9M7.5 11.6 5.9 9.7M18.9 15.8l2.5-.4M5.1 15.8l-2.5-.4M3 20.5h18" />
     </>
   ),
   mond: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,

@@ -54,7 +54,7 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
 - **Morgenfenster GEBAUT (06.10.):** Die Nutzerin wählte Entwurf **C** („Einmal strecken – und los“, eine
   direkte Aufforderung als Ansporn) für den Start und **D** (AKA-Gehirn in der Sonne) als Abschluss
   „Aufgeladen! ⚡“.
-  - `ui/MorgenStartFenster.jsx`: ganzer Bildschirm, Bild `assets/fenster/morgen-strecken.jpg`, nicht
+  - `ui/MorgenStartFenster.jsx`: ganzer Bildschirm, Bild `assets/fenster/morgen-sonne.jpg` (Vorlage `docs/morgenfenster/morgen-sonne.svg`) (eigene Zeichnung, s. u.), nicht
     wegtippbar. „Starten“ (bzw. „Weitermachen“) öffnet den geführten Ablauf. „Heute nicht“ verlangt einen
     Grund (Chips oder eigene Worte) und vermerkt ihn im Tagesverlauf (`aktion: "heute ausgelassen"`, in
     `ProtokollLogView` TAGESVERLAUF_AKTIONEN).
@@ -78,8 +78,10 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
     bleibt darunter.
   - **Sonnen-Symbol** (Morgenroutine, `Icon.jsx` „sunrise“ und `SchnellIcon.jsx` „sonnenaufgang“): fünf
     weiter aufgefächerte Strahlen statt vier („vier Striche sehen nackig aus“).
-  - **Offen:** Morgenbild neu mit **größerer Sonne, die Figur steht IN der Sonne**. Canva-Kontingent am
-    06.10. leer, sobald möglich nachziehen (Stil wie `morgen-strecken.jpg`). Ebenso Bilder für Tageslicht,
+  - **Morgenbild neu (06.10. spät):** Die Nutzerin wollte die Sonne erheblich größer als die Figur, die Figur
+    soll IN der Sonne stehen. Canva war leer, deshalb selbst gezeichnet: `assets/fenster/morgen-sonne.jpg` (Vorlage `docs/morgenfenster/morgen-sonne.svg`)
+    (große Sonne, Ton-Figur mit erhobenen Armen). Sonnen-Symbol: mehr Abstand zwischen Strahlen und Sonne.
+    Später ggf. durch ein Canva-Bild ersetzen. **Offen:** Bilder für Tageslicht,
     Schlaf, Atem, Workflow, Tagebuch. Die Nutzerin will Fenster-Bilder für **alle** Bereiche.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.

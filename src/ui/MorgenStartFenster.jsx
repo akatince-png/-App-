@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import bildMorgen from "../assets/fenster/morgen-strecken.jpg";
+// Eigene Zeichnung (06.10.): große Sonne, die Figur steht mittendrin
+// (Nutzerin: „die Sonne soll erheblich größer sein als das Männchen“).
+import bildMorgen from "../assets/fenster/morgen-sonne.jpg";
 import bildAbend from "../assets/fenster/abend-fenster.jpg";
 import { plastikFarbe } from "./plastik";
 import { HEUTE_NICHT_GRUENDE } from "../utils/morgenFenster";
@@ -11,7 +13,7 @@ import { HEUTE_NICHT_GRUENDE } from "../utils/morgenFenster";
 // Abend (06.10. abends, Nutzerin: „solche Bilder auch für die Abendroutine“):
 // gleicher Aufbau, Nachtbild, Leitsatz aus dem AKA-Konzept.
 const ART = {
-  morgen: { bild: bildMorgen, pos: "center 22%", grund: "#3B5F66", titel: "Guten Morgen ☀️", satz: "Einmal strecken – und los.", name: "Morgenroutine", farbe: "#F07A1A" },
+  morgen: { bild: bildMorgen, pos: "center 30%", grund: "#3B5F66", titel: "Guten Morgen ☀️", satz: "Einmal strecken – und los.", name: "Morgenroutine", farbe: "#F07A1A" },
   abend: { bild: bildAbend, pos: "center 30%", grund: "#1B2550", titel: "Guten Abend 🌙", satz: "Ein guter Morgen beginnt am Abend davor.", name: "Abendroutine", farbe: "#6C5BD4" },
 };
 

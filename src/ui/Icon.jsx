@@ -99,9 +99,9 @@ const PATHS = {
   // inkonsistent), symmetrisch um die Mittelachse verteilt.
   sunrise: (
     <>
-      <path d="M6.5 17a5.5 5.5 0 0 1 11 0" />
-      {/* Fünf Strahlen, weiter aufgefächert (06.10., Nutzerin: „vier Striche sehen nackig aus“). */}
-      <path d="M12 9.5V7M16.8 11.3l1.6-1.9M7.2 11.3 5.6 9.4M19.4 15.7l2.4-.4M4.6 15.7l-2.4-.4" />
+      <path d="M7.5 17a4.5 4.5 0 0 1 9 0" />
+      {/* Fünf Strahlen, weiter aufgefächert (06.10., Nutzerin: „vier Striche sehen nackig aus“), mit mehr Abstand zur Sonne. */}
+      <path d="M12 10V7.5M16.5 11.6l1.6-1.9M7.5 11.6 5.9 9.7M18.9 15.8l2.5-.4M5.1 15.8l-2.5-.4" />
       <path d="M2 20.5h20" />
     </>
   ),
