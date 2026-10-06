@@ -19,6 +19,13 @@ Hinweise) und wird laufend gepflegt.
 
 Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
 
+- **Vorgemerkt: Weg zum Live-Start (Nutzerin, 06.10.):** Ganz oben in
+  `UEBERGABEPROTOKOLL.md` stehen fünf Punkte (Einfrieren, Dauertest-
+  Kernschritte in die e2e-Prüfungen, Fehler-Erfassung, klein starten,
+  Neuerungen gesammelt). Die Nutzerin bestimmt, wann es losgeht, mit dem
+  Einfrieren ist sie noch nicht einverstanden. Daran erinnern, nicht von
+  selbst starten.
+
 - **Philosophie (Nutzerin, 26.09.):** AKA ist ein Management-Tool für den
   Alltag mit ADHS, „Deine exekutive rechte Hand“: App und Coach übernehmen
   Planen, Erinnern, Tracken, Im-Blick-Behalten und Auswerten. Kern ist das

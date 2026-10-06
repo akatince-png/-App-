@@ -1,5 +1,30 @@
 # 📋 ÜBERGABEPROTOKOLL: AKA App
 
+## 🚦 VORGEMERKT: Weg zum Live-Start (Nutzerin, 06.10.2026) — im Auge behalten
+
+Die Nutzerin will die folgenden Punkte **umsetzen, sobald wir an einem bestimmten Punkt angekommen sind**.
+Jetzt noch nicht: Sie hat noch einiges zu ändern und nutzt die App selbst wieder aktiver, um ihren eigenen,
+menschlichen Blick einzubringen. Einzelne Funktionen gefallen ihr noch nicht. Manchmal muss man zu viele
+Fenster öffnen, und manche Seiten wirken zu kompliziert. **Den Zeitpunkt bestimmt sie.** Bei jeder Sitzung kurz
+daran erinnern, aber nicht von selbst starten.
+
+1. **Einfrieren vor dem Start (1–2 Wochen):** keine neuen Funktionen und keine Umzüge mehr, nur Fehler
+   beheben und ein Durchgang, ob alles stimmig ist. **Damit ist die Nutzerin noch nicht einverstanden.** Erst
+   ansprechen, wenn sie den Punkt für erreicht hält.
+2. **Die Kernschritte des Dauertests in die automatischen Prüfungen** (e2e, laufen vor jedem Commit):
+   abhaken, Quests unter „Mehr“, Morgen-/Abendroutine, Coach-Übersicht. Verschiebt ein Umbau etwas, fällt es
+   sofort auf und nicht erst im nächsten Dauertest. Anlass: Am 06.10. hatte der Tageslauf seit dem 28.09.
+   keine Quests gefunden, weil sie seit „Startseite schlicht“ unter „Mehr“ stehen.
+3. **Fehler echter Nutzer automatisch erfassen:** eine eigene Tabelle in Supabase (z. B. `app_fehler`), kein
+   Drittanbieter (Datenschutz). Abstürze landen dort, Claude sieht sie bei der nächsten Sitzung.
+4. **Klein starten:** erst 3–5 echte Personen für 1–2 Wochen, dann mehr.
+5. **Neuerungen nach dem Start gesammelt:** höchstens einmal pro Woche, mit kurzer Notiz „Was ist neu“ in der
+   App. Ständig wandernde Knöpfe sind für Menschen mit ADHS anstrengend.
+
+**Bis dahin gilt:** Der tägliche Dauertest mit den Bots läuft weiter (Wunsch der Nutzerin), auch während sie
+parallel Änderungen vornimmt. Ihre Eindrücke aus der eigenen Nutzung möglichst **gesammelt** umsetzen statt
+einzeln hin und her, auch um das Arbeitskontingent zu schonen.
+
 ## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026, überarbeitet am selben Abend) — Maßstab für jede Änderung
 
 Quellen: Aussagen der Nutzerin vom 26.09., Claim „Deine exekutive rechte Hand“ (Abschnitt 1),
