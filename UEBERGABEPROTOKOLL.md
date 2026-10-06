@@ -21,6 +21,29 @@ daran erinnern, aber nicht von selbst starten.
 5. **Neuerungen nach dem Start gesammelt:** höchstens einmal pro Woche, mit kurzer Notiz „Was ist neu“ in der
    App. Ständig wandernde Knöpfe sind für Menschen mit ADHS anstrengend.
 
+### Wunschbild „Assistent statt Werkzeugkasten“ (Nutzerin, 06.10., gesammelt, noch nicht beauftragt)
+Kern ihrer Kritik: Die App muss **aktiv auffordern**, statt dass man selbst hineingehen und suchen muss.
+Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und Licht außerhalb laufen.
+1. **Wecker über die App:** Der Wecker klingelt, die hinterlegte Spotify-Liste startet, das Licht ist ohnehin
+   zeitgeschaltet. Technik: Eine Web-App kann nicht laut wecken (siehe „Wecken“ weiter unten). Ein echter
+   App-Wecker geht nur in der nativen iOS-App (Capacitor-Projekt `ios/` vorhanden, iOS-Alarm-Schnittstelle prüfen).
+   Spotify braucht ein aktives Gerät. **Zwischenlösung ohne Code:** eine iOS-Kurzbefehl-Automation
+   „Wecker gestoppt → Spotify-Playlist abspielen + AKA öffnen“.
+2. **Begrüßungsfenster „Guten Morgen – starte jetzt deine Morgenroutine“:** ein eigenes, großes Fenster, das
+   nicht einfach weggeklickt wird. Darin „Starten“ und klein „Heute nicht“. Bei „Heute nicht“ wird nach dem
+   Grund gefragt. Nach „Starten“ kommt die Morgenroutine wie im Tagesplan, Schritt für Schritt, jeder Schritt im
+   eigenen Fenster (so wie die Abendroutine mit Atemübung, die ihr gefallen hat). Am besten auch abends.
+3. **Sprachbegleitung durch die KI** („gib mir deine drei Vorhaben“, To-dos per Sprache in die Liste). Später,
+   kostet Pay-per-Use über die Anthropic-API.
+4. **Matrix/To-dos smarter:** Aufgaben nach Tag/Woche/Monat/Jahr, wandern zwischen Feldern, in Tage
+   einplanbar und mit der Tages-To-do-Liste verknüpft. Beim Anlegen ein kleines Auswahlfenster: Termin,
+   Projekt, Aufgabe … Schlicht, nicht überladen.
+5. **Training:** Bilder für alle Übungen (Canva oder eine eigene Figur in verschiedenen Haltungen), damit
+   Untrainierte sehen, wie die Bewegung geht. Der Timer funktioniert gut.
+6. **Startseite:** Darstellung von Tagesplan und Morgenroutine noch einmal überarbeiten.
+Vorgehen laut Nutzerin: **Schritt für Schritt.** Sie nutzt die App und spricht nebenbei ihre Eindrücke ein.
+Claude sammelt, sortiert und baut gebündelt um.
+
 **Bis dahin gilt:** Der tägliche Dauertest mit den Bots läuft weiter (Wunsch der Nutzerin), auch während sie
 parallel Änderungen vornimmt. Ihre Eindrücke aus der eigenen Nutzung möglichst **gesammelt** umsetzen statt
 einzeln hin und her, auch um das Arbeitskontingent zu schonen.
