@@ -100,7 +100,8 @@ const PATHS = {
   sunrise: (
     <>
       <path d="M6.5 17a5.5 5.5 0 0 1 11 0" />
-      <path d="M9 8.5l-2-3M15 8.5l2-3M5.5 12l-3.5-1.5M18.5 12l3.5-1.5" />
+      {/* Fünf Strahlen, weiter aufgefächert (06.10., Nutzerin: „vier Striche sehen nackig aus“). */}
+      <path d="M12 9.5V7M16.8 11.3l1.6-1.9M7.2 11.3 5.6 9.4M19.4 15.7l2.4-.4M4.6 15.7l-2.4-.4" />
       <path d="M2 20.5h20" />
     </>
   ),

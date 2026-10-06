@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { zeigeMorgenFenster } from "./morgenFenster";
+import { zeigeMorgenFenster, zeigeRoutineFenster } from "./morgenFenster";
 
 const offen = { anzahlGesamt: 5, abgeschlossen: false };
 const um = (h, m = 0) => new Date(2026, 9, 7, h, m);
@@ -25,5 +25,19 @@ describe("zeigeMorgenFenster", () => {
   it("ohne Startzeit ab 5 Uhr", () => {
     expect(zeigeMorgenFenster({ jetzt: um(4, 59), status: offen, entscheidung: null })).toBe(false);
     expect(zeigeMorgenFenster({ jetzt: um(5), status: offen, entscheidung: null })).toBe(true);
+  });
+});
+
+describe("Abendfenster", () => {
+  const abend = (h, m = 0) => new Date(2026, 9, 7, h, m);
+  it("ab 30 Min. vor der Abend-Startzeit bis Mitternacht", () => {
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(20, 59), startZeit: "21:30", status: offen, entscheidung: null })).toBe(false);
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(21, 0), startZeit: "21:30", status: offen, entscheidung: null })).toBe(true);
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(23, 59), startZeit: "21:30", status: offen, entscheidung: null })).toBe(true);
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(9, 0), startZeit: "21:30", status: offen, entscheidung: null })).toBe(false);
+  });
+  it("ohne Startzeit ab 20 Uhr", () => {
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(19, 59), status: offen, entscheidung: null })).toBe(false);
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(20, 0), status: offen, entscheidung: null })).toBe(true);
   });
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import bild from "../assets/fenster/morgen-strecken.jpg";
+import bildMorgen from "../assets/fenster/morgen-strecken.jpg";
+import bildAbend from "../assets/fenster/abend-fenster.jpg";
 import { plastikFarbe } from "./plastik";
 import { HEUTE_NICHT_GRUENDE } from "../utils/morgenFenster";
 
@@ -7,10 +8,18 @@ import { HEUTE_NICHT_GRUENDE } from "../utils/morgenFenster";
 // und los“, eine direkte, motivierende Aufforderung). Füllt den ganzen
 // Bildschirm und lässt sich nicht wegtippen: entweder „Starten“ oder
 // „Heute nicht“ – dann wird kurz nach dem Grund gefragt (fürs Coaching).
+// Abend (06.10. abends, Nutzerin: „solche Bilder auch für die Abendroutine“):
+// gleicher Aufbau, Nachtbild, Leitsatz aus dem AKA-Konzept.
+const ART = {
+  morgen: { bild: bildMorgen, pos: "center 22%", grund: "#3B5F66", titel: "Guten Morgen ☀️", satz: "Einmal strecken – und los.", name: "Morgenroutine", farbe: "#F07A1A" },
+  abend: { bild: bildAbend, pos: "center 30%", grund: "#1B2550", titel: "Guten Abend 🌙", satz: "Ein guter Morgen beginnt am Abend davor.", name: "Abendroutine", farbe: "#6C5BD4" },
+};
+
 const datumText = (d) => d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
 const uhrText = (d) => d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
-export default function MorgenStartFenster({ schritte = 0, dauerMin = 0, fortgesetzt = 0, onStart, onHeuteNicht }) {
+export default function MorgenStartFenster({ art = "morgen", schritte = 0, dauerMin = 0, fortgesetzt = 0, onStart, onHeuteNicht }) {
+  const a = ART[art];
   const [jetzt, setJetzt] = useState(new Date());
   const [frage, setFrage] = useState(false);
   const [grund, setGrund] = useState("");
@@ -27,16 +36,16 @@ export default function MorgenStartFenster({ schritte = 0, dauerMin = 0, fortges
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Guten Morgen"
-      data-morgenfenster
+      aria-label={a.titel}
+      data-morgenfenster={art}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        backgroundImage: `url(${bild})`,
+        backgroundImage: `url(${a.bild})`,
         backgroundSize: "cover",
-        backgroundPosition: "center 22%",
-        backgroundColor: "#3B5F66",
+        backgroundPosition: a.pos,
+        backgroundColor: a.grund,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -66,10 +75,10 @@ export default function MorgenStartFenster({ schritte = 0, dauerMin = 0, fortges
       >
         {!frage ? (
           <>
-            <div style={{ fontSize: 28, fontWeight: 900 }}>Guten Morgen ☀️</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#4A5570", margin: "6px 0 4px" }}>Einmal strecken – und los.</div>
+            <div style={{ fontSize: 28, fontWeight: 900 }}>{a.titel}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#4A5570", margin: "6px 0 4px" }}>{a.satz}</div>
             <div style={{ fontSize: 13, color: "#6B7590", marginBottom: 16 }}>
-              {fortgesetzt > 0 ? `${fortgesetzt} von ${schritte} Schritten schon erledigt` : `Morgenroutine · ${schritte} Schritte`}
+              {fortgesetzt > 0 ? `${fortgesetzt} von ${schritte} Schritten schon erledigt` : `${a.name} · ${schritte} Schritte`}
               {dauerMin > 0 ? ` · ca. ${dauerMin} Min.` : ""}
             </div>
             <button
@@ -77,7 +86,7 @@ export default function MorgenStartFenster({ schritte = 0, dauerMin = 0, fortges
               className="mp-tap"
               data-morgenfenster-start
               onClick={onStart}
-              style={{ width: "100%", minHeight: 60, border: "none", borderRadius: 22, fontSize: 20, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", ...plastikFarbe("#F07A1A") }}
+              style={{ width: "100%", minHeight: 60, border: "none", borderRadius: 22, fontSize: 20, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", ...plastikFarbe(a.farbe) }}
             >
               ▶ {fortgesetzt > 0 ? "Weitermachen" : "Starten"}
             </button>
@@ -94,13 +103,13 @@ export default function MorgenStartFenster({ schritte = 0, dauerMin = 0, fortges
             <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 4 }}>Okay – was ist heute los?</div>
             <div style={{ fontSize: 13, color: "#6B7590", marginBottom: 12 }}>Kurz antippen reicht. Das hilft dir und deinem Coach, Muster zu sehen.</div>
             <div role="group" aria-label="Grund" style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 10 }}>
-              {HEUTE_NICHT_GRUENDE.map((g) => (
+              {HEUTE_NICHT_GRUENDE[art].map((g) => (
                 <button
                   key={g}
                   type="button"
                   aria-pressed={grund === g}
                   onClick={() => setGrund(grund === g ? "" : g)}
-                  style={{ border: "none", borderRadius: 99, padding: "9px 14px", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: grund === g ? "#F07A1A" : "rgba(31,42,68,.08)", color: grund === g ? "#fff" : "#1F2A44" }}
+                  style={{ border: "none", borderRadius: 99, padding: "9px 14px", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: grund === g ? a.farbe : "rgba(31,42,68,.08)", color: grund === g ? "#fff" : "#1F2A44" }}
                 >
                   {g}
                 </button>
@@ -125,7 +134,7 @@ export default function MorgenStartFenster({ schritte = 0, dauerMin = 0, fortges
             <button
               type="button"
               onClick={() => setFrage(false)}
-              style={{ marginTop: 8, border: "none", background: "transparent", color: "#F07A1A", fontSize: 14, fontWeight: 800, cursor: "pointer", padding: 8, fontFamily: "inherit" }}
+              style={{ marginTop: 8, border: "none", background: "transparent", color: a.farbe, fontSize: 14, fontWeight: 800, cursor: "pointer", padding: 8, fontFamily: "inherit" }}
             >
               Doch starten
             </button>

@@ -45,7 +45,7 @@ import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
 import MorgenStartFenster from "../ui/MorgenStartFenster";
-import { zeigeMorgenFenster, heutigeEntscheidung, entscheidungMerken } from "../utils/morgenFenster";
+import { zeigeRoutineFenster, heutigeEntscheidung, entscheidungMerken } from "../utils/morgenFenster";
 import { routineTagesStatus } from "../utils/routineStatus";
 import ZeitraumKalender from "../ui/ZeitraumKalender";
 import { useTagesBloecke } from "../data/useTagesBloecke";
@@ -1035,20 +1035,23 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     </>
   );
 
-  // Morgenfenster (06.10., Nutzerin): morgens groß „Einmal strecken – und
-  // los“, bis man startet oder „Heute nicht“ mit Grund wählt. Mit
-  // ?morgen=1 in der Adresse (iOS-Kurzbefehl nach dem Wecker) immer.
-  const morgenHeute = toLocalISODate(new Date());
-  const morgenStatus = routineTagesStatus("morgen", morgenHeute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
-  const morgenErzwungen = new URLSearchParams(window.location.search).get("morgen") === "1";
-  const morgenFensterZeigen =
+  // Routine-Fenster (06.10., Nutzerin): morgens groß „Einmal strecken – und
+  // los“, abends „Ein guter Morgen beginnt am Abend davor“ – bis man startet
+  // oder „Heute nicht“ mit Grund wählt. Mit ?morgen=1 bzw. ?abend=1 in der
+  // Adresse (iOS-Kurzbefehl, z. B. nach dem Wecker) immer.
+  const fensterHeute = toLocalISODate(new Date());
+  const fensterParam = new URLSearchParams(window.location.search);
+  const fensterArt = fensterParam.get("abend") === "1" ? "abend" : fensterParam.get("morgen") === "1" ? "morgen" : new Date().getHours() < 14 ? "morgen" : "abend";
+  const fensterErzwungen = fensterParam.get(fensterArt) === "1";
+  const fensterStatus = routineTagesStatus(fensterArt, fensterHeute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
+  const routineFensterZeigen =
     !istAdminModus &&
     !morgenFensterZu &&
-    zeigeMorgenFenster({ jetzt: new Date(), startZeit: routineEinstellungen?.morgen?.startZeit, status: morgenStatus, entscheidung: heutigeEntscheidung(morgenHeute), erzwungen: morgenErzwungen });
-  const morgenFensterSchliessen = (wahl) => {
-    entscheidungMerken(morgenHeute, wahl);
+    zeigeRoutineFenster({ art: fensterArt, jetzt: new Date(), startZeit: routineEinstellungen?.[fensterArt]?.startZeit, status: fensterStatus, entscheidung: heutigeEntscheidung(fensterHeute, fensterArt), erzwungen: fensterErzwungen });
+  const routineFensterSchliessen = (wahl) => {
+    entscheidungMerken(fensterHeute, wahl, fensterArt);
     setMorgenFensterZu(true);
-    if (morgenErzwungen) window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+    if (fensterErzwungen) window.history.replaceState(null, "", window.location.pathname + window.location.hash);
   };
 
   if (ablaufRoutine) {
@@ -1065,18 +1068,20 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
 
   return (
     <Shell>
-      {morgenFensterZeigen && (
+      {routineFensterZeigen && (
         <MorgenStartFenster
-          schritte={morgenStatus.anzahlGesamt}
-          fortgesetzt={morgenStatus.anzahlErledigt}
-          dauerMin={routineSchritte.filter((x) => x.routine === "morgen").reduce((summe, x) => summe + (Number(x.dauerMin) || 0), 0)}
+          art={fensterArt}
+          schritte={fensterStatus.anzahlGesamt}
+          fortgesetzt={fensterStatus.anzahlErledigt}
+          dauerMin={routineSchritte.filter((x) => x.routine === fensterArt).reduce((summe, x) => summe + (Number(x.dauerMin) || 0), 0)}
           onStart={() => {
-            morgenFensterSchliessen("gestartet");
-            setAblaufRoutine("morgen");
+            routineFensterSchliessen("gestartet");
+            setAblaufRoutine(fensterArt);
           }}
           onHeuteNicht={(grund) => {
-            morgenFensterSchliessen("nicht");
-            aenderungVermerken({ kategorie: "morgenroutine", itemName: "Morgenroutine", aktion: "heute ausgelassen", detail: grund });
+            routineFensterSchliessen("nicht");
+            const name = fensterArt === "morgen" ? "Morgenroutine" : "Abendroutine";
+            aenderungVermerken({ kategorie: name.toLowerCase(), itemName: name, aktion: "heute ausgelassen", detail: grund });
           }}
         />
       )}

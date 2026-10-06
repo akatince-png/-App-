@@ -67,6 +67,20 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   - Abschluss: `ui/AufgeladenFenster.jsx` ersetzt bei der Morgenroutine die Abschlusskarte und das
     Feier-Fenster (Punkte und Verspätungs-Hinweis stehen jetzt darin). Die Abendroutine bleibt unverändert.
   - Tests: `e2e/morgenfenster.spec.js`. Fotos: `docs/morgenfenster/app-*.png`.
+- **Nachtrag 06.10. spät (Nutzerin):**
+  - **Abendfenster** im gleichen Aufbau (`MorgenStartFenster` mit `art="abend"`, Bild
+    `assets/fenster/abend-fenster.jpg`, Satz „Ein guter Morgen beginnt am Abend davor.“, Lila). Es erscheint
+    ab 30 Min. vor der Abend-Startzeit (ohne Startzeit ab 20 Uhr) bis Mitternacht. Per Link mit `?abend=1`.
+    Logik in `utils/morgenFenster.js` (`zeigeRoutineFenster`, je Art eigener Speicher `aka-abendfenster`).
+  - **Abschluss Abendroutine:** `ui/GuteNachtFenster.jsx` mit Nachthimmel, funkelnden Sternen (wie in der
+    Startseiten-Gehirnkarte), Mond und dem leuchtenden Abend-Gehirn (schwarzer Hintergrund per
+    feColorMatrix durchsichtig). Ersetzt die Abschlusskarte und das Feier-Fenster. Die Tagebuch-Karte
+    bleibt darunter.
+  - **Sonnen-Symbol** (Morgenroutine, `Icon.jsx` „sunrise“ und `SchnellIcon.jsx` „sonnenaufgang“): fünf
+    weiter aufgefächerte Strahlen statt vier („vier Striche sehen nackig aus“).
+  - **Offen:** Morgenbild neu mit **größerer Sonne, die Figur steht IN der Sonne**. Canva-Kontingent am
+    06.10. leer, sobald möglich nachziehen (Stil wie `morgen-strecken.jpg`). Ebenso Bilder für Tageslicht,
+    Schlaf, Atem, Workflow, Tagebuch. Die Nutzerin will Fenster-Bilder für **alle** Bereiche.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

@@ -13,6 +13,7 @@ import { toLocalISODate } from "../utils/dates";
 import { playBeep } from "../utils/beep";
 import AtemFuehrung from "./AtemFuehrung";
 import AufgeladenFenster from "./AufgeladenFenster";
+import GuteNachtFenster from "./GuteNachtFenster";
 import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBibliothek";
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 
@@ -20,10 +21,6 @@ const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 const ROUTINE_EMOJI = { morgen: "🌅", abend: "🌙" };
-const ABSCHLUSS_TEXT = {
-  morgen: "Du bist startklar für den Tag. Wünsch dir einen wunderschönen Tag!",
-  abend: "Gut gemacht — Zeit, zur Ruhe zu kommen. Schlaf gut.",
-};
 
 function fmtDauer(sekunden) {
   const s = Math.max(0, Math.round(sekunden));
@@ -141,10 +138,10 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
       // Immer feiern (25.09.), pünktlich oder später — siehe routineFeier.js.
-      // Morgens übernimmt das „Aufgeladen“-Bild (06.10.) die Feier selbst,
-      // sonst lägen zwei Fenster übereinander.
+      // „Aufgeladen“ (morgens) bzw. „Gute Nacht“ (abends) übernehmen seit
+      // 06.10. die Feier selbst, sonst lägen zwei Fenster übereinander.
       const feier = routineGeschafftFeier(routine, rechtzeitigGestartetRef.current, verspaetungHinweis(routineEinstellungen?.[routine]?.startZeit, gestartetUmRef.current, belohnungPufferMin));
-      if (routine === "morgen") feierRef.current = feier;
+      if (routine === "morgen" || routine === "abend") feierRef.current = feier;
       else feuereBelohnung(feier);
       setFertig(true);
     }
@@ -199,13 +196,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
         {routine === "morgen" ? (
           <AufgeladenFenster gesamtZeit={fmtDauer(gesamtSek)} feier={feierRef.current} onWeiter={onAbschluss} />
         ) : (
-        <Card style={{ textAlign: "center", marginBottom: 14 }}>
-          <div style={{ fontSize: 30, marginBottom: 8 }}>{ROUTINE_EMOJI[routine]}</div>
-          <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{ROUTINE_LABEL[routine]} abgeschlossen!</div>
-          <div style={{ fontSize: 13, color: textMuted, marginBottom: 4 }}>{ABSCHLUSS_TEXT[routine]}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Gesamtzeit: {fmtDauer(gesamtSek)}</div>
-          <PrimaryButton onClick={onAbschluss}>Zurück zum Tag</PrimaryButton>
-        </Card>
+          <GuteNachtFenster gesamtZeit={fmtDauer(gesamtSek)} feier={feierRef.current} onWeiter={onAbschluss} />
         )}
         {/* "Wie war dein Tag?" (25.09.): gehört an den Abend, nicht auf die
             Startseite – hier, falls die Abendroutine keinen Tagebuch-Schritt hat. */}

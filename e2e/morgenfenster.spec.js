@@ -33,3 +33,17 @@ test("Morgenfenster: „Heute nicht“ verlangt einen Grund und schließt dann",
   await expect(fenster).toHaveCount(0);
   await expect(page.locator("[data-home-kopf]")).toBeVisible();
 });
+
+test("Abendfenster: Starten führt in die Abendroutine, am Ende „Gute Nacht“ mit Sternen", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 9, 7, 21, 40) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&abend=1#/home");
+  const fenster = page.locator("[data-morgenfenster]");
+  await expect(fenster).toContainText("Ein guter Morgen beginnt am Abend davor.");
+  await fenster.locator("[data-morgenfenster-start]").click();
+  for (let i = 0; i < 8; i++) {
+    const weiter = page.getByRole("button", { name: /^(Schritt fertig|Schon geatmet – weiter|Heute überspringen)$/ }).first();
+    if (!(await weiter.isVisible().catch(() => false))) break;
+    await weiter.click();
+  }
+  await expect(page.locator("[data-gute-nacht]")).toContainText("Gute Nacht 🌙");
+});
