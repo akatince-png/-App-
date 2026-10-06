@@ -41,6 +41,36 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
 5. **Training:** Bilder für alle Übungen (Canva oder eine eigene Figur in verschiedenen Haltungen), damit
    Untrainierte sehen, wie die Bewegung geht. Der Timer funktioniert gut.
 6. **Startseite:** Darstellung von Tagesplan und Morgenroutine noch einmal überarbeiten.
+**Stand 06.10. abends (Nutzerin):**
+- **Morgenfenster:** soll stylisch sein, im App-Design, z. B. mit Sonne, dem Gehirn (von vorn) oder einer
+  Figur, die sich in der Sonne streckt. Vier Entwürfe liegen in `docs/morgenfenster/varianten.png`
+  (A Sonne/Dünen, B Gehirn wacht auf, C Strecken in der Sonne, D AKA-Gehirn in bewegter Sonne). Die
+  Canva-Bilder in voller Größe liegen daneben (`sonne.jpg`, `gehirn.jpg`, `person.jpg`). **Auswahl der
+  Nutzerin steht aus.**
+- **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
+  einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
+- **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.
+  Bis dahin die freien Canva-Bilder für die **Fenster-Designs** nutzen.
+- **Canva-Weg für große Bilder:** `generate-image` liefert nur eine Vorschau (112 px). Für volle Größe
+  `generate-design` (phone_wallpaper, asset_ids) → `create-design-from-candidate` → `export-design`
+  (jpg, 900 px). Canva zeichnet das Bild dabei neu, das Motiv bleibt aber erhalten.
+- **Vorschläge aus dem Vergleich mit erfolgreichen Apps** (Routinery, „Best ADHD App“ bei Forbes Health 2025;
+  Tiimo, iPhone-App des Jahres 2025; Alarmy; Fabulous):
+  1. Routine als **Ein-Knopf-Ablauf mit Sprachansage** je Schritt, auch bei gesperrtem Handy weiter
+     (Routinery). Pausieren, Überspringen und Zeit ändern direkt im Ablauf.
+  2. **Sichtbare Zeit** als farbige Zeitleiste und Rest-Balken je Schritt gegen Zeitblindheit (Tiimo).
+     Sanfte Übergangs-Hinweise („in 5 Min. geht's weiter mit …“).
+  3. **Aufsteh-Mission nach dem Wecker** (Alarmy): Der erste Schritt ist körperlich, z. B. Glas Wasser
+     oder ans Fenster und Licht. Passt zum AKA-Konzept.
+  4. **Gedanken-Ablage** („Brain Dump“): alles auf einmal reinsprechen oder -tippen, die App/Aka sortiert
+     es in die Matrix und schlägt Teilschritte vor (Tiimo-KI).
+  5. **Reise statt Liste** (Fabulous): das Kernprogramm als sichtbare Etappen-Reise mit kleinen Feiern.
+     Haben wir in Ansätzen und könnten es stärker zeigen.
+  6. **Weniger Fenster:** Jede Hauptaufgabe mit höchstens zwei Tipps erreichbar. Beim nächsten
+     Eigentest der Nutzerin Klickwege zählen.
+  - Technik Wecker: iOS-AlarmKit (iOS 26) erlaubt echte App-Wecker. Die App wird beim Wegwischen aber
+    nicht geweckt, nur über einen eigenen Knopf im Alarm („AKA öffnen“). Bis zur nativen App: iOS-Kurzbefehl.
+
 Vorgehen laut Nutzerin: **Schritt für Schritt.** Sie nutzt die App und spricht nebenbei ihre Eindrücke ein.
 Claude sammelt, sortiert und baut gebündelt um.
 
