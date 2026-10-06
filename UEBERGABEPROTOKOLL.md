@@ -47,6 +47,10 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   (A Sonne/Dünen, B Gehirn wacht auf, C Strecken in der Sonne, D AKA-Gehirn in bewegter Sonne). Die
   Canva-Bilder in voller Größe liegen daneben (`sonne.jpg`, `gehirn.jpg`, `person.jpg`). **Auswahl der
   Nutzerin steht aus.**
+  Auf ihren Wunsch auch Fenster für die anderen Bereiche: `bereiche.png` mit Abendroutine, Supplemente,
+  Ernährung, Sport und Wasser (Bilder `abend/supplemente/ernaehrung/sport/wasser.jpg`). Für Tageslicht,
+  Schlaf, Atem, Workflow und Tagebuch ist die Canva-Erstellung am 06.10. fehlgeschlagen (vermutlich
+  Kontingent leer, „nicht erneut versuchen“). Später nachziehen.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.
