@@ -50,6 +50,9 @@ const NUR_ANSICHTEN = process.env.AKA_NUR_ANSICHTEN === "1";
 // Nachholen nach einem Skriptfehler im Tagesplan (27.09.): nur anmelden,
 // Tagesplan abhaken, Startseite ansehen – keine doppelten Wasser-/Licht-Einträge.
 const NUR_TAGESPLAN = process.env.AKA_NUR_TAGESPLAN === "1";
+// Nachholen der Coach-Quests (06.10.): nur anmelden und Schritt 6 – nichts
+// sonst doppelt abhaken oder eintragen.
+const NUR_QUESTS = process.env.AKA_NUR_QUESTS === "1";
 // Zwei Läufe am Tag (27.09., Nutzerin: Testdaten sollen realistisch sein –
 // abends erledigte Morgenroutinen erzeugten absurde "meist erst 21:30"-
 // Hinweise und Chats): AKA_TEIL=morgen → nur die Morgenroutine (früh am
@@ -193,7 +196,7 @@ try {
   await foto("01-home-vorher");
 
   if (!NUR_ANSICHTEN) {
-  if (!NUR_TAGESPLAN && TEIL !== "morgen") {
+  if (!NUR_TAGESPLAN && !NUR_QUESTS && TEIL !== "morgen") {
   // 1b) Coach-Chat (seit 24.09.): Hinweis "Dein Coach hat geschrieben" oben
   //     auf der Startseite → Chat öffnen, mit einer Schnellantwort antworten
   //     (mit demselben Fleiß wie beim Abhaken).
@@ -246,6 +249,7 @@ try {
   }
 
   } // Ende !NUR_TAGESPLAN
+  if (!NUR_QUESTS) {
   // 2) Tagesplan abhaken (außer am Pausentag)
   await geheZu("tagesplan");
   // Seit 27.09. startet der Tagesplan in der Bild-Ansicht (Zeitleiste). Ein
@@ -341,9 +345,10 @@ try {
   bericht.ausgelassen = ausgelassen;
   schritt(`Tagesplan: ${erledigt.length} erledigt, ${ausgelassen.length} bewusst ausgelassen${PAUSENTAG ? " (Pausentag)" : ""}`);
   await foto("03-tagesplan-nachher");
+  } // Ende !NUR_QUESTS (2)
 
   // 3) Morgenroutine einmal komplett durchlaufen (außer Pausentag)
-  if (!PAUSENTAG && !NUR_TAGESPLAN && TEIL !== "abend") {
+  if (!PAUSENTAG && !NUR_TAGESPLAN && !NUR_QUESTS && TEIL !== "abend") {
     await geheZu("routinen");
     const start = page.getByText("▶️ Morgenroutine starten").first();
     if (await start.isVisible().catch(() => false)) {
@@ -367,6 +372,7 @@ try {
   }
 
   if (!NUR_TAGESPLAN && TEIL !== "morgen") {
+  if (!NUR_QUESTS) {
   // 4) Trinken: 2–4 Gläser (+200 ml) in der Hydration-Ansicht
   await geheZu("hydration");
   const schlucke = PAUSENTAG ? 0 : 2 + (tagIndex % 3);
@@ -412,9 +418,13 @@ try {
     schritt(`Tagesrätsel: ${fragen} Fragen beantwortet`);
   }
 
+  } // Ende !NUR_QUESTS (4–5)
+
   // 6) Quests (Team-Quests vom Coach): annehmen, Fortschritt eintragen,
-  //    ab Ziel abschließen.
-  await geheZu("home");
+  //    ab Ziel abschließen. Seit „Startseite schlicht“ (29.09.) stehen die
+  //    Coach-Quests unter „Mehr“, nicht mehr auf Home (06.10. bemerkt:
+  //    seit 28.09. hatte der Lauf deshalb 0 Quests angenommen).
+  await geheZu("mehr");
   await warte(1500);
   let angenommen = 0;
   for (let i = 0; i < 5; i++) {
@@ -449,6 +459,7 @@ try {
   await foto("06c-quests");
   schritt(`Quests: ${angenommen} angenommen, Fortschritt ${questWert} bei ${felder.length} eingetragen, ${abgeschlossen} abgeschlossen`);
 
+  if (!NUR_QUESTS) {
   // 7) Team (seit 24.09.): Team-Seite ansehen, wer seit 2+ Tagen ruhig ist,
   //    bekommt eine Motivationsnachricht; dann die Rangliste (Personen, Teams).
   await geheZu("team");
@@ -496,6 +507,7 @@ try {
   await page.getByRole("button", { name: "👥 Teams" }).click().catch(() => {});
   await warte(1500);
   await foto("06e-team-liga");
+  } // Ende !NUR_QUESTS (7)
   } // Ende !NUR_TAGESPLAN (4–7)
   } else {
     schritt("Nur Ansichten (Wiederholungslauf, keine Aktionen)");
@@ -507,7 +519,7 @@ try {
   bericht.homeText = (await text()).slice(0, 1500);
 
   // 8) Alle Bereiche einmal öffnen (Absturz-/Leer-/Fehler-Check)
-  const ansichten = NUR_TAGESPLAN || TEIL === "morgen" ? [] : [
+  const ansichten = NUR_TAGESPLAN || NUR_QUESTS || TEIL === "morgen" ? [] : [
     "tagesplan", "routinen", "atemuebungen", "tageslicht", "hydration", "schlaf", "bildschirmzeit", "ernaehrung", "training",
     "supplemente", "medikamente", "wochenuebersicht", "morgenroutine", "abendroutine", "verlauf", "archiv", "statistik",
     "erfolge", "tagebuch", "profil", "mehr", "lexikon", "team", "denksport",

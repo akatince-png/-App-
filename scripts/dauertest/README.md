@@ -116,6 +116,8 @@ testen, aber realistisch. Deshalb:
 - `AKA_TEIL=morgen|abend` gibt es im Skript noch, wird aber nicht mehr genutzt.
 - Der Tagesplan startet in der Bild-Ansicht; das Skript fotografiert sie (02a) und
   schaltet auf „Liste“. `AKA_NUR_TAGESPLAN=1` holt nur den Tagesplan nach.
+  `AKA_NUR_QUESTS=1` holt nur die Coach-Quests nach (stehen seit 29.09. unter
+  „Mehr“, nicht mehr auf der Startseite).
 
 ## Seit 05.10.: Passwörter über `passwoerter.mjs`
 
