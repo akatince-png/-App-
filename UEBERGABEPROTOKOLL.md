@@ -54,7 +54,7 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
 - **Morgenfenster GEBAUT (06.10.):** Die Nutzerin wählte Entwurf **C** („Einmal strecken – und los“, eine
   direkte Aufforderung als Ansporn) für den Start und **D** (AKA-Gehirn in der Sonne) als Abschluss
   „Aufgeladen! ⚡“.
-  - `ui/MorgenStartFenster.jsx`: ganzer Bildschirm, Bild `assets/fenster/morgen-sonne.jpg` (Vorlage `docs/morgenfenster/morgen-sonne.svg`) (eigene Zeichnung, s. u.), nicht
+  - `ui/MorgenStartFenster.jsx`: ganzer Bildschirm, Bild `assets/fenster/morgen-strecken-hell.jpg` (Canva-Bild C, aufgehellt), nicht
     wegtippbar. „Starten“ (bzw. „Weitermachen“) öffnet den geführten Ablauf. „Heute nicht“ verlangt einen
     Grund (Chips oder eigene Worte) und vermerkt ihn im Tagesverlauf (`aktion: "heute ausgelassen"`, in
     `ProtokollLogView` TAGESVERLAUF_AKTIONEN).
@@ -81,7 +81,10 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   - **Morgenbild neu (06.10. spät):** Die Nutzerin wollte die Sonne erheblich größer als die Figur, die Figur
     soll IN der Sonne stehen. Canva war leer, deshalb selbst gezeichnet: `assets/fenster/morgen-sonne.jpg` (Vorlage `docs/morgenfenster/morgen-sonne.svg`)
     (große Sonne, Ton-Figur mit erhobenen Armen). Sonnen-Symbol: mehr Abstand zwischen Strahlen und Sonne.
-    Später ggf. durch ein Canva-Bild ersetzen. **Offen:** Bilder für Tageslicht,
+    Später ggf. durch ein Canva-Bild ersetzen. **Nachts entschieden:** Die Nutzerin will doch das vorherige
+    Canva-Bild, nur so hell wie die Zeichnung → `morgen-strecken-hell.jpg` (brightness 1.15, saturate 1.4,
+    contrast 1.05 eingerechnet). Die Zeichnung liegt als Vorlage in `docs/morgenfenster/morgen-sonne.svg`.
+    **Offen:** Bilder für Tageslicht,
     Schlaf, Atem, Workflow, Tagebuch. Die Nutzerin will Fenster-Bilder für **alle** Bereiche.
 - **„Als Nächstes“-Fenster (06.10. spät, Nutzerin: „Wenn ‚Aufgeladen‘ steht, soll schon das nächste
   Actionfenster passieren … je nach Lebensbereich mit Bild … ein Workflow öffnet direkt die Workflow-Seite mit
