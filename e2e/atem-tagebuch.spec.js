@@ -115,5 +115,5 @@ test("Morgenroutine mit Stoppuhr: Atem-Schritt zeigt die geführte Übung", asyn
   await expect(atem).toBeVisible();
   await expect(atem).toContainText("Atemübung");
   await atem.getByRole("button", { name: "Schon geatmet – weiter" }).click();
-  await expect(page.getByText("Morgenroutine abgeschlossen!")).toBeVisible();
+  await expect(page.getByText("Aufgeladen! ⚡")).toBeVisible();
 });

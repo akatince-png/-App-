@@ -51,6 +51,22 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   Ernährung, Sport und Wasser (Bilder `abend/supplemente/ernaehrung/sport/wasser.jpg`). Für Tageslicht,
   Schlaf, Atem, Workflow und Tagebuch ist die Canva-Erstellung am 06.10. fehlgeschlagen (vermutlich
   Kontingent leer, „nicht erneut versuchen“). Später nachziehen.
+- **Morgenfenster GEBAUT (06.10.):** Die Nutzerin wählte Entwurf **C** („Einmal strecken – und los“, eine
+  direkte Aufforderung als Ansporn) für den Start und **D** (AKA-Gehirn in der Sonne) als Abschluss
+  „Aufgeladen! ⚡“.
+  - `ui/MorgenStartFenster.jsx`: ganzer Bildschirm, Bild `assets/fenster/morgen-strecken.jpg`, nicht
+    wegtippbar. „Starten“ (bzw. „Weitermachen“) öffnet den geführten Ablauf. „Heute nicht“ verlangt einen
+    Grund (Chips oder eigene Worte) und vermerkt ihn im Tagesverlauf (`aktion: "heute ausgelassen"`, in
+    `ProtokollLogView` TAGESVERLAUF_AKTIONEN).
+  - Regeln in `utils/morgenFenster.js` (+Test): ab 1 Std. vor der Morgen-Startzeit bis 14 Uhr, solange die
+    Routine offen ist und heute noch nicht entschieden wurde (localStorage `aka-morgenfenster`, je Datum).
+  - **`?morgen=1` in der Adresse zeigt es immer** (für den iOS-Kurzbefehl nach dem Wecker:
+    `https://akaapp.vercel.app/?morgen=1#/home`).
+  - Nur für Coachees, nicht im Admin-/Verwalten-Modus. Im e2e-Harness nur mit `?morgen=1` (sonst
+    `aka-morgenfenster-aus`).
+  - Abschluss: `ui/AufgeladenFenster.jsx` ersetzt bei der Morgenroutine die Abschlusskarte und das
+    Feier-Fenster (Punkte und Verspätungs-Hinweis stehen jetzt darin). Die Abendroutine bleibt unverändert.
+  - Tests: `e2e/morgenfenster.spec.js`. Fotos: `docs/morgenfenster/app-*.png`.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

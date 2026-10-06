@@ -12,6 +12,7 @@ import { istTagebuchSchritt } from "../utils/tagebuch";
 import { toLocalISODate } from "../utils/dates";
 import { playBeep } from "../utils/beep";
 import AtemFuehrung from "./AtemFuehrung";
+import AufgeladenFenster from "./AufgeladenFenster";
 import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBibliothek";
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 
@@ -56,6 +57,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   const [fertig, setFertig] = useState(false);
   const [musikFehler, setMusikFehler] = useState(null);
   const protokollRef = useRef([]);
+  const feierRef = useRef(null);
   const startZeitRef = useRef(Date.now());
   const gestartetUmRef = useRef(new Date().toISOString());
   // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): bei Routinen mit echtem
@@ -139,9 +141,11 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
       spotifyPausieren();
       routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
       // Immer feiern (25.09.), pünktlich oder später — siehe routineFeier.js.
-      feuereBelohnung(
-        routineGeschafftFeier(routine, rechtzeitigGestartetRef.current, verspaetungHinweis(routineEinstellungen?.[routine]?.startZeit, gestartetUmRef.current, belohnungPufferMin))
-      );
+      // Morgens übernimmt das „Aufgeladen“-Bild (06.10.) die Feier selbst,
+      // sonst lägen zwei Fenster übereinander.
+      const feier = routineGeschafftFeier(routine, rechtzeitigGestartetRef.current, verspaetungHinweis(routineEinstellungen?.[routine]?.startZeit, gestartetUmRef.current, belohnungPufferMin));
+      if (routine === "morgen") feierRef.current = feier;
+      else feuereBelohnung(feier);
       setFertig(true);
     }
   };
@@ -192,6 +196,9 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
     const protokoll = protokollRef.current;
     return (
       <Shell>
+        {routine === "morgen" ? (
+          <AufgeladenFenster gesamtZeit={fmtDauer(gesamtSek)} feier={feierRef.current} onWeiter={onAbschluss} />
+        ) : (
         <Card style={{ textAlign: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 30, marginBottom: 8 }}>{ROUTINE_EMOJI[routine]}</div>
           <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{ROUTINE_LABEL[routine]} abgeschlossen!</div>
@@ -199,6 +206,7 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Gesamtzeit: {fmtDauer(gesamtSek)}</div>
           <PrimaryButton onClick={onAbschluss}>Zurück zum Tag</PrimaryButton>
         </Card>
+        )}
         {/* "Wie war dein Tag?" (25.09.): gehört an den Abend, nicht auf die
             Startseite – hier, falls die Abendroutine keinen Tagebuch-Schritt hat. */}
         {routine === "abend" && !schritte.some(istTagebuchSchritt) && (!tagebuchHeute || tagebuchNachher) && (

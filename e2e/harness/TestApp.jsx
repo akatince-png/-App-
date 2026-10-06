@@ -35,6 +35,9 @@ function leseOverridesAusUrl() {
     if (params.get("startvariante")) localStorage.setItem("mp-start-variante", params.get("startvariante"));
     // Ohne Angabe Variante A, damit die älteren Tests die vier Knöpfe finden.
     else localStorage.setItem("mp-start-variante", "a");
+    // Morgenfenster (06.10.) nur mit ?morgen=1 – sonst würde es morgens alle Startseiten-Tests verdecken.
+    if (params.get("morgen") === "1") localStorage.removeItem("aka-morgenfenster-aus");
+    else localStorage.setItem("aka-morgenfenster-aus", "1");
   } catch {
     /* ohne Speicher: Variante A */
   }

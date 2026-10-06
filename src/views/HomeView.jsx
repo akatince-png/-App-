@@ -44,6 +44,9 @@ import { workflowStartMerken } from "../utils/workflowStart";
 import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
+import MorgenStartFenster from "../ui/MorgenStartFenster";
+import { zeigeMorgenFenster, heutigeEntscheidung, entscheidungMerken } from "../utils/morgenFenster";
+import { routineTagesStatus } from "../utils/routineStatus";
 import ZeitraumKalender from "../ui/ZeitraumKalender";
 import { useTagesBloecke } from "../data/useTagesBloecke";
 
@@ -216,6 +219,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   // Stoppuhr muss man sofort finden“): "morgen"/"abend" öffnet den
   // geführten Ablauf wie im Tagesplan, null = normale Startseite.
   const [ablaufRoutine, setAblaufRoutine] = useState(null);
+  // Morgenfenster (06.10.): nach Starten/„Heute nicht“ für diese Sitzung zu.
+  const [morgenFensterZu, setMorgenFensterZu] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
   const [trainingFehler, setTrainingFehler] = useState(null);
   // Direkte Checkliste statt Wegnavigieren (12.09., Nutzerin-Vorgabe): ein
@@ -1030,6 +1035,22 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     </>
   );
 
+  // Morgenfenster (06.10., Nutzerin): morgens groß „Einmal strecken – und
+  // los“, bis man startet oder „Heute nicht“ mit Grund wählt. Mit
+  // ?morgen=1 in der Adresse (iOS-Kurzbefehl nach dem Wecker) immer.
+  const morgenHeute = toLocalISODate(new Date());
+  const morgenStatus = routineTagesStatus("morgen", morgenHeute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
+  const morgenErzwungen = new URLSearchParams(window.location.search).get("morgen") === "1";
+  const morgenFensterZeigen =
+    !istAdminModus &&
+    !morgenFensterZu &&
+    zeigeMorgenFenster({ jetzt: new Date(), startZeit: routineEinstellungen?.morgen?.startZeit, status: morgenStatus, entscheidung: heutigeEntscheidung(morgenHeute), erzwungen: morgenErzwungen });
+  const morgenFensterSchliessen = (wahl) => {
+    entscheidungMerken(morgenHeute, wahl);
+    setMorgenFensterZu(true);
+    if (morgenErzwungen) window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+  };
+
   if (ablaufRoutine) {
     return (
       <RoutineAblauf
@@ -1044,6 +1065,21 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
 
   return (
     <Shell>
+      {morgenFensterZeigen && (
+        <MorgenStartFenster
+          schritte={morgenStatus.anzahlGesamt}
+          fortgesetzt={morgenStatus.anzahlErledigt}
+          dauerMin={routineSchritte.filter((x) => x.routine === "morgen").reduce((summe, x) => summe + (Number(x.dauerMin) || 0), 0)}
+          onStart={() => {
+            morgenFensterSchliessen("gestartet");
+            setAblaufRoutine("morgen");
+          }}
+          onHeuteNicht={(grund) => {
+            morgenFensterSchliessen("nicht");
+            aenderungVermerken({ kategorie: "morgenroutine", itemName: "Morgenroutine", aktion: "heute ausgelassen", detail: grund });
+          }}
+        />
+      )}
       {/* Design 2.0 (28.09.): große Begrüßung mit Datum statt Logo-Zeile;
           rechts das Logo als kleines Markenzeichen. */}
       <div data-home-kopf style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "4px 2px 16px" }}>
