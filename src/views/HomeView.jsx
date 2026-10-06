@@ -40,11 +40,13 @@ import { getADHSMode, saveADHSMode, getSoundEnabled, saveSoundEnabled } from "..
 import RoutineHeuteChecklist from "../ui/RoutineHeuteChecklist";
 import RoutineAblauf from "../ui/RoutineAblauf";
 import { TrainingStartAuswahl, WorkflowStartAuswahl } from "../ui/SpontanStart";
-import { workflowStartMerken } from "../utils/workflowStart";
+import { workflowStartMerken, istWorkflowHeuteErledigt } from "../utils/workflowStart";
 import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
 import MorgenStartFenster from "../ui/MorgenStartFenster";
+import NaechsterSchrittFenster from "../ui/NaechsterSchrittFenster";
+import { naechsteSchritte } from "../utils/naechsteSchritte";
 import { zeigeRoutineFenster, heutigeEntscheidung, entscheidungMerken } from "../utils/morgenFenster";
 import { routineTagesStatus } from "../utils/routineStatus";
 import ZeitraumKalender from "../ui/ZeitraumKalender";
@@ -221,6 +223,17 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [ablaufRoutine, setAblaufRoutine] = useState(null);
   // Morgenfenster (06.10.): nach Starten/„Heute nicht“ für diese Sitzung zu.
   const [morgenFensterZu, setMorgenFensterZu] = useState(false);
+  // „Als Nächstes“ (06.10.): nach „Aufgeladen“ und nach einer beendeten
+  // Workflow-Session (Merker aus WorkflowTimer) die nächste Tätigkeit ankündigen.
+  const [naechsterOffen, setNaechsterOffen] = useState(() => {
+    try {
+      const da = sessionStorage.getItem("aka-naechster-zeigen") === "1";
+      sessionStorage.removeItem("aka-naechster-zeigen");
+      return da;
+    } catch {
+      return false;
+    }
+  });
   const [soundEnabled, setSoundEnabled] = useState(() => getSoundEnabled());
   const [trainingFehler, setTrainingFehler] = useState(null);
   // Direkte Checkliste statt Wegnavigieren (12.09., Nutzerin-Vorgabe): ein
@@ -1059,7 +1072,10 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       <RoutineAblauf
         routine={ablaufRoutine}
         schritte={routineSchritte.filter((x) => x.routine === ablaufRoutine).sort((x, y) => x.reihenfolge - y.reihenfolge)}
-        onAbschluss={() => setAblaufRoutine(null)}
+        onAbschluss={() => {
+          if (ablaufRoutine === "morgen" && !istAdminModus) setNaechsterOffen(true);
+          setAblaufRoutine(null);
+        }}
         onAbbrechen={() => setAblaufRoutine(null)}
         routineDurchlaufSpeichern={routineDurchlaufSpeichern}
       />
@@ -1068,6 +1084,21 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
 
   return (
     <Shell>
+      {naechsterOffen && !routineFensterZeigen && (
+        <NaechsterSchrittFenster
+          schritte={naechsteSchritte(displayItems.filter((i) => !(i.kategorie === "workflow" && istWorkflowHeuteErledigt(i.raw?.preset?.id))))}
+          direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
+          onErledigt={(i) => (i.bundleIds ? buendelErledigen(i) : direktErledigen(i))}
+          onOeffnen={(i) => {
+            setNaechsterOffen(false);
+            if (i.kategorie === "workflow") {
+              if (i.raw?.preset?.id) workflowStartMerken(`anstehend:${i.raw.preset.id}`);
+              onOpenView("workflow");
+            } else onOpenView(i.kategorie === "training" ? "training" : "tagesplan");
+          }}
+          onSpaeter={() => setNaechsterOffen(false)}
+        />
+      )}
       {routineFensterZeigen && (
         <MorgenStartFenster
           art={fensterArt}

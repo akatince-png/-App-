@@ -47,3 +47,36 @@ test("Abendfenster: Starten führt in die Abendroutine, am Ende „Gute Nacht“
   }
   await expect(page.locator("[data-gute-nacht]")).toContainText("Gute Nacht 🌙");
 });
+
+// „Als Nächstes“ (06.10.): nach „Aufgeladen“ kündigt ein Fenster die nächste
+// Tätigkeit an; Abhaken springt zum folgenden Punkt.
+test("Als Nächstes: nach der Morgenroutine kommt die nächste Tätigkeit", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 9, 7, 7, 10) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&morgen=1#/home");
+  await page.locator("[data-morgenfenster-start]").click();
+  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  if (await abJetzt.isVisible()) await abJetzt.click();
+  for (let i = 0; i < 6; i++) {
+    const w = page.getByRole("button", { name: /^(Schritt fertig|Schon geatmet – weiter)$/ }).first();
+    if (!(await w.isVisible().catch(() => false))) break;
+    await w.click();
+  }
+  await page.getByRole("button", { name: "Los in den Tag" }).click();
+  const fenster = page.locator("[data-naechster-schritt]");
+  await expect(fenster).toContainText("ALS NÄCHSTES");
+  // Im Harness speichert Abhaken nichts (Mock) – hier nur: Knopf da, Liste „Danach“ da.
+  await expect(fenster.locator('[data-naechster-knopf="erledigt"]')).toBeVisible();
+  await expect(fenster.locator("[data-naechster-danach]")).toContainText("Wäsche machen");
+  await fenster.getByRole("button", { name: "Später" }).click();
+  await expect(fenster).toHaveCount(0);
+});
+
+test("Workflow aus „Als Nächstes“: Seite zeigt „Steht jetzt an“ und startet erst auf Tipp", async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("mp-workflow-start", "anstehend:wp1"));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&spontan=1#/workflow");
+  const karte = page.locator("[data-workflow-anstehend]").locator("..");
+  await expect(karte).toContainText("Deep Work");
+  await expect(karte).toContainText("50 Min. Arbeit · 10 Min. Pause");
+  await karte.getByRole("button", { name: "▶ Jetzt starten" }).click();
+  await expect(page.locator("[data-workflow-anstehend]")).toHaveCount(0);
+});

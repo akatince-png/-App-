@@ -83,6 +83,26 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
     (große Sonne, Ton-Figur mit erhobenen Armen). Sonnen-Symbol: mehr Abstand zwischen Strahlen und Sonne.
     Später ggf. durch ein Canva-Bild ersetzen. **Offen:** Bilder für Tageslicht,
     Schlaf, Atem, Workflow, Tagebuch. Die Nutzerin will Fenster-Bilder für **alle** Bereiche.
+- **„Als Nächstes“-Fenster (06.10. spät, Nutzerin: „Wenn ‚Aufgeladen‘ steht, soll schon das nächste
+  Actionfenster passieren … je nach Lebensbereich mit Bild … ein Workflow öffnet direkt die Workflow-Seite mit
+  der anstehenden Aufgabe … danach ‚vergiss nicht, als Nächstes steht das an‘“):**
+  - `ui/NaechsterSchrittFenster.jsx`, ganzer Bildschirm. Zeigt den nächsten offenen Punkt aus dem Tagesplan
+    (`utils/naechsteSchritte.js` + Test: ohne Routinen, nach Uhrzeit) mit Bereichsbild (Supplement/Hormon,
+    Mahlzeit, Training, Wasser aus `assets/fenster/`), sonst mit großem Plastik-Symbol auf Bereichsfarbe.
+    Darunter „Danach:“ mit den zwei folgenden Punkten und „Später“.
+  - Mit einem Tipp abhakbare Punkte: „✓ Erledigt“, danach rückt der nächste Punkt nach (Kette). Workflow und
+    Training haben einen eigenen Knopf zur jeweiligen Seite, alles andere öffnet den Tagesplan.
+  - Erscheint nach „Los in den Tag“ (Aufgeladen) und beim Zurückkommen nach einer beendeten Workflow-Session
+    (sessionStorage `aka-naechster-zeigen`).
+  - Workflow: `workflowStartMerken("anstehend:<presetId>")` → `WorkflowTimer` zeigt oben „STEHT JETZT AN“
+    mit Einstellungen und der Reihenfolge der heute geplanten Workflows. Gestartet wird erst mit
+    „▶ Jetzt starten“. Nach einer Session (ab 1 Min.) gilt der Workflow heute als erledigt
+    (`workflowHeuteErledigtMerken`, localStorage) und wird nicht erneut angekündigt.
+  - Feste Einheiten (z. B. 25/5, 90 Min.) gab es schon: Workflow anlegen → Zeitplan mit Uhrzeit → erscheint im
+    Tagesplan.
+  - **Offen:** Bilder für Workflow, Tageslicht, Schlaf, Atem, Gewohnheit (Canva leer). Ankündigung auch nach
+    dem Abhaken an anderen Stellen (Tagesplan) ist noch nicht drin, bisher nur über dieses Fenster und nach dem
+    Workflow. Die Frage „zu früh abgehakt?“ fragt das Fenster bewusst nicht.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

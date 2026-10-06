@@ -19,3 +19,29 @@ export function workflowStartHolen() {
     return null;
   }
 }
+
+// Heute schon gelaufene Workflows (06.10., „Als Nächstes“): Workflow-Punkte im
+// Tagesplan haben keinen Haken – nach einer Session (ab 1 Min.) gilt der
+// Workflow für heute als erledigt und wird nicht erneut angekündigt.
+const ERLEDIGT_KEY = "aka-workflow-erledigt";
+const heute = () => new Date().toLocaleDateString("sv-SE");
+
+export function workflowHeuteErledigtMerken(presetId) {
+  try {
+    const roh = JSON.parse(localStorage.getItem(ERLEDIGT_KEY) || "null");
+    const ids = roh?.datum === heute() ? roh.ids : [];
+    localStorage.setItem(ERLEDIGT_KEY, JSON.stringify({ datum: heute(), ids: [...new Set([...ids, presetId])] }));
+    sessionStorage.setItem("aka-naechster-zeigen", "1");
+  } catch {
+    // ohne Speicher wird der Workflow eben noch einmal angekündigt
+  }
+}
+
+export function istWorkflowHeuteErledigt(presetId) {
+  try {
+    const roh = JSON.parse(localStorage.getItem(ERLEDIGT_KEY) || "null");
+    return roh?.datum === heute() && roh.ids.includes(presetId);
+  } catch {
+    return false;
+  }
+}

@@ -11,7 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useIntervallMusikSync } from "../data/useIntervallMusikSync";
 import { WOCHENTAGE } from "../constants";
 import { toLocalISODate } from "../utils/dates";
-import { workflowStartHolen } from "../utils/workflowStart";
+import { workflowStartHolen, workflowHeuteErledigtMerken } from "../utils/workflowStart";
 import { MatrixWahl } from "./SpontanStart";
 
 const FADE_SEK = 5;
@@ -76,6 +76,9 @@ export default function WorkflowTimer({ onSchliessen }) {
   // nach dem Ende kommt die Frage, ob sie erledigt ist.
   const [matrixAufgabeId, setMatrixAufgabeId] = useState(null);
   const [erledigtFrage, setErledigtFrage] = useState(null);
+  // Angekündigter Workflow aus „Als Nächstes“ (06.10.): oben groß mit
+  // Überschrift; gestartet wird erst, wenn man selbst „Jetzt starten“ tippt.
+  const [anstehendId, setAnstehendId] = useState(null);
   const matrixAufgabe = matrixAufgaben.find((a) => a.id === matrixAufgabeId) || null;
   // Spontan-Workflow (30.09., Nutzerin: „spontan 25 Minuten mit 5 Minuten
   // Pause, offenes Ende, Playlist wählen“): ohne vorher einen benannten
@@ -137,6 +140,10 @@ export default function WorkflowTimer({ onSchliessen }) {
   useEffect(() => {
     const ziel = workflowStartHolen();
     if (!ziel) return;
+    if (ziel.startsWith("anstehend:")) {
+      setAnstehendId(ziel.slice(10));
+      return;
+    }
     if (ziel.startsWith("matrix:")) setMatrixAufgabeId(ziel.slice(7));
     if (ziel === "spontan" || ziel.startsWith("matrix:")) {
       setTimeout(() => spontanRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 50);
@@ -188,10 +195,17 @@ export default function WorkflowTimer({ onSchliessen }) {
     // dokumentiert sind – ab 1 Minute.
     const min = startZeitRef.current ? Math.round((Date.now() - startZeitRef.current) / 60000) : 0;
     if (laufendesPreset && min >= 1) aenderungVermerken?.({ kategorie: "workflow", itemName: laufendesPreset.name, aktion: "erledigt", detail: `${min} Min.` });
+    if (laufendesPreset?.id && min >= 1) workflowHeuteErledigtMerken(laufendesPreset.id);
     if (laufendesPreset?.matrixAufgabeId) setErledigtFrage(laufendesPreset.matrixAufgabeId);
     startZeitRef.current = null;
     setLaufendesPreset(null);
   };
+
+  const anstehend = anstehendId ? (workflowPresets || []).find((p) => p.id === anstehendId) || null : null;
+  const wochentagHeute = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][new Date().getDay()];
+  const heuteGeplant = (workflowPlaene || [])
+    .filter((p) => !p.wochentage?.length || p.wochentage.includes(wochentagHeute))
+    .sort((a, b) => String(a.uhrzeit || "99").localeCompare(String(b.uhrzeit || "99")));
 
   return (
     <Shell bereich="gewohnheit">
@@ -222,6 +236,34 @@ export default function WorkflowTimer({ onSchliessen }) {
             Flotterem) und optional festen Tagen/Uhrzeiten, dann taucht er auch im Tagesplan auf.
           </div>
 
+          {anstehend && (
+            <Card style={{ marginBottom: 14, border: "2px solid #C43A8E" }}>
+              <div data-workflow-anstehend style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.5, color: "#C43A8E" }}>STEHT JETZT AN</div>
+              <div style={{ fontSize: 21, fontWeight: 900, margin: "2px 0 4px" }}>{anstehend.name}</div>
+              <div style={{ fontSize: 13, color: textMuted, marginBottom: 10 }}>
+                {anstehend.arbeitMin} Min. Arbeit · {anstehend.pauseMin} Min. Pause · {anstehend.offen ? "offenes Ende" : `ca. ${anstehend.gesamtMin} Min. insgesamt`}
+              </div>
+              {heuteGeplant.length > 1 && (
+                <div style={{ fontSize: 12.5, marginBottom: 10 }}>
+                  <div style={{ fontWeight: 800, marginBottom: 2 }}>Heute geplant, in dieser Reihenfolge:</div>
+                  {heuteGeplant.map((p, i) => (
+                    <div key={p.id} style={{ color: p.presetId === anstehend.id ? "inherit" : textMuted, fontWeight: p.presetId === anstehend.id ? 800 : 500 }}>
+                      {i + 1}. {(workflowPresets || []).find((x) => x.id === p.presetId)?.name || "Workflow"}
+                      {p.uhrzeit ? ` · ${p.uhrzeit.slice(0, 5)}` : ""}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <PrimaryButton
+                onClick={() => {
+                  setAnstehendId(null);
+                  starten(anstehend);
+                }}
+              >
+                ▶ Jetzt starten
+              </PrimaryButton>
+            </Card>
+          )}
           {erledigtFrage && (
             <Card style={{ marginBottom: 14 }}>
               <div data-matrix-erledigt-frage style={{ fontSize: 15, fontWeight: 800, marginBottom: 10 }}>
