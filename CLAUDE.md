@@ -77,6 +77,13 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   `UEBERGABEPROTOKOLL.md`, Teil 121. Produktive DB-Änderungen vorher mit
   der Nutzerin abstimmen. Ohne Connector gilt weiter: Migrationen/Edge
   Functions landen im Code, die Nutzerin spielt sie selbst ein.
+- **Dauerfreigabe Datenbank (Nutzerin, 07.10.2026):** Sie will SQL-/Datenbank-
+  Änderungen, die für eine von ihr beauftragte Funktion nötig sind (neue Spalten,
+  Funktionen, Reihenfolgen u. ä.), nicht mehr einzeln freigeben – einfach
+  durchführen und hinterher berichten. Ausgenommen bleibt: Daten echter Konten
+  löschen oder überschreiben. Technisch fragen manche Werkzeuge trotzdem nach
+  (z. B. Supabase bei „drop“); das umgehen wir nicht, sondern bauen ohne
+  „drop“ oder berichten.
 - **Dauerfreigabe Dauertest (Nutzerin, 29.09.2026, wörtlich: „Ich gebe dir
   auch in Zukunft die Freigabe“):** Für den täglichen Dauertest
   (`scripts/dauertest/README.md`) darfst du die Passwörter der sechs

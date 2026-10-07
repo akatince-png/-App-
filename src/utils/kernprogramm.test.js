@@ -84,3 +84,24 @@ describe("Kernprogramm: Eiweißziel ab Woche 3", () => {
     expect(b.find((x) => x.key === "mahlzeiten")).toMatchObject({ erledigt: 3, von: 3 });
   });
 });
+
+import { abendReihenfolge } from "./kernprogramm";
+describe("abendReihenfolge (07.10.)", () => {
+  it("Tagebuch zuerst, eigene Schritte in der Mitte, Atem und Bett am Ende", () => {
+    const s = [
+      { id: "z", routine: "abend", reihenfolge: 0, kernKey: null, name: "Zähne" },
+      { id: "a", routine: "abend", reihenfolge: 1, kernKey: "atem_abend" },
+      { id: "t", routine: "abend", reihenfolge: 2, kernKey: "tagebuch" },
+      { id: "k", routine: "abend", reihenfolge: 3, kernKey: null, name: "Kleidung bereitlegen" },
+      { id: "b", routine: "abend", reihenfolge: 4, kernKey: "schlafenszeit" },
+      { id: "m", routine: "morgen", reihenfolge: 0, kernKey: "wasser" },
+    ];
+    const neu = new Map(abendReihenfolge(s).map((x) => [x.id, x.reihenfolge]));
+    const ordnung = s.filter((x) => x.routine === "abend").map((x) => ({ ...x, r: neu.has(x.id) ? neu.get(x.id) : x.reihenfolge })).sort((a, b) => a.r - b.r).map((x) => x.id);
+    expect(ordnung).toEqual(["t", "z", "k", "a", "b"]);
+    expect(neu.has("m")).toBe(false);
+  });
+  it("schon richtig sortiert → keine Änderung", () => {
+    expect(abendReihenfolge([{ id: "t", routine: "abend", reihenfolge: 0, kernKey: "tagebuch" }, { id: "b", routine: "abend", reihenfolge: 1, kernKey: "schlafenszeit" }])).toEqual([]);
+  });
+});

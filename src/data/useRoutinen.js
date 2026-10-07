@@ -6,7 +6,7 @@ import { routineGeschafftFeier } from "../utils/routineFeier";
 import { feuereBelohnung } from "../utils/belohnungBus";
 import { verspaetungHinweis } from "../utils/routineVerspaetung";
 import { einstellungenFuer, planFuer, plusTage, schritteFuer, zeileZuPlantag, zeileZuVariante } from "../utils/schichtplan";
-import { pauseFuer, zeileZuPause } from "../utils/kernprogramm";
+import { abendReihenfolge, pauseFuer, zeileZuPause } from "../utils/kernprogramm";
 
 function rowToSchritt(r) {
   return {
@@ -403,6 +403,20 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   // kommen sie nach vorn (Wasser/Licht/Atmen zuerst), abends ans Ende, „Ins
   // Bett zur festen Zeit“ bleibt immer der letzte Schritt. Doppelte fängt
   // der eindeutige Index (user_id, kern_key) ab.
+  // Bestehende Abendroutinen einmal in die sinnvolle Reihenfolge bringen
+  // (07.10.): Tagebuch/Plan zuerst, Atmung und Bett zuletzt.
+  const abendOrdnen = useCallback(async () => {
+    const aenderungen = abendReihenfolge(schritte);
+    if (!aenderungen.length) return { ok: true, anzahl: 0 };
+    for (const { id, reihenfolge } of aenderungen) {
+      const { error } = await supabase.from("routine_schritte").update({ reihenfolge }).eq("id", id);
+      if (error) console.error(error);
+    }
+    const neu = new Map(aenderungen.map((x) => [x.id, x.reihenfolge]));
+    setSchritte((prev) => prev.map((sc) => (neu.has(sc.id) ? { ...sc, reihenfolge: neu.get(sc.id) } : sc)));
+    return { ok: true, anzahl: aenderungen.length };
+  }, [schritte]);
+
   const kernSchritteAnlegen = useCallback(
     async (bausteine) => {
       const neu = [];
@@ -429,14 +443,12 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
           neu.push(rowToSchritt(data));
         }
         if (routine === "abend") {
-          const alle = [...schritte, ...neu].filter((sc) => sc.routine === "abend");
-          const bett = alle.find((sc) => sc.kernKey === "schlafenszeit");
-          const hoechste = Math.max(...alle.map((sc) => sc.reihenfolge));
-          if (bett && bett.reihenfolge < hoechste) {
-            await supabase.from("routine_schritte").update({ reihenfolge: hoechste + 1 }).eq("id", bett.id);
-            const i = neu.findIndex((sc) => sc.id === bett.id);
-            if (i >= 0) neu[i] = { ...neu[i], reihenfolge: hoechste + 1 };
-            else neu.push({ ...bett, reihenfolge: hoechste + 1, ersetzt: true });
+          // Sinnvolle Abend-Reihenfolge (07.10.): Tagebuch zuerst … Bett zuletzt.
+          for (const { id, reihenfolge } of abendReihenfolge([...schritte, ...neu])) {
+            await supabase.from("routine_schritte").update({ reihenfolge }).eq("id", id);
+            const i = neu.findIndex((sc) => sc.id === id);
+            if (i >= 0) neu[i] = { ...neu[i], reihenfolge };
+            else neu.push({ ...schritte.find((sc) => sc.id === id), reihenfolge, ersetzt: true });
           }
         }
       }
@@ -565,6 +577,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     routineZeitrahmenSetzen: zeitrahmenSetzen,
     routineSchrittAendern: schrittAendern,
     routineKernSchritteAnlegen: kernSchritteAnlegen,
+    routineAbendOrdnen: abendOrdnen,
     routineKernPausen: kernPausen,
     routineGeladen: geladen,
   };

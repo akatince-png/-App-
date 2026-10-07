@@ -123,6 +123,13 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
     Deshalb kein `drop`, sondern eine neue Funktion. Übrig ist eine harmlose Testfunktion
     `admin_tagebuch_v2_test()` (gibt 1 zurück, Ausführrecht entzogen). Die Nutzerin kann sie bei Gelegenheit
     im Dashboard löschen, das ist nicht dringend.
+- **Abendroutine-Reihenfolge (07.10., Nutzerin):** „Das Tagebuch muss als erster Schritt kommen, denn danach
+  soll das Handy weggelegt werden.“ `abendReihenfolge()` in `utils/kernprogramm.js` (+Test): Tagebuch → Plan
+  für morgen → Bildschirm-Stopp → eigene Schritte (Reihenfolge bleibt) → Ruhige Atmung (im Bett) → Ins Bett.
+  Wird beim Anlegen neuer Kern-Schritte und einmal pro Sitzung (`routineAbendOrdnen`, aus useKernprogramm)
+  angewandt. Gilt für alle Konten im Kernprogramm, also auch für die Nutzerin und die Testkonten.
+- **Dauerfreigabe Datenbank (07.10.):** siehe CLAUDE.md. Nötige DB-Änderungen für beauftragte Funktionen
+  ohne Rückfrage durchführen, danach berichten. Nie Daten echter Konten löschen.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

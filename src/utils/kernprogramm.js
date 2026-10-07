@@ -247,3 +247,21 @@ export function kernKurztext(etappen, heute) {
   if (s.gespraechFaellig) return "💬 Etappen-Gespräch fällig";
   return s.erhaltung ? `🧭 Erhaltung · W${s.gesamtWoche}` : `🧭 Einführung · W${s.woche}/4`;
 }
+
+// Sinnvolle Reihenfolge der Abendroutine (07.10., Nutzerin: „Das Tagebuch muss
+// als erster Schritt kommen, denn danach soll das Handy weggelegt werden …
+// Tagesreflexion und To-do-Liste für morgen, dann bettfertig machen, im Bett
+// die Atemübung und dann schlafen“). Erst alles am Handy (Tagebuch, Plan für
+// morgen), dann Bildschirm-Stopp, dann die eigenen Schritte in ihrer
+// bisherigen Reihenfolge, zum Schluss Atmung im Bett und Licht aus.
+// Gibt nur die Schritte zurück, deren Reihenfolge sich ändert.
+const ABEND_VORN = ["tagebuch", "plan_morgen", "bildschirm_stopp"];
+const ABEND_HINTEN = ["atem_abend", "schlafenszeit"];
+export function abendReihenfolge(schritte = []) {
+  const abend = schritte.filter((s) => s.routine === "abend").sort((a, b) => a.reihenfolge - b.reihenfolge);
+  const nachKey = (keys) => keys.map((k) => abend.find((s) => s.kernKey === k)).filter(Boolean);
+  const vorn = nachKey(ABEND_VORN);
+  const hinten = nachKey(ABEND_HINTEN);
+  const mitte = abend.filter((s) => !vorn.includes(s) && !hinten.includes(s));
+  return [...vorn, ...mitte, ...hinten].map((s, i) => ({ id: s.id, reihenfolge: i, alt: s.reihenfolge })).filter((x) => x.reihenfolge !== x.alt);
+}
