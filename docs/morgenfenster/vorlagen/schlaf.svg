@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600"><defs>
+<linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E2457"/><stop offset="1" stop-color="#7D74C9"/></linearGradient>
+<radialGradient id="glanz" cx="0.35" cy="0.3" r="0.75"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<filter id="schatten" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#000" flood-opacity=".22"/></filter>
+<filter id="weich"><feGaussianBlur stdDeviation="30"/></filter>
+</defs><rect width="900" height="1600" fill="url(#h)"/><circle cx="140" cy="220" r="5" fill="#fff" opacity=".9"/><circle cx="260" cy="330" r="4" fill="#fff" opacity=".9"/><circle cx="720" cy="260" r="6" fill="#fff" opacity=".9"/><circle cx="800" cy="430" r="4" fill="#fff" opacity=".9"/><circle cx="620" cy="160" r="3" fill="#fff" opacity=".9"/><circle cx="180" cy="520" r="4" fill="#fff" opacity=".9"/><circle cx="760" cy="640" r="5" fill="#fff" opacity=".9"/><circle cx="330" cy="180" r="3" fill="#fff" opacity=".9"/><circle cx="520" cy="300" r="3" fill="#fff" opacity=".9"/>
+<circle cx="470" cy="560" r="300" fill="#B6A8FF" opacity=".35" filter="url(#weich)"/>
+<g filter="url(#schatten)"><path d="M560 330 A230 230 0 1 0 650 760 A190 190 0 1 1 560 330 Z" fill="#FFE39A"/>
+<path d="M560 330 A230 230 0 1 0 650 760 A190 190 0 1 1 560 330 Z" fill="url(#glanz)"/></g>
+<g filter="url(#schatten)"><path d="M200 990 a80 80 0 0 1 120 -80 a110 110 0 0 1 200 -10 a90 90 0 0 1 170 90 z" fill="#F4F1FF"/></g></svg>

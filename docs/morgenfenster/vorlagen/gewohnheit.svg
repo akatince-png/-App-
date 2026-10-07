@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600"><defs>
+<linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2BA59A"/><stop offset="1" stop-color="#D9F5EE"/></linearGradient>
+<radialGradient id="glanz" cx="0.35" cy="0.3" r="0.75"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<filter id="schatten" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#000" flood-opacity=".22"/></filter>
+<filter id="weich"><feGaussianBlur stdDeviation="30"/></filter>
+</defs><rect width="900" height="1600" fill="url(#h)"/>
+<circle cx="450" cy="600" r="330" fill="#fff" opacity=".3" filter="url(#weich)"/>
+<g filter="url(#schatten)"><circle cx="450" cy="600" r="230" fill="#1F9C8C"/><circle cx="450" cy="600" r="230" fill="url(#glanz)"/>
+<path d="M340 610 l80 80 150 -170" stroke="#fff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+<g fill="#FFD36B"><path d="M700 330 l14 36 36 14 -36 14 -14 36 -14 -36 -36 -14 36 -14z"/><path d="M200 420 l10 26 26 10 -26 10 -10 26 -10 -26 -26 -10 26 -10z"/></g></svg>

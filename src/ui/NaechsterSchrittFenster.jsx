@@ -7,6 +7,12 @@ import bildSupplemente from "../assets/fenster/supplemente.jpg";
 import bildErnaehrung from "../assets/fenster/ernaehrung.jpg";
 import bildSport from "../assets/fenster/sport.jpg";
 import bildWasser from "../assets/fenster/wasser.jpg";
+// Selbst gezeichnet (07.10., Canva-Kontingent leer; Vorlagen in docs/morgenfenster/vorlagen).
+import bildWorkflow from "../assets/fenster/workflow.jpg";
+import bildTageslicht from "../assets/fenster/tageslicht.jpg";
+import bildSchlaf from "../assets/fenster/schlaf.jpg";
+import bildAtem from "../assets/fenster/atemuebung.jpg";
+import bildGewohnheit from "../assets/fenster/gewohnheit.jpg";
 
 // „Als Nächstes“-Fenster (06.10., Nutzerin: „Wenn ‚Aufgeladen‘ steht, soll
 // schon das nächste Actionfenster passieren … je nach Lebensbereich mit
@@ -14,9 +20,21 @@ import bildWasser from "../assets/fenster/wasser.jpg";
 // Workflow-Seite mit der anstehenden Aufgabe.“). Ganzer Bildschirm wie das
 // Morgenfenster. Was sich mit einem Tipp abhaken lässt, wird hier abgehakt –
 // danach kündigt das Fenster gleich den folgenden Punkt an.
-// Bereiche ohne eigenes Bild zeigen ihr großes Plastik-Symbol auf Farbverlauf
-// (Bilder für Workflow, Tageslicht, Schlaf, Atem … folgen, sobald Canva wieder geht).
-const BILD = { supplement: bildSupplemente, hormon: bildSupplemente, mahlzeit: bildErnaehrung, training: bildSport, hydration: bildWasser };
+// Bereiche ohne eigenes Bild zeigen ihr großes Plastik-Symbol auf Farbverlauf.
+const BILD = {
+  supplement: bildSupplemente,
+  hormon: bildSupplemente,
+  mahlzeit: bildErnaehrung,
+  training: bildSport,
+  hydration: bildWasser,
+  workflow: bildWorkflow,
+  zeitblock: bildWorkflow,
+  tageslicht: bildTageslicht,
+  schlaf: bildSchlaf,
+  atemuebung: bildAtem,
+  gewohnheit: bildGewohnheit,
+  gruppe: bildGewohnheit,
+};
 const KNOPF = { workflow: "▶ Zum Workflow", training: "▶ Zum Training", zeitblock: "Im Tagesplan ansehen" };
 
 export default function NaechsterSchrittFenster({ schritte = [], direkt, onErledigt, onOeffnen, onSpaeter }) {

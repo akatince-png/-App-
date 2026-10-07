@@ -103,7 +103,9 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
     (`workflowHeuteErledigtMerken`, localStorage) und wird nicht erneut angekündigt.
   - Feste Einheiten (z. B. 25/5, 90 Min.) gab es schon: Workflow anlegen → Zeitplan mit Uhrzeit → erscheint im
     Tagesplan.
-  - **Offen:** Bilder für Workflow, Tageslicht, Schlaf, Atem, Gewohnheit (Canva leer). Ankündigung auch nach
+  - **Bilder (07.10.):** Workflow/Zeitblock, Tageslicht, Schlaf, Atem und Gewohnheit/Gruppe selbst gezeichnet
+    (Canva weiter „Generation failed“), Vorlagen in `docs/morgenfenster/vorlagen/*.svg`, Bilder in `assets/fenster/`.
+    Später ggf. durch Canva-Bilder ersetzen. **Offen:** Ankündigung auch nach
     dem Abhaken an anderen Stellen (Tagesplan) ist noch nicht drin, bisher nur über dieses Fenster und nach dem
     Workflow. Die Frage „zu früh abgehakt?“ fragt das Fenster bewusst nicht.
 - **Tagebuch-Stichworte (07.10., freigegeben):** Die Smileys bleiben. Neu sind grüne und rote Stichworte zum

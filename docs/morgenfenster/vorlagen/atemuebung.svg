@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600"><defs>
+<linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4FC3B0"/><stop offset="1" stop-color="#D8F4EE"/></linearGradient>
+<radialGradient id="glanz" cx="0.35" cy="0.3" r="0.75"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<filter id="schatten" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#000" flood-opacity=".22"/></filter>
+<filter id="weich"><feGaussianBlur stdDeviation="30"/></filter>
+</defs><rect width="900" height="1600" fill="url(#h)"/>
+<g filter="url(#schatten)">
+<circle cx="450" cy="600" r="330" fill="#fff" opacity=".25"/>
+<circle cx="450" cy="600" r="250" fill="#fff" opacity=".35"/>
+<circle cx="450" cy="600" r="170" fill="#BFE7F2"/>
+<circle cx="450" cy="600" r="170" fill="url(#glanz)"/></g>
+<g stroke="#2E8F80" stroke-width="20" stroke-linecap="round" fill="none">
+<path d="M370 570 h120 a30 30 0 1 0 -30 -30"/><path d="M370 620 h150 a30 30 0 1 1 -30 30"/></g></svg>
