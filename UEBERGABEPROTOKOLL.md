@@ -105,7 +105,9 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
     Tagesplan.
   - **Bilder (07.10.):** Workflow/Zeitblock, Tageslicht, Schlaf, Atem und Gewohnheit/Gruppe selbst gezeichnet
     (Canva weiter „Generation failed“), Vorlagen in `docs/morgenfenster/vorlagen/*.svg`, Bilder in `assets/fenster/`.
-    Später ggf. durch Canva-Bilder ersetzen. **Offen:** Ankündigung auch nach
+    **Nutzerin 07.10.: unbedingt mit Canva neu machen**, weil Qualität und Stil nicht zu den Canva-Bildern passen.
+    Sobald Canva wieder Bilder erzeugt, als Erstes erledigen (Stil: Prompt wie bei `supplemente/ernaehrung.jpg`,
+    Weg: generate-design → create-design-from-candidate → export-design). **Offen:** Ankündigung auch nach
     dem Abhaken an anderen Stellen (Tagesplan) ist noch nicht drin, bisher nur über dieses Fenster und nach dem
     Workflow. Die Frage „zu früh abgehakt?“ fragt das Fenster bewusst nicht.
 - **Tagebuch-Stichworte (07.10., freigegeben):** Die Smileys bleiben. Neu sind grüne und rote Stichworte zum
