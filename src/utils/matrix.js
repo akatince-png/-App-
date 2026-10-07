@@ -62,13 +62,30 @@ export function nachQuadrant(aufgaben = [], heute = new Date()) {
 
 // Was erscheint im Alltag (Tagesplan)? Nur Rot und das an diesem Tag
 // eingeplante Grün – Gelb und Grau bleiben in der Matrix.
+// Was ist es? (07.10., Nutzerin: „beim Anlegen ein kleines Fenster: Termin,
+// Projekt, Aufgabe …“). Termine haben Datum und Uhrzeit.
+export const ARTEN = [
+  { id: "aufgabe", icon: "📝", label: "Aufgabe" },
+  { id: "termin", icon: "📅", label: "Termin" },
+  { id: "anruf", icon: "📞", label: "Anruf" },
+  { id: "erledigung", icon: "🛒", label: "Erledigung" },
+  { id: "projekt", icon: "🗂️", label: "Projekt-Schritt" },
+  { id: "idee", icon: "💡", label: "Idee" },
+];
+export const ART = Object.fromEntries(ARTEN.map((a) => [a.id, a]));
+
 export function alltagAusMatrix(aufgaben = [], datum = new Date()) {
   const tag = toLocalISODate(datum);
   return aufgaben
     .filter((a) => !a.erledigtAm || toLocalISODate(new Date(a.erledigtAm)) === tag)
     .map((a) => ({ ...a, quadrant: quadrantVon(a, datum) }))
-    .filter((a) => a.quadrant === "jetzt" || (a.quadrant === "planen" && a.geplantAm === tag))
-    .sort((x, y) => (x.quadrant === y.quadrant ? (x.frist || "9999").localeCompare(y.frist || "9999") : x.quadrant === "jetzt" ? -1 : 1));
+    // Alles, was für heute eingeplant ist (auch Termine), plus Rot.
+    .filter((a) => a.quadrant === "jetzt" || a.geplantAm === tag)
+    .sort((x, y) => {
+      // Mit Uhrzeit zuerst, nach Uhrzeit (07.10.); danach wie bisher.
+      if ((x.uhrzeit || "") !== (y.uhrzeit || "")) return (x.uhrzeit || "99").localeCompare(y.uhrzeit || "99");
+      return x.quadrant === y.quadrant ? (x.frist || "9999").localeCompare(y.frist || "9999") : x.quadrant === "jetzt" ? -1 : 1;
+    });
 }
 
 // Zu viele rote Aufgaben gleichzeitig (Überlastung, Punkt 34 im Konzept).

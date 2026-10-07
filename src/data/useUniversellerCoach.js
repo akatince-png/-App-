@@ -30,6 +30,7 @@ export const BEREICH_LABELS = {
   tagebuch: "Im Tagebuch festhalten",
   fokus: "Fokus-Runde starten",
   alltag: "In den Kalender eintragen",
+  matrix: "In die Matrix eintragen",
   aussehen: "Einstellung übernehmen",
 };
 
@@ -306,6 +307,17 @@ export function useUniversellerCoach() {
         if (!r?.ok) throw new Error(r?.error || "Starten fehlgeschlagen.");
         timerHinweisPlanen({ symbol: "🎯", name: r.sitzung.ziel || "Gemeinsam fokussieren", ende: sitzungEnde(r.sitzung) });
         return { bereich: "fokus", daten: r.sitzung };
+      }
+      case "matrix": {
+        const liste = await AIService.matrixAusChat({ verlauf, coachName, heute: toLocalISODate(new Date()) });
+        if (!liste.length) throw new Error("Ich habe keine Aufgabe erkannt.");
+        const angelegt = [];
+        for (const a of liste) {
+          const r = await appData.matrixAufgabeSpeichern?.(a);
+          if (r?.ok) angelegt.push(r.aufgabe);
+        }
+        if (!angelegt.length) throw new Error("Speichern fehlgeschlagen.");
+        return { bereich: "matrix", daten: angelegt };
       }
       case "alltag": {
         const liste = await AIService.alltagAusChat({ verlauf, coachName, heute: toLocalISODate(new Date()) });

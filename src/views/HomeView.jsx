@@ -46,6 +46,7 @@ import SchnellIcon from "../ui/SchnellIcon";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
 import MorgenStartFenster from "../ui/MorgenStartFenster";
 import NaechsterSchrittFenster from "../ui/NaechsterSchrittFenster";
+import NaechsterHinweis from "../ui/NaechsterHinweis";
 import { naechsteSchritte } from "../utils/naechsteSchritte";
 import { zeigeRoutineFenster, heutigeEntscheidung, entscheidungMerken } from "../utils/morgenFenster";
 import { routineTagesStatus } from "../utils/routineStatus";
@@ -225,6 +226,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const [morgenFensterZu, setMorgenFensterZu] = useState(false);
   // „Als Nächstes“ (06.10.): nach „Aufgeladen“ und nach einer beendeten
   // Workflow-Session (Merker aus WorkflowTimer) die nächste Tätigkeit ankündigen.
+  const [naechsterHinweis, setNaechsterHinweis] = useState(null);
   const [naechsterOffen, setNaechsterOffen] = useState(() => {
     try {
       const da = sessionStorage.getItem("aka-naechster-zeigen") === "1";
@@ -1086,6 +1088,16 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
 
   return (
     <Shell>
+      {!naechsterOffen && (
+        <NaechsterHinweis
+          item={naechsterHinweis}
+          onOeffnen={() => {
+            setNaechsterHinweis(null);
+            setNaechsterOffen(true);
+          }}
+          onWeg={() => setNaechsterHinweis(null)}
+        />
+      )}
       {naechsterOffen && !routineFensterZeigen && (
         <NaechsterSchrittFenster
           schritte={naechsteSchritte(displayItems.filter((i) => !(i.kategorie === "workflow" && istWorkflowHeuteErledigt(i.raw?.preset?.id))))}
@@ -1217,7 +1229,13 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             items={displayItems}
             tagStr={tagStr}
             direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
-            onToggle={(i) => (i.bundleIds ? buendelErledigen(i) : direktErledigbar(i) ? direktErledigen(i) : onOpenView("tagesplan"))}
+            onToggle={(i) => {
+              if (!i.bundleIds && !direktErledigbar(i)) return onOpenView("tagesplan");
+              const r = i.bundleIds ? buendelErledigen(i) : direktErledigen(i);
+              // „Vergiss nicht – als Nächstes …“ (07.10.)
+              if (!i.done) setNaechsterHinweis(naechsteSchritte(displayItems.filter((x) => x.key !== i.key && !(x.kategorie === "workflow" && istWorkflowHeuteErledigt(x.raw?.preset?.id))), 1)[0] || null);
+              return r;
+            }}
             onOpenPlan={() => onOpenView("tagesplan")}
           >
             {proband === null && <RoutineStart onRoutineStart={setAblaufRoutine} />}

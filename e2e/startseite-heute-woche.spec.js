@@ -21,6 +21,11 @@ test("Startseite: Überblick mit Tagesplan oben (Abhaken, Rückfrage bei zu frü
   await heute.getByRole("button", { name: "Elvanse erledigt" }).click();
   await heute.getByRole("button", { name: "Ja, erledigt" }).click();
   expect((await aufrufe(page, "toggleHormonErledigt")).length).toBe(1);
+  // Nach dem Abhaken: „Vergiss nicht – als Nächstes …“ (07.10.); Antippen
+  // öffnet das große Fenster.
+  await expect(page.locator("[data-naechster-hinweis]")).toContainText("ALS NÄCHSTES");
+  await page.locator("[data-naechster-hinweis]").click();
+  await page.locator("[data-naechster-schritt]").getByRole("button", { name: "Später" }).click();
 
   // Kalender steckt im Überblick unter „Bereiche einzeln ansehen“ (30.09.)
   // und folgt Tag/Woche/Monat.

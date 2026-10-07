@@ -1,6 +1,6 @@
 import React from "react";
 import { useAppData } from "../context/AppDataContext";
-import { QUADRANT, alltagAusMatrix, fristText } from "../utils/matrix";
+import { ART, QUADRANT, alltagAusMatrix, fristText } from "../utils/matrix";
 
 // „Heute aus deiner Matrix“ (30.09., Vorschau): Die Aufgaben-Matrix aus dem
 // Workflow-Bereich spiegelt sich im Tagesplan – nur Rot (JETZT) und das
@@ -26,7 +26,11 @@ export default function MatrixHeuteKarte({ onOeffnen }) {
           <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: "1px solid var(--mp-rand)" }}>
             <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 9, background: q.farbe, flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0, opacity: fertig ? 0.55 : 1 }}>
-              <span style={{ display: "block", fontWeight: 700, fontSize: 13.5, textDecoration: fertig ? "line-through" : "none" }}>{a.naechsterSchritt || a.titel}</span>
+              <span style={{ display: "block", fontWeight: 700, fontSize: 13.5, textDecoration: fertig ? "line-through" : "none" }}>
+                {a.uhrzeit ? `${a.uhrzeit} · ` : ""}
+                {a.art && a.art !== "aufgabe" ? `${ART[a.art]?.icon || ""} ` : ""}
+                {a.naechsterSchritt || a.titel}
+              </span>
               <span style={{ display: "block", fontSize: 11.5, color: "var(--mp-text-muted)" }}>
                 {[a.naechsterSchritt && a.titel, projektName(a.projektId), a.frist && `bis ${fristText(a.frist)}`, a.dauerMin && `${a.dauerMin} Min`].filter(Boolean).join(" · ")}
               </span>

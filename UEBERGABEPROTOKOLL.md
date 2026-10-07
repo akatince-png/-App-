@@ -140,6 +140,21 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   - **Morgenfenster/„Als Nächstes“ auch für das eigene Coach-Konto.** Bisher waren sie für Admin-Konten aus
     (`istAdminModus`), die Nutzerin nutzt aber ihr Admin-Konto selbst. Jetzt gilt: nur nicht im
     „Verwalten als“-Modus (`proband === null`).
+- **Matrix ausgebaut (07.10. vormittags, Nutzerin: „mach alle ausstehenden Dinge, die du ohne mich kannst“):**
+  - Beim Anlegen „Was ist es?“: Aufgabe, Termin, Anruf, Erledigung, Projekt-Schritt, Idee (`ARTEN` in
+    `utils/matrix.js`). Termine mit Tag und Uhrzeit (Frist = Termin-Tag, eingeplant an dem Tag).
+  - Fristen zusätzlich „Diesen Monat“ und „Dieses Jahr“. In der Aufgaben-Karte lassen sich Art und Uhrzeit ändern.
+  - Tagesplan („Heute aus deiner Matrix“): alles für heute Eingeplante (auch gelb/grau) plus Rot, mit Uhrzeit
+    zuerst.
+  - DB: `matrix_aufgaben.art` (Standard „aufgabe“) und `uhrzeit` (Migration 0126, per SQL eingespielt).
+  - **Aka:** neuer Bereich „matrix“ (`AIService.matrixAusChat`, `useUniversellerCoach`), z. B. „ich muss noch
+    Mama anrufen und bis Freitag die Belege sortieren“.
+  - Der unklare diktierte Halbsatz zur Matrix („Kapitel minus Break …“) ist weiter offen, bei Gelegenheit nachfragen.
+- **„Vergiss nicht – als Nächstes …“ (07.10.):** Nach dem Abhaken auf der Startseite erscheint 8 Sek. lang ein
+  kleiner Hinweis über der Leiste (`ui/NaechsterHinweis.jsx`). Antippen öffnet das große „Als Nächstes“-Fenster.
+  Im Tagesplan selbst noch nicht.
+- **Canva 07.10.:** „quota_exceeded“, das Bild-Guthaben des Canva-Kontos ist leer. Die selbst gezeichneten Bilder
+  bleiben bis zu neuem Guthaben oder Canva Pro.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

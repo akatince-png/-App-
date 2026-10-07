@@ -5,7 +5,7 @@ import Umschalter, { ChipReihe } from "../ui/Umschalter";
 import { useAppData } from "../context/AppDataContext";
 import { useFokusTimer } from "../data/useFokusTimer";
 import { addDays, toLocalISODate } from "../utils/dates";
-import { QUADRANTEN, QUADRANT, JETZT_GRENZE, VERSCHOBEN_HINWEIS, fristText, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
+import { ARTEN, ART, QUADRANTEN, QUADRANT, JETZT_GRENZE, VERSCHOBEN_HINWEIS, fristText, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
 
 // Aufgaben-Matrix im Workflow-Bereich (30.09., Vorschau, Nutzerin: „eine
 // Matrix für die vielen Aufgaben eines Projekts … das soll sich im Alltag
@@ -18,12 +18,17 @@ const FRISTEN = [
   ["heute", "Heute"],
   ["morgen", "Morgen"],
   ["woche", "Diese Woche"],
+  // Längere Horizonte (07.10., Wunschliste: „Tag, Woche, Monat, Jahr“).
+  ["monat", "Diesen Monat"],
+  ["jahr", "Dieses Jahr"],
 ];
 const fristAus = (wahl) => {
   const h = new Date();
   if (wahl === "heute") return toLocalISODate(h);
   if (wahl === "morgen") return toLocalISODate(addDays(h, 1));
   if (wahl === "woche") return toLocalISODate(addDays(h, (7 - ((h.getDay() + 6) % 7) - 1) || 0));
+  if (wahl === "monat") return toLocalISODate(new Date(h.getFullYear(), h.getMonth() + 1, 0));
+  if (wahl === "jahr") return toLocalISODate(new Date(h.getFullYear(), 11, 31));
   return null;
 };
 
@@ -37,6 +42,10 @@ export default function MatrixView({ onHome }) {
   const [titel, setTitel] = useState("");
   const [wichtig, setWichtig] = useState("ja");
   const [frist, setFrist] = useState("keine");
+  // Was ist es? Termin mit Tag + Uhrzeit (07.10.).
+  const [art, setArt] = useState("aufgabe");
+  const [terminTag, setTerminTag] = useState(toLocalISODate(new Date()));
+  const [terminZeit, setTerminZeit] = useState("");
   const [offen, setOffen] = useState(null); // id der geöffneten Aufgabe
   const [fehler, setFehler] = useState(null);
   const [neuesProjekt, setNeuesProjekt] = useState(null);
@@ -44,7 +53,7 @@ export default function MatrixView({ onHome }) {
   const sichtbar = useMemo(() => matrixAufgaben.filter((a) => projekt === "alle" || (a.projektId || "ohne") === projekt), [matrixAufgaben, projekt]);
   const felder = nachQuadrant(sichtbar);
   const projektName = (id) => projekte.find((p) => p.id === id)?.name;
-  const vorschau = quadrantVon({ wichtig: wichtig === "ja", frist: fristAus(frist) });
+  const vorschau = quadrantVon({ wichtig: wichtig === "ja", frist: art === "termin" ? terminTag || null : fristAus(frist) });
 
   const speichern = async (a) => {
     setFehler(null);
@@ -54,8 +63,21 @@ export default function MatrixView({ onHome }) {
   };
   const hinzufuegen = async () => {
     if (!titel.trim()) return;
-    const r = await speichern({ titel, wichtig: wichtig === "ja", frist: fristAus(frist), projektId: projekt === "alle" || projekt === "ohne" ? null : projekt });
-    if (r?.ok !== false) setTitel("");
+    const termin = art === "termin";
+    const r = await speichern({
+      titel,
+      art,
+      wichtig: wichtig === "ja",
+      // Ein Termin hat seinen Tag als Frist und ist an dem Tag eingeplant.
+      frist: termin ? terminTag || null : fristAus(frist),
+      geplantAm: termin ? terminTag || null : null,
+      uhrzeit: termin ? terminZeit || null : null,
+      projektId: projekt === "alle" || projekt === "ohne" ? null : projekt,
+    });
+    if (r?.ok !== false) {
+      setTitel("");
+      setTerminZeit("");
+    }
   };
 
   const aufgabe = matrixAufgaben.find((a) => a.id === offen);
@@ -108,17 +130,32 @@ export default function MatrixView({ onHome }) {
           aria-label="Neue Aufgabe"
           style={feld}
         />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }} role="group" aria-label="Was ist es?">
+          {ARTEN.map((x) => (
+            <button key={x.id} type="button" aria-pressed={art === x.id} onClick={() => setArt(x.id)} style={kleinKnopf(art === x.id)}>
+              {x.icon} {x.label}
+            </button>
+          ))}
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
           <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mp-text-muted)", width: 62 }}>Wichtig?</span>
           <Umschalter name="Wichtig?" wert={wichtig} onWahl={setWichtig} style={{ flex: 1, marginBottom: 0 }} optionen={[["ja", "Ja"], ["nein", "Eher nicht"]]} />
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }} role="group" aria-label="Bis wann?">
-          {FRISTEN.map(([id, l]) => (
-            <button key={id} type="button" aria-pressed={frist === id} onClick={() => setFrist(id)} style={kleinKnopf(frist === id)}>
-              {l}
-            </button>
-          ))}
-        </div>
+        {art === "termin" ? (
+          <div data-matrix-termin style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mp-text-muted)" }}>Wann?</span>
+            <input type="date" value={terminTag} onChange={(e) => setTerminTag(e.target.value)} aria-label="Termin-Tag" style={{ ...feld, width: "auto", padding: "7px 8px", fontSize: 14 }} />
+            <input type="time" value={terminZeit} onChange={(e) => setTerminZeit(e.target.value)} aria-label="Termin-Uhrzeit" style={{ ...feld, width: "auto", padding: "7px 8px", fontSize: 14 }} />
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }} role="group" aria-label="Bis wann?">
+            {FRISTEN.map(([id, l]) => (
+              <button key={id} type="button" aria-pressed={frist === id} onClick={() => setFrist(id)} style={kleinKnopf(frist === id)}>
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
           <span data-matrix-vorschau={vorschau} style={{ fontSize: 12.5, fontWeight: 700, color: QUADRANT[vorschau].schrift }}>
             → landet in {QUADRANT[vorschau].icon} {QUADRANT[vorschau].titel}
@@ -176,9 +213,10 @@ export default function MatrixView({ onHome }) {
                 aria-expanded={offen === a.id}
                 style={{ display: "block", width: "100%", textAlign: "left", border: offen === a.id ? `2px solid ${q.farbe}` : "none", borderRadius: 10, padding: "6px 8px", marginBottom: 5, background: "var(--mp-karte)", color: "var(--mp-text)", fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,.06)" }}
               >
+                {a.art && a.art !== "aufgabe" ? `${ART[a.art]?.icon || ""} ` : ""}
                 {a.titel}
                 <span style={{ display: "block", fontSize: 10.5, fontWeight: 500, color: "var(--mp-text-muted)" }}>
-                  {[a.frist && fristText(a.frist), a.geplantAm && `📅 ${fristText(a.geplantAm)}`, a.dauerMin && `${a.dauerMin} Min`, projekt === "alle" && projektName(a.projektId)].filter(Boolean).join(" · ") || "ohne Frist"}
+                  {[a.frist && a.art !== "termin" && fristText(a.frist), a.geplantAm && `📅 ${fristText(a.geplantAm)}${a.uhrzeit ? ` ${a.uhrzeit}` : ""}`, a.dauerMin && `${a.dauerMin} Min`, projekt === "alle" && projektName(a.projektId)].filter(Boolean).join(" · ") || "ohne Frist"}
                 </span>
               </button>
             ))}
@@ -213,6 +251,13 @@ function AufgabeKarte({ a, onSpeichern, onLoeschen, onFokus, onSchliessen }) {
         </div>
       )}
 
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }} role="group" aria-label="Art ändern">
+        {ARTEN.map((x) => (
+          <button key={x.id} type="button" aria-pressed={(a.art || "aufgabe") === x.id} onClick={() => aendern({ art: x.id })} style={kleinKnopf((a.art || "aufgabe") === x.id)}>
+            {x.icon} {x.label}
+          </button>
+        ))}
+      </div>
       <div style={{ fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", marginBottom: 4 }}>NÄCHSTER KLEINER SCHRITT</div>
       <input value={schritt} onChange={(e) => setSchritt(e.target.value)} onBlur={() => schritt !== (a.naechsterSchritt || "") && aendern({})} placeholder="z. B. Ordner aus dem Schrank holen" aria-label="Nächster Schritt" style={feld} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }} role="group" aria-label="Dauer">
@@ -246,6 +291,7 @@ function AufgabeKarte({ a, onSpeichern, onLoeschen, onFokus, onSchliessen }) {
           Morgen
         </button>
         <input type="date" value={a.geplantAm || ""} onChange={(e) => aendern({ geplantAm: e.target.value || null })} aria-label="Tag wählen" style={{ ...feld, width: "auto", padding: "5px 8px", fontSize: 13 }} />
+        <input type="time" value={a.uhrzeit || ""} onChange={(e) => aendern({ uhrzeit: e.target.value || null })} aria-label="Uhrzeit wählen" style={{ ...feld, width: "auto", padding: "5px 8px", fontSize: 13 }} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>

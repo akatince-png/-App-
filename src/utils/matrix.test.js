@@ -50,6 +50,18 @@ describe("Aufgaben-Matrix", () => {
     expect(l.map((a) => a.id)).toEqual(["rot", "gruen-heute"]);
   });
 
+  it("heute eingeplante Termine erscheinen immer, mit Uhrzeit zuerst (07.10.)", () => {
+    const l = alltagAusMatrix(
+      [
+        { id: "rot", wichtig: true, frist: "2026-10-01" },
+        { id: "zahnarzt", art: "termin", wichtig: false, geplantAm: "2026-09-30", uhrzeit: "15:30" },
+        { id: "anruf", art: "anruf", wichtig: false, geplantAm: "2026-09-30", uhrzeit: "09:00" },
+      ],
+      heute
+    );
+    expect(l.map((a) => a.id)).toEqual(["anruf", "zahnarzt", "rot"]);
+  });
+
   it("Frist als Wort", () => {
     expect(fristText("2026-09-30", heute)).toBe("heute");
     expect(fristText("2026-10-01", heute)).toBe("morgen");

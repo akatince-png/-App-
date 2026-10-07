@@ -193,10 +193,11 @@ export const AIService = {
         "tagebuch (die Person erzählt, wie ihr Tag war: Stimmung, wo, mit wem, Essen, Besonderes),",
         "fokus (die Person will JETZT eine Weile konzentriert an einer Sache arbeiten, z. B. '25 Minuten Steuer', 'hilf mir, mit der Wäsche anzufangen' – startet eine Runde 'Gemeinsam fokussieren').",
         "aussehen (die Person möchte, dass die App abends dunkel wird oder lieber hell bleibt, z. B. 'mach die App abends nicht mehr dunkel', 'abends bitte wieder dunkel').",
+        "matrix (Aufgaben/To-dos, die irgendwann erledigt werden müssen, mit oder ohne Frist, z. B. 'ich muss noch die Steuer machen', 'Mama anrufen', 'bis Freitag Belege sortieren', 'Idee: Fotobuch').",
         "alltag (feste oder einmalige Termine im Kalender 'Mein Alltag': Arbeit, Haushalt, Hobby, Me-Time, Termin, Freunde & Familie, z. B. 'samstags 10 Uhr Staubsaugen', 'Dienstag 15 Uhr Zahnarzt', 'Mo bis Do 8:30 bis 16:30 Arbeit').",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"aussehen"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"matrix"|"aussehen"|"keiner" }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
@@ -393,6 +394,37 @@ export const AIService = {
    * „samstags 10 Uhr Staubsaugen“. Wöchentlich (wochentage) oder einmalig
    * (datum YYYY-MM-DD). Ohne Endzeit: 1 Stunde.
    */
+  /**
+   * Aufgaben-Matrix (07.10., Leitprinzip „jede Funktion auch per Aka“):
+   * To-dos aus dem Gespräch mit Art, „wichtig?“, Frist, ggf. Termin-Uhrzeit.
+   */
+  async matrixAusChat({ verlauf, coachName, heute }) {
+    const data = await ausChatZusammenfassen(
+      coachName,
+      [
+        "Du bist ein Assistent für eine bestehende App und trägst Aufgaben in die Aufgaben-Matrix ein.",
+        `Heute ist ${heute}. art: aufgabe, termin, anruf, erledigung, projekt, idee.`,
+        "wichtig: true, wenn die Person es wichtig nennt oder es Folgen hat, sonst false. frist: YYYY-MM-DD oder null.",
+        "Bei Terminen: geplantAm (YYYY-MM-DD) und uhrzeit (HH:MM), sonst null. Titel kurz (höchstens 6 Wörter).",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "aufgaben": [ { "titel": string, "art": string, "wichtig": boolean, "frist": string|null, "geplantAm": string|null, "uhrzeit": string|null } ] }',
+      ],
+      verlauf,
+      "Fasse die Aufgaben jetzt als JSON zusammen, wie vereinbart."
+    );
+    const ARTEN = ["aufgabe", "termin", "anruf", "erledigung", "projekt", "idee"];
+    const datum = (d) => (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null);
+    const zeit = (z) => (typeof z === "string" && /^\d{2}:\d{2}$/.test(z) ? z : null);
+    return (Array.isArray(data?.aufgaben) ? data.aufgaben : [])
+      .filter((a) => a && typeof a.titel === "string" && a.titel.trim())
+      .slice(0, 10)
+      .map((a) => {
+        const art = ARTEN.includes(a.art) ? a.art : "aufgabe";
+        const geplantAm = datum(a.geplantAm);
+        return { titel: a.titel.trim().slice(0, 200), art, wichtig: a.wichtig !== false, frist: datum(a.frist) || (art === "termin" ? geplantAm : null), geplantAm, uhrzeit: zeit(a.uhrzeit) };
+      });
+  },
+
   async alltagAusChat({ verlauf, coachName, heute }) {
     const data = await ausChatZusammenfassen(
       coachName,

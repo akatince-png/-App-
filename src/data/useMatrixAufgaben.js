@@ -16,6 +16,8 @@ const zuAufgabe = (r) => ({
   geplantAm: r.geplant_am || null,
   verschoben: r.verschoben || 0,
   erledigtAm: r.erledigt_am || null,
+  art: r.art || "aufgabe",
+  uhrzeit: r.uhrzeit ? String(r.uhrzeit).slice(0, 5) : "",
 });
 const zuZeile = (userId, a) => ({
   user_id: userId,
@@ -29,6 +31,8 @@ const zuZeile = (userId, a) => ({
   geplant_am: a.geplantAm || null,
   verschoben: a.verschoben || 0,
   erledigt_am: a.erledigtAm || null,
+  art: a.art || "aufgabe",
+  uhrzeit: a.uhrzeit || null,
 });
 
 export function useMatrixAufgaben(userId) {

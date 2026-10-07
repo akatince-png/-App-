@@ -73,3 +73,18 @@ test("Workflow: Aufgabe aus der Matrix wählen, starten, danach als erledigt abh
   expect(liste.at(-1)[0]).toMatchObject({ id: "m1" });
   expect(liste.at(-1)[0].erledigtAm).toBeTruthy();
 });
+
+// Matrix ausbauen (07.10.): „Was ist es?“ beim Anlegen, Termin mit Tag + Uhrzeit,
+// Fristen bis Monat/Jahr.
+test("Matrix: Termin mit Tag und Uhrzeit anlegen, Fristen bis Jahresende", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/matrix");
+  await expect(page.getByRole("group", { name: "Bis wann?" }).getByRole("button", { name: "Dieses Jahr" })).toBeVisible();
+  await page.getByRole("group", { name: "Was ist es?" }).getByRole("button", { name: /Termin/ }).click();
+  await page.getByLabel("Neue Aufgabe").fill("Zahnarzt");
+  await page.getByLabel("Termin-Tag").fill("2026-10-02");
+  await page.getByLabel("Termin-Uhrzeit").fill("15:30");
+  await page.getByRole("button", { name: "＋ Dazu" }).click();
+  const [[neu]] = await aufrufe(page, "matrixAufgabeSpeichern");
+  expect(neu).toMatchObject({ titel: "Zahnarzt", art: "termin", geplantAm: "2026-10-02", uhrzeit: "15:30", frist: "2026-10-02" });
+});

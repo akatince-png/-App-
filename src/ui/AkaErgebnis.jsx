@@ -83,6 +83,8 @@ export default function AkaErgebnis({ ergebnis }) {
           🎯 Fokus-Runde läuft: {daten.ziel || "deine Sache"} · {daten.dauerMinuten} Min. Handy weg, ich melde mich, wenn die Zeit um ist. Wer aus dem Team gerade dabei ist, siehst du unter „Gemeinsam fokussieren“.
         </Box>
       );
+    case "matrix":
+      return <Box>🗂️ In der Aufgaben-Matrix: {daten.map((a) => `${a.titel}${a.uhrzeit ? ` (${a.uhrzeit})` : ""}`).join(" · ")}. Die Farbe ergibt sich von selbst, Rotes steht heute im Tagesplan.</Box>;
     case "alltag":
       return (
         <Box>

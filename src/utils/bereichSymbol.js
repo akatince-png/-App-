@@ -25,6 +25,7 @@ const SYMBOL = {
   abendroutine: "mond",
   gruppe: "gruppe",
   alltag: "kalender",
+  matrix: "liste",
   kalender: "kalender",
   tagesraetsel: "puzzle",
   knobel: "puzzle",
