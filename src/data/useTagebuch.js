@@ -16,6 +16,7 @@ export function zeileZuEintrag(r) {
     notiz: r.notiz || "",
     notizTeilen: r.notiz_teilen ?? r.notiz_geteilt ?? false,
     auto: r.auto || {},
+    stichworte: Array.isArray(r.stichworte) ? r.stichworte : [],
   };
 }
 
@@ -60,6 +61,8 @@ export function useTagebuch(userId) {
         notiz: e.notiz?.trim() || null,
         notiz_teilen: !!e.notizTeilen,
         auto: e.auto || {},
+        // Stichworte grün/rot mit „weil …“ (07.10.).
+        stichworte: (e.stichworte || []).map((x) => ({ wort: x.wort, art: x.art, ...(x.weil?.trim() ? { weil: x.weil.trim() } : {}) })),
         updated_at: new Date().toISOString(),
       };
       const { data, error } = await supabase.from("tagebuch_eintraege").upsert(row, { onConflict: "user_id,datum" }).select().single();

@@ -21,6 +21,39 @@ export const OPTIONEN = {
   koerper: ["müde", "Kopfweh", "Periode", "krank", "Schmerzen", "voller Energie"],
 };
 
+// Stichworte (07.10., Nutzerin: „eine Auswahl positiver und negativer
+// Beschreibungswörter, positive grün, negative rot … stressig, weil …“). Die
+// Smileys bleiben. Gespeichert als [{ wort, art: "gut"|"schwer", weil }].
+export const STICHWORTE = {
+  gut: ["produktiv", "ruhig", "lustig", "verbunden", "erholt", "stolz", "fokussiert", "entspannt"],
+  schwer: ["stressig", "anstrengend", "gereizt", "müde", "überfordert", "chaotisch", "traurig", "einsam"],
+};
+
+/** Anteil grüner Stichworte (0–1) eines Eintrags, null ohne Stichworte. */
+export function gruenAnteil(e) {
+  const s = e?.stichworte || [];
+  if (!s.length) return null;
+  return s.filter((x) => x.art === "gut").length / s.length;
+}
+
+/** Wochen-/Zeitraum-Bilanz: grüne/rote Stichworte gesamt, häufigste Wörter. */
+export function stichwortBilanz(eintraege = []) {
+  const zaehler = new Map();
+  let gut = 0;
+  let schwer = 0;
+  for (const e of eintraege) {
+    for (const s of e.stichworte || []) {
+      if (s.art === "gut") gut++;
+      else schwer++;
+      const k = `${s.art}:${s.wort}`;
+      zaehler.set(k, { wort: s.wort, art: s.art, anzahl: (zaehler.get(k)?.anzahl || 0) + 1 });
+    }
+  }
+  const haeufigste = [...zaehler.values()].sort((a, b) => b.anzahl - a.anzahl || a.wort.localeCompare(b.wort)).slice(0, 8);
+  const summe = gut + schwer;
+  return { gut, schwer, anteilGut: summe ? gut / summe : null, haeufigste };
+}
+
 function lokalesDatum(iso) {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -68,7 +101,7 @@ export function autoZeilen(auto = {}) {
 // Kurzzeile fürs Tagesprotokoll.
 export function tagebuchZeile(e) {
   const ohneEmoji = (x) => String(x).replace(/^[^\p{L}\d]+\s/u, "");
-  return [stimmungEmoji(e.stimmung), ...[...(e.orte || []), ...(e.personen || []), ...(e.essen || []), ...(e.tagesart || []), ...(e.koerper || [])].map(ohneEmoji)]
+  return [stimmungEmoji(e.stimmung), ...(e.stichworte || []).map((x) => x.wort), ...[...(e.orte || []), ...(e.personen || []), ...(e.essen || []), ...(e.tagesart || []), ...(e.koerper || [])].map(ohneEmoji)]
     .filter(Boolean)
     .join(" · ");
 }
@@ -100,6 +133,10 @@ export function tagebuchMuster(eintraege) {
     const werte = new Set(liste.flatMap((e) => e[feld] || []));
     werte.forEach((w) => kandidaten.push(auswahlMerkmal(feld, w)));
   }
+  // Stichworte (07.10.) fließen genauso in die Muster-Suche ein.
+  new Set(liste.flatMap((e) => (e.stichworte || []).map((x) => x.wort))).forEach((w) =>
+    kandidaten.push({ key: `stichwort:${w}`, label: w, test: (e) => (e.stichworte || []).some((x) => x.wort === w), bekannt: () => true })
+  );
   const muster = [];
   for (const m of kandidaten) {
     const g = gut.filter(m.bekannt);

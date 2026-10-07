@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { tagebuchMuster, stimmungEmoji, momentZeile } from "../../utils/tagebuch";
+import { tagebuchMuster, stimmungEmoji, momentZeile, stichwortBilanz } from "../../utils/tagebuch";
 import { zeileZuEintrag, zeileZuMoment } from "../../data/useTagebuch";
 import { Shell, PrimaryButton, TextInput } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
@@ -594,10 +594,15 @@ function TagebuchKurz({ personId, vorname, onChat }) {
       if (error) console.error(error);
       setMomente((data || []).map(zeileZuMoment));
     });
-    supabase.rpc("admin_tagebuch", { p_user: personId, p_tage: 60 }).then(({ data, error }) => {
+    // Stichworte grün/rot (07.10.) kommen aus einer eigenen Abfrage dazu.
+    Promise.all([
+      supabase.rpc("admin_tagebuch", { p_user: personId, p_tage: 60 }),
+      supabase.rpc("admin_tagebuch_stichworte", { p_user: personId, p_tage: 60 }),
+    ]).then(([{ data, error }, { data: worte }]) => {
       if (ab) return;
       if (error) console.error(error);
-      setEintraege((data || []).map(zeileZuEintrag));
+      const nachDatum = new Map((worte || []).map((w) => [w.datum, w.stichworte]));
+      setEintraege((data || []).map((r) => zeileZuEintrag({ ...r, stichworte: nachDatum.get(r.datum) || [] })));
     });
     return () => {
       ab = true;
@@ -617,6 +622,20 @@ function TagebuchKurz({ personId, vorname, onChat }) {
           </span>
         ))}
       </div>
+      {(() => {
+        const b = stichwortBilanz(eintraege.slice(-14));
+        if (!b.haeufigste.length) return null;
+        return (
+          <div data-coach-stichworte style={{ fontSize: 12, margin: "2px 0 6px", display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+            <span style={{ color: textMuted, fontWeight: 700 }}>{Math.round((b.anteilGut || 0) * 100)} % grün ·</span>
+            {b.haeufigste.slice(0, 5).map((w) => (
+              <span key={`${w.art}${w.wort}`} style={{ borderRadius: 99, padding: "2px 8px", fontWeight: 800, background: w.art === "gut" ? "#E3F5EC" : "#FBE6E3", color: w.art === "gut" ? "#1E7A50" : "#B4382A" }}>
+                {w.wort} ×{w.anzahl}
+              </span>
+            ))}
+          </div>
+        );
+      })()}
       {m.bereit ? (
         top.length > 0 && (
           <div style={{ fontSize: 12.5, margin: "4px 0 6px" }}>

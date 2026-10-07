@@ -36,3 +36,22 @@ describe("tagebuchMuster", () => {
     expect(m.muster.find((x) => x.key === "essen:viel Zucker")).toMatchObject({ richtung: "schwer", schwer: 4 });
   });
 });
+
+import { stichwortBilanz, gruenAnteil, tagebuchZeile as zeile2 } from "./tagebuch";
+
+describe("Stichworte (07.10.)", () => {
+  const e1 = { stimmung: 4, stichworte: [{ wort: "produktiv", art: "gut" }, { wort: "stressig", art: "schwer", weil: "Termine" }, { wort: "lustig", art: "gut" }] };
+  const e2 = { stimmung: 2, stichworte: [{ wort: "stressig", art: "schwer" }] };
+  it("Anteil grün je Eintrag", () => {
+    expect(gruenAnteil(e1)).toBeCloseTo(2 / 3);
+    expect(gruenAnteil({ stichworte: [] })).toBe(null);
+  });
+  it("Bilanz mit häufigsten Wörtern", () => {
+    const b = stichwortBilanz([e1, e2]);
+    expect(b).toMatchObject({ gut: 2, schwer: 2, anteilGut: 0.5 });
+    expect(b.haeufigste[0]).toEqual({ wort: "stressig", art: "schwer", anzahl: 2 });
+  });
+  it("Protokollzeile enthält die Stichworte", () => {
+    expect(zeile2(e1)).toContain("produktiv");
+  });
+});

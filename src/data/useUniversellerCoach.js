@@ -3,7 +3,7 @@ import { getCoachName } from "../utils/coachStorage";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
 import { bibliotheksUebung } from "../utils/atemBibliothek";
-import { OPTIONEN as TAGEBUCH_OPTIONEN, autoWerte, tagebuchZeile } from "../utils/tagebuch";
+import { OPTIONEN as TAGEBUCH_OPTIONEN, STICHWORTE, autoWerte, tagebuchZeile } from "../utils/tagebuch";
 import { VORLAGEN, planErzeugen, plusTage, rollenZuordnung, wochenBeginn } from "../utils/schichtplan";
 import { sitzungEnde } from "../utils/fokusGemeinsam";
 import { bloeckeFuerTag, konflikteFuerEintrag } from "../utils/kalender";
@@ -324,7 +324,7 @@ export function useUniversellerCoach() {
       }
       case "tagebuch": {
         const heute = toLocalISODate(new Date());
-        const e = await AIService.tagebuchAusChat({ verlauf, coachName, optionen: TAGEBUCH_OPTIONEN });
+        const e = await AIService.tagebuchAusChat({ verlauf, coachName, optionen: { ...TAGEBUCH_OPTIONEN, stichworte: STICHWORTE } });
         const vorher = (tagebuchEintraege || []).find((x) => x.datum === heute);
         const r = await tagebuchSpeichern({ ...e, datum: heute, notizTeilen: vorher?.notizTeilen || false, auto: autoWerte(heute, appData) });
         if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");

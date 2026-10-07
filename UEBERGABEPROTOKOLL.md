@@ -106,6 +106,21 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   - **Offen:** Bilder für Workflow, Tageslicht, Schlaf, Atem, Gewohnheit (Canva leer). Ankündigung auch nach
     dem Abhaken an anderen Stellen (Tagesplan) ist noch nicht drin, bisher nur über dieses Fenster und nach dem
     Workflow. Die Frage „zu früh abgehakt?“ fragt das Fenster bewusst nicht.
+- **Tagebuch-Stichworte (07.10., freigegeben):** Die Smileys bleiben. Neu sind grüne und rote Stichworte zum
+  Antippen (`STICHWORTE` in `utils/tagebuch.js`, eigene Wörter mit „+ grün/+ rot“), je Wort ein freiwilliges
+  „weil …“. Spalte `tagebuch_eintraege.stichworte` (jsonb `[{wort, art, weil}]`), Migration `0125`.
+  - In der kompakten Abend-Variante stehen Ort/Menschen/„Weiß die App schon“/Essen/Körper zugeklappt unter
+    „+ Mehr dazu“.
+  - Tagebuch-Seite: Karte „Deine Woche in Farben“ (grün-rote Balken je Tag, häufigste Wörter).
+  - Muster-Suche und Protokollzeile berücksichtigen die Stichworte.
+  - Coach: `admin_tagebuch_stichworte()` (neue Funktion neben `admin_tagebuch`). Das „weil …“ sieht der Coach
+    nur bei geteilter Notiz. Die Zeile „% grün · Wörter“ steht im Tagebuch-Kasten der Coach-Übersicht.
+  - Aka füllt die Stichworte aus dem Gespräch mit (`tagebuchAusChat`).
+  - **Technik-Hinweis:** `apply_migration` hing am 07.10. Befehle mit `drop` warten im Supabase-Werkzeug
+    auf eine Bestätigung, die in der Sitzung nicht ankommt (Zeitüberschreitung, alles zurückgerollt).
+    Deshalb kein `drop`, sondern eine neue Funktion. Übrig ist eine harmlose Testfunktion
+    `admin_tagebuch_v2_test()` (gibt 1 zurück, Ausführrecht entzogen). Die Nutzerin kann sie bei Gelegenheit
+    im Dashboard löschen, das ist nicht dringend.
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

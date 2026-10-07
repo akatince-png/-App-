@@ -117,3 +117,19 @@ test("Morgenroutine mit Stoppuhr: Atem-Schritt zeigt die geführte Übung", asyn
   await atem.getByRole("button", { name: "Schon geatmet – weiter" }).click();
   await expect(page.getByText("Aufgeladen! ⚡")).toBeVisible();
 });
+
+// Stichworte (07.10.): grün/rot antippen, je Wort ein freiwilliges „weil …“;
+// in der kompakten Abend-Variante stehen Ort/Menschen unter „Mehr dazu“.
+test("Tagebuch: Stichworte grün/rot mit „weil …“", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 7, 21, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0#/tagebuch");
+  const bereich = page.locator("[data-stichworte]");
+  await bereich.getByRole("button", { name: "produktiv" }).click();
+  await bereich.getByRole("button", { name: "stressig" }).click();
+  await expect(bereich.getByRole("button", { name: "stressig" })).toHaveAttribute("aria-pressed", "true");
+  await bereich.getByLabel("stressig, weil").fill("drei Termine am Stück");
+  await bereich.getByLabel("Eigenes Stichwort").fill("kreativ");
+  await bereich.getByRole("button", { name: "+ grün" }).click();
+  await expect(bereich.getByRole("button", { name: "kreativ" })).toHaveAttribute("aria-pressed", "true");
+  await expect(bereich.getByLabel("kreativ, weil")).toBeVisible();
+});

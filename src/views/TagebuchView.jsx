@@ -5,7 +5,9 @@ import TagebuchFormular from "../ui/TagebuchFormular";
 import { textMuted, cardBorder } from "../ui/theme";
 import { useAppData } from "../context/AppDataContext";
 import { toLocalISODate } from "../utils/dates";
-import { MUSTER_MIN_EINTRAEGE, autoZeilen, momentZeile, stimmungEmoji, tagebuchMuster, tagebuchZeile } from "../utils/tagebuch";
+import { MUSTER_MIN_EINTRAEGE, autoZeilen, gruenAnteil, momentZeile, stichwortBilanz, stimmungEmoji, tagebuchMuster, tagebuchZeile } from "../utils/tagebuch";
+
+const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 // Kontext-Tagebuch (25.09., Vorschau freigegeben): Eintrag für heute oder
 // gestern, "Was deine guten Tage gemeinsam haben" und der Verlauf. Geht
@@ -45,6 +47,47 @@ export default function TagebuchView({ onHome }) {
         </div>
         <TagebuchFormular key={`${datum}-${neuKey}-${vorhanden ? "v" : "n"}`} datum={datum} vorhanden={vorhanden} />
       </Card>
+
+      {/* Farb-Statistik (07.10., Nutzerin: „damit man farblich eine gewisse
+          Statistik führt – mehrheitlich guter oder schlechter Tag“). */}
+      {(() => {
+        const woche = tagebuchEintraege.filter((e) => e.datum >= toLocalISODate(new Date(Date.now() - 6 * 86400000)));
+        const b = stichwortBilanz(woche);
+        if (!b.haeufigste.length) return null;
+        const prozent = Math.round((b.anteilGut || 0) * 100);
+        return (
+          <Card style={{ marginBottom: 14 }}>
+            <div data-farb-statistik style={{ fontSize: 15, fontWeight: 900 }}>Deine Woche in Farben</div>
+            <div style={{ fontSize: 13, color: textMuted, margin: "4px 0 8px" }}>
+              {prozent >= 60 ? "Überwiegend gute Tage" : prozent <= 40 ? "Eher schwere Tage – sei gut zu dir" : "Gemischt"} · {prozent} % grüne Stichworte
+            </div>
+            {woche.map((e) => {
+              const g = gruenAnteil(e);
+              return (
+                <div key={e.datum} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, margin: "5px 0" }}>
+                  <span style={{ width: 22, fontWeight: 800 }}>{WT[new Date(`${e.datum}T12:00:00`).getDay()]}</span>
+                  <div style={{ flex: 1, display: "flex", height: 14, borderRadius: 99, overflow: "hidden", background: "color-mix(in srgb, #EEF0F5 var(--mp-flaeche), var(--mp-rand-dunkel))" }}>
+                    {g !== null && (
+                      <>
+                        <div style={{ flex: g, background: "#2FA36B" }} />
+                        <div style={{ flex: 1 - g, background: "#D9483B" }} />
+                      </>
+                    )}
+                  </div>
+                  <span>{stimmungEmoji(e.stimmung)}</span>
+                </div>
+              );
+            })}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+              {b.haeufigste.map((w) => (
+                <span key={`${w.art}${w.wort}`} style={{ borderRadius: 99, padding: "4px 10px", fontSize: 12.5, fontWeight: 800, background: w.art === "gut" ? "#2FA36B" : "#D9483B", color: "#fff" }}>
+                  {w.wort} ×{w.anzahl}
+                </span>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
 
       <Card style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 15, fontWeight: 900 }}>✨ Was deine guten Tage gemeinsam haben</div>

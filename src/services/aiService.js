@@ -456,7 +456,8 @@ export const AIService = {
         "stimmung: 1 = schwer, 2 = eher schwer, 3 = mittel, 4 = gut, 5 = richtig gut.",
         `Erlaubte Werte – orte: ${JSON.stringify(optionen.orte)}; personen: ${JSON.stringify(optionen.personen)}; essen: ${JSON.stringify(optionen.essen)}; tagesart: ${JSON.stringify(optionen.tagesart)}; koerper: ${JSON.stringify(optionen.koerper)}. Nur passende Werte exakt so übernehmen.`,
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "stimmung": 1-5, "orte": string[], "personen": string[], "essen": string[], "tagesart": string[], "koerper": string[], "notiz": string (kurz, in Ich-Form, was sonst Besonderes erzählt wurde, sonst leer) }',
+        `Stichworte (wie der Tag war, 1–4 Stück): bevorzugt aus gut ${JSON.stringify(optionen.stichworte?.gut || [])} bzw. schwer ${JSON.stringify(optionen.stichworte?.schwer || [])}; je Wort optional "weil" mit dem genannten Grund (kurz, Ich-Form), sonst leer.`,
+        'Format exakt: { "stimmung": 1-5, "stichworte": [{ "wort": string, "art": "gut"|"schwer", "weil": string }], "orte": string[], "personen": string[], "essen": string[], "tagesart": string[], "koerper": string[], "notiz": string (kurz, in Ich-Form, was sonst Besonderes erzählt wurde, sonst leer) }',
       ],
       verlauf,
       "Fasse den besprochenen Tag jetzt als JSON zusammen, wie vereinbart."
@@ -470,6 +471,15 @@ export const AIService = {
       essen: nur("essen"),
       tagesart: nur("tagesart"),
       koerper: nur("koerper"),
+      // Stichworte (07.10.): bekannte Wörter behalten ihre Farbe aus der Liste.
+      stichworte: (Array.isArray(data.stichworte) ? data.stichworte : [])
+        .filter((x) => x && typeof x.wort === "string" && x.wort.trim())
+        .slice(0, 6)
+        .map((x) => {
+          const wort = x.wort.trim().toLowerCase();
+          const art = optionen.stichworte?.gut?.includes(wort) ? "gut" : optionen.stichworte?.schwer?.includes(wort) ? "schwer" : x.art === "gut" ? "gut" : "schwer";
+          return { wort, art, weil: typeof x.weil === "string" ? x.weil.trim() : "" };
+        }),
       notiz: data.notiz || "",
     };
   },
