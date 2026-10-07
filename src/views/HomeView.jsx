@@ -1058,7 +1058,9 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const fensterErzwungen = fensterParam.get(fensterArt) === "1";
   const fensterStatus = routineTagesStatus(fensterArt, fensterHeute, { routineSchritte, routineDurchlaeufe, routineSchrittErledigt });
   const routineFensterZeigen =
-    !istAdminModus &&
+    // Auch für das eigene Coach-Konto (07.10.: die Nutzerin nutzt ihr Admin-
+    // Konto selbst), nur nicht im „Verwalten als“-Modus.
+    proband === null &&
     !morgenFensterZu &&
     zeigeRoutineFenster({ art: fensterArt, jetzt: new Date(), startZeit: routineEinstellungen?.[fensterArt]?.startZeit, status: fensterStatus, entscheidung: heutigeEntscheidung(fensterHeute, fensterArt), erzwungen: fensterErzwungen });
   const routineFensterSchliessen = (wahl) => {
@@ -1073,7 +1075,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         routine={ablaufRoutine}
         schritte={routineSchritte.filter((x) => x.routine === ablaufRoutine).sort((x, y) => x.reihenfolge - y.reihenfolge)}
         onAbschluss={() => {
-          if (ablaufRoutine === "morgen" && !istAdminModus) setNaechsterOffen(true);
+          if (ablaufRoutine === "morgen" && proband === null) setNaechsterOffen(true);
           setAblaufRoutine(null);
         }}
         onAbbrechen={() => setAblaufRoutine(null)}

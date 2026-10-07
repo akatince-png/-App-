@@ -26,3 +26,27 @@ export function viewAusHash(): string | null {
 export function hashFuerView(view: string): string {
   return `#/${view}`;
 }
+
+// Start immer auf der Startseite (07.10., Nutzerin: „Wenn ich die Seite in
+// Safari aktualisiere oder öffne, kommt irgendeine Seite, nicht der
+// Homebildschirm“). Die zuletzt offene Seite steht noch in der Adresse
+// (#/tagebuch …) und wurde bisher beim Neuladen wieder geöffnet. Jetzt nur
+// noch bei echten Sprung-Links aus Erinnerungen (Push), nie beim Neuladen.
+export const SPRUNG_ZIELE = ["kalender", "coach-chat", "admin-uebersicht"];
+
+export function anfangsZielErlaubt(view: string | null, navigationsArt?: string): boolean {
+  if (!view) return false;
+  // Testumgebung (e2e-Harness) öffnet Seiten direkt über die Adresse.
+  if ((window as unknown as { __akaAdresseStart?: boolean }).__akaAdresseStart) return true;
+  if (!SPRUNG_ZIELE.includes(view)) return false;
+  return navigationsArt !== "reload" && navigationsArt !== "back_forward";
+}
+
+export function navigationsArt(): string | undefined {
+  try {
+    const eintrag = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    return eintrag?.type;
+  } catch {
+    return undefined;
+  }
+}

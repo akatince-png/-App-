@@ -30,6 +30,9 @@ const mockAuthValue = {
 // für e2e/*.spec.js gedacht, wirkt sich auf die echte App nicht aus.
 function leseOverridesAusUrl() {
   const params = new URLSearchParams(window.location.search);
+  // Tests öffnen Seiten direkt über die Adresse (#/tagesplan …); in der echten
+  // App startet ein Neuladen seit 07.10. immer auf der Startseite.
+  window.__akaAdresseStart = true;
   // ?startvariante=b: Schnellzugriff in der Leiste (30.09., Vorschau).
   try {
     if (params.get("startvariante")) localStorage.setItem("mp-start-variante", params.get("startvariante"));

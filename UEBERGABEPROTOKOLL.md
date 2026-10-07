@@ -132,6 +132,14 @@ Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und
   angewandt. Gilt für alle Konten im Kernprogramm, also auch für die Nutzerin und die Testkonten.
 - **Dauerfreigabe Datenbank (07.10.):** siehe CLAUDE.md. Nötige DB-Änderungen für beauftragte Funktionen
   ohne Rückfrage durchführen, danach berichten. Nie Daten echter Konten löschen.
+- **Fixes 07.10. früh (Nutzerin):**
+  - **Start immer auf der Startseite.** Beim Neuladen bzw. Öffnen in Safari kam die zuletzt offene Seite
+    (stand im Hash). Jetzt öffnet die App die Seite aus der Adresse nur noch bei Sprung-Links aus Erinnerungen
+    (`SPRUNG_ZIELE` in `utils/routing.ts`: kalender, coach-chat, admin-uebersicht) und nie beim Neuladen.
+    Das e2e-Harness setzt `window.__akaAdresseStart`.
+  - **Morgenfenster/„Als Nächstes“ auch für das eigene Coach-Konto.** Bisher waren sie für Admin-Konten aus
+    (`istAdminModus`), die Nutzerin nutzt aber ihr Admin-Konto selbst. Jetzt gilt: nur nicht im
+    „Verwalten als“-Modus (`proband === null`).
 - **Reihenfolge:** zuerst das Morgenfenster, danach die **Matrix ausbauen**. Mit dem Ausbau ist sie
   einverstanden; ein diktierter Halbsatz dazu war unklar, vor dem Bau nachfragen.
 - **Sprachbegleitung** erst nächsten Monat (Budget). **Übungsbilder** später mit Canva-Bezahlversion.

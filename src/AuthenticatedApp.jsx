@@ -18,7 +18,7 @@ import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { PLAENE_TABS } from "./constants";
 import { wochenprotokollFaellig, baueWochenprotokollDaten } from "./utils/wochenprotokollSnapshot";
 import { spotifyCodeAustauschen } from "./services/spotify";
-import { viewAusHash, hashFuerView } from "./utils/routing";
+import { viewAusHash, hashFuerView, anfangsZielErlaubt, navigationsArt } from "./utils/routing";
 import { meldeAppBereit } from "./utils/startzeit";
 import { ladeMitWiederholung } from "./utils/nachladeFehler";
 
@@ -262,7 +262,8 @@ export default function AuthenticatedApp() {
       if (!anfangsHashSchonVerwendet) {
         anfangsHashSchonVerwendet = true;
         const ausUrl = viewAusHash();
-        if (istGueltigerView(ausUrl, isAdmin)) {
+        // Beim Öffnen/Neuladen immer Startseite (07.10.), außer Sprung-Links.
+        if (istGueltigerView(ausUrl, isAdmin) && anfangsZielErlaubt(ausUrl, navigationsArt())) {
           setView(ausUrl);
           return;
         }
