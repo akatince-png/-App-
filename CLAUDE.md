@@ -83,7 +83,9 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   durchführen und hinterher berichten. Ausgenommen bleibt: Daten echter Konten
   löschen oder überschreiben. Technisch fragen manche Werkzeuge trotzdem nach
   (z. B. Supabase bei „drop“); das umgehen wir nicht, sondern bauen ohne
-  „drop“ oder berichten.
+  „drop“ oder berichten. Ausdrücklich eingeschlossen (Nutzerin, 08.10.): alle
+  SQL-Schritte des täglichen Dauertests, auch das Aufräumen von Test-Resten
+  wie dem „Probe-Team Admin-Test“.
 - **Dauerfreigabe Dauertest (Nutzerin, 29.09.2026, wörtlich: „Ich gebe dir
   auch in Zukunft die Freigabe“):** Für den täglichen Dauertest
   (`scripts/dauertest/README.md`) darfst du die Passwörter der sechs
