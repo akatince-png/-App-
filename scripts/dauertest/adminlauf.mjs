@@ -14,6 +14,16 @@ const pems = fs.existsSync(bundle) ? fs.readFileSync(bundle,'utf8').match(/-----
 const pins = pems.map(p=>new crypto.X509Certificate(p)).filter(c=>/Proxy CA|agent-proxy/i.test(c.subject)).map(c=>crypto.createHash('sha256').update(c.publicKey.export({type:'spki',format:'der'})).digest('base64'));
 const b = await chromium.launch({ executablePath: process.env.AKA_CHROMIUM || '/opt/pw-browsers/chromium', args: pins.length ? [`--ignore-certificate-errors-spki-list=${pins.join(',')}`] : [] });
 const ctx = await b.newContext({ viewport:{width:390,height:844}, deviceScaleFactor:2, isMobile:true, hasTouch:true, locale:'de-DE', timezoneId:'Europe/Berlin' });
+// Morgen-/Abendfenster (seit 06.10.) würden die Startseite für den Bot
+// verdecken – der Lauf klickt die Routinen selbst durch.
+await ctx.addInitScript(() => {
+  try {
+    localStorage.setItem("aka-morgenfenster-aus", "1");
+    localStorage.setItem("aka-abendfenster-aus", "1");
+  } catch {
+    /* ohne Speicher */
+  }
+});
 const p = await ctx.newPage(); const log=[]; let aktuell='start';
 const befund=(s)=>{log.push(`[${aktuell}] ${s}`); console.log('⚠',aktuell,s);};
 p.on('pageerror', e=>befund('PAGE '+e.message.slice(0,200)));

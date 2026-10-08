@@ -111,6 +111,16 @@ const context = await browser.newContext({
   locale: "de-DE",
   timezoneId: "Europe/Berlin",
 });
+// Morgen-/Abendfenster (seit 06.10.) würden die Startseite für den Bot
+// verdecken – der Lauf klickt die Routinen selbst durch.
+await context.addInitScript(() => {
+  try {
+    localStorage.setItem("aka-morgenfenster-aus", "1");
+    localStorage.setItem("aka-abendfenster-aus", "1");
+  } catch {
+    /* ohne Speicher */
+  }
+});
 const page = await context.newPage();
 page.on("console", (m) => m.type() === "error" && bericht.konsolenFehler.push(m.text().slice(0, 300)));
 page.on("pageerror", (e) => bericht.seitenFehler.push(e.message.slice(0, 300)));
