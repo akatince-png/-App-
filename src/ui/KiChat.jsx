@@ -13,6 +13,7 @@ import { wissensBasisText } from "../utils/wissensBasis";
 import { trackingZusammenfassung } from "../utils/trackingZusammenfassung";
 import { MikrofonIcon, StopIcon } from "./MikrofonIcons";
 import VorlesenToggle from "./VorlesenToggle";
+import { akaSatzAusAdresse } from "../utils/akaAdresse";
 
 // Wie viele Nachrichten aus dem (potenziell über Wochen gewachsenen)
 // gespeicherten Verlauf maximal als Kontext an die KI mitgeschickt werden —
@@ -162,6 +163,8 @@ export default function KiChat({
   // gewählt wurde (siehe getKiAutoStartUnterdrueckt) — der Orb bleibt da.
   const [offen, setOffen] = useState(() => autoStart && !getKiAutoStartUnterdrueckt());
   const [verlauf, setVerlauf] = useState([]);
+  const [verlaufBereit, setVerlaufBereit] = useState(false);
+  const [ausstehend, setAusstehend] = useState(null);
   const [verlaufSichtbar, setVerlaufSichtbar] = useState(false);
   const [eingabe, setEingabe] = useState("");
   const [laden, setLaden] = useState(false);
@@ -386,7 +389,7 @@ export default function KiChat({
   // jetzt wie ein neues Gespräch an. Der gespeicherte Verlauf wird trotzdem
   // weiter geladen (Klapp-Verlauf + Erinnerung der KI über die Zeit), nur
   // eben nicht mehr automatisch vorgelesen.
-  const starteGespraech = async () => {
+  const starteGespraech = async ({ still = false } = {}) => {
     setOffen(true);
     if (bereich && !verlaufGeladenRef.current) {
       verlaufGeladenRef.current = true;
@@ -397,6 +400,9 @@ export default function KiChat({
       if (gespeichert.length) setVerlauf(gespeichert);
       altVerlaufBisRef.current = gespeichert.length;
     }
+    setVerlaufBereit(true);
+    // Kommt gleich ein Satz von Siri, nicht begrüßen und nicht zuhören.
+    if (still) return;
     const kannHoeren = spracherkennungVerfuegbar();
     if (vorlesenAktiv && effektiveEinleitung) {
       sprich(effektiveEinleitung, { onEnde: () => kannHoeren && mikrofonStarten() });
@@ -406,6 +412,25 @@ export default function KiChat({
   };
   const starteRef = useRef(starteGespraech);
   starteRef.current = starteGespraech;
+
+  // Siri-Kurzbefehl (10.10., utils/akaAdresse.js): nur der zentrale Aka
+  // (mit `befehl`) nimmt einen Satz aus der Adresse an – sobald klar ist,
+  // dass Aka hier überhaupt aktiv ist (Admin, KI eingeschaltet).
+  useEffect(() => {
+    if (!befehl || !istAdminModus || !getKiAktiv()) return;
+    const satz = akaSatzAusAdresse();
+    if (!satz) return;
+    setAusstehend(satz);
+    starteRef.current({ still: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [istAdminModus]);
+  useEffect(() => {
+    if (!ausstehend || !offen || !verlaufBereit || laden) return;
+    const satz = ausstehend;
+    setAusstehend(null);
+    senden(satz);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ausstehend, offen, verlaufBereit, laden]);
   useEffect(() => {
     // Nur der zentrale Aka (ohne eigenen Orb) hört auf den Leisten-Knopf,
     // eingebettete Chats (z. B. im Onboarding) nicht.

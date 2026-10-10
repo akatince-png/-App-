@@ -77,3 +77,21 @@ describe("Ausbau 10.10.: starten, löschen, verschieben, Startzeit", () => {
     expect(nameFinden(aufgaben, "Wäsche", "titel")).toBeNull();
   });
 });
+
+describe("aendern", () => {
+  it("nimmt nur gültige neue Werte", () => {
+    expect(befehlBereinigen({ art: "aendern", typ: "gewohnheit", name: "Lesen", uhrzeit: "21:30", menge: "", dauerMin: null, neuerName: null })).toEqual({
+      art: "aendern",
+      typ: "gewohnheit",
+      name: "Lesen",
+      neuerName: null,
+      uhrzeit: "21:30",
+      menge: null,
+      dauerMin: null,
+    });
+  });
+  it("ohne neuen Wert oder mit unbekanntem Typ → keine", () => {
+    expect(befehlBereinigen({ art: "aendern", typ: "gewohnheit", name: "Lesen", uhrzeit: "spät" })).toEqual({ art: "keine" });
+    expect(befehlBereinigen({ art: "aendern", typ: "konto", name: "x", menge: "1" })).toEqual({ art: "keine" });
+  });
+});

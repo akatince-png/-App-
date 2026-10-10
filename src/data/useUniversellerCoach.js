@@ -128,6 +128,49 @@ export function useUniversellerCoach() {
     return `${String((h + 1) % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   };
 
+  // „Lesen lieber um 21:30“ (10.10.): Uhrzeit, Menge, Dauer oder Name ändern.
+  const aendern = async (befehl, liste) => {
+    const { typ, uhrzeit, menge, dauerMin, neuerName } = befehl;
+    const quelle = typ === "aufgabe" ? offeneAufgaben().map((a) => ({ ...a, name: a.titel })) : liste[typ];
+    const ziel = nameFinden(quelle, befehl.name);
+    if (!ziel) return null;
+    const pruefen = (r) => {
+      if (r && r.ok === false) throw new Error(r.error || "Ändern fehlgeschlagen.");
+    };
+    const was = [];
+    if (typ === "gewohnheit") {
+      if (neuerName || uhrzeit || menge) pruefen(await appData.gewohnheitAendern?.(ziel.id, { name: neuerName || undefined, uhrzeit: uhrzeit || undefined, menge: menge || undefined }));
+      if (dauerMin) pruefen(await appData.gewohnheitDauerSetzen?.(ziel.id, dauerMin));
+    } else if (typ === "supplement") {
+      const felder = {};
+      if (uhrzeit) {
+        // Mehrere Einnahmezeiten: nicht raten, welche gemeint ist.
+        const sp = (appData.supplemente || []).find((x) => x.id === ziel.id);
+        if ((sp?.tageszeiten || []).length > 1) throw new Error(`„${ziel.name}“ hat mehrere Einnahmezeiten – die Uhrzeit bitte unter Supplemente ändern.`);
+        felder.uhrzeiten = [uhrzeit];
+      }
+      if (menge) felder.menge = menge;
+      if (neuerName) felder.name = neuerName;
+      if (!Object.keys(felder).length) return null;
+      pruefen(await appData.supplementAendern?.(ziel.id, felder));
+    } else if (typ === "routineschritt") {
+      const schritt = (appData.routineSchritte || []).find((x) => x.id === ziel.id);
+      if (!neuerName && !dauerMin) return null;
+      pruefen(await appData.routineSchrittAendern?.(ziel.id, { name: neuerName || schritt?.name, dauerMin: dauerMin || schritt?.dauerMin }));
+    } else if (typ === "aufgabe") {
+      if (!neuerName && !uhrzeit) return null;
+      const a = offeneAufgaben().find((x) => x.id === ziel.id);
+      pruefen(await appData.matrixAufgabeSpeichern?.({ ...a, ...(neuerName ? { titel: neuerName } : {}), ...(uhrzeit ? { uhrzeit } : {}) }));
+    }
+    if (neuerName) was.push(`heißt jetzt „${neuerName}“`);
+    if (uhrzeit) was.push(`um ${uhrzeit} Uhr`);
+    if (menge) was.push(menge);
+    if (dauerMin) was.push(`${dauerMin} Min.`);
+    const kategorie = { gewohnheit: "gewohnheit", supplement: "supplement" }[typ];
+    if (kategorie) aenderungVermerken({ kategorie, itemName: ziel.name, aktion: "geändert", detail: `${was.join(" · ")} (per Aka)` });
+    return { bereich: "geaendert", daten: { name: ziel.name, was } };
+  };
+
   // „Starte …“ (10.10.): Routine, Training, Workflow, Atemübung, Fokus, Rätsel.
   const starten = async (befehl, punkte, { onOpenView, onOpenTraining }) => {
     const oeffne = (v) => onOpenView?.(v);
@@ -290,6 +333,8 @@ export function useUniversellerCoach() {
         if (!r?.ok) throw new Error(r?.error || "Verschieben fehlgeschlagen.");
         return { bereich: "verschoben", daten: { titel: a.titel, datum: befehl.datum } };
       }
+      case "aendern":
+        return aendern(befehl, liste);
       case "startzeit": {
         const bisher = routineEinstellungen?.[befehl.routine];
         const r = await appData.routineZeitrahmenSetzen?.(befehl.routine, befehl.uhrzeit, bisher?.endZeit || plusEineStunde(befehl.uhrzeit));

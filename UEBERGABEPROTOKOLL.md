@@ -33,9 +33,22 @@ aber nicht (Klassifikator „keiner“).
   KiChat übernimmt dann automatisch, je Runde höchstens einmal und nie in derselben Runde wie ein direkter Befehl
   (sonst würde „200 ml getrunken“ zusätzlich das Trinkziel ändern). Der Knopf bleibt als Ersatz.
 - Aka verweist nicht mehr auf Knöpfe; `**fett**` wird aus Antworten entfernt; To-do-Listen „für morgen“ → Matrix mit `geplantAm`.
-- **Noch offen (nicht abgedeckt):** Ändern/Löschen bestehender Einträge, Training/Workflow per Sprache starten,
-  Einstellungen außer „abends dunkel“, Punkte abhaken, die einen eigenen Ablauf haben (Training, Routinen).
-  Nur mit Unit-Tests geprüft; ein e2e-Test bräuchte eine KI-Attrappe.
+- **Ausbau am selben Abend** (Nutzerin: „bau weiter an den offenen Bereichen“):
+  - **starten:** Morgen-/Abendroutine (`utils/routineStart.js`: sessionStorage + Ereignis, HomeView holt ab),
+    Training (geplantes Training aus dem Wochenplan, `utils/trainingAusPlan.js`, jetzt auch von HomeView genutzt),
+    Workflow (Preset nach Name, sonst spontan), Atemübung (nach Name), gemeinsam fokussieren, Tagesrätsel.
+  - **löschen** (Gewohnheit, Supplement, Medikament, Aufgabe, Kalender-Eintrag, Workflow, Routine-Schritt; 🔒-Kernschritte
+    nie): immer mit Rückfrage „Ja, löschen“ in `AkaErgebnis` (`LoeschenFrage`).
+  - **ändern:** Gewohnheit (Name/Uhrzeit/Menge/Dauer; neue `gewohnheitAendern` in useGewohnheitenData), Supplement
+    (Uhrzeit nur bei genau einer Einnahmezeit, Menge, Name), Routine-Schritt (Name/Dauer), Aufgabe (Titel/Uhrzeit).
+  - Aufgaben **verschieben** (`geplantAm`) und **abhaken** (`erledigtAm`), **Startzeit** Morgen/Abend setzen.
+- **Siri über Kurzbefehle** (`utils/akaAdresse.js`): `akaapp.vercel.app/?aka=<Satz>` öffnet Aka und schickt den Satz
+  ab (nur Admin-Modus mit KI an), danach wird `aka` aus der Adresse entfernt. Kurzbefehl der Nutzerin: „Text diktieren“ →
+  URL `https://akaapp.vercel.app/?aka=` + diktierter Text → „URL öffnen“. Öffnet Safari (nicht die Homescreen-App,
+  iOS-Grenze), dort muss sie angemeldet sein. Echter Siri-Zugriff ohne App-Öffnen erst mit der nativen iOS-App (App Intents).
+- **Weiter offen:** Mahlzeit/Snack spontan per Sprache, Medikament ändern, Termine ändern, Einstellungen wie Vorlesen/
+  Notfallmodus, Abhaken von Training/Routinen per Sprache (Training wird gestartet, nicht abgehakt).
+  KI-Teil nur mit Unit-Tests geprüft (keine KI-Attrappe im Harness); Übergaben (Routine-Start, Siri-Adresse) mit e2e.
 
 ### Wunschbild „Assistent statt Werkzeugkasten“ (Nutzerin, 06.10., gesammelt, noch nicht beauftragt)
 Kern ihrer Kritik: Die App muss **aktiv auffordern**, statt dass man selbst hineingehen und suchen muss.

@@ -131,6 +131,34 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
   // Als persönliche Akut-Übung markieren (Teil 18) — wird im neuen
   // Akutmodus (AkutModusKarte.jsx) prominent vorgeschlagen, statt nur die
   // allgemeine KI-Antwort zu zeigen.
+  // Name, Uhrzeit oder Menge ändern (10.10., für Aka: „Lesen lieber um 21:30“).
+  const gewohnheitAendern = useCallback(async (id, { name, uhrzeit, menge } = {}) => {
+    const zeile = {};
+    const neu = {};
+    if (typeof name === "string" && name.trim()) zeile.name = neu.name = name.trim();
+    if (typeof uhrzeit === "string") {
+      zeile.uhrzeit = uhrzeit || null;
+      neu.uhrzeit = uhrzeit;
+    }
+    if (typeof menge === "string") zeile.menge = neu.menge = menge;
+    if (!Object.keys(zeile).length) return { ok: false, error: "Nichts zu ändern." };
+    let vorher;
+    setGewohnheiten((prev) =>
+      prev.map((g) => {
+        if (g.id !== id) return g;
+        vorher = g;
+        return { ...g, ...neu };
+      })
+    );
+    const { error } = await supabase.from("routines").update(zeile).eq("id", id);
+    if (error) {
+      console.error(error);
+      if (vorher) setGewohnheiten((prev) => prev.map((g) => (g.id === id ? vorher : g)));
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  }, []);
+
   // Dauer für den Bild-Tagesplan (27.09.).
   const gewohnheitDauerSetzen = useCallback(async (id, dauerMin) => {
     const wert = Number(dauerMin) > 0 ? Number(dauerMin) : null;
@@ -256,6 +284,7 @@ export function useGewohnheitenData(userId, hauptprotokollId) {
     gewohnheitEntfernen,
     gewohnheitZielAktualisieren,
     gewohnheitDauerSetzen,
+    gewohnheitAendern,
     gewohnheitAkutFavoritUmschalten,
     toggleGewohnheitErledigt,
     gewohnheitNotizen,

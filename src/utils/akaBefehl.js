@@ -60,6 +60,8 @@ export const ansichtenListe = () => ANSICHTEN.map((a) => `${a.id} = ${a.name}`).
 export const START_ZIELE = ["morgenroutine", "abendroutine", "training", "workflow", "atem", "fokus", "tagesraetsel"];
 // Was Aka löschen kann – immer erst nach Rückfrage (AkaErgebnis „Ja, löschen“).
 export const LOESCH_TYPEN = ["gewohnheit", "supplement", "medikament", "aufgabe", "termin", "workflow", "routineschritt"];
+// Was Aka an Bestehendem ändern kann (10.10.).
+export const AENDER_TYPEN = ["gewohnheit", "supplement", "routineschritt", "aufgabe"];
 export const LOESCH_TYP_NAME = {
   gewohnheit: "Gewohnheit",
   supplement: "Supplement",
@@ -105,6 +107,18 @@ export function befehlBereinigen(data) {
   if (aktion === "verschieben") {
     const name = typeof data.name === "string" ? data.name.trim() : "";
     return name && datumOk(data.datum) ? { art: aktion, name, datum: data.datum } : { art: "keine" };
+  }
+  if (aktion === "aendern") {
+    const name = typeof data.name === "string" ? data.name.trim() : "";
+    if (!AENDER_TYPEN.includes(data.typ) || !name) return { art: "keine" };
+    const neu = {
+      neuerName: typeof data.neuerName === "string" && data.neuerName.trim() ? data.neuerName.trim() : null,
+      uhrzeit: zeitOk(data.uhrzeit) ? data.uhrzeit : null,
+      menge: typeof data.menge === "string" && data.menge.trim() ? data.menge.trim() : null,
+      dauerMin: zahl(data.dauerMin, 1, 240),
+    };
+    if (!Object.values(neu).some((v) => v !== null)) return { art: "keine" };
+    return { art: aktion, typ: data.typ, name, ...neu };
   }
   if (aktion === "startzeit") {
     return ["morgen", "abend"].includes(data.routine) && zeitOk(data.uhrzeit) ? { art: aktion, routine: data.routine, uhrzeit: data.uhrzeit } : { art: "keine" };

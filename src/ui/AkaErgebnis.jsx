@@ -68,6 +68,8 @@ export default function AkaErgebnis({ ergebnis }) {
       return <Box>☀️ {daten.minuten} Min. Tageslicht eingetragen.</Box>;
     case "abgehakt":
       return <Box>✓ Abgehakt: {daten.join(", ")}</Box>;
+    case "geaendert":
+      return <Box>✏️ „{daten.name}“ geändert: {daten.was.join(" · ")}</Box>;
     case "gestartet":
       return <Box>▶ {daten.name} gestartet.</Box>;
     case "verschoben":

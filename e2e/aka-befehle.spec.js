@@ -24,3 +24,17 @@ test("Aka-Übergabe: Ereignis startet die Abendroutine auf offener Startseite", 
   const weiter = page.getByRole("button", { name: /^(Schritt fertig|Schon geatmet – weiter)$/ }).first();
   await expect(abJetzt.or(weiter)).toBeVisible();
 });
+
+// Siri-Kurzbefehl (10.10.): akaapp…/?aka=<Satz> öffnet Aka und schickt den
+// Satz ab; danach ist er aus der Adresse verschwunden.
+test("Siri-Kurzbefehl: Satz aus der Adresse landet bei Aka", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?aka=Hab%20200%20ml%20Wasser%20getrunken#/home");
+  await expect(page.getByText("Hab 200 ml Wasser getrunken").first()).toBeVisible();
+  expect(page.url()).not.toContain("aka=");
+});
+
+test("Siri-Kurzbefehl: Coachees ohne Aka bekommen nichts", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0&aka=Hallo#/home");
+  await page.waitForTimeout(600);
+  await expect(page.getByText("Hallo", { exact: true })).toHaveCount(0);
+});
