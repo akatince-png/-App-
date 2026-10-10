@@ -9,6 +9,9 @@ import { sitzungEnde } from "../utils/fokusGemeinsam";
 import { bloeckeFuerTag, konflikteFuerEintrag } from "../utils/kalender";
 import { timerHinweisPlanen } from "./nativeTimerHinweis";
 import { setzeAbendDunkelErlaubt } from "../ui/theme";
+import { buildDayItems } from "../utils/dayItems";
+import { verspaetungText } from "../utils/dates";
+import { ansichtenListe, ansichtName, befehlBereinigen, punktFinden } from "../utils/akaBefehl";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -73,9 +76,85 @@ export function useUniversellerCoach() {
   // jeder Coach-Antwort, damit der "Übernehmen"-Knopf nur erscheint, wenn
   // das Gespräch wirklich schon konkret genug ist — nicht schon nach
   // belanglosem Small Talk (siehe KiChat.jsx für die genaue Mechanik).
+  // Seit 10.10. zusätzlich „jetzt“: Sagt die Person klar „trag ein“, führt
+  // KiChat die Übernahme ohne Knopf aus (der Knopf bleibt als Ersatz).
   const handleBereitschaftPruefen = async (verlauf) => {
-    const { bereich } = await AIService.bereichErkennen({ verlauf, coachName: getCoachName() });
-    return bereich === "keiner" ? null : bereich;
+    const { bereich, jetzt } = await AIService.bereichErkennen({ verlauf, coachName: getCoachName() });
+    return bereich === "keiner" ? null : { bereich, jetzt };
+  };
+
+  // Heutige Tagesplan-Punkte wie auf der Startseite (HomeView.jsx).
+  const heutePunkte = () =>
+    buildDayItems(new Date(), {
+      hormonPlan: appData.hormonPlan,
+      hormonErledigt: appData.hormonErledigt,
+      supplemente: appData.supplemente,
+      supplementErledigt: appData.supplementErledigt,
+      mahlzeiten: appData.mahlzeiten,
+      mahlzeitErledigt: appData.mahlzeitErledigt,
+      mealWochenplan: appData.mealWochenplan,
+      trainingEintraege: appData.trainingEintraege,
+      trainingNachDatum: appData.trainingNachDatum,
+      trainingWochenplan: appData.trainingWochenplan,
+      trainingTemplates: appData.trainingTemplates,
+      gewohnheiten: appData.gewohnheiten,
+      gewohnheitErledigt: appData.gewohnheitErledigt,
+      workflowPlaene: appData.workflowPlaene,
+      workflowPresets: appData.workflowPresets,
+      projekte: appData.projekte,
+      zeitbloecke: appData.zeitbloecke,
+      ausnahmenNachSchluessel: appData.ausnahmenNachSchluessel,
+    });
+
+  // Ein Punkt wie beim Ein-Tipp-Abhaken auf der Startseite (HomeView.jsx).
+  const punktAbhaken = async (item) => {
+    const tag = toLocalISODate(new Date());
+    const zeit = item.originalUhrzeit ?? item.uhrzeit;
+    if (item.bundleIds) return appData.confirmAlleTageszeit?.(tag, item.uhrzeit, item.bundleIds);
+    if (!["supplement", "hormon", "mahlzeit", "gewohnheit"].includes(item.kategorie)) return false;
+    if (item.raw?.name) aenderungVermerken({ kategorie: item.kategorie, itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.logZeit ?? zeit) || "" });
+    if (item.kategorie === "supplement") return appData.toggleSupplementErledigt?.(tag, item.raw.id, zeit);
+    if (item.kategorie === "hormon") return appData.toggleHormonErledigt?.(tag, item.raw.name, zeit);
+    if (item.kategorie === "mahlzeit") return appData.toggleMahlzeitErledigt?.(tag, item.refId, item.logZeit ?? zeit);
+    return appData.toggleGewohnheitErledigt?.(tag, item.raw.id);
+  };
+
+  // Direkte Befehle aus der letzten Nachricht (10.10., „Aka wie Siri“):
+  // läuft parallel zur Chat-Antwort, gibt null zurück, wenn es keiner ist.
+  const handleBefehl = async (verlauf, { onOpenView } = {}) => {
+    const punkte = heutePunkte();
+    const offen = punkte.filter((i) => !i.done).map((i) => i.name).slice(0, 40);
+    const befehl = befehlBereinigen(
+      await AIService.befehlErkennen({ verlauf, coachName: getCoachName(), ansichten: ansichtenListe(), offenePunkte: offen })
+    );
+    switch (befehl.art) {
+      case "oeffnen":
+        if (!onOpenView) return null;
+        onOpenView(befehl.ansicht);
+        return { bereich: "oeffnen", daten: { name: ansichtName(befehl.ansicht) }, schliessen: true };
+      case "wasser": {
+        const r = await appData.hydrationHinzufuegen?.(befehl.ml);
+        if (r && r.ok === false) throw new Error(r.error);
+        aenderungVermerken({ kategorie: "hydration", itemName: "Wasser", aktion: "eingetragen", detail: `+${befehl.ml} ml` });
+        return { bereich: "wasser", daten: { ml: befehl.ml } };
+      }
+      case "tageslicht": {
+        const r = await appData.tageslichtHinzufuegen?.(befehl.minuten);
+        if (r && r.ok === false) throw new Error(r.error);
+        aenderungVermerken({ kategorie: "tageslicht", itemName: "Tageslicht", aktion: "eingetragen", detail: `+${befehl.minuten} Min.` });
+        return { bereich: "tageslicht-log", daten: { minuten: befehl.minuten } };
+      }
+      case "abhaken": {
+        const erledigt = [];
+        for (const name of befehl.namen) {
+          const item = punktFinden(punkte, name);
+          if (item && !erledigt.includes(item.name) && (await punktAbhaken(item)) !== false) erledigt.push(item.name);
+        }
+        return erledigt.length ? { bereich: "abgehakt", daten: erledigt } : null;
+      }
+      default:
+        return null;
+    }
   };
 
   // Übergabe an <KiChat onUebernehmen>: routet je nach dem von
@@ -353,5 +432,5 @@ export function useUniversellerCoach() {
     }
   };
 
-  return { handleBereitschaftPruefen, handleUniverselleUebernahme };
+  return { handleBefehl, handleBereitschaftPruefen, handleUniverselleUebernahme };
 }

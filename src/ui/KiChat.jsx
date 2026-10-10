@@ -88,6 +88,11 @@ const NICHTS_AUTOMATISCH_GESPEICHERT_HINWEIS =
 //   denen der Chat schon direkt sichtbar eingebettet ist statt als
 //   schwebender Trigger (z. B. Onboarding-Kategorie-Schritte) — die Wahl,
 //   dorthin zu navigieren, gilt dort bereits als Zustimmung zum Gespräch.
+// - befehl: optional, async (verlauf) => Ergebnis|null — direkte Befehle
+//   (Seite öffnen, Wasser eintragen, abhaken; 10.10. „Aka wie Siri“). Läuft
+//   parallel zur Antwort; ein Ergebnis mit `schliessen` schließt den Chat.
+//   pruefeBereitschaft darf seit 10.10. auch { bereich, jetzt } liefern:
+//   bei jetzt === true wird ohne Knopf übernommen.
 export default function KiChat({
   bereich,
   systemPrompt,
@@ -98,6 +103,7 @@ export default function KiChat({
   pruefeBereitschaft,
   uebernehmenLabels,
   autoStart = false,
+  befehl,
   // Design 2.0 (28.09.): mit der festen Leiste unten öffnet deren Mittel-
   // knopf den Chat (Ereignis „aka-oeffnen“), der schwebende Orb entfällt.
   ohneOrb = false,
@@ -166,6 +172,11 @@ export default function KiChat({
   const [vorlesenAktiv, setVorlesenAktiv] = useState(() => getVorlesenAktiv());
   const [streamText, setStreamText] = useState("");
   const [erkannterBereich, setErkannterBereich] = useState(null);
+  // Automatisches Übernehmen (10.10.): je Verlaufslänge höchstens einmal,
+  // und nicht in derselben Runde wie ein direkter Befehl.
+  const autoUebernommenBeiRef = useRef(-1);
+  const befehlRef = useRef({ laenge: -1, promise: null });
+  const offenRef = useRef(false);
   // Beim allerersten Kontakt stellt sich Aka noch per Namen vor ("Hi, ich
   // bin Aka!"); ab dann (getCoachVorgestellt()) wird genau dieser Anfang
   // aus jeder künftigen Begrüßung rausgeschnitten — einmal berechnet bei
@@ -195,6 +206,9 @@ export default function KiChat({
   // KI-Anfragen ein — nur die Anzeige/Sprachausgabe beim Öffnen ist neu.
   const altVerlaufBisRef = useRef(0);
   const eingabeRef = useRef(null);
+  useEffect(() => {
+    offenRef.current = offen;
+  }, [offen]);
 
   // Laufende Sprachausgabe/-erkennung beenden, wenn die Karte verschwindet
   // (z. B. Wechsel auf einen anderen Bildschirm), statt im Hintergrund
@@ -222,10 +236,23 @@ export default function KiChat({
     if (!pruefeBereitschaft) return;
     const letzte = verlauf[verlauf.length - 1];
     if (!letzte || letzte.rolle !== "coach") return;
+    // Nur im laufenden Gespräch, nicht beim Laden eines alten Verlaufs.
+    if (verlauf.length <= altVerlaufBisRef.current) return;
     let abgebrochen = false;
+    const laenge = verlauf.length;
     pruefeBereitschaft(verlauf).then(
-      (bereich) => {
-        if (!abgebrochen) setErkannterBereich(bereich || null);
+      async (antwort) => {
+        if (abgebrochen) return;
+        const bereichNeu = typeof antwort === "string" ? antwort : antwort?.bereich || null;
+        setErkannterBereich(bereichNeu);
+        if (!bereichNeu || antwort?.jetzt !== true || !onUebernehmen) return;
+        // Lief in dieser Runde schon ein direkter Befehl (z. B. Wasser
+        // eingetragen), nicht zusätzlich etwas einrichten.
+        const b = befehlRef.current;
+        const befehlErgebnis = b.laenge === laenge - 1 ? await b.promise : null;
+        if (abgebrochen || befehlErgebnis || autoUebernommenBeiRef.current === laenge) return;
+        autoUebernommenBeiRef.current = laenge;
+        uebernehmen(bereichNeu);
       },
       () => {
         if (!abgebrochen) setErkannterBereich(null);
@@ -234,6 +261,9 @@ export default function KiChat({
     return () => {
       abgebrochen = true;
     };
+    // uebernehmen/onUebernehmen bewusst nicht als Abhängigkeit: die Prüfung
+    // soll genau einmal je neuer Coach-Antwort laufen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verlauf, pruefeBereitschaft]);
 
   const senden = async (text) => {
@@ -249,6 +279,22 @@ export default function KiChat({
     setStreamText("");
     setSpotifyHinweis(null);
     if (bereich) coachNachrichtSpeichern(bereich, "nutzer", nachricht);
+    // Direkter Befehl parallel zur Antwort (10.10.).
+    if (befehl) {
+      const promise = befehl(neuerVerlauf).then(
+        (r) => {
+          if (!r) return null;
+          setErgebnis(r);
+          if (r.schliessen) schliessen();
+          return r;
+        },
+        (err) => {
+          setFehler(err.message);
+          return null;
+        }
+      );
+      befehlRef.current = { laenge: neuerVerlauf.length, promise };
+    }
     try {
       const rohAntwort = await AIService.coachChatStreamend({
         systemPrompt: `${systemPrompt}${onUebernehmen ? NICHTS_AUTOMATISCH_GESPEICHERT_HINWEIS : ""}\n\n${hintergrundKontext}`,
@@ -274,6 +320,9 @@ export default function KiChat({
       setVerlauf((prev) => [...prev, { rolle: "coach", text: antwort }]);
       if (bereich) coachNachrichtSpeichern(bereich, "coach", antwort);
       const kannHoeren = spracherkennungVerfuegbar();
+      // Hat ein Befehl den Chat schon geschlossen (Seite geöffnet), nichts
+      // mehr vorlesen und nicht wieder zuhören.
+      if (!offenRef.current) return;
       if (vorlesenAktiv) {
         sprich(antwort, { onEnde: () => kannHoeren && mikrofonStarten() });
       } else if (kannHoeren) {
@@ -377,6 +426,7 @@ export default function KiChat({
   }, []);
 
   const schliessen = () => {
+    offenRef.current = false;
     stopErkennungRef.current?.();
     setHoert(false);
     sprachausgabeStoppen();
@@ -385,12 +435,12 @@ export default function KiChat({
 
   useEscapeSchliesst(schliessen, offen);
 
-  const uebernehmen = async () => {
+  const uebernehmen = async (bereichJetzt) => {
     setLaden(true);
     setFehler(null);
     setErgebnis(null);
     try {
-      const result = await onUebernehmen(verlauf, erkannterBereich);
+      const result = await onUebernehmen(verlauf, typeof bereichJetzt === "string" ? bereichJetzt : erkannterBereich);
       setErgebnis(result);
     } catch (err) {
       setFehler(err.message);

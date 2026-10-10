@@ -20,6 +20,7 @@ import MehrfachauswahlLeiste from "../ui/MehrfachauswahlLeiste";
 const AKTION_ANZEIGE = {
   ausgefallen: "Nicht geschafft",
   "heute ausgelassen": "Heute ausgelassen",
+  eingetragen: "Eingetragen",
 };
 
 // Siehe Kommentar bei aenderungGruppen weiter unten — nur echte
@@ -56,6 +57,8 @@ export const TAGESVERLAUF_AKTIONEN = [
   "Notiz entfernt",
   // Morgenfenster „Heute nicht“ mit Grund (06.10.).
   "heute ausgelassen",
+  // Wasser/Tageslicht per Aka eingetragen (10.10.).
+  "eingetragen",
 ];
 
 function datumLabel(datumStr) {

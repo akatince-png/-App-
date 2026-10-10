@@ -12,6 +12,15 @@ export default function AkaErgebnis({ ergebnis }) {
   if (!ergebnis?.bereich) return <Box>Ich konnte noch nichts Konkretes zum Übernehmen finden — magst du genauer sagen, worum es gehen soll?</Box>;
   const { bereich, daten } = ergebnis;
   switch (bereich) {
+    // Direkte Befehle (10.10., „Aka wie Siri“).
+    case "oeffnen":
+      return <Box>„{daten.name}“ ist geöffnet.</Box>;
+    case "wasser":
+      return <Box>💧 {daten.ml} ml Wasser eingetragen.</Box>;
+    case "tageslicht-log":
+      return <Box>☀️ {daten.minuten} Min. Tageslicht eingetragen.</Box>;
+    case "abgehakt":
+      return <Box>✓ Abgehakt: {daten.join(", ")}</Box>;
     case "gewohnheit":
       return (
         <Box>

@@ -21,6 +21,22 @@ daran erinnern, aber nicht von selbst starten.
 5. **Neuerungen nach dem Start gesammelt:** höchstens einmal pro Woche, mit kurzer Notiz „Was ist neu“ in der
    App. Ständig wandernde Knöpfe sind für Menschen mit ADHS anstrengend.
 
+### Aka wie Siri: Befehle, Eintragen ohne Knopf (10.10., live)
+Nutzerin: „Aka soll auf alles Zugriff haben … wie Siri … ‚öffne den Spielebereich‘, ‚200 ml Wasser getrunken‘ …
+nicht jedes Mal das Problem, dass er keinen Zugriff hat.“ Anlass: Aka sagte „tippe auf Übernehmen“, der Knopf kam
+aber nicht (Klassifikator „keiner“).
+- **Direkte Befehle** (`AIService.befehlErkennen`, `utils/akaBefehl.js`, `handleBefehl` in `useUniversellerCoach`):
+  läuft bei jeder Nachricht parallel zur Antwort. Seite öffnen (Liste `ANSICHTEN`, ~40 Seiten inkl. Admin; schließt den
+  Chat), Wasser (ml) und Tageslicht (Min.) eintragen, heutige Tagesplan-Punkte abhaken (Supplement, Medikament,
+  Mahlzeit, Gewohnheit; wie Ein-Tipp auf Home, mit Tagesverlauf-Eintrag). Tagesverlauf-Aktion neu: „eingetragen“.
+- **Einrichten ohne Knopf:** `bereichErkennen` liefert zusätzlich `jetzt` (Person sagt klar „trag ein“/„mach das“).
+  KiChat übernimmt dann automatisch, je Runde höchstens einmal und nie in derselben Runde wie ein direkter Befehl
+  (sonst würde „200 ml getrunken“ zusätzlich das Trinkziel ändern). Der Knopf bleibt als Ersatz.
+- Aka verweist nicht mehr auf Knöpfe; `**fett**` wird aus Antworten entfernt; To-do-Listen „für morgen“ → Matrix mit `geplantAm`.
+- **Noch offen (nicht abgedeckt):** Ändern/Löschen bestehender Einträge, Training/Workflow per Sprache starten,
+  Einstellungen außer „abends dunkel“, Punkte abhaken, die einen eigenen Ablauf haben (Training, Routinen).
+  Nur mit Unit-Tests geprüft; ein e2e-Test bräuchte eine KI-Attrappe.
+
 ### Wunschbild „Assistent statt Werkzeugkasten“ (Nutzerin, 06.10., gesammelt, noch nicht beauftragt)
 Kern ihrer Kritik: Die App muss **aktiv auffordern**, statt dass man selbst hineingehen und suchen muss.
 Sie selbst hat die App deshalb aus dem Alltag verloren, weil Wecker, Spotify und Licht außerhalb laufen.

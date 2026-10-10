@@ -196,14 +196,43 @@ export const AIService = {
         "matrix (Aufgaben/To-dos, die irgendwann erledigt werden müssen, mit oder ohne Frist, z. B. 'ich muss noch die Steuer machen', 'Mama anrufen', 'bis Freitag Belege sortieren', 'Idee: Fotobuch'). Auch To-do-Listen für morgen oder einen bestimmten Tag, z. B. 'übernimm die Punkte in den Tagesplan für morgen'.",
         "alltag (feste oder einmalige Termine im Kalender 'Mein Alltag': Arbeit, Haushalt, Hobby, Me-Time, Termin, Freunde & Familie, z. B. 'samstags 10 Uhr Staubsaugen', 'Dienstag 15 Uhr Zahnarzt', 'Mo bis Do 8:30 bis 16:30 Arbeit').",
         "Nutze 'keiner', wenn noch nichts Konkretes besprochen/vorgeschlagen wurde (z. B. reiner Small Talk oder eine allgemeine Frage ohne Vorschlag).",
+        "jetzt: true NUR, wenn die Person in ihrer LETZTEN Nachricht klar sagt, dass es jetzt eingetragen/angelegt/übernommen werden soll (z. B. 'ja, trag das ein', 'mach das', 'übernimm das', 'leg das an', 'passt so', 'ja bitte') oder es direkt als Auftrag formuliert ('trag ein, dass …', 'leg eine Gewohnheit … an'). Fehlen noch wichtige Angaben oder fragt die Person noch etwas, dann false.",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"matrix"|"aussehen"|"keiner" }',
+        'Format exakt: { "bereich": "gewohnheit"|"supplement"|"medikament"|"hydration"|"tageslicht"|"training"|"ernaehrung"|"schlaf"|"workflow"|"morgenroutine"|"abendroutine"|"schichtplan"|"atemroutine"|"tagebuch"|"fokus"|"alltag"|"matrix"|"aussehen"|"keiner", "jetzt": boolean }',
       ].join(" ")
     );
     const messages = verlauf.map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
     const antwort = await sendeAnfrage({ system, messages, json: true });
     const data = parseJsonAntwort(antwort);
-    return { bereich: data.bereich || "keiner" };
+    return { bereich: data.bereich || "keiner", jetzt: data.jetzt === true };
+  },
+
+  /**
+   * Erkennt in der LETZTEN Nachricht der Person einen direkten Befehl, den
+   * die App sofort ausführt (10.10., „Aka wie Siri“): eine Seite öffnen,
+   * Wasser oder Tageslicht eintragen, Punkte im heutigen Plan abhaken.
+   * Läuft parallel zur Chat-Antwort, damit es sich sofort anfühlt.
+   *
+   * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string, ansichten: string, offenePunkte: string[]}} params
+   */
+  async befehlErkennen({ verlauf, coachName, ansichten, offenePunkte }) {
+    const system = mitPersona(
+      coachName,
+      [
+        "Du bist ein Befehls-Erkenner für eine bestehende App, kein Gesprächspartner.",
+        "Prüfe NUR die letzte Nachricht der Person (frühere Nachrichten nur zum Verständnis). Ist sie ein direkter Befehl, gib ihn zurück, sonst art 'keine'.",
+        `oeffnen: die Person will eine Seite sehen/öffnen/hin ('öffne …', 'zeig mir …', 'geh zu …'). ansicht = eine id aus dieser Liste: ${ansichten}.`,
+        "wasser: die Person hat getrunken und will es eintragen ('ich hab 200 ml Wasser getrunken', 'ein Glas Wasser' = 250 ml, 'eine Flasche' = 500 ml). ml = Menge.",
+        "tageslicht: die Person war draußen im Tageslicht ('war 20 Minuten draußen'). minuten = Dauer.",
+        `abhaken: die Person hat etwas aus ihrem heutigen Plan erledigt/genommen/gegessen/gemacht ('hab Vitamin D genommen', 'Frühstück gegessen', 'Spaziergang erledigt'). namen = die passenden Punkte, wörtlich aus dieser Liste offener Punkte: ${offenePunkte.length ? offenePunkte.join(" | ") : "(keine offenen Punkte)"}. Passt nichts aus der Liste, art 'keine'.`,
+        "Fragen ('wie viel hab ich heute getrunken?'), Pläne für später ('ich will morgen …') oder Wünsche, etwas Neues einzurichten, sind KEIN Befehl → 'keine'.",
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
+        'Format exakt: { "art": "oeffnen"|"wasser"|"tageslicht"|"abhaken"|"keine", "ansicht": string|null, "ml": number|null, "minuten": number|null, "namen": string[] }',
+      ].join(" ")
+    );
+    const messages = verlauf.slice(-4).map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));
+    const antwort = await sendeAnfrage({ system, messages, json: true });
+    return parseJsonAntwort(antwort);
   },
 
   /**
