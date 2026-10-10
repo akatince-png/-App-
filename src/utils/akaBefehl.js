@@ -61,7 +61,7 @@ export const START_ZIELE = ["morgenroutine", "abendroutine", "training", "workfl
 // Was Aka löschen kann – immer erst nach Rückfrage (AkaErgebnis „Ja, löschen“).
 export const LOESCH_TYPEN = ["gewohnheit", "supplement", "medikament", "aufgabe", "termin", "workflow", "routineschritt"];
 // Was Aka an Bestehendem ändern kann (10.10.).
-export const AENDER_TYPEN = ["gewohnheit", "supplement", "routineschritt", "aufgabe"];
+export const AENDER_TYPEN = ["gewohnheit", "supplement", "routineschritt", "aufgabe", "termin"];
 export const LOESCH_TYP_NAME = {
   gewohnheit: "Gewohnheit",
   supplement: "Supplement",
@@ -124,6 +124,7 @@ export function befehlBereinigen(data) {
       uhrzeit: zeitOk(data.uhrzeit) ? data.uhrzeit : null,
       menge: typeof data.menge === "string" && data.menge.trim() ? data.menge.trim() : null,
       dauerMin: zahl(data.dauerMin, 1, 240),
+      datum: datumOk(data.datum) ? data.datum : null,
     };
     if (!Object.values(neu).some((v) => v !== null)) return { art: "keine" };
     return { art: aktion, typ: data.typ, name, ...neu };

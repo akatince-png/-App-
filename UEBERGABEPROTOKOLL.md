@@ -49,7 +49,8 @@ aber nicht (Klassifikator „keiner“).
 - **Dritte Runde:** Essen per Sprache („hab zwei Eier gegessen“, Nährwerte über `data/essenBerechnen.js`, jetzt auch von
   EssenEingabe genutzt, ohne Bestätigungsschritt), zusätzliche Einnahme und Nickerchen (wie Schnellmenü, `spontanSpeichern`),
   Wasser zusätzlich als Getränk-Ereignis, Training per Sprache als erledigt abhaken.
-- **Weiter offen:** Medikament ändern, Termine ändern, Einstellungen wie Vorlesen/Notfallmodus, Routine per Sprache
+- Kalender-Termine ändern (Uhrzeit mit gleicher Dauer, Titel, Datum nur bei einmaligen Terminen).
+- **Weiter offen:** Medikament ändern (Dosierung hängt an Protokoll/Plan), Einstellungen wie Vorlesen/Notfallmodus, Routine per Sprache
   „abhaken“ (wird gestartet, nicht abgehakt).
   KI-Teil nur mit Unit-Tests geprüft (keine KI-Attrappe im Harness); Übergaben (Routine-Start, Siri-Adresse) mit e2e.
 

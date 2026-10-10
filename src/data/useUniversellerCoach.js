@@ -142,7 +142,7 @@ export function useUniversellerCoach() {
 
   // „Lesen lieber um 21:30“ (10.10.): Uhrzeit, Menge, Dauer oder Name ändern.
   const aendern = async (befehl, liste) => {
-    const { typ, uhrzeit, menge, dauerMin, neuerName } = befehl;
+    const { typ, uhrzeit, menge, dauerMin, neuerName, datum } = befehl;
     const quelle = typ === "aufgabe" ? offeneAufgaben().map((a) => ({ ...a, name: a.titel })) : liste[typ];
     const ziel = nameFinden(quelle, befehl.name);
     if (!ziel) return null;
@@ -169,6 +169,16 @@ export function useUniversellerCoach() {
       const schritt = (appData.routineSchritte || []).find((x) => x.id === ziel.id);
       if (!neuerName && !dauerMin) return null;
       pruefen(await appData.routineSchrittAendern?.(ziel.id, { name: neuerName || schritt?.name, dauerMin: dauerMin || schritt?.dauerMin }));
+    } else if (typ === "termin") {
+      const e = (alltagEintraege || []).find((x) => x.id === ziel.id);
+      if (!e || (!uhrzeit && !neuerName && !datum)) return null;
+      if (datum && !e.datum) throw new Error(`„${e.titel}“ wiederholt sich jede Woche – den Tag bitte im Kalender ändern.`);
+      // Dauer bleibt gleich, wenn sich nur der Beginn verschiebt.
+      const min = (t) => (t ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : null);
+      const hhmm = (m) => `${String(Math.floor((((m % 1440) + 1440) % 1440) / 60)).padStart(2, "0")}:${String(((m % 60) + 60) % 60).padStart(2, "0")}`;
+      const ende = uhrzeit && e.ende ? hhmm(min(uhrzeit) + (min(e.ende) - min(e.start))) : e.ende;
+      pruefen(await alltagSpeichern?.({ ...e, start: uhrzeit || e.start, ende, titel: neuerName || e.titel, datum: datum || e.datum }));
+      if (datum) was.push(`am ${datum.split("-").reverse().join(".")}`);
     } else if (typ === "aufgabe") {
       if (!neuerName && !uhrzeit) return null;
       const a = offeneAufgaben().find((x) => x.id === ziel.id);

@@ -88,6 +88,7 @@ describe("aendern", () => {
       uhrzeit: "21:30",
       menge: null,
       dauerMin: null,
+      datum: null,
     });
   });
   it("ohne neuen Wert oder mit unbekanntem Typ → keine", () => {
@@ -104,5 +105,12 @@ describe("essen, einnahme, nickerchen", () => {
   it("nickerchen 5–240 Minuten", () => {
     expect(befehlBereinigen({ art: "nickerchen", minuten: 20 })).toEqual({ art: "nickerchen", minuten: 20 });
     expect(befehlBereinigen({ art: "nickerchen", minuten: 2 })).toEqual({ art: "keine" });
+  });
+});
+
+describe("Termin ändern", () => {
+  it("nimmt Datum und Uhrzeit an", () => {
+    expect(befehlBereinigen({ art: "aendern", typ: "termin", name: "Zahnarzt", uhrzeit: "16:00", datum: "2026-10-15" })).toMatchObject({ art: "aendern", typ: "termin", uhrzeit: "16:00", datum: "2026-10-15" });
+    expect(befehlBereinigen({ art: "aendern", typ: "termin", name: "Zahnarzt", datum: "morgen" })).toEqual({ art: "keine" });
   });
 });
