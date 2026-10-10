@@ -46,8 +46,11 @@ aber nicht (Klassifikator „keiner“).
   ab (nur Admin-Modus mit KI an), danach wird `aka` aus der Adresse entfernt. Kurzbefehl der Nutzerin: „Text diktieren“ →
   URL `https://akaapp.vercel.app/?aka=` + diktierter Text → „URL öffnen“. Öffnet Safari (nicht die Homescreen-App,
   iOS-Grenze), dort muss sie angemeldet sein. Echter Siri-Zugriff ohne App-Öffnen erst mit der nativen iOS-App (App Intents).
-- **Weiter offen:** Mahlzeit/Snack spontan per Sprache, Medikament ändern, Termine ändern, Einstellungen wie Vorlesen/
-  Notfallmodus, Abhaken von Training/Routinen per Sprache (Training wird gestartet, nicht abgehakt).
+- **Dritte Runde:** Essen per Sprache („hab zwei Eier gegessen“, Nährwerte über `data/essenBerechnen.js`, jetzt auch von
+  EssenEingabe genutzt, ohne Bestätigungsschritt), zusätzliche Einnahme und Nickerchen (wie Schnellmenü, `spontanSpeichern`),
+  Wasser zusätzlich als Getränk-Ereignis, Training per Sprache als erledigt abhaken.
+- **Weiter offen:** Medikament ändern, Termine ändern, Einstellungen wie Vorlesen/Notfallmodus, Routine per Sprache
+  „abhaken“ (wird gestartet, nicht abgehakt).
   KI-Teil nur mit Unit-Tests geprüft (keine KI-Attrappe im Harness); Übergaben (Routine-Start, Siri-Adresse) mit e2e.
 
 ### Wunschbild „Assistent statt Werkzeugkasten“ (Nutzerin, 06.10., gesammelt, noch nicht beauftragt)

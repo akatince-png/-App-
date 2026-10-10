@@ -95,6 +95,14 @@ export function befehlBereinigen(data) {
     const minuten = zahl(data.minuten, 1, 600);
     return minuten ? { art: aktion, minuten } : { art: "keine" };
   }
+  if (aktion === "essen" || aktion === "einnahme") {
+    const text = typeof data.name === "string" ? data.name.trim().slice(0, 300) : "";
+    return text ? { art: aktion, name: text } : { art: "keine" };
+  }
+  if (aktion === "nickerchen") {
+    const minuten = zahl(data.minuten, 5, 240);
+    return minuten ? { art: aktion, minuten } : { art: "keine" };
+  }
   if (aktion === "starten") {
     if (!START_ZIELE.includes(data.ziel)) return { art: "keine" };
     const name = typeof data.name === "string" && data.name.trim() ? data.name.trim() : null;

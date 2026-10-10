@@ -95,3 +95,14 @@ describe("aendern", () => {
     expect(befehlBereinigen({ art: "aendern", typ: "konto", name: "x", menge: "1" })).toEqual({ art: "keine" });
   });
 });
+
+describe("essen, einnahme, nickerchen", () => {
+  it("essen und einnahme brauchen einen Text", () => {
+    expect(befehlBereinigen({ art: "essen", name: " zwei Eier " })).toEqual({ art: "essen", name: "zwei Eier" });
+    expect(befehlBereinigen({ art: "einnahme", name: "" })).toEqual({ art: "keine" });
+  });
+  it("nickerchen 5–240 Minuten", () => {
+    expect(befehlBereinigen({ art: "nickerchen", minuten: 20 })).toEqual({ art: "nickerchen", minuten: 20 });
+    expect(befehlBereinigen({ art: "nickerchen", minuten: 2 })).toEqual({ art: "keine" });
+  });
+});

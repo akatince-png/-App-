@@ -16,6 +16,9 @@ import { ATEM_BIBLIOTHEK, ATEM_START_KEY } from "../utils/atemBibliothek";
 import { trainingAusPlan } from "../utils/trainingAusPlan";
 import { routineStartMerken } from "../utils/routineStart";
 import { workflowStartMerken } from "../utils/workflowStart";
+import { essenBerechnen } from "./essenBerechnen";
+import { summe as essenSumme } from "../utils/essenRechner";
+import { nickerchenBeginn } from "../utils/ereignisse";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -115,6 +118,15 @@ export function useUniversellerCoach() {
     const tag = toLocalISODate(new Date());
     const zeit = item.originalUhrzeit ?? item.uhrzeit;
     if (item.bundleIds) return appData.confirmAlleTageszeit?.(tag, item.uhrzeit, item.bundleIds);
+    if (item.kategorie === "training") {
+      // Geplantes Training als erledigt eintragen (10.10.).
+      const r = item.raw?.virtuell
+        ? await appData.trainingHinzufuegen?.(trainingAusPlan(item.raw, { erledigt: true }))
+        : await appData.trainingErledigtSetzen?.(item.raw?.id, true);
+      if (r && r.ok === false) return false;
+      aenderungVermerken({ kategorie: "training", itemName: item.name, aktion: "erledigt", detail: verspaetungText(zeit) || "" });
+      return true;
+    }
     if (!["supplement", "hormon", "mahlzeit", "gewohnheit"].includes(item.kategorie)) return false;
     if (item.raw?.name) aenderungVermerken({ kategorie: item.kategorie, itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.logZeit ?? zeit) || "" });
     if (item.kategorie === "supplement") return appData.toggleSupplementErledigt?.(tag, item.raw.id, zeit);
@@ -283,6 +295,8 @@ export function useUniversellerCoach() {
       case "wasser": {
         const r = await appData.hydrationHinzufuegen?.(befehl.ml);
         if (r && r.ok === false) throw new Error(r.error);
+        // Wie im Schnellmenü zusätzlich mit Uhrzeit als Ereignis (Kalender).
+        appData.spontanSpeichern?.({ art: "getraenk", mengeMl: befehl.ml, name: "Wasser" });
         aenderungVermerken({ kategorie: "hydration", itemName: "Wasser", aktion: "eingetragen", detail: `+${befehl.ml} ml` });
         return { bereich: "wasser", daten: { ml: befehl.ml } };
       }
@@ -335,6 +349,30 @@ export function useUniversellerCoach() {
       }
       case "aendern":
         return aendern(befehl, liste);
+      case "essen": {
+        // Wie „Was hast du gegessen?“ (EssenEingabe), nur ohne Bestätigen.
+        const { posten } = await essenBerechnen(befehl.name);
+        const s = essenSumme(posten);
+        const jetzt = new Date();
+        const uhrzeit = `${String(jetzt.getHours()).padStart(2, "0")}:${String(jetzt.getMinutes()).padStart(2, "0")}`;
+        const r = await appData.essenSpeichern?.({ datum: toLocalISODate(jetzt), uhrzeit, text: befehl.name, posten, summe: s });
+        if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+        aenderungVermerken({ kategorie: "mahlzeit", itemName: befehl.name.slice(0, 60), aktion: "erledigt", detail: `≈ ${Math.round(s.kcal)} kcal · ${Math.round(s.eiweiss)} g Eiweiß` });
+        return { bereich: "gegessen", daten: { text: befehl.name, kcal: Math.round(s.kcal), eiweiss: Math.round(s.eiweiss) } };
+      }
+      case "einnahme": {
+        // Wie „Einnahme“ im Schnellmenü (SchnellKreis.jsx).
+        const r = await appData.spontanSpeichern?.({ art: "einnahme", name: befehl.name });
+        if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+        aenderungVermerken({ kategorie: "supplement", itemName: befehl.name, aktion: "erledigt", detail: "zusätzlich, außerhalb des Plans" });
+        return { bereich: "einnahme", daten: { name: befehl.name } };
+      }
+      case "nickerchen": {
+        const r = await appData.spontanSpeichern?.({ art: "nickerchen", dauerMin: befehl.minuten, uhrzeit: nickerchenBeginn(new Date(), befehl.minuten) });
+        if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+        aenderungVermerken({ kategorie: "schlaf", itemName: "Nickerchen", aktion: "erledigt", detail: `${befehl.minuten} Min.` });
+        return { bereich: "nickerchen", daten: { minuten: befehl.minuten } };
+      }
       case "startzeit": {
         const bisher = routineEinstellungen?.[befehl.routine];
         const r = await appData.routineZeitrahmenSetzen?.(befehl.routine, befehl.uhrzeit, bisher?.endZeit || plusEineStunde(befehl.uhrzeit));

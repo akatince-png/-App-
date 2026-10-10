@@ -70,6 +70,12 @@ export default function AkaErgebnis({ ergebnis }) {
       return <Box>✓ Abgehakt: {daten.join(", ")}</Box>;
     case "geaendert":
       return <Box>✏️ „{daten.name}“ geändert: {daten.was.join(" · ")}</Box>;
+    case "gegessen":
+      return <Box>🍽️ „{daten.text}“ eingetragen · ≈ {daten.kcal} kcal · {daten.eiweiss} g Eiweiß</Box>;
+    case "einnahme":
+      return <Box>⚡ {daten.name} festgehalten (zusätzlich zum Plan).</Box>;
+    case "nickerchen":
+      return <Box>😴 Nickerchen {daten.minuten} Min. festgehalten.</Box>;
     case "gestartet":
       return <Box>▶ {daten.name} gestartet.</Box>;
     case "verschoben":
