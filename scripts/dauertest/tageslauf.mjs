@@ -114,6 +114,9 @@ const context = await browser.newContext({
 // Morgen-/Abendfenster (seit 06.10.) würden die Startseite für den Bot
 // verdecken – der Lauf klickt die Routinen selbst durch.
 await context.addInitScript(() => {
+  // Seit 08.10. öffnet die App beim Neuladen Home statt der Adresse; der Bot
+  // springt aber per Adresse (wie der e2e-Harness).
+  window.__akaAdresseStart = true;
   try {
     localStorage.setItem("aka-morgenfenster-aus", "1");
     localStorage.setItem("aka-abendfenster-aus", "1");
