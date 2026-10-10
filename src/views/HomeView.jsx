@@ -8,6 +8,8 @@ import { TAGESRAETSEL_ZIEL, tagesraetselHeute } from "../utils/tagesraetsel";
 import { questFortschritt, werHatHeute } from "../data/gruppenprotokoll";
 import { widgetsFuerZeitraum, gesamtVerfuegbar, kalendertageSeit } from "../utils/zeitraumFortschritt";
 import { accentSoft, cardBorder, fontHeading, hexZuRgba, textMain, textMuted } from "../ui/theme";
+import { trainingAusPlan } from "../utils/trainingAusPlan";
+import { ROUTINE_START_EREIGNIS, routineStartHolen } from "../utils/routineStart";
 import { buildDayItems, KATEGORIE_META, ROUTINE_META, TAGESRAETSEL_META, ATEM_META } from "../utils/dayItems";
 import { ATEM_START_KEY, atemZeitenHeute, uebungFuerKey } from "../utils/atemBibliothek";
 import { aktuelleSession } from "../data/useAtemSessions";
@@ -222,6 +224,16 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   // Stoppuhr muss man sofort finden“): "morgen"/"abend" öffnet den
   // geführten Ablauf wie im Tagesplan, null = normale Startseite.
   const [ablaufRoutine, setAblaufRoutine] = useState(null);
+  // Aka: „Starte meine Morgenroutine“ (10.10., utils/routineStart.js).
+  useEffect(() => {
+    const holen = () => {
+      const art = routineStartHolen();
+      if (art) setAblaufRoutine(art);
+    };
+    holen();
+    window.addEventListener(ROUTINE_START_EREIGNIS, holen);
+    return () => window.removeEventListener(ROUTINE_START_EREIGNIS, holen);
+  }, []);
   // Morgenfenster (06.10.): nach Starten/„Heute nicht“ für diese Sitzung zu.
   const [morgenFensterZu, setMorgenFensterZu] = useState(false);
   // „Als Nächstes“ (06.10.): nach „Aufgeladen“ und nach einer beendeten
@@ -257,24 +269,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       return;
     }
     setTrainingFehler(null);
-    const arten = item.raw.arten || [];
-    const art = arten.find((a) => a === "Krafttraining") || arten.find((a) => a === "Bodyweight") || arten[0] || "";
-    const warmupCooldown = [
-      item.raw.warmup?.aktiv ? `Warm-up${item.raw.warmup.dauerMin ? ` ${item.raw.warmup.dauerMin} Min.` : ""}` : "",
-      item.raw.cooldown?.aktiv ? `Cool-down${item.raw.cooldown.dauerMin ? ` ${item.raw.cooldown.dauerMin} Min.` : ""}` : "",
-    ].filter(Boolean);
-    const result = await trainingHinzufuegen({
-      datum: item.raw.datum,
-      uhrzeit: item.raw.uhrzeit || "",
-      art,
-      name: item.raw.name || "",
-      uebungen: item.raw.uebungenListe || [],
-      bemerkungen: warmupCooldown.join(" · "),
-      erledigt: false,
-      intervallArbeitSek: item.raw.intervallArbeitSek || "",
-      intervallPauseSek: item.raw.intervallPauseSek || "",
-      runden: item.raw.runden || "",
-    });
+    const result = await trainingHinzufuegen(trainingAusPlan(item.raw));
     if (result?.ok) {
       onOpenTraining(result.eintrag.id);
       return;

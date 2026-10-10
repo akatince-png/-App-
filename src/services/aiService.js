@@ -215,7 +215,7 @@ export const AIService = {
    *
    * @param {{verlauf: Array<{rolle: "nutzer"|"coach", text: string}>, coachName?: string, ansichten: string, offenePunkte: string[]}} params
    */
-  async befehlErkennen({ verlauf, coachName, ansichten, offenePunkte }) {
+  async befehlErkennen({ verlauf, coachName, ansichten, offenePunkte, aufgaben = [], eintraege = [], workflows = [], atemuebungen = [], heute }) {
     const system = mitPersona(
       coachName,
       [
@@ -225,9 +225,14 @@ export const AIService = {
         "wasser: die Person hat getrunken und will es eintragen ('ich hab 200 ml Wasser getrunken', 'ein Glas Wasser' = 250 ml, 'eine Flasche' = 500 ml). ml = Menge.",
         "tageslicht: die Person war draußen im Tageslicht ('war 20 Minuten draußen'). minuten = Dauer.",
         `abhaken: die Person hat etwas aus ihrem heutigen Plan erledigt/genommen/gegessen/gemacht ('hab Vitamin D genommen', 'Frühstück gegessen', 'Spaziergang erledigt'). namen = die passenden Punkte, wörtlich aus dieser Liste offener Punkte: ${offenePunkte.length ? offenePunkte.join(" | ") : "(keine offenen Punkte)"}. Passt nichts aus der Liste, art 'keine'.`,
+        `Erledigte Aufgaben aus der Aufgaben-Matrix zählen auch als abhaken (namen wörtlich aus: ${aufgaben.length ? aufgaben.join(" | ") : "(keine)"}).`,
+        `starten: die Person will JETZT etwas beginnen. ziel: morgenroutine, abendroutine, training, workflow (name = einer aus: ${workflows.length ? workflows.join(" | ") : "(keine)"}; ohne Namen null), atem (name = eine aus: ${atemuebungen.join(" | ")}; ohne Namen null), fokus (gemeinsam fokussieren; minuten = Dauer, name = woran), tagesraetsel.`,
+        `loeschen: die Person will etwas Bestehendes löschen/entfernen ('lösch die Gewohnheit Lesen'). typ + name wörtlich aus dieser Liste ('typ: name'): ${eintraege.length ? eintraege.join(" | ") : "(keine)"}. Passt nichts, 'keine'.`,
+        `verschieben: eine Aufgabe aus der Matrix auf einen anderen Tag legen ('schieb Steuer auf Freitag'). name wörtlich aus der Aufgaben-Liste oben, datum YYYY-MM-DD (heute ist ${heute}).`,
+        "startzeit: die Startzeit der Morgen- oder Abendroutine ändern ('meine Morgenroutine soll um 6:30 starten'). routine: morgen|abend, uhrzeit HH:MM.",
         "Fragen ('wie viel hab ich heute getrunken?'), Pläne für später ('ich will morgen …') oder Wünsche, etwas Neues einzurichten, sind KEIN Befehl → 'keine'.",
         "Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Fließtext davor oder danach.",
-        'Format exakt: { "art": "oeffnen"|"wasser"|"tageslicht"|"abhaken"|"keine", "ansicht": string|null, "ml": number|null, "minuten": number|null, "namen": string[] }',
+        'Format exakt: { "art": "oeffnen"|"wasser"|"tageslicht"|"abhaken"|"starten"|"loeschen"|"verschieben"|"startzeit"|"keine", "ansicht": string|null, "ml": number|null, "minuten": number|null, "namen": string[], "ziel": string|null, "name": string|null, "typ": string|null, "datum": string|null, "routine": string|null, "uhrzeit": string|null }',
       ].join(" ")
     );
     const messages = verlauf.slice(-4).map((e) => ({ role: e.rolle === "coach" ? "assistant" : "user", content: e.text }));

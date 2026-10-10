@@ -11,7 +11,11 @@ import { timerHinweisPlanen } from "./nativeTimerHinweis";
 import { setzeAbendDunkelErlaubt } from "../ui/theme";
 import { buildDayItems } from "../utils/dayItems";
 import { verspaetungText } from "../utils/dates";
-import { ansichtenListe, ansichtName, befehlBereinigen, punktFinden } from "../utils/akaBefehl";
+import { LOESCH_TYP_NAME, ansichtenListe, ansichtName, befehlBereinigen, nameFinden, punktFinden } from "../utils/akaBefehl";
+import { ATEM_BIBLIOTHEK, ATEM_START_KEY } from "../utils/atemBibliothek";
+import { trainingAusPlan } from "../utils/trainingAusPlan";
+import { routineStartMerken } from "../utils/routineStart";
+import { workflowStartMerken } from "../utils/workflowStart";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -119,13 +123,114 @@ export function useUniversellerCoach() {
     return appData.toggleGewohnheitErledigt?.(tag, item.raw.id);
   };
 
+  const plusEineStunde = (hhmm) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    return `${String((h + 1) % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
+
+  // „Starte …“ (10.10.): Routine, Training, Workflow, Atemübung, Fokus, Rätsel.
+  const starten = async (befehl, punkte, { onOpenView, onOpenTraining }) => {
+    const oeffne = (v) => onOpenView?.(v);
+    switch (befehl.ziel) {
+      case "morgenroutine":
+      case "abendroutine": {
+        const art = befehl.ziel === "morgenroutine" ? "morgen" : "abend";
+        routineStartMerken(art);
+        oeffne("home");
+        return { bereich: "gestartet", daten: { name: art === "morgen" ? "Morgenroutine" : "Abendroutine" }, schliessen: true };
+      }
+      case "training": {
+        const geplant = punkte.find((i) => i.kategorie === "training" && !i.done && (!befehl.name || nameFinden([i], befehl.name)));
+        if (geplant && onOpenTraining) {
+          let id = geplant.raw?.id;
+          if (geplant.raw?.virtuell) {
+            const r = await appData.trainingHinzufuegen?.(trainingAusPlan(geplant.raw));
+            if (!r?.ok) throw new Error(r?.error || "Training konnte nicht gestartet werden.");
+            id = r.eintrag.id;
+          }
+          onOpenTraining(id);
+          return { bereich: "gestartet", daten: { name: geplant.name }, schliessen: true };
+        }
+        oeffne("training");
+        return { bereich: "oeffnen", daten: { name: "Training" }, schliessen: true };
+      }
+      case "workflow": {
+        const preset = befehl.name ? nameFinden(appData.workflowPresets, befehl.name) : null;
+        workflowStartMerken(preset ? preset.id : "spontan");
+        oeffne("workflow");
+        return { bereich: "gestartet", daten: { name: preset?.name || "Workflow" }, schliessen: true };
+      }
+      case "atem": {
+        const u = (befehl.name && nameFinden(ATEM_BIBLIOTHEK, befehl.name)) || null;
+        try {
+          if (u) sessionStorage.setItem(ATEM_START_KEY, u.key);
+        } catch {
+          // ohne Speicher öffnet sich nur die Atem-Seite
+        }
+        oeffne("atemuebungen");
+        return { bereich: "gestartet", daten: { name: u?.name || "Atemübungen" }, schliessen: true };
+      }
+      case "fokus": {
+        const r = await fokusStarten({ ziel: befehl.name || "", dauerMinuten: befehl.minuten || 25 });
+        if (!r?.ok) throw new Error(r?.error || "Starten fehlgeschlagen.");
+        timerHinweisPlanen({ symbol: "🎯", name: r.sitzung.ziel || "Gemeinsam fokussieren", ende: sitzungEnde(r.sitzung) });
+        oeffne("fokus");
+        return { bereich: "gestartet", daten: { name: "Gemeinsam fokussieren" }, schliessen: true };
+      }
+      case "tagesraetsel":
+        oeffne("tagesraetsel");
+        return { bereich: "oeffnen", daten: { name: "Tagesrätsel" }, schliessen: true };
+      default:
+        return null;
+    }
+  };
+
   // Direkte Befehle aus der letzten Nachricht (10.10., „Aka wie Siri“):
   // läuft parallel zur Chat-Antwort, gibt null zurück, wenn es keiner ist.
-  const handleBefehl = async (verlauf, { onOpenView } = {}) => {
+  // Löschbare Einträge je Typ (für Klassifikator und Ausführung).
+  const loeschbar = () => ({
+    gewohnheit: (appData.gewohnheiten || []).map((g) => ({ id: g.id, name: g.name })),
+    supplement: (appData.supplemente || []).map((x) => ({ id: x.id, name: x.name })),
+    medikament: (appData.hormone || []).map((h) => ({ id: typeof h === "string" ? h : h?.name, name: typeof h === "string" ? h : h?.name })),
+    aufgabe: offeneAufgaben().map((a) => ({ id: a.id, name: a.titel })),
+    termin: (alltagEintraege || []).map((e) => ({ id: e.id, name: e.titel })),
+    workflow: (appData.workflowPresets || []).map((w) => ({ id: w.id, name: w.name })),
+    // Kernprogramm-Schritte (🔒) bleiben geschützt.
+    routineschritt: (appData.routineSchritte || []).filter((x) => !x.kernKey).map((x) => ({ id: x.id, name: x.name })),
+  });
+  const offeneAufgaben = () => (appData.matrixAufgaben || []).filter((a) => !a.erledigtAm);
+
+  const loeschenAusfuehren = async (typ, id) => {
+    const f = {
+      gewohnheit: appData.gewohnheitEntfernen,
+      supplement: appData.supplementEntfernen,
+      medikament: appData.hormonEntfernen,
+      aufgabe: appData.matrixAufgabeLoeschen,
+      termin: appData.alltagLoeschen,
+      workflow: appData.workflowPresetLoeschen,
+      routineschritt: appData.routineSchrittEntfernen,
+    }[typ];
+    if (!f) throw new Error("Das kann ich noch nicht löschen.");
+    const r = await f(id);
+    if (r && r.ok === false) throw new Error(r.error || "Löschen fehlgeschlagen.");
+  };
+
+  const handleBefehl = async (verlauf, { onOpenView, onOpenTraining } = {}) => {
     const punkte = heutePunkte();
     const offen = punkte.filter((i) => !i.done).map((i) => i.name).slice(0, 40);
+    const liste = loeschbar();
     const befehl = befehlBereinigen(
-      await AIService.befehlErkennen({ verlauf, coachName: getCoachName(), ansichten: ansichtenListe(), offenePunkte: offen })
+      await AIService.befehlErkennen({
+        verlauf,
+        coachName: getCoachName(),
+        ansichten: ansichtenListe(),
+        offenePunkte: offen,
+        aufgaben: offeneAufgaben().map((a) => a.titel).slice(0, 40),
+        eintraege: Object.entries(liste).flatMap(([typ, l]) => l.map((x) => `${typ}: ${x.name}`)).slice(0, 120),
+        workflows: (appData.workflowPresets || []).map((w) => w.name),
+        atemuebungen: ATEM_BIBLIOTHEK.map((u) => u.name),
+        heute: toLocalISODate(new Date()),
+      })
     );
     switch (befehl.art) {
       case "oeffnen":
@@ -148,9 +253,49 @@ export function useUniversellerCoach() {
         const erledigt = [];
         for (const name of befehl.namen) {
           const item = punktFinden(punkte, name);
-          if (item && !erledigt.includes(item.name) && (await punktAbhaken(item)) !== false) erledigt.push(item.name);
+          if (item && !erledigt.includes(item.name) && (await punktAbhaken(item)) !== false) {
+            erledigt.push(item.name);
+            continue;
+          }
+          // Sonst: Aufgabe aus der Matrix als erledigt markieren.
+          const a = nameFinden(offeneAufgaben(), name, "titel");
+          if (a && !erledigt.includes(a.titel)) {
+            const r = await appData.matrixAufgabeSpeichern?.({ ...a, erledigtAm: toLocalISODate(new Date()) });
+            if (r?.ok) erledigt.push(a.titel);
+          }
         }
         return erledigt.length ? { bereich: "abgehakt", daten: erledigt } : null;
+      }
+      case "starten":
+        return starten(befehl, punkte, { onOpenView, onOpenTraining });
+      case "loeschen": {
+        const ziel = nameFinden(liste[befehl.typ], befehl.name);
+        if (!ziel) return null;
+        // Nie ohne Rückfrage löschen: AkaErgebnis zeigt „Ja, löschen“.
+        return {
+          bereich: "loeschen-frage",
+          daten: { typName: LOESCH_TYP_NAME[befehl.typ], name: ziel.name },
+          bestaetigen: async () => {
+            await loeschenAusfuehren(befehl.typ, ziel.id);
+            // Nur Bereiche, die der Tagesverlauf kennt (Aufgaben/Termine nicht).
+            const kategorie = { gewohnheit: "gewohnheit", supplement: "supplement", medikament: "hormon", workflow: "workflow" }[befehl.typ];
+            if (kategorie) aenderungVermerken({ kategorie, itemName: ziel.name, aktion: "entfernt", detail: "per Aka" });
+          },
+        };
+      }
+      case "verschieben": {
+        const a = nameFinden(offeneAufgaben(), befehl.name, "titel");
+        if (!a) return null;
+        const r = await appData.matrixAufgabeSpeichern?.({ ...a, geplantAm: befehl.datum });
+        if (!r?.ok) throw new Error(r?.error || "Verschieben fehlgeschlagen.");
+        return { bereich: "verschoben", daten: { titel: a.titel, datum: befehl.datum } };
+      }
+      case "startzeit": {
+        const bisher = routineEinstellungen?.[befehl.routine];
+        const r = await appData.routineZeitrahmenSetzen?.(befehl.routine, befehl.uhrzeit, bisher?.endZeit || plusEineStunde(befehl.uhrzeit));
+        if (r && r.ok === false) throw new Error(r.error);
+        aenderungVermerken({ kategorie: befehl.routine === "morgen" ? "morgenroutine" : "abendroutine", itemName: "Startzeit", aktion: "geändert", detail: `${befehl.uhrzeit} Uhr (per Aka)` });
+        return { bereich: "startzeit", daten: befehl };
       }
       default:
         return null;

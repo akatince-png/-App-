@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { accentSoft } from "./theme";
 import { tagebuchZeile } from "../utils/tagebuch";
 
@@ -6,6 +6,53 @@ import { tagebuchZeile } from "../utils/tagebuch";
 // alle Bereiche, passend zu dem, was useUniversellerCoach() zurückgibt.
 function Box({ children }) {
   return <div style={{ padding: 12, borderRadius: 12, background: accentSoft, fontSize: 12.5, lineHeight: 1.6 }}>{children}</div>;
+}
+
+const datumKurz = (d) => {
+  const [j, m, t] = String(d).split("-");
+  return t ? `${t}.${m}.${j}` : d;
+};
+
+// Löschen nie ohne Rückfrage (10.10.): Aka findet den Eintrag, gelöscht wird
+// erst nach „Ja, löschen“.
+function LoeschenFrage({ ergebnis }) {
+  const [stand, setStand] = useState("frage");
+  const [fehler, setFehler] = useState(null);
+  const { typName, name } = ergebnis.daten;
+  if (stand === "fertig") return <Box>🗑 {typName} „{name}“ gelöscht.</Box>;
+  if (stand === "nein") return <Box>Okay, „{name}“ bleibt.</Box>;
+  const knopf = { border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" };
+  return (
+    <Box>
+      <div data-aka-loeschen-frage>
+        Soll ich {typName} „{name}“ wirklich löschen?
+      </div>
+      {fehler && <div style={{ color: "#C0392B", marginTop: 4 }}>{fehler}</div>}
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <button
+          type="button"
+          disabled={stand === "laeuft"}
+          onClick={async () => {
+            setStand("laeuft");
+            setFehler(null);
+            try {
+              await ergebnis.bestaetigen();
+              setStand("fertig");
+            } catch (e) {
+              setFehler(e.message);
+              setStand("frage");
+            }
+          }}
+          style={{ ...knopf, background: "#C0392B", color: "#fff" }}
+        >
+          Ja, löschen
+        </button>
+        <button type="button" onClick={() => setStand("nein")} style={{ ...knopf, background: "transparent", color: "inherit", border: "1px solid currentColor" }}>
+          Nein
+        </button>
+      </div>
+    </Box>
+  );
 }
 
 export default function AkaErgebnis({ ergebnis }) {
@@ -21,6 +68,14 @@ export default function AkaErgebnis({ ergebnis }) {
       return <Box>☀️ {daten.minuten} Min. Tageslicht eingetragen.</Box>;
     case "abgehakt":
       return <Box>✓ Abgehakt: {daten.join(", ")}</Box>;
+    case "gestartet":
+      return <Box>▶ {daten.name} gestartet.</Box>;
+    case "verschoben":
+      return <Box>📅 „{daten.titel}“ liegt jetzt auf dem {datumKurz(daten.datum)}.</Box>;
+    case "startzeit":
+      return <Box>⏰ {daten.routine === "morgen" ? "Morgenroutine" : "Abendroutine"} startet jetzt um {daten.uhrzeit} Uhr.</Box>;
+    case "loeschen-frage":
+      return <LoeschenFrage ergebnis={ergebnis} />;
     case "gewohnheit":
       return (
         <Box>

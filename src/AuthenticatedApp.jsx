@@ -604,7 +604,15 @@ export default function AuthenticatedApp() {
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
             {/* Aka — ein Assistent, zentral für jede Seite (ui/Aka.jsx). Das
                 Onboarding ("form") hat seine eigene geführte KI-Einrichtung. */}
-            {view !== "form" && view !== "tour" && <Aka view={view} ohneOrb={mitLeiste && !istDesktop} onOpenView={setView} />}
+            {view !== "form" && view !== "tour" && <Aka
+                view={view}
+                ohneOrb={mitLeiste && !istDesktop}
+                onOpenView={setView}
+                onOpenTraining={(id) => {
+                  setOffenesTrainingId(id);
+                  setView("training");
+                }}
+              />}
           </ErrorBoundary>
         </div>
       </div>
