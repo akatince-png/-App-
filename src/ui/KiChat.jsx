@@ -33,7 +33,7 @@ const SPOTIFY_PLAY_MARKER = /\[\[SPOTIFY_PLAY:([^\]]+)\]\]/;
 // die Formularfelder, gespeichert wird erst beim anschließenden "Weiter"
 // bzw. manuellen Speichern-Knopf (live beobachtet: Schlafqualität, 13.08.).
 const NICHTS_AUTOMATISCH_GESPEICHERT_HINWEIS =
-  ' Wichtig: Du trägst während des Gesprächs nichts automatisch ein und speicherst nichts im Hintergrund — behaupte das auch nicht. Die Person muss danach noch bewusst auf "Übernehmen" tippen, damit die Felder ausgefüllt werden, und je nach Bereich anschließend noch speichern.';
+  ' Wichtig: Du trägst während des Gesprächs nichts automatisch ein und speicherst nichts im Hintergrund — behaupte das auch nicht. Fordere die Person nicht auf, auf einen bestimmten Knopf (z. B. "Übernehmen" oder "Speichern") zu tippen – die App blendet den passenden Knopf selbst ein, sobald es etwas einzutragen gibt. Sag höchstens: "Wenn alles passt, kann ich es eintragen."';
 
 // Wiederverwendbare Chat-Oberfläche für den ADHS Coach — echtes Hin-und-Her
 // statt nur "einmal fragen, einmal Antwort" (siehe AIService.coachChat()).
@@ -260,7 +260,8 @@ export default function KiChat({
       // gewünschten Playlist-Namen auslesen und die Wiedergabe anstoßen —
       // die Person sieht/hört nie den technischen Marker selbst.
       const markerTreffer = rohAntwort.match(SPOTIFY_PLAY_MARKER);
-      const antwort = rohAntwort.replace(SPOTIFY_PLAY_MARKER, "").trim();
+      // Fettdruck-Sternchen (**…**) zeigt der Chat sonst roh an (10.10.).
+      const antwort = rohAntwort.replace(SPOTIFY_PLAY_MARKER, "").replace(/\*\*(.+?)\*\*/gs, "$1").trim();
       if (markerTreffer) {
         const name = markerTreffer[1].trim();
         const playlist = spotifyPlaylists?.find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
