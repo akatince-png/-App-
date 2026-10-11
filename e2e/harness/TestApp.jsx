@@ -198,6 +198,10 @@ function leseOverridesAusUrl() {
       { id: "bd1", datum: heute, uhrzeit: "07:30", systolisch: 120, diastolisch: 80, puls: 68, notiz: "morgens" },
       { id: "bd2", datum: heute, uhrzeit: "20:00", systolisch: 130, diastolisch: 84, puls: null, notiz: "" },
     ];
+    overrides.blutzuckerMessungen = [
+      { id: "bz1", datum: heute, uhrzeit: "07:15", wertMgdl: 92, zeitpunkt: "nuechtern", notiz: "" },
+      { id: "bz2", datum: heute, uhrzeit: "13:30", wertMgdl: 138, zeitpunkt: "nach_essen", notiz: "nach Pasta" },
+    ];
   }
   // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;

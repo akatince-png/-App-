@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { accentSoft } from "./theme";
 import { tagebuchZeile } from "../utils/tagebuch";
+import { zeitpunktLabel } from "../utils/blutzucker";
 
 // Bestätigung nach "Übernehmen" in Aka (ui/Aka.jsx) — eine Anzeige für
 // alle Bereiche, passend zu dem, was useUniversellerCoach() zurückgibt.
@@ -79,6 +80,12 @@ export default function AkaErgebnis({ ergebnis }) {
         <Box>
           ❤️ Blutdruck {daten.systolisch}/{daten.diastolisch}
           {daten.puls ? ` · Puls ${daten.puls}` : ""} eingetragen.
+        </Box>
+      );
+    case "blutzucker":
+      return (
+        <Box>
+          🩸 Blutzucker {daten.wertMgdl} mg/dl ({zeitpunktLabel(daten.zeitpunkt)}) eingetragen.
         </Box>
       );
     case "nickerchen":

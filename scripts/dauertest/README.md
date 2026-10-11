@@ -84,6 +84,7 @@ AKA_TEST_PW='<pw>' node scripts/dauertest/adminlauf.mjs
    - trägt 2–4 Gläser Wasser ein;
    - löst das Tagesrätsel (5 Fragen), nimmt Quests an und trägt Fortschritt ein (ab 3 → abschließen);
    - besucht die Team-Seite, schickt Ruhigen eine Motivationsnachricht, öffnet die Team-Liga;
+   - trägt seit 11.10. je eine Blutzucker- und Blutdruckmessung ein (Archiv → „Blutzucker & Blutdruck“, Foto 06b);
    - tippt große Belohnungsfenster weg (bleiben absichtlich stehen);
    - öffnet alle Bereiche und sammelt Abstürze, Konsolenfehler und fehlgeschlagene Anfragen.
 4. **Fotos ansehen** (mindestens Home vorher/nachher, Tagesplan, Erfolge, Verlauf, Wochenübersicht) und auf UX-Auffälligkeiten achten.

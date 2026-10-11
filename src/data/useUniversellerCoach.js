@@ -19,6 +19,7 @@ import { workflowStartMerken } from "../utils/workflowStart";
 import { essenBerechnen } from "./essenBerechnen";
 import { summe as essenSumme } from "../utils/essenRechner";
 import { nickerchenBeginn } from "../utils/ereignisse";
+import { zeitpunktVorschlag } from "../utils/blutzucker";
 
 // Beschriftung des "Übernehmen"-Knopfs im universellen Coach — je nachdem,
 // welchen Bereich AIService.bereichErkennen() im laufenden Gespräch erkannt
@@ -381,6 +382,12 @@ export function useUniversellerCoach() {
         const r = await appData.blutdruckSpeichern?.({ systolisch: befehl.systolisch, diastolisch: befehl.diastolisch, puls: befehl.puls });
         if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
         return { bereich: "blutdruck", daten: befehl };
+      }
+      case "blutzucker": {
+        const zeitpunkt = befehl.zeitpunkt || zeitpunktVorschlag();
+        const r = await appData.blutzuckerSpeichern?.({ wertMgdl: befehl.wertMgdl, zeitpunkt });
+        if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+        return { bereich: "blutzucker", daten: { wertMgdl: befehl.wertMgdl, zeitpunkt } };
       }
       case "nickerchen": {
         const r = await appData.spontanSpeichern?.({ art: "nickerchen", dauerMin: befehl.minuten, uhrzeit: nickerchenBeginn(new Date(), befehl.minuten) });

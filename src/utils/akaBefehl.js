@@ -106,6 +106,15 @@ export function befehlBereinigen(data) {
     if (!sys || !dia || sys <= dia) return { art: "keine" };
     return { art: aktion, systolisch: sys, diastolisch: dia, puls: zahl(data.puls, 25, 250) };
   }
+  if (aktion === "blutzucker") {
+    const zp = ["nuechtern", "vor_essen", "nach_essen", "abends", "zwischendurch"];
+    const roh = Number(String(data.wert ?? "").replace(",", "."));
+    if (!Number.isFinite(roh) || roh <= 0) return { art: "keine" };
+    // Werte unter 35 sind mmol/l (z. B. 5,4) → in mg/dl umrechnen.
+    const mgdl = Math.round(roh < 35 ? roh * 18.016 : roh);
+    if (mgdl < 20 || mgdl > 600) return { art: "keine" };
+    return { art: aktion, wertMgdl: mgdl, zeitpunkt: zp.includes(data.zeitpunkt) ? data.zeitpunkt : null };
+  }
   if (aktion === "nickerchen") {
     const minuten = zahl(data.minuten, 5, 240);
     return minuten ? { art: aktion, minuten } : { art: "keine" };

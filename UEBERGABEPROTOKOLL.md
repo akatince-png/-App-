@@ -28,7 +28,15 @@ RLS eigene Zeilen + Admin) per Connector eingespielt. `data/useBlutdruck.js` (le
 (Prüfung, Ø 7/30 Tage, ohne Bewertung der Werte – Lifestyle-App), `BlutzuckerView.jsx` mit Karte „Blutdruck eintragen“
 (oberer/unterer Wert, Puls optional, Tag, Uhrzeit, Notiz; Liste mit Löschen nach Rückfrage). Reiter heißt jetzt
 „Blutzucker & Blutdruck“ (Archiv). Aka: „Blutdruck 125 zu 82, Puls 70“ trägt direkt ein. Vorschau: `docs/blutdruck-vorschau.png`.
-Offen: Verlauf als Grafik, Coach-Übersicht, Smartwatch/Health-Anbindung (native App).
+**Blutzucker am selben Tag** (Nutzerin: „morgens, abends und zwischendurch messen und eintragen“): Migration
+`0128_blutzucker.sql` (`blutzucker_messungen`, Werte in mg/dl, Zeitpunkt nuechtern/vor_essen/nach_essen/abends/zwischendurch),
+`data/useBlutzucker.js`, `utils/blutzucker.js` (mmol/l-Umrechnung ×18,016, Zeitpunkt-Vorschlag nach Uhrzeit, Ø 7 Tage,
+Ø nüchtern, Ø 30 Tage). Platzhalter ersetzt durch Karte „Blutzucker eintragen“ (Einheit mg/dl ↔ mmol/l, merkt sich die
+Wahl im Gerät). Aka: „Blutzucker nüchtern 95“ / „Zucker 5,4“. RLS live geprüft (eigene Zeilen ja, fremde nein, Admin alle).
+Testkonten: je 14 Tage fiktive Werte (Blutdruck morgens/abends, Blutzucker nüchtern/nach dem Essen/abends) per SQL;
+der Tageslauf trägt seit 11.10. täglich je eine Messung über die Oberfläche ein (Schritt 4c, Foto 06b).
+Vorschau: `docs/blutzucker-vorschau.png`.
+Offen: Verlauf als Grafik, Coach-Übersicht, Smartwatch/CGM/Health-Anbindung (native App).
 
 ### Aka wie Siri: Befehle, Eintragen ohne Knopf (10.10., live)
 Nutzerin: „Aka soll auf alles Zugriff haben … wie Siri … ‚öffne den Spielebereich‘, ‚200 ml Wasser getrunken‘ …

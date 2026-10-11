@@ -412,6 +412,38 @@ try {
     }
   }
 
+  // 4c) Blutzucker + Blutdruck (seit 11.10., Nutzerin: „bei den Teams fiktiv
+  //     mit einbauen, überprüf, ob es funktioniert“): je eine Messung über die
+  //     echte Oberfläche eintragen und prüfen, dass die Bestätigung erscheint.
+  if (!PAUSENTAG) {
+    await geheZu("blutzucker");
+    const h = [...EMAIL].reduce((a, c) => a + c.charCodeAt(0), 0) + tagIndex * 7;
+    const bzFeld = page.getByLabel("Blutzuckerwert");
+    if (await bzFeld.isVisible().catch(() => false)) {
+      const wert = 88 + (h % 40);
+      await bzFeld.fill(String(wert));
+      await page.getByRole("group", { name: "Zeitpunkt der Messung" }).getByRole("button", { name: "Abends" }).click();
+      await page.getByRole("button", { name: "Blutzucker eintragen" }).click();
+      const ok = await page.locator("[data-blutzucker-gespeichert]").waitFor({ timeout: 8000 }).then(() => true).catch(() => false);
+      if (ok) schritt(`Blutzucker: ${wert} mg/dl (abends) eingetragen`);
+      else befund("Blutzucker: Eintragen ohne Bestätigung");
+    } else befund("Blutzucker: Eingabefeld nicht gefunden");
+    const sysFeld = page.getByLabel("Oberer Wert (systolisch)");
+    if (await sysFeld.isVisible().catch(() => false)) {
+      const sys = 116 + (h % 18);
+      const dia = 74 + (h % 11);
+      const puls = 60 + (h % 20);
+      await sysFeld.fill(String(sys));
+      await page.getByLabel("Unterer Wert (diastolisch)").fill(String(dia));
+      await page.getByLabel("Puls").fill(String(puls));
+      await page.getByRole("button", { name: "Blutdruck eintragen" }).click();
+      const ok = await page.locator("[data-blutdruck-gespeichert]").waitFor({ timeout: 8000 }).then(() => true).catch(() => false);
+      if (ok) schritt(`Blutdruck: ${sys}/${dia}, Puls ${puls} eingetragen`);
+      else befund("Blutdruck: Eintragen ohne Bestätigung");
+    } else befund("Blutdruck: Eingabefeld nicht gefunden");
+    await foto("06b-blutwerte");
+  }
+
   // 5) Tagesrätsel (seit 24.09.): 5 Fragen, jeweils die erste Antwort —
   //    mal richtig, mal falsch. Am Pausentag nicht.
   if (!PAUSENTAG) {

@@ -6,6 +6,7 @@ import { useFokusGemeinsam } from "../../data/useFokusGemeinsam";
 import { useAlltag } from "../../data/useAlltag";
 import { useMatrixAufgaben } from "../../data/useMatrixAufgaben";
 import { useBlutdruck } from "../../data/useBlutdruck";
+import { useBlutzucker } from "../../data/useBlutzucker";
 import { useSpontanEintraege } from "../../data/useSpontanEintraege";
 import { useAenderungsprotokoll } from "../../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../../data/useWochenprotokollMeilenstein";
@@ -78,6 +79,7 @@ export function PlatformDataProvider({ children }) {
   const spontanData = useSpontanEintraege(userId);
   // Blutdruck-Protokoll (11.10., Migration 0127).
   const blutdruckData = useBlutdruck(userId);
+  const blutzuckerData = useBlutzucker(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -99,6 +101,7 @@ export function PlatformDataProvider({ children }) {
     ...matrixData,
     ...spontanData,
     ...blutdruckData,
+    ...blutzuckerData,
     ...coacheeNachrichtenData,
     ...coachWissenData,
     ...workflowData,
