@@ -190,6 +190,15 @@ function leseOverridesAusUrl() {
     ];
     overrides.essenEintraege = [...(overrides.essenEintraege || []), { id: "es9", datum: heute, uhrzeit: "10:15", text: "Apfel und Handvoll Nüsse", posten: [], werte: { kcal: 260 } }];
   }
+  // ?blutdruck=1: zwei Blutdruckmessungen (11.10.).
+  if (params.get("blutdruck") === "1") {
+    const h = new Date();
+    const heute = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-${String(h.getDate()).padStart(2, "0")}`;
+    overrides.blutdruckMessungen = [
+      { id: "bd1", datum: heute, uhrzeit: "07:30", systolisch: 120, diastolisch: 80, puls: 68, notiz: "morgens" },
+      { id: "bd2", datum: heute, uhrzeit: "20:00", systolisch: 130, diastolisch: 84, puls: null, notiz: "" },
+    ];
+  }
   // ?teilt=1: eigene Punkte in der Rangliste geteilt (Standard: aus, 24.09.).
   if (params.get("teilt") === "1") overrides.ranglisteSichtbar = true;
   // ?gruppe=1 (mit ?team=1): ein laufendes Gruppenprotokoll (24.09.).

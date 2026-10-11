@@ -18,7 +18,7 @@ const TABS = [
   { id: "erfolge", label: "Erfolge" },
   { id: "tagebuch", label: "Tagebuch" },
   { id: "profil", label: "Profil" },
-  { id: "blutzucker", label: "Blutzucker" },
+  { id: "blutzucker", label: "Blutzucker & Blutdruck" },
   { id: "community", label: "Community" },
 ];
 

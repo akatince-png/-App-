@@ -40,6 +40,7 @@ export const ANSICHTEN = [
   { id: "statistik", name: "Statistik" },
   { id: "erfolge", name: "Erfolge (Fortschritt, Punkte)" },
   { id: "profil", name: "Profil (Einstellungen)" },
+  { id: "blutzucker", name: "Blutzucker & Blutdruck (Blutdruck-Protokoll)" },
   { id: "community", name: "Community" },
   { id: "lexikon", name: "Lexikon" },
   { id: "admin", name: "Admin-Dashboard" },
@@ -98,6 +99,12 @@ export function befehlBereinigen(data) {
   if (aktion === "essen" || aktion === "einnahme") {
     const text = typeof data.name === "string" ? data.name.trim().slice(0, 300) : "";
     return text ? { art: aktion, name: text } : { art: "keine" };
+  }
+  if (aktion === "blutdruck") {
+    const sys = zahl(data.systolisch, 50, 260);
+    const dia = zahl(data.diastolisch, 30, 180);
+    if (!sys || !dia || sys <= dia) return { art: "keine" };
+    return { art: aktion, systolisch: sys, diastolisch: dia, puls: zahl(data.puls, 25, 250) };
   }
   if (aktion === "nickerchen") {
     const minuten = zahl(data.minuten, 5, 240);

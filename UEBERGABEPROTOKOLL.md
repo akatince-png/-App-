@@ -21,6 +21,15 @@ daran erinnern, aber nicht von selbst starten.
 5. **Neuerungen nach dem Start gesammelt:** höchstens einmal pro Woche, mit kurzer Notiz „Was ist neu“ in der
    App. Ständig wandernde Knöpfe sind für Menschen mit ADHS anstrengend.
 
+### Blutdruck-Protokoll (11.10., live)
+Nutzerin: „im Blutzuckerbereich auch ein Blutdruckprotokoll … reicht, wenn ich das eintragen kann (Messgerät zu Hause);
+Smartwatch-Anbindung später, nach dem Live-Start.“ Migration `0127_blutdruck.sql` (Tabelle `blutdruck_messungen`,
+RLS eigene Zeilen + Admin) per Connector eingespielt. `data/useBlutdruck.js` (letzte 365 Tage), `utils/blutdruck.js`
+(Prüfung, Ø 7/30 Tage, ohne Bewertung der Werte – Lifestyle-App), `BlutzuckerView.jsx` mit Karte „Blutdruck eintragen“
+(oberer/unterer Wert, Puls optional, Tag, Uhrzeit, Notiz; Liste mit Löschen nach Rückfrage). Reiter heißt jetzt
+„Blutzucker & Blutdruck“ (Archiv). Aka: „Blutdruck 125 zu 82, Puls 70“ trägt direkt ein. Vorschau: `docs/blutdruck-vorschau.png`.
+Offen: Verlauf als Grafik, Coach-Übersicht, Smartwatch/Health-Anbindung (native App).
+
 ### Aka wie Siri: Befehle, Eintragen ohne Knopf (10.10., live)
 Nutzerin: „Aka soll auf alles Zugriff haben … wie Siri … ‚öffne den Spielebereich‘, ‚200 ml Wasser getrunken‘ …
 nicht jedes Mal das Problem, dass er keinen Zugriff hat.“ Anlass: Aka sagte „tippe auf Übernehmen“, der Knopf kam

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { sammleKonsolenfehler } from "./helpers.js";
 
 // Alle 8 Reiter im Archiv-Hub (PlanView.jsx) durchklicken.
-const ARCHIV_LABELS = ["Protokolle", "Archiv", "Statistik", "Erfolge", "Tagebuch", "Profil", "Blutzucker", "Community"];
+const ARCHIV_LABELS = ["Protokolle", "Archiv", "Statistik", "Erfolge", "Tagebuch", "Profil", "Blutzucker & Blutdruck", "Community"];
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/e2e/harness/index.html");

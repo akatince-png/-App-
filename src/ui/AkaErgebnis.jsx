@@ -74,6 +74,13 @@ export default function AkaErgebnis({ ergebnis }) {
       return <Box>🍽️ „{daten.text}“ eingetragen · ≈ {daten.kcal} kcal · {daten.eiweiss} g Eiweiß</Box>;
     case "einnahme":
       return <Box>⚡ {daten.name} festgehalten (zusätzlich zum Plan).</Box>;
+    case "blutdruck":
+      return (
+        <Box>
+          ❤️ Blutdruck {daten.systolisch}/{daten.diastolisch}
+          {daten.puls ? ` · Puls ${daten.puls}` : ""} eingetragen.
+        </Box>
+      );
     case "nickerchen":
       return <Box>😴 Nickerchen {daten.minuten} Min. festgehalten.</Box>;
     case "gestartet":

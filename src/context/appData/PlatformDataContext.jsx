@@ -5,6 +5,7 @@ import { usePushNotifications } from "../../data/usePushNotifications";
 import { useFokusGemeinsam } from "../../data/useFokusGemeinsam";
 import { useAlltag } from "../../data/useAlltag";
 import { useMatrixAufgaben } from "../../data/useMatrixAufgaben";
+import { useBlutdruck } from "../../data/useBlutdruck";
 import { useSpontanEintraege } from "../../data/useSpontanEintraege";
 import { useAenderungsprotokoll } from "../../data/useAenderungsprotokoll";
 import { useWochenprotokollMeilenstein } from "../../data/useWochenprotokollMeilenstein";
@@ -75,6 +76,8 @@ export function PlatformDataProvider({ children }) {
   const matrixData = useMatrixAufgaben(userId);
   // Spontan-Einträge aus dem Kreis-Schnellmenü (30.09., Migration 0122).
   const spontanData = useSpontanEintraege(userId);
+  // Blutdruck-Protokoll (11.10., Migration 0127).
+  const blutdruckData = useBlutdruck(userId);
 
   const value = useShallowStableValue({
     ...pushData,
@@ -95,6 +98,7 @@ export function PlatformDataProvider({ children }) {
     ...alltagData,
     ...matrixData,
     ...spontanData,
+    ...blutdruckData,
     ...coacheeNachrichtenData,
     ...coachWissenData,
     ...workflowData,

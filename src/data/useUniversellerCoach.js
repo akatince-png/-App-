@@ -377,6 +377,11 @@ export function useUniversellerCoach() {
         aenderungVermerken({ kategorie: "supplement", itemName: befehl.name, aktion: "erledigt", detail: "zusätzlich, außerhalb des Plans" });
         return { bereich: "einnahme", daten: { name: befehl.name } };
       }
+      case "blutdruck": {
+        const r = await appData.blutdruckSpeichern?.({ systolisch: befehl.systolisch, diastolisch: befehl.diastolisch, puls: befehl.puls });
+        if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
+        return { bereich: "blutdruck", daten: befehl };
+      }
       case "nickerchen": {
         const r = await appData.spontanSpeichern?.({ art: "nickerchen", dauerMin: befehl.minuten, uhrzeit: nickerchenBeginn(new Date(), befehl.minuten) });
         if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
