@@ -383,6 +383,24 @@ export function useUniversellerCoach() {
         if (!r?.ok) throw new Error(r?.error || "Speichern fehlgeschlagen.");
         return { bereich: "blutdruck", daten: befehl };
       }
+      case "aufgaben": {
+        // Diktierte To-dos (11.10.): direkt in die Aufgaben-Matrix; mit Tag
+        // erscheinen sie an dem Tag im Tagesplan.
+        const angelegt = [];
+        for (const a of befehl.aufgaben) {
+          const r = await appData.matrixAufgabeSpeichern?.({
+            titel: a.titel,
+            art: a.uhrzeit ? "termin" : "aufgabe",
+            wichtig: true,
+            frist: null,
+            geplantAm: a.datum,
+            uhrzeit: a.uhrzeit,
+          });
+          if (r?.ok) angelegt.push(r.aufgabe);
+        }
+        if (!angelegt.length) throw new Error("Die Aufgaben konnten nicht gespeichert werden.");
+        return { bereich: "matrix", daten: angelegt };
+      }
       case "blutzucker": {
         const zeitpunkt = befehl.zeitpunkt || zeitpunktVorschlag();
         const r = await appData.blutzuckerSpeichern?.({ wertMgdl: befehl.wertMgdl, zeitpunkt });

@@ -106,6 +106,14 @@ export function befehlBereinigen(data) {
     if (!sys || !dia || sys <= dia) return { art: "keine" };
     return { art: aktion, systolisch: sys, diastolisch: dia, puls: zahl(data.puls, 25, 250) };
   }
+  if (aktion === "aufgaben") {
+    // Diktierte To-dos (11.10.): jede Sache einzeln, mit Tag/Uhrzeit, wenn genannt.
+    const liste = (Array.isArray(data.aufgaben) ? data.aufgaben : [])
+      .filter((a) => a && typeof a.titel === "string" && a.titel.trim())
+      .slice(0, 15)
+      .map((a) => ({ titel: a.titel.trim().slice(0, 120), datum: datumOk(a.datum) ? a.datum : null, uhrzeit: zeitOk(a.uhrzeit) ? a.uhrzeit : null }));
+    return liste.length ? { art: aktion, aufgaben: liste } : { art: "keine" };
+  }
   if (aktion === "blutzucker") {
     const zp = ["nuechtern", "vor_essen", "nach_essen", "abends", "zwischendurch"];
     const roh = Number(String(data.wert ?? "").replace(",", "."));

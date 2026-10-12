@@ -46,11 +46,24 @@ const BASE_URL = import.meta.env.VITE_AI_BASE_URL || STANDARD_BASE_URLS[PROVIDER
  *   Provider anders umgesetzt, siehe die einzelnen anfrage*-Funktionen).
  * @returns {Promise<string>}
  */
+// Zeitlimit (11.10., Nutzerin: Aka blieb bei „überlegt …“ stehen): Antwortet
+// der Dienst nicht, bricht die Anzeige nach dieser Zeit mit einer Meldung ab,
+// statt endlos zu warten.
+export const ZEITLIMIT_MS = 60000;
+export const ZEITLIMIT_STREAM_MS = 120000;
+export function mitZeitlimit(promise, ms) {
+  let t;
+  const limit = new Promise((_, reject) => {
+    t = setTimeout(() => reject(new Error("Aka antwortet gerade nicht – bitte gleich noch einmal versuchen.")), ms);
+  });
+  return Promise.race([promise, limit]).finally(() => clearTimeout(t));
+}
+
 export async function sendeAnfrage({ system, messages, json = false }) {
   kiPruefen();
-  if (PROVIDER === "ollama") return anfrageOllama({ system, messages, json });
-  if (PROVIDER === "groq") return anfrageOpenAiKompatibel({ system, messages, json });
-  if (PROVIDER === "gemini") return anfrageGemini({ system, messages, json });
+  if (PROVIDER === "ollama") return mitZeitlimit(anfrageOllama({ system, messages, json }), ZEITLIMIT_MS);
+  if (PROVIDER === "groq") return mitZeitlimit(anfrageOpenAiKompatibel({ system, messages, json }), ZEITLIMIT_MS);
+  if (PROVIDER === "gemini") return mitZeitlimit(anfrageGemini({ system, messages, json }), ZEITLIMIT_MS);
   throw new Error(`Unbekannter VITE_AI_PROVIDER: "${PROVIDER}". Erlaubt: ollama, groq, gemini.`);
 }
 
@@ -68,8 +81,8 @@ export async function sendeAnfrage({ system, messages, json = false }) {
  */
 export async function sendeAnfrageStreamend({ system, messages, onTeilantwort }) {
   kiPruefen();
-  if (PROVIDER === "ollama") return anfrageOllamaStreamend({ system, messages, onTeilantwort });
-  if (PROVIDER === "gemini") return anfrageGeminiStreamend({ system, messages, onTeilantwort });
+  if (PROVIDER === "ollama") return mitZeitlimit(anfrageOllamaStreamend({ system, messages, onTeilantwort }), ZEITLIMIT_STREAM_MS);
+  if (PROVIDER === "gemini") return mitZeitlimit(anfrageGeminiStreamend({ system, messages, onTeilantwort }), ZEITLIMIT_STREAM_MS);
   const antwort = await sendeAnfrage({ system, messages, json: false });
   onTeilantwort(antwort);
   return antwort;

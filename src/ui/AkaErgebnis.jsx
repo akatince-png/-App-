@@ -170,7 +170,19 @@ export default function AkaErgebnis({ ergebnis }) {
         </Box>
       );
     case "matrix":
-      return <Box>🗂️ In der Aufgaben-Matrix: {daten.map((a) => `${a.titel}${a.uhrzeit ? ` (${a.uhrzeit})` : ""}`).join(" · ")}. Die Farbe ergibt sich von selbst, Rotes steht heute im Tagesplan.</Box>;
+      return (
+        <Box>
+          ✓ {daten.length} Aufgabe{daten.length === 1 ? "" : "n"} eingetragen:
+          {daten.map((a) => (
+            <div key={a.id || a.titel}>
+              • {a.titel}
+              {a.geplantAm ? ` – ${datumKurz(a.geplantAm)}` : ""}
+              {a.uhrzeit ? `, ${a.uhrzeit} Uhr` : ""}
+            </div>
+          ))}
+          <div style={{ marginTop: 4, opacity: 0.8 }}>Mit Tag stehen sie an dem Tag im Tagesplan, alle zusammen in der Aufgaben-Matrix.</div>
+        </Box>
+      );
     case "alltag":
       return (
         <Box>

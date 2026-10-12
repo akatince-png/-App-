@@ -21,6 +21,18 @@ daran erinnern, aber nicht von selbst starten.
 5. **Neuerungen nach dem Start gesammelt:** höchstens einmal pro Woche, mit kurzer Notiz „Was ist neu“ in der
    App. Ständig wandernde Knöpfe sind für Menschen mit ADHS anstrengend.
 
+### Aka trägt diktierte To-do-Listen direkt ein + Zeitlimit (12.10., live)
+Anlass (Nutzerin 11.10.: „komplett überfordert … To-dos für morgen … nicht gebacken gekriegt“): Zwei Gespräche (10.10.
+abends, 11.10. 16:42) – nichts wurde gespeichert. Ursachen: (1) To-do-Listen liefen nur über die Gesprächs-Prüfung
+(`bereichErkennen` + `jetzt`), die nicht griff; (2) der Coach-Teil sortierte/kürzte/belehrte („riesige Liste,
+krankgeschrieben …“) statt einzutragen; (3) KI-Anfragen hatten kein Zeitlimit → „Aka überlegt …“ ohne Ende.
+Lösung: neuer direkter Befehl `aufgaben` in `befehlErkennen` (jede Sache einzeln, Tag gilt für die ganze Liste,
+„Tagesplan/heute“ → heute, „übernimm die Punkte“ holt sie aus dem Verlauf; letzte 6 Nachrichten) → sofort in die
+Aufgaben-Matrix mit `geplantAm` (erscheint am Tag im Tagesplan). GRUNDPROMPT: bei diktierten Aufgaben nicht umsortieren/
+priorisieren/belehren. `mitZeitlimit` in `aiProviders.js` (60 s, Stream 120 s) mit verständlicher Meldung.
+Live mit der echten KI geprüft (Testkonto, nichts gespeichert): ihr Satz vom 11.10. → 13 Einzelpunkte; „für morgen“-Liste
+→ 3 Punkte mit Datum; „Ja, übernimm die Punkte“ → 3 Punkte aus dem Verlauf; Frage → keine Aktion.
+
 ### Blutdruck-Protokoll (11.10., live)
 Nutzerin: „im Blutzuckerbereich auch ein Blutdruckprotokoll … reicht, wenn ich das eintragen kann (Messgerät zu Hause);
 Smartwatch-Anbindung später, nach dem Live-Start.“ Migration `0127_blutdruck.sql` (Tabelle `blutdruck_messungen`,

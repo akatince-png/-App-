@@ -114,3 +114,29 @@ describe("Termin ändern", () => {
     expect(befehlBereinigen({ art: "aendern", typ: "termin", name: "Zahnarzt", datum: "morgen" })).toEqual({ art: "keine" });
   });
 });
+
+describe("aufgaben (diktierte To-dos)", () => {
+  it("übernimmt jede Sache einzeln mit Tag und Uhrzeit", () => {
+    expect(
+      befehlBereinigen({
+        art: "aufgaben",
+        aufgaben: [
+          { titel: " Webseite von Papa fertig machen ", datum: "2026-10-12", uhrzeit: null },
+          { titel: "Bei der Arbeit Bescheid geben", datum: "2026-10-12", uhrzeit: "09:00" },
+          { titel: "", datum: null },
+          { titel: "Fotos auf Festplatte", datum: "morgen", uhrzeit: "spät" },
+        ],
+      })
+    ).toEqual({
+      art: "aufgaben",
+      aufgaben: [
+        { titel: "Webseite von Papa fertig machen", datum: "2026-10-12", uhrzeit: null },
+        { titel: "Bei der Arbeit Bescheid geben", datum: "2026-10-12", uhrzeit: "09:00" },
+        { titel: "Fotos auf Festplatte", datum: null, uhrzeit: null },
+      ],
+    });
+  });
+  it("leere Liste → keine", () => {
+    expect(befehlBereinigen({ art: "aufgaben", aufgaben: [] })).toEqual({ art: "keine" });
+  });
+});
