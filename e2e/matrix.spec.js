@@ -143,3 +143,12 @@ test("Matrix: Deadline wird immer abgefragt", async ({ page }) => {
   await dazu.click();
   expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ titel: "Steuer abgeben", frist: "2026-11-15" });
 });
+
+// ⭐ MIT (24.10.): in der Matrix-Karte markieren, höchstens drei am Tag.
+test("Matrix: Aufgabe als MIT markieren", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/matrix");
+  await page.getByRole("button", { name: /Steuerberater fragen/ }).click();
+  await page.locator("[data-matrix-mit]").click();
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m4", mitAm: "2026-09-30" });
+});

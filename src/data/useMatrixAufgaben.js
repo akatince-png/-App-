@@ -20,6 +20,8 @@ const zuAufgabe = (r) => ({
   uhrzeit: r.uhrzeit ? String(r.uhrzeit).slice(0, 5) : "",
   // Erinnerung (24.10., Migration 0132): null | "zeit" | "15" | "60" | "morgens".
   erinnerung: r.erinnerung || null,
+  // ⭐ MIT für diesen Tag (24.10., Migration 0133).
+  mitAm: r.mit_am || null,
 });
 const zuZeile = (userId, a) => ({
   user_id: userId,
@@ -36,6 +38,7 @@ const zuZeile = (userId, a) => ({
   art: a.art || "aufgabe",
   uhrzeit: a.uhrzeit || null,
   erinnerung: a.erinnerung || null,
+  mit_am: a.mitAm || null,
 });
 
 export function useMatrixAufgaben(userId) {

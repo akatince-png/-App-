@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { quadrantVon, nachQuadrant, alltagAusMatrix, fristText, warum } from "./matrix";
+import { quadrantVon, nachQuadrant, alltagAusMatrix, fristText, warum, MIT_GRENZE, mitUmschalten } from "./matrix";
 
 const heute = new Date(2026, 8, 30, 10, 0); // Mi 30.09.2026
 
@@ -79,5 +79,21 @@ describe("Aufgaben-Matrix", () => {
     expect(fristText("2026-10-01", heute)).toBe("morgen");
     expect(fristText("2026-09-28", heute)).toBe("überfällig");
     expect(fristText("2026-10-09", heute)).toBe("9.10.");
+  });
+});
+
+describe("MIT – Most Important Task (24.10.)", () => {
+  const tag = "2026-10-26";
+  it("höchstens drei offene MITs je Tag, Antippen schaltet um", () => {
+    const liste = [1, 2, 3].map((i) => ({ id: `m${i}`, titel: `A${i}`, mitAm: tag }));
+    expect(MIT_GRENZE).toBe(3);
+    expect(mitUmschalten({ id: "neu", titel: "B" }, tag, liste)).toEqual({ voll: true });
+    expect(mitUmschalten(liste[0], tag, liste).aufgabe.mitAm).toBeNull();
+    const mitErledigt = [{ ...liste[0], erledigtAm: "x" }, liste[1], liste[2]];
+    expect(mitUmschalten({ id: "neu" }, tag, mitErledigt).aufgabe.mitAm).toBe(tag);
+  });
+  it("MITs stehen im Alltag ganz oben", () => {
+    const l = alltagAusMatrix([{ id: "a", wichtig: true, geplantAm: tag, uhrzeit: "09:00" }, { id: "mit", wichtig: false, mitAm: tag }], new Date(2026, 9, 26), { nurGeplant: true });
+    expect(l.map((a) => a.id)).toEqual(["mit", "a"]);
   });
 });

@@ -3,7 +3,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useTagesBloecke } from "../data/useTagesBloecke";
 import { addDays, toLocalISODate } from "../utils/dates";
 import { hhmm } from "../utils/kalender";
-import { ART, FRISTEN, QUADRANT, QUADRANTEN, fristAus, nachQuadrant } from "../utils/matrix";
+import { ART, FRISTEN, MIT_GRENZE, QUADRANT, QUADRANTEN, fristAus, mitsAm, nachQuadrant } from "../utils/matrix";
 import { bg, textMain, textMuted } from "../ui/theme";
 
 // Tafel fürs Tablet (24.10., Nutzerin: „wenn ich morgens an mein Tablet gehe
@@ -39,8 +39,9 @@ export default function TafelView({ onHome }) {
   const quadranten = nachQuadrant(matrixAufgaben, jetzt);
   const offen = QUADRANTEN.reduce((n, q) => n + quadranten[q.id].length, 0);
   const heuteBloecke = bloeckeFuer(heute);
-  const ohneUhrzeit = matrixAufgaben.filter((a) => a.geplantAm === heuteStr && !a.uhrzeit && !a.erledigtAm);
+  const ohneUhrzeit = matrixAufgaben.filter((a) => a.geplantAm === heuteStr && !a.uhrzeit && !a.erledigtAm && a.mitAm !== heuteStr);
   const woche = Array.from({ length: 6 }, (_, i) => addDays(heute, i + 1));
+  const mits = mitsAm(matrixAufgaben, heuteStr);
 
   const matrixHaken = (a) => matrixAufgabeSpeichern?.({ ...a, erledigtAm: a.erledigtAm ? null : new Date().toISOString() });
   const blockHaken = (b) => {
@@ -115,6 +116,7 @@ export default function TafelView({ onHome }) {
                     <div key={a.id} style={zeile}>
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>
+                          {a.mitAm === heuteStr ? "⭐ " : ""}
                           {a.art && a.art !== "aufgabe" ? `${ART[a.art]?.icon || ""} ` : ""}
                           {a.titel}
                         </span>
@@ -137,6 +139,22 @@ export default function TafelView({ onHome }) {
             <div style={kopf}>
               <span>📅 Heute</span>
               <a href="#/tagesplan" style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mp-accent-dark-text)", textDecoration: "none" }}>Tagesplan ›</a>
+            </div>
+            {/* ⭐ MITs ganz oben (24.10.) */}
+            <div data-tafel-mits style={{ borderRadius: 14, padding: "8px 10px", marginBottom: 8, background: "color-mix(in srgb, #FFF1CC var(--mp-flaeche), var(--mp-karte))" }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "color-mix(in srgb, #8A5A00 var(--mp-schrift), var(--mp-schrift-hell))" }}>⭐ DEINE MITs HEUTE · {mits.length}/{MIT_GRENZE}</div>
+              {!mits.length && <div style={{ fontSize: 12.5, color: textMuted, padding: "4px 0" }}>Noch keine gewählt – in der Matrix ☆ antippen oder abends im Tagesabschluss.</div>}
+              {mits.map((a) => (
+                <div key={a.id} style={{ ...zeile, borderTop: "none", padding: "5px 0" }}>
+                  <span style={{ flex: 1, fontSize: 14.5, fontWeight: 800, textDecoration: a.erledigtAm ? "line-through" : "none", opacity: a.erledigtAm ? 0.55 : 1 }}>
+                    ⭐ {a.titel}
+                    {a.uhrzeit ? <span style={{ fontSize: 12, fontWeight: 600, color: textMuted }}> · {a.uhrzeit}</span> : null}
+                  </span>
+                  <button type="button" aria-label={`${a.titel} ${a.erledigtAm ? "wieder öffnen" : "erledigt"}`} onClick={() => matrixHaken(a)} style={haken(!!a.erledigtAm, "#E0A21B")}>
+                    ✓
+                  </button>
+                </div>
+              ))}
             </div>
             {!heuteBloecke.length && !ohneUhrzeit.length && <div style={{ fontSize: 13, color: textMuted, padding: "8px 0" }}>Für heute ist nichts geplant.</div>}
             {heuteBloecke.map((b) => {

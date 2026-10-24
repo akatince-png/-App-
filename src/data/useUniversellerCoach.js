@@ -396,6 +396,7 @@ export function useUniversellerCoach() {
             geplantAm: a.datum,
             uhrzeit: a.uhrzeit,
             erinnerung: a.erinnerung && a.datum ? a.erinnerung : null,
+            mitAm: a.mit ? a.datum || toLocalISODate(new Date()) : null,
           });
           if (r?.ok) angelegt.push(r.aufgabe);
         }

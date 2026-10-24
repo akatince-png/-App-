@@ -5,7 +5,7 @@ import Umschalter, { ChipReihe } from "../ui/Umschalter";
 import { useAppData } from "../context/AppDataContext";
 import { useFokusTimer } from "../data/useFokusTimer";
 import { addDays, toLocalISODate } from "../utils/dates";
-import { ARTEN, ART, FRISTEN, QUADRANTEN, QUADRANT, JETZT_GRENZE, VERSCHOBEN_HINWEIS, fristAus, fristText, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
+import { ARTEN, ART, FRISTEN, QUADRANTEN, QUADRANT, JETZT_GRENZE, MIT_GRENZE, VERSCHOBEN_HINWEIS, fristAus, fristText, mitUmschalten, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
 
 // Aufgaben-Matrix im Workflow-Bereich (30.09., Vorschau, Nutzerin: „eine
 // Matrix für die vielen Aufgaben eines Projekts … das soll sich im Alltag
@@ -220,6 +220,7 @@ export default function MatrixView({ onHome }) {
                 aria-expanded={offen === a.id}
                 style={{ display: "block", width: "100%", textAlign: "left", border: offen === a.id ? `2px solid ${q.farbe}` : "none", borderRadius: 10, padding: "6px 8px", marginBottom: 5, background: "var(--mp-karte)", color: "var(--mp-text)", fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,.06)" }}
               >
+                {a.mitAm && a.mitAm >= toLocalISODate(new Date()) ? "⭐ " : ""}
                 {a.art && a.art !== "aufgabe" ? `${ART[a.art]?.icon || ""} ` : ""}
                 {a.titel}
                 <span style={{ display: "block", fontSize: 10.5, fontWeight: 500, color: "var(--mp-text-muted)" }}>
@@ -242,6 +243,16 @@ function AufgabeKarte({ a, onSpeichern, onLoeschen, onFokus, onSchliessen }) {
   const q = quadrantVon(a);
   const heute = toLocalISODate(new Date());
   const aendern = (teil) => onSpeichern({ ...a, naechsterSchritt: schritt, dauerMin: dauer ? Number(dauer) : null, ...teil });
+  // ⭐ MIT (24.10.): für den eingeplanten Tag, sonst für heute; höchstens 3.
+  const { matrixAufgaben = [] } = useAppData();
+  const mitTag = a.geplantAm && a.geplantAm >= heute ? a.geplantAm : heute;
+  const [mitHinweis, setMitHinweis] = useState(null);
+  const mitKnopf = () => {
+    const r = mitUmschalten(a, mitTag, matrixAufgaben);
+    if (r.voll) return setMitHinweis(`Für ${fristText(mitTag)} sind schon ${MIT_GRENZE} MITs gewählt – erst eine abwählen.`);
+    setMitHinweis(null);
+    aendern({ mitAm: r.aufgabe.mitAm });
+  };
   return (
     <Card style={{ marginTop: 12, borderLeft: `5px solid ${QUADRANT[q].farbe}` }}>
       <div data-matrix-karte style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
@@ -300,6 +311,13 @@ function AufgabeKarte({ a, onSpeichern, onLoeschen, onFokus, onSchliessen }) {
           </div>
         </>
       )}
+      <div style={{ marginTop: 12 }}>
+        <button type="button" data-matrix-mit aria-pressed={a.mitAm === mitTag} onClick={mitKnopf} style={{ ...kleinKnopf(a.mitAm === mitTag, "#E0A21B"), padding: "8px 14px" }}>
+          {a.mitAm === mitTag ? "⭐" : "☆"} MIT für {fristText(mitTag)}
+        </button>
+        <span style={{ fontSize: 11.5, color: "var(--mp-text-muted)", marginLeft: 8 }}>Most Important Task – höchstens {MIT_GRENZE} am Tag</span>
+        {mitHinweis && <div role="status" style={{ fontSize: 12, marginTop: 4, color: "color-mix(in srgb, #8A5A00 var(--mp-schrift), var(--mp-schrift-hell))" }}>{mitHinweis}</div>}
+      </div>
       <div style={{ fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", margin: "12px 0 4px" }}>IN DEN TAGESPLAN</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         <button type="button" aria-pressed={a.geplantAm === heute} onClick={() => aendern({ geplantAm: heute })} style={kleinKnopf(a.geplantAm === heute)}>
