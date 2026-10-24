@@ -32,7 +32,10 @@ export function hashFuerView(view: string): string {
 // Homebildschirm“). Die zuletzt offene Seite steht noch in der Adresse
 // (#/tagebuch …) und wurde bisher beim Neuladen wieder geöffnet. Jetzt nur
 // noch bei echten Sprung-Links aus Erinnerungen (Push), nie beim Neuladen.
-export const SPRUNG_ZIELE = ["kalender", "coach-chat", "admin-uebersicht"];
+// Abkürzungen (24.10., Nutzerin: Tagesplan und To-dos „als Widget“): echte
+// Widgets gehen als Web-App nicht, daher Sprung-Links für Kurzbefehle-Widget
+// und App-Symbol-Kurzmenü (manifest „shortcuts“).
+export const SPRUNG_ZIELE = ["kalender", "coach-chat", "admin-uebersicht", "tagesplan", "matrix"];
 
 export function anfangsZielErlaubt(view: string | null, navigationsArt?: string): boolean {
   if (!view) return false;

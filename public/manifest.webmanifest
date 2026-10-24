@@ -13,5 +13,11 @@
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Tagesplan", "url": "/#/tagesplan", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "To-dos (Matrix)", "short_name": "To-dos", "url": "/#/matrix", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mein Alltag", "url": "/#/kalender", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Coach-Chat", "url": "/#/coach-chat", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

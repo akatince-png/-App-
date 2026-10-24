@@ -290,6 +290,15 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🔗 Abkürzungen statt Widgets (24.10.2026)
+
+Nutzerin wollte Tagesplan, To-dos (Matrix) usw. als Widget. Echte Widgets gehen als Web-App nicht (iOS/Android:
+nur native Apps, später über App-Hülle + WidgetKit, Roadmap). Stattdessen: `#/tagesplan` und `#/matrix` in
+`SPRUNG_ZIELE` (`utils/routing.ts`) freigegeben (Neuladen landet weiter auf der Startseite), dazu `shortcuts` im
+Manifest (Android: lange auf das App-Symbol drücken). iPhone/iPad: Kurzbefehle-App, „URL öffnen“
+`https://akaapp.vercel.app/#/tagesplan` bzw. `#/matrix`, als Kurzbefehle-Widget auf den Home-Bildschirm. Öffnet in
+Safari (dort einmal anmelden), nicht in der Home-Bildschirm-App.
+
 ## ✅ Erledigte Quests eingeklappt (24.10.2026, Auswertung Testphase)
 
 Nach vier Wochen Dauertest standen in Tagesplan, Gewohnheiten und Mehr bis zu elf erledigte Quests mit je einem
