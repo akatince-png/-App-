@@ -83,6 +83,12 @@ const STIMMUNG = {
     hinweis: null,
     hell: true,
   },
+  // Abendphase (24.10.): ab Sonnenuntergang Dämmerung, noch keine Sterne.
+  abend: {
+    hintergrund: "linear-gradient(165deg, #A8506F 0%, #7A3E78 32%, #45306A 68%, #221C42 100%)",
+    schatten: "0 14px 30px rgba(90, 40, 90, 0.35)",
+    hinweis: "🌆 Die Sonne ist untergegangen – der Abend beginnt. Bald startet deine Abendroutine.",
+  },
   nacht: {
     hintergrund: nachtVerlaufFest,
     schatten: "0 14px 30px rgba(16, 19, 43, 0.35)",
@@ -108,6 +114,16 @@ function Deko({ phase }) {
           />
         ))}
         <span style={{ position: "absolute", right: 16, top: 150, fontSize: 28, filter: "drop-shadow(0 0 10px rgba(255,236,170,0.8))" }}>🌙</span>
+      </div>
+    );
+  }
+  if (phase === "abend") {
+    return (
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", borderRadius: 24 }}>
+        <span style={{ position: "absolute", right: -40, bottom: -60, width: 200, height: 200, borderRadius: 999, background: "radial-gradient(circle, rgba(255,200,120,0.55) 0%, rgba(255,140,90,0.25) 45%, rgba(255,120,80,0) 70%)" }} />
+        {STERNE.slice(0, 3).map(([x, y, r, verz], i) => (
+          <span key={i} className="mp-stern" style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: 99, background: "#fff", opacity: 0.7, animationDelay: `${verz}s` }} />
+        ))}
       </div>
     );
   }

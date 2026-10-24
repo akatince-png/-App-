@@ -10,6 +10,9 @@ import { toLocalISODate } from "./dates";
 // - "morgen": ab 04:00, solange die Morgenroutine heute noch nicht
 //   abgeschlossen ist — längstens bis 12:00 (ohne eingerichtete
 //   Morgenroutine bis 09:00).
+// - "abend" (24.10., Nutzerin: „mit Sonnenuntergang“): ab Sonnenuntergang bis
+//   zum Start der Abendroutine – Dämmerung, die App wird schon dunkel. Nur wenn
+//   `sonnenuntergangMin` übergeben wird (useTagesphase berechnet ihn).
 // - "tag": dazwischen.
 const NACHT_STANDARD = "20:00";
 
@@ -19,7 +22,7 @@ function minuten(hhmm) {
   return Number.isFinite(h) ? h * 60 + (Number.isFinite(m) ? m : 0) : null;
 }
 
-export function tagesphase({ jetzt = new Date(), routineDurchlaeufe = [], routineSchritte = [], routineEinstellungen = {} } = {}) {
+export function tagesphase({ jetzt = new Date(), routineDurchlaeufe = [], routineSchritte = [], routineEinstellungen = {}, sonnenuntergangMin = null } = {}) {
   const heute = toLocalISODate(jetzt);
   const min = jetzt.getHours() * 60 + jetzt.getMinutes();
   const heuteGelaufen = (routine) => routineDurchlaeufe.some((d) => d.routine === routine && d.datum === heute && (d.abgeschlossenUm ?? true));
@@ -30,5 +33,6 @@ export function tagesphase({ jetzt = new Date(), routineDurchlaeufe = [], routin
   const hatMorgenroutine = routineSchritte.some((s) => s.routine === "morgen");
   const morgenEnde = hatMorgenroutine ? 12 * 60 : 9 * 60;
   if (min < morgenEnde && !heuteGelaufen("morgen")) return "morgen";
+  if (sonnenuntergangMin != null && min >= sonnenuntergangMin) return "abend";
   return "tag";
 }

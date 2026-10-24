@@ -21,4 +21,12 @@ describe("tagesphase", () => {
     expect(tagesphase({ jetzt: um(3, 59) })).toBe("nacht");
     expect(tagesphase({ jetzt: um(18), routineDurchlaeufe: [{ routine: "abend", datum: "2026-09-24", abgeschlossenUm: "x" }] })).toBe("nacht");
   });
+  it("Abendphase ab Sonnenuntergang bis zur Abendroutine (24.10.)", () => {
+    const e = { abend: { startZeit: "21:38" } };
+    expect(tagesphase({ jetzt: um(17, 59), routineEinstellungen: e, sonnenuntergangMin: 18 * 60 })).toBe("tag");
+    expect(tagesphase({ jetzt: um(18), routineEinstellungen: e, sonnenuntergangMin: 18 * 60 })).toBe("abend");
+    expect(tagesphase({ jetzt: um(21, 38), routineEinstellungen: e, sonnenuntergangMin: 18 * 60 })).toBe("nacht");
+    // Sommer: Sonne geht erst nach der Abendroutine unter → direkt Nacht.
+    expect(tagesphase({ jetzt: um(21, 40), routineEinstellungen: e, sonnenuntergangMin: 21 * 60 + 50 })).toBe("nacht");
+  });
 });

@@ -15,6 +15,9 @@ describe("Abendmodus", () => {
     expect(document.documentElement.dataset.dunkel).toBeUndefined();
     setzeTagesphasenFarben("morgen");
     expect(document.documentElement.dataset.dunkel).toBeUndefined();
+    // Seit 24.10. auch ab Sonnenuntergang (Abendphase).
+    setzeTagesphasenFarben("abend");
+    expect(document.documentElement.dataset.dunkel).toBe("1");
   });
 
   it("lässt sich abschalten und wieder einschalten", () => {

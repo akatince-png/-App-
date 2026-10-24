@@ -295,7 +295,17 @@ Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer 
 Nutzerin (Variante A): Das Abendfenster kam 30 Min. vor der Startzeit, während die App noch im hellen Tag-Modus war
 (Nacht/Abendmodus beginnt erst mit der Abendroutine) – wirkte widersprüchlich und bot nur „Starten“/„Heute nicht“.
 `utils/morgenFenster.js`: `VORLAUF_MIN.abend = 0`, Fenster und Abendmodus kommen jetzt gleichzeitig. Morgens bleibt
-60 Min. Vorlauf. Offen: Abendphase ab Sonnenuntergang (Vorschlag, noch nicht entschieden).
+60 Min. Vorlauf.
+
+**Abendphase ab Sonnenuntergang (24.10., Nutzerin: ja):** neue Tagesphase „abend“ zwischen Sonnenuntergang (Hannover,
+`utils/sonne.js`, Sonnenstandsgleichung, ±5 Min.) und Start der Abendroutine. Dämmerungsfarben (`TAGESPHASEN_FARBEN.abend`,
+`ABEND_DUNKEL`), App dunkel wie nachts (Schalter „Abends dunkel“ gilt auch hier), Gehirn-Karte mit Dämmerungsverlauf und
+Hinweis „Die Sonne ist untergegangen …“, Leiste unten dunkel. Ab der Abendroutine wie bisher Nacht mit Sternen. Im
+Sommer (Sonne nach 21:38) geht es direkt von Tag zu Nacht. `tagesphase()` kennt „abend“ nur mit `sonnenuntergangMin`
+(von `useTagesphase` berechnet). Tests: `sonne.test.js`, `tagesphase.test.js`, `theme.test.js`.
+
+**Neustart verschoben (Nutzerin 24.10. abends):** Abendroutine ab So 25.10. (`routine_schritte.gueltig_ab`), Morgenroutine,
+Morgen-/Mittags-Supplemente und Kernprogramm (Etappe 1: 26.10.–22.11.) ab Mo 26.10. Milgamma-Kur bis 22.11.
 
 ## 📲 Kalender-Abo (24.10.2026)
 
