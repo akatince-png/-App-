@@ -269,6 +269,10 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Gründungsgeschichte (Nutzerin):** Start 22.07.2026 spontan als Peptid-Tracker; mit den Möglichkeiten (selbst bauen
   mit Claude) kamen alte und neue Ideen dazu. ADHS seit drei Jahren bekannt, Coaching und Menschen helfen war immer ihr
   Bedürfnis; daraus wurde die ADHS-Alltags-App.
+- **Vision AKA-Coach-Programm (Nutzerin, 24.10.):** App und AKA-Konzept später auch anderen ADHS-Coaches anbieten
+  (eigener Coach-Zugang für ihre Coachees, Lizenz je Coachee, Einarbeitung). Technisch nötig: Mandantenfähigkeit –
+  heute sieht die eine Admin-Rolle (`is_admin`) **alle** Konten; künftig Coach-Rolle mit Zuordnung Coachee → Coach und
+  RLS je Coach. Nicht von selbst bauen, nur bei Auftrag; Planung in Notion („AKA-Coach-Programm (Vision)“, Roadmap).
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
