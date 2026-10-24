@@ -23,13 +23,13 @@ Quelle: `_punkte_ereignisse` (dieselbe Zählung wie Rangliste und Team-Statistik
 | 28.09. | 24 | 24 | **48** | 21 | 23 | **44** | 24 | 24 |
 | 05.10. | 71 | 72 | **143** | 74 | 68 | **142** | 65 | 65 |
 | 12.10. | – | – | – | – | – | – | – | – |
-| 19.10. | ZAHL_CLAUDE | ZAHL_MIA | **ZAHL_SONNE** | ZAHL_JONAS | ZAHL_LEA | **ZAHL_MOND** | ZAHL_TEST1 | ZAHL_ADMIN |
+| 19.10. | 61 | 59 | **120** | 64 | 65 | **129** | 58 | 65 |
 
 ## Fairness von Punkten und Liga
 - **Gleich fleißig heißt gleich viele Punkte.** In vollen Wochen liegen alle sechs Konten innerhalb von ±10 %, zum Beispiel in der Woche ab 05.10. zwischen 65 und 74 Punkten. Unterschiede kommen vom Zufall des Fleiß-Werts, nicht von der Rolle.
 - **Wer später startet, verliert keine Punkte.** Mia (Ø 07:48) liegt gleichauf mit Claude (Ø 07:09). Das ist gewollt: Erledigt zählt, nicht pünktlich. Pünktlichkeit zeigt die App über die Zeit-Hinweise, ohne zu bestrafen.
 - **Schichtarbeit wird nicht benachteiligt.** Jonas holt mit Frühschicht-Zeiten genauso viele Punkte wie die anderen.
-- **Team-Liga:** Beide Teams lagen jede Woche nah beieinander (Abstand höchstens 22 Punkte, meist unter 10). Die Führung wechselte: in den ersten Wochen Sonne, in der Woche 19.10. Mond. Kein Team setzt sich dauerhaft ab. In vollen Wochen erreichen beide das Wochenziel (100), in Wochen mit wenigen Lauftagen (28.09.) nicht.
+- **Team-Liga:** Beide Teams lagen jede Woche nah beieinander (Abstand höchstens 22 Punkte, meist unter 10; Endstand der letzten Woche Sonne 120 : Mond 129). Die Führung wechselte: in den ersten Wochen Sonne, in der Woche 19.10. Mond. Kein Team setzt sich dauerhaft ab. In vollen Wochen erreichen beide das Wochenziel (100), in Wochen mit wenigen Lauftagen (28.09.) nicht.
 - **Einzelpersonen** (Test 1, Admin-Test) sammeln genauso Punkte und erscheinen in der Personen-Rangliste. Die Team-Liga zeigt nur Teams.
 
 ## Wirkung der Zeit-Hinweise (Grenzwert: 3 von 5 Tagen > 30 Min. später, dann 1 Woche Ruhe)
