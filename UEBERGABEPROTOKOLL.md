@@ -290,6 +290,17 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🖥️ Tafel fürs Tablet (24.10.2026)
+
+Nutzerin: „Wenn ich morgens an mein Tablet gehe … To-dos, Tagesplan und Wochenplan sehen, ohne die App öffnen zu müssen.“
+Neue Seite `#/tafel` (`views/TafelView.jsx`, eigenes Layout bis 1400 px, `.mp-tafel-raster`: ab 900 px drei Spalten,
+darunter gestapelt): **✅ To-dos** (offene Matrix-Aufgaben nach Feld, abhaken, neue Aufgabe direkt eintippen → PLANEN),
+**📅 Heute** (alle Blöcke aus `useTagesBloecke` mit Zeitraum, „JETZT“-Markierung, Abhaken für Matrix und „Mein Alltag“,
+Matrix ohne Uhrzeit extra), **🗓️ Die nächsten Tage** (6 Tage ohne Routinen, je max. 6 Einträge). Uhr oben, aktualisiert alle
+30 s. Zugang: Kalender „Mein Alltag“ (`data-tafel-link`), Aka („Tafel“), Home-Bildschirm-Symbol
+`public/kurz/tafel.html` (Bild `kurz-tafel.png`), Sprungziel `tafel`. Nebenbei behoben: `kalender.js` `minuten("")`
+gab 0 zurück – Gewohnheiten ohne Uhrzeit standen im Kalender um 00:00. Tests: `e2e/tafel.spec.js`, kalender.test.
+
 ## 🗂️ Matrix ↔ Tagesplan, Kalender und Erinnerungen (24.10.2026)
 
 Nutzerin: Matrix-Aufgaben mit Tag/Uhrzeit spiegelten sich nirgends (nur „Heute aus deiner Matrix“ für heute), keine

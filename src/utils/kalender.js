@@ -41,7 +41,9 @@ export const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const wochentagVon = (date) => WOCHENTAGE[(date.getDay() + 6) % 7];
 
 export const minuten = (hhmm) => {
-  const [h, m] = String(hhmm || "").split(":").map(Number);
+  // Leer = keine Uhrzeit (24.10.: Gewohnheiten ohne Uhrzeit standen sonst um 00:00).
+  if (!hhmm) return null;
+  const [h, m] = String(hhmm).split(":").map(Number);
   return Number.isFinite(h) ? h * 60 + (m || 0) : null;
 };
 export const hhmm = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;

@@ -63,6 +63,7 @@ import { istTouchGeraet } from "./utils/touch";
 import { nimmLiveNeuladen } from "./data/liveAktualisierung";
 const KernprogrammView = lazyAnsicht(() => import("./views/KernprogrammView"));
 const KalenderView = lazyAnsicht(() => import("./views/KalenderView"));
+const TafelView = lazyAnsicht(() => import("./views/TafelView"));
 const DienstplanFotoView = lazyAnsicht(() => import("./views/DienstplanFotoView"));
 const StartTourView = lazyAnsicht(() => import("./views/onboarding/StartTourView"));
 const OnboardingFlow = lazyAnsicht(() => import("./views/onboarding/OnboardingFlow"));
@@ -77,7 +78,7 @@ const ARCHIV_VIEW_IDS = ["verlauf", "archiv", "statistik", "erfolge", "tagebuch"
 // `view`-Werte, die der Screen-Switch unten kennt — Grundlage für
 // `istGueltigerView()` unten, das einen aus der URL gelesenen Hash prüft,
 // bevor er als Startansicht übernommen wird (siehe utils/routing.js).
-const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "matrix", "workflow", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "dienstplan-foto", "datenschutz", "impressum", "tagebuch", "coaching", "tour", "kalender", "mehr", "zusatzprotokoll"];
+const EINZEL_VIEWS = ["home", "form", "lexikon", "tagesplan", "routinen", "atemuebungen", "fokus", "matrix", "workflow", "denksport", "tagesraetsel", "team", "coach-chat", "schichtplan", "dienstplan-foto", "datenschutz", "impressum", "tagebuch", "coaching", "tour", "kalender", "mehr", "zusatzprotokoll", "tafel"];
 const ADMIN_VIEWS = ["admin", "admin-wissen", "admin-formulare", "admin-uebersicht", "admin-quests", "admin-teams", "admin-handbuch"];
 
 // Nur bekannte Werte übernehmen — ein veralteter/manipulierter Hash (z. B.
@@ -431,6 +432,9 @@ export default function AuthenticatedApp() {
     screen = <CoachChatView onHome={() => setView("home")} />;
   } else if (view === "kalender") {
     screen = <KalenderView onHome={() => setView("home")} />;
+  } else if (view === "tafel") {
+    // Tafel fürs Tablet (24.10.): To-dos, Heute, nächste Tage auf einen Blick.
+    screen = <TafelView onHome={() => setView("home")} />;
   } else if (view === "tour") {
     screen = <StartTourView onDone={() => setView("home")} />;
   } else if (view === "coaching") {

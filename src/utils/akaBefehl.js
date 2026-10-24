@@ -13,6 +13,7 @@ export const ANSICHTEN = [
   { id: "wochenuebersicht", name: "Wochenübersicht (Wochenplan)" },
   { id: "kalender", name: "Kalender (Mein Alltag, Kalender-Abo fürs Handy/Tablet)" },
   { id: "matrix", name: "Aufgaben-Matrix (To-dos)" },
+  { id: "tafel", name: "Tafel (Übersicht fürs Tablet: To-dos, Heute, Woche)" },
   { id: "mehr", name: "Mehr (alle Bereiche)" },
   { id: "denksport", name: "Spiele (Denksport, Spielebereich)" },
   { id: "tagesraetsel", name: "Tagesrätsel" },

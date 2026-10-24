@@ -475,6 +475,11 @@ export default function KalenderView({ onHome }) {
           🗓️ Dienstplan eintragen (selbst oder per Foto)
         </button>
       )}
+      {!formular && !details && (
+        <button type="button" className="mp-tap" data-tafel-link onClick={() => (window.location.hash = "#/tafel")} style={{ width: "100%", marginBottom: 10, border: "none", background: "color-mix(in srgb, #EFEAFB var(--mp-flaeche), var(--mp-karte))", color: "color-mix(in srgb, #4B2A86 var(--mp-schrift), var(--mp-schrift-hell))", borderRadius: 12, padding: 9, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+          🖥️ Tafel: To-dos, Heute und die nächsten Tage auf einen Blick
+        </button>
+      )}
       <Card style={{ padding: 10 }}>
         {ansicht === "tag" && <TagAnsicht datum={datum} bloecke={tagesBloecke} onBlock={(b) => blockOeffnen(b, datum)} />}
         {ansicht === "woche" && <WochenAnsicht tage={tage} bloeckeFuer={bloeckeFuer} onTag={zumTag} onBlock={blockOeffnen} />}

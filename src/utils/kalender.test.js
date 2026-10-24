@@ -119,4 +119,8 @@ describe("Überschneidungen", () => {
     expect(m).toHaveLength(1);
     expect(m[0]).toMatchObject({ key: "m-a", start: 600, ende: 615, titel: "Schuldenberatung", icon: "📞" });
   });
+  it("Einträge ohne Uhrzeit landen nicht um 00:00 (24.10.)", () => {
+    const b = bloeckeFuerTag(mo, { items: [{ key: "g1", kategorie: "gewohnheit", name: "Ohne Zeit", uhrzeit: "" }, { key: "g2", kategorie: "gewohnheit", name: "Mit Zeit", uhrzeit: "08:00" }] });
+    expect(b.map((x) => x.titel)).toEqual(["Mit Zeit"]);
+  });
 });
