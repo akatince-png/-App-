@@ -2,7 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 function rowToProjekt(r) {
-  return { id: r.id, name: r.name, farbeIndex: r.farbe_index };
+  return {
+    id: r.id,
+    name: r.name,
+    farbeIndex: r.farbe_index,
+    // Langzeit-Plan (24.10., Migration 0134).
+    ziel: r.ziel || "",
+    start: r.start || null,
+    deadline: r.deadline || null,
+    sessionTage: r.session_tage || [],
+    sessionUhrzeit: r.session_uhrzeit ? String(r.session_uhrzeit).slice(0, 5) : "",
+    sessionDauerMin: r.session_dauer_min || null,
+    sessionsZiel: r.sessions_ziel || null,
+  };
 }
 
 function rowToZeitblock(r) {
@@ -61,6 +73,27 @@ export function useZeitbloecke(userId) {
     },
     [userId, projekte]
   );
+
+  // Ziel, Zeitraum und Session-Rhythmus speichern (24.10.).
+  const projektPlanSpeichern = useCallback(async (id, plan) => {
+    const zeile = {
+      ziel: plan.ziel?.trim() || null,
+      start: plan.start || null,
+      deadline: plan.deadline || null,
+      session_tage: plan.sessionTage || [],
+      session_uhrzeit: plan.sessionUhrzeit || null,
+      session_dauer_min: plan.sessionDauerMin ? Number(plan.sessionDauerMin) : null,
+      sessions_ziel: plan.sessionsZiel ? Number(plan.sessionsZiel) : null,
+    };
+    const { data, error } = await supabase.from("projekte").update(zeile).eq("id", id).select().single();
+    if (error) {
+      console.error(error);
+      return { ok: false, error: "Projekt-Plan nicht gespeichert – bitte nochmal versuchen." };
+    }
+    const neu = rowToProjekt(data);
+    setProjekte((prev) => prev.map((p) => (p.id === id ? neu : p)));
+    return { ok: true, projekt: neu };
+  }, []);
 
   const projektEntfernen = useCallback(async (id) => {
     // Bug-Fix: bei Fehlschlag verschwanden Projekt UND seine Zeitblöcke
@@ -163,6 +196,7 @@ export function useZeitbloecke(userId) {
   return {
     projekte,
     projektHinzufuegen,
+    projektPlanSpeichern,
     projektEntfernen,
     zeitbloecke,
     zeitblockHinzufuegen,

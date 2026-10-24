@@ -290,6 +290,20 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🗂️ Langzeit-Projekte mit Work-Sessions (24.10.2026)
+
+Nutzerin: Langzeitprojekte planen und regelmäßig Work-Sessions in die tagesaktuellen To-dos der Matrix holen.
+- `projekte` um Ziel, Start, Deadline, Session-Tage, -Uhrzeit, -Dauer und Sessions-Ziel erweitert (Migration 0134),
+  `projektPlanSpeichern` in `data/useZeitbloecke.js`.
+- Logik `utils/projekt.js`: `sessionTermine` (Wochentage im Zeitraum, nicht nach Deadline, keine Doppel-Tage),
+  `sessionAufgaben` (Matrix-Aufgaben art „projekt“, Titel „Session: …“, Uhrzeit, Dauer, Deadline als Frist,
+  Erinnerung 15 Min. vorher bzw. morgens), `projektStand` (erledigt/geplant/Ziel, Wochen bis Deadline, im Plan =
+  Anteil Sessions ≥ Anteil Zeit − 15 %). Tests `projekt.test.js`.
+- Matrix: Projekt-Chip gewählt → `ProjektPlanKarte` (Ziel, Fortschrittsbalken, freundlicher Hinweis bei Rückstand,
+  ⚙️ Plan bearbeiten, „🗓️ Nächste 2 Wochen einplanen (n)“, nächste Termine). Bei „Alle“: Überblick „Langzeit-Projekte“
+  mit Balken je Projekt. Sessions erscheinen als normale Matrix-Aufgaben in Tagesplan, Tafel, Kalender, mit Erinnerung.
+- e2e: Plan anlegen, Sessions einplanen. Offen: Aka-Befehl „plane mein Projekt …“ (heute nur manuell).
+
 ## ⭐ MIT – Most Important Task (24.10.2026)
 
 Nutzerin wollte Begriffe aus dem Zeitmanagement (sie meinte „MIT“; korrekt: Most Important Task). Höchstens 3 MITs je
