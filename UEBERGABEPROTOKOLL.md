@@ -297,7 +297,8 @@ nur native Apps, später über App-Hülle + WidgetKit, Roadmap). Stattdessen: `#
 `SPRUNG_ZIELE` (`utils/routing.ts`) freigegeben (Neuladen landet weiter auf der Startseite), dazu `shortcuts` im
 Manifest (Android: lange auf das App-Symbol drücken). iPhone/iPad: Kurzbefehle-App, „URL öffnen“
 `https://akaapp.vercel.app/#/tagesplan` bzw. `#/matrix`, als Kurzbefehle-Widget auf den Home-Bildschirm. Öffnet in
-Safari (dort einmal anmelden), nicht in der Home-Bildschirm-App.
+Safari (dort einmal anmelden), nicht in der Home-Bildschirm-App. Eigene Bilder: `public/icons/kurz-*.png`
+(im Manifest hinterlegt; auf iPhone/iPad über Kurzbefehle → „Zum Home-Bildschirm“ → Symbol → Foto wählen).
 
 ## ✅ Erledigte Quests eingeklappt (24.10.2026, Auswertung Testphase)
 

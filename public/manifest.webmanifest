@@ -15,9 +15,9 @@
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Tagesplan", "url": "/#/tagesplan", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "To-dos (Matrix)", "short_name": "To-dos", "url": "/#/matrix", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Mein Alltag", "url": "/#/kalender", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Coach-Chat", "url": "/#/coach-chat", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Tagesplan", "url": "/#/tagesplan", "icons": [{ "src": "/icons/kurz-tagesplan.png", "sizes": "512x512", "type": "image/png" }] },
+    { "name": "To-dos (Matrix)", "short_name": "To-dos", "url": "/#/matrix", "icons": [{ "src": "/icons/kurz-matrix.png", "sizes": "512x512", "type": "image/png" }] },
+    { "name": "Mein Alltag", "url": "/#/kalender", "icons": [{ "src": "/icons/kurz-kalender.png", "sizes": "512x512", "type": "image/png" }] },
+    { "name": "Coach-Chat", "url": "/#/coach-chat", "icons": [{ "src": "/icons/kurz-coach-chat.png", "sizes": "512x512", "type": "image/png" }] }
   ]
 }
