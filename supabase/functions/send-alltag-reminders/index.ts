@@ -8,6 +8,7 @@
 // Person über profiles.erinnerungen.alltag = false bzw. { aktiv: false }.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { sendeAnGeraet } from "../_shared/push.ts";
+import { erinnerungsZeit, matrixText } from "./matrix.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -55,7 +56,14 @@ Deno.serve(async (req) => {
       .select("user_id, titel, start_zeit, wochentage, datum")
       .eq("erinnerung", true);
     if (error) throw error;
-    const userIds = [...new Set((eintraege || []).map((e) => e.user_id as string))];
+    // Matrix-Aufgaben mit Erinnerung (24.10., Migration 0132).
+    const { data: aufgaben, error: mError } = await admin
+      .from("matrix_aufgaben")
+      .select("user_id, titel, geplant_am, frist, uhrzeit, erinnerung, erledigt_am")
+      .not("erinnerung", "is", null)
+      .is("erledigt_am", null);
+    if (mError) throw mError;
+    const userIds = [...new Set([...(eintraege || []), ...(aufgaben || [])].map((e) => e.user_id as string))];
     if (!userIds.length) return new Response(JSON.stringify({ ok: true, faellig: 0, versendet: 0 }), { headers: { "Content-Type": "application/json" } });
 
     const { data: profile, error: pError } = await admin.from("profiles").select("id, zeitzone, erinnerungen").in("id", userIds);
@@ -68,6 +76,7 @@ Deno.serve(async (req) => {
     }
 
     const faellig = new Map<string, string[]>();
+    const matrixFaellig = new Map<string, string[]>();
     for (const e of eintraege || []) {
       const i = info.get(e.user_id as string);
       if (!i || String(e.start_zeit || "").slice(0, 5) !== i.jetzt) continue;
@@ -75,19 +84,33 @@ Deno.serve(async (req) => {
       if (!gilt) continue;
       faellig.set(e.user_id as string, [...(faellig.get(e.user_id as string) || []), (e.titel as string) || "Termin"]);
     }
-    if (!faellig.size) return new Response(JSON.stringify({ ok: true, faellig: 0, versendet: 0 }), { headers: { "Content-Type": "application/json" } });
+    for (const a of aufgaben || []) {
+      const i = info.get(a.user_id as string);
+      if (!i || erinnerungsZeit(a, i.heute) !== i.jetzt) continue;
+      matrixFaellig.set(a.user_id as string, [...(matrixFaellig.get(a.user_id as string) || []), matrixText(a)]);
+    }
+    if (!faellig.size && !matrixFaellig.size) return new Response(JSON.stringify({ ok: true, faellig: 0, versendet: 0 }), { headers: { "Content-Type": "application/json" } });
 
-    const { data: subs, error: sError } = await admin.from("push_subscriptions").select("user_id, endpoint, p256dh, auth_key").in("user_id", [...faellig.keys()]);
+    const empfaenger = [...new Set([...faellig.keys(), ...matrixFaellig.keys()])];
+    const { data: subs, error: sError } = await admin.from("push_subscriptions").select("user_id, endpoint, p256dh, auth_key").in("user_id", empfaenger);
     if (sError) throw sError;
     let versendet = 0;
     for (const sub of subs || []) {
-      const titel = faellig.get(sub.user_id as string);
-      if (!titel?.length) continue;
-      const ergebnis = await sendeAnGeraet(sub, { title: "🗓️ Mein Alltag", body: titel.join(" · "), url: "/#/kalender" });
-      if (ergebnis === "ok") versendet++;
-      else if (ergebnis === "ungueltig") await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+      const nachrichten = [
+        { titel: faellig.get(sub.user_id as string), kopf: "🗓️ Mein Alltag", url: "/#/kalender" },
+        { titel: matrixFaellig.get(sub.user_id as string), kopf: "🗂️ Aus deiner Matrix", url: "/#/matrix" },
+      ];
+      for (const n of nachrichten) {
+        if (!n.titel?.length) continue;
+        const ergebnis = await sendeAnGeraet(sub, { title: n.kopf, body: n.titel.join(" · "), url: n.url });
+        if (ergebnis === "ok") versendet++;
+        else if (ergebnis === "ungueltig") {
+          await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+          break;
+        }
+      }
     }
-    return new Response(JSON.stringify({ ok: true, faellig: faellig.size, versendet }), { headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, faellig: faellig.size + matrixFaellig.size, versendet }), { headers: { "Content-Type": "application/json" } });
   } catch (err) {
     console.error(err);
     return new Response(JSON.stringify({ error: "Unerwarteter Fehler." }), { status: 500, headers: { "Content-Type": "application/json" } });

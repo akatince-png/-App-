@@ -136,6 +136,14 @@ describe("aufgaben (diktierte To-dos)", () => {
       ],
     });
   });
+  it("übernimmt eine gewünschte Erinnerung (24.10.)", () => {
+    expect(
+      befehlBereinigen({ art: "aufgaben", aufgaben: [{ titel: "Schuldenberatung anrufen", datum: "2026-10-26", uhrzeit: "10:00", erinnerung: "15" }, { titel: "Brief", datum: null, uhrzeit: null, erinnerung: "irgendwann" }] }).aufgaben
+    ).toEqual([
+      { titel: "Schuldenberatung anrufen", datum: "2026-10-26", uhrzeit: "10:00", erinnerung: "15" },
+      { titel: "Brief", datum: null, uhrzeit: null },
+    ]);
+  });
   it("leere Liste → keine", () => {
     expect(befehlBereinigen({ art: "aufgaben", aufgaben: [] })).toEqual({ art: "keine" });
   });

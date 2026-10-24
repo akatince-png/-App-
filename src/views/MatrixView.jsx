@@ -33,6 +33,19 @@ const fristAus = (wahl) => {
 };
 
 const feld = { width: "100%", boxSizing: "border-box", border: "1.5px solid var(--mp-rand)", borderRadius: 12, padding: "10px 12px", fontSize: 15, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" };
+// Erinnerungs-Wahl: [Wert, Text, braucht Uhrzeit].
+const ERINNERUNGEN = [
+  [null, "Aus", false],
+  ["zeit", "Zur Uhrzeit", true],
+  ["15", "15 Min. vorher", true],
+  ["60", "1 Std. vorher", true],
+  ["morgens", "Morgens um 8", false],
+];
+const bisUhrzeit = (hhmm, dauer) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  const ende = (h * 60 + m + Number(dauer || 30)) % (24 * 60);
+  return `${String(Math.floor(ende / 60)).padStart(2, "0")}:${String(ende % 60).padStart(2, "0")}`;
+};
 const kleinKnopf = (an, farbe = "var(--mp-accent)") => ({ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", background: an ? farbe : "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))", color: an ? "#fff" : "var(--mp-text)" });
 
 export default function MatrixView({ onHome }) {
@@ -291,8 +304,39 @@ function AufgabeKarte({ a, onSpeichern, onLoeschen, onFokus, onSchliessen }) {
           Morgen
         </button>
         <input type="date" value={a.geplantAm || ""} onChange={(e) => aendern({ geplantAm: e.target.value || null })} aria-label="Tag wählen" style={{ ...feld, width: "auto", padding: "5px 8px", fontSize: 13 }} />
-        <input type="time" value={a.uhrzeit || ""} onChange={(e) => aendern({ uhrzeit: e.target.value || null })} aria-label="Uhrzeit wählen" style={{ ...feld, width: "auto", padding: "5px 8px", fontSize: 13 }} />
       </div>
+      {/* Uhrzeit gut sichtbar (24.10.: auf dem iPad war das Feld nur ein leeres
+          Kästchen). Mit Dauer ergibt sich der Zeitraum im Kalender. */}
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700 }}>
+          🕐 Uhrzeit
+          <input type="time" data-matrix-uhrzeit value={a.uhrzeit || ""} onChange={(e) => aendern({ uhrzeit: e.target.value || null })} aria-label="Uhrzeit wählen" style={{ ...feld, width: 120, minWidth: 120, padding: "6px 8px", fontSize: 14 }} />
+        </label>
+        {a.uhrzeit && (
+          <>
+            <span style={{ fontSize: 12.5, color: "var(--mp-text-muted)" }}>
+              {a.uhrzeit}–{bisUhrzeit(a.uhrzeit, dauer || a.dauerMin || 30)} Uhr{!a.geplantAm ? " · bitte noch einen Tag wählen" : ""}
+            </span>
+            <button type="button" onClick={() => aendern({ uhrzeit: null, erinnerung: a.erinnerung === "morgens" ? "morgens" : null })} style={{ border: "none", background: "none", fontSize: 12, color: "var(--mp-text-muted)", textDecoration: "underline", cursor: "pointer", fontFamily: "inherit" }}>
+              Uhrzeit entfernen
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Erinnerung (24.10., Migration 0132) – Push wie bei „Mein Alltag“. */}
+      <div style={{ fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", margin: "12px 0 4px" }}>🔔 ERINNERN</div>
+      <div role="group" aria-label="Erinnerung" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {ERINNERUNGEN.map(([wert, text, brauchtZeit]) => {
+          const moeglich = brauchtZeit ? !!a.uhrzeit && !!a.geplantAm : wert === null || !!(a.geplantAm || a.frist);
+          return (
+            <button key={text} type="button" data-matrix-erinnerung={wert || "aus"} aria-pressed={(a.erinnerung || null) === wert} disabled={!moeglich} onClick={() => aendern({ erinnerung: wert })} style={{ ...kleinKnopf((a.erinnerung || null) === wert), opacity: moeglich ? 1 : 0.4, cursor: moeglich ? "pointer" : "default" }}>
+              {text}
+            </button>
+          );
+        })}
+      </div>
+      {!a.geplantAm && !a.frist && <div style={{ fontSize: 12, color: "var(--mp-text-muted)", marginTop: 4 }}>Für eine Erinnerung zuerst einen Tag wählen.</div>}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
         <PrimaryButton onClick={onFokus}>⏱️ Fokus starten</PrimaryButton>

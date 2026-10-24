@@ -1,5 +1,6 @@
 import { toLocalISODate } from "./dates";
 import { KATEGORIE_META, ROUTINE_META } from "./dayItems";
+import { ART, QUADRANT, quadrantVon } from "./matrix";
 
 // Kalender „Mein Alltag“ (28.09., Vorschau, Nutzerin: Stundenplan, Woche,
 // Monat – Haushalt, Arbeit, Hobbys usw. im selben Plan wie Routinen und
@@ -54,7 +55,7 @@ export function alltagAmTag(eintrag, date) {
 const STANDARD_DAUER = { mahlzeit: 30, training: 60, supplement: 10, hormon: 10, gewohnheit: 15, workflow: 30, zeitblock: 60 };
 
 // Alle Blöcke eines Tages, nach Beginn sortiert.
-export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, alltagEintraege = [], alltagBereiche = [], alltagErledigt = {}, ereignisse = [] } = {}) {
+export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, alltagEintraege = [], alltagBereiche = [], alltagErledigt = {}, ereignisse = [], matrixAufgaben = [] } = {}) {
   const bloecke = [];
   for (const [key, meta] of [
     ["abend", ROUTINE_META.abendroutine],
@@ -80,6 +81,17 @@ export function bloeckeFuerTag(date, { items = [], routineEinstellungen = {}, al
     const meta = bereichMeta(e, alltagBereiche);
     const tag = toLocalISODate(date);
     bloecke.push({ key: `a-${e.id}`, start, ende: minuten(e.ende) ?? start + 60, titel: e.titel, icon: meta.icon, farbe: meta, art: e.bereich, alltag: e, done: !!alltagErledigt[`${e.id}|${tag}`] });
+  }
+  // Matrix-Aufgaben mit Tag und Uhrzeit (24.10., Nutzerin: „was ich in die
+  // Matrix einplane, soll sich im Kalender widerspiegeln“). Farbe = Feld.
+  const tagStr = toLocalISODate(date);
+  for (const a of matrixAufgaben) {
+    if (a.geplantAm !== tagStr || !a.uhrzeit) continue;
+    const start = minuten(a.uhrzeit);
+    if (start == null) continue;
+    const q = QUADRANT[quadrantVon(a, date)] || QUADRANT.planen;
+    const farbe = { bg: `color-mix(in srgb, ${q.bg} var(--mp-flaeche), var(--mp-karte))`, text: `color-mix(in srgb, ${q.schrift} var(--mp-schrift), var(--mp-schrift-hell))`, dot: q.farbe };
+    bloecke.push({ key: `m-${a.id}`, start, ende: start + (Number(a.dauerMin) || 30), titel: a.titel, icon: ART[a.art]?.icon || "🗂️", farbe, art: "matrix", matrix: a, done: !!a.erledigtAm });
   }
   // Spontan Passiertes (30.09., utils/ereignisse.js) – schon geschehen, daher „erledigt“.
   for (const e of ereignisse) {

@@ -74,13 +74,15 @@ export const ARTEN = [
 ];
 export const ART = Object.fromEntries(ARTEN.map((a) => [a.id, a]));
 
-export function alltagAusMatrix(aufgaben = [], datum = new Date()) {
+// nurGeplant (24.10.): für andere Tage als heute nur das dort Eingeplante –
+// „Rot“ (jetzt dringend) gehört zum heutigen Tag.
+export function alltagAusMatrix(aufgaben = [], datum = new Date(), { nurGeplant = false } = {}) {
   const tag = toLocalISODate(datum);
   return aufgaben
     .filter((a) => !a.erledigtAm || toLocalISODate(new Date(a.erledigtAm)) === tag)
     .map((a) => ({ ...a, quadrant: quadrantVon(a, datum) }))
     // Alles, was für heute eingeplant ist (auch Termine), plus Rot.
-    .filter((a) => a.quadrant === "jetzt" || a.geplantAm === tag)
+    .filter((a) => (!nurGeplant && a.quadrant === "jetzt") || a.geplantAm === tag)
     .sort((x, y) => {
       // Mit Uhrzeit zuerst, nach Uhrzeit (07.10.); danach wie bisher.
       if ((x.uhrzeit || "") !== (y.uhrzeit || "")) return (x.uhrzeit || "99").localeCompare(y.uhrzeit || "99");

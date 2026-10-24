@@ -36,11 +36,12 @@ function Block({ b, pxProMin, klein, onClick, konflikt = false }) {
   const top = (Math.max(b.start, VON) - VON) * pxProMin;
   const hoehe = Math.max((Math.min(b.ende, BIS) - Math.max(b.start, VON)) * pxProMin, klein ? 12 : 20);
   const breite = 100 / b.spalten;
-  const Tag = b.alltag ? "button" : "div";
+  const tippbar = !!(b.alltag || b.matrix);
+  const Tag = tippbar ? "button" : "div";
   return (
     <Tag
-      type={b.alltag ? "button" : undefined}
-      onClick={b.alltag ? () => onClick?.(b) : undefined}
+      type={tippbar ? "button" : undefined}
+      onClick={tippbar ? () => onClick?.(b) : undefined}
       data-block={b.alltag ? "alltag" : b.art}
       data-konflikt={konflikt ? "ja" : undefined}
       title={`${hhmm(b.start)}–${hhmm(b.ende)} ${b.titel}`}
@@ -348,7 +349,7 @@ function EintragFormular({ start, datum, onFertig, bloeckeFuer }) {
 }
 
 function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
-  const { alltagAbhaken } = useAppData();
+  const { alltagAbhaken, matrixAufgabeSpeichern } = useAppData();
   const mit = bloeckeFuer ? konflikte(bloeckeFuer(datum)).get(b.key) || [] : [];
   return (
     <Card style={{ marginBottom: 12, border: `1.5px solid ${b.farbe.dot}` }}>
@@ -369,6 +370,17 @@ function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
           ⚠️ Überschneidet sich mit {mit.map((x) => `${x.titel} (${hhmm(x.start)}–${hhmm(x.ende)})`).join(", ")}. Über „Ändern“ eine andere Zeit wählen.
         </div>
       )}
+      {b.matrix ? (
+        // Matrix-Aufgabe (24.10.): abhaken hier, ändern in der Matrix.
+        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          <button type="button" onClick={async () => { await matrixAufgabeSpeichern?.({ ...b.matrix, erledigtAm: b.done ? null : new Date().toISOString() }); onSchliessen(); }} style={{ ...knopf(true), flex: 1, padding: 10 }}>
+            {b.done ? "↩︎ Nicht erledigt" : "✓ Erledigt"}
+          </button>
+          <button type="button" onClick={() => (window.location.hash = "#/matrix")} style={knopf(false)}>
+            🗂️ In der Matrix
+          </button>
+        </div>
+      ) : (
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <button type="button" onClick={async () => (await alltagAbhaken?.(b.alltag.id, toLocalISODate(datum)))?.ok && onSchliessen()} style={{ ...knopf(true), flex: 1, padding: 10 }}>
           {b.done ? "↩︎ Nicht erledigt" : "✓ Erledigt"}
@@ -377,6 +389,7 @@ function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
           ✎ Ändern
         </button>
       </div>
+      )}
     </Card>
   );
 }

@@ -1,20 +1,25 @@
 import React from "react";
 import { useAppData } from "../context/AppDataContext";
 import { ART, QUADRANT, alltagAusMatrix, fristText } from "../utils/matrix";
+import { toLocalISODate } from "../utils/dates";
 
 // „Heute aus deiner Matrix“ (30.09., Vorschau): Die Aufgaben-Matrix aus dem
 // Workflow-Bereich spiegelt sich im Tagesplan – nur Rot (JETZT) und das
 // heute eingeplante Grün (PLANEN). Gelb und Grau bleiben in der Matrix,
 // damit der Tag nicht voll wird. Abhaken geht direkt hier.
-export default function MatrixHeuteKarte({ onOeffnen }) {
+// datum (24.10.): Im Tagesplan der gewählte Tag – für morgen usw. erscheint,
+// was dort eingeplant ist.
+export default function MatrixHeuteKarte({ onOeffnen, datum = null }) {
   const { matrixAufgaben = [], matrixAufgabeSpeichern, projekte = [] } = useAppData();
-  const liste = alltagAusMatrix(matrixAufgaben);
+  const tag = datum || new Date();
+  const istHeute = toLocalISODate(tag) === toLocalISODate(new Date());
+  const liste = alltagAusMatrix(matrixAufgaben, tag, { nurGeplant: !istHeute });
   if (!liste.length) return null;
   const projektName = (id) => projekte.find((p) => p.id === id)?.name;
   return (
-    <section data-matrix-heute aria-label="Heute aus deiner Matrix" style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" }}>
+    <section data-matrix-heute aria-label={istHeute ? "Heute aus deiner Matrix" : "Aus deiner Matrix"} style={{ marginBottom: 14, borderRadius: 18, padding: "12px 14px", background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-        <span style={{ fontWeight: 800, fontSize: 14 }}>🗂️ Heute aus deiner Matrix</span>
+        <span style={{ fontWeight: 800, fontSize: 14 }}>🗂️ {istHeute ? "Heute aus deiner Matrix" : `Aus deiner Matrix · ${tag.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "numeric" })}`}</span>
         <button type="button" onClick={onOeffnen} style={{ border: "none", background: "none", fontSize: 12.5, fontWeight: 700, color: "var(--mp-accent-dark-text)", cursor: "pointer", fontFamily: "inherit" }}>
           Matrix ›
         </button>
@@ -28,6 +33,7 @@ export default function MatrixHeuteKarte({ onOeffnen }) {
             <span style={{ flex: 1, minWidth: 0, opacity: fertig ? 0.55 : 1 }}>
               <span style={{ display: "block", fontWeight: 700, fontSize: 13.5, textDecoration: fertig ? "line-through" : "none" }}>
                 {a.uhrzeit ? `${a.uhrzeit} · ` : ""}
+                {a.erinnerung ? "🔔 " : ""}
                 {a.art && a.art !== "aufgabe" ? `${ART[a.art]?.icon || ""} ` : ""}
                 {a.naechsterSchritt || a.titel}
               </span>
