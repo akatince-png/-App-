@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 // Canva-Bild „Strecken in der Sonne“, aufgehellt (06.10. nachts, Nutzerin:
 // „das vorherige Morgenbild, aber so hell wie die Zeichnung“).
 import bildMorgen from "../assets/fenster/morgen-strecken-hell.jpg";
@@ -13,9 +14,12 @@ import { HEUTE_NICHT_GRUENDE } from "../utils/morgenFenster";
 // Abend (06.10. abends, Nutzerin: „solche Bilder auch für die Abendroutine“):
 // gleicher Aufbau, Nachtbild, Leitsatz aus dem AKA-Konzept.
 const ART = {
-  morgen: { bild: bildMorgen, pos: "center 22%", grund: "#3B6F78", titel: "Guten Morgen ☀️", satz: "Einmal strecken – und los.", name: "Morgenroutine", farbe: "#F07A1A" },
-  abend: { bild: bildAbend, pos: "center 30%", grund: "#1B2550", titel: "Guten Abend 🌙", satz: "Ein guter Morgen beginnt am Abend davor.", name: "Abendroutine", farbe: "#6C5BD4" },
+  morgen: { bild: bildMorgen, pos: "center 22%", grund: "#3B6F78", rand: "linear-gradient(180deg, #2B6C77 0%, #6E8C8C 45%, #E39A72 75%, #F0A27A 100%)", titel: "Guten Morgen ☀️", satz: "Einmal strecken – und los.", name: "Morgenroutine", farbe: "#F07A1A" },
+  abend: { bild: bildAbend, pos: "center 30%", grund: "#1B2550", rand: "linear-gradient(180deg, #121A3A 0%, #1B2550 60%, #2A2E5E 100%)", titel: "Guten Abend 🌙", satz: "Ein guter Morgen beginnt am Abend davor.", name: "Abendroutine", farbe: "#6C5BD4" },
 };
+
+// Bildbreite = 0,5625 × Bildschirmhöhe; die äußeren Ränder blenden aus.
+const RAND_MASKE = "linear-gradient(90deg, transparent calc(50% - 28.1dvh), #000 calc(50% - 22dvh), #000 calc(50% + 22dvh), transparent calc(50% + 28.1dvh))";
 
 const datumText = (d) => d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
 const uhrText = (d) => d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
@@ -32,9 +36,32 @@ export default function MorgenStartFenster({ art = "morgen", schritte = 0, dauer
     return () => clearInterval(id);
   }, []);
 
+  // Tablet/Querformat (24.10., Nutzerin: „wackelig, bitte mittiger“): Das
+  // Hochformat-Bild wird nicht mehr auf die volle Breite aufgeblasen,
+  // sondern in voller Höhe mittig gezeigt, daneben eine weichgezeichnete
+  // Fassung als Rand. Karte und Uhr bleiben in derselben Mittelspalte.
+  // Außerdem: Seite dahinter festhalten, damit nichts nachfedert.
+  const [breit, setBreit] = useState(() => typeof window !== "undefined" && window.innerWidth / window.innerHeight > 0.7);
+  useEffect(() => {
+    const pruefen = () => setBreit(window.innerWidth / window.innerHeight > 0.7);
+    window.addEventListener("resize", pruefen);
+    const html = document.documentElement;
+    const vorher = { body: document.body.style.overflow, html: html.style.overscrollBehavior };
+    document.body.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    return () => {
+      window.removeEventListener("resize", pruefen);
+      document.body.style.overflow = vorher.body;
+      html.style.overscrollBehavior = vorher.html;
+    };
+  }, []);
+
   const gruendeText = [grund, freitext.trim()].filter(Boolean).join(" · ");
 
-  return (
+  // Direkt an <body> hängen: Auf dem Tablet liegt die Startseite in einer
+  // Spalte neben der Seitenleiste, deren Gestaltung „fixed“ sonst auf diese
+  // Spalte begrenzt – das Fenster saß dann schief und rutschte nach unten.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -44,18 +71,42 @@ export default function MorgenStartFenster({ art = "morgen", schritte = 0, dauer
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        backgroundImage: `url(${a.bild})`,
-        backgroundSize: "cover",
-        backgroundPosition: a.pos,
         backgroundColor: a.grund,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: "max(48px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom))",
+        overflow: "hidden",
+        overscrollBehavior: "none",
+        touchAction: "manipulation",
         color: "#1F2A44",
         fontFamily: "inherit",
       }}
     >
+      {breit && <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: a.rand }} />}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${a.bild})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: breit ? "auto 100%" : "cover",
+          backgroundPosition: breit ? "center" : a.pos,
+          // Bildränder weich in den unscharfen Hintergrund auslaufen lassen.
+          ...(breit ? { maskImage: RAND_MASKE, WebkitMaskImage: RAND_MASKE } : {}),
+        }}
+      />
+      <div
+        style={{
+          position: "relative",
+          height: "100%",
+          boxSizing: "border-box",
+          width: "100%",
+          maxWidth: breit ? "min(100%, calc(100dvh * 0.5625))" : "none",
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "max(48px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom))",
+        }}
+      >
       <div style={{ textAlign: "center", color: "#fff", textShadow: "0 2px 12px rgba(0,0,0,.35)" }}>
         <div style={{ fontSize: 64, fontWeight: 300, letterSpacing: -1, lineHeight: 1.1 }}>{uhrText(jetzt)}</div>
         <div style={{ fontSize: 15, fontWeight: 600, opacity: 0.92 }}>{datumText(jetzt)}</div>
@@ -143,6 +194,8 @@ export default function MorgenStartFenster({ art = "morgen", schritte = 0, dauer
           </>
         )}
       </div>
-    </div>
+      </div>
+    </div>,
+    document.body
   );
 }

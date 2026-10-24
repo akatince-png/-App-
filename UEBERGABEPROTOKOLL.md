@@ -272,6 +272,17 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 📱 Morgen-/Abendfenster auf dem Tablet mittig (24.10.2026)
+
+Nutzerin: Morgenfenster auf dem iPad „wackelig“, nicht mittig. Ursache: Das Fenster ist `position: fixed`, lag aber im
+Seiten-Wrapper mit `fadeInUp`-Animation (transform) – der wird dabei zum Bezugsrahmen, das Fenster saß in der
+Inhaltsspalte neben der Seitenleiste und rutschte. Behoben: `ui/MorgenStartFenster.jsx` per `createPortal` an `<body>`,
+Seite dahinter festgehalten (kein Nachfedern); im Querformat wird das Hochformat-Bild in voller Höhe mittig gezeigt,
+Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mittelspalte. Seitenwechsel in
+`AuthenticatedApp.jsx` nutzt jetzt `seiteEinblenden` (nur Deckkraft, kein transform), damit auch alle anderen
+Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
+`docs/morgenfenster-tablet.png`.
+
 ## 🪪 Steckbrief im Profil und in der Coach-Übersicht (24.10.2026)
 
 Nutzerinnen-Wunsch nach Vorlage einer Lernplattform-Profilseite, für **beide** Seiten gleich: oben großes Profilbild,

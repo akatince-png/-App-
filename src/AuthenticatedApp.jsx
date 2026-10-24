@@ -599,7 +599,7 @@ export default function AuthenticatedApp() {
             setzt sich also von selbst zurück, ohne dass die App komplett neu
             geladen werden muss. */}
         {view !== "form" && view !== "tour" && <ZusatzprotokollBanner />}
-        <div key={view} style={{ animation: "fadeInUp 0.35s ease-out" }}>
+        <div key={view} style={{ animation: "seiteEinblenden 0.3s ease-out" }}>
           <ErrorBoundary onReset={() => setView("home")}>
             <Suspense fallback={<LoadingScreen />}>{screen}</Suspense>
             {/* Aka — ein Assistent, zentral für jede Seite (ui/Aka.jsx). Das

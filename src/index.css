@@ -395,6 +395,19 @@ input[type="time"]::-webkit-date-and-time-value {
     }
   }
 
+  /* Seitenwechsel (24.10.): nur Deckkraft, kein transform – ein transform am
+     Seiten-Wrapper macht ihn zum Bezugsrahmen für position:fixed, dann
+     saßen Vollbild-Fenster (Morgenfenster u. a.) auf dem Tablet kurz bzw.
+     dauerhaft schief in der Inhaltsspalte. */
+  @keyframes seiteEinblenden {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   /* Fade In + Slide für GraceDayCard */
   @keyframes fadeInUp {
     from {

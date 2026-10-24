@@ -80,3 +80,19 @@ test("Workflow aus „Als Nächstes“: Seite zeigt „Steht jetzt an“ und sta
   await karte.getByRole("button", { name: "▶ Jetzt starten" }).click();
   await expect(page.locator("[data-workflow-anstehend]")).toHaveCount(0);
 });
+
+// Tablet quer (24.10., Nutzerin: „wackelig, bitte mittiger“): Bild und Karte
+// stehen in einer Mittelspalte, die Karte liegt waagerecht mittig.
+test("Morgenfenster: auf dem Tablet quer mittig ausgerichtet", async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await page.clock.install({ time: new Date(2026, 9, 7, 7, 10) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1&morgen=1#/home");
+  const fenster = page.locator("[data-morgenfenster]");
+  await expect(fenster).toBeVisible();
+  const knopf = await fenster.locator("[data-morgenfenster-start]").boundingBox();
+  const mitte = knopf.x + knopf.width / 2;
+  if (process.env.AKA_VORSCHAU) await page.screenshot({ path: "docs/morgenfenster-tablet.png" });
+  expect(Math.abs(mitte - 590)).toBeLessThan(4);
+  expect(knopf.y + knopf.height).toBeLessThan(820);
+  if (process.env.AKA_VORSCHAU) await page.screenshot({ path: "docs/morgenfenster-tablet.png" });
+});
