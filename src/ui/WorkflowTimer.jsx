@@ -297,6 +297,9 @@ export default function WorkflowTimer({ onSchliessen }) {
               <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>⚡ Spontan-Workflow</div>
               <div style={{ fontSize: 12, color: textMuted, marginBottom: 10 }}>Einstellen und los – ohne vorher etwas anzulegen.</div>
               <MatrixWahl gewaehlt={matrixAufgabeId} onWahl={(x) => setMatrixAufgabeId((id) => (id === x.id ? null : x.id))} max={6} />
+              <button type="button" data-workflow-fokus-link onClick={() => (window.location.hash = "#/fokus")} style={{ border: "none", background: "none", padding: "2px 2px 10px", fontSize: 12.5, fontWeight: 800, color: "var(--mp-accent-dark-text)", cursor: "pointer", fontFamily: "inherit" }}>
+                🎯 Lieber gemeinsam mit anderen? Gemeinsam fokussieren ›
+              </button>
               <Label>Arbeiten</Label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
                 {[15, 25, 45, 50].map((m) => (

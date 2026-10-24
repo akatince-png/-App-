@@ -1305,6 +1305,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           {spontanOffen === "workflow" && (
             <WorkflowStartAuswahl
               heuteGeplant={heuteItems.filter((i) => i.kategorie === "workflow")}
+              onFokus={() => onOpenView("fokus")}
               onStart={(ziel) => {
                 workflowStartMerken(ziel);
                 onOpenView("workflow");
@@ -1317,7 +1318,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
             <div data-spiele-auswahl style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 10, borderRadius: 20, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" }}>
               {[
                 ["denksport", "🧠", "Denksport & Rätsel"],
-                ["fokus", "🎯", "Gemeinsam fokussieren"],
+                ["tagesraetsel", "🧩", "Tagesrätsel"],
               ].map(([id, emoji, titel]) => (
                 <button key={id} type="button" className="mp-tap" onClick={() => onOpenView(id)} style={{ border: "none", borderRadius: 14, padding: "12px 6px", background: "color-mix(in srgb, #F1EDFF var(--mp-flaeche), var(--mp-karte))", cursor: "pointer", fontSize: 12.5, fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                   <span style={{ fontSize: 22 }}>{emoji}</span>
@@ -1334,16 +1335,15 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
       {!STARTSEITE_SCHLICHT && (
       <>
-      {/* Spielen & Fokus (Design 2.0, 28.09., Nutzerin: „die Spiele nicht mehr
+      {/* Spielen (Design 2.0, 28.09.; Fokus seit 24.10. im Workflow). Nutzerin: „die Spiele nicht mehr
           entdecken“): gut sichtbar direkt unter den Quests. */}
       {!isEmergencyMode && (
         <div data-spielen style={{ marginBottom: 20 }}>
-          <div style={{ fontFamily: fontHeading, fontSize: 18, fontWeight: 800, letterSpacing: -0.3, margin: "0 2px 10px" }}>🎮 Spielen & Fokus</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          <div style={{ fontFamily: fontHeading, fontSize: 18, fontWeight: 800, letterSpacing: -0.3, margin: "0 2px 10px" }}>🎮 Spielen</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
             {[
               { id: "tagesraetsel", emoji: "🧩", titel: "Tagesrätsel", sub: "5 Fragen am Tag", verlauf: "linear-gradient(135deg, #FF8A5B, #FFB36B)" },
               { id: "denksport", emoji: "🧠", titel: "Denksport", sub: "Rätsel & Quiz", verlauf: "linear-gradient(135deg, #7C6CFF, #A48BFF)" },
-              { id: "fokus", emoji: "🎯", titel: "Gemeinsam fokussieren", sub: "Body Doubling", verlauf: "linear-gradient(135deg, #1FA99A, #4FD1C5)" },
             ].map((sp) => (
               <button
                 key={sp.id}

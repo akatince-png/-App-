@@ -145,7 +145,7 @@ export function TrainingStartAuswahl({ heuteOffen = [], onVorziehen, onGestartet
 }
 
 // ---------------------------------------------------------------- Workflow
-export function WorkflowStartAuswahl({ heuteGeplant = [], onStart }) {
+export function WorkflowStartAuswahl({ heuteGeplant = [], onStart, onFokus }) {
   const { workflowPresets = [] } = useAppData();
   return (
     <div data-workflow-auswahl style={box}>
@@ -185,6 +185,17 @@ export function WorkflowStartAuswahl({ heuteGeplant = [], onStart }) {
         </span>
         <b style={{ fontSize: 13, color: "var(--mp-accent-dark-text)" }}>›</b>
       </button>
+      {/* Gemeinsam fokussieren gehört zum Arbeiten, nicht zu den Spielen (24.10., Nutzerin). */}
+      {onFokus && (
+        <button type="button" className="mp-tap" data-workflow-fokus onClick={onFokus} style={zeile("#DDF5F1")}>
+          <span style={{ fontSize: 22 }}>🎯</span>
+          <span style={{ flex: 1 }}>
+            <b style={{ display: "block", fontSize: 14 }}>Gemeinsam fokussieren</b>
+            <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Body Doubling: mit anderen gleichzeitig an deiner Sache arbeiten</span>
+          </span>
+          <b style={{ fontSize: 13, color: "var(--mp-accent-dark-text)" }}>›</b>
+        </button>
+      )}
     </div>
   );
 }
