@@ -11,7 +11,7 @@ export const ANSICHTEN = [
   { id: "home", name: "Startseite (Heute)" },
   { id: "tagesplan", name: "Tagesplan (Plan)" },
   { id: "wochenuebersicht", name: "Wochenübersicht (Wochenplan)" },
-  { id: "kalender", name: "Kalender (Mein Alltag)" },
+  { id: "kalender", name: "Kalender (Mein Alltag, Kalender-Abo fürs Handy/Tablet)" },
   { id: "matrix", name: "Aufgaben-Matrix (To-dos)" },
   { id: "mehr", name: "Mehr (alle Bereiche)" },
   { id: "denksport", name: "Spiele (Denksport, Spielebereich)" },

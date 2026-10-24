@@ -8,6 +8,7 @@ import SchnellIcon from "../ui/SchnellIcon";
 import { addDays, sameDay, toLocalISODate } from "../utils/dates";
 import { ALLTAG_BEREICHE, ICON_VORSCHLAEGE, WOCHENTAGE, eigeneBereichMeta, hhmm, konflikte, konflikteFuerEintrag, monatsRaster, spaltenVerteilen } from "../utils/kalender";
 import Umschalter from "../ui/Umschalter";
+import KalenderAboKarte from "../ui/KalenderAboKarte";
 
 // Kalender „Mein Alltag“ (28.09., Vorschau freigegeben). Tag als Zeitleiste,
 // Woche als Stundenplan, Monat als Kalenderblatt. Alles aus der App erscheint
@@ -474,6 +475,7 @@ export default function KalenderView({ onHome }) {
         ))}
         <span style={{ fontSize: 11, color: textMuted, padding: "3px 4px" }}>+ alles aus deinen Plänen in den gewohnten Farben. Tipp auf einen Alltags-Eintrag: abhaken oder ändern.</span>
       </div>
+      <KalenderAboKarte />
     </Shell>
   );
 }
