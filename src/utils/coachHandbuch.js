@@ -15,7 +15,7 @@ export const KAPITEL = [
     id: "haltung",
     emoji: "🧭",
     titel: "Deine Rolle als Coach",
-    wozu: "AKA ist die exekutive rechte Hand für den Alltag mit ADHS. App und Coach übernehmen Planen, Erinnern, Tracken, Im-Blick-Behalten und Auswerten. Du stellst ein, die Person lebt.",
+    wozu: "AKA ist die rechte Hand im Alltag mit ADHS. App und Coach übernehmen Planen, Erinnern, Tracken, Im-Blick-Behalten und Auswerten. Du stellst ein, die Person lebt.",
     achten: [
       "Einstellen statt bewerten: Klappt etwas nicht, passt meist der Plan nicht, nicht die Person.",
       "Nichts ist rot, nichts schimpft. Lob konkret, Kritik nur als Vorschlag nach vorne.",

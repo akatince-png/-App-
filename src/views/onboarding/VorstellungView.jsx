@@ -13,7 +13,7 @@ import { EtappenBalken } from "../../ui/KernprogrammKarte";
 // AKA stellt sich im Look der App vor – echte Bausteine (Gehirn + Körper +
 // Balken wie auf der Startseite, Routinen-Karten, Chat, Kernprogramm-Karte,
 // Bereichsfarben) statt eigener Grafik-Welt. Inhalt = Philosophie aus
-// UEBERGABEPROTOKOLL.md: exekutive rechte Hand, "Ein guter Morgen beginnt am
+// UEBERGABEPROTOKOLL.md: rechte Hand im Alltag, "Ein guter Morgen beginnt am
 // Abend davor" (Abend immer zuerst), Bewegung, die Kleinigkeiten, Hilfe im
 // schlechten Moment, sich kennenlernen + Coach, Community, Einstellungsphase.
 // Alle Werte sind Beispiele. Jede Seite lässt sich überspringen.

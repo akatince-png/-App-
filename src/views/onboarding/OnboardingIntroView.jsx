@@ -73,7 +73,7 @@ export default function OnboardingIntroView({ onDone, onBack, onCancel, nurManue
           <Logo size={52} />
           <div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>Hey! 👋</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>Ich bin {coachName} — deine exekutive rechte Hand.</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: textMuted }}>Ich bin {coachName} — deine rechte Hand im Alltag.</div>
           </div>
         </div>
         <Card style={{ marginBottom: 14 }}>

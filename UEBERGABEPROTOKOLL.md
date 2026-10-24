@@ -250,12 +250,13 @@ einzeln hin und her, auch um das Arbeitskontingent zu schonen.
 
 ## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026, überarbeitet am selben Abend) — Maßstab für jede Änderung
 
-Quellen: Aussagen der Nutzerin vom 26.09., Claim „Deine exekutive rechte Hand“ (Abschnitt 1),
+Quellen: Aussagen der Nutzerin vom 26.09., Claim „Deine rechte Hand im Alltag“ (Abschnitt 1, bis 24.10. „Deine exekutive rechte Hand“),
 Wissens-Basis (`coach_wissen`: „Rolle & Grenzen: Coaching ist keine Therapie“,
 „ADHS-Coaching-Grundhaltung … Drei-Ebenen-Modell“, „ADHS-Paradoxon: … Lebensrahmenbedingungen“,
 „Evidenz: Nichtmedikamentöse Verfahren …“).
 
-**1. AKA ist ein Management-Tool für den Alltag mit ADHS: „Deine exekutive rechte Hand“.**
+**1. AKA ist ein Management-Tool für den Alltag mit ADHS: „Deine rechte Hand im Alltag“.**
+(Slogan seit 24.10. auf Wunsch der Nutzerin: „exekutiv“ ist ein Fachwort, die App soll auch Menschen ansprechen, die es nicht kennen. Im Code: `ui/Logo.jsx`, `LoginView`, `OnboardingIntroView`, `coachHandbuch`, `manifest.webmanifest`.)
 Ziel ist, die **Alltagssymptome** von ADHS so gut wie möglich zu managen. App und Coach übernehmen die
 **exekutiven Aufgaben**, die mit ADHS schwerfallen: planen, erinnern, tracken, kontrollieren/im Blick
 behalten und auswerten. Die Person soll nicht nachdenken, nicht selbst planen, keine sieben Apps öffnen
@@ -7135,7 +7136,7 @@ eines der beiden pausierten Themen wieder aufzugreifen.
 
 ## 1. Was ist AKA?
 
-**AKA** (Claim: "Deine exekutive rechte Hand") ist eine React+Supabase-Web-App
+**AKA** (Claim: "Deine rechte Hand im Alltag") ist eine React+Supabase-Web-App
 zur Selbstverwaltung von Gesundheitsprotokollen, mit starkem Fokus auf
 ADHS-Freundlichkeit (reduzierte Reizüberflutung, Notfallmodus, große
 Bedienelemente, klare Sprache, kleine Schritte statt Überforderung). Läuft

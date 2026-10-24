@@ -27,7 +27,7 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   selbst starten.
 
 - **Philosophie (Nutzerin, 26.09.):** AKA ist ein Management-Tool für den
-  Alltag mit ADHS, „Deine exekutive rechte Hand“: App und Coach übernehmen
+  Alltag mit ADHS, „Deine rechte Hand im Alltag“: App und Coach übernehmen
   Planen, Erinnern, Tracken, Im-Blick-Behalten und Auswerten. Kern ist das
   AKA-Konzept. Das Rückgrat bilden feste Abend- und Morgenroutine (immer
   Abend zuerst: „Ein guter Morgen beginnt am Abend davor“, einen Schritt
