@@ -290,6 +290,14 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🎯 Gemeinsam fokussieren gehört zum Workflow (24.10.2026)
+
+Nutzerin: „Gemeinsam fokussieren hat im Spielebereich nichts zu suchen, gehört zum Workflow, und der Workflow soll mit der
+To-do-Matrix zusammenhängen.“ Spiele zeigen nur noch Spiele (Startseite „🎮 Spielen“: Tagesrätsel, Denksport; Spiele-Knopf:
+Denksport & Rätsel, Tagesrätsel). „Gemeinsam fokussieren“ steht jetzt in der Workflow-Auswahl (`WorkflowStartAuswahl`,
+`data-workflow-fokus`) und als Link auf der Workflow-Seite unter der Matrix-Auswahl. Die Matrix-Verbindung gab es schon
+(05.10., „Aus deiner Matrix“ in Workflow-Auswahl und Spontan-Workflow).
+
 ## 🌙 Abendfenster erst zur Startzeit (24.10.2026)
 
 Nutzerin (Variante A): Das Abendfenster kam 30 Min. vor der Startzeit, während die App noch im hellen Tag-Modus war
