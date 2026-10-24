@@ -273,6 +273,9 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
   (eigener Coach-Zugang für ihre Coachees, Lizenz je Coachee, Einarbeitung). Technisch nötig: Mandantenfähigkeit –
   heute sieht die eine Admin-Rolle (`is_admin`) **alle** Konten; künftig Coach-Rolle mit Zuordnung Coachee → Coach und
   RLS je Coach. Nicht von selbst bauen, nur bei Auftrag; Planung in Notion („AKA-Coach-Programm (Vision)“, Roadmap).
+- **Reifegrad (Nutzerin, 24.10.):** Das AKA-Konzept in Notion ist ein **Arbeitsstand**, kein fertiges Konzept (nur mit
+  Bots erprobt). Pitch-Deck und Leitfaden für Etappen-Gespräche sind **zurückgestellt** („noch zu früh“). Grundsatz-
+  Entscheidungen stehen in der Notion-Datenbank „📜 Entscheidungen“ – neue Entscheidungen dort nachtragen.
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
