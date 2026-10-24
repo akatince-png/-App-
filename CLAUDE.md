@@ -114,10 +114,16 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   `UEBERGABEPROTOKOLL.md`, Abschnitt „Gründung & Förderung“.
 - **Vor jeder Arbeit `git fetch origin main`:** Der Sitzungs-Arbeitszweig
   kann auf einem uralten Stand basieren — `main` ist immer maßgeblich.
-- **Git-Workflow:** auf dem Feature-Branch arbeiten (siehe
+- **Git-Workflow (seit 24.10.2026, Nutzerin: „künftig in kleineren Schritten
+  mergen“, Variante A):** auf dem Feature-Branch arbeiten (siehe
   `UEBERGABEPROTOKOLL.md`, Abschnitt 8, für den genauen Namen), nicht
-  direkt auf `main`, danach fetch + fast-forward-merge + push nach
-  `main`. Vor jedem Commit: `npm run build` + `npx oxlint`.
+  direkt auf `main`. **Ein Pull Request pro Thema** (z. B. Kalender-Abo,
+  Tablet-Tafel) mit kurzer deutscher Beschreibung: was sich ändert, wie
+  geprüft. Claude merged selbst, sobald alle Prüfungen grün sind (Build,
+  oxlint, Typecheck, vitest, Playwright); bei größeren Umbauten vorher die
+  Freigabe der Nutzerin holen. Kleine Doku-/Datenstand-Commits dürfen in den
+  nächsten PR. Nie mergen, während der Dauertest läuft (Vercel-Neuausrollung).
+  Vor jedem Commit: `npm run build` + `npx oxlint`.
 - **Nach substanziellen Änderungen `UEBERGABEPROTOKOLL.md` aktualisieren**
   — bei viel Veränderung lieber neu schreiben statt endlos weitere
   "Nachtrag"-Absätze aufzustapeln.

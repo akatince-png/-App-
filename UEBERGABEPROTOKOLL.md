@@ -290,6 +290,23 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 📲 Kalender-Abo (24.10.2026)
+
+Nutzerin wollte To-dos, Tagesplan und Woche auf dem Tablet sehen, ohne die App zu öffnen. Echte Widgets gehen als
+Web-App nicht, deshalb ein iCalendar-Abo: dann zeigen die Kalender-Widgets von Apple/Google den AKA-Plan.
+- Tabelle `kalender_abos` (Migration 0131, RLS nur eigene Zeile, Token 64 Hex-Zeichen, `ohne_bereiche`), RPC
+  `kalender_abo_neues_token()` für „Link sperren“.
+- Edge Function `kalender-abo` (verify_jwt = false, das Token ist der Schlüssel): `?t=<token>` → `text/calendar`.
+  Inhalt: Morgen-/Abendroutine täglich, „Mein Alltag“ (einmalig −30/+365 Tage, wöchentlich als RRULE, ausgenommene
+  Bereiche fehlen), offene Matrix-Aufgaben (geplant mit/ohne Uhrzeit, sonst Frist ganztags), Trainings-Wochenplan.
+  Keine Notizen, keine Medikamente/Supplemente/Werte. Logik in `ics.ts` (vitest `ics.test.ts`), live mit dem
+  Testkonto Admin-Test geprüft (200 + gültiger Kalender, falsches Token 404).
+- App: Karte „📲 Im Handy-Kalender anzeigen“ unten in „Mein Alltag“ (`ui/KalenderAboKarte.jsx`,
+  `data/useKalenderAbo.js`): einrichten, „In Apple-Kalender abonnieren“ (webcal://), Link kopieren (Google),
+  Bereiche abwählen, Link sperren, Abo beenden. Aka öffnet die Seite bei „Kalender-Abo“ (Eintrag in `ANSICHTEN`).
+  e2e `kalender-abo.spec.js`.
+- Offen: Abhaken im Kalender geht nicht (Abo ist nur lesend); Tablet-Tafel folgt als eigener PR.
+
 ## 🧭 Erstgespräch Nutzerin, Neustart 25.10., Kurzfassung (24.10.2026)
 
 - **Eigenes Konto neu eingerichtet** (Coaching-Gespräch, Claude als Coach): altes Protokoll „Mein Start“ zum 24.10.
