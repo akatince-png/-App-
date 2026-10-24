@@ -285,6 +285,8 @@ function leseOverridesAusUrl() {
       { id: "m5", projektId: "p-umzug", titel: "Mail an Vermieter", wichtig: false, frist: tagIso(0), dauerMin: 5, naechsterSchritt: "", verschoben: 0 },
       { id: "m6", projektId: "p-umzug", titel: "Alte Quittungen scannen", wichtig: false, frist: null, naechsterSchritt: "", verschoben: 0 },
     ];
+    // ?matrixzeit=1 (24.10.): „Ordner sortieren“ heute um 10:00 (Erinnerung testen).
+    if (params.get("matrixzeit") === "1") overrides.matrixAufgaben[2] = { ...overrides.matrixAufgaben[2], uhrzeit: "10:00" };
   }
   // ?alltag=1: Kalender „Mein Alltag“ mit Beispiel-Einträgen (28.09., Vorschau).
   if (params.get("alltag") === "1") {

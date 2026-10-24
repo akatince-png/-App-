@@ -395,6 +395,7 @@ export function useUniversellerCoach() {
             frist: null,
             geplantAm: a.datum,
             uhrzeit: a.uhrzeit,
+            erinnerung: a.erinnerung && a.datum ? a.erinnerung : null,
           });
           if (r?.ok) angelegt.push(r.aufgabe);
         }

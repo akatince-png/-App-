@@ -290,6 +290,23 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🗂️ Matrix ↔ Tagesplan, Kalender und Erinnerungen (24.10.2026)
+
+Nutzerin: Matrix-Aufgaben mit Tag/Uhrzeit spiegelten sich nirgends (nur „Heute aus deiner Matrix“ für heute), keine
+Erinnerungen, und das Uhrzeit-Feld war auf dem iPad ein leeres Kästchen.
+- `MatrixView`: Uhrzeit-Feld beschriftet und breit (`data-matrix-uhrzeit`), Zeitraum aus Uhrzeit + Dauer
+  („10:00–10:30 Uhr“), „Uhrzeit entfernen“. Neu **🔔 Erinnern**: Aus · Zur Uhrzeit · 15 Min. vorher · 1 Std. vorher ·
+  Morgens um 8 (zeitbezogene nur mit Tag + Uhrzeit, „morgens“ auch nur mit Frist).
+- Spalte `matrix_aufgaben.erinnerung` (Migration 0132, check zeit|15|60|morgens). Edge Function
+  `send-alltag-reminders` verschickt jetzt auch Matrix-Erinnerungen (Logik `matrix.ts` + vitest `matrix.test.ts`),
+  Push „🗂️ Aus deiner Matrix“ → `/#/matrix`. Abschaltbar wie Alltag (`profiles.erinnerungen.alltag`).
+- Kalender „Mein Alltag“: Matrix-Aufgaben mit Tag + Uhrzeit als Block (Farbe = Feld, Länge = Dauer, sonst 30 Min.),
+  antippbar: ✓ Erledigt oder „In der Matrix“. `bloeckeFuerTag(..., { matrixAufgaben })`.
+- Tagesplan: Karte „Aus deiner Matrix“ folgt dem gewählten Tag (`TagesHinweise datum`, `alltagAusMatrix(..., { nurGeplant })`),
+  🔔 bei Aufgaben mit Erinnerung.
+- Aka: diktierte Aufgaben übernehmen „erinnere mich …“ (`erinnerung` in `befehlBereinigen` und im Prompt).
+- Tests: kalender, matrix, akaBefehl, matrix.test.ts (Function), e2e matrix (Uhrzeit, Erinnerung, Kalender-Block).
+
 ## 💧 Sofortige Rückmeldung beim Eintragen (24.10.2026)
 
 Nutzerin trug Getränke ein, sah keine Rückmeldung und tippte mehrfach – in der DB kamen fünf Getränke (2× Wasser, 3× Kaffee,

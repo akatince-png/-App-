@@ -88,3 +88,35 @@ test("Matrix: Termin mit Tag und Uhrzeit anlegen, Fristen bis Jahresende", async
   const [[neu]] = await aufrufe(page, "matrixAufgabeSpeichern");
   expect(neu).toMatchObject({ titel: "Zahnarzt", art: "termin", geplantAm: "2026-10-02", uhrzeit: "15:30", frist: "2026-10-02" });
 });
+
+// Uhrzeit sichtbar + Erinnerung (24.10., Nutzerin: auf dem iPad war die
+// Uhrzeit nur ein leeres Kästchen, Erinnerungen fehlten).
+test("Matrix-Karte: Uhrzeit setzen; Erinnerung erst mit Uhrzeit möglich", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 8, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/matrix");
+  await page.getByRole("button", { name: /Ordner sortieren/ }).click();
+  const erinnern = page.getByRole("group", { name: "Erinnerung" });
+  await expect(erinnern.getByRole("button", { name: "15 Min. vorher" })).toBeDisabled();
+  await expect(erinnern.getByRole("button", { name: "Morgens um 8" })).toBeEnabled();
+  await page.locator("[data-matrix-uhrzeit]").fill("10:00");
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m3", uhrzeit: "10:00" });
+});
+
+test("Matrix-Karte mit Uhrzeit: Zeitraum sichtbar, Erinnerung „15 Min. vorher“", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 8, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1&matrixzeit=1#/matrix");
+  await page.getByRole("button", { name: /Ordner sortieren/ }).click();
+  await expect(page.getByText("10:00–10:30 Uhr")).toBeVisible();
+  await page.getByRole("group", { name: "Erinnerung" }).getByRole("button", { name: "15 Min. vorher" }).click();
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m3", uhrzeit: "10:00", erinnerung: "15" });
+});
+
+test("Kalender: Matrix-Aufgabe mit Uhrzeit erscheint als Block, abhaken möglich", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 8, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1&matrixzeit=1&kal=tag#/kalender");
+  const block = page.locator('[data-block="matrix"]');
+  await expect(block).toContainText("Ordner sortieren");
+  await block.click();
+  await page.locator("[data-block-details]").locator("..").getByRole("button", { name: "✓ Erledigt" }).click();
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m3" });
+});

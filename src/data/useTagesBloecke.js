@@ -40,6 +40,7 @@ export function useTagesBloecke() {
         alltagBereiche: a.alltagBereiche || [],
         alltagErledigt: a.alltagErledigt || {},
         ereignisse: ereignisseAmTag(toLocalISODate(date), a),
+        matrixAufgaben: a.matrixAufgaben || [],
       });
     },
     [a],

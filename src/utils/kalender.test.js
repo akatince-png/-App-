@@ -107,4 +107,16 @@ describe("Überschneidungen", () => {
     expect(konflikteFuerEintrag({ bereich: "haushalt", titel: "Wäsche", start: "18:00", ende: "18:30", wochentage: ["Di"] }, fuer, mo)).toEqual([]);
     expect(konflikteFuerEintrag({ id: 1, bereich: "arbeit", titel: "Arbeit", start: "08:30", ende: "16:30", wochentage: ["Mo"] }, fuer, mo)).toEqual([]);
   });
+  it("Matrix-Aufgaben mit Tag und Uhrzeit als Block, Dauer als Länge (24.10.)", () => {
+    const b = bloeckeFuerTag(mo, {
+      matrixAufgaben: [
+        { id: "a", titel: "Schuldenberatung", art: "anruf", wichtig: true, geplantAm: "2026-09-28", uhrzeit: "10:00", dauerMin: 15 },
+        { id: "b", titel: "ohne Uhrzeit", wichtig: true, geplantAm: "2026-09-28" },
+        { id: "c", titel: "anderer Tag", wichtig: true, geplantAm: "2026-09-29", uhrzeit: "10:00" },
+      ],
+    });
+    const m = b.filter((x) => x.art === "matrix");
+    expect(m).toHaveLength(1);
+    expect(m[0]).toMatchObject({ key: "m-a", start: 600, ende: 615, titel: "Schuldenberatung", icon: "📞" });
+  });
 });

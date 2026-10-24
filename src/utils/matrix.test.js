@@ -62,6 +62,18 @@ describe("Aufgaben-Matrix", () => {
     expect(l.map((a) => a.id)).toEqual(["anruf", "zahnarzt", "rot"]);
   });
 
+  it("anderer Tag (24.10.): nur das dort Eingeplante, kein Rot", () => {
+    const l = alltagAusMatrix(
+      [
+        { id: "rot", wichtig: true, frist: "2026-10-01" },
+        { id: "gruen-spaeter", wichtig: true, geplantAm: "2026-10-02", uhrzeit: "10:00" },
+      ],
+      new Date(2026, 9, 2),
+      { nurGeplant: true }
+    );
+    expect(l.map((a) => a.id)).toEqual(["gruen-spaeter"]);
+  });
+
   it("Frist als Wort", () => {
     expect(fristText("2026-09-30", heute)).toBe("heute");
     expect(fristText("2026-10-01", heute)).toBe("morgen");

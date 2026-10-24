@@ -111,7 +111,13 @@ export function befehlBereinigen(data) {
     const liste = (Array.isArray(data.aufgaben) ? data.aufgaben : [])
       .filter((a) => a && typeof a.titel === "string" && a.titel.trim())
       .slice(0, 15)
-      .map((a) => ({ titel: a.titel.trim().slice(0, 120), datum: datumOk(a.datum) ? a.datum : null, uhrzeit: zeitOk(a.uhrzeit) ? a.uhrzeit : null }));
+      .map((a) => ({
+        titel: a.titel.trim().slice(0, 120),
+        datum: datumOk(a.datum) ? a.datum : null,
+        uhrzeit: zeitOk(a.uhrzeit) ? a.uhrzeit : null,
+        // „Erinnere mich …“ (24.10.): nur gültige Werte, sonst weggelassen.
+        ...(["zeit", "15", "60", "morgens"].includes(a.erinnerung) ? { erinnerung: a.erinnerung } : {}),
+      }));
     return liste.length ? { art: aktion, aufgaben: liste } : { art: "keine" };
   }
   if (aktion === "blutzucker") {
