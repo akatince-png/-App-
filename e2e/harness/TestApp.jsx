@@ -287,6 +287,8 @@ function leseOverridesAusUrl() {
     ];
     // ?matrixzeit=1 (24.10.): „Ordner sortieren“ heute um 10:00 (Erinnerung testen).
     if (params.get("matrixzeit") === "1") overrides.matrixAufgaben[2] = { ...overrides.matrixAufgaben[2], uhrzeit: "10:00" };
+    // ?projektplan=1 (24.10.): „Steuer 2025“ als Langzeit-Projekt mit Sessions Mo + Do 18:00.
+    if (params.get("projektplan") === "1") overrides.projekte[0] = { ...overrides.projekte[0], ziel: "Erklärung abgegeben", start: tagIso(0), deadline: tagIso(60), sessionTage: ["Mo", "Do"], sessionUhrzeit: "18:00", sessionDauerMin: 45, sessionsZiel: 16 };
   }
   // ?alltag=1: Kalender „Mein Alltag“ mit Beispiel-Einträgen (28.09., Vorschau).
   if (params.get("alltag") === "1") {

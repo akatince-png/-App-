@@ -40,7 +40,7 @@ const BEKANNTE_FUNKTIONEN = new Set([
   "hydrationCheckinSpeichern", "hydrationHinzufuegen", "hydrationZielSetzen", "hydrationZielZuruecksetzen",
   "lexikonFragen", "lexikonSchnellFragen", "load", "loadArchived", "mahlzeitAendern", "mahlzeitEntfernen",
   "mahlzeitHinzufuegen", "nachrichtSenden", "programmEntfernen", "programmHinzufuegen", "projektEntfernen",
-  "projektHinzufuegen", "protokollArchivieren", "protokollLoeschen", "pushAktivieren", "pushDeaktivieren",
+  "projektHinzufuegen", "projektPlanSpeichern", "protokollArchivieren", "protokollLoeschen", "pushAktivieren", "pushDeaktivieren",
   "pushTestSenden", "questFortschrittSpeichern", "removeCustomMesswert", "removePeptidRow", "resetOnboarding",
   "rezeptEntfernen", "rezeptHinzufuegen", "saveHormonFeedback", "saveSupplementFeedback", "schlafHinzufuegen",
   "schrittEntfernen", "schrittHinzufuegen", "schrittVerschieben", "setBelohnungPufferMin", "setBiomarkerWert",

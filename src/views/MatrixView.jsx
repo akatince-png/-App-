@@ -3,6 +3,7 @@ import { Shell, Card, PrimaryButton } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import Umschalter, { ChipReihe } from "../ui/Umschalter";
 import { useAppData } from "../context/AppDataContext";
+import ProjektPlanKarte, { ProjektBalken } from "../ui/ProjektPlanKarte";
 import { useFokusTimer } from "../data/useFokusTimer";
 import { addDays, toLocalISODate } from "../utils/dates";
 import { ARTEN, ART, FRISTEN, QUADRANTEN, QUADRANT, JETZT_GRENZE, MIT_GRENZE, VERSCHOBEN_HINWEIS, fristAus, fristText, mitUmschalten, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
@@ -118,6 +119,17 @@ export default function MatrixView({ onHome }) {
             Anlegen
           </button>
         </div>
+      )}
+
+      {/* Langzeit-Projekte (24.10.): Plan + Sessions je Projekt, Überblick bei „Alle“. */}
+      {projekte.find((p) => p.id === projekt) && <ProjektPlanKarte key={projekt} projekt={projekte.find((p) => p.id === projekt)} />}
+      {projekt === "alle" && projekte.some((p) => p.deadline || p.sessionTage?.length) && (
+        <Card style={{ marginBottom: 12 }}>
+          <div data-projekte-ueberblick style={{ fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", marginBottom: 2 }}>LANGZEIT-PROJEKTE</div>
+          {projekte.filter((p) => p.deadline || p.sessionTage?.length).map((p) => (
+            <ProjektBalken key={p.id} projekt={p} onWahl={() => setProjekt(p.id)} />
+          ))}
+        </Card>
       )}
 
       <Card style={{ marginBottom: 12 }}>

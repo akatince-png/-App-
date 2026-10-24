@@ -152,3 +152,32 @@ test("Matrix: Aufgabe als MIT markieren", async ({ page }) => {
   await page.locator("[data-matrix-mit]").click();
   expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m4", mitAm: "2026-09-30" });
 });
+
+// Langzeit-Projekte (24.10.): Plan anlegen, Sessions der nächsten 2 Wochen
+// als Matrix-Aufgaben einplanen, Überblick bei „Alle“.
+test("Projekt: Plan anlegen und speichern", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 26, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/matrix");
+  await page.getByRole("button", { name: "Steuer 2025", exact: true }).click();
+  const editor = page.locator("[data-projekt-editor]");
+  await editor.getByLabel("Projektziel").fill("Erklärung abgegeben");
+  await editor.getByLabel("Projekt-Deadline").fill("2026-12-20");
+  await editor.getByRole("group", { name: "Session-Tage" }).getByRole("button", { name: "Mo" }).click();
+  await editor.getByRole("group", { name: "Session-Tage" }).getByRole("button", { name: "Do" }).click();
+  await editor.getByLabel("Session-Uhrzeit").fill("18:00");
+  await editor.getByRole("button", { name: "Plan speichern" }).click();
+  const [[id, plan]] = await aufrufe(page, "projektPlanSpeichern");
+  expect(id).toBe("p-steuer");
+  expect(plan).toMatchObject({ ziel: "Erklärung abgegeben", deadline: "2026-12-20", sessionTage: ["Mo", "Do"], sessionUhrzeit: "18:00", sessionDauerMin: 45, sessionsZiel: 16 });
+});
+
+test("Projekt: nächste 2 Wochen einplanen, Überblick bei „Alle“", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 26, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1&projektplan=1#/matrix");
+  await expect(page.locator("[data-projekte-ueberblick]")).toBeVisible();
+  await page.locator("[data-projekt-balken]").first().click();
+  await page.locator("[data-projekt-einplanen]").click();
+  const sessions = (await aufrufe(page, "matrixAufgabeSpeichern")).map((a) => a[0]).filter((a) => a.art === "projekt");
+  expect(sessions.map((a) => a.geplantAm)).toEqual(["2026-10-26", "2026-10-29", "2026-11-02", "2026-11-05"]);
+  expect(sessions[0]).toMatchObject({ titel: "Session: Steuer 2025", projektId: "p-steuer", uhrzeit: "18:00", dauerMin: 45, erinnerung: "15" });
+});
