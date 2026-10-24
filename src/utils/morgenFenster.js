@@ -5,7 +5,10 @@
 // wie die Entscheidung des Tages gemerkt wird (pro Gerät, je Datum).
 
 const SPEICHER = { morgen: "aka-morgenfenster", abend: "aka-abendfenster" };
-const VORLAUF_MIN = { morgen: 60, abend: 30 }; // so lange vor der geplanten Startzeit
+// So lange vor der geplanten Startzeit. Abends seit 24.10. 0 (Nutzerin, Variante A):
+// Das Fenster kam 30 Min. zu früh, während die App noch hell war – jetzt erscheint
+// es genau zur Startzeit, zusammen mit dem Abendmodus.
+const VORLAUF_MIN = { morgen: 60, abend: 0 };
 const STANDARD_AB = { morgen: 5 * 60, abend: 20 * 60 };
 // Morgens bis 14 Uhr (danach gilt die Abendroutine, wie RoutineStart),
 // abends ab 14 Uhr bis Mitternacht (danach zählt schon der neue Tag).
