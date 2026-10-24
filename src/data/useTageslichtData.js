@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { feuereBelohnung } from "../utils/belohnungBus";
 import { toLocalISODate } from "../utils/dates";
 
 const heute = () => toLocalISODate(new Date());
@@ -46,6 +47,11 @@ export function useTageslichtData(userId) {
           : tageslichtEintraege.find((e) => e.datum === datum)?.minuten ?? 0;
       const neueMinuten = Math.max(0, bisher + deltaMinuten);
       pendingHeuteRef.current = { datum, minuten: neueMinuten };
+      // Sofort sichtbar wie beim Wasser (24.10.): erst anzeigen, dann speichern.
+      const setzen = (minuten) =>
+        setTageslichtEintraege((prev) => [...prev.filter((e) => e.datum !== datum), { datum, minuten }].sort((a, b) => a.datum.localeCompare(b.datum)));
+      setzen(neueMinuten);
+      if (deltaMinuten > 0) feuereBelohnung({ text: `+${deltaMinuten} Min. Tageslicht eingetragen`, untertitel: `Heute ${neueMinuten} Min.`, icon: "sun" });
       const { error } = await supabase
         .from("tageslicht_logs")
         .upsert({ user_id: userId, datum, minuten: neueMinuten }, { onConflict: "user_id,datum" });
@@ -53,12 +59,10 @@ export function useTageslichtData(userId) {
         console.error(error);
         if (pendingHeuteRef.current?.datum === datum && pendingHeuteRef.current?.minuten === neueMinuten) {
           pendingHeuteRef.current = null;
+          setzen(bisher);
         }
-        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+        return { ok: false, error: `Nicht gespeichert – bitte Verbindung prüfen und nochmal versuchen. (${error.message})` };
       }
-      setTageslichtEintraege((prev) =>
-        [...prev.filter((e) => e.datum !== datum), { datum, minuten: neueMinuten }].sort((a, b) => a.datum.localeCompare(b.datum))
-      );
       return { ok: true };
     },
     [userId, tageslichtEintraege]

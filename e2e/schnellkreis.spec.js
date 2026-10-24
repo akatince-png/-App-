@@ -72,3 +72,15 @@ test("Abkürzung: ?schnell=spielen öffnet die Spiele auf der Startseite", async
   await expect(page.locator("[data-schnell-kreis]")).toHaveCount(0);
   await expect(page.locator("[data-spiele-auswahl]")).toBeVisible();
 });
+
+// Doppelt-Eintrag (24.10., Nutzerin: fünfmal Kaffee, weil keine Rückmeldung
+// kam): Nach dem ersten Tippen sofort eine Bestätigung statt der Knöpfe.
+test("Getränk: sofortige Rückmeldung, zweites Tippen trägt nichts doppelt ein", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&spontan=1&schnell=trinken#/home");
+  const kreis = page.locator("[data-schnell-kreis]");
+  const knopf = kreis.getByRole("button", { name: "+500 ml" });
+  await knopf.click();
+  await expect(kreis.getByRole("status")).toContainText("500 ml Wasser");
+  await expect(knopf).toHaveCount(0);
+  expect(await aufrufe(page, "hydrationHinzufuegen")).toHaveLength(1);
+});

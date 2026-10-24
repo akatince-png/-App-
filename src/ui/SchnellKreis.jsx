@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import EssenEingabe from "./EssenEingabe";
 import SchnellIcon from "./SchnellIcon";
@@ -77,19 +77,37 @@ export default function SchnellKreis({ onSchliessen, onOeffnen, startWahl = null
 
   const erledigt = (text) => {
     setFertig(text);
-    setTimeout(onSchliessen, 1100);
+    setTimeout(onSchliessen, 1600);
+  };
+  // Doppelt-Eintrag verhindern (24.10.): Beim Antippen sofort eine Rückmeldung
+  // statt der Knöpfe; ein zweites Tippen während des Speicherns zählt nicht.
+  const laeuftRef = useRef(false);
+  const speichern = async (wartetext, aktion) => {
+    if (laeuftRef.current) return;
+    laeuftRef.current = true;
+    setFehler(null);
+    setFertig(wartetext);
+    const r = await aktion();
+    if (r && r.ok === false) {
+      laeuftRef.current = false;
+      setFertig(null);
+      setFehler(r.error || "Nicht gespeichert – bitte nochmal versuchen.");
+      return false;
+    }
+    return true;
   };
   // Getränk (30.09.): zählt wie bisher zur Tagesmenge und wird zusätzlich
   // mit Uhrzeit als Ereignis festgehalten (Kalender/Wochenansicht).
   const trinken = async (ml) => {
-    await hydrationHinzufuegen?.(ml);
+    const ok = await speichern(`+${ml} ml ${getraenk} wird eingetragen …`, () => hydrationHinzufuegen?.(ml, { leise: true }));
+    if (!ok) return;
     spontanSpeichern?.({ art: "getraenk", mengeMl: ml, name: getraenk });
     erledigt(`+${ml} ml ${getraenk} eingetragen 💧`);
   };
   // Nickerchen: Dauer antippen (Beginn = jetzt minus Dauer) oder von–bis.
   const nickerchen = async (min, beginn = null) => {
-    const r = await spontanSpeichern?.({ art: "nickerchen", dauerMin: min, uhrzeit: beginn || nickerchenBeginn(new Date(), min) });
-    if (r && r.ok === false) return setFehler(r.error);
+    const ok = await speichern(`Nickerchen ${min} Min. wird eingetragen …`, () => spontanSpeichern?.({ art: "nickerchen", dauerMin: min, uhrzeit: beginn || nickerchenBeginn(new Date(), min) }));
+    if (!ok) return;
     aenderungVermerken?.({
       kategorie: "schlaf",
       itemName: "Nickerchen",
@@ -99,8 +117,8 @@ export default function SchnellKreis({ onSchliessen, onOeffnen, startWahl = null
     erledigt(`Nickerchen ${min} Min. festgehalten 😴`);
   };
   const einnahme = async (was) => {
-    const r = await spontanSpeichern?.({ art: "einnahme", name: was });
-    if (r && r.ok === false) return setFehler(r.error);
+    const ok = await speichern(`${was} wird eingetragen …`, () => spontanSpeichern?.({ art: "einnahme", name: was }));
+    if (!ok) return;
     aenderungVermerken?.({
       kategorie: "supplement",
       itemName: was,
@@ -237,7 +255,7 @@ export default function SchnellKreis({ onSchliessen, onOeffnen, startWahl = null
               role="status"
               style={{ textAlign: "center", fontSize: 16, fontWeight: 800 }}
             >
-              ✓ {fertig}
+              {fertig.endsWith("…") ? "⏳" : "✓"} {fertig}
             </div>
           ) : wahl === "trinken" ? (
             <>
