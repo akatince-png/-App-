@@ -30,9 +30,9 @@ describe("zeigeMorgenFenster", () => {
 
 describe("Abendfenster", () => {
   const abend = (h, m = 0) => new Date(2026, 9, 7, h, m);
-  it("ab 30 Min. vor der Abend-Startzeit bis Mitternacht", () => {
-    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(20, 59), startZeit: "21:30", status: offen, entscheidung: null })).toBe(false);
-    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(21, 0), startZeit: "21:30", status: offen, entscheidung: null })).toBe(true);
+  it("ab der Abend-Startzeit bis Mitternacht (seit 24.10. ohne Vorlauf)", () => {
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(21, 29), startZeit: "21:30", status: offen, entscheidung: null })).toBe(false);
+    expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(21, 30), startZeit: "21:30", status: offen, entscheidung: null })).toBe(true);
     expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(23, 59), startZeit: "21:30", status: offen, entscheidung: null })).toBe(true);
     expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(9, 0), startZeit: "21:30", status: offen, entscheidung: null })).toBe(false);
   });

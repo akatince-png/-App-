@@ -290,6 +290,13 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🌙 Abendfenster erst zur Startzeit (24.10.2026)
+
+Nutzerin (Variante A): Das Abendfenster kam 30 Min. vor der Startzeit, während die App noch im hellen Tag-Modus war
+(Nacht/Abendmodus beginnt erst mit der Abendroutine) – wirkte widersprüchlich und bot nur „Starten“/„Heute nicht“.
+`utils/morgenFenster.js`: `VORLAUF_MIN.abend = 0`, Fenster und Abendmodus kommen jetzt gleichzeitig. Morgens bleibt
+60 Min. Vorlauf. Offen: Abendphase ab Sonnenuntergang (Vorschlag, noch nicht entschieden).
+
 ## 📲 Kalender-Abo (24.10.2026)
 
 Nutzerin wollte To-dos, Tagesplan und Woche auf dem Tablet sehen, ohne die App zu öffnen. Echte Widgets gehen als
