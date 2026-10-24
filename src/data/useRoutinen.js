@@ -18,6 +18,8 @@ function rowToSchritt(r) {
     nurVarianten: r.nur_varianten || null,
     gueltigAb: r.gueltig_ab || null,
     kernKey: r.kern_key || null,
+    // ⚡ Kurzfassung (24.10.): Schritt gehört zur Notfall-Version der Routine.
+    kurz: r.kurz === true,
   };
 }
 
@@ -382,8 +384,9 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
 
   // Name/Dauer eines Schritts ändern (Pflicht-Bausteine: Art und Dauer frei
   // einstellbar, nur löschen geht nicht).
-  const schrittAendern = useCallback(async (id, { name, dauerMin }) => {
+  const schrittAendern = useCallback(async (id, { name, dauerMin, kurz }) => {
     const patch = {};
+    if (kurz != null) patch.kurz = kurz === true;
     if (name != null) {
       if (!name.trim()) return { ok: false, error: "Bitte einen Namen eingeben." };
       patch.name = name.trim();

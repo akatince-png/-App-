@@ -83,6 +83,16 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
               <div style={{ fontSize: 13, color: textMuted, marginTop: 1 }}>
                 {s.dauerMin} Min.
                 {s.kernKey && " · 🔒 gehört zum Kernprogramm"}
+                <button
+                  type="button"
+                  data-kurz-schalter
+                  aria-pressed={s.kurz === true}
+                  title="Gehört zur ⚡ Kurzfassung für schwere Tage"
+                  onClick={() => routineSchrittAendern?.(s.id, { kurz: !s.kurz })}
+                  style={{ marginLeft: 8, border: `1px solid ${s.kurz ? "#E0A21B" : cardBorder}`, borderRadius: 99, padding: "1px 8px", fontSize: 11.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: s.kurz ? "#E0A21B" : "transparent", color: s.kurz ? "#fff" : textMuted }}
+                >
+                  ⚡ Kurz
+                </button>
                 {pausiertBis(s) && ` · ⏸ vom Coach pausiert bis ${pausiertBis(s)}`}
               </div>
               {bearbeiten?.id === s.id && (

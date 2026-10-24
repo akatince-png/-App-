@@ -156,6 +156,10 @@ function leseOverridesAusUrl() {
   if (params.get("atemschritt") === "1") {
     overrides.routineSchritte = [...(overrides.routineSchritte || []), { id: "ks3", routine: "morgen", reihenfolge: 2, name: "🌬️ Atemübung (2 Min.)", dauerMin: 2, kernKey: "atem_morgen" }];
   }
+  // ?kurz=1 (mit ?kern=1&atemschritt=1): Wasser und Atmung bilden die ⚡ Kurzfassung (24.10.).
+  if (params.get("kurz") === "1") {
+    overrides.routineSchritte = (overrides.routineSchritte || []).map((sc) => ({ ...sc, kurz: sc.id !== "ks2" }));
+  }
   // ?mess=1 (mit ?kern=1): drei gemessene Morgenroutinen in der Messwoche (26.09.).
   if (params.get("mess") === "1") {
     const h = new Date();

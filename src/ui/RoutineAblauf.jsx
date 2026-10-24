@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { Shell, Card, PrimaryButton } from "./primitives";
-import { cardBorder, danger, textMuted } from "./theme";
+import { cardBorder, danger, textMain, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
@@ -35,7 +35,7 @@ function fmtDauer(sekunden) {
 // "Schritt fertig" geht jederzeit, auch vor Ablauf des Timers (z. B. wenn
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
-export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
+export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
   useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand, atemuebungAbschliessen, aenderungVermerken } = useAppData();
   const heute = toLocalISODate(new Date());
@@ -52,6 +52,13 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
   const [wachGefragt, setWachGefragt] = useState(!(messmodus && routine === "morgen" && weckMs && Date.now() > weckMs && Date.now() - weckMs < 3 * 3600000));
   const [index, setIndex] = useState(0);
   const [fertig, setFertig] = useState(false);
+  // ⚡ Kurzfassung (24.10., Nutzerin: „diese Notfallversion gerne überall
+  // integrieren“): Sind Schritte als „kurz“ markiert, fragt die Routine beim
+  // Start „Ganz“ oder „Kurz“. Die Kurzfassung zählt genauso als geschafft.
+  const kurzSchritte = alleSchritte.filter((s) => s.kurz);
+  const kurzMoeglich = kurzSchritte.length > 0 && kurzSchritte.length < alleSchritte.length;
+  const [fassung, setFassung] = useState(kurzMoeglich ? null : "ganz");
+  const schritte = fassung === "kurz" ? kurzSchritte : alleSchritte;
   const [musikFehler, setMusikFehler] = useState(null);
   const protokollRef = useRef([]);
   const feierRef = useRef(null);
@@ -160,6 +167,34 @@ export default function RoutineAblauf({ routine, schritte, onAbschluss, onAbbrec
             Für die {ROUTINE_LABEL[routine]} sind noch keine Schritte eingerichtet.
           </div>
           <PrimaryButton onClick={abbrechen}>Zurück</PrimaryButton>
+        </Card>
+      </Shell>
+    );
+  }
+
+  if (fassung === null) {
+    const minuten = (liste) => liste.reduce((summe, s) => summe + (Number(s.dauerMin) || 0), 0);
+    const waehlen = (f) => {
+      setFassung(f);
+      startZeitRef.current = Date.now();
+      gesamtStartRef.current = Date.now();
+    };
+    return (
+      <Shell>
+        <Card style={{ textAlign: "center" }}>
+          <div data-routine-fassung style={{ fontSize: 18, fontWeight: 800, color: textMain, marginBottom: 6 }}>
+            {ROUTINE_EMOJI[routine]} {ROUTINE_LABEL[routine]}
+          </div>
+          <div style={{ fontSize: 13, color: textMuted, marginBottom: 16 }}>Wie viel geht heute?</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <PrimaryButton onClick={() => waehlen("ganz")}>
+              Ganz · {alleSchritte.length} Schritte · ca. {minuten(alleSchritte)} Min.
+            </PrimaryButton>
+            <PrimaryButton variant="ghost" onClick={() => waehlen("kurz")}>
+              ⚡ Kurz · {kurzSchritte.length} Schritte · ca. {minuten(kurzSchritte)} Min.
+            </PrimaryButton>
+          </div>
+          <div style={{ fontSize: 12, color: textMuted, marginTop: 12 }}>Auch die Kurzfassung zählt als geschafft.</div>
         </Card>
       </Shell>
     );

@@ -290,6 +290,23 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 🧭 Erstgespräch Nutzerin, Neustart 25.10., Kurzfassung (24.10.2026)
+
+- **Eigenes Konto neu eingerichtet** (Coaching-Gespräch, Claude als Coach): altes Protokoll „Mein Start“ zum 24.10.
+  abgeschlossen (nichts gelöscht, Sicherung in `sicherung.reset_2026_10_24`), neues Hauptprotokoll „Neustart 25.10.“,
+  Etappe 1 des Kernprogramms neu ab 25.10. (bis 21.11.), Gewicht 96 kg. Abendroutine 21:38–23:00 (10 Schritte, Haushalt
+  zuerst), Morgenroutine 6:30–7:30 (8 Schritte); alte Kern-Schritte umgeschrieben statt gelöscht. Testosteron und
+  Retatrutid alle 3 Tage ab 25.10. (Kategorie Hormone/Peptid), 10 Supplemente, „Mein Alltag“-Bereiche Kinder/Arbeit/
+  Gesundheit mit Kinderwochenenden (14-täglich ab 30.10.), Diensten 26.–29.10., Sonntag 20:00 Dosetten, Erinnerungen
+  01.11./09.11./21.11./23.11. Offen: Russisch im Workflow (Woche 3), Training (Woche 2), Kribbeln/Taubheit-Ausgangswert.
+- **⚡ Kurzfassung der Routinen:** Spalte `routine_schritte.kurz` (Migration 0130). `RoutineAblauf` fragt beim Start
+  „Ganz“ oder „⚡ Kurz“, sobald Schritte markiert sind; Kurz zählt als geschafft. Schalter „⚡ Kurz“ je Schritt in
+  `RoutineSchritteListe` (manuell). Aka-Befehl dafür fehlt noch. e2e-Test in `atem-tagebuch.spec.js`.
+- **Abend-Reihenfolge:** `useKernprogramm` sortiert die Abendroutine nicht mehr bei jedem Öffnen um, nur noch beim
+  Anlegen neuer Pflicht-Schritte – sonst wäre Haushalt-zuerst jedes Mal umgestellt worden.
+- **Supabase-Nachfragen:** Ursache und Arbeitsweise stehen in `CLAUDE.md` (eine Tabelle pro Aufruf, keine
+  `do`-Blöcke, Zeilen umschreiben statt löschen).
+
 ## 🔗 Abkürzungen statt Widgets (24.10.2026)
 
 Nutzerin wollte Tagesplan, To-dos (Matrix) usw. als Widget. Echte Widgets gehen als Web-App nicht (iOS/Android:

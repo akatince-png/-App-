@@ -86,6 +86,16 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   „drop“ oder berichten. Ausdrücklich eingeschlossen (Nutzerin, 08.10.): alle
   SQL-Schritte des täglichen Dauertests, auch das Aufräumen von Test-Resten
   wie dem „Probe-Team Admin-Test“.
+- **Supabase-Nachfragen (Ursache gefunden 24.10.):** Der Supabase-Connector
+  fragt bei manchen SQL-Aufrufen selbst bei der Nutzerin nach. Diese Nachfrage
+  kommt bei ihr nicht an (auch nicht im Browser), nach 60 s bricht der Aufruf
+  ab. Ausgelöst haben es: `do $$ … $$`-Blöcke, `delete` und große Pakete mit
+  Änderungen an mehreren Tabellen samt `begin/commit`. Ohne Nachfrage laufen:
+  `select`, `insert`, `update` (auch mehrere Befehle, solange es **eine
+  Tabelle pro Aufruf** ist), `apply_migration`. Deshalb: freigegebene
+  Änderungen je Tabelle einzeln schicken, keine `do`-Blöcke, statt Löschen
+  bestehende Zeilen umschreiben. Vorher Sicherung (Schema `sicherung`). Wo
+  wirklich gelöscht werden muss, nicht umgehen, sondern der Nutzerin melden.
 - **Dauerfreigabe Dauertest (Nutzerin, 29.09.2026, wörtlich: „Ich gebe dir
   auch in Zukunft die Freigabe“):** Für den täglichen Dauertest
   (`scripts/dauertest/README.md`) darfst du die Passwörter der sechs

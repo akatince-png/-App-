@@ -133,3 +133,19 @@ test("Tagebuch: Stichworte grün/rot mit „weil …“", async ({ page }) => {
   await expect(bereich.getByRole("button", { name: "kreativ" })).toHaveAttribute("aria-pressed", "true");
   await expect(bereich.getByLabel("kreativ, weil")).toBeVisible();
 });
+
+// ⚡ Kurzfassung (24.10.): beim Start „Ganz“ oder „Kurz“, Kurz läuft nur die
+// markierten Schritte und zählt trotzdem als geschafft.
+test("Morgenroutine: Kurzfassung läuft nur die markierten Schritte", async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 8, 30, 7, 20) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1&atemschritt=1&kurz=1#/home");
+  await page.getByRole("button", { name: /Morgenroutine starten/ }).click();
+  await expect(page.getByRole("button", { name: /^Ganz · 3 Schritte/ })).toBeVisible();
+  await page.getByRole("button", { name: /⚡ Kurz · 2 Schritte/ }).click();
+  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  if (await abJetzt.isVisible()) await abJetzt.click();
+  await expect(page.getByText("Schritt 1 von 2", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Schritt fertig" }).click();
+  await page.locator("[data-routine-atem]").getByRole("button", { name: "Schon geatmet – weiter" }).click();
+  await expect(page.getByText("Aufgeladen! ⚡")).toBeVisible();
+});

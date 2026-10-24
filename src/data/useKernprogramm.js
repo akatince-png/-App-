@@ -55,15 +55,11 @@ export function useKernprogramm(userId, routinen) {
 
   // Fehlende Pflicht-Schritte anlegen — erst wenn die Routine-Schritte
   // geladen sind, und je Schlüsselsatz nur einmal pro Sitzung versuchen.
-  const { routineGeladen, routineSchritteAlle, routineKernSchritteAnlegen, routineAbendOrdnen } = routinen;
-  // Abendroutine einmal pro Sitzung in die sinnvolle Reihenfolge bringen
-  // (07.10.: Tagebuch zuerst, Atmung im Bett, Schlafen zuletzt).
-  const geordnetRef = useRef(false);
-  useEffect(() => {
-    if (!routineGeladen || !stand.aktiv || !routineAbendOrdnen || geordnetRef.current) return;
-    geordnetRef.current = true;
-    routineAbendOrdnen();
-  }, [routineGeladen, stand, routineAbendOrdnen]);
+  // Abend-Reihenfolge (07.10.: Tagebuch zuerst … Bett zuletzt) wird nur noch
+  // beim Anlegen neuer Pflicht-Schritte hergestellt (routineKernSchritteAnlegen),
+  // nicht mehr bei jedem Öffnen (24.10.): sonst schob die App eine bewusst
+  // eingerichtete Abendroutine (Haushalt zuerst, Planen später) jedes Mal um.
+  const { routineGeladen, routineSchritteAlle, routineKernSchritteAnlegen } = routinen;
   const versuchtRef = useRef("");
   useEffect(() => {
     if (!routineGeladen || !stand.aktiv || !routineKernSchritteAnlegen) return;
