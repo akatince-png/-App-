@@ -47,6 +47,7 @@ import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
 import MorgenStartFenster from "../ui/MorgenStartFenster";
+import { SCHNELL_AUF_STARTSEITE, kamUeberSchnell, nimmSchnellStart } from "../utils/schnellStart";
 import NaechsterSchrittFenster from "../ui/NaechsterSchrittFenster";
 import NaechsterHinweis from "../ui/NaechsterHinweis";
 import { naechsteSchritte } from "../utils/naechsteSchritte";
@@ -218,6 +219,9 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       setTimeout(() => document.querySelector("[data-spontan-bereich]")?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
     };
     window.addEventListener("mp-schnell", auf);
+    // Abkürzung vom Home-Bildschirm (24.10.): Training/Workflow/Spielen gleich öffnen.
+    const start = nimmSchnellStart(SCHNELL_AUF_STARTSEITE);
+    if (start) auf({ detail: start });
     return () => window.removeEventListener("mp-schnell", auf);
   }, []);
   // Routine direkt von der Startseite starten (29.09., Nutzerin: „die
@@ -1059,6 +1063,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     // Konto selbst), nur nicht im „Verwalten als“-Modus.
     proband === null &&
     !morgenFensterZu &&
+    // Über eine Schnell-Abkürzung geöffnet: erst das Eintragen, kein Vollbild davor.
+    !kamUeberSchnell() &&
     zeigeRoutineFenster({ art: fensterArt, jetzt: new Date(), startZeit: routineEinstellungen?.[fensterArt]?.startZeit, status: fensterStatus, entscheidung: heutigeEntscheidung(fensterHeute, fensterArt), erzwungen: fensterErzwungen });
   const routineFensterSchliessen = (wahl) => {
     entscheidungMerken(fensterHeute, wahl, fensterArt);

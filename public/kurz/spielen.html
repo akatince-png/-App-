@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spielen – AKA</title>
+<!-- Abkürzung (24.10.): eigene Startseite mit eigenem Bild, damit sie über
+     Safari „Zum Home-Bildschirm“ als eigenes Symbol abgelegt werden kann.
+     Als Home-Bildschirm-App geöffnet, öffnet sie in AKA sofort den Schnellzugriff „Spielen“. -->
+<link rel="apple-touch-icon" href="/icons/kurz-schnell-spielen.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Spielen" />
+<meta name="theme-color" content="#5B47E0" />
+<script>
+  var alsApp = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+  if (alsApp || location.search.indexOf("start=1") !== -1) location.replace("/?schnell=spielen#/home");
+</script>
+<style>
+  body { margin: 0; background: #f6f7fb; color: #15181a; font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 460px; margin: 0 auto; padding: 32px 18px; text-align: center; }
+  img { width: 120px; height: 120px; border-radius: 26px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  ol { text-align: left; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  a { display: inline-block; margin-top: 14px; color: #fff; background: #5B47E0; padding: 12px 22px; border-radius: 14px; text-decoration: none; font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/icons/kurz-schnell-spielen.png" alt="" />
+  <h1>Spielen auf den Home-Bildschirm</h1>
+  <ol>
+    <li>Unten in Safari auf <b>Teilen</b> tippen (Quadrat mit Pfeil nach oben).</li>
+    <li><b>Zum Home-Bildschirm</b> wählen.</li>
+    <li>Rechts oben auf <b>Hinzufügen</b> tippen.</li>
+  </ol>
+  <p>Beim ersten Öffnen einmal anmelden, danach führt das Symbol direkt zu „Spielen“.</p>
+  <a href="/?schnell=spielen#/home">Jetzt öffnen</a>
+</main>
+</body>
+</html>

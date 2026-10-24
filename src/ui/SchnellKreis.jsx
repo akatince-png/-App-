@@ -59,14 +59,14 @@ const feld = {
   color: "inherit",
 };
 
-export default function SchnellKreis({ onSchliessen, onOeffnen }) {
+export default function SchnellKreis({ onSchliessen, onOeffnen, startWahl = null }) {
   const {
     hydrationHinzufuegen,
     spontanSpeichern,
     aenderungVermerken,
     supplemente = [],
   } = useAppData();
-  const [wahl, setWahl] = useState(null);
+  const [wahl, setWahl] = useState(startWahl);
   const [fertig, setFertig] = useState(null);
   const [fehler, setFehler] = useState(null);
   const [name, setName] = useState("");
