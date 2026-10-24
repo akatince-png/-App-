@@ -248,6 +248,30 @@ Claude sammelt, sortiert und baut gebündelt um.
 parallel Änderungen vornimmt. Ihre Eindrücke aus der eigenen Nutzung möglichst **gesammelt** umsetzen statt
 einzeln hin und her, auch um das Arbeitskontingent zu schonen.
 
+## 🏛️ GRÜNDUNG & FÖRDERUNG (Nutzerin, 24.10.2026) — parallel pflegen
+
+Die Nutzerin will AKA vom privaten Projekt zur marktreifen App führen (ggf. Startup/Nebengewerbe in Hannover) und
+dafür Förderung der Region Hannover / hannoverimpuls nutzen: **Soziovation** (gesellschaftlicher Nutzen),
+**Plug & Work** (USP, Geschäftsmodell), **HRI** (technologische Hürden: datenschutzkonforme KI, Barrierefreiheit).
+Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberater (keine verbindliche Rechts-/Förderberatung).
+
+- **Notion-Ordner** „AKA – Gründung & Förderung“ (ID `403e2e4d61c681539137cee15c36cfdd`, privat, angelegt 24.10.):
+  Hauptseite mit Mindmap und Leitplanken; Datenbanken 🕒 Timeline (Ansicht „Zeitstrahl“), 🗺️ Roadmap & Förderphasen
+  (Board „Nach Phase“), 🧩 Funktionen, 🤖 Test-Logs (Diagramm „Ergebnisse“), ✅ Förder-Checkliste; Seiten
+  Projektsteckbrief & Gründungsgeschichte, Antragsbausteine.
+- **Laufend nachführen** wie dieses Protokoll: neue Funktionen → Funktionen + ggf. Timeline; jeder Dauertest-Tag →
+  Test-Logs (Ergebnis, aktive Konten, Teampunkte, Befunde, Bericht).
+- **Trennung:** 22.07.–24.10.2026 = Phase 0, Eigenleistung (Prototyp). Künftige Phasen 1–4 sind mögliche Förderprojekte.
+  **Keine Verträge, Aufträge oder Bestellungen für künftige Phasen vor Antrag/Bewilligung** (vorzeitiger
+  Maßnahmebeginn) – die Nutzerin daran erinnern, sobald etwas in die Richtung geht.
+- **Einordnung:** Lifestyle-App, kein Medizinprodukt (keine Diagnose/Therapie/Heilversprechen), Gesundheitsdaten nach
+  DSGVO Art. 9.
+- **Gründungsgeschichte (Nutzerin):** Start 22.07.2026 spontan als Peptid-Tracker; mit den Möglichkeiten (selbst bauen
+  mit Claude) kamen alte und neue Ideen dazu. ADHS seit drei Jahren bekannt, Coaching und Menschen helfen war immer ihr
+  Bedürfnis; daraus wurde die ADHS-Alltags-App.
+- **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
+  „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
+
 ## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026, überarbeitet am selben Abend) — Maßstab für jede Änderung
 
 Quellen: Aussagen der Nutzerin vom 26.09., Claim „Deine rechte Hand im Alltag“ (Abschnitt 1, bis 24.10. „Deine exekutive rechte Hand“),

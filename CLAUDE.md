@@ -93,6 +93,15 @@ Die allerwichtigsten Punkte daraus, falls du gerade wenig Zeit hast:
   Passwörter nie speichern oder ausgeben, nach dem Lauf wieder auf
   unbekannte Zufallswerte setzen. Gilt nur für diese sechs Testkonten,
   nicht für echte Konten.
+- **Notion-Gründungsordner parallel pflegen (Nutzerin, 24.10.2026):** Seite
+  „AKA – Gründung & Förderung“ (Notion-ID `403e2e4d61c681539137cee15c36cfdd`,
+  privat) mit Timeline, Roadmap & Förderphasen, Funktionen, Test-Logs,
+  Förder-Checkliste, Steckbrief und Antragsbausteinen. Wie das
+  Übergabeprotokoll laufend nachführen: neue Funktionen, Meilensteine,
+  jeden Dauertest-Tag. Ziel: Förderung Region Hannover/hannoverimpuls
+  (Soziovation, Plug & Work, HRI). Bis heute = Eigenleistung; für künftige
+  Phasen keine Verträge vor Bewilligung (daran erinnern). Details:
+  `UEBERGABEPROTOKOLL.md`, Abschnitt „Gründung & Förderung“.
 - **Vor jeder Arbeit `git fetch origin main`:** Der Sitzungs-Arbeitszweig
   kann auf einem uralten Stand basieren — `main` ist immer maßgeblich.
 - **Git-Workflow:** auf dem Feature-Branch arbeiten (siehe
