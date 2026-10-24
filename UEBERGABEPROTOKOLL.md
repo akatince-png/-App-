@@ -297,7 +297,7 @@ nur native Apps, später über App-Hülle + WidgetKit, Roadmap). Stattdessen: `#
 `SPRUNG_ZIELE` (`utils/routing.ts`) freigegeben (Neuladen landet weiter auf der Startseite), dazu `shortcuts` im
 Manifest (Android: lange auf das App-Symbol drücken). iPhone/iPad: Der Kurzbefehle-Weg klappte bei der Nutzerin
 nicht (Link öffnete nicht richtig, Bild ließ sich nicht ändern). Deshalb eigene Startseiten `public/kurz/*.html`
-(tagesplan, todos, alltag, coach) mit eigenem Manifest und `apple-touch-icon` (`public/icons/kurz-*.png`): in Safari
+(tagesplan, todos, alltag, coach) ohne eigenes Manifest (sonst hielt das iPhone sie für die normale AKA-App), nur mit `apple-touch-icon` (`public/icons/kurz-*.png`): in Safari
 öffnen → Teilen → „Zum Home-Bildschirm“. Als Home-Bildschirm-App gestartet (standalone oder `?start=1`) springen sie
 per `location.replace` nach `/#/<view>`. Jedes Symbol ist auf iOS eine eigene Web-App (einmal anmelden).
 
