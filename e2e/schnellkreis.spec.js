@@ -52,3 +52,23 @@ test("Tagesplan: vor der geplanten Zeit abhaken fragt „Schon erledigt?“", as
   await page.locator("[data-frueh-frage]").getByRole("button", { name: "Ja, erledigt" }).click();
   await expect(page.locator("[data-frueh-frage]")).toHaveCount(0);
 });
+
+// Abkürzungen vom Home-Bildschirm (24.10.): ?schnell=<id> öffnet den
+// passenden Kreis bzw. bei Training/Spielen gleich die Auswahl – auch auf
+// dem Tablet quer, ohne Routine-Vollbild davor.
+test("Abkürzung: ?schnell=trinken öffnet den Kreis mit Getränk", async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await page.clock.install({ time: new Date(2026, 8, 30, 21, 45) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&spontan=1&schnell=trinken#/home");
+  const kreis = page.locator("[data-schnell-kreis]");
+  await expect(kreis.getByRole("button", { name: "Getränk" })).toHaveAttribute("aria-pressed", "true");
+  await expect(kreis.getByRole("button", { name: "+330 ml" })).toBeVisible();
+  await expect(page.locator("[data-morgenfenster]")).toHaveCount(0);
+  await expect(page).not.toHaveURL(/schnell=/);
+});
+
+test("Abkürzung: ?schnell=spielen öffnet die Spiele auf der Startseite", async ({ page }) => {
+  await page.goto("/e2e/harness/index.html?isAdmin=0&beispiel=1&spontan=1&schnell=spielen#/home");
+  await expect(page.locator("[data-schnell-kreis]")).toHaveCount(0);
+  await expect(page.locator("[data-spiele-auswahl]")).toBeVisible();
+});

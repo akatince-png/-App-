@@ -334,6 +334,12 @@ nicht (Link öffnete nicht richtig, Bild ließ sich nicht ändern). Deshalb eige
 (tagesplan, todos, alltag, coach, workflow) ohne eigenes Manifest (sonst hielt das iPhone sie für die normale AKA-App), nur mit `apple-touch-icon` (`public/icons/kurz-*.png`): in Safari
 öffnen → Teilen → „Zum Home-Bildschirm“. Als Home-Bildschirm-App gestartet (standalone oder `?start=1`) springen sie
 per `location.replace` nach `/#/<view>`. Jedes Symbol ist auf iOS eine eigene Web-App (einmal anmelden).
+Schnellzugriff (24.10., Nutzerin: alles unter „⚡ Schnell“ als eigenes Symbol fürs Tablet): Seiten `public/kurz/`
+getraenk, snack, nickerchen, training, pre-workout, spielen (Bilder `public/icons/kurz-schnell-*.png`) springen nach
+`/?schnell=<id>#/home`. `utils/schnellStart.js` liest den Wert einmal und entfernt ihn aus der Adresse; `BottomNav`
+öffnet den Kreis mit vorgewähltem Eintrag (Getränk, Snack, Nickerchen, Pre-Workout), `HomeView` öffnet
+Training/Workflow/Spielen direkt. Über eine Abkürzung geöffnet, erscheint kein Routine-Vollbild davor. Tests:
+`schnellStart.test.js`, `schnellkreis.spec.js` (auch Tablet quer).
 
 ## ✅ Erledigte Quests eingeklappt (24.10.2026, Auswertung Testphase)
 

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getCoachName } from "../utils/coachStorage";
 import { startVariante } from "../utils/startVariante";
 import SchnellKreis from "./SchnellKreis";
+import { SCHNELL_AUF_STARTSEITE, SCHNELL_IDS, nimmSchnellStart } from "../utils/schnellStart";
 
 // Feste Leiste unten (Design 2.0, 28.09., Nutzerin: „mit der Leiste, wie du
 // es empfiehlst“): Heute · Plan · Aka (Mitte) · Fortschritt · Mehr – immer
@@ -72,6 +73,15 @@ export default function BottomNav({ view, planIds, onNavigate, istAdminModus, co
   const aktiv = aktiverReiter(view, planIds);
   const mitSchnell = startVariante() === "b";
   const [schnellOffen, setSchnellOffen] = useState(false);
+  // Abkürzung vom Home-Bildschirm (24.10.): direkt den passenden Kreis öffnen.
+  const [startWahl, setStartWahl] = useState(null);
+  useEffect(() => {
+    if (istAdminModus) return;
+    const id = nimmSchnellStart(SCHNELL_IDS.filter((x) => !SCHNELL_AUF_STARTSEITE.includes(x)));
+    if (!id) return;
+    setStartWahl(id);
+    setSchnellOffen(true);
+  }, [istAdminModus]);
   const reiter = [
     { id: "heute", label: "Heute", ziel: "home" },
     { id: "plan", label: "Plan", ziel: "tagesplan" },
@@ -90,7 +100,16 @@ export default function BottomNav({ view, planIds, onNavigate, istAdminModus, co
     {!istAdminModus && coachNachrichten.length > 0 && view !== "coach-chat" && (
       <CoachBlase nachricht={coachNachrichten[0]} anzahl={coachNachrichten.length} onOeffnen={() => onNavigate("coach-chat")} />
     )}
-    {schnellOffen && <SchnellKreis onSchliessen={() => setSchnellOffen(false)} onOeffnen={schnellOeffnen} />}
+    {schnellOffen && (
+      <SchnellKreis
+        startWahl={startWahl}
+        onSchliessen={() => {
+          setSchnellOffen(false);
+          setStartWahl(null);
+        }}
+        onOeffnen={schnellOeffnen}
+      />
+    )}
     <nav className="mp-bottomnav" aria-label="Hauptnavigation" data-bottomnav>
       {reiter.map((r) =>
         r.id === "aka" ? (
