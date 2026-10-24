@@ -272,6 +272,16 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🪪 Steckbrief im Profil und in der Coach-Übersicht (24.10.2026)
+
+Nutzerinnen-Wunsch nach Vorlage einer Lernplattform-Profilseite, für **beide** Seiten gleich: oben großes Profilbild,
+Name, E-Mail (Coach-Sicht: Team · E-Mail), Serie; darunter „Erfolge“ (Punkte · Abzeichen · Level als runde Symbole),
+„Fortschritt“ (Balken: Level bis zum nächsten, aktive Tage der letzten 7, Protokoll Tag X von Y) und „Abzeichen“ als
+runde Plaketten. Komponente `ui/Steckbrief.jsx`, Daten `data/usePersonSpielstand.js` (RPC `person_spielstand`,
+Migration 0129, angewendet; liefert nur für die Person selbst oder Admins eine Zeile – geprüft) plus Tabelle
+`errungenschaften`. Eingebaut oben in `views/plan/ProfilTab.jsx` (Foto-Karte bleibt darunter) und beim Aufklappen
+einer Person in `AdminCoachUebersichtView.jsx`. e2e `e2e/steckbrief.spec.js`, Vorschau `docs/steckbrief-vorschau.png`.
+
 ## 🧭 PHILOSOPHIE DER APP (Nutzerin, 26.09.2026, überarbeitet am selben Abend) — Maßstab für jede Änderung
 
 Quellen: Aussagen der Nutzerin vom 26.09., Claim „Deine rechte Hand im Alltag“ (Abschnitt 1, bis 24.10. „Deine exekutive rechte Hand“),

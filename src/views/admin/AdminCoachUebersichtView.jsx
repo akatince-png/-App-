@@ -4,6 +4,7 @@ import { zeileZuEintrag, zeileZuMoment } from "../../data/useTagebuch";
 import { Shell, PrimaryButton, TextInput } from "../../ui/primitives";
 import ViewHeader from "../../ui/ViewHeader";
 import Profilbild from "../../ui/Profilbild";
+import Steckbrief from "../../ui/Steckbrief";
 import ChatFenster from "../../ui/ChatFenster";
 import { accentDark, cardBorder, danger, nachtSchatten, nachtVerlauf, textMain, textMuted } from "../../ui/theme";
 import { supabase } from "../../lib/supabaseClient";
@@ -425,6 +426,13 @@ function CoacheeZeile({ proband: p, teamName, offen, onToggle, onChat, onVerwalt
 
       {offen && (
         <div style={{ padding: "0 12px 12px" }}>
+          <Steckbrief
+            personId={p.id}
+            name={p.vorname || p.email}
+            untertitel={[teamName, p.email].filter(Boolean).join(" · ")}
+            profilbildPfad={p.profilbild_pfad}
+            fortschritte={fortschritt ? [{ label: "Protokoll", anteil: fortschritt.vergangeneTage / fortschritt.gesamtTage, text: `Tag ${fortschritt.vergangeneTage} von ${fortschritt.gesamtTage}` }] : []}
+          />
           <div style={{ display: "flex", gap: 4 }}>
             {letzteSiebenTage(p.aktive_tage_7).map((t) => (
               <div key={t.iso} title={t.iso} style={{ flex: 1, textAlign: "center" }}>
