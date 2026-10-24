@@ -802,7 +802,8 @@ input[type="time"]::-webkit-date-and-time-value {
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
-:root[data-tagesphase="nacht"] .mp-bottomnav {
+:root[data-tagesphase="nacht"] .mp-bottomnav,
+:root[data-tagesphase="abend"][data-dunkel] .mp-bottomnav {
   background: rgba(24, 27, 52, 0.92);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 30px rgba(8, 10, 25, 0.4);
@@ -827,10 +828,12 @@ input[type="time"]::-webkit-date-and-time-value {
 .mp-bottomnav-reiter.an {
   color: var(--mp-accent);
 }
-:root[data-tagesphase="nacht"] .mp-bottomnav-reiter {
+:root[data-tagesphase="nacht"] .mp-bottomnav-reiter,
+:root[data-tagesphase="abend"][data-dunkel] .mp-bottomnav-reiter {
   color: #7a80ad;
 }
-:root[data-tagesphase="nacht"] .mp-bottomnav-reiter.an {
+:root[data-tagesphase="nacht"] .mp-bottomnav-reiter.an,
+:root[data-tagesphase="abend"][data-dunkel] .mp-bottomnav-reiter.an {
   color: #fff;
 }
 .mp-bottomnav-mitte {

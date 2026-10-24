@@ -136,6 +136,17 @@ export const TAGESPHASEN_FARBEN = {
     highlightSchatten: "0 14px 30px rgba(27, 62, 140, 0.35)",
     canvas: "#F2F6FC",
   },
+  // Abendphase (24.10.): ab Sonnenuntergang bis zur Abendroutine – Dämmerung.
+  abend: {
+    accent: "#9B4D8C",
+    accentDark: "#5E2453",
+    accentSoft: "#F6E4F0",
+    success: "#8E4580",
+    successSoft: "#F6E4F0",
+    highlight: "linear-gradient(165deg, #A8506F 0%, #7A3E78 32%, #45306A 68%, #221C42 100%)",
+    highlightSchatten: "0 14px 30px rgba(90, 40, 90, 0.35)",
+    canvas: "#F8F1F5",
+  },
   nacht: {
     accent: "#3B4BA8",
     accentDark: "#1B2150",
@@ -149,7 +160,7 @@ export const TAGESPHASEN_FARBEN = {
 };
 
 // Abendmodus (Design 2.0, 29.09.): ab der Abendroutine wird die ganze App
-// dunkel. Abschaltbar unter Mehr → Aussehen (nur auf diesem Gerät).
+// dunkel, seit 24.10. schon ab Sonnenuntergang (Abendphase). Abschaltbar unter Mehr → Aussehen (nur auf diesem Gerät).
 export const ABEND_DUNKEL_KEY = "mp-abend-dunkel";
 export function abendDunkelErlaubt() {
   try {
@@ -179,9 +190,19 @@ const NACHT_DUNKEL = {
   canvas: "#0E1124",
 };
 
+// Dunkle Werte für die Abendphase (Dämmerungs-Akzent auf dunklem Grund).
+const ABEND_DUNKEL = {
+  accent: "#D9849A",
+  accentSoft: "#3A2440",
+  success: "#D9849A",
+  successSoft: "#3A2440",
+  canvas: "#15101F",
+};
+
 export function setzeTagesphasenFarben(phase) {
-  const dunkel = phase === "nacht" && abendDunkelErlaubt();
-  const f = { ...(TAGESPHASEN_FARBEN[phase] || TAGESPHASEN_FARBEN.nacht), ...(dunkel ? NACHT_DUNKEL : {}) };
+  // Dunkel ab Sonnenuntergang (Abendphase, 24.10.) und in der Nacht.
+  const dunkel = (phase === "nacht" || phase === "abend") && abendDunkelErlaubt();
+  const f = { ...(TAGESPHASEN_FARBEN[phase] || TAGESPHASEN_FARBEN.nacht), ...(dunkel ? (phase === "abend" ? ABEND_DUNKEL : NACHT_DUNKEL) : {}) };
   const root = typeof document !== "undefined" ? document.documentElement : null;
   if (!root) return;
   root.style.setProperty("--mp-accent", f.accent);
