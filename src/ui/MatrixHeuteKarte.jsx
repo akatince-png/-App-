@@ -33,6 +33,7 @@ export default function MatrixHeuteKarte({ onOeffnen, datum = null }) {
             <span style={{ flex: 1, minWidth: 0, opacity: fertig ? 0.55 : 1 }}>
               <span style={{ display: "block", fontWeight: 700, fontSize: 13.5, textDecoration: fertig ? "line-through" : "none" }}>
                 {a.uhrzeit ? `${a.uhrzeit} · ` : ""}
+                {a.mitAm === toLocalISODate(tag) ? "⭐ " : ""}
                 {a.erinnerung ? "🔔 " : ""}
                 {a.art && a.art !== "aufgabe" ? `${ART[a.art]?.icon || ""} ` : ""}
                 {a.naechsterSchritt || a.titel}

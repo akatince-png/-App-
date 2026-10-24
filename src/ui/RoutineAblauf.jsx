@@ -12,6 +12,7 @@ import { istTagebuchSchritt } from "../utils/tagebuch";
 import { toLocalISODate } from "../utils/dates";
 import { playBeep } from "../utils/beep";
 import AtemFuehrung from "./AtemFuehrung";
+import MitWahl from "./MitWahl";
 import AufgeladenFenster from "./AufgeladenFenster";
 import GuteNachtFenster from "./GuteNachtFenster";
 import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBibliothek";
@@ -333,6 +334,9 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
           </div>
           {messmodus && <div style={{ fontSize: 12, fontWeight: 700, color: textMuted, marginTop: 2 }}>📏 wird gemessen – in deinem Tempo</div>}
         </div>
+        {/* ⭐ MITs wählen (24.10.): abends beim Planen für morgen, morgens bei Top 3. */}
+        {aktuell.kernKey === "plan_morgen" && <MitWahl datum={new Date(Date.now() + 864e5)} titel="⭐ Deine MITs für morgen" />}
+        {aktuell.kernKey === "top3" && <MitWahl datum={new Date()} titel="⭐ Deine MITs für heute" />}
         <div style={{ marginTop: 14 }}>
           <PrimaryButton onClick={weiter} variant="success">
             Schritt fertig

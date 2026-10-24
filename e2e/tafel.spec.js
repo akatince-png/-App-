@@ -30,3 +30,10 @@ test("Kalender: Link zur Tafel", async ({ page }) => {
   await page.locator("[data-tafel-link]").click();
   await expect(page.locator("[data-tafel]")).toBeVisible();
 });
+
+test("Tafel: MIT-Bereich oben in „Heute“", async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 12));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/tafel");
+  await expect(page.locator("[data-tafel-mits]")).toContainText("DEINE MITs HEUTE");
+});

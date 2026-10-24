@@ -82,8 +82,10 @@ export function alltagAusMatrix(aufgaben = [], datum = new Date(), { nurGeplant 
     .filter((a) => !a.erledigtAm || toLocalISODate(new Date(a.erledigtAm)) === tag)
     .map((a) => ({ ...a, quadrant: quadrantVon(a, datum) }))
     // Alles, was für heute eingeplant ist (auch Termine), plus Rot.
-    .filter((a) => (!nurGeplant && a.quadrant === "jetzt") || a.geplantAm === tag)
+    .filter((a) => (!nurGeplant && a.quadrant === "jetzt") || a.geplantAm === tag || a.mitAm === tag)
     .sort((x, y) => {
+      // ⭐ MITs des Tages ganz oben (24.10.).
+      if ((x.mitAm === tag) !== (y.mitAm === tag)) return x.mitAm === tag ? -1 : 1;
       // Mit Uhrzeit zuerst, nach Uhrzeit (07.10.); danach wie bisher.
       if ((x.uhrzeit || "") !== (y.uhrzeit || "")) return (x.uhrzeit || "99").localeCompare(y.uhrzeit || "99");
       return x.quadrant === y.quadrant ? (x.frist || "9999").localeCompare(y.frist || "9999") : x.quadrant === "jetzt" ? -1 : 1;
@@ -119,4 +121,21 @@ export function fristAus(wahl, datum = "") {
   if (wahl === "monat") return toLocalISODate(new Date(h.getFullYear(), h.getMonth() + 1, 0));
   if (wahl === "jahr") return toLocalISODate(new Date(h.getFullYear(), 11, 31));
   return null;
+}
+
+// ⭐ MIT – Most Important Task (24.10., Nutzerin: Begriffe aus dem
+// Zeitmanagement). Höchstens 3 je Tag; sie stehen oben im Tagesplan und auf
+// der Tafel und werden in der Abendroutine für morgen gewählt.
+export const MIT_GRENZE = 3;
+
+export function mitsAm(aufgaben = [], tag) {
+  return aufgaben.filter((a) => a.mitAm === tag);
+}
+
+// Neuer Stand einer Aufgabe nach Antippen von ⭐, oder { voll: true }.
+export function mitUmschalten(aufgabe, tag, aufgaben = []) {
+  if (aufgabe.mitAm === tag) return { aufgabe: { ...aufgabe, mitAm: null } };
+  const offen = mitsAm(aufgaben, tag).filter((a) => !a.erledigtAm && a.id !== aufgabe.id);
+  if (offen.length >= MIT_GRENZE) return { voll: true };
+  return { aufgabe: { ...aufgabe, mitAm: tag } };
 }

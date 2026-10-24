@@ -290,6 +290,17 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## ⭐ MIT – Most Important Task (24.10.2026)
+
+Nutzerin wollte Begriffe aus dem Zeitmanagement (sie meinte „MIT“; korrekt: Most Important Task). Höchstens 3 MITs je
+Tag (`MIT_GRENZE`), Spalte `matrix_aufgaben.mit_am` (Migration 0133), Logik `mitsAm`/`mitUmschalten` in `utils/matrix.js`.
+- Matrix-Karte: „☆/⭐ MIT für heute|morgen|Tag“ (für den eingeplanten Tag, sonst heute), Hinweis wenn schon 3; ⭐ in den Feldern.
+- Tagesplan-Karte „Aus deiner Matrix“: MITs des Tages ganz oben mit ⭐ (auch ohne Einplanung).
+- Tafel: Bereich „⭐ DEINE MITs HEUTE · x/3“ oben in „Heute“, abhakbar; ⭐ in den To-dos.
+- Routinen: Schritt mit `kern_key` `plan_morgen` (bei der Nutzerin „Tagesabschluss“) zeigt `MitWahl` für morgen,
+  `top3` (Morgenroutine) für heute (`ui/MitWahl.jsx`).
+- Aka: diktierte Aufgaben mit „wichtigste Aufgabe/MIT“ → `mit: true` → `mitAm`.
+
 ## ⏰ Deadline immer abfragen (24.10.2026)
 
 Nutzerin: In der Matrix soll beim Anlegen immer nach einer Deadline gefragt werden, offen lassen soll möglich sein.

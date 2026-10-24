@@ -118,6 +118,8 @@ export function befehlBereinigen(data) {
         uhrzeit: zeitOk(a.uhrzeit) ? a.uhrzeit : null,
         // „Erinnere mich …“ (24.10.): nur gültige Werte, sonst weggelassen.
         ...(["zeit", "15", "60", "morgens"].includes(a.erinnerung) ? { erinnerung: a.erinnerung } : {}),
+        // „Das ist meine wichtigste Aufgabe“ → ⭐ MIT (24.10.).
+        ...(a.mit === true ? { mit: true } : {}),
       }));
     return liste.length ? { art: aktion, aufgaben: liste } : { art: "keine" };
   }
