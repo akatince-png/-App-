@@ -290,6 +290,14 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## ⏰ Deadline immer abfragen (24.10.2026)
+
+Nutzerin: In der Matrix soll beim Anlegen immer nach einer Deadline gefragt werden, offen lassen soll möglich sein.
+Keine Vorauswahl mehr: „⏰ Deadline – bis wann?“ mit Heute · Morgen · Diese Woche · Diesen Monat · Dieses Jahr · 📅 Datum ·
+Ohne Deadline; „＋ Dazu“ erst nach einer Wahl (Hinweis „Bitte wählen“). Gilt in der Matrix und auf der Tafel.
+`FRISTEN`/`fristAus` liegen jetzt in `utils/matrix.js`. In der Matrix-Karte lässt sich die Deadline nachträglich
+ändern oder entfernen. Offen (Vorschlag an die Nutzerin): Langzeit-Projekte mit Work-Sessions, MIT-Markierung.
+
 ## 🖥️ Tafel fürs Tablet (24.10.2026)
 
 Nutzerin: „Wenn ich morgens an mein Tablet gehe … To-dos, Tagesplan und Wochenplan sehen, ohne die App öffnen zu müssen.“

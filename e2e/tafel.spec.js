@@ -18,8 +18,10 @@ test("Tafel: drei Spalten, Aufgabe abhaken und neu anlegen", async ({ page }) =>
   await todos.getByRole("button", { name: "Antrag abschicken erledigt" }).click();
   expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m1" });
   await todos.getByLabel("Neue Aufgabe").fill("Zahnarzt anrufen");
+  await expect(todos.getByRole("button", { name: "＋" })).toBeDisabled();
+  await todos.getByRole("group", { name: "Bis wann?" }).getByRole("button", { name: "Morgen" }).click();
   await todos.getByRole("button", { name: "＋" }).click();
-  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ titel: "Zahnarzt anrufen", wichtig: true });
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ titel: "Zahnarzt anrufen", wichtig: true, frist: "2026-10-01" });
   expect(fehler.filter((f) => !f.includes("fetch"))).toEqual([]);
 });
 

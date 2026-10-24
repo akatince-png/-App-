@@ -96,3 +96,27 @@ export const JETZT_GRENZE = 3;
 // Verschieben: +1 Tag einplanen und mitzählen; ab 3× fragt die App
 // freundlich nach (kleiner machen, neu planen, streichen).
 export const VERSCHOBEN_HINWEIS = 3;
+
+// Deadline wird immer abgefragt (24.10., Nutzerin: „immer danach gefragt
+// werden … auch offen gelassen werden können“): keine Vorauswahl, „＋ Dazu“
+// erst nach einer Wahl – „Ohne Deadline“ ist eine bewusste Wahl.
+export const FRISTEN = [
+  ["heute", "Heute"],
+  ["morgen", "Morgen"],
+  ["woche", "Diese Woche"],
+  // Längere Horizonte (07.10., Wunschliste: „Tag, Woche, Monat, Jahr“).
+  ["monat", "Diesen Monat"],
+  ["jahr", "Dieses Jahr"],
+  ["datum", "📅 Datum"],
+  ["keine", "Ohne Deadline"],
+];
+export function fristAus(wahl, datum = "") {
+  const h = new Date();
+  if (wahl === "datum") return datum || null;
+  if (wahl === "heute") return toLocalISODate(h);
+  if (wahl === "morgen") return toLocalISODate(addDays(h, 1));
+  if (wahl === "woche") return toLocalISODate(addDays(h, (7 - ((h.getDay() + 6) % 7) - 1) || 0));
+  if (wahl === "monat") return toLocalISODate(new Date(h.getFullYear(), h.getMonth() + 1, 0));
+  if (wahl === "jahr") return toLocalISODate(new Date(h.getFullYear(), 11, 31));
+  return null;
+}

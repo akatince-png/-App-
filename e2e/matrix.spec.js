@@ -120,3 +120,26 @@ test("Kalender: Matrix-Aufgabe mit Uhrzeit erscheint als Block, abhaken möglich
   await page.locator("[data-block-details]").locator("..").getByRole("button", { name: "✓ Erledigt" }).click();
   expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ id: "m3" });
 });
+
+// Deadline immer abfragen (24.10.): erst nach einer Wahl lässt sich die
+// Aufgabe anlegen – „Ohne Deadline“ ist eine bewusste Wahl, Datum frei wählbar.
+test("Matrix: Deadline wird immer abgefragt", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/matrix");
+  const dazu = page.getByRole("button", { name: "＋ Dazu" });
+  await page.getByLabel("Neue Aufgabe").fill("Keller aufräumen");
+  await expect(dazu).toBeDisabled();
+  await expect(page.getByText("Bitte wählen", { exact: false })).toBeVisible();
+  const frist = page.getByRole("group", { name: "Bis wann?" });
+  await frist.getByRole("button", { name: "Ohne Deadline" }).click();
+  await dazu.click();
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ titel: "Keller aufräumen", frist: null });
+
+  await page.getByLabel("Neue Aufgabe").fill("Steuer abgeben");
+  await expect(dazu).toBeDisabled();
+  await frist.getByRole("button", { name: "📅 Datum" }).click();
+  await expect(dazu).toBeDisabled();
+  await page.getByLabel("Deadline-Datum").fill("2026-11-15");
+  await dazu.click();
+  expect((await aufrufe(page, "matrixAufgabeSpeichern")).at(-1)[0]).toMatchObject({ titel: "Steuer abgeben", frist: "2026-11-15" });
+});
