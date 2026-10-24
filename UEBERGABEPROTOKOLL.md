@@ -290,6 +290,12 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## ✅ Erledigte Quests eingeklappt (24.10.2026, Auswertung Testphase)
+
+Nach vier Wochen Dauertest standen in Tagesplan, Gewohnheiten und Mehr bis zu elf erledigte Quests mit je einem
+„Zurücksetzen“-Knopf vor dem eigentlichen Inhalt. `ui/QuestsKarte.jsx` zeigt jetzt nur offene Quests, die erledigten
+hinter „✅ N Quests geschafft ▼“ (Zurücksetzen bleibt dort erreichbar). Test `ui/QuestsKarte.test.jsx`.
+
 ## 🪪 Steckbrief im Profil und in der Coach-Übersicht (24.10.2026)
 
 Nutzerinnen-Wunsch nach Vorlage einer Lernplattform-Profilseite, für **beide** Seiten gleich: oben großes Profilbild,

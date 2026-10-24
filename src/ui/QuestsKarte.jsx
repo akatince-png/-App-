@@ -14,6 +14,14 @@ import { VideoNachweisKnopf } from "./VideoNachweis";
 // unter Gewohnheiten ... mit aufgeführt werden").
 export function QuestsKarte({ quests, onFortschritt, titel = "🎯 Quests von deinem Coach — freiwillig, zusätzlich zu deinem Protokoll." }) {
   if (!quests || quests.length === 0) return null;
+  return <QuestsListe quests={quests} onFortschritt={onFortschritt} titel={titel} />;
+}
+
+// Erledigte Quests eingeklappt (24.10., Auswertung Testphase): Nach vier
+// Wochen standen elf erledigte Quests mit je einem „Zurücksetzen“-Knopf vor
+// Tagesplan und Mehr – der eigentliche Inhalt rutschte weit nach unten.
+function QuestsListe({ quests, onFortschritt, titel }) {
+  const [zeigeErledigte, setZeigeErledigte] = useState(false);
   const offen = quests.filter((q) => !q.fortschritt.erledigt);
   const erledigt = quests.filter((q) => q.fortschritt.erledigt);
 
@@ -23,9 +31,21 @@ export function QuestsKarte({ quests, onFortschritt, titel = "🎯 Quests von de
       {offen.map((q) => (
         <QuestZeile key={q.id} quest={q} onFortschritt={onFortschritt} />
       ))}
-      {erledigt.map((q) => (
-        <QuestZeile key={q.id} quest={q} onFortschritt={onFortschritt} />
-      ))}
+      {erledigt.length > 0 && (
+        <button
+          type="button"
+          data-quests-erledigt
+          aria-expanded={zeigeErledigte}
+          onClick={() => setZeigeErledigte(!zeigeErledigte)}
+          style={{ border: "none", background: "transparent", color: success, fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: "4px 0", fontFamily: "inherit" }}
+        >
+          ✅ {erledigt.length} {erledigt.length === 1 ? "Quest" : "Quests"} geschafft {zeigeErledigte ? "▲" : "▼"}
+        </button>
+      )}
+      {zeigeErledigte &&
+        erledigt.map((q) => (
+          <QuestZeile key={q.id} quest={q} onFortschritt={onFortschritt} />
+        ))}
     </div>
   );
 }
