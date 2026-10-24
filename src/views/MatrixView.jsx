@@ -5,7 +5,7 @@ import Umschalter, { ChipReihe } from "../ui/Umschalter";
 import { useAppData } from "../context/AppDataContext";
 import { useFokusTimer } from "../data/useFokusTimer";
 import { addDays, toLocalISODate } from "../utils/dates";
-import { ARTEN, ART, QUADRANTEN, QUADRANT, JETZT_GRENZE, VERSCHOBEN_HINWEIS, fristText, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
+import { ARTEN, ART, FRISTEN, QUADRANTEN, QUADRANT, JETZT_GRENZE, VERSCHOBEN_HINWEIS, fristAus, fristText, nachQuadrant, quadrantVon, warum } from "../utils/matrix";
 
 // Aufgaben-Matrix im Workflow-Bereich (30.09., Vorschau, Nutzerin: „eine
 // Matrix für die vielen Aufgaben eines Projekts … das soll sich im Alltag
@@ -13,24 +13,6 @@ import { ARTEN, ART, QUADRANTEN, QUADRANT, JETZT_GRENZE, VERSCHOBEN_HINWEIS, fri
 // sich von selbst (utils/matrix.js). Antippen öffnet die Karte: nächster
 // Schritt, anderes Feld, einplanen, Fokus-Timer, erledigt, verschieben.
 // Rot und heute eingeplantes Grün erscheinen im Tagesplan (TagesHinweise).
-const FRISTEN = [
-  ["keine", "Keine Frist"],
-  ["heute", "Heute"],
-  ["morgen", "Morgen"],
-  ["woche", "Diese Woche"],
-  // Längere Horizonte (07.10., Wunschliste: „Tag, Woche, Monat, Jahr“).
-  ["monat", "Diesen Monat"],
-  ["jahr", "Dieses Jahr"],
-];
-const fristAus = (wahl) => {
-  const h = new Date();
-  if (wahl === "heute") return toLocalISODate(h);
-  if (wahl === "morgen") return toLocalISODate(addDays(h, 1));
-  if (wahl === "woche") return toLocalISODate(addDays(h, (7 - ((h.getDay() + 6) % 7) - 1) || 0));
-  if (wahl === "monat") return toLocalISODate(new Date(h.getFullYear(), h.getMonth() + 1, 0));
-  if (wahl === "jahr") return toLocalISODate(new Date(h.getFullYear(), 11, 31));
-  return null;
-};
 
 const feld = { width: "100%", boxSizing: "border-box", border: "1.5px solid var(--mp-rand)", borderRadius: 12, padding: "10px 12px", fontSize: 15, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" };
 // Erinnerungs-Wahl: [Wert, Text, braucht Uhrzeit].
@@ -54,7 +36,8 @@ export default function MatrixView({ onHome }) {
   const [projekt, setProjekt] = useState("alle");
   const [titel, setTitel] = useState("");
   const [wichtig, setWichtig] = useState("ja");
-  const [frist, setFrist] = useState("keine");
+  const [frist, setFrist] = useState(null);
+  const [fristDatum, setFristDatum] = useState("");
   // Was ist es? Termin mit Tag + Uhrzeit (07.10.).
   const [art, setArt] = useState("aufgabe");
   const [terminTag, setTerminTag] = useState(toLocalISODate(new Date()));
@@ -66,7 +49,8 @@ export default function MatrixView({ onHome }) {
   const sichtbar = useMemo(() => matrixAufgaben.filter((a) => projekt === "alle" || (a.projektId || "ohne") === projekt), [matrixAufgaben, projekt]);
   const felder = nachQuadrant(sichtbar);
   const projektName = (id) => projekte.find((p) => p.id === id)?.name;
-  const vorschau = quadrantVon({ wichtig: wichtig === "ja", frist: art === "termin" ? terminTag || null : fristAus(frist) });
+  const vorschau = quadrantVon({ wichtig: wichtig === "ja", frist: art === "termin" ? terminTag || null : fristAus(frist, fristDatum) });
+  const fristFehlt = art !== "termin" && (frist === null || (frist === "datum" && !fristDatum));
 
   const speichern = async (a) => {
     setFehler(null);
@@ -75,14 +59,14 @@ export default function MatrixView({ onHome }) {
     return r;
   };
   const hinzufuegen = async () => {
-    if (!titel.trim()) return;
+    if (!titel.trim() || fristFehlt) return;
     const termin = art === "termin";
     const r = await speichern({
       titel,
       art,
       wichtig: wichtig === "ja",
       // Ein Termin hat seinen Tag als Frist und ist an dem Tag eingeplant.
-      frist: termin ? terminTag || null : fristAus(frist),
+      frist: termin ? terminTag || null : fristAus(frist, fristDatum),
       geplantAm: termin ? terminTag || null : null,
       uhrzeit: termin ? terminZeit || null : null,
       projektId: projekt === "alle" || projekt === "ohne" ? null : projekt,
@@ -90,6 +74,8 @@ export default function MatrixView({ onHome }) {
     if (r?.ok !== false) {
       setTitel("");
       setTerminZeit("");
+      setFrist(null);
+      setFristDatum("");
     }
   };
 
@@ -161,19 +147,27 @@ export default function MatrixView({ onHome }) {
             <input type="time" value={terminZeit} onChange={(e) => setTerminZeit(e.target.value)} aria-label="Termin-Uhrzeit" style={{ ...feld, width: "auto", padding: "7px 8px", fontSize: 14 }} />
           </div>
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }} role="group" aria-label="Bis wann?">
-            {FRISTEN.map(([id, l]) => (
-              <button key={id} type="button" aria-pressed={frist === id} onClick={() => setFrist(id)} style={kleinKnopf(frist === id)}>
-                {l}
-              </button>
-            ))}
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: titel.trim() && fristFehlt ? "var(--mp-accent-dark-text)" : "var(--mp-text-muted)", marginBottom: 6 }}>
+              ⏰ Deadline – bis wann?{titel.trim() && fristFehlt ? " Bitte wählen" : ""}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }} role="group" aria-label="Bis wann?">
+              {FRISTEN.map(([id, l]) => (
+                <button key={id} type="button" aria-pressed={frist === id} onClick={() => setFrist(id)} style={kleinKnopf(frist === id)}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            {frist === "datum" && (
+              <input type="date" value={fristDatum} onChange={(e) => setFristDatum(e.target.value)} aria-label="Deadline-Datum" style={{ ...feld, width: "auto", marginTop: 8, padding: "7px 8px", fontSize: 14 }} />
+            )}
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
           <span data-matrix-vorschau={vorschau} style={{ fontSize: 12.5, fontWeight: 700, color: QUADRANT[vorschau].schrift }}>
             → landet in {QUADRANT[vorschau].icon} {QUADRANT[vorschau].titel}
           </span>
-          <button type="button" onClick={hinzufuegen} disabled={!titel.trim()} style={{ ...kleinKnopf(true), padding: "9px 16px", opacity: titel.trim() ? 1 : 0.5 }}>
+          <button type="button" onClick={hinzufuegen} disabled={!titel.trim() || fristFehlt} style={{ ...kleinKnopf(true), padding: "9px 16px", opacity: titel.trim() && !fristFehlt ? 1 : 0.5 }}>
             ＋ Dazu
           </button>
         </div>
@@ -295,6 +289,17 @@ function AufgabeKarte({ a, onSpeichern, onLoeschen, onFokus, onSchliessen }) {
         </button>
       )}
 
+      {a.art !== "termin" && (
+        <>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", margin: "12px 0 4px" }}>⏰ DEADLINE</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <input type="date" value={a.frist || ""} onChange={(e) => aendern({ frist: e.target.value || null })} aria-label="Deadline ändern" style={{ ...feld, width: "auto", padding: "5px 8px", fontSize: 13 }} />
+            <button type="button" aria-pressed={!a.frist} onClick={() => aendern({ frist: null })} style={kleinKnopf(!a.frist)}>
+              Ohne Deadline
+            </button>
+          </div>
+        </>
+      )}
       <div style={{ fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", margin: "12px 0 4px" }}>IN DEN TAGESPLAN</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         <button type="button" aria-pressed={a.geplantAm === heute} onClick={() => aendern({ geplantAm: heute })} style={kleinKnopf(a.geplantAm === heute)}>

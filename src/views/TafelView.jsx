@@ -3,7 +3,7 @@ import { useAppData } from "../context/AppDataContext";
 import { useTagesBloecke } from "../data/useTagesBloecke";
 import { addDays, toLocalISODate } from "../utils/dates";
 import { hhmm } from "../utils/kalender";
-import { ART, QUADRANT, QUADRANTEN, nachQuadrant } from "../utils/matrix";
+import { ART, FRISTEN, QUADRANT, QUADRANTEN, fristAus, nachQuadrant } from "../utils/matrix";
 import { bg, textMain, textMuted } from "../ui/theme";
 
 // Tafel fürs Tablet (24.10., Nutzerin: „wenn ich morgens an mein Tablet gehe
@@ -24,6 +24,10 @@ export default function TafelView({ onHome }) {
   const bloeckeFuer = useTagesBloecke();
   const [jetzt, setJetzt] = useState(() => new Date());
   const [neu, setNeu] = useState("");
+  // Deadline wie in der Matrix immer abfragen (24.10.).
+  const [frist, setFrist] = useState(null);
+  const [fristDatum, setFristDatum] = useState("");
+  const fristFehlt = frist === null || (frist === "datum" && !fristDatum);
   useEffect(() => {
     const id = setInterval(() => setJetzt(new Date()), 30000);
     return () => clearInterval(id);
@@ -45,9 +49,13 @@ export default function TafelView({ onHome }) {
   };
   const hinzufuegen = async () => {
     const titel = neu.trim();
-    if (!titel) return;
-    const r = await matrixAufgabeSpeichern?.({ titel, wichtig: true, art: "aufgabe" });
-    if (r?.ok !== false) setNeu("");
+    if (!titel || fristFehlt) return;
+    const r = await matrixAufgabeSpeichern?.({ titel, wichtig: true, art: "aufgabe", frist: fristAus(frist, fristDatum) });
+    if (r?.ok !== false) {
+      setNeu("");
+      setFrist(null);
+      setFristDatum("");
+    }
   };
 
   return (
@@ -79,10 +87,23 @@ export default function TafelView({ onHome }) {
               style={{ display: "flex", gap: 6, marginBottom: 6 }}
             >
               <input value={neu} onChange={(e) => setNeu(e.target.value)} placeholder="Neue Aufgabe …" aria-label="Neue Aufgabe" style={{ flex: 1, minWidth: 0, border: "1.5px solid var(--mp-rand)", borderRadius: 12, padding: "8px 10px", fontSize: 14, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" }} />
-              <button type="submit" disabled={!neu.trim()} style={{ border: "none", borderRadius: 12, padding: "0 12px", fontWeight: 800, background: "var(--mp-accent)", color: "#fff", cursor: "pointer", opacity: neu.trim() ? 1 : 0.5, fontFamily: "inherit" }}>
+              <button type="submit" disabled={!neu.trim() || fristFehlt} style={{ border: "none", borderRadius: 12, padding: "0 12px", fontWeight: 800, background: "var(--mp-accent)", color: "#fff", cursor: "pointer", opacity: neu.trim() && !fristFehlt ? 1 : 0.5, fontFamily: "inherit" }}>
                 ＋
               </button>
             </form>
+            {neu.trim() && (
+              <div style={{ marginBottom: 6 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: textMuted, marginBottom: 4 }}>⏰ Deadline – bis wann?</div>
+                <div role="group" aria-label="Bis wann?" style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {FRISTEN.map(([id, l]) => (
+                    <button key={id} type="button" aria-pressed={frist === id} onClick={() => setFrist(id)} style={{ border: "none", borderRadius: 99, padding: "5px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", background: frist === id ? "var(--mp-accent)" : "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))", color: frist === id ? "#fff" : "var(--mp-text)" }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                {frist === "datum" && <input type="date" value={fristDatum} onChange={(e) => setFristDatum(e.target.value)} aria-label="Deadline-Datum" style={{ marginTop: 6, border: "1.5px solid var(--mp-rand)", borderRadius: 10, padding: "5px 8px", fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" }} />}
+              </div>
+            )}
             {!offen && <div style={{ fontSize: 13, color: textMuted, padding: "8px 0" }}>Keine offenen Aufgaben. 🎉</div>}
             {QUADRANTEN.map((q) =>
               quadranten[q.id].length ? (
