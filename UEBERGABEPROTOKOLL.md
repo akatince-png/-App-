@@ -295,10 +295,11 @@ Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer 
 Nutzerin wollte Tagesplan, To-dos (Matrix) usw. als Widget. Echte Widgets gehen als Web-App nicht (iOS/Android:
 nur native Apps, später über App-Hülle + WidgetKit, Roadmap). Stattdessen: `#/tagesplan` und `#/matrix` in
 `SPRUNG_ZIELE` (`utils/routing.ts`) freigegeben (Neuladen landet weiter auf der Startseite), dazu `shortcuts` im
-Manifest (Android: lange auf das App-Symbol drücken). iPhone/iPad: Kurzbefehle-App, „URL öffnen“
-`https://akaapp.vercel.app/#/tagesplan` bzw. `#/matrix`, als Kurzbefehle-Widget auf den Home-Bildschirm. Öffnet in
-Safari (dort einmal anmelden), nicht in der Home-Bildschirm-App. Eigene Bilder: `public/icons/kurz-*.png`
-(im Manifest hinterlegt; auf iPhone/iPad über Kurzbefehle → „Zum Home-Bildschirm“ → Symbol → Foto wählen).
+Manifest (Android: lange auf das App-Symbol drücken). iPhone/iPad: Der Kurzbefehle-Weg klappte bei der Nutzerin
+nicht (Link öffnete nicht richtig, Bild ließ sich nicht ändern). Deshalb eigene Startseiten `public/kurz/*.html`
+(tagesplan, todos, alltag, coach) mit eigenem Manifest und `apple-touch-icon` (`public/icons/kurz-*.png`): in Safari
+öffnen → Teilen → „Zum Home-Bildschirm“. Als Home-Bildschirm-App gestartet (standalone oder `?start=1`) springen sie
+per `location.replace` nach `/#/<view>`. Jedes Symbol ist auf iOS eine eigene Web-App (einmal anmelden).
 
 ## ✅ Erledigte Quests eingeklappt (24.10.2026, Auswertung Testphase)
 

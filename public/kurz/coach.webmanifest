@@ -1,0 +1,17 @@
+{
+  "name": "AKA Coach",
+  "short_name": "Coach",
+  "start_url": "/kurz/coach.html?start=1",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F5",
+  "theme_color": "#5641C2",
+  "icons": [
+    {
+      "src": "/icons/kurz-coach-chat.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

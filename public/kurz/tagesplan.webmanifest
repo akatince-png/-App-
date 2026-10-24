@@ -1,0 +1,17 @@
+{
+  "name": "AKA Tagesplan",
+  "short_name": "Tagesplan",
+  "start_url": "/kurz/tagesplan.html?start=1",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F5",
+  "theme_color": "#2D5BB0",
+  "icons": [
+    {
+      "src": "/icons/kurz-tagesplan.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
