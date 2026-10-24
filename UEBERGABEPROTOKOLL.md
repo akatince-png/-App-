@@ -290,6 +290,18 @@ Ränder als ruhiger Farbverlauf in den Bildfarben, Uhr und Karte in derselben Mi
 Vollbild-Fenster nicht mehr eingesperrt werden. e2e-Test „auf dem Tablet quer mittig“, Vorschau
 `docs/morgenfenster-tablet.png`.
 
+## 💧 Sofortige Rückmeldung beim Eintragen (24.10.2026)
+
+Nutzerin trug Getränke ein, sah keine Rückmeldung und tippte mehrfach – in der DB kamen fünf Getränke (2× Wasser, 3× Kaffee,
+je 500 ml) in derselben Zehntelsekunde an: Die Verbindung hing, die App zeigte die Bestätigung erst nach der Server-Antwort,
+die Knöpfe blieben aktiv. Jetzt:
+- `hydrationHinzufuegen` und `tageslichtHinzufuegen`: Menge springt sofort hoch, kurze Bestätigung („+500 ml eingetragen ·
+  Heute … ml“) über `feuereBelohnung`, Speichern danach; bei Fehler zurück auf den alten Wert + klare Meldung. Option
+  `{ leise: true }` für Aufrufer mit eigener Bestätigung (Schnellzugriff, Aka).
+- Schnellzugriff (`SchnellKreis`): beim Tippen sofort „⏳ … wird eingetragen“ statt der Knöpfe, ein zweites Tippen zählt
+  nicht (`laeuftRef`), danach „✓ …“ für 1,6 s. Gilt für Getränk, Nickerchen, Pre-Workout & Co.
+- e2e: „Getränk: sofortige Rückmeldung, zweites Tippen trägt nichts doppelt ein“.
+
 ## 🎯 Gemeinsam fokussieren gehört zum Workflow (24.10.2026)
 
 Nutzerin: „Gemeinsam fokussieren hat im Spielebereich nichts zu suchen, gehört zum Workflow, und der Workflow soll mit der

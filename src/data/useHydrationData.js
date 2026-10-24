@@ -53,8 +53,13 @@ export function useHydrationData(userId) {
     return eintrag?.mengeMl ?? 0;
   }, [hydrationEintraege]);
 
+  // Sofort sichtbar (24.10., Nutzerin: „ich nehme nicht wahr, ob das passiert
+  // ist“ – bei hängender Verbindung kamen fünf Getränke auf einmal an): Menge
+  // springt beim Antippen hoch und eine kurze Bestätigung erscheint, gespeichert
+  // wird danach. Schlägt das Speichern fehl, geht die Menge wieder zurück.
+  // `leise`: Aufrufer zeigt selbst eine Bestätigung (Schnellzugriff, Aka).
   const hydrationHinzufuegen = useCallback(
-    async (deltaMl) => {
+    async (deltaMl, { leise = false } = {}) => {
       const datum = heute();
       const bisher =
         pendingHeuteRef.current?.datum === datum
@@ -62,6 +67,13 @@ export function useHydrationData(userId) {
           : hydrationEintraege.find((e) => e.datum === datum)?.mengeMl ?? 0;
       const neueMenge = Math.max(0, bisher + deltaMl);
       pendingHeuteRef.current = { datum, menge: neueMenge };
+      const mengeSetzen = (menge) =>
+        setHydrationEintraege((prev) => {
+          const bestehend = prev.find((e) => e.datum === datum) || {};
+          return [...prev.filter((e) => e.datum !== datum), { ...bestehend, datum, mengeMl: menge }].sort((a, b) => a.datum.localeCompare(b.datum));
+        });
+      mengeSetzen(neueMenge);
+      if (!leise && deltaMl > 0) feuereBelohnung({ text: `+${deltaMl} ml eingetragen`, untertitel: `Heute ${neueMenge} ml`, icon: "droplet" });
       const { error } = await supabase
         .from("hydration_logs")
         .upsert({ user_id: userId, datum, menge_ml: neueMenge }, { onConflict: "user_id,datum" });
@@ -69,15 +81,10 @@ export function useHydrationData(userId) {
         console.error(error);
         if (pendingHeuteRef.current?.datum === datum && pendingHeuteRef.current?.menge === neueMenge) {
           pendingHeuteRef.current = null;
+          mengeSetzen(bisher);
         }
-        return { ok: false, error: `Speichern fehlgeschlagen: ${error.message}` };
+        return { ok: false, error: `Nicht gespeichert – bitte Verbindung prüfen und nochmal versuchen. (${error.message})` };
       }
-      setHydrationEintraege((prev) => {
-        const bestehend = prev.find((e) => e.datum === datum) || {};
-        return [...prev.filter((e) => e.datum !== datum), { ...bestehend, datum, mengeMl: neueMenge }].sort((a, b) =>
-          a.datum.localeCompare(b.datum)
-        );
-      });
       // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): Hydration hat keine
       // geplante Uhrzeit, gegen die "rechtzeitig" geprüft werden könnte —
       // die Belohnung feiert stattdessen das erstmalige Erreichen des

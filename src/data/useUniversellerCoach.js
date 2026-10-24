@@ -304,7 +304,7 @@ export function useUniversellerCoach() {
         onOpenView(befehl.ansicht);
         return { bereich: "oeffnen", daten: { name: ansichtName(befehl.ansicht) }, schliessen: true };
       case "wasser": {
-        const r = await appData.hydrationHinzufuegen?.(befehl.ml);
+        const r = await appData.hydrationHinzufuegen?.(befehl.ml, { leise: true });
         if (r && r.ok === false) throw new Error(r.error);
         // Wie im Schnellmenü zusätzlich mit Uhrzeit als Ereignis (Kalender).
         appData.spontanSpeichern?.({ art: "getraenk", mengeMl: befehl.ml, name: "Wasser" });
