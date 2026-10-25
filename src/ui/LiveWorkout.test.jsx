@@ -6,7 +6,7 @@ vi.mock("../context/AppDataContext", () => ({
   useAppData: () => ({ spotifyVerbunden: false, spotifyAnlaesse: {}, spotifyPausieren: () => {}, uebungsBilder: {} }),
 }));
 vi.mock("../utils/speech", () => ({ spracherkennungVerfuegbar: () => false, starteSprachErkennung: vi.fn() }));
-vi.mock("../data/useIntervallMusikSync", () => ({ useIntervallMusikSync: () => {} }));
+vi.mock("../data/useIntervallMusikSync", () => ({ useIntervallMusikSync: () => ({ onPhaseStart: () => {}, onPhaseEndeNaht: () => {}, reset: () => {} }) }));
 // Kamera-Zählung: echte Erkennung braucht Kamera + MediaPipe → hier ersetzt.
 vi.mock("./KameraZaehler", () => ({ default: ({ onFertig }) => <button onClick={() => onFertig(8)}>Kamera fertig 8</button> }));
 
@@ -30,5 +30,21 @@ describe("LiveWorkout – Frage nach dem letzten Satz", () => {
     fireEvent.click(screen.getByText("Kamera fertig 8"));
     expect(screen.getByText("Tatsächlich durchgeführt:")).toBeTruthy();
     expect(screen.getByText(/Satz 1: 8/)).toBeTruthy();
+  });
+});
+
+// 25.10. (Nutzerin): jedes laufende Training lässt sich spontan beenden.
+describe("LiveWorkout – spontan beenden", () => {
+  it.each([
+    ["Kraft", SESSION],
+    ["Intervall", { id: "t2", art: "Bodyweight", intervallArbeitSek: 40, intervallPauseSek: 20, runden: 8, uebungen: [] }],
+    ["Stoppuhr", { id: "t3", art: "Sonstiges", uebungen: [] }],
+  ])("%s: „Training jetzt beenden“ speichert das Training", (_, session) => {
+    const onFertig = vi.fn();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<LiveWorkout session={session} onFertig={onFertig} onSchliessen={() => {}} />);
+    fireEvent.click(screen.getByText("■ Training jetzt beenden"));
+    expect(onFertig).toHaveBeenCalledWith(session.id, expect.objectContaining({ dauerMin: 1 }));
+    expect(screen.queryByText("■ Training jetzt beenden")).toBeNull();
   });
 });

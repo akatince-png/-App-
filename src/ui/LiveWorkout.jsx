@@ -470,6 +470,22 @@ export default function LiveWorkout({ session, onFertig, onSchliessen }) {
         </Card>
       )}
 
+      {/* Spontan beenden (25.10., Nutzerin: „das Training auch spontan beenden
+          können, in allen Bereichen“): speichert die bisherige Zeit als erledigt;
+          bei Intervallen folgt danach die Frage nach den geschafften Runden. */}
+      {!fertig && (
+        <div data-training-beenden style={{ marginTop: 14 }}>
+          <PrimaryButton
+            variant="ghost"
+            onClick={() => {
+              if (window.confirm(`Training jetzt beenden? Gespeichert werden ${Math.max(1, Math.round(gesamtSek / 60))} Min.`)) beenden();
+            }}
+          >
+            ■ Training jetzt beenden
+          </PrimaryButton>
+        </div>
+      )}
+
       {vorschauOffen && (
         <TrainingVorschau
           art={session.art}

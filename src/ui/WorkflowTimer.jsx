@@ -529,7 +529,7 @@ export default function WorkflowTimer({ onSchliessen }) {
           />
           <div style={{ marginTop: 14 }}>
             <PrimaryButton variant={laufendesPreset.offen ? "success" : "ghost"} onClick={beenden}>
-              {laufendesPreset.offen ? "✓ Fertig für heute" : "Abbrechen"}
+              {laufendesPreset.offen ? "✓ Fertig für heute" : "■ Jetzt beenden"}
             </PrimaryButton>
           </div>
         </Card>
