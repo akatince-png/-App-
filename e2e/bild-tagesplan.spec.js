@@ -30,3 +30,24 @@ test("Bild-Tagesplan: Bilder, Dauer, Jetzt-Linie, Timer läuft in der Listenansi
   await expect(page.locator("[data-fokus-timer]")).toHaveCount(0);
   expect(fehler).toEqual([]);
 });
+
+// Aufklappen (25.10., Nutzerin): Routine zeigt ihre Schritte und lässt sich
+// direkt bearbeiten; gleichzeitige Supplemente stehen als eine Gabe da.
+test("Bild-Tagesplan: Routine aufklappen und bearbeiten, Supplemente gebündelt", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const heute = new Date();
+  await page.clock.install({ time: new Date(heute.getFullYear(), heute.getMonth(), heute.getDate(), 9, 40) });
+  await page.goto("/e2e/harness/index.html?beispiel=1#/tagesplan");
+  const morgen = page.locator('[data-bild-block="routine-morgen"]');
+  await morgen.locator("[data-bild-aufklappen]").click();
+  await expect(morgen.locator("[data-bild-routine]")).toBeVisible();
+  await morgen.locator("[data-routine-bearbeiten]").click();
+  await expect(morgen.getByRole("button", { name: "✓ Fertig mit Bearbeiten" })).toBeVisible();
+  const gruppen = page.locator('[data-bild-block^="gruppe-"]');
+  if ((await gruppen.count()) > 0) {
+    const g = gruppen.first();
+    await g.locator("[data-bild-aufklappen]").click();
+    await expect(g.locator("[data-bild-gruppe]")).toBeVisible();
+  }
+  expect(fehler).toEqual([]);
+});

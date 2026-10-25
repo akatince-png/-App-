@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { KATEGORIE_META, ROUTINE_META } from "../utils/dayItems";
-import { blockHoehe, dauerText, minZuZeit, planBloecke } from "../utils/bildTagesplan";
+import { blockHoehe, dauerText, gruppiereBloecke, minZuZeit, planBloecke } from "../utils/bildTagesplan";
 import { useFokusTimer } from "../data/useFokusTimer";
 import { Ring } from "./TimerRing";
 import { textMain, textMuted, verdunkeln, hexZuRgba } from "./theme";
@@ -31,13 +31,20 @@ function JetztLinie({ oben }) {
   );
 }
 
-function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
+// Aufklappen (25.10., Nutzerin: „wenn ich auf die Morgenroutine klicke, geht
+// sie auf und ich sehe alle Bestandteile und kann sie direkt bearbeiten“ –
+// genauso eine gebündelte Supplement-/Injektionsgabe).
+function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine }) {
+  const [offen, setOffen] = useState(false);
   const f = farbenFuer(b);
   const hoehe = blockHoehe(b.dauer);
   const meinTimer = timer?.key === b.key;
   const erledigt = !!b.done;
   const istRoutine = b.kategorie === "morgenroutine" || b.kategorie === "abendroutine";
-  const aktionText = istRoutine ? "▶ Starten" : b.kategorie === "training" ? "Training" : "✓ Erledigt";
+  const istGruppe = !!b.teile;
+  const aufklappbar = istGruppe || (istRoutine && !!renderRoutine);
+  const aktionText = istRoutine ? "▶ Starten" : b.kategorie === "training" ? "Training" : istGruppe ? "✓ Alle" : "✓ Erledigt";
+  const textFarbe = erledigt ? "#fff" : f.text;
   return (
     <div style={{ position: "relative", marginBottom: 8 }} data-bild-block={b.key}>
       {b.start != null && <time style={{ position: "absolute", left: -58, top: 10, width: 46, textAlign: "right", fontSize: 12, fontWeight: 800, color: b.vorbei ? "#B4B8C8" : textMuted }}>{minZuZeit(b.start)}</time>}
@@ -45,76 +52,116 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion }) {
         style={{
           minHeight: hoehe,
           borderRadius: 18,
-          padding: "10px 10px 10px 10px",
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 11,
+          padding: 10,
           background: erledigt ? verdunkeln(f.dot, 6) : f.bg,
           border: b.laeuft || meinTimer ? `2.5px solid ${verdunkeln(f.dot, 10)}` : `1.5px solid ${f.dot}55`,
-          opacity: b.vorbei && !erledigt ? 0.72 : 1,
+          opacity: b.vorbei && !erledigt && !offen ? 0.72 : 1,
           // Plastisch (30.09.): jeder Block liegt mit weichem Schatten auf.
           boxShadow: b.laeuft
             ? `0 12px 24px -8px ${hexZuRgba(f.dot, 0.45)}, inset 0 1px 0 rgba(255,255,255,.55)`
             : `0 6px 16px -8px ${hexZuRgba(f.dot, 0.4)}, 0 1px 2px rgba(16,24,40,.05), inset 0 1px 0 rgba(255,255,255,.55)`,
           position: "relative",
+          boxSizing: "border-box",
         }}
       >
-        {/* Bereichs-Symbol als plastische Kugel (30.09., Nutzerin) statt Emoji. */}
-        <span style={{ position: "relative", zIndex: 3 }}>
-          <PlastikSymbol kategorie={b.kategorie} farbe={f.dot} size={46} eckig />
-        </span>
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: erledigt ? "#fff" : f.text, lineHeight: 1.25 }}>{b.name}</div>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: erledigt ? "rgba(255,255,255,0.88)" : textMain, opacity: 0.8, marginTop: 2 }}>
-            {dauerText(b.dauer)}
-            {b.start != null ? ` · bis ${minZuZeit(b.ende)}` : ""}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
+          {/* Bereichs-Symbol als plastische Kugel (30.09., Nutzerin) statt Emoji. */}
+          <span style={{ position: "relative", zIndex: 3 }}>
+            <PlastikSymbol kategorie={b.kategorie} farbe={f.dot} size={46} eckig />
+          </span>
+          <div
+            role={aufklappbar ? "button" : undefined}
+            tabIndex={aufklappbar ? 0 : undefined}
+            aria-expanded={aufklappbar ? offen : undefined}
+            data-bild-aufklappen={aufklappbar ? b.key : undefined}
+            onClick={aufklappbar ? () => setOffen((o) => !o) : undefined}
+            onKeyDown={aufklappbar ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOffen((o) => !o)) : undefined}
+            style={{ flex: 1, minWidth: 0, paddingTop: 2, cursor: aufklappbar ? "pointer" : "default" }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 800, color: textFarbe, lineHeight: 1.25 }}>
+              {b.name}
+              {aufklappbar && <span aria-hidden="true" style={{ fontSize: 11, marginLeft: 6, opacity: 0.7 }}>{offen ? "▲" : "▼"}</span>}
+            </div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: erledigt ? "rgba(255,255,255,0.88)" : textMain, opacity: 0.8, marginTop: 2 }}>
+              {dauerText(b.dauer)}
+              {b.start != null ? ` · bis ${minZuZeit(b.ende)}` : ""}
+            </div>
+            {b.detail && !offen && <div style={{ fontSize: 11.5, color: erledigt ? "rgba(255,255,255,0.8)" : textMuted, marginTop: 2 }}>{b.detail}</div>}
+            <div style={{ marginTop: 5, color: erledigt ? "#fff" : textMain }}>
+              <AmpelPunkt item={b} />
+            </div>
           </div>
-          {b.detail && <div style={{ fontSize: 11.5, color: erledigt ? "rgba(255,255,255,0.8)" : textMuted, marginTop: 2 }}>{b.detail}</div>}
-          <div style={{ marginTop: 5, color: erledigt ? "#fff" : textMain }}>
-            <AmpelPunkt item={b} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0, position: "relative", zIndex: 3 }}>
+            {!erledigt && !istRoutine && (
+              <button
+                type="button"
+                className="mp-tap"
+                aria-label={meinTimer ? `Timer ${b.name} läuft` : `Timer für ${b.name} starten`}
+                onClick={() => onTimer(b)}
+                style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}
+              >
+                {meinTimer ? (
+                  <Ring anteil={anteil} groesse={42} dicke={5} farbe={verdunkeln(f.dot, 10)}>
+                    {Math.ceil(restSek / 60)}′
+                  </Ring>
+                ) : (
+                  <span style={{ width: 42, height: 42, borderRadius: 21, ...plastikHell(), color: verdunkeln(f.dot, 10), display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                    <SchnellIcon name="play" size={16} />
+                  </span>
+                )}
+              </button>
+            )}
+            {erledigt ? (
+              <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>✓ Erledigt</span>
+            ) : (istRoutine || b.kategorie === "training" || b.onConfirm || istGruppe) && b.kategorie !== "zeitblock" && b.kategorie !== "workflow" ? (
+              <button
+                type="button"
+                className="mp-tap"
+                onClick={() => onAktion(b)}
+                aria-label={istRoutine ? `${b.name} starten` : b.kategorie === "training" ? undefined : `${b.name} erledigt`}
+                style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+              >
+                {aktionText}
+              </button>
+            ) : null}
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0, position: "relative", zIndex: 3 }}>
-          {!erledigt && !istRoutine && (
-            <button
-              type="button"
-              className="mp-tap"
-              aria-label={meinTimer ? `Timer ${b.name} läuft` : `Timer für ${b.name} starten`}
-              onClick={() => onTimer(b)}
-              style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}
-            >
-              {meinTimer ? (
-                <Ring anteil={anteil} groesse={42} dicke={5} farbe={verdunkeln(f.dot, 10)}>
-                  {Math.ceil(restSek / 60)}′
-                </Ring>
-              ) : (
-                <span style={{ width: 42, height: 42, borderRadius: 21, ...plastikHell(), color: verdunkeln(f.dot, 10), display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  <SchnellIcon name="play" size={16} />
+        {offen && istGruppe && (
+          <div data-bild-gruppe={b.key} style={{ marginTop: 10, display: "grid", gap: 6 }}>
+            {b.teile.map((t) => (
+              <div key={t.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 12, background: "var(--mp-karte)", color: "var(--mp-text)" }}>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <b style={{ display: "block", fontSize: 13.5, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.6 : 1 }}>{t.name}</b>
+                  {t.detail && <span style={{ fontSize: 12, color: textMuted }}>{t.detail}</span>}
                 </span>
-              )}
-            </button>
-          )}
-          {erledigt ? (
-            <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>✓ Erledigt</span>
-          ) : (istRoutine || b.kategorie === "training" || b.onConfirm) && b.kategorie !== "zeitblock" && b.kategorie !== "workflow" ? (
-            <button
-              type="button"
-              className="mp-tap"
-              onClick={() => onAktion(b)}
-              aria-label={istRoutine ? `${b.name} starten` : b.kategorie === "training" ? undefined : `${b.name} erledigt`}
-              style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
-            >
-              {aktionText}
-            </button>
-          ) : null}
-        </div>
+                {onBearbeiten && (
+                  <button type="button" aria-label={`${t.name} bearbeiten`} onClick={() => onBearbeiten(t)} style={{ border: "none", background: "transparent", fontSize: 15, cursor: "pointer", padding: "4px 6px" }}>
+                    ✏️
+                  </button>
+                )}
+                {t.done ? (
+                  <span style={{ fontSize: 12, fontWeight: 800, color: verdunkeln(f.dot, 12) }}>✓</span>
+                ) : t.onConfirm ? (
+                  <button type="button" className="mp-tap" aria-label={`${t.name} erledigt`} onClick={() => t.onConfirm()} style={{ border: "none", borderRadius: 99, padding: "6px 10px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit" }}>
+                    ✓
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+        {offen && istRoutine && renderRoutine && (
+          <div data-bild-routine={b.routine} style={{ marginTop: 10, padding: 10, borderRadius: 14, background: "var(--mp-karte)", color: "var(--mp-text)" }}>
+            {renderRoutine(b.routine)}
+          </div>
+        )}
       </div>
-      {b.laeuft && <JetztLinie oben={Math.round(b.jetztAnteil * hoehe)} />}
+      {b.laeuft && !offen && <JetztLinie oben={Math.round(b.jetztAnteil * hoehe)} />}
     </div>
   );
 }
 
-export default function BildTagesplan({ items, routinen = [], heute, onRoutineStart, onTraining }) {
+export default function BildTagesplan({ items, routinen = [], heute, onRoutineStart, onTraining, onBearbeiten, renderRoutine }) {
   const { timer, restSek, anteil, starten, stoppen } = useFokusTimer();
   const [jetztMin, setJetztMin] = useState(() => {
     const d = new Date();
@@ -130,16 +177,21 @@ export default function BildTagesplan({ items, routinen = [], heute, onRoutineSt
   }, [heute]);
 
   const alle = useMemo(() => [...routinen, ...(items || [])], [routinen, items]);
-  const { mitZeit, ohneZeit, linieVor } = useMemo(() => planBloecke(alle, heute ? jetztMin : null), [alle, heute, jetztMin]);
+  const { mitZeit, ohneZeit, linieVor } = useMemo(() => {
+    const plan = planBloecke(alle, heute ? jetztMin : null);
+    const { bloecke, linieVor: linie } = gruppiereBloecke(plan.mitZeit, plan.linieVor);
+    return { mitZeit: bloecke, ohneZeit: plan.ohneZeit, linieVor: linie };
+  }, [alle, heute, jetztMin]);
 
   const onTimer = (b) => (timer?.key === b.key ? stoppen() : starten({ key: b.key, name: b.name, symbol: b.symbol, minuten: b.dauer }));
   const onAktion = (b) => {
     if (b.kategorie === "morgenroutine" || b.kategorie === "abendroutine") return onRoutineStart?.(b.routine);
     if (b.kategorie === "training") return onTraining?.(b);
     if (timer?.key === b.key) stoppen();
+    if (b.teile) return b.teile.filter((t) => !t.done).forEach((t) => t.onConfirm?.());
     b.onConfirm?.();
   };
-  const blockProps = { timer, restSek, anteil, onTimer, onAktion };
+  const blockProps = { timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine };
 
   if (!mitZeit.length && !ohneZeit.length) {
     return <div style={{ textAlign: "center", color: textMuted, fontSize: 13.5, padding: "24px 0" }}>Für diesen Tag steht nichts an. 🌿</div>;

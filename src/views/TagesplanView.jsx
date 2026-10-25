@@ -24,6 +24,7 @@ import TrainingVorschau from "../ui/TrainingVorschau";
 import { QuestsKarte } from "../ui/QuestsKarte";
 import DenkpauseNudge from "../ui/DenkpauseNudge";
 import BildTagesplan from "../ui/BildTagesplan";
+import RoutineInhalt from "../ui/RoutineInhalt";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import TagesHinweise from "../ui/TagesHinweise";
 import Umschalter from "../ui/Umschalter";
@@ -792,7 +793,15 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
               }}
             />
           )}
-          <BildTagesplan items={tagesItems} routinen={routinenBloecke} heute={sameDay(selectedDate, new Date())} onRoutineStart={setAblaufRoutine} onTraining={setTrainingVorschau} />
+          <BildTagesplan
+            items={tagesItems}
+            routinen={routinenBloecke}
+            heute={sameDay(selectedDate, new Date())}
+            onRoutineStart={setAblaufRoutine}
+            onTraining={setTrainingVorschau}
+            onBearbeiten={onEditItem ? (t) => onEditItem(t.kategorie, t.refId) : undefined}
+            renderRoutine={(r) => <RoutineInhalt routine={r} status={r === "morgen" ? morgenRoutineStatus : abendRoutineStatus} />}
+          />
           {zeigeUebergangsDenkpause && <DenkpauseNudge text="Kurzer Denksport zwischendurch?" onDismiss={() => setDenkpauseVersteckt(true)} />}
         </>
       )}
