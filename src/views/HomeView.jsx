@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Shell } from "../ui/primitives";
 import Logo from "../ui/Logo";
@@ -19,9 +19,7 @@ import { ZusatzEtikett } from "../ui/Zusatzprotokolle";
 import { useZusatzEtikett } from "../ui/useZusatzEtikett";
 import { SpielstandReihe } from "../ui/SpielstandKarte";
 import GehirnKarte from "../ui/GehirnKarte";
-import TagesQuestsKarte from "../ui/TagesQuestsKarte";
 import { useSpielFeiern } from "../ui/useSpielFeiern";
-import { baueTagesQuests } from "../utils/tagesQuests";
 import { toLocalISODate, addDays, sameDay, verspaetungText } from "../utils/dates";
 import { useAppData } from "../context/AppDataContext";
 import { useAdmin } from "../context/AdminContext";
@@ -45,6 +43,7 @@ import { TrainingStartAuswahl, WorkflowStartAuswahl } from "../ui/SpontanStart";
 import { workflowStartMerken, istWorkflowHeuteErledigt } from "../utils/workflowStart";
 import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
+import SchnellFenster, { AppKacheln } from "../ui/SchnellFenster";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
 import MorgenStartFenster from "../ui/MorgenStartFenster";
 import { SCHNELL_AUF_STARTSEITE, kamUeberSchnell, nimmSchnellStart } from "../utils/schnellStart";
@@ -205,6 +204,10 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   // Spontan starten (30.09.): „training“ | „workflow“ | null – klappt unter den Knöpfen auf.
   const [spontanOffen, setSpontanOffen] = useState(null);
   const variante = startVariante();
+  const schnellZu = useCallback(() => {
+    setSpieleOffen(false);
+    setSpontanOffen(null);
+  }, []);
   // Variante B: die Leiste unten öffnet Training/Workflow/Spielen hier.
   useEffect(() => {
     const auf = (e) => {
@@ -216,7 +219,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         setSpieleOffen(false);
         setSpontanOffen(was);
       }
-      setTimeout(() => document.querySelector("[data-spontan-bereich]")?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
     };
     window.addEventListener("mp-schnell", auf);
     // Abkürzung vom Home-Bildschirm (24.10.): Training/Workflow/Spielen gleich öffnen.
@@ -801,10 +803,6 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   );
   const { kategorien: ordenKategorien, gesamtPunkte, globalerStreak, ladend: ordenLadend, neueBadgeKeys } = useErrungenschaften(userId, errungenschaftenQuellen);
   useSpielFeiern({ userId, gesamtPunkte, ladend: ordenLadend, neueBadgeKeys });
-  const tagesQuests = useMemo(
-    () => baueTagesQuests({ items: heuteItems, hydrationHeuteMl, hydrationZielMl, raetselHeute, raetselZiel: TAGESRAETSEL_ZIEL }),
-    [heuteItems, hydrationHeuteMl, hydrationZielMl, raetselHeute]
-  );
   const raetselZaehlt = !isEmergencyMode && raetselGeschafft ? 1 : 0;
 
   // Zeitraum-Auswahl fürs Tagesfortschritt-Balkendiagramm (16.09.,
@@ -1294,6 +1292,10 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
               <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2 }}>{k.titel}</span>
             </button>
           ))}
+        </div>
+        {/* Training/Workflow/Spielen im eigenen Fenster (25.10., Nutzerin). */}
+        {(spieleOffen || spontanOffen) && (
+          <SchnellFenster art={spieleOffen ? "spielen" : spontanOffen} onZu={schnellZu}>
           {spontanOffen === "training" && (
             <TrainingStartAuswahl
               heuteOffen={heuteItems.filter((i) => i.kategorie === "training" && !i.done)}
@@ -1315,24 +1317,24 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           {spieleOffen && (
             // Denksport und Tagesrätsel zusammengelegt (29.09., Nutzerin: „führen
             // in den gleichen Reiter“) – das Tagesrätsel steht oben in Denksport.
-            <div data-spiele-auswahl style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 10, borderRadius: 20, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" }}>
-              {[
-                ["denksport", "🧠", "Denksport & Rätsel"],
-                ["tagesraetsel", "🧩", "Tagesrätsel"],
-              ].map(([id, emoji, titel]) => (
-                <button key={id} type="button" className="mp-tap" onClick={() => onOpenView(id)} style={{ border: "none", borderRadius: 14, padding: "12px 6px", background: "color-mix(in srgb, #F1EDFF var(--mp-flaeche), var(--mp-karte))", cursor: "pointer", fontSize: 12.5, fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <span style={{ fontSize: 22 }}>{emoji}</span>
-                  {titel}
-                </button>
-              ))}
+            <div data-spiele-auswahl>
+              <AppKacheln
+                label="Spiele"
+                kacheln={[
+                  { id: "denksport", icon: "🧠", titel: "Denksport & Rätsel", label: "Denksport & Rätsel", hell: "#9D8BFF", farbe: "#5B47E0", onClick: () => onOpenView("denksport") },
+                  { id: "tagesraetsel", icon: "🧩", titel: "Tagesrätsel", label: "Tagesrätsel", hell: "#FF9F6B", farbe: "#D9541E", onClick: () => onOpenView("tagesraetsel") },
+                ]}
+              />
             </div>
           )}
-        </div>
+          </SchnellFenster>
+        )}
         </>
       )}
       {/* Spiel-Ausbau 23.09.: automatische Tages-Quests + "Dein Gehirn"
           direkt unter "Als Nächstes" — für alle, auch im Admin-Modus. */}
-      {!isEmergencyMode && <TagesQuestsKarte quests={tagesQuests} onOpenView={onOpenView} />}
+      {/* Tages-Quests unten entfernt (25.10., Nutzerin: „überflüssig, steht
+          schon oben in der Statistik“). */}
       {!STARTSEITE_SCHLICHT && (
       <>
       {/* Spielen (Design 2.0, 28.09.; Fokus seit 24.10. im Workflow). Nutzerin: „die Spiele nicht mehr

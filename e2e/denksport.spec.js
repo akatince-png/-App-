@@ -36,8 +36,9 @@ test("Denksport: Admin-Konto spielt frei eine Runde Rätsel", async ({ page }) =
 test("Tagesrätsel: von Home aus starten und 5 Fragen lösen", async ({ page }) => {
   const fehler = sammleKonsolenfehler(page);
   await page.goto("/e2e/harness/index.html");
-  await expect(page.getByText("Tagesrätsel").first()).toBeVisible();
-  await page.getByRole("button", { name: /Tagesrätsel/ }).first().click();
+  // Seit 25.10. über „Spielen“ im eigenen Fenster (Tages-Quests unten entfernt).
+  await page.locator("[data-schnellknoepfe]").getByRole("button", { name: "Spielen", exact: true }).click();
+  await page.locator("[data-spiele-auswahl]").getByRole("button", { name: /Tagesrätsel/ }).click();
   for (let i = 1; i <= 5; i++) {
     await expect(page.getByText(`Frage ${i} von 5`)).toBeVisible();
     await page.getByRole("group", { name: "Antworten" }).getByRole("button").first().click();

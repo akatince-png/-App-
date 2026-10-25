@@ -3,6 +3,7 @@ import { useAppData } from "../context/AppDataContext";
 import { LEERE_UEBUNG } from "./UebungenEditor";
 import { toLocalISODate } from "../utils/dates";
 import { QUADRANT, fristText, quadrantVon } from "../utils/matrix";
+import { AppKacheln } from "./SchnellFenster";
 
 // Spontan starten (30.09., Nutzerin: „wenn man gerade Fokus, Inspiration
 // oder Power hat“): Knöpfe „Training“ und „Workflow“ auf der Startseite.
@@ -24,9 +25,9 @@ const zahl = { width: 64, border: "1.5px solid var(--mp-rand)", borderRadius: 10
 
 // ---------------------------------------------------------------- Training
 const SPONTAN_ARTEN = [
-  { id: "wdh", icon: "🏋️", label: "Wiederholungen", sub: "Sätze zählen, z. B. Kettlebell – auch mit Kamera" },
-  { id: "zeit", icon: "⏱️", label: "Auf Zeit", sub: "Stoppuhr läuft, du hörst auf, wann du willst" },
-  { id: "intervall", icon: "🔁", label: "Intervall", sub: "Belastung / Pause im Wechsel" },
+  { id: "wdh", icon: "🏋️", label: "Wiederholungen", sub: "Sätze zählen, z. B. Kettlebell – auch mit Kamera", hell: "#FF8A73", farbe: "#D13A26" },
+  { id: "zeit", icon: "⏱️", label: "Auf Zeit", sub: "Stoppuhr läuft, du hörst auf, wann du willst", hell: "#FFB85C", farbe: "#D9730D" },
+  { id: "intervall", icon: "🔁", label: "Intervall", sub: "Belastung / Pause im Wechsel", hell: "#6FB2FF", farbe: "#2D6FD6" },
 ];
 
 export function TrainingStartAuswahl({ heuteOffen = [], onVorziehen, onGestartet, onMehr }) {
@@ -104,15 +105,12 @@ export function TrainingStartAuswahl({ heuteOffen = [], onVorziehen, onGestartet
       )}
 
       <div style={titel}>SPONTAN – WAS MÖCHTEST DU MACHEN?</div>
-      {SPONTAN_ARTEN.map((a) => (
-        <button key={a.id} type="button" className="mp-tap" aria-pressed={art === a.id} onClick={() => setArt(art === a.id ? null : a.id)} style={{ ...zeile(art === a.id ? "#E3E8FF" : "#F4F6FA"), outline: art === a.id ? "2px solid var(--mp-accent)" : "none" }}>
-          <span style={{ fontSize: 22 }}>{a.icon}</span>
-          <span style={{ flex: 1 }}>
-            <b style={{ display: "block", fontSize: 14 }}>{a.label}</b>
-            <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>{a.sub}</span>
-          </span>
-        </button>
-      ))}
+      <AppKacheln
+        label="Trainingsart"
+        gewaehlt={art}
+        kacheln={SPONTAN_ARTEN.map((a) => ({ id: a.id, icon: a.icon, titel: a.label, label: a.label, hell: a.hell, farbe: a.farbe, onClick: () => setArt(art === a.id ? null : a.id) }))}
+      />
+      {art && <div style={{ fontSize: 12.5, color: "var(--mp-text-muted)", margin: "0 2px 6px" }}>{SPONTAN_ARTEN.find((a) => a.id === art)?.sub}</div>}
       {art && (
         <div data-spontan-form style={{ padding: "6px 2px 2px" }}>
           {art !== "intervall" && (
@@ -177,25 +175,15 @@ export function WorkflowStartAuswahl({ heuteGeplant = [], onStart, onFokus }) {
         </>
       )}
       <MatrixWahl onWahl={(a) => onStart(`matrix:${a.id}`)} max={4} />
-      <button type="button" className="mp-tap" onClick={() => onStart("spontan")} style={zeile("#E3E8FF")}>
-        <span style={{ fontSize: 22 }}>⚡</span>
-        <span style={{ flex: 1 }}>
-          <b style={{ display: "block", fontSize: 14 }}>Spontan-Workflow</b>
-          <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Intervalle, Playlist und Dauer selbst wählen – auch offenes Ende</span>
-        </span>
-        <b style={{ fontSize: 13, color: "var(--mp-accent-dark-text)" }}>›</b>
-      </button>
-      {/* Gemeinsam fokussieren gehört zum Arbeiten, nicht zu den Spielen (24.10., Nutzerin). */}
-      {onFokus && (
-        <button type="button" className="mp-tap" data-workflow-fokus onClick={onFokus} style={zeile("#DDF5F1")}>
-          <span style={{ fontSize: 22 }}>🎯</span>
-          <span style={{ flex: 1 }}>
-            <b style={{ display: "block", fontSize: 14 }}>Gemeinsam fokussieren</b>
-            <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Body Doubling: mit anderen gleichzeitig an deiner Sache arbeiten</span>
-          </span>
-          <b style={{ fontSize: 13, color: "var(--mp-accent-dark-text)" }}>›</b>
-        </button>
-      )}
+      <div style={{ ...titel, marginTop: 10 }}>ODER</div>
+      <AppKacheln
+        label="Workflow starten"
+        kacheln={[
+          { id: "spontan", icon: "⚡", titel: "Spontan-Workflow", label: "Spontan-Workflow: Intervalle, Playlist und Dauer selbst wählen", hell: "#8FA2FF", farbe: "#4B5FD6", onClick: () => onStart("spontan") },
+          // Gemeinsam fokussieren gehört zum Arbeiten, nicht zu den Spielen (24.10., Nutzerin).
+          ...(onFokus ? [{ id: "fokus", icon: "🎯", titel: "Gemeinsam fokussieren", label: "Gemeinsam fokussieren (Body Doubling)", hell: "#5FD4C0", farbe: "#178A78", onClick: onFokus }] : []),
+        ]}
+      />
     </div>
   );
 }

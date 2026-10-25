@@ -279,6 +279,15 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🪟 Schnellzugriff im eigenen Fenster, App-Kacheln (25.10.2026)
+
+Nutzerin: Training/Workflow/Spielen (aus dem ⚡-Kreis oder den Knöpfen) sollen sich nicht mehr mitten auf der Startseite aufklappen, sondern in einem eigenen Fenster „wo nichts anderes drumherum ist“; die Trainingsarten als App-Kacheln nebeneinander statt Balken übereinander.
+- `ui/SchnellFenster.jsx`: Vollbild-Fenster (Portal, farbiger Kopf, „‹ Zurück“, Startseite dahinter fest) + `AppKacheln` (bis 3 Kacheln nebeneinander). HomeView rendert `TrainingStartAuswahl`/`WorkflowStartAuswahl`/Spiele darin.
+- Training: Wiederholungen · Auf Zeit · Intervall als Kacheln; Workflow: Spontan-Workflow · Gemeinsam fokussieren als Kacheln; Spiele: Denksport · Tagesrätsel.
+- Tages-Quests-Karte unten auf der Startseite entfernt („überflüssig, steht oben in der Statistik“).
+- Offen: Nutzerin überlegt, den ⚡-Knopf wieder durch App-Kacheln auf der Startseite zu ersetzen und die Startseite zu überarbeiten. Marketing-Idee „AKA-Kosmos“ steht in Notion, Seite „Marketing & Ideen“.
+- Workflow-Vorlagen: Arbeitsintervall jetzt minutengenau (z. B. 22/6).
+
 ## 📱 Morgen-/Abendfenster auf dem Tablet mittig (24.10.2026)
 
 Nutzerin: Morgenfenster auf dem iPad „wackelig“, nicht mittig. Ursache: Das Fenster ist `position: fixed`, lag aber im

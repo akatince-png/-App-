@@ -51,3 +51,20 @@ test("Workflow-Knopf: geplanten Workflow vorziehen startet ihn sofort", async ({
   await expect(page.getByText("Deep Work")).toBeVisible();
   await expect(page.getByText(/Runde 1\//)).toBeVisible();
 });
+
+// Eigenes Fenster statt Aufklappen mitten auf der Startseite (25.10., Nutzerin);
+// die drei Trainingsarten stehen als App-Kacheln nebeneinander.
+test("Training öffnet ein eigenes Fenster mit Kacheln nebeneinander, Zurück schließt es", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
+  await page.goto("/e2e/harness/index.html?isAdmin=0&spontan=1#/home");
+  await page.getByRole("button", { name: "Training starten" }).click();
+  const fenster = page.locator("[data-schnell-fenster=training]");
+  await expect(fenster).toBeVisible();
+  await expect(fenster.locator("[data-training-auswahl]")).toBeVisible();
+  const boxen = await Promise.all(["wdh", "zeit", "intervall"].map((id) => fenster.locator(`[data-kachel=${id}]`).boundingBox()));
+  expect(Math.abs(boxen[0].y - boxen[2].y)).toBeLessThan(2);
+  expect(boxen[0].x).toBeLessThan(boxen[1].x);
+  expect(boxen[1].x).toBeLessThan(boxen[2].x);
+  await fenster.getByRole("button", { name: "Zurück zur Startseite" }).click();
+  await expect(fenster).toHaveCount(0);
+});

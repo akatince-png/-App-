@@ -48,8 +48,9 @@ test("Gemeinsam fokussieren: ohne Team trotzdem allein nutzbar, Kachel auf der S
   // Seit 24.10. im Workflow-Bereich (nicht mehr unter Spielen).
   await page.locator("[data-schnellknoepfe]").getByRole("button", { name: "Spielen", exact: true }).click();
   await expect(page.locator("[data-spiele-auswahl]").getByRole("button", { name: /Gemeinsam fokussieren/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Zurück zur Startseite" }).click();
   await page.locator("[data-schnellknoepfe]").getByRole("button", { name: /Workflow starten/ }).click();
-  await page.locator("[data-workflow-fokus]").click();
+  await page.locator("[data-workflow-auswahl] [data-kachel=fokus]").click();
   await expect(page.getByText("Woran arbeitest du?")).toBeVisible();
   await expect(page.getByText("👥 Gerade dabei")).toHaveCount(0);
   await page.getByRole("button", { name: "▶ Los geht's (25 Min.)" }).click();
