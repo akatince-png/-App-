@@ -106,6 +106,9 @@ export function projektFarbe(projekt) {
 // Kommaliste wirkte dort wie "wirrer Buchstabensalat") — nur Anzahl statt
 // aller Namen/Sätze/Wiederholungen. Die volle Liste gibt's stattdessen als
 // Tabelle in der antippbaren Trainings-Vorschau (siehe TrainingVorschau.jsx).
+// Über den Schnellzugriff angelegt (SpontanStart: Name „Spontan: …“, ohne Plan).
+export const istSpontanTraining = (t) => !t?.templateId && /^Spontan:/.test(String(t?.name || ""));
+
 export function trainingKompaktDetail(t) {
   if (t.art === "Krafttraining" || (t.art === "Bodyweight" && (t.uebungen || t.uebungenListe || []).length > 0)) {
     const anzahl = (t.uebungen || t.uebungenListe || []).filter((u) => u.name).length;
@@ -299,7 +302,13 @@ export function buildDayItems(
   // spart den vollen Scan der unbegrenzt wachsenden Trainingshistorie bei
   // jedem Aufruf — trainingEintraege bleibt als Fallback für Aufrufer, die
   // die Map (noch) nicht mitgeben (z. B. wochenprotokollSnapshot.js).
-  const heutigeTrainings = trainingNachDatum ? trainingNachDatum.get(tagStr) || [] : trainingEintraege.filter((t) => t.datum === tagStr);
+  // Spontan gestartet, aber nicht beendet (25.10., Nutzerin: „darf nicht
+  // übernommen werden, auch wenn ich vergesse, es zu beenden“): kein offener
+  // Punkt im Plan, kein „vorziehen?“ und kein Ersatz für das geplante Training.
+  // Beendete Spontan-Trainings stehen ganz normal als erledigt drin.
+  const heutigeTrainings = (trainingNachDatum ? trainingNachDatum.get(tagStr) || [] : trainingEintraege.filter((t) => t.datum === tagStr)).filter(
+    (t) => t.erledigt || !istSpontanTraining(t)
+  );
   heutigeTrainings.forEach((t) => {
     items.push({
       kategorie: "training",
