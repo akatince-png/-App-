@@ -279,6 +279,14 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🌙 Tagesabschluss neu: erst Rückblick, dann Planung (25.10.2026)
+
+Nutzerin (nach der ersten Abendroutine): Die MIT-Liste im Schritt „Tagesabschluss“ wirkte wie eine Abhak-Liste. Gewünscht: erst „Was hast du heute geschafft?“, Offenes auf morgen oder in den Pool, danach erst für morgen planen; Prioritäten deutlich; Projekte nur einmal; 1–2 freiwillige Aufgaben, nie MIT.
+- `utils/tagesabschluss.js`: `heuteFaellig`, `heuteGeschafft`, `alsGeschafft`/`aufMorgen`/`inDenPool`, `kandidatenFuer` (Sessions je Projekt zusammengefasst, laufende Projekte auch ohne offene Session), `aufgabeFuerTag` (legt bei Bedarf eine Session an), `stand`, `FREIWILLIG_GRENZE = 2`, `abschlussTag` (bis 4 Uhr zählt der Vortag).
+- `ui/TagesRueckblick.jsx` im Schritt `plan_morgen`: ✓ Geschafft / → Morgen / ⏸ Später je offener Aufgabe, dann „Weiter zur Planung“ → `MitWahl` für morgen.
+- `ui/MitWahl.jsx` neu: Prioritäts-Etikett (JETZT/PLANEN/…), ⭐ = MIT (max. 3), ＋ = freiwillig (geplant ohne ⭐, max. 2, auch neue Aufgabe per Textfeld, `wichtig: false`). Morgens bei Top 3 dieselbe Auswahl für heute.
+- Freiwillig ist technisch „für den Tag eingeplant ohne ⭐“; die Grenze 2 lässt sich später anheben (Nutzerin: „falls meine Kapazitäten steigen“).
+
 ## 🧩 Bild-Tagesplan: Aufklappen und gebündelte Gaben (25.10.2026)
 
 Nutzerin: Routine im Tagesplan antippen → alle Schritte sehen und direkt bearbeiten; gleichzeitige Supplemente (und Injektionen, Medikamente) als **eine** Gabe, die aufklappt.
