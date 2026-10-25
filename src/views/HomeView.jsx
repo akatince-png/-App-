@@ -1321,8 +1321,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
               <AppKacheln
                 label="Spiele"
                 kacheln={[
-                  { id: "denksport", icon: "🧠", titel: "Denksport & Rätsel", label: "Denksport & Rätsel", hell: "#9D8BFF", farbe: "#5B47E0", onClick: () => onOpenView("denksport") },
-                  { id: "tagesraetsel", icon: "🧩", titel: "Tagesrätsel", label: "Tagesrätsel", hell: "#FF9F6B", farbe: "#D9541E", onClick: () => onOpenView("tagesraetsel") },
+                  { id: "denksport", icon: "gehirn", titel: "Denksport & Rätsel", label: "Denksport & Rätsel", hell: "#9D8BFF", farbe: "#5B47E0", onClick: () => onOpenView("denksport") },
+                  { id: "tagesraetsel", icon: "raetsel", titel: "Tagesrätsel", label: "Tagesrätsel", hell: "#FF9F6B", farbe: "#D9541E", onClick: () => onOpenView("tagesraetsel") },
                 ]}
               />
             </div>

@@ -4,6 +4,7 @@ import { LEERE_UEBUNG } from "./UebungenEditor";
 import { toLocalISODate } from "../utils/dates";
 import { QUADRANT, fristText, quadrantVon } from "../utils/matrix";
 import { AppKacheln } from "./SchnellFenster";
+import SchnellIcon from "./SchnellIcon";
 
 // Spontan starten (30.09., Nutzerin: „wenn man gerade Fokus, Inspiration
 // oder Power hat“): Knöpfe „Training“ und „Workflow“ auf der Startseite.
@@ -17,17 +18,24 @@ const jetztUhrzeit = () => {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
-const box = { gridColumn: "1 / -1", padding: 12, borderRadius: 20, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" };
-const titel = { fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", letterSpacing: 0.3, margin: "4px 2px 6px" };
+// Seit 25.10. im eigenen Fenster (SchnellFenster): keine Karte drumherum,
+// Abschnitte direkt auf dem Hintergrund.
+const box = {};
+const titel = { fontSize: 12, fontWeight: 800, color: "var(--mp-text-muted)", letterSpacing: 0.4, margin: "4px 2px 8px" };
+// „Heute geplant – vorziehen?“ als ruhige Karte mit deutlichem ▶-Knopf.
+const vorziehen = { width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", border: "none", borderRadius: 18, padding: "10px 10px 10px 12px", marginBottom: 8, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)", cursor: "pointer", fontFamily: "inherit", color: "var(--mp-text)" };
+const jetztKnopf = (farbe) => ({ flexShrink: 0, borderRadius: 99, padding: "8px 13px", fontSize: 13, fontWeight: 800, background: farbe, color: "#fff" });
+const kleinesSymbol = (hell, farbe) => ({ width: 40, height: 40, flexShrink: 0, borderRadius: 12, background: `linear-gradient(135deg, ${hell}, ${farbe})`, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center" });
+const abschnitt = { marginBottom: 20 };
 const zeile = (farbe) => ({ width: "100%", display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "none", borderRadius: 14, padding: "11px 12px", marginBottom: 6, background: `color-mix(in srgb, ${farbe} var(--mp-flaeche), var(--mp-rand-dunkel))`, cursor: "pointer", fontFamily: "inherit", color: "var(--mp-text)" });
-const chip = (an) => ({ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", background: an ? "var(--mp-accent)" : "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))", color: an ? "#fff" : "var(--mp-text)" });
+const chip = (an) => ({ border: "none", borderRadius: 99, padding: "9px 14px", boxShadow: an ? "none" : "var(--mp-schatten)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", background: an ? "var(--mp-accent)" : "var(--mp-karte)", color: an ? "#fff" : "var(--mp-text)" });
 const zahl = { width: 64, border: "1.5px solid var(--mp-rand)", borderRadius: 10, padding: "7px 8px", fontSize: 14, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" };
 
 // ---------------------------------------------------------------- Training
 const SPONTAN_ARTEN = [
-  { id: "wdh", icon: "🏋️", label: "Wiederholungen", sub: "Sätze zählen, z. B. Kettlebell – auch mit Kamera", hell: "#FF8A73", farbe: "#D13A26" },
-  { id: "zeit", icon: "⏱️", label: "Auf Zeit", sub: "Stoppuhr läuft, du hörst auf, wann du willst", hell: "#FFB85C", farbe: "#D9730D" },
-  { id: "intervall", icon: "🔁", label: "Intervall", sub: "Belastung / Pause im Wechsel", hell: "#6FB2FF", farbe: "#2D6FD6" },
+  { id: "wdh", icon: "training", label: "Wiederholungen", sub: "Sätze zählen, z. B. Kettlebell – auch mit Kamera", hell: "#FF8A73", farbe: "#D13A26" },
+  { id: "zeit", icon: "stoppuhr", label: "Auf Zeit", sub: "Stoppuhr läuft, du hörst auf, wann du willst", hell: "#FFB85C", farbe: "#D9730D" },
+  { id: "intervall", icon: "wiederholen", label: "Intervall", sub: "Belastung / Pause im Wechsel", hell: "#6FB2FF", farbe: "#2D6FD6" },
 ];
 
 export function TrainingStartAuswahl({ heuteOffen = [], onVorziehen, onGestartet, onMehr }) {
@@ -75,67 +83,71 @@ export function TrainingStartAuswahl({ heuteOffen = [], onVorziehen, onGestartet
 
   return (
     <div data-training-auswahl style={box}>
+      {/* Kacheln zuerst (25.10., Nutzerin): drei Arten nebeneinander. */}
+      <div style={abschnitt}>
+        <div style={titel}>SPONTAN – WAS MÖCHTEST DU MACHEN?</div>
+        <AppKacheln
+          label="Trainingsart"
+          gewaehlt={art}
+          kacheln={SPONTAN_ARTEN.map((a) => ({ id: a.id, icon: a.icon, titel: a.label, label: a.label, hell: a.hell, farbe: a.farbe, onClick: () => setArt(art === a.id ? null : a.id) }))}
+        />
+        {art && (
+          <div data-spontan-form style={{ padding: 14, borderRadius: 20, background: "var(--mp-karte)", boxShadow: "var(--mp-schatten)" }}>
+            <div style={{ fontSize: 13, color: "var(--mp-text-muted)", marginBottom: 10 }}>{SPONTAN_ARTEN.find((a) => a.id === art)?.sub}</div>
+            {art !== "intervall" && (
+              <input value={uebung} onChange={(e) => setUebung(e.target.value)} aria-label="Was machst du?" placeholder="z. B. Kettlebell-Swings, Liegestütze, Laufen" style={{ ...zahl, width: "100%", boxSizing: "border-box", marginBottom: 10 }} />
+            )}
+            {art === "wdh" && (
+              <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, marginBottom: 10 }}>
+                <input value={saetze} onChange={(e) => setSaetze(e.target.value)} inputMode="numeric" aria-label="Sätze" style={zahl} /> Sätze ×
+                <input value={wdh} onChange={(e) => setWdh(e.target.value)} inputMode="numeric" aria-label="Wiederholungen" style={zahl} /> Wdh.
+              </div>
+            )}
+            {art === "intervall" && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", fontSize: 13, marginBottom: 10 }}>
+                <input value={arbeit} onChange={(e) => setArbeit(e.target.value)} inputMode="numeric" aria-label="Belastung Sekunden" style={zahl} /> s Belastung
+                <input value={pause} onChange={(e) => setPause(e.target.value)} inputMode="numeric" aria-label="Pause Sekunden" style={zahl} /> s Pause
+                <input value={runden} onChange={(e) => setRunden(e.target.value)} inputMode="numeric" aria-label="Runden" style={zahl} /> Runden
+              </div>
+            )}
+            <button type="button" onClick={spontan} disabled={laeuft} style={{ ...chip(true), width: "100%", padding: "13px", fontSize: 15, background: `linear-gradient(135deg, ${SPONTAN_ARTEN.find((a) => a.id === art)?.hell}, ${SPONTAN_ARTEN.find((a) => a.id === art)?.farbe})` }}>
+              ▶ Los geht&apos;s
+            </button>
+          </div>
+        )}
+        {fehler && <div style={{ color: "#C0392B", fontSize: 12.5, marginTop: 6 }}>{fehler}</div>}
+      </div>
+
       {heuteOffen.length > 0 && (
-        <>
-          <div style={titel}>HEUTE STEHT NOCH AN – VORZIEHEN?</div>
+        <div style={abschnitt}>
+          <div style={titel}>HEUTE GEPLANT – VORZIEHEN?</div>
           {heuteOffen.map((t) => (
-            <button key={t.key} type="button" className="mp-tap" onClick={() => onVorziehen(t)} style={zeile("#FDE3DF")}>
-              <span style={{ fontSize: 22 }}>🏋️</span>
-              <span style={{ flex: 1 }}>
+            <button key={t.key} type="button" className="mp-tap" onClick={() => onVorziehen(t)} style={vorziehen}>
+              <span aria-hidden="true" style={kleinesSymbol("#FF8A73", "#D13A26")}><SchnellIcon name="training" size={22} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
                 <b style={{ display: "block", fontSize: 14 }}>{t.name || t.detail || "Training"}</b>
                 <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>{t.uhrzeit ? `geplant ${t.uhrzeit} Uhr` : "heute geplant"}</span>
               </span>
-              <b style={{ fontSize: 13, color: "#B42318" }}>▶ Jetzt</b>
+              <span style={jetztKnopf("#D13A26")}>▶ Jetzt</span>
             </button>
           ))}
-        </>
+        </div>
       )}
 
       {trainingTemplates.length > 0 && (
-        <>
-          <div style={titel}>{heuteOffen.length ? "ODER EIN GESPEICHERTER PLAN" : "AUS MEINEN TRAININGSPLÄNEN"}</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+        <div style={abschnitt}>
+          <div style={titel}>AUS MEINEN TRAININGSPLÄNEN</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {trainingTemplates.slice(0, 8).map((tpl) => (
               <button key={tpl.id} type="button" onClick={() => ausPlan(tpl)} style={chip(false)}>
                 ▶ {tpl.name}
               </button>
             ))}
           </div>
-        </>
-      )}
-
-      <div style={titel}>SPONTAN – WAS MÖCHTEST DU MACHEN?</div>
-      <AppKacheln
-        label="Trainingsart"
-        gewaehlt={art}
-        kacheln={SPONTAN_ARTEN.map((a) => ({ id: a.id, icon: a.icon, titel: a.label, label: a.label, hell: a.hell, farbe: a.farbe, onClick: () => setArt(art === a.id ? null : a.id) }))}
-      />
-      {art && <div style={{ fontSize: 12.5, color: "var(--mp-text-muted)", margin: "0 2px 6px" }}>{SPONTAN_ARTEN.find((a) => a.id === art)?.sub}</div>}
-      {art && (
-        <div data-spontan-form style={{ padding: "6px 2px 2px" }}>
-          {art !== "intervall" && (
-            <input value={uebung} onChange={(e) => setUebung(e.target.value)} aria-label="Was machst du?" placeholder="z. B. Kettlebell-Swings, Liegestütze, Laufen" style={{ ...zahl, width: "100%", boxSizing: "border-box", marginBottom: 8 }} />
-          )}
-          {art === "wdh" && (
-            <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, marginBottom: 8 }}>
-              <input value={saetze} onChange={(e) => setSaetze(e.target.value)} inputMode="numeric" aria-label="Sätze" style={zahl} /> Sätze ×
-              <input value={wdh} onChange={(e) => setWdh(e.target.value)} inputMode="numeric" aria-label="Wiederholungen" style={zahl} /> Wdh.
-            </div>
-          )}
-          {art === "intervall" && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", fontSize: 13, marginBottom: 8 }}>
-              <input value={arbeit} onChange={(e) => setArbeit(e.target.value)} inputMode="numeric" aria-label="Belastung Sekunden" style={zahl} /> s Belastung
-              <input value={pause} onChange={(e) => setPause(e.target.value)} inputMode="numeric" aria-label="Pause Sekunden" style={zahl} /> s Pause
-              <input value={runden} onChange={(e) => setRunden(e.target.value)} inputMode="numeric" aria-label="Runden" style={zahl} /> Runden
-            </div>
-          )}
-          <button type="button" onClick={spontan} disabled={laeuft} style={{ ...chip(true), width: "100%", padding: "12px", fontSize: 15 }}>
-            ▶ Los geht&apos;s
-          </button>
         </div>
       )}
-      {fehler && <div style={{ color: "#C0392B", fontSize: 12.5, marginTop: 6 }}>{fehler}</div>}
-      <button type="button" onClick={onMehr} style={{ border: "none", background: "none", padding: "8px 2px 0", fontSize: 12.5, fontWeight: 700, color: "var(--mp-accent-dark-text)", cursor: "pointer", fontFamily: "inherit" }}>
+
+      <button type="button" onClick={onMehr} style={{ border: "none", background: "none", padding: "4px 2px 0", fontSize: 13, fontWeight: 700, color: "var(--mp-accent-dark-text)", cursor: "pointer", fontFamily: "inherit" }}>
         Alle Möglichkeiten im Trainingsbereich ›
       </button>
     </div>
@@ -147,43 +159,45 @@ export function WorkflowStartAuswahl({ heuteGeplant = [], onStart, onFokus }) {
   const { workflowPresets = [] } = useAppData();
   return (
     <div data-workflow-auswahl style={box}>
+      <div style={abschnitt}>
+        <div style={titel}>SOFORT LOSLEGEN</div>
+        <AppKacheln
+          label="Workflow starten"
+          kacheln={[
+            { id: "spontan", icon: "blitz", titel: "Spontan-Workflow", label: "Spontan-Workflow: Intervalle, Playlist und Dauer selbst wählen", hell: "#8FA2FF", farbe: "#4B5FD6", onClick: () => onStart("spontan") },
+            // Gemeinsam fokussieren gehört zum Arbeiten, nicht zu den Spielen (24.10., Nutzerin).
+            ...(onFokus ? [{ id: "fokus", icon: "ziel", titel: "Gemeinsam fokussieren", label: "Gemeinsam fokussieren (Body Doubling)", hell: "#5FD4C0", farbe: "#178A78", onClick: onFokus }] : []),
+          ]}
+        />
+      </div>
       {heuteGeplant.length > 0 && (
-        <>
+        <div style={abschnitt}>
           <div style={titel}>HEUTE GEPLANT – VORZIEHEN?</div>
           {heuteGeplant.map((w) => (
-            <button key={w.key} type="button" className="mp-tap" onClick={() => onStart(w.raw?.preset?.id || w.raw?.presetId)} style={zeile("#F8E0EE")}>
-              <span style={{ fontSize: 22 }}>⏱️</span>
-              <span style={{ flex: 1 }}>
+            <button key={w.key} type="button" className="mp-tap" onClick={() => onStart(w.raw?.preset?.id || w.raw?.presetId)} style={vorziehen}>
+              <span aria-hidden="true" style={kleinesSymbol("#F07BC0", "#A12A74")}><SchnellIcon name="workflow" size={22} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
                 <b style={{ display: "block", fontSize: 14 }}>{w.name}</b>
                 <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>{w.uhrzeit ? `geplant ${w.uhrzeit} Uhr · ` : ""}{w.detail}</span>
               </span>
-              <b style={{ fontSize: 13, color: "#86285F" }}>▶ Jetzt</b>
+              <span style={jetztKnopf("#A12A74")}>▶ Jetzt</span>
             </button>
           ))}
-        </>
+        </div>
       )}
       {workflowPresets.length > 0 && (
-        <>
+        <div style={abschnitt}>
           <div style={titel}>MEINE WORKFLOWS</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {workflowPresets.map((p) => (
               <button key={p.id} type="button" onClick={() => onStart(p.id)} style={chip(false)}>
                 ▶ {p.name} <span style={{ fontWeight: 500, opacity: 0.8 }}>{p.arbeitMin}/{p.pauseMin}</span>
               </button>
             ))}
           </div>
-        </>
+        </div>
       )}
       <MatrixWahl onWahl={(a) => onStart(`matrix:${a.id}`)} max={4} />
-      <div style={{ ...titel, marginTop: 10 }}>ODER</div>
-      <AppKacheln
-        label="Workflow starten"
-        kacheln={[
-          { id: "spontan", icon: "⚡", titel: "Spontan-Workflow", label: "Spontan-Workflow: Intervalle, Playlist und Dauer selbst wählen", hell: "#8FA2FF", farbe: "#4B5FD6", onClick: () => onStart("spontan") },
-          // Gemeinsam fokussieren gehört zum Arbeiten, nicht zu den Spielen (24.10., Nutzerin).
-          ...(onFokus ? [{ id: "fokus", icon: "🎯", titel: "Gemeinsam fokussieren", label: "Gemeinsam fokussieren (Body Doubling)", hell: "#5FD4C0", farbe: "#178A78", onClick: onFokus }] : []),
-        ]}
-      />
     </div>
   );
 }
