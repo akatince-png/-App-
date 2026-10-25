@@ -86,7 +86,8 @@ test("Variante B: ⚡ Schnell in der Leiste öffnet das Kreis-Menü, Training f�
   const kreis = page.locator("[data-schnell-kreis]");
   await kreis.getByRole("button", { name: "Training" }).click();
   await kreis.getByRole("button", { name: "▶ Training öffnen" }).click();
-  await expect(page.locator("[data-training-auswahl]")).toBeVisible();
+  await expect(page.locator("[data-schnell-fenster=training] [data-training-auswahl]")).toBeVisible();
+  await page.getByRole("button", { name: "Zurück zur Startseite" }).click();
   await leiste.getByRole("button", { name: "Mehr" }).click();
   await expect(page.locator("[data-mehr-schnellzugriff]")).toContainText("Fortschritt");
 });
