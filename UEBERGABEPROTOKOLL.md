@@ -279,6 +279,14 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🧩 Bild-Tagesplan: Aufklappen und gebündelte Gaben (25.10.2026)
+
+Nutzerin: Routine im Tagesplan antippen → alle Schritte sehen und direkt bearbeiten; gleichzeitige Supplemente (und Injektionen, Medikamente) als **eine** Gabe, die aufklappt.
+- `utils/bildTagesplan.js` `gruppiereBloecke()`: Supplemente / Injektionen (`raw.einnahmeart === "Injektion"`) / sonstige Medikamente mit gleicher Uhrzeit → ein Block „Supplemente · 3“ mit `teile`; ein einzelner bleibt einzeln. „✓ Alle“ hakt alle offenen ab, aufgeklappt einzeln abhaken und ✏️ bearbeiten (→ `onEditItem`).
+- Routinen-Block aufklappbar: `ui/RoutineInhalt.jsx` (Schritte mit Häkchen-Stand, „✏️ Schritte bearbeiten“ = Editor + Liste wie in der Listenansicht).
+- Fix: Workflow-Blöcke zeigen die Dauer der Vorlage (`gesamtMin`) statt pauschal 30 Min.
+- Training: „■ Training jetzt beenden“ in jedem Live-Training (`LiveWorkout`), Workflow-Knopf „■ Jetzt beenden“.
+
 ## 🪟 Schnellzugriff im eigenen Fenster, App-Kacheln (25.10.2026)
 
 Nutzerin: Training/Workflow/Spielen (aus dem ⚡-Kreis oder den Knöpfen) sollen sich nicht mehr mitten auf der Startseite aufklappen, sondern in einem eigenen Fenster „wo nichts anderes drumherum ist“; die Trainingsarten als App-Kacheln nebeneinander statt Balken übereinander.

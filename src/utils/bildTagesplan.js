@@ -79,7 +79,7 @@ export const minZuZeit = (min) => `${Math.floor(min / 60) % 24}:${String(min % 6
 const STANDARD_DAUER = { hormon: 2, supplement: 2, mahlzeit: 30, training: 45, gewohnheit: 15, workflow: 30, zeitblock: 60 };
 export function dauerFuer(item) {
   const r = item?.raw || {};
-  const eigen = Number(item?.dauerMin || r.dauerMin || r.dauer_min || r.dauer || r.minuten);
+  const eigen = Number(item?.dauerMin || r.dauerMin || r.dauer_min || r.dauer || r.minuten || (item?.kategorie === "workflow" && (r.preset?.gesamtMin || r.gesamtMin)));
   if (eigen > 0) return Math.round(eigen);
   if (item?.kategorie === "zeitblock") {
     const s = zeitInMin(r.startUhrzeit || item.uhrzeit);
@@ -121,3 +121,65 @@ export function planBloecke(items, jetztMin = null) {
 
 // Höhe eines Blocks: länger = höher, aber nie winzig oder riesig.
 export const blockHoehe = (dauer) => Math.round(Math.min(170, Math.max(62, 44 + dauer * 1.1)));
+
+// Gleichzeitige Einnahmen bündeln (25.10., Nutzerin: „nicht alle Supplemente
+// einzeln im Tagesplan, sondern eine Supplementgabe, die beim Draufdrücken
+// aufgeht – genauso Injektionen, wenn sie zeitgleich geplant sind“).
+// Gruppiert Supplemente, Injektionen und sonstige Medikamente mit derselben
+// Uhrzeit; ein einzelner Punkt bleibt, wie er ist.
+const GRUPPEN = {
+  supplement: { name: "Supplemente", kategorie: "supplement" },
+  injektion: { name: "Injektionen", kategorie: "hormon" },
+  medikament: { name: "Medikamente", kategorie: "hormon" },
+};
+export function gruppeVon(b) {
+  if (b?.kategorie === "supplement") return "supplement";
+  if (b?.kategorie === "hormon") return b.raw?.einnahmeart === "Injektion" ? "injektion" : "medikament";
+  return null;
+}
+export function gruppiereBloecke(bloecke, linieVor = null) {
+  const liste = [];
+  const nachSchluessel = new Map();
+  for (const b of bloecke || []) {
+    const g = b.start != null ? gruppeVon(b) : null;
+    if (!g) {
+      liste.push(b);
+      continue;
+    }
+    const k = `${g}|${b.start}`;
+    if (!nachSchluessel.has(k)) {
+      const gruppe = { key: `gruppe-${k}`, gruppe: g, start: b.start, teile: [] };
+      nachSchluessel.set(k, gruppe);
+      liste.push(gruppe);
+    }
+    nachSchluessel.get(k).teile.push(b);
+  }
+  let linie = linieVor;
+  const ergebnis = liste.map((x) => {
+    if (!x.teile) return x;
+    const t = x.teile;
+    if (t.length === 1) return t[0];
+    if (t.some((b) => b.key === linieVor)) linie = x.key;
+    const dauer = Math.max(...t.map((b) => b.dauer));
+    const laufend = t.find((b) => b.laeuft);
+    return {
+      key: x.key,
+      gruppe: x.gruppe,
+      kategorie: GRUPPEN[x.gruppe].kategorie,
+      name: `${GRUPPEN[x.gruppe].name} · ${t.length}`,
+      detail: t.map((b) => b.name).join(", "),
+      symbol: t[0].symbol,
+      farbe: t[0].farbe,
+      uhrzeit: t[0].uhrzeit,
+      start: x.start,
+      dauer,
+      ende: x.start + dauer,
+      done: t.every((b) => b.done),
+      laeuft: !!laufend,
+      vorbei: t.every((b) => b.vorbei),
+      jetztAnteil: laufend ? laufend.jetztAnteil : null,
+      teile: t,
+    };
+  });
+  return { bloecke: ergebnis, linieVor: linie };
+}

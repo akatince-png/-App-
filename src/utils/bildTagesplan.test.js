@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { blockHoehe, dauerFuer, dauerText, planBloecke, symbolFuer, zeitInMin } from "./bildTagesplan";
+import { blockHoehe, dauerFuer, dauerText, gruppiereBloecke, planBloecke, symbolFuer, zeitInMin } from "./bildTagesplan";
 
 describe("Bild-Tagesplan", () => {
   it("findet passende Bilder am Namen, sonst nach Bereich", () => {
@@ -40,5 +40,26 @@ describe("Bild-Tagesplan", () => {
     expect(blockHoehe(2)).toBe(62);
     expect(blockHoehe(30)).toBeGreaterThan(blockHoehe(10));
     expect(blockHoehe(600)).toBe(170);
+  });
+});
+
+// 25.10. (Nutzerin): gleichzeitige Einnahmen als eine aufklappbare Gabe.
+describe("gruppiereBloecke", () => {
+  const sup = (name, start, extra = {}) => ({ key: `s-${name}`, kategorie: "supplement", name, start, dauer: 2, ende: start + 2, ...extra });
+  const inj = (name, start) => ({ key: `h-${name}`, kategorie: "hormon", name, start, dauer: 2, ende: start + 2, raw: { einnahmeart: "Injektion" } });
+  it("bündelt Supplemente und Injektionen mit derselben Uhrzeit, Einzelne bleiben", () => {
+    const { bloecke } = gruppiereBloecke([sup("Magnesium", 1315), sup("NAC", 1315), inj("Testo", 425), inj("Reta", 425), sup("D3", 480), { key: "w", kategorie: "workflow", name: "Arbeit", start: 480 }]);
+    expect(bloecke.map((b) => b.name)).toEqual(["Supplemente · 2", "Injektionen · 2", "D3", "Arbeit"]);
+    expect(bloecke[0].teile.map((t) => t.name)).toEqual(["Magnesium", "NAC"]);
+    expect(bloecke[0].detail).toBe("Magnesium, NAC");
+  });
+  it("Gruppe ist erledigt, wenn alle Teile erledigt sind; Jetzt-Linie wandert auf die Gruppe", () => {
+    const { bloecke, linieVor } = gruppiereBloecke([sup("A", 600, { done: true }), sup("B", 600)], "s-B");
+    expect(bloecke[0].done).toBe(false);
+    expect(linieVor).toBe(bloecke[0].key);
+    expect(gruppiereBloecke([sup("A", 600, { done: true }), sup("B", 600, { done: true })]).bloecke[0].done).toBe(true);
+  });
+  it("Workflow-Dauer kommt aus der Vorlage", () => {
+    expect(dauerFuer({ kategorie: "workflow", raw: { preset: { gesamtMin: 225 } } })).toBe(225);
   });
 });
