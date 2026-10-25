@@ -377,7 +377,7 @@ export default function WorkflowTimer({ onSchliessen }) {
                     <NumberWheelField value={preset.gesamtMin} onChange={(v) => workflowPresetAendern(preset.id, { gesamtMin: v })} min={10} max={240} step={5} placeholder="Min." />
 
                     <Label>Arbeitsintervall (Min.)</Label>
-                    <NumberWheelField value={preset.arbeitMin} onChange={(v) => workflowPresetAendern(preset.id, { arbeitMin: v })} min={5} max={90} step={5} placeholder="Min." />
+                    <NumberWheelField value={preset.arbeitMin} onChange={(v) => workflowPresetAendern(preset.id, { arbeitMin: v })} min={5} max={90} step={1} placeholder="Min." />
 
                     <Label>Pauseintervall (Min.)</Label>
                     <NumberWheelField value={preset.pauseMin} onChange={(v) => workflowPresetAendern(preset.id, { pauseMin: v })} min={0} max={30} step={1} placeholder="Min." />
