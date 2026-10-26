@@ -36,7 +36,7 @@ function JetztLinie({ oben }) {
 // Aufklappen (25.10., Nutzerin: „wenn ich auf die Morgenroutine klicke, geht
 // sie auf und ich sehe alle Bestandteile und kann sie direkt bearbeiten“ –
 // genauso eine gebündelte Supplement-/Injektionsgabe).
-function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine }) {
+function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine, onGabe }) {
   const [offen, setOffen] = useState(false);
   const f = farbenFuer(b);
   const hoehe = blockHoehe(b.dauer);
@@ -151,7 +151,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 {t.done ? (
                   <span style={{ fontSize: 12, fontWeight: 800, color: verdunkeln(f.dot, 12) }}>✓</span>
                 ) : t.onConfirm ? (
-                  <button type="button" className="mp-tap" aria-label={`${t.name} erledigt`} onClick={() => t.onConfirm()} style={{ border: "none", borderRadius: 99, padding: "6px 10px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit" }}>
+                  <button type="button" className="mp-tap" aria-label={`${t.name} erledigt`} onClick={() => (onGabe ? onGabe([t]) : t.onConfirm())} style={{ border: "none", borderRadius: 99, padding: "6px 10px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit" }}>
                     ✓
                   </button>
                 ) : null}
@@ -175,7 +175,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
   );
 }
 
-export default function BildTagesplan({ items, routinen = [], heute, onRoutineStart, onTraining, onBearbeiten, renderRoutine }) {
+export default function BildTagesplan({ items, routinen = [], heute, onRoutineStart, onTraining, onBearbeiten, renderRoutine, onGabe }) {
   const { timer, restSek, anteil, starten, stoppen } = useFokusTimer();
   const [jetztMin, setJetztMin] = useState(() => {
     const d = new Date();
@@ -202,10 +202,10 @@ export default function BildTagesplan({ items, routinen = [], heute, onRoutineSt
     if (b.kategorie === "morgenroutine" || b.kategorie === "abendroutine") return onRoutineStart?.(b.routine);
     if (b.kategorie === "training") return onTraining?.(b);
     if (timer?.key === b.key) stoppen();
-    if (b.teile) return b.teile.filter((t) => !t.done).forEach((t) => t.onConfirm?.());
+    if (b.teile) return onGabe ? onGabe(b.teile) : b.teile.filter((t) => !t.done).forEach((t) => t.onConfirm?.());
     b.onConfirm?.();
   };
-  const blockProps = { timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine };
+  const blockProps = { timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine, onGabe };
 
   if (!mitZeit.length && !ohneZeit.length) {
     return <div style={{ textAlign: "center", color: textMuted, fontSize: 13.5, padding: "24px 0" }}>Für diesen Tag steht nichts an. 🌿</div>;

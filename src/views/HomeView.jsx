@@ -55,22 +55,35 @@ import { routineTagesStatus } from "../utils/routineStatus";
 import ZeitraumKalender from "../ui/ZeitraumKalender";
 import { useTagesBloecke } from "../data/useTagesBloecke";
 
+// Bündel (26.10., Nutzerin: „nur einmal gefragt werden, ob ich meine
+// Supplemente nehme, darunter eine Liste … nicht jedes einzeln abhaken“):
+// Supplemente und Spritzen/Medikamente mit derselben Uhrzeit werden ein
+// Punkt; `teile` hält die einzelnen Einträge für die Liste im Fenster.
 function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   const angezeigt = [];
   const supplementSlots = {};
+  const hormonSlots = {};
   let trainingSlot = null;
 
   items.forEach((item) => {
     if (item.kategorie === "supplement") {
       let slot = supplementSlots[item.uhrzeit];
       if (!slot) {
-        slot = { ...item, _ids: [item.refId], _namen: [item.name] };
+        slot = { ...item, _ids: [item.refId], _namen: [item.name], _teile: [item] };
         supplementSlots[item.uhrzeit] = slot;
         angezeigt.push(slot);
       } else {
         slot._ids.push(item.refId);
         slot._namen.push(item.name);
+        slot._teile.push(item);
       }
+    } else if (item.kategorie === "hormon" && item.uhrzeit) {
+      const art = item.raw?.einnahmeart === "Injektion" ? "injektion" : "medikament";
+      const k = `${art}|${item.uhrzeit}`;
+      if (!hormonSlots[k]) {
+        hormonSlots[k] = { ...item, _art: art, _teile: [item] };
+        angezeigt.push(hormonSlots[k]);
+      } else hormonSlots[k]._teile.push(item);
     } else if (item.kategorie === "training") {
       if (!trainingSlot) {
         trainingSlot = { ...item, _traininganzahl: 1 };
@@ -85,7 +98,10 @@ function gruppiereFuerAlsNaechstes(items, t, tLabel) {
 
   return angezeigt.map((it) => {
     if (it.kategorie === "supplement" && it._ids.length > 1) {
-      return { ...it, name: t("home.list.supplementBundle", { uhrzeit: tLabel(it.uhrzeit) }), detail: it._namen.join(", "), bundleIds: it._ids };
+      return { ...it, name: t("home.list.supplementBundle", { uhrzeit: tLabel(it.uhrzeit) }), detail: it._namen.join(", "), bundleIds: it._ids, teile: it._teile };
+    }
+    if (it.kategorie === "hormon" && it._teile?.length > 1) {
+      return { ...it, key: `buendel-${it._art}-${it.uhrzeit}`, name: `${it._art === "injektion" ? "Injektionen" : "Medikamente"} · ${it._teile.length}`, detail: it._teile.map((x) => x.name).join(", "), teile: it._teile };
     }
     if (it.kategorie === "training" && it._traininganzahl > 1) {
       return { ...it, name: t("home.list.trainingseinheit") };
@@ -527,6 +543,15 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     if (item.kategorie === "gewohnheit") return toggleGewohnheitErledigt(tagStr, item.raw.id);
     return undefined;
   };
+  // Bündel aus dem „Als Nächstes“-Fenster: nur die angehakten Teile; der Rest bleibt offen.
+  const auswahlErledigen = (item, auswahl = item.teile) => {
+    const teile = auswahl.filter((x) => !x.done);
+    if (item.kategorie === "supplement") {
+      teile.forEach((x) => protokolliereErledigt("supplement", x.raw?.name, item.uhrzeit));
+      return confirmAlleTageszeit(tagStr, item.uhrzeit, teile.map((x) => x.refId));
+    }
+    teile.forEach((x) => direktErledigen(x));
+  };
   const buendelErledigen = (item) => {
     (supplemente || []).filter((sp) => item.bundleIds.includes(sp.id)).forEach((sp) => protokolliereErledigt("supplement", sp.name, item.uhrzeit));
     return confirmAlleTageszeit(tagStr, item.uhrzeit, item.bundleIds);
@@ -542,6 +567,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     onToggle: () => {
       if (item.bundleIds) {
         buendelErledigen(item);
+      } else if (item.teile) {
+        auswahlErledigen(item);
       } else if (direktErledigbar(item)) {
         direktErledigen(item);
       } else {
@@ -942,12 +969,13 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
                           {item.detail && <div style={{ fontSize: istErste ? 12.5 : 11.5, color: textMuted, marginTop: 1 }}>{item.detail}</div>}
                         </div>
                       </button>
-                      {item.bundleIds ? (
+                      {item.bundleIds || item.teile ? (
                         <button
                           className="mp-tap"
                           onClick={(e) => {
                             e.stopPropagation();
-                            buendelErledigen(item);
+                            if (item.bundleIds) buendelErledigen(item);
+                            else auswahlErledigen(item);
                           }}
                           style={{
                             flexShrink: 0,
@@ -1099,9 +1127,9 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       )}
       {naechsterOffen && !routineFensterZeigen && (
         <NaechsterSchrittFenster
-          schritte={naechsteSchritte(displayItems.filter((i) => !(i.kategorie === "workflow" && istWorkflowHeuteErledigt(i.raw?.preset?.id))))}
-          direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
-          onErledigt={(i) => (i.bundleIds ? buendelErledigen(i) : direktErledigen(i))}
+          schritte={naechsteSchritte(gruppiereFuerAlsNaechstes(displayItems.filter((i) => !i.done && !(i.kategorie === "workflow" && istWorkflowHeuteErledigt(i.raw?.preset?.id))), t, tLabel))}
+          direkt={(i) => !!i.bundleIds || !!i.teile || direktErledigbar(i)}
+          onErledigt={(i, auswahl) => (i.teile ? auswahlErledigen(i, auswahl) : i.bundleIds ? buendelErledigen(i) : direktErledigen(i))}
           onOeffnen={(i) => {
             setNaechsterOffen(false);
             if (i.kategorie === "workflow") {

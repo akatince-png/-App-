@@ -153,6 +153,16 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   const zusatzEtikett = useZusatzEtikett();
   const openFeedbackRef = useRef(openFeedback);
   openFeedbackRef.current = openFeedback;
+  // Gebündelte Gabe (26.10., Nutzerin: „nicht jedes Supplement einzeln“):
+  // abhaken ohne Rückfrage je Einzelnem.
+  const gabeErledigen = (teile) =>
+    teile
+      .filter((t) => !t.done && t.doseRef)
+      .forEach((t) => {
+        if (t.kategorie === "hormon") skipHormonFeedback(t.doseRef);
+        else skipSupplementFeedback(t.doseRef);
+        if (t.doseRef.name) aenderungVermerken({ kategorie: t.kategorie, itemName: t.doseRef.name, aktion: "erledigt", detail: verspaetungText(t.doseRef.zeit ?? t.doseRef.uhrzeit) || "" });
+      });
   const feedbackSchliessen = () => {
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
@@ -812,6 +822,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             onRoutineStart={setAblaufRoutine}
             onTraining={setTrainingVorschau}
             onBearbeiten={onEditItem ? (t) => onEditItem(t.kategorie, t.refId) : undefined}
+            onGabe={gabeErledigen}
             renderRoutine={(r) => <RoutineInhalt routine={r} status={r === "morgen" ? morgenRoutineStatus : abendRoutineStatus} />}
           />
           {zeigeUebergangsDenkpause && <DenkpauseNudge text="Kurzer Denksport zwischendurch?" onDismiss={() => setDenkpauseVersteckt(true)} />}
