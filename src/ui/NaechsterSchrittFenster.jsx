@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PlastikSymbol from "./PlastikSymbol";
 import { plastikFarbe } from "./plastik";
 import { KATEGORIE_META } from "../utils/dayItems";
@@ -37,8 +37,40 @@ const BILD = {
 };
 const KNOPF = { workflow: "▶ Zum Workflow", training: "▶ Zum Training", zeitblock: "Im Tagesplan ansehen" };
 
+// Bündel (26.10., Nutzerin): eine Abfrage mit Liste; einzelne lassen sich
+// abwählen und bleiben dann offen („später / heute nicht“).
+function BuendelListe({ teile, gewaehlt, setGewaehlt, farbe }) {
+  return (
+    <div data-naechster-buendel style={{ textAlign: "left", margin: "0 0 12px", display: "grid", gap: 6 }}>
+      {teile.map((t) => {
+        const an = gewaehlt.includes(t.key);
+        return (
+          <button
+            key={t.key}
+            type="button"
+            role="checkbox"
+            aria-checked={an}
+            onClick={() => setGewaehlt((g) => (an ? g.filter((k) => k !== t.key) : [...g, t.key]))}
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", border: `1.5px solid ${an ? farbe : "#D9DDE7"}`, borderRadius: 14, padding: "9px 12px", background: an ? "#fff" : "#F2F3F7", cursor: "pointer", fontFamily: "inherit", color: "#1F2A44" }}
+          >
+            <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: an ? farbe : "#fff", border: `2px solid ${an ? farbe : "#C3C8D4"}`, color: "#fff", fontSize: 14, fontWeight: 900 }}>{an ? "✓" : ""}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ display: "block", fontSize: 14.5, opacity: an ? 1 : 0.55 }}>{t.name}</b>
+              {t.detail && <span style={{ fontSize: 12, color: "#6B7590" }}>{t.detail}</span>}
+            </span>
+            {!an && <span style={{ fontSize: 11.5, fontWeight: 800, color: "#6B7590" }}>später</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function NaechsterSchrittFenster({ schritte = [], direkt, onErledigt, onOeffnen, onSpaeter }) {
   const [item, ...danach] = schritte;
+  const teile = item?.teile?.length > 1 ? item.teile : null;
+  const [gewaehlt, setGewaehlt] = useState([]);
+  useEffect(() => setGewaehlt(teile ? teile.map((t) => t.key) : []), [item?.key]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!item) {
     return (
       <Huelle farbe="#2FA36B">
@@ -56,9 +88,14 @@ export default function NaechsterSchrittFenster({ schritte = [], direkt, onErled
       <div style={{ fontSize: 12.5, fontWeight: 900, letterSpacing: 0.6, color: farbe }}>ALS NÄCHSTES · {zeitText(item).toUpperCase()}</div>
       <div style={{ fontSize: 26, fontWeight: 900, margin: "4px 0 2px", lineHeight: 1.15 }}>{item.name}</div>
       <div style={{ fontSize: 14, fontWeight: 700, color: "#4A5570", marginBottom: 14 }}>
-        {[meta.label, item.detail].filter(Boolean).join(" · ")}
+        {teile ? `${meta.label} · alle auf einmal – abwählen, was heute nicht dran ist` : [meta.label, item.detail].filter(Boolean).join(" · ")}
       </div>
-      {kannDirekt ? (
+      {teile && <BuendelListe teile={teile} gewaehlt={gewaehlt} setGewaehlt={setGewaehlt} farbe={farbe} />}
+      {teile ? (
+        <Knopf farbe={farbe} onClick={() => (gewaehlt.length ? onErledigt(item, teile.filter((t) => gewaehlt.includes(t.key))) : onSpaeter())} data="erledigt">
+          {gewaehlt.length ? `✓ Genommen (${gewaehlt.length})` : "Alle später"}
+        </Knopf>
+      ) : kannDirekt ? (
         <Knopf farbe={farbe} onClick={() => onErledigt(item)} data="erledigt">✓ Erledigt</Knopf>
       ) : (
         <Knopf farbe={farbe} onClick={() => onOeffnen(item)} data="oeffnen">{KNOPF[item.kategorie] || "▶ Öffnen"}</Knopf>
@@ -81,7 +118,16 @@ export default function NaechsterSchrittFenster({ schritte = [], direkt, onErled
   );
 }
 
+// Mittig statt unten (26.10., Nutzerin: „so mittig wie möglich, dann sieht man
+// das schöne Bild dahinter viel besser“). Im Querformat das Bild in voller
+// Höhe mittig, daneben weichgezeichnet – wie beim Morgenfenster.
 function Huelle({ farbe, bild, item, children }) {
+  const [breit, setBreit] = useState(() => typeof window !== "undefined" && window.innerWidth / window.innerHeight > 0.7);
+  useEffect(() => {
+    const pruefen = () => setBreit(window.innerWidth / window.innerHeight > 0.7);
+    window.addEventListener("resize", pruefen);
+    return () => window.removeEventListener("resize", pruefen);
+  }, []);
   return (
     <div
       role="dialog"
@@ -92,18 +138,20 @@ function Huelle({ farbe, bild, item, children }) {
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: bild ? `center 25% / cover no-repeat url(${bild})` : `radial-gradient(circle at 50% 30%, ${farbe}55, transparent 60%), linear-gradient(180deg, ${farbe}33, #F5F1EC)`,
-        backgroundColor: "#F5F1EC",
+        background: bild ? "#F5F1EC" : `radial-gradient(circle at 50% 30%, ${farbe}55, transparent 60%), linear-gradient(180deg, ${farbe}33, #F5F1EC)`,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-end",
+        justifyContent: "center",
+        overflowY: "auto",
         padding: "max(48px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom))",
         color: "#1F2A44",
       }}
     >
+      {bild && breit && <div aria-hidden="true" style={{ position: "fixed", inset: -40, background: `center / cover no-repeat url(${bild})`, filter: "blur(28px) saturate(1.1)", opacity: 0.85 }} />}
+      {bild && <div aria-hidden="true" style={{ position: "fixed", inset: 0, background: `${breit ? "center / auto 100%" : "center 25% / cover"} no-repeat url(${bild})` }} />}
       {!bild && item && (
-        <div style={{ position: "absolute", left: 0, right: 0, top: "18%", display: "flex", justifyContent: "center" }}>
-          <PlastikSymbol kategorie={item.kategorie} farbe={farbe} size={150} />
+        <div style={{ position: "absolute", left: 0, right: 0, top: "8%", display: "flex", justifyContent: "center" }}>
+          <PlastikSymbol kategorie={item.kategorie} farbe={farbe} size={130} />
         </div>
       )}
       <div style={{ position: "relative", maxWidth: 460, width: "100%", margin: "0 auto", padding: "20px 20px 10px", borderRadius: 30, background: "rgba(255,255,255,.9)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", boxShadow: "0 10px 30px rgba(0,0,0,.18)", textAlign: "center" }}>

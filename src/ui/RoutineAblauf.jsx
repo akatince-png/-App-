@@ -272,7 +272,7 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
   }
 
   return (
-    <Shell>
+    <Shell mittig>
       <div style={{ textAlign: "center", marginBottom: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 0.3 }}>GESAMTZEIT {ROUTINE_LABEL[routine].toUpperCase()}</div>
         <div style={{ fontSize: 24, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{fmtDauer(gesamtSek)}</div>

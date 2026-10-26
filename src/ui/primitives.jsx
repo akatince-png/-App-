@@ -10,7 +10,9 @@ import { useDiktat } from "./useDiktat";
 // Stepper innerhalb dieses Screens automatisch in der Farbe des jeweiligen
 // Lebensbereichs statt der generischen Marken-Akzentfarbe — ein Prop statt
 // jeden einzelnen Button manuell einzufärben.
-export function Shell({ children, bereich }) {
+// `mittig` (26.10., Nutzerin): geführte Abläufe wie Morgen-/Abendroutine
+// stehen senkrecht in der Bildschirmmitte statt oben – vor allem aufs Tablet.
+export function Shell({ children, bereich, mittig = false }) {
   return (
     <BereichColorProvider bereich={bereich}>
       <div
@@ -21,6 +23,7 @@ export function Shell({ children, bereich }) {
           fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           display: "flex",
           justifyContent: "center",
+          alignItems: mittig ? "center" : undefined,
           // Unten extra Platz reserviert: der schwebende, mittig sitzende
           // Aka-Orb (KiChat.jsx, geschlossener Zustand) braucht diesen Raum,
           // damit er nicht auf dem letzten Karteninhalt landet (Nutzerin
