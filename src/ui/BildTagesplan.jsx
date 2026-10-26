@@ -38,7 +38,7 @@ function JetztLinie({ oben }) {
 // Aufklappen (25.10., Nutzerin: „wenn ich auf die Morgenroutine klicke, geht
 // sie auf und ich sehe alle Bestandteile und kann sie direkt bearbeiten“ –
 // genauso eine gebündelte Supplement-/Injektionsgabe).
-function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine, onGabe }) {
+function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine, onGabe, onRueckgaengig }) {
   const [offen, setOffen] = useState(false);
   const f = farbenFuer(b);
   const hoehe = blockHoehe(b.dauer);
@@ -135,6 +135,10 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
               <button type="button" className="mp-tap" data-termin-wie onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
                 Wie lief's?
               </button>
+            ) : erledigt && onRueckgaengig && !istGruppe && (b.kategorie === "supplement" || b.kategorie === "hormon") ? (
+              <button type="button" aria-label={`${b.name}: Haken zurücknehmen`} title="Vertippt? Haken zurücknehmen" onClick={() => onRueckgaengig(b)} style={{ border: "none", fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12), cursor: "pointer", fontFamily: "inherit" }}>
+                ✓ Erledigt ↩︎
+              </button>
             ) : erledigt ? (
               <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>{(istTermin && b.rueckmeldung?.status === "ausgefallen") || (istAufgabe && b.raw.ausgefallen) ? "✕ Ausgefallen" : istTermin ? "✓ Wahrgenommen" : "✓ Erledigt"}</span>
             ) : (istRoutine || b.kategorie === "training" || b.onConfirm || istGruppe) && b.kategorie !== "zeitblock" && b.kategorie !== "workflow" ? (
@@ -164,7 +168,13 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                   </button>
                 )}
                 {t.done ? (
-                  <span style={{ fontSize: 12, fontWeight: 800, color: verdunkeln(f.dot, 12) }}>✓</span>
+                  onRueckgaengig ? (
+                    <button type="button" aria-label={`${t.name}: Haken zurücknehmen`} title="Vertippt? Haken zurücknehmen" onClick={() => onRueckgaengig(t)} style={{ border: `1.5px solid ${verdunkeln(f.dot, 12)}`, borderRadius: 99, padding: "5px 10px", fontSize: 12, fontWeight: 800, background: "transparent", color: verdunkeln(f.dot, 12), cursor: "pointer", fontFamily: "inherit" }}>
+                      ✓ ↩︎
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: 12, fontWeight: 800, color: verdunkeln(f.dot, 12) }}>✓</span>
+                  )
                 ) : t.onConfirm ? (
                   <button type="button" className="mp-tap" aria-label={`${t.name} erledigt`} onClick={() => (onGabe ? onGabe([t]) : t.onConfirm())} style={{ border: "none", borderRadius: 99, padding: "6px 10px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit" }}>
                     ✓
@@ -200,7 +210,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
   );
 }
 
-export default function BildTagesplan({ items, routinen = [], heute, onRoutineStart, onTraining, onBearbeiten, renderRoutine, onGabe }) {
+export default function BildTagesplan({ items, routinen = [], heute, onRoutineStart, onTraining, onBearbeiten, renderRoutine, onGabe, onRueckgaengig }) {
   const { timer, restSek, anteil, starten, stoppen } = useFokusTimer();
   const [jetztMin, setJetztMin] = useState(() => {
     const d = new Date();
@@ -230,7 +240,7 @@ export default function BildTagesplan({ items, routinen = [], heute, onRoutineSt
     if (b.teile) return onGabe ? onGabe(b.teile) : b.teile.filter((t) => !t.done).forEach((t) => t.onConfirm?.());
     b.onConfirm?.();
   };
-  const blockProps = { timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine, onGabe };
+  const blockProps = { timer, restSek, anteil, onTimer, onAktion, onBearbeiten, renderRoutine, onGabe, onRueckgaengig };
 
   if (!mitZeit.length && !ohneZeit.length) {
     return <div style={{ textAlign: "center", color: textMuted, fontSize: 13.5, padding: "24px 0" }}>Für diesen Tag steht nichts an. 🌿</div>;
