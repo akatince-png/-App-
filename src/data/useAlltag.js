@@ -31,7 +31,7 @@ const zuZeile = (userId, e) => ({
   notiz: e.notiz || null,
 });
 
-const rueckmeldungAus = (x) => ({ status: x.status || "wahrgenommen", ende: x.ende ? String(x.ende).slice(0, 5) : null, notiz: x.notiz || null });
+const rueckmeldungAus = (x) => ({ status: x.status || "wahrgenommen", start: x.start ? String(x.start).slice(0, 5) : null, ende: x.ende ? String(x.ende).slice(0, 5) : null, notiz: x.notiz || null });
 
 export function useAlltag(userId) {
   const [alltagBereiche, setBereiche] = useState([]);
@@ -47,7 +47,7 @@ export function useAlltag(userId) {
       const [b, e, d] = await Promise.all([
         supabase.from("alltag_bereiche").select("*").eq("user_id", userId).order("created_at"),
         supabase.from("alltag_eintraege").select("*").eq("user_id", userId).order("start_zeit"),
-        supabase.from("alltag_erledigt").select("eintrag_id, datum, status, ende, notiz").eq("user_id", userId).gte("datum", seit),
+        supabase.from("alltag_erledigt").select("eintrag_id, datum, status, start, ende, notiz").eq("user_id", userId).gte("datum", seit),
       ]);
       if (abbruch) return;
       if (b.error || e.error) console.error(b.error || e.error);
@@ -119,7 +119,7 @@ export function useAlltag(userId) {
         if (error) setErledigt((p) => ({ ...p, [schluessel]: vorher }));
         return error ? { ok: false, error: error.message } : { ok: true };
       }
-      const zeile = { user_id: userId, eintrag_id: eintragId, datum, status: rueckmeldung.status === "ausgefallen" ? "ausgefallen" : "wahrgenommen", ende: rueckmeldung.ende || null, notiz: rueckmeldung.notiz?.trim() || null };
+      const zeile = { user_id: userId, eintrag_id: eintragId, datum, status: rueckmeldung.status === "ausgefallen" ? "ausgefallen" : "wahrgenommen", start: rueckmeldung.start || null, ende: rueckmeldung.ende || null, notiz: rueckmeldung.notiz?.trim() || null };
       setErledigt((p) => ({ ...p, [schluessel]: rueckmeldungAus(zeile) }));
       const { error } = await supabase.from("alltag_erledigt").upsert(zeile, { onConflict: "eintrag_id,datum" });
       if (error) {

@@ -279,6 +279,13 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🗓️ Tagesplan aufgeräumt: Aufgaben des Tages im Plan, echte Zeiten (26.10.2026)
+
+Nutzerin: Oben im Tagesplan stand „Heute aus deiner Matrix“ mit allem Roten aus der Matrix – zu voll, der Plan kam erst weit unten. Gewünscht: nur das am Tag Eingeplante, direkt im Plan; abhaken, ausfallen lassen und dokumentieren, wann begonnen/beendet.
+- Bild-Ansicht: keine Matrix-Karte mehr (`TagesHinweise ohneMatrix`); Matrix-Aufgaben mit `geplantAm`/`mitAm` = Tag stehen als Blöcke (`kategorie: "aufgabe"`, Knopf „▶ Start“/„✓ Fertig?“) mit `ui/AufgabeRueckmeldung.jsx`: ▶ Jetzt starten, ✓ Erledigt (Begonnen/Fertig um, nachträglich änderbar), ✕ Fällt aus → Morgen / Später / Entfällt ganz. Listen-Ansicht behält die Karte.
+- Fortschritts-Ring und Quests stehen unter dem Plan.
+- Migration 0137 (eingespielt): `matrix_aufgaben.gestartet_am`, `.ausgefallen`; `alltag_erledigt.start`. Termine: „Begonnen um“ zusätzlich. Workflow-Protokoll mit „08:02–11:40 · 218 Min.“.
+
 ## 🥤 Shaker in Portionen, Supplemente gebündelt, Fenster mittig (26.10.2026)
 
 - „Als Nächstes“-Fenster mittig (Querformat: Bild in voller Höhe, Rand weichgezeichnet). Supplemente bzw. Spritzen/Medikamente mit gleicher Uhrzeit kommen als **eine** Abfrage mit abwählbarer Liste („✓ Genommen (n)“, Abgewähltes bleibt offen). `HomeView.gruppiereFuerAlsNaechstes` hält `teile`, `auswahlErledigen`.

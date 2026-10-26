@@ -22,6 +22,9 @@ const zuAufgabe = (r) => ({
   erinnerung: r.erinnerung || null,
   // ⭐ MIT für diesen Tag (24.10., Migration 0133).
   mitAm: r.mit_am || null,
+  // Echte Zeiten (26.10., Migration 0137): wann begonnen; ausgefallen = nicht gemacht, abgeschlossen.
+  gestartetAm: r.gestartet_am || null,
+  ausgefallen: !!r.ausgefallen,
 });
 const zuZeile = (userId, a) => ({
   user_id: userId,
@@ -39,6 +42,8 @@ const zuZeile = (userId, a) => ({
   uhrzeit: a.uhrzeit || null,
   erinnerung: a.erinnerung || null,
   mit_am: a.mitAm || null,
+  gestartet_am: a.gestartetAm || null,
+  ausgefallen: !!a.ausgefallen,
 });
 
 export function useMatrixAufgaben(userId) {

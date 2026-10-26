@@ -36,6 +36,9 @@ test("Matrix: vom Workflow-Kasten erreichbar, Aufgaben in vier Farbfeldern, neue
 test("Tagesplan: nur Rot und heute eingeplantes Grün aus der Matrix", async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 8, 30, 10, 0));
   await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1#/tagesplan");
+  // Seit 26.10. steht die Matrix-Karte nur noch in der Listen-Ansicht; im Bild
+  // stehen die eingeplanten Aufgaben direkt im Plan (bild-tagesplan.spec.js).
+  await page.getByRole("button", { name: "Liste", exact: true }).click();
   const k = page.locator("[data-matrix-heute]");
   await expect(k).toContainText("Antrag abschicken");
   await expect(k).toContainText("Schuhkarton mit Belegen holen");

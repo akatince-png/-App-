@@ -25,7 +25,8 @@ const oeffne = (id) => {
 
 // ohneTimer: der Tagesplan zeigt den laufenden Timer in der Bild-Ansicht
 // schon selbst (mit Abhaken beim Fertig), dann hier nicht doppelt.
-export default function TagesHinweise({ onOpenView = oeffne, ohneTimer = false, datum = null }) {
+// ohneMatrix (26.10.): im Bild-Tagesplan stehen die Aufgaben des Tages direkt im Plan.
+export default function TagesHinweise({ onOpenView = oeffne, ohneTimer = false, datum = null, ohneMatrix = false }) {
   const { atemSessions, team, isAdmin, atemZeiten, atemuebungLogs, atemuebungen, gruppenprotokolle, eigeneGruppenLogs } = useAppData();
   const { proband } = useAdmin();
   const session = team ? aktuelleSession(atemSessions) : null;
@@ -94,7 +95,7 @@ export default function TagesHinweise({ onOpenView = oeffne, ohneTimer = false, 
         </button>
       ))}
       {!ohneTimer && <LaufenderTimerKarte />}
-      <MatrixHeuteKarte datum={datum} onOeffnen={() => onOpenView("matrix")} />
+      {!ohneMatrix && <MatrixHeuteKarte datum={datum} onOeffnen={() => onOpenView("matrix")} />}
       {proband === null && <Top3Karte />}
       {proband === null && <WochenCheckKarte />}
       {session && (

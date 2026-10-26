@@ -26,6 +26,7 @@ import DenkpauseNudge from "../ui/DenkpauseNudge";
 import BildTagesplan from "../ui/BildTagesplan";
 import RoutineInhalt from "../ui/RoutineInhalt";
 import { alltagItems } from "../utils/exportAuswahl";
+import { QUADRANT, quadrantVon } from "../utils/matrix";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import TagesHinweise from "../ui/TagesHinweise";
 import Umschalter from "../ui/Umschalter";
@@ -99,6 +100,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     alltagEintraege,
     alltagBereiche,
     alltagErledigt,
+    matrixAufgaben,
   } = useAppData();
 
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
@@ -376,6 +378,24 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
       return { ...i, kategorie: "termin", datum: tag, rueckmeldung: r, done: !!r };
     });
   }, [selectedDate, alltagEintraege, alltagBereiche, alltagErledigt]);
+  // Aufgaben aus der Matrix, die an diesem Tag eingeplant sind (26.10.,
+  // Nutzerin: „nur die an dem Tag anfallenden … direkt in den Tagesplan“).
+  const aufgabenHeute = useMemo(() => {
+    const tag = toLocalISODate(selectedDate);
+    return (matrixAufgaben || [])
+      .filter((a) => a.geplantAm === tag || a.mitAm === tag)
+      .map((a) => ({
+        key: `m-${a.id}`,
+        kategorie: "aufgabe",
+        datum: tag,
+        name: `${a.mitAm === tag ? "⭐ " : ""}${a.titel}`,
+        uhrzeit: a.uhrzeit || "",
+        dauerMin: a.dauerMin || 30,
+        farbe: QUADRANT[quadrantVon(a, selectedDate)]?.farbe,
+        done: !!a.erledigtAm,
+        raw: a,
+      }));
+  }, [selectedDate, matrixAufgaben]);
   useTagGeschafftFeier(tagesItems, sameDay(selectedDate, today));
 
   // Performance-Fix (12.09.): itemsForDate(d) lief in der Wochenansicht
@@ -687,7 +707,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   return (
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
-      <TagesHinweise datum={selectedDate} ohneTimer={modus === "tag" && ansicht === "bild" && sameDay(selectedDate, new Date())} />
+      <TagesHinweise datum={selectedDate} ohneTimer={modus === "tag" && ansicht === "bild" && sameDay(selectedDate, new Date())} ohneMatrix={modus === "tag" && ansicht === "bild"} />
       {fruehFrage && (
         <div data-frueh-frage role="dialog" aria-label="Schon erledigt?" style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(16, 24, 40, 0.45)" }}>
           <div style={{ width: "min(92vw, 380px)", borderRadius: 22, padding: 18, background: "var(--mp-karte)", color: "var(--mp-text)", boxShadow: "0 12px 32px rgba(0,0,0,.25)", textAlign: "center" }}>
@@ -726,26 +746,6 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         </Card>
       )}
 
-
-      {modus === "tag" && (
-        <Card style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <ProgressRing done={erledigtCount} total={tagesItems.length} />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 3 }}>{fmtDate(selectedDate)}</div>
-              <div style={{ fontSize: 15, fontWeight: 800 }}>{statusText(erledigtCount, tagesItems.length)}</div>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {modus === "tag" && sameDay(selectedDate, new Date()) && (
-        <QuestsKarte
-          quests={(quests || []).filter((q) => q.fortschritt.angenommen === true)}
-          onFortschritt={questFortschrittSpeichern}
-          titel="🎯 Deine angenommenen Quests"
-        />
-      )}
 
       {/* Kalender als dritter Reiter (29.09., Nutzerin: „Kalender muss
           leichter einsehbar sein, nicht zu tief versteckt“) – öffnet
@@ -816,7 +816,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             />
           )}
           <BildTagesplan
-            items={[...tagesItems, ...termine]}
+            items={[...tagesItems, ...termine, ...aufgabenHeute]}
             routinen={routinenBloecke}
             heute={sameDay(selectedDate, new Date())}
             onRoutineStart={setAblaufRoutine}
@@ -828,6 +828,29 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           {zeigeUebergangsDenkpause && <DenkpauseNudge text="Kurzer Denksport zwischendurch?" onDismiss={() => setDenkpauseVersteckt(true)} />}
         </>
       )}
+
+      {/* Fortschritt und Quests stehen seit 26.10. unter dem Plan (Nutzerin:
+          „der Tagesplan ist auf dieser Seite viel wichtiger“). */}
+      {modus === "tag" && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <ProgressRing done={erledigtCount} total={tagesItems.length} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: textMuted, marginBottom: 3 }}>{fmtDate(selectedDate)}</div>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>{statusText(erledigtCount, tagesItems.length)}</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {modus === "tag" && sameDay(selectedDate, new Date()) && (
+        <QuestsKarte
+          quests={(quests || []).filter((q) => q.fortschritt.angenommen === true)}
+          onFortschritt={questFortschrittSpeichern}
+          titel="🎯 Deine angenommenen Quests"
+        />
+      )}
+
 
       {modus === "tag" && ansicht === "liste" && (
         <>

@@ -11,6 +11,7 @@ export default function TerminRueckmeldung({ eintrag, datum, onFertig }) {
   const { alltagErledigt = {}, alltagRueckmelden } = useAppData();
   const jetzt = alltagErledigt[`${eintrag.id}|${datum}`] || null;
   const [status, setStatus] = useState(jetzt?.status || null);
+  const [start, setStart] = useState(jetzt?.start || eintrag.start || "");
   const [ende, setEnde] = useState(jetzt?.ende || eintrag.ende || "");
   const [notiz, setNotiz] = useState(jetzt?.notiz || "");
   const [fehler, setFehler] = useState(null);
@@ -36,14 +37,20 @@ export default function TerminRueckmeldung({ eintrag, datum, onFertig }) {
       {status && (
         <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
           {status === "wahrgenommen" && (
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-              Gedauert bis
-              <input type="time" value={ende} onChange={(e) => setEnde(e.target.value)} aria-label="Gedauert bis" style={{ ...feld, width: 110 }} />
-            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                Begonnen um
+                <input type="time" value={start} onChange={(e) => setStart(e.target.value)} aria-label="Begonnen um" style={{ ...feld, width: 110 }} />
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                Gedauert bis
+                <input type="time" value={ende} onChange={(e) => setEnde(e.target.value)} aria-label="Gedauert bis" style={{ ...feld, width: 110 }} />
+              </label>
+            </div>
           )}
           <input value={notiz} onChange={(e) => setNotiz(e.target.value)} placeholder={status === "ausgefallen" ? "Warum? (optional)" : "Notiz, z. B. wie es war (optional)"} aria-label="Notiz zum Termin" style={feld} />
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" data-rueckmeldung-speichern onClick={() => speichern({ status, ende: status === "wahrgenommen" ? ende : null, notiz })} style={knopf("var(--mp-accent)", true)}>
+            <button type="button" data-rueckmeldung-speichern onClick={() => speichern({ status, start: status === "wahrgenommen" ? start : null, ende: status === "wahrgenommen" ? ende : null, notiz })} style={knopf("var(--mp-accent)", true)}>
               Speichern
             </button>
             {jetzt && (

@@ -65,6 +65,30 @@ test("Bild-Tagesplan: Termin als ausgefallen rückmelden", async ({ page }) => {
   await termin.getByLabel("Notiz zum Termin").fill("abgesagt");
   await termin.locator("[data-rueckmeldung-speichern]").click();
   const [, , r] = (await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "alltagRueckmelden").map((a) => a.args))).at(-1);
-  expect(r).toEqual({ status: "ausgefallen", ende: null, notiz: "abgesagt" });
+  expect(r).toEqual({ status: "ausgefallen", start: null, ende: null, notiz: "abgesagt" });
+  expect(fehler).toEqual([]);
+});
+
+// Aufgaben aus der Matrix direkt im Tagesplan (26.10., Nutzerin): nur die des
+// Tages, keine Matrix-Karte mehr oben; Start/Fertig werden mit Uhrzeit gespeichert.
+test("Bild-Tagesplan: Aufgabe des Tages starten und mit Zeiten abhaken", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  const h = new Date();
+  await page.clock.install({ time: new Date(h.getFullYear(), h.getMonth(), h.getDate(), 9, 0) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1&matrixzeit=1#/tagesplan");
+  await expect(page.locator("[data-matrix-heute]")).toHaveCount(0);
+  const block = page.locator('[data-bild-block="m-m3"]');
+  await expect(block).toContainText("Ordner sortieren");
+  // Nur eingeplante Aufgaben, nicht alles Rote aus der Matrix.
+  await expect(page.locator('[data-bild-block="m-m2"]')).toHaveCount(0);
+  await block.locator("[data-aufgabe-oeffnen]").click();
+  await block.locator("[data-aufgabe-erledigt]").click();
+  await block.getByLabel("Begonnen um").fill("09:05");
+  await block.getByLabel("Fertig um").fill("09:40");
+  await block.locator("[data-aufgabe-speichern]").click();
+  const [a] = (await page.evaluate(() => (window.__mockAufrufe || []).filter((x) => x.name === "matrixAufgabeSpeichern").map((x) => x.args))).at(-1);
+  expect(a.id).toBe("m3");
+  expect(new Date(a.gestartetAm).getHours()).toBe(9);
+  expect(new Date(a.erledigtAm).getMinutes()).toBe(40);
   expect(fehler).toEqual([]);
 });

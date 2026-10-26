@@ -42,7 +42,7 @@ test("Woche, Tag, Monat; Eintrag mit eigenem Bereich anlegen; Alltags-Eintrag ab
   await page.getByLabel("Gedauert bis").fill("17:00");
   await page.getByLabel("Notiz zum Termin").fill("länger geblieben");
   await page.locator("[data-rueckmeldung-speichern]").click();
-  expect((await aufrufe(page, "alltagRueckmelden")).at(-1)).toEqual([1, "2026-10-28", { status: "wahrgenommen", ende: "17:00", notiz: "länger geblieben" }]);
+  expect((await aufrufe(page, "alltagRueckmelden")).at(-1)).toEqual([1, "2026-10-28", { status: "wahrgenommen", start: "08:30", ende: "17:00", notiz: "länger geblieben" }]);
 
   await page.getByRole("button", { name: "Monat", exact: true }).click();
   await expect(page.getByText("Oktober 2026")).toBeVisible();
