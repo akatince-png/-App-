@@ -52,7 +52,7 @@ const BEKANNTE_FUNKTIONEN = new Set([
   "spotifyAnlassSetzen", "spotifyAutoPlayTokenErzeugen", "spotifyFortsetzen", "spotifyLautstaerke",
   "spotifyPausieren", "spotifyPlaylistHinzufuegen", "spotifyPlaylistLoeschen", "spotifyVerbindungNeuLaden",
   "spotifyVerbindungTrennen", "starteTraining", "supplementAendern", "supplementEntfernen",
-  "supplementHinzufuegen", "tageslichtHinzufuegen", "tageslichtZielSetzen", "tageslichtZielZuruecksetzen",
+  "supplementHinzufuegen", "supplementSchluck", "tageslichtHinzufuegen", "tageslichtZielSetzen", "tageslichtZielZuruecksetzen",
   "teamNachrichtGelesen", "teamNachrichtSenden", "teilprotokollSpeichern", "templateBearbeiten",
   "templateEntfernen", "templateSpeichern", "toggleDatenteilung", "toggleGewohnheitErledigt",
   "toggleHormonErledigt", "toggleMahlzeitErledigt", "toggleMesswert", "togglePeptid", "toggleRezeptErledigt",

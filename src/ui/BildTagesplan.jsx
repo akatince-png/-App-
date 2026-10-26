@@ -9,6 +9,7 @@ import AmpelPunkt, { AmpelLegende } from "./AmpelPunkt";
 import SchnellIcon from "./SchnellIcon";
 import { plastikFarbe, plastikHell } from "./plastik";
 import TerminRueckmeldung from "./TerminRueckmeldung";
+import GetraenkPortion from "./GetraenkPortion";
 import { rueckmeldungText } from "../utils/termin";
 
 // Bild-Tagesplan (27.09., Nutzerinnen-Wunsch nach dem Marktvergleich): der
@@ -46,7 +47,9 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
   const istGruppe = !!b.teile;
   // Termine aus „Mein Alltag“ (26.10.): rückmelden statt nur abhaken.
   const istTermin = b.kategorie === "termin";
-  const aufklappbar = istGruppe || istTermin || (istRoutine && !!renderRoutine);
+  // Getränk über den Tag (26.10.): Portionen statt „✓ Erledigt“.
+  const getraenk = b.kategorie === "supplement" && b.raw?.getraenkMl && b.doseRef ? b.raw.getraenkMl : null;
+  const aufklappbar = istGruppe || istTermin || !!getraenk || (istRoutine && !!renderRoutine);
   const aktionText = istRoutine ? "▶ Starten" : b.kategorie === "training" ? "Training" : istGruppe ? "✓ Alle" : "✓ Erledigt";
   const textFarbe = erledigt ? "#fff" : f.text;
   return (
@@ -97,7 +100,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0, position: "relative", zIndex: 3 }}>
-            {!erledigt && !istRoutine && !istTermin && (
+            {!erledigt && !istRoutine && !istTermin && !getraenk && (
               <button
                 type="button"
                 className="mp-tap"
@@ -116,7 +119,11 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 )}
               </button>
             )}
-            {istTermin && !erledigt ? (
+            {getraenk && !erledigt ? (
+              <button type="button" className="mp-tap" data-getraenk-oeffnen onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                🥤 Trinken
+              </button>
+            ) : istTermin && !erledigt ? (
               <button type="button" className="mp-tap" data-termin-wie onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
                 Wie lief's?
               </button>
@@ -157,6 +164,11 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 ) : null}
               </div>
             ))}
+          </div>
+        )}
+        {offen && getraenk && (
+          <div style={{ marginTop: 10, padding: 10, borderRadius: 14, background: "var(--mp-karte)", color: "var(--mp-text)" }}>
+            <GetraenkPortion dose={b.doseRef} gesamtMl={getraenk} farbe={verdunkeln(f.dot, 6)} />
           </div>
         )}
         {offen && istTermin && b.raw && (

@@ -3,6 +3,8 @@ import PlastikSymbol from "./PlastikSymbol";
 import { plastikFarbe } from "./plastik";
 import { KATEGORIE_META } from "../utils/dayItems";
 import { zeitText } from "../utils/naechsteSchritte";
+import { toLocalISODate } from "../utils/dates";
+import GetraenkPortion from "./GetraenkPortion";
 import bildSupplemente from "../assets/fenster/supplemente.jpg";
 import bildErnaehrung from "../assets/fenster/ernaehrung.jpg";
 import bildSport from "../assets/fenster/sport.jpg";
@@ -69,6 +71,7 @@ function BuendelListe({ teile, gewaehlt, setGewaehlt, farbe }) {
 export default function NaechsterSchrittFenster({ schritte = [], direkt, onErledigt, onOeffnen, onSpaeter }) {
   const [item, ...danach] = schritte;
   const teile = item?.teile?.length > 1 ? item.teile : null;
+  const getraenk = item?.kategorie === "supplement" && item.raw?.getraenkMl ? item.raw.getraenkMl : null;
   const [gewaehlt, setGewaehlt] = useState([]);
   useEffect(() => setGewaehlt(teile ? teile.map((t) => t.key) : []), [item?.key]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!item) {
@@ -88,10 +91,12 @@ export default function NaechsterSchrittFenster({ schritte = [], direkt, onErled
       <div style={{ fontSize: 12.5, fontWeight: 900, letterSpacing: 0.6, color: farbe }}>ALS NÄCHSTES · {zeitText(item).toUpperCase()}</div>
       <div style={{ fontSize: 26, fontWeight: 900, margin: "4px 0 2px", lineHeight: 1.15 }}>{item.name}</div>
       <div style={{ fontSize: 14, fontWeight: 700, color: "#4A5570", marginBottom: 14 }}>
-        {teile ? `${meta.label} · alle auf einmal – abwählen, was heute nicht dran ist` : [meta.label, item.detail].filter(Boolean).join(" · ")}
+        {teile ? `${meta.label} · alle auf einmal – abwählen, was heute nicht dran ist` : getraenk ? "Über den Tag verteilt trinken – Portion eintragen" : [meta.label, item.detail].filter(Boolean).join(" · ")}
       </div>
       {teile && <BuendelListe teile={teile} gewaehlt={gewaehlt} setGewaehlt={setGewaehlt} farbe={farbe} />}
-      {teile ? (
+      {getraenk ? (
+        <GetraenkPortion dose={{ datum: toLocalISODate(new Date()), id: item.raw.id, zeit: item.originalUhrzeit ?? item.uhrzeit }} gesamtMl={getraenk} farbe={farbe} hell />
+      ) : teile ? (
         <Knopf farbe={farbe} onClick={() => (gewaehlt.length ? onErledigt(item, teile.filter((t) => gewaehlt.includes(t.key))) : onSpaeter())} data="erledigt">
           {gewaehlt.length ? `✓ Genommen (${gewaehlt.length})` : "Alle später"}
         </Knopf>

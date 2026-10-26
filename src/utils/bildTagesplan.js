@@ -133,7 +133,8 @@ const GRUPPEN = {
   medikament: { name: "Medikamente", kategorie: "hormon" },
 };
 export function gruppeVon(b) {
-  if (b?.kategorie === "supplement") return "supplement";
+  // Getränke über den Tag (Shaker) bleiben eigene Blöcke mit Portionen.
+  if (b?.kategorie === "supplement") return b.raw?.getraenkMl ? null : "supplement";
   if (b?.kategorie === "hormon") return b.raw?.einnahmeart === "Injektion" ? "injektion" : "medikament";
   return null;
 }

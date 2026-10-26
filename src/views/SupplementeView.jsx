@@ -23,7 +23,7 @@ const { dot: accent, text: accentDark } = KATEGORIE_META.supplement;
 
 function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto, onIntervallAendern }) {
   const [offen, setOffen] = useState(false);
-  const [entwurf, setEntwurf] = useState({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis });
+  const [entwurf, setEntwurf] = useState({ name: s.name, tageszeiten: s.tageszeiten, hinweis: s.hinweis, getraenkMl: s.getraenkMl || "" });
   const [grund, setGrund] = useState("");
   // Dosierintervall bearbeiten (17.09., Konsistenz-Check) — bisher ließ sich
   // das Intervall/die Uhrzeiten eines Supplements nur beim Anlegen (Onboarding)
@@ -96,6 +96,9 @@ function SupplementZeile({ s, istLetzte, onAendern, onEntfernen, onFoto, onInter
               <Pill key={h} label={h} selected={entwurf.hinweis === h} onClick={() => setEntwurf((p) => ({ ...p, hinweis: p.hinweis === h ? "" : h }))} />
             ))}
           </div>
+          {/* Großes Getränk über den Tag (26.10.): dann Portionen statt „erledigt“. */}
+          <Label>🥤 Getränk über den Tag verteilt (ml, optional)</Label>
+          <TextInput value={String(entwurf.getraenkMl || "")} onChange={(v) => setEntwurf((p) => ({ ...p, getraenkMl: v.replace(/\D/g, "") }))} placeholder="z. B. 1500 – leer lassen für normale Einnahme" />
           <GrundEingabe grund={grund} onChange={setGrund} />
           <div style={{ marginTop: 10 }}>
             <PrimaryButton onClick={speichern} disabled={!entwurf.name.trim() || entwurf.tageszeiten.length === 0}>
@@ -256,10 +259,12 @@ function SupplementeSection() {
       aenderungen.push(`Tageszeiten: ${s.tageszeiten.join(", ") || "–"} → ${entwurf.tageszeiten.join(", ") || "–"}`);
     }
     if (entwurf.hinweis !== s.hinweis) aenderungen.push(`Hinweis: ${s.hinweis || "–"} → ${entwurf.hinweis || "–"}`);
+    const { getraenkMl, ...felder } = entwurf;
+    if (Number(getraenkMl || 0) !== Number(s.getraenkMl || 0)) aenderungen.push(`Getränk: ${s.getraenkMl || "–"} → ${getraenkMl || "–"} ml`);
     if (aenderungen.length > 0) {
       aenderungVermerken({ kategorie: "supplement", itemName: s.name, aktion: "geändert", detail: aenderungen.join("; "), grund });
     }
-    supplementAendern(s.id, entwurf);
+    supplementAendern(s.id, { ...felder, getraenk_ml: Number(getraenkMl) > 0 ? Number(getraenkMl) : null });
   };
 
   // Dosierintervall bearbeiten (17.09., Konsistenz-Check) — Gegenstück zu
