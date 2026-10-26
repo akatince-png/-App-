@@ -11,6 +11,7 @@ import { plastikFarbe, plastikHell } from "./plastik";
 import TerminRueckmeldung from "./TerminRueckmeldung";
 import GetraenkPortion from "./GetraenkPortion";
 import AufgabeRueckmeldung from "./AufgabeRueckmeldung";
+import { AufgabeStartStop, TerminStartStop } from "./StartStopKnopf";
 import { aufgabeZeitText, rueckmeldungText } from "../utils/termin";
 
 // Bild-Tagesplan (27.09., Nutzerinnen-Wunsch nach dem Marktvergleich): der
@@ -124,9 +125,9 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
               </button>
             )}
             {istAufgabe && !erledigt ? (
-              <button type="button" className="mp-tap" data-aufgabe-oeffnen onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-                {b.raw.gestartetAm ? "✓ Fertig?" : "▶ Start"}
-              </button>
+              <AufgabeStartStop aufgabe={b.raw} farbe={f.dot} />
+            ) : istTermin && !erledigt && b.raw && !(b.vorbei && !b.rueckmeldung) ? (
+              <TerminStartStop eintrag={b.raw} datum={b.datum} rueckmeldung={b.rueckmeldung} farbe={f.dot} />
             ) : getraenk && !erledigt ? (
               <button type="button" className="mp-tap" data-getraenk-oeffnen onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
                 🥤 Trinken

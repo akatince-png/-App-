@@ -26,6 +26,7 @@ import DenkpauseNudge from "../ui/DenkpauseNudge";
 import BildTagesplan from "../ui/BildTagesplan";
 import RoutineInhalt from "../ui/RoutineInhalt";
 import { alltagItems } from "../utils/exportAuswahl";
+import { terminLaeuft } from "../utils/termin";
 import { QUADRANT, quadrantVon } from "../utils/matrix";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import TagesHinweise from "../ui/TagesHinweise";
@@ -391,7 +392,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     const tag = toLocalISODate(selectedDate);
     return alltagItems(selectedDate, alltagEintraege || [], alltagBereiche || [], alltagErledigt || {}).map((i) => {
       const r = (alltagErledigt || {})[`${i.raw.id}|${tag}`] || null;
-      return { ...i, kategorie: "termin", datum: tag, rueckmeldung: r, done: !!r };
+      const [sh, sm] = String(i.raw.start || "").split(":").map(Number);
+      const [eh, em] = String(i.raw.ende || "").split(":").map(Number);
+      const dauer = i.raw.ende ? eh * 60 + em - (sh * 60 + sm) : null;
+      return { ...i, kategorie: "termin", datum: tag, rueckmeldung: r, done: !!r && !terminLaeuft(r), dauerMin: dauer > 0 ? dauer : undefined };
     });
   }, [selectedDate, alltagEintraege, alltagBereiche, alltagErledigt]);
   // Aufgaben aus der Matrix, die an diesem Tag eingeplant sind (26.10.,

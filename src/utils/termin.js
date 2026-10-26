@@ -2,6 +2,7 @@
 export function rueckmeldungText(r) {
   if (!r) return null;
   if (r.status === "ausgefallen") return `✕ Ausgefallen${r.notiz ? ` · ${r.notiz}` : ""}`;
+  if (r.start && !r.ende) return `▶ Läuft seit ${r.start} Uhr`;
   const zeit = r.start && r.ende ? ` · ${r.start}–${r.ende}` : r.ende ? ` · bis ${r.ende}` : r.start ? ` · ab ${r.start}` : "";
   return `✓ Wahrgenommen${zeit}${r.notiz ? ` · ${r.notiz}` : ""}`;
 }
@@ -17,3 +18,6 @@ export function aufgabeZeitText(a) {
   return null;
 }
 
+
+// Termin läuft gerade (gestartet, noch nicht beendet).
+export const terminLaeuft = (r) => !!r && r.status === "wahrgenommen" && !!r.start && !r.ende;

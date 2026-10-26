@@ -81,7 +81,7 @@ test("Bild-Tagesplan: Aufgabe des Tages starten und mit Zeiten abhaken", async (
   await expect(block).toContainText("Ordner sortieren");
   // Nur eingeplante Aufgaben, nicht alles Rote aus der Matrix.
   await expect(page.locator('[data-bild-block="m-m2"]')).toHaveCount(0);
-  await block.locator("[data-aufgabe-oeffnen]").click();
+  await block.locator("[data-bild-aufklappen]").click();
   await block.locator("[data-aufgabe-erledigt]").click();
   await block.getByLabel("Begonnen um").fill("09:05");
   await block.getByLabel("Fertig um").fill("09:40");
@@ -91,4 +91,15 @@ test("Bild-Tagesplan: Aufgabe des Tages starten und mit Zeiten abhaken", async (
   expect(new Date(a.gestartetAm).getHours()).toBe(9);
   expect(new Date(a.erledigtAm).getMinutes()).toBe(40);
   expect(fehler).toEqual([]);
+});
+
+// Ein Tipp startet, ein Tipp beendet – mit der echten Uhrzeit (26.10., Nutzerin).
+test("Bild-Tagesplan: Aufgabe per Tipp starten speichert die Startzeit", async ({ page }) => {
+  const h = new Date();
+  await page.clock.install({ time: new Date(h.getFullYear(), h.getMonth(), h.getDate(), 9, 12) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&matrix=1&matrixzeit=1#/tagesplan");
+  await page.locator('[data-bild-block="m-m3"] [data-aufgabe-go]').click();
+  const [a] = (await page.evaluate(() => (window.__mockAufrufe || []).filter((x) => x.name === "matrixAufgabeSpeichern").map((x) => x.args))).at(-1);
+  expect(new Date(a.gestartetAm).getMinutes()).toBe(12);
+  expect(a.erledigtAm).toBeFalsy();
 });
