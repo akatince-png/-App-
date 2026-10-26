@@ -727,7 +727,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   return (
     <Shell>
       <ViewHeader title="🗓️ Tagesplan" onHome={onHome} />
-      <TagesHinweise datum={selectedDate} ohneTimer={modus === "tag" && ansicht === "bild" && sameDay(selectedDate, new Date())} ohneMatrix={modus === "tag" && ansicht === "bild"} />
+      <TagesHinweise datum={selectedDate} ohneTimer={modus === "tag" && ansicht === "bild" && sameDay(selectedDate, new Date())} ohneMatrix={modus === "woche" || (modus === "tag" && ansicht === "bild")} />
       {fruehFrage && (
         <div data-frueh-frage role="dialog" aria-label="Schon erledigt?" style={{ position: "fixed", inset: 0, zIndex: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(16, 24, 40, 0.45)" }}>
           <div style={{ width: "min(92vw, 380px)", borderRadius: 22, padding: 18, background: "var(--mp-karte)", color: "var(--mp-text)", boxShadow: "0 12px 32px rgba(0,0,0,.25)", textAlign: "center" }}>

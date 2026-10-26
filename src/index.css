@@ -114,6 +114,18 @@ body {
   }
 }
 
+/* Kalender-Woche als Liste (26.10.): sieben Spalten, auf dem Handy untereinander. */
+.mp-kal-woche {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+@media (max-width: 640px) {
+  .mp-kal-woche {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Tafel fürs Tablet (24.10., TafelView.jsx): drei Spalten nebeneinander,
    auf schmalen Bildschirmen untereinander. */
 .mp-tafel-raster {
