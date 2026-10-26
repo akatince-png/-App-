@@ -194,7 +194,10 @@ export default function WorkflowTimer({ onSchliessen }) {
     // Im Tagesverlauf festhalten (30.09.), damit auch spontane Sessions
     // dokumentiert sind – ab 1 Minute.
     const min = startZeitRef.current ? Math.round((Date.now() - startZeitRef.current) / 60000) : 0;
-    if (laufendesPreset && min >= 1) aenderungVermerken?.({ kategorie: "workflow", itemName: laufendesPreset.name, aktion: "erledigt", detail: `${min} Min.` });
+    // Echte Zeiten mitschreiben (26.10., Nutzerin: „wann gestartet und beendet“).
+    const hhmm = (t) => new Date(t).toTimeString().slice(0, 5);
+    const zeiten = startZeitRef.current ? `${hhmm(startZeitRef.current)}–${hhmm(Date.now())} · ` : "";
+    if (laufendesPreset && min >= 1) aenderungVermerken?.({ kategorie: "workflow", itemName: laufendesPreset.name, aktion: "erledigt", detail: `${zeiten}${min} Min.` });
     if (laufendesPreset?.id && min >= 1) workflowHeuteErledigtMerken(laufendesPreset.id);
     if (laufendesPreset?.matrixAufgabeId) setErledigtFrage(laufendesPreset.matrixAufgabeId);
     startZeitRef.current = null;

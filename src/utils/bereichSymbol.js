@@ -32,6 +32,7 @@ const SYMBOL = {
   tagebuch: "tagebuch",
   notfallmodus: "akut",
   termin: "kalender",
+  aufgabe: "liste",
 };
 
 export function bereichSymbol(kategorie) {

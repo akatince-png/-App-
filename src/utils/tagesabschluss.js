@@ -29,7 +29,7 @@ export function heuteFaellig(aufgaben = [], heute = new Date()) {
 // Heute schon abgehakt (zum Anzeigen mit ✓).
 export function heuteGeschafft(aufgaben = [], heute = new Date()) {
   const tag = iso(heute);
-  return aufgaben.filter((a) => a.erledigtAm && toLocalISODate(new Date(a.erledigtAm)) === tag);
+  return aufgaben.filter((a) => a.erledigtAm && !a.ausgefallen && toLocalISODate(new Date(a.erledigtAm)) === tag);
 }
 
 export const alsGeschafft = (a, jetzt = new Date()) => ({ ...a, erledigtAm: jetzt.toISOString() });

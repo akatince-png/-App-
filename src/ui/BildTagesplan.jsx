@@ -10,7 +10,8 @@ import SchnellIcon from "./SchnellIcon";
 import { plastikFarbe, plastikHell } from "./plastik";
 import TerminRueckmeldung from "./TerminRueckmeldung";
 import GetraenkPortion from "./GetraenkPortion";
-import { rueckmeldungText } from "../utils/termin";
+import AufgabeRueckmeldung from "./AufgabeRueckmeldung";
+import { aufgabeZeitText, rueckmeldungText } from "../utils/termin";
 
 // Bild-Tagesplan (27.09., Nutzerinnen-Wunsch nach dem Marktvergleich): der
 // Tag als senkrechte Zeitleiste mit großen Bild-Symbolen (🧺 Wäsche · 30 Min),
@@ -49,7 +50,9 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
   const istTermin = b.kategorie === "termin";
   // Getränk über den Tag (26.10.): Portionen statt „✓ Erledigt“.
   const getraenk = b.kategorie === "supplement" && b.raw?.getraenkMl && b.doseRef ? b.raw.getraenkMl : null;
-  const aufklappbar = istGruppe || istTermin || !!getraenk || (istRoutine && !!renderRoutine);
+  // Aufgaben aus der Matrix (26.10.): direkt im Plan starten, abhaken, ausfallen lassen.
+  const istAufgabe = b.kategorie === "aufgabe" && !!b.raw;
+  const aufklappbar = istGruppe || istTermin || istAufgabe || !!getraenk || (istRoutine && !!renderRoutine);
   const aktionText = istRoutine ? "▶ Starten" : b.kategorie === "training" ? "Training" : istGruppe ? "✓ Alle" : "✓ Erledigt";
   const textFarbe = erledigt ? "#fff" : f.text;
   return (
@@ -93,6 +96,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
               {dauerText(b.dauer)}
               {b.start != null ? ` · bis ${minZuZeit(b.ende)}` : ""}
             </div>
+            {istAufgabe && aufgabeZeitText(b.raw) && <div style={{ fontSize: 12, fontWeight: 700, color: erledigt ? "#fff" : textMain, marginTop: 2 }}>{aufgabeZeitText(b.raw)}</div>}
             {istTermin && b.rueckmeldung && <div style={{ fontSize: 12, fontWeight: 700, color: erledigt ? "#fff" : textMain, marginTop: 2 }}>{rueckmeldungText(b.rueckmeldung)}</div>}
             {b.detail && !offen && <div style={{ fontSize: 11.5, color: erledigt ? "rgba(255,255,255,0.8)" : textMuted, marginTop: 2 }}>{b.detail}</div>}
             <div style={{ marginTop: 5, color: erledigt ? "#fff" : textMain }}>
@@ -100,7 +104,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0, position: "relative", zIndex: 3 }}>
-            {!erledigt && !istRoutine && !istTermin && !getraenk && (
+            {!erledigt && !istRoutine && !istTermin && !istAufgabe && !getraenk && (
               <button
                 type="button"
                 className="mp-tap"
@@ -119,7 +123,11 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 )}
               </button>
             )}
-            {getraenk && !erledigt ? (
+            {istAufgabe && !erledigt ? (
+              <button type="button" className="mp-tap" data-aufgabe-oeffnen onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                {b.raw.gestartetAm ? "✓ Fertig?" : "▶ Start"}
+              </button>
+            ) : getraenk && !erledigt ? (
               <button type="button" className="mp-tap" data-getraenk-oeffnen onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
                 🥤 Trinken
               </button>
@@ -128,7 +136,7 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 Wie lief's?
               </button>
             ) : erledigt ? (
-              <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>{istTermin && b.rueckmeldung?.status === "ausgefallen" ? "✕ Ausgefallen" : istTermin ? "✓ Wahrgenommen" : "✓ Erledigt"}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>{(istTermin && b.rueckmeldung?.status === "ausgefallen") || (istAufgabe && b.raw.ausgefallen) ? "✕ Ausgefallen" : istTermin ? "✓ Wahrgenommen" : "✓ Erledigt"}</span>
             ) : (istRoutine || b.kategorie === "training" || b.onConfirm || istGruppe) && b.kategorie !== "zeitblock" && b.kategorie !== "workflow" ? (
               <button
                 type="button"
@@ -164,6 +172,11 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 ) : null}
               </div>
             ))}
+          </div>
+        )}
+        {offen && istAufgabe && (
+          <div style={{ marginTop: 10, padding: 10, borderRadius: 14, background: "var(--mp-karte)", color: "var(--mp-text)" }}>
+            <AufgabeRueckmeldung aufgabe={b.raw} datum={b.datum} onFertig={() => setOffen(false)} />
           </div>
         )}
         {offen && getraenk && (
