@@ -66,7 +66,7 @@ function gruppiereFuerAlsNaechstes(items, t, tLabel) {
   let trainingSlot = null;
 
   items.forEach((item) => {
-    if (item.kategorie === "supplement") {
+    if (item.kategorie === "supplement" && !item.raw?.getraenkMl) {
       let slot = supplementSlots[item.uhrzeit];
       if (!slot) {
         slot = { ...item, _ids: [item.refId], _namen: [item.name], _teile: [item] };
@@ -161,6 +161,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     eigeneFokusSitzungen,
     alltagEintraege,
     alltagErledigt,
+    supplementMengeMl,
     gruppenprotokolle,
     gruppenBausteinUmschalten,
     gruppenprotokolleNeuLaden,
@@ -1127,7 +1128,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
       )}
       {naechsterOffen && !routineFensterZeigen && (
         <NaechsterSchrittFenster
-          schritte={naechsteSchritte(gruppiereFuerAlsNaechstes(displayItems.filter((i) => !i.done && !(i.kategorie === "workflow" && istWorkflowHeuteErledigt(i.raw?.preset?.id))), t, tLabel))}
+          schritte={naechsteSchritte(gruppiereFuerAlsNaechstes(displayItems.filter((i) => !i.done && !(i.kategorie === "workflow" && istWorkflowHeuteErledigt(i.raw?.preset?.id)) && !(i.raw?.getraenkMl && (supplementMengeMl || {})[`${tagStr}__${i.raw.id}__${i.originalUhrzeit ?? i.uhrzeit}`] > 0)), t, tLabel))}
           direkt={(i) => !!i.bundleIds || !!i.teile || direktErledigbar(i)}
           onErledigt={(i, auswahl) => (i.teile ? auswahlErledigen(i, auswahl) : i.bundleIds ? buendelErledigen(i) : direktErledigen(i))}
           onOeffnen={(i) => {

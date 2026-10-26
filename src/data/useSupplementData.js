@@ -30,6 +30,9 @@ function rowToSupplement(r) {
     // Zugehöriges (Haupt- oder Zusatz-)Protokoll — für das 🧪-Etikett und
     // das Ausblenden beendeter Zusatzprotokolle (siehe useZusatzprotokolle).
     hauptprotokollId: r.hauptprotokoll_id || null,
+    // Großes Getränk über den Tag (26.10., z. B. Shaker 1500 ml): statt
+    // „erledigt“ werden Portionen eingetragen.
+    getraenkMl: r.getraenk_ml || null,
   };
 }
 
@@ -49,6 +52,7 @@ export function supplementToRow(neu) {
     weekdays: neu.weekdays || [],
     uhrzeiten: neu.uhrzeiten || [],
     eigener_start: neu.eigenerStart || null,
+    ...(neu.getraenkMl !== undefined ? { getraenk_ml: Number(neu.getraenkMl) > 0 ? Math.round(Number(neu.getraenkMl)) : null } : {}),
   };
 }
 
@@ -60,6 +64,7 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
   const pendingErledigtRef = useRef({});
   const [supplementErledigtAt, setSupplementErledigtAt] = useState({});
   const [supplementFeedback, setSupplementFeedback] = useState({});
+  const [supplementMengeMl, setSupplementMengeMl] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -74,8 +79,10 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
       const nextErledigt = {};
       const nextErledigtAt = {};
       const nextFeedback = {};
+      const nextMenge = {};
       (logs || []).forEach((row) => {
         const k = `${row.log_date}__${row.supplement_id}__${row.tageszeit}`;
+        if (row.menge_ml) nextMenge[k] = row.menge_ml;
         nextErledigt[k] = row.erledigt;
         nextErledigtAt[k] = row.erledigt_at || null;
         nextFeedback[k] = {
@@ -87,6 +94,7 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
       setSupplementErledigt(nextErledigt);
       setSupplementErledigtAt(nextErledigtAt);
       setSupplementFeedback(nextFeedback);
+      setSupplementMengeMl(nextMenge);
     })();
     return () => {
       cancelled = true;
@@ -134,7 +142,7 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
       prev.map((s) => {
         if (s.id !== id) return s;
         vorher = s;
-        return { ...s, ...felder };
+        return { ...s, ...felder, ...("getraenk_ml" in felder ? { getraenkMl: felder.getraenk_ml } : {}) };
       })
     );
     const { error } = await supabase.from("supplements").update(felder).eq("id", id);
@@ -320,8 +328,42 @@ export function useSupplementData(userId, hauptprotokollId, belohnungPufferMin) 
     [supplementErledigt, userId]
   );
 
+  // Portion eines Getränks eintragen (26.10., Nutzerin: „1,5-l-Shake über den
+  // Tag verteilt, die ersten 250 ml …“). Erledigt, sobald die Menge erreicht ist.
+  const mengeRef = useRef({});
+  const supplementSchluck = useCallback(
+    async (dose, ml) => {
+      const k = `${dose.datum}__${dose.id}__${dose.zeit}`;
+      const sup = supplemente.find((x) => x.id === dose.id);
+      const ziel = sup?.getraenkMl || 0;
+      const bisher = k in mengeRef.current ? mengeRef.current[k] : supplementMengeMl[k] || 0;
+      const neu = Math.max(0, bisher + ml);
+      const fertig = ziel > 0 && neu >= ziel;
+      mengeRef.current[k] = neu;
+      const nowIso = new Date().toISOString();
+      setSupplementMengeMl((p) => ({ ...p, [k]: neu }));
+      setSupplementErledigt((p) => ({ ...p, [k]: fertig }));
+      if (fertig) setSupplementErledigtAt((p) => ({ ...p, [k]: nowIso }));
+      const { error } = await supabase
+        .from("supplement_logs")
+        .upsert({ user_id: userId, supplement_id: dose.id, log_date: dose.datum, tageszeit: dose.zeit, menge_ml: neu, erledigt: fertig, erledigt_at: fertig ? nowIso : null }, { onConflict: "supplement_id,log_date,tageszeit" });
+      if (error) {
+        console.error(error);
+        mengeRef.current[k] = bisher;
+        setSupplementMengeMl((p) => ({ ...p, [k]: bisher }));
+        setSupplementErledigt((p) => ({ ...p, [k]: ziel > 0 && bisher >= ziel }));
+        return { ok: false, error: error.message };
+      }
+      feuereBelohnung({ text: fertig ? `${sup?.name?.split(":")[0] || "Getränk"} geschafft! 🥤` : `+${ml} ml`, untertitel: `${neu} von ${ziel} ml`, icon: "droplet" });
+      return { ok: true, menge: neu, fertig };
+    },
+    [supplemente, supplementMengeMl, userId]
+  );
+
   return {
     supplemente,
+    supplementMengeMl,
+    supplementSchluck,
     supplementHinzufuegen,
     supplementAendern,
     supplementEntfernen,

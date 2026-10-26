@@ -279,6 +279,13 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🥤 Shaker in Portionen, Supplemente gebündelt, Fenster mittig (26.10.2026)
+
+- „Als Nächstes“-Fenster mittig (Querformat: Bild in voller Höhe, Rand weichgezeichnet). Supplemente bzw. Spritzen/Medikamente mit gleicher Uhrzeit kommen als **eine** Abfrage mit abwählbarer Liste („✓ Genommen (n)“, Abgewähltes bleibt offen). `HomeView.gruppiereFuerAlsNaechstes` hält `teile`, `auswahlErledigen`.
+- Bild-Tagesplan: „✓ Alle“ einer Gabe ohne Rückfrage je Einzelnem (`onGabe` → `skip*Feedback`).
+- Routine-Ablauf senkrecht mittig (`Shell mittig`).
+- Getränk über den Tag: Migration 0136 (`supplements.getraenk_ml`, `supplement_logs.menge_ml`, eingespielt), `supplementSchluck(dose, ml)`, `ui/GetraenkPortion.jsx` (+125/+250/+500 ml, Fortschritt, zählt auch zum Wasser). Im Fenster und im Bild-Tagesplan („🥤 Trinken“); Einstellung manuell unter Supplemente → Bearbeiten. Shaker der Nutzerin = 1500 ml.
+
 ## 📅 Termine rückmelden: wahrgenommen oder ausgefallen (26.10.2026)
 
 Nutzerin: Termin im Tagesplan als „wahrgenommen“ (bis wann, Notiz) oder „abgesagt/ausgefallen“ vermerken, um kleinteilig zu dokumentieren.
