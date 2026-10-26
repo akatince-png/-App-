@@ -63,3 +63,13 @@ describe("gruppiereBloecke", () => {
     expect(dauerFuer({ kategorie: "workflow", raw: { preset: { gesamtMin: 225 } } })).toBe(225);
   });
 });
+
+describe("gabeTitel (26.10.)", () => {
+  it("benennt Supplement-Gaben nach Tageszeit", async () => {
+    const { gabeTitel } = await import("./bildTagesplan");
+    expect(gabeTitel("supplement", "06:40")).toBe("Morgensupplemente");
+    expect(gabeTitel("supplement", "13:00")).toBe("Mittagssupplemente");
+    expect(gabeTitel("supplement", "21:55")).toBe("Abendsupplemente");
+    expect(gabeTitel("injektion", "06:35")).toBe("Injektionen");
+  });
+});

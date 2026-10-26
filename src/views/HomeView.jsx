@@ -54,12 +54,13 @@ import { zeigeRoutineFenster, heutigeEntscheidung, entscheidungMerken } from "..
 import { routineTagesStatus } from "../utils/routineStatus";
 import ZeitraumKalender from "../ui/ZeitraumKalender";
 import { useTagesBloecke } from "../data/useTagesBloecke";
+import { gabeTitel } from "../utils/bildTagesplan";
 
 // Bündel (26.10., Nutzerin: „nur einmal gefragt werden, ob ich meine
 // Supplemente nehme, darunter eine Liste … nicht jedes einzeln abhaken“):
 // Supplemente und Spritzen/Medikamente mit derselben Uhrzeit werden ein
 // Punkt; `teile` hält die einzelnen Einträge für die Liste im Fenster.
-function gruppiereFuerAlsNaechstes(items, t, tLabel) {
+function gruppiereFuerAlsNaechstes(items, t, _tLabel) {
   const angezeigt = [];
   const supplementSlots = {};
   const hormonSlots = {};
@@ -98,10 +99,10 @@ function gruppiereFuerAlsNaechstes(items, t, tLabel) {
 
   return angezeigt.map((it) => {
     if (it.kategorie === "supplement" && it._ids.length > 1) {
-      return { ...it, name: t("home.list.supplementBundle", { uhrzeit: tLabel(it.uhrzeit) }), detail: it._namen.join(", "), bundleIds: it._ids, teile: it._teile };
+      return { ...it, name: `${gabeTitel("supplement", it.uhrzeit)} · ${it._ids.length}`, detail: it._namen.join(", "), bundleIds: it._ids, teile: it._teile, done: it._teile.every((x) => x.done) };
     }
     if (it.kategorie === "hormon" && it._teile?.length > 1) {
-      return { ...it, key: `buendel-${it._art}-${it.uhrzeit}`, name: `${it._art === "injektion" ? "Injektionen" : "Medikamente"} · ${it._teile.length}`, detail: it._teile.map((x) => x.name).join(", "), teile: it._teile };
+      return { ...it, key: `buendel-${it._art}-${it.uhrzeit}`, name: `${gabeTitel(it._art, it.uhrzeit)} · ${it._teile.length}`, detail: it._teile.map((x) => x.name).join(", "), teile: it._teile, done: it._teile.every((x) => x.done) };
     }
     if (it.kategorie === "training" && it._traininganzahl > 1) {
       return { ...it, name: t("home.list.trainingseinheit") };
@@ -1254,12 +1255,13 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         oben={
           <HeutePlanKarte
             eingebettet
-            items={displayItems}
+            items={gruppiereFuerAlsNaechstes(displayItems, t, tLabel)}
             tagStr={tagStr}
-            direkt={(i) => !!i.bundleIds || direktErledigbar(i)}
+            direkt={(i) => !!i.bundleIds || !!i.teile || direktErledigbar(i)}
             onToggle={(i) => {
-              if (!i.bundleIds && !direktErledigbar(i)) return onOpenView("tagesplan");
-              const r = i.bundleIds ? buendelErledigen(i) : direktErledigen(i);
+              if (!i.bundleIds && !i.teile && !direktErledigbar(i)) return onOpenView("tagesplan");
+              // Gabe (26.10.): alle offenen Teile auf einmal.
+              const r = i.teile ? auswahlErledigen(i) : i.bundleIds ? buendelErledigen(i) : direktErledigen(i);
               // „Vergiss nicht – als Nächstes …“ (07.10.)
               if (!i.done) setNaechsterHinweis(naechsteSchritte(displayItems.filter((x) => x.key !== i.key && !(x.kategorie === "workflow" && istWorkflowHeuteErledigt(x.raw?.preset?.id))), 1)[0] || null);
               return r;

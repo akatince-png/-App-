@@ -14,11 +14,11 @@ describe("BildTagesplan – gebündelte Supplementgabe", () => {
       { key: "s2", kategorie: "supplement", name: "NAC", detail: "600 mg", uhrzeit: "21:55", onConfirm: b },
     ];
     render(<BildTagesplan items={items} heute={false} onBearbeiten={() => {}} />);
-    expect(screen.getByText("Supplemente · 2")).toBeTruthy();
-    fireEvent.click(screen.getByText("Supplemente · 2"));
+    expect(screen.getByText("Abendsupplemente · 2")).toBeTruthy();
+    fireEvent.click(screen.getByText("Abendsupplemente · 2"));
     fireEvent.click(screen.getByRole("button", { name: "NAC erledigt" }));
     expect(b).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("button", { name: "Supplemente · 2 erledigt" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abendsupplemente · 2 erledigt" }));
     expect(a).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("button", { name: "Magnesium bearbeiten" })).toBeTruthy();
   });
@@ -33,7 +33,7 @@ describe("BildTagesplan – Haken zurücknehmen", () => {
       { key: "s2", kategorie: "supplement", name: "Jod", uhrzeit: "06:40", done: false, onConfirm: () => {} },
     ];
     render(<BildTagesplan items={items} heute={false} onRueckgaengig={zurueck} />);
-    fireEvent.click(screen.getByText("Supplemente · 2"));
+    fireEvent.click(screen.getByText("Morgensupplemente · 2"));
     fireEvent.click(screen.getByRole("button", { name: "Milgamma: Haken zurücknehmen" }));
     expect(zurueck.mock.calls[0][0].key).toBe("s1");
   });

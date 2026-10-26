@@ -132,6 +132,15 @@ const GRUPPEN = {
   injektion: { name: "Injektionen", kategorie: "hormon" },
   medikament: { name: "Medikamente", kategorie: "hormon" },
 };
+// Name einer Gabe nach Tageszeit (26.10., Nutzerin: „Morgensupplemente,
+// Mittagssupplemente und Abendsupplemente“).
+export function gabeTitel(gruppe, uhrzeit) {
+  if (gruppe !== "supplement") return GRUPPEN[gruppe]?.name || "Gabe";
+  const h = Number(String(uhrzeit || "").slice(0, 2));
+  if (Number.isNaN(h) || !String(uhrzeit || "").includes(":")) return "Supplemente";
+  return h < 11 ? "Morgensupplemente" : h < 17 ? "Mittagssupplemente" : "Abendsupplemente";
+}
+
 export function gruppeVon(b) {
   // Getränke über den Tag (Shaker) bleiben eigene Blöcke mit Portionen.
   if (b?.kategorie === "supplement") return b.raw?.getraenkMl ? null : "supplement";
@@ -167,7 +176,7 @@ export function gruppiereBloecke(bloecke, linieVor = null) {
       key: x.key,
       gruppe: x.gruppe,
       kategorie: GRUPPEN[x.gruppe].kategorie,
-      name: `${GRUPPEN[x.gruppe].name} · ${t.length}`,
+      name: `${gabeTitel(x.gruppe, t[0].uhrzeit)} · ${t.length}`,
       detail: t.map((b) => b.name).join(", "),
       symbol: t[0].symbol,
       farbe: t[0].farbe,
