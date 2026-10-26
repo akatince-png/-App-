@@ -6,7 +6,8 @@ import { aufgabeZeitText, uhr } from "../utils/termin";
 // Aufgabe aus der Matrix im Tagesplan (26.10., Nutzerin: „ganz normal
 // abhaken, bestätigen, ob es ausgefallen ist … dokumentieren, wann ich es
 // gestartet und beendet habe, egal ob es sich nach der geplanten Zeit
-// richtet“). Begonnen/Fertig lassen sich nachträglich korrigieren.
+// richtet“). 26.10. mittags: Start und Ende per Tipp mit der echten Uhrzeit
+// (Nutzerin: „nicht nur manuell eingeben“); Zeiten nur bei Bedarf ändern.
 const knopf = (farbe, aktiv = true) => ({ flex: 1, border: "none", borderRadius: 12, padding: "10px 8px", fontSize: 13.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", background: aktiv ? farbe : "color-mix(in srgb, #EEF1F6 var(--mp-flaeche), var(--mp-rand-dunkel))", color: aktiv ? "#fff" : "var(--mp-text)" });
 const feld = { border: "1.5px solid var(--mp-rand)", borderRadius: 10, padding: "7px 9px", fontSize: 14, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit", width: 110 };
 
@@ -16,7 +17,7 @@ const zuIso = (datum, hhmm) => (hhmm ? new Date(`${datum}T${hhmm}:00`).toISOStri
 
 export default function AufgabeRueckmeldung({ aufgabe: a, datum, onFertig }) {
   const { matrixAufgabeSpeichern } = useAppData();
-  const [modus, setModus] = useState(a.erledigtAm && !a.ausgefallen ? "erledigt" : null);
+  const [modus, setModus] = useState(null);
   const [start, setStart] = useState(uhr(a.gestartetAm) || a.uhrzeit || "");
   const [ende, setEnde] = useState(uhr(a.erledigtAm) || jetztUhr());
   const [fehler, setFehler] = useState(null);
@@ -31,32 +32,50 @@ export default function AufgabeRueckmeldung({ aufgabe: a, datum, onFertig }) {
     return (
       <div data-aufgabe-rueckmeldung style={{ textAlign: "left" }}>
         <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>{aufgabeZeitText(a)}</div>
-        <button type="button" onClick={() => speichern({ ...a, erledigtAm: null, ausgefallen: false })} style={{ ...knopf("", false), flex: "0 0 auto", padding: "9px 12px" }}>
-          ↩︎ Zurücknehmen
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {!a.ausgefallen && (
+            <button type="button" onClick={() => setModus("erledigt")} style={{ ...knopf("", false), flex: "0 0 auto", padding: "9px 12px" }}>
+              🕐 Zeiten ändern
+            </button>
+          )}
+          <button type="button" onClick={() => speichern({ ...a, erledigtAm: null, ausgefallen: false })} style={{ ...knopf("", false), flex: "0 0 auto", padding: "9px 12px" }}>
+            ↩︎ Zurücknehmen
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div data-aufgabe-rueckmeldung style={{ textAlign: "left" }}>
-      {!modus && (
-        <>
+      {!modus && !a.gestartetAm && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" data-aufgabe-start onClick={() => speichern({ ...a, gestartetAm: new Date().toISOString() })} style={knopf("var(--mp-accent)")}>
+            ▶ Jetzt starten
+          </button>
+          <button type="button" data-aufgabe-erledigt onClick={() => setModus("erledigt")} style={knopf("#2E9C6E")}>
+            ✓ Schon erledigt
+          </button>
+          <button type="button" data-aufgabe-faellt-aus onClick={() => setModus("aus")} style={knopf("#8A90A6")}>
+            ✕ Fällt aus
+          </button>
+        </div>
+      )}
+      {!modus && a.gestartetAm && (
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 800 }}>▶ Läuft seit {uhr(a.gestartetAm)} Uhr</div>
+          <button type="button" data-aufgabe-beenden onClick={() => speichern({ ...a, erledigtAm: new Date().toISOString(), ausgefallen: false })} style={knopf("#2E9C6E")}>
+            ■ Jetzt beenden
+          </button>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {!a.gestartetAm && (
-              <button type="button" data-aufgabe-start onClick={() => speichern({ ...a, gestartetAm: new Date().toISOString() })} style={knopf("var(--mp-accent)")}>
-                ▶ Jetzt starten
-              </button>
-            )}
-            <button type="button" data-aufgabe-erledigt onClick={() => setModus("erledigt")} style={knopf("#2E9C6E")}>
-              ✓ Erledigt
+            <button type="button" data-aufgabe-erledigt onClick={() => setModus("erledigt")} style={{ ...knopf("", false), flex: "0 0 auto", padding: "8px 12px" }}>
+              🕐 Zeiten ändern
             </button>
-            <button type="button" data-aufgabe-faellt-aus onClick={() => setModus("aus")} style={knopf("#8A90A6")}>
-              ✕ Fällt aus
+            <button type="button" onClick={() => speichern({ ...a, gestartetAm: null })} style={{ ...knopf("", false), flex: "0 0 auto", padding: "8px 12px" }}>
+              ↩︎ Start zurücknehmen
             </button>
           </div>
-          {a.gestartetAm && <div style={{ fontSize: 12.5, color: "var(--mp-text-muted)", marginTop: 6 }}>Begonnen um {uhr(a.gestartetAm)}</div>}
-        </>
+        </div>
       )}
       {modus === "erledigt" && (
         <div style={{ display: "grid", gap: 8 }}>
