@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Shell, Card, Pill, TextInput, Label } from "../ui/primitives";
 import ViewHeader from "../ui/ViewHeader";
 import { cardBorder, danger, textMain, textMuted } from "../ui/theme";
+import TerminRueckmeldung from "../ui/TerminRueckmeldung";
 import { useAppData } from "../context/AppDataContext";
 import { useTagesBloecke } from "../data/useTagesBloecke";
 import SchnellIcon from "../ui/SchnellIcon";
@@ -349,7 +350,7 @@ function EintragFormular({ start, datum, onFertig, bloeckeFuer }) {
 }
 
 function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
-  const { alltagAbhaken, matrixAufgabeSpeichern } = useAppData();
+  const { matrixAufgabeSpeichern } = useAppData();
   const mit = bloeckeFuer ? konflikte(bloeckeFuer(datum)).get(b.key) || [] : [];
   return (
     <Card style={{ marginBottom: 12, border: `1.5px solid ${b.farbe.dot}` }}>
@@ -381,13 +382,14 @@ function BlockDetails({ b, datum, onAendern, onSchliessen, bloeckeFuer }) {
           </button>
         </div>
       ) : (
-      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-        <button type="button" onClick={async () => (await alltagAbhaken?.(b.alltag.id, toLocalISODate(datum)))?.ok && onSchliessen()} style={{ ...knopf(true), flex: 1, padding: 10 }}>
-          {b.done ? "↩︎ Nicht erledigt" : "✓ Erledigt"}
-        </button>
-        <button type="button" onClick={onAendern} style={knopf(false)}>
-          ✎ Ändern
-        </button>
+      // Termin rückmelden statt nur abhaken (26.10., Nutzerin).
+      <div style={{ marginTop: 10 }}>
+        <TerminRueckmeldung eintrag={b.alltag} datum={toLocalISODate(datum)} onFertig={onSchliessen} />
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+          <button type="button" onClick={onAendern} style={knopf(false)}>
+            ✎ Ändern
+          </button>
+        </div>
       </div>
       )}
     </Card>

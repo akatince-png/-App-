@@ -8,6 +8,8 @@ import PlastikSymbol from "./PlastikSymbol";
 import AmpelPunkt, { AmpelLegende } from "./AmpelPunkt";
 import SchnellIcon from "./SchnellIcon";
 import { plastikFarbe, plastikHell } from "./plastik";
+import TerminRueckmeldung from "./TerminRueckmeldung";
+import { rueckmeldungText } from "../utils/termin";
 
 // Bild-Tagesplan (27.09., Nutzerinnen-Wunsch nach dem Marktvergleich): der
 // Tag als senkrechte Zeitleiste mit großen Bild-Symbolen (🧺 Wäsche · 30 Min),
@@ -42,7 +44,9 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
   const erledigt = !!b.done;
   const istRoutine = b.kategorie === "morgenroutine" || b.kategorie === "abendroutine";
   const istGruppe = !!b.teile;
-  const aufklappbar = istGruppe || (istRoutine && !!renderRoutine);
+  // Termine aus „Mein Alltag“ (26.10.): rückmelden statt nur abhaken.
+  const istTermin = b.kategorie === "termin";
+  const aufklappbar = istGruppe || istTermin || (istRoutine && !!renderRoutine);
   const aktionText = istRoutine ? "▶ Starten" : b.kategorie === "training" ? "Training" : istGruppe ? "✓ Alle" : "✓ Erledigt";
   const textFarbe = erledigt ? "#fff" : f.text;
   return (
@@ -86,13 +90,14 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
               {dauerText(b.dauer)}
               {b.start != null ? ` · bis ${minZuZeit(b.ende)}` : ""}
             </div>
+            {istTermin && b.rueckmeldung && <div style={{ fontSize: 12, fontWeight: 700, color: erledigt ? "#fff" : textMain, marginTop: 2 }}>{rueckmeldungText(b.rueckmeldung)}</div>}
             {b.detail && !offen && <div style={{ fontSize: 11.5, color: erledigt ? "rgba(255,255,255,0.8)" : textMuted, marginTop: 2 }}>{b.detail}</div>}
             <div style={{ marginTop: 5, color: erledigt ? "#fff" : textMain }}>
               <AmpelPunkt item={b} />
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0, position: "relative", zIndex: 3 }}>
-            {!erledigt && !istRoutine && (
+            {!erledigt && !istRoutine && !istTermin && (
               <button
                 type="button"
                 className="mp-tap"
@@ -111,8 +116,12 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 )}
               </button>
             )}
-            {erledigt ? (
-              <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>✓ Erledigt</span>
+            {istTermin && !erledigt ? (
+              <button type="button" className="mp-tap" data-termin-wie onClick={() => setOffen((o) => !o)} style={{ border: "none", borderRadius: 99, padding: "7px 12px", fontSize: 12, fontWeight: 800, ...plastikFarbe(f.dot, "flach"), cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                Wie lief's?
+              </button>
+            ) : erledigt ? (
+              <span style={{ fontSize: 11.5, fontWeight: 800, padding: "6px 10px", borderRadius: 99, background: "rgba(255,255,255,0.94)", boxShadow: "0 4px 10px -4px rgba(0,0,0,.25), inset 0 1px 0 #fff", color: verdunkeln(f.dot, 12) }}>{istTermin && b.rueckmeldung?.status === "ausgefallen" ? "✕ Ausgefallen" : istTermin ? "✓ Wahrgenommen" : "✓ Erledigt"}</span>
             ) : (istRoutine || b.kategorie === "training" || b.onConfirm || istGruppe) && b.kategorie !== "zeitblock" && b.kategorie !== "workflow" ? (
               <button
                 type="button"
@@ -148,6 +157,11 @@ function Block({ b, timer, restSek, anteil, onTimer, onAktion, onBearbeiten, ren
                 ) : null}
               </div>
             ))}
+          </div>
+        )}
+        {offen && istTermin && b.raw && (
+          <div style={{ marginTop: 10, padding: 10, borderRadius: 14, background: "var(--mp-karte)", color: "var(--mp-text)" }}>
+            <TerminRueckmeldung eintrag={b.raw} datum={b.datum} onFertig={() => setOffen(false)} />
           </div>
         )}
         {offen && istRoutine && renderRoutine && (

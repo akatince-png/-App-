@@ -51,3 +51,20 @@ test("Bild-Tagesplan: Routine aufklappen und bearbeiten, Supplemente gebündelt"
   }
   expect(fehler).toEqual([]);
 });
+
+// Termine aus „Mein Alltag“ im Bild-Tagesplan (26.10., Nutzerin): rückmelden
+// als wahrgenommen oder abgesagt/ausgefallen.
+test("Bild-Tagesplan: Termin als ausgefallen rückmelden", async ({ page }) => {
+  const fehler = sammleKonsolenfehler(page);
+  await page.clock.install({ time: new Date(2026, 9, 28, 18, 0) });
+  await page.goto("/e2e/harness/index.html?isAdmin=0&alltag=1#/tagesplan");
+  const termin = page.locator('[data-bild-block^="alltag-"]').first();
+  await expect(termin).toBeVisible();
+  await termin.locator("[data-termin-wie]").click();
+  await termin.getByRole("button", { name: "✕ Abgesagt / ausgefallen" }).click();
+  await termin.getByLabel("Notiz zum Termin").fill("abgesagt");
+  await termin.locator("[data-rueckmeldung-speichern]").click();
+  const [, , r] = (await page.evaluate(() => (window.__mockAufrufe || []).filter((a) => a.name === "alltagRueckmelden").map((a) => a.args))).at(-1);
+  expect(r).toEqual({ status: "ausgefallen", ende: null, notiz: "abgesagt" });
+  expect(fehler).toEqual([]);
+});
