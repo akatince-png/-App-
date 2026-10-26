@@ -27,17 +27,19 @@ export function useWochenprotokollMeilenstein(userId) {
 
   const wochenprotokollSnapshotErzeugen = useCallback(
     async (protocolId, wochenNummer, daten) => {
+      // Existiert schon (z. B. zweiter Tab offen)? Dann still nichts tun –
+      // ignoreDuplicates statt Insert, damit der Browser keinen 409 meldet
+      // (Dauertest 26.10.: „Failed to load resource … 409“).
       const { data, error } = await supabase
         .from("wochenprotokoll_snapshots")
-        .insert({ user_id: userId, protocol_id: protocolId, wochen_nummer: wochenNummer, daten })
-        .select()
-        .single();
+        .upsert({ user_id: userId, protocol_id: protocolId, wochen_nummer: wochenNummer, daten }, { onConflict: "user_id,protocol_id,wochen_nummer", ignoreDuplicates: true })
+        .select();
       if (error) {
-        // Unique-Verletzung heißt: existiert schon (z. B. zweiter Tab offen) — kein echter Fehler.
-        if (error.code !== "23505") console.error(error);
+        console.error(error);
         return { ok: false };
       }
-      const neu = rowToSnapshot(data);
+      if (!data?.length) return { ok: false };
+      const neu = rowToSnapshot(data[0]);
       setSnapshots((prev) => [...prev, neu]);
       return { ok: true, snapshot: neu };
     },
