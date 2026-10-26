@@ -135,38 +135,41 @@ function TagAnsicht({ datum, bloecke, onBlock }) {
   );
 }
 
+// Woche als Liste wie der Monat (26.10., Nutzerin: „die Wochenansicht hat
+// komische Balken … soll einheitlich aussehen, dem Monatsplan ähneln“):
+// je Tag eine Spalte mit allen Einträgen und Uhrzeit, untereinander auf dem Handy.
 function WochenAnsicht({ tage, bloeckeFuer, onTag, onBlock }) {
-  const px = 0.55;
   return (
-    <div>
-      <div style={{ display: "flex", marginLeft: 34 }}>
-        {tage.map((d, i) => {
-          const heute = sameDay(d, new Date());
-          return (
-            <button key={i} type="button" onClick={() => onTag(d)} style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", padding: "2px 0 6px", fontFamily: "inherit" }}>
-              <span style={{ display: "block", fontSize: 10.5, color: textMuted, fontWeight: 700 }}>{WOCHENTAGE[i]}</span>
-              <span style={{ display: "inline-flex", width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 800, background: heute ? "#1B2350" : "transparent", color: heute ? "#fff" : textMain }}>{d.getDate()}</span>
+    <div className="mp-kal-woche">
+      {tage.map((d, i) => {
+        const heute = sameDay(d, new Date());
+        const bl = bloeckeFuer(d);
+        const k = konflikte(bl);
+        return (
+          <div key={i} data-kal-woche-tag style={{ border: `1px solid ${heute ? "#1B2350" : cardBorder}`, borderRadius: 10, background: heute ? "color-mix(in srgb, #EEF0FA var(--mp-flaeche), var(--mp-karte))" : "var(--mp-karte)", padding: 5, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+            <button type="button" onClick={() => onTag(d)} style={{ border: "none", background: "transparent", cursor: "pointer", padding: "2px 2px 4px", fontFamily: "inherit", textAlign: "left", display: "flex", alignItems: "baseline", gap: 6 }}>
+              <span style={{ fontSize: 11, color: textMuted, fontWeight: 700 }}>{WOCHENTAGE[i]}</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: heute ? "color-mix(in srgb, #1B2350 var(--mp-schrift), var(--mp-schrift-hell))" : textMain }}>{d.getDate()}</span>
             </button>
-          );
-        })}
-      </div>
-      <div style={{ display: "flex", height: (BIS - VON) * px }}>
-        <Zeitachse pxProMin={px} schritt={120} />
-        <div style={{ position: "relative", flex: 1, display: "flex" }}>
-          <div style={{ position: "absolute", inset: 0 }}>
-            <Linien pxProMin={px} />
+            {!bl.length && <span style={{ fontSize: 10.5, color: textMuted, padding: "0 2px" }}>frei</span>}
+            {bl.map((x) => (
+              <button
+                key={x.key}
+                type="button"
+                data-block={x.art}
+                onClick={() => onBlock(x, d)}
+                title={`${hhmm(x.start)}–${hhmm(x.ende)} ${x.titel}`}
+                style={{ display: "block", width: "100%", textAlign: "left", border: "none", borderLeft: `3px solid ${x.farbe.dot}`, borderRadius: 5, background: x.farbe.bg, color: x.farbe.text, padding: "2px 4px", fontSize: 10.5, fontWeight: 700, lineHeight: 1.25, cursor: "pointer", fontFamily: "inherit", overflowWrap: "anywhere", textDecoration: x.done ? "line-through" : "none", opacity: x.done ? 0.65 : 1 }}
+              >
+                <span style={{ fontVariantNumeric: "tabular-nums", opacity: 0.8, marginRight: 3 }}>{hhmm(x.start)}</span>
+                {k.has(x.key) ? "⚠️ " : ""}
+                {x.icon || ""}
+                {x.titel}
+              </button>
+            ))}
           </div>
-          {tage.map((d, i) => (
-            <div key={i} style={{ position: "relative", flex: 1, borderLeft: `1px solid ${cardBorder}`, background: sameDay(d, new Date()) ? "rgba(27,35,80,.04)" : "transparent" }}>
-              {(() => {
-                const bl = bloeckeFuer(d);
-                const k = konflikte(bl);
-                return spaltenVerteilen(bl).map((b) => <Block key={b.key} b={b} pxProMin={px} klein onClick={(x) => onBlock(x, d)} konflikt={k.has(b.key)} />);
-              })()}
-            </div>
-          ))}
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 }
