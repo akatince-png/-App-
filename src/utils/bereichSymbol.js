@@ -31,6 +31,7 @@ const SYMBOL = {
   knobel: "puzzle",
   tagebuch: "tagebuch",
   notfallmodus: "akut",
+  termin: "kalender",
 };
 
 export function bereichSymbol(kategorie) {

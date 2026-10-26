@@ -31,10 +31,13 @@ const zuZeile = (userId, e) => ({
   notiz: e.notiz || null,
 });
 
+const rueckmeldungAus = (x) => ({ status: x.status || "wahrgenommen", ende: x.ende ? String(x.ende).slice(0, 5) : null, notiz: x.notiz || null });
+
 export function useAlltag(userId) {
   const [alltagBereiche, setBereiche] = useState([]);
   const [alltagEintraege, setEintraege] = useState([]);
-  const [alltagErledigt, setErledigt] = useState({}); // { "eintragId|datum": true }
+  // { "eintragId|datum": { status: "wahrgenommen"|"ausgefallen", ende, notiz } } – truthy = rückgemeldet.
+  const [alltagErledigt, setErledigt] = useState({});
 
   useEffect(() => {
     if (!userId) return;
@@ -44,13 +47,13 @@ export function useAlltag(userId) {
       const [b, e, d] = await Promise.all([
         supabase.from("alltag_bereiche").select("*").eq("user_id", userId).order("created_at"),
         supabase.from("alltag_eintraege").select("*").eq("user_id", userId).order("start_zeit"),
-        supabase.from("alltag_erledigt").select("eintrag_id, datum").eq("user_id", userId).gte("datum", seit),
+        supabase.from("alltag_erledigt").select("eintrag_id, datum, status, ende, notiz").eq("user_id", userId).gte("datum", seit),
       ]);
       if (abbruch) return;
       if (b.error || e.error) console.error(b.error || e.error);
       setBereiche((b.data || []).map(zuBereich));
       setEintraege((e.data || []).map(zuEintrag));
-      setErledigt(Object.fromEntries((d.data || []).map((x) => [`${x.eintrag_id}|${x.datum}`, true])));
+      setErledigt(Object.fromEntries((d.data || []).map((x) => [`${x.eintrag_id}|${x.datum}`, rueckmeldungAus(x)])));
     })();
     return () => {
       abbruch = true;
@@ -89,16 +92,42 @@ export function useAlltag(userId) {
     async (eintragId, datum) => {
       const schluessel = `${eintragId}|${datum}`;
       const war = !!alltagErledigt[schluessel];
-      setErledigt((p) => ({ ...p, [schluessel]: !war }));
+      const vorher = alltagErledigt[schluessel];
+      setErledigt((p) => ({ ...p, [schluessel]: war ? false : { status: "wahrgenommen", ende: null, notiz: null } }));
       const { error } = war
         ? await supabase.from("alltag_erledigt").delete().eq("eintrag_id", eintragId).eq("datum", datum)
         : await supabase.from("alltag_erledigt").insert({ user_id: userId, eintrag_id: eintragId, datum });
       if (error) {
         console.error(error);
-        setErledigt((p) => ({ ...p, [schluessel]: war }));
+        setErledigt((p) => ({ ...p, [schluessel]: vorher }));
         return { ok: false, error: error.message };
       }
       return { ok: true, erledigt: !war };
+    },
+    [userId, alltagErledigt]
+  );
+
+  // Termin rückmelden (26.10., Nutzerin): wahrgenommen (bis wann, Notiz) oder
+  // abgesagt/ausgefallen. `null` nimmt die Rückmeldung zurück.
+  const alltagRueckmelden = useCallback(
+    async (eintragId, datum, rueckmeldung) => {
+      const schluessel = `${eintragId}|${datum}`;
+      const vorher = alltagErledigt[schluessel];
+      if (!rueckmeldung) {
+        setErledigt((p) => ({ ...p, [schluessel]: false }));
+        const { error } = await supabase.from("alltag_erledigt").delete().eq("eintrag_id", eintragId).eq("datum", datum);
+        if (error) setErledigt((p) => ({ ...p, [schluessel]: vorher }));
+        return error ? { ok: false, error: error.message } : { ok: true };
+      }
+      const zeile = { user_id: userId, eintrag_id: eintragId, datum, status: rueckmeldung.status === "ausgefallen" ? "ausgefallen" : "wahrgenommen", ende: rueckmeldung.ende || null, notiz: rueckmeldung.notiz?.trim() || null };
+      setErledigt((p) => ({ ...p, [schluessel]: rueckmeldungAus(zeile) }));
+      const { error } = await supabase.from("alltag_erledigt").upsert(zeile, { onConflict: "eintrag_id,datum" });
+      if (error) {
+        console.error(error);
+        setErledigt((p) => ({ ...p, [schluessel]: vorher }));
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
     },
     [userId, alltagErledigt]
   );
@@ -130,5 +159,5 @@ export function useAlltag(userId) {
     return { ok: true };
   }, []);
 
-  return { alltagBereiche, alltagEintraege, alltagErledigt, alltagSpeichern, alltagLoeschen, alltagAbhaken, alltagBereichAnlegen, alltagBereichLoeschen };
+  return { alltagBereiche, alltagEintraege, alltagErledigt, alltagSpeichern, alltagLoeschen, alltagAbhaken, alltagRueckmelden, alltagBereichAnlegen, alltagBereichLoeschen };
 }

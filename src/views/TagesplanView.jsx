@@ -25,6 +25,7 @@ import { QuestsKarte } from "../ui/QuestsKarte";
 import DenkpauseNudge from "../ui/DenkpauseNudge";
 import BildTagesplan from "../ui/BildTagesplan";
 import RoutineInhalt from "../ui/RoutineInhalt";
+import { alltagItems } from "../utils/exportAuswahl";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import TagesHinweise from "../ui/TagesHinweise";
 import Umschalter from "../ui/Umschalter";
@@ -95,6 +96,9 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     questFortschrittSpeichern,
     ausnahmenNachSchluessel,
     aenderungVermerken,
+    alltagEintraege,
+    alltagBereiche,
+    alltagErledigt,
   } = useAppData();
 
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
@@ -354,6 +358,14 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
+  // Termine aus „Mein Alltag“ im Bild-Tagesplan (26.10.), mit Rückmeldung.
+  const termine = useMemo(() => {
+    const tag = toLocalISODate(selectedDate);
+    return alltagItems(selectedDate, alltagEintraege || [], alltagBereiche || [], alltagErledigt || {}).map((i) => {
+      const r = (alltagErledigt || {})[`${i.raw.id}|${tag}`] || null;
+      return { ...i, kategorie: "termin", datum: tag, rueckmeldung: r, done: !!r };
+    });
+  }, [selectedDate, alltagEintraege, alltagBereiche, alltagErledigt]);
   useTagGeschafftFeier(tagesItems, sameDay(selectedDate, today));
 
   // Performance-Fix (12.09.): itemsForDate(d) lief in der Wochenansicht
@@ -794,7 +806,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             />
           )}
           <BildTagesplan
-            items={tagesItems}
+            items={[...tagesItems, ...termine]}
             routinen={routinenBloecke}
             heute={sameDay(selectedDate, new Date())}
             onRoutineStart={setAblaufRoutine}

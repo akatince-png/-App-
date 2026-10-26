@@ -279,6 +279,14 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 📅 Termine rückmelden: wahrgenommen oder ausgefallen (26.10.2026)
+
+Nutzerin: Termin im Tagesplan als „wahrgenommen“ (bis wann, Notiz) oder „abgesagt/ausgefallen“ vermerken, um kleinteilig zu dokumentieren.
+- Migration `0135_alltag_rueckmeldung.sql` (eingespielt): `alltag_erledigt` + `status` ('wahrgenommen'|'ausgefallen'), `ende`, `notiz`.
+- `useAlltag`: `alltagErledigt[k]` ist jetzt `{ status, ende, notiz }` (truthy wie vorher), neu `alltagRueckmelden(id, datum, r|null)`. Errungenschaften zählen „ausgefallen“ nicht.
+- `ui/TerminRueckmeldung.jsx` in Kalender-Details (statt „✓ Erledigt“) und im Bild-Tagesplan: Alltag-Termine stehen dort jetzt als Block (`kategorie: "termin"`, Knopf „Wie lief's?“).
+- Abend: Bad-&-Bett-Schritt neu, Tagebuch + Tagesabschluss = 20 Min., Abendroutine ab 21:18 (Daten, kein Code). Morgenroutine 6:00–7:00.
+
 ## 🌙 Tagesabschluss neu: erst Rückblick, dann Planung (25.10.2026)
 
 Nutzerin (nach der ersten Abendroutine): Die MIT-Liste im Schritt „Tagesabschluss“ wirkte wie eine Abhak-Liste. Gewünscht: erst „Was hast du heute geschafft?“, Offenes auf morgen oder in den Pool, danach erst für morgen planen; Prioritäten deutlich; Projekte nur einmal; 1–2 freiwillige Aufgaben, nie MIT.

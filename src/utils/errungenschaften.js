@@ -51,7 +51,7 @@ function tageAusErledigtMap(map) {
 function alltagTage(q, bereiche) {
   const bereichVon = new Map((q.alltagEintraege || []).map((e) => [String(e.id), e.bereichId ? "eigen" : e.bereich]));
   const tage = Object.entries(q.alltagErledigt || {})
-    .filter(([k, v]) => v && bereiche.includes(bereichVon.get(k.split("|")[0])))
+    .filter(([k, v]) => v && v.status !== "ausgefallen" && bereiche.includes(bereichVon.get(k.split("|")[0])))
     .map(([k]) => k.split("|")[1]);
   return [...new Set(tage)];
 }
