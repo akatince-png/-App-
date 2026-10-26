@@ -23,3 +23,18 @@ describe("BildTagesplan – gebündelte Supplementgabe", () => {
     expect(screen.getByRole("button", { name: "Magnesium bearbeiten" })).toBeTruthy();
   });
 });
+
+// 26.10. (Nutzerin): versehentlich abgehakt → Haken zurücknehmen.
+describe("BildTagesplan – Haken zurücknehmen", () => {
+  it("bietet bei abgehakten Teilen einer Gabe das Zurücknehmen an", () => {
+    const zurueck = vi.fn();
+    const items = [
+      { key: "s1", kategorie: "supplement", name: "Milgamma", uhrzeit: "06:40", done: true, onConfirm: () => {} },
+      { key: "s2", kategorie: "supplement", name: "Jod", uhrzeit: "06:40", done: false, onConfirm: () => {} },
+    ];
+    render(<BildTagesplan items={items} heute={false} onRueckgaengig={zurueck} />);
+    fireEvent.click(screen.getByText("Supplemente · 2"));
+    fireEvent.click(screen.getByRole("button", { name: "Milgamma: Haken zurücknehmen" }));
+    expect(zurueck.mock.calls[0][0].key).toBe("s1");
+  });
+});

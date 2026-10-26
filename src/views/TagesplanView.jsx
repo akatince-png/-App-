@@ -101,6 +101,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
     alltagBereiche,
     alltagErledigt,
     matrixAufgaben,
+    toggleSupplementErledigt,
+    toggleHormonErledigt,
+    protokollEintraege,
+    aenderungEntfernen,
   } = useAppData();
 
   // Geführter Ablauf-Screen (Phase 1, 13.08.): null = normale Tagesplan-
@@ -165,6 +169,18 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         else skipSupplementFeedback(t.doseRef);
         if (t.doseRef.name) aenderungVermerken({ kategorie: t.kategorie, itemName: t.doseRef.name, aktion: "erledigt", detail: verspaetungText(t.doseRef.zeit ?? t.doseRef.uhrzeit) || "" });
       });
+  // Vertippt? (26.10., Nutzerin: „Haken wieder entfernen … gerne einmal fragen,
+  // ob ich es doch nicht genommen habe“). Nimmt den Haken zurück und löscht den
+  // „erledigt“-Eintrag von heute aus dem Protokoll.
+  const abhakenZuruecknehmen = (t) => {
+    const name = t.doseRef?.name || t.raw?.name || t.name;
+    if (!window.confirm(`„${name}“ doch nicht genommen? Der Haken wird wieder entfernt.`)) return;
+    if (t.kategorie === "hormon") toggleHormonErledigt?.(toLocalISODate(selectedDate), t.raw.name, t.originalUhrzeit ?? t.uhrzeit);
+    else if (t.doseRef) toggleSupplementErledigt?.(t.doseRef.datum, t.doseRef.id, t.doseRef.zeit);
+    const heute = toLocalISODate(new Date());
+    const eintrag = (protokollEintraege || []).find((e) => e.kategorie === t.kategorie && e.itemName === name && e.aktion === "erledigt" && e.erstelltAm && toLocalISODate(new Date(e.erstelltAm)) === heute);
+    if (eintrag) aenderungEntfernen?.(eintrag.id);
+  };
   const feedbackSchliessen = () => {
     setFeedbackOpen(null);
     setFeedbackKategorie(null);
@@ -823,6 +839,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             onTraining={setTrainingVorschau}
             onBearbeiten={onEditItem ? (t) => onEditItem(t.kategorie, t.refId) : undefined}
             onGabe={gabeErledigen}
+            onRueckgaengig={abhakenZuruecknehmen}
             renderRoutine={(r) => <RoutineInhalt routine={r} status={r === "morgen" ? morgenRoutineStatus : abendRoutineStatus} />}
           />
           {zeigeUebergangsDenkpause && <DenkpauseNudge text="Kurzer Denksport zwischendurch?" onDismiss={() => setDenkpauseVersteckt(true)} />}
