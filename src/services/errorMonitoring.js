@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { supabase } from "../lib/supabaseClient";
 
 // Fehler-Frühwarnsystem (14.09., Nutzerinnen-Vorgabe aus dem App-Bauplan):
 // ohne das erfährt man von einem echten Absturz draußen bei der Nutzung
@@ -32,4 +33,26 @@ export function initErrorMonitoring() {
 // wurde (captureException ist dann einfach wirkungslos).
 export function meldeAbsturz(fehler, componentStack) {
   Sentry.captureException(fehler, { extra: { componentStack } });
+  // Eigene Fehler-Erfassung (27.10., Migration 0138): ohne Sentry-Zugang
+  // landet jeder Absturz in public.app_fehler, damit Claude die Ursache
+  // lesen kann (Nutzerin: „die App hat immer wieder Probleme“).
+  speichereAbsturz(fehler, componentStack);
+}
+
+async function speichereAbsturz(fehler, componentStack) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    if (!userId) return;
+    await supabase.from("app_fehler").insert({
+      user_id: userId,
+      nachricht: String(fehler?.message || fehler || "").slice(0, 1000),
+      stack: String(fehler?.stack || "").slice(0, 4000),
+      komponenten: String(componentStack || "").slice(0, 4000),
+      adresse: String(globalThis.location?.href || "").slice(0, 500),
+      geraet: String(globalThis.navigator?.userAgent || "").slice(0, 300),
+    });
+  } catch {
+    // Erfassen darf nie selbst einen Fehler werfen.
+  }
 }

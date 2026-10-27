@@ -66,6 +66,10 @@ export class ErrorBoundary extends React.Component {
           <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.55, marginBottom: 22 }}>
             Nichts ist verloren — deine gespeicherten Daten sind unberührt. Ein Neustart dieses Bereichs behebt es meistens.
           </div>
+          {/* Kurzer technischer Hinweis (27.10.): hilft beim Melden per Foto. */}
+          <div data-fehler-text style={{ fontSize: 11, color: textMuted, background: "rgba(127,127,127,.1)", borderRadius: 8, padding: "6px 8px", marginBottom: 16, wordBreak: "break-word", textAlign: "left" }}>
+            {String(this.state.fehler?.message || this.state.fehler).slice(0, 200)}
+          </div>
           <button
             type="button"
             onClick={() => {
