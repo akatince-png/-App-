@@ -50,7 +50,7 @@ import { SCHNELL_AUF_STARTSEITE, kamUeberSchnell, nimmSchnellStart } from "../ut
 import NaechsterSchrittFenster from "../ui/NaechsterSchrittFenster";
 import NaechsterHinweis from "../ui/NaechsterHinweis";
 import { naechsteSchritte } from "../utils/naechsteSchritte";
-import { zeigeRoutineFenster, heutigeEntscheidung, entscheidungMerken } from "../utils/morgenFenster";
+import { zeigeRoutineFenster, heutigeEntscheidung, entscheidungMerken, routineAusgelassen } from "../utils/morgenFenster";
 import { routineTagesStatus } from "../utils/routineStatus";
 import ZeitraumKalender from "../ui/ZeitraumKalender";
 import { useTagesBloecke } from "../data/useTagesBloecke";
@@ -109,6 +109,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     alltagEintraege,
     alltagErledigt,
     supplementMengeMl,
+    protokollEintraege,
     gruppenprotokolle,
     gruppenBausteinUmschalten,
     gruppenprotokolleNeuLaden,
@@ -363,7 +364,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const routineAlsNaechstesItems = isEmergencyMode
     ? []
     : ["morgen", "abend"]
-        .filter((routine) => routineSchritte.some((s) => s.routine === routine) && !routineDurchlaeufe.some((d) => d.routine === routine && d.datum === tagStr))
+        .filter((routine) => routineSchritte.some((s) => s.routine === routine) && !routineDurchlaeufe.some((d) => d.routine === routine && d.datum === tagStr) && !routineAusgelassen(protokollEintraege || [], routine, tagStr))
         .map((routine) => {
           const schritteDieserRoutine = routineSchritte.filter((s) => s.routine === routine);
           const erledigtCount = schritteDieserRoutine.filter((s) => routineSchrittErledigt[`${tagStr}__${s.id}`]).length;
@@ -1039,7 +1040,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
     !morgenFensterZu &&
     // Über eine Schnell-Abkürzung geöffnet: erst das Eintragen, kein Vollbild davor.
     !kamUeberSchnell() &&
-    zeigeRoutineFenster({ art: fensterArt, jetzt: new Date(), startZeit: routineEinstellungen?.[fensterArt]?.startZeit, status: fensterStatus, entscheidung: heutigeEntscheidung(fensterHeute, fensterArt), erzwungen: fensterErzwungen });
+    zeigeRoutineFenster({ art: fensterArt, jetzt: new Date(), startZeit: routineEinstellungen?.[fensterArt]?.startZeit, status: fensterStatus, entscheidung: heutigeEntscheidung(fensterHeute, fensterArt) || (routineAusgelassen(protokollEintraege || [], fensterArt, fensterHeute) ? "nicht" : null), erzwungen: fensterErzwungen });
   const routineFensterSchliessen = (wahl) => {
     entscheidungMerken(fensterHeute, wahl, fensterArt);
     setMorgenFensterZu(true);
@@ -1101,7 +1102,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
           onHeuteNicht={(grund) => {
             routineFensterSchliessen("nicht");
             const name = fensterArt === "morgen" ? "Morgenroutine" : "Abendroutine";
-            aenderungVermerken({ kategorie: name.toLowerCase(), itemName: name, aktion: "heute ausgelassen", detail: grund });
+            // „ausgefallen“ (die Datenbank kennt kein „heute ausgelassen“ – das wurde nie gespeichert).
+            aenderungVermerken({ kategorie: name.toLowerCase(), itemName: name, aktion: "ausgefallen", detail: `Heute ausgelassen${grund ? `: ${grund}` : ""}` });
           }}
         />
       )}
