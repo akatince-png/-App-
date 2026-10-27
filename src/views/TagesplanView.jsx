@@ -27,6 +27,7 @@ import BildTagesplan from "../ui/BildTagesplan";
 import RoutineInhalt from "../ui/RoutineInhalt";
 import { alltagItems } from "../utils/exportAuswahl";
 import { terminLaeuft } from "../utils/termin";
+import { routineAusgelassen } from "../utils/morgenFenster";
 import { QUADRANT, quadrantVon } from "../utils/matrix";
 import LaufenderTimerKarte from "../ui/TimerRing";
 import TagesHinweise from "../ui/TagesHinweise";
@@ -472,6 +473,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           const start = routineEinstellungen?.[r]?.startZeit || "";
           if (!schritte.length && !start) return null;
           const dauer = schritte.reduce((sum, x) => sum + (Number(x.dauerMin) || 0), 0) || 15;
+          // Heute ausgelassen (27.10.): steht als erledigt-grau da, stört den Plan nicht mehr.
+          const ausgelassen = sameDay(selectedDate, new Date()) && routineAusgelassen(protokollEintraege || [], r, toLocalISODate(selectedDate));
           return {
             key: `routine-${r}`,
             kategorie: `${r}routine`,
@@ -479,12 +482,12 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             name,
             uhrzeit: String(start).slice(0, 5),
             dauerMin: dauer,
-            detail: status.anzahlGesamt > 0 ? `${status.anzahlErledigt}/${status.anzahlGesamt} Schritte` : "Noch keine Schritte",
-            done: status.anzahlGesamt > 0 && status.anzahlErledigt >= status.anzahlGesamt,
+            detail: ausgelassen ? "✕ Heute ausgelassen" : status.anzahlGesamt > 0 ? `${status.anzahlErledigt}/${status.anzahlGesamt} Schritte` : "Noch keine Schritte",
+            done: ausgelassen || (status.anzahlGesamt > 0 && status.anzahlErledigt >= status.anzahlGesamt),
           };
         })
         .filter(Boolean),
-    [routineSchritte, routineEinstellungen, morgenRoutineStatus, abendRoutineStatus]
+    [routineSchritte, routineEinstellungen, morgenRoutineStatus, abendRoutineStatus, protokollEintraege, selectedDate]
   );
 
   // Zeigt an, welcher Zeitblock gerade "dran" ist — auch müde auf einen Blick

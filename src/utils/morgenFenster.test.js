@@ -41,3 +41,14 @@ describe("Abendfenster", () => {
     expect(zeigeRoutineFenster({ art: "abend", jetzt: abend(20, 0), status: offen, entscheidung: null })).toBe(true);
   });
 });
+
+describe("routineAusgelassen (27.10.)", () => {
+  it("erkennt „heute ausgelassen“ aus dem Protokoll", async () => {
+    const { routineAusgelassen } = await import("./morgenFenster");
+    const heute = new Date(2026, 9, 27, 8, 30).toISOString();
+    const p = [{ kategorie: "morgenroutine", aktion: "ausgefallen", erstelltAm: heute }];
+    expect(routineAusgelassen(p, "morgen", "2026-10-27")).toBe(true);
+    expect(routineAusgelassen(p, "abend", "2026-10-27")).toBe(false);
+    expect(routineAusgelassen(p, "morgen", "2026-10-28")).toBe(false);
+  });
+});

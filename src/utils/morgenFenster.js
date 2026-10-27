@@ -64,3 +64,13 @@ export const HEUTE_NICHT_GRUENDE = {
   morgen: ["Krank", "Verschlafen", "Anderer Plan heute", "Keine Kraft", "Unterwegs"],
   abend: ["Krank", "Zu müde", "Noch unterwegs", "Besuch / Termin", "Keine Kraft"],
 };
+
+// „Heute nicht“ steht auch im Protokoll (27.10.): gilt dann auf jedem Gerät,
+// und Claude kann eine Routine für die Nutzerin als ausgelassen eintragen.
+// Eintrag: kategorie „morgenroutine“/„abendroutine“, aktion „ausgefallen“,
+// heute angelegt.
+export function routineAusgelassen(protokoll = [], art = "morgen", datum) {
+  const kategorie = `${art}routine`;
+  return protokoll.some((e) => e.kategorie === kategorie && e.aktion === "ausgefallen" && e.erstelltAm && localIso(new Date(e.erstelltAm)) === datum);
+}
+const localIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
