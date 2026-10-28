@@ -11,6 +11,7 @@ import { KATEGORIE_META } from "../utils/dayItems";
 import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 import ItemVerlauf from "../ui/ItemVerlauf";
 import EintragVerlaufListe from "../ui/EintragVerlaufListe";
+import { sonnenaufgangUhr, sonnenuntergangUhr } from "../utils/sonne";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -93,6 +94,9 @@ export default function TageslichtView({ onHome, embedded = false }) {
           {tageslichtHeuteMinuten} <span style={{ fontSize: 13, fontWeight: 600, color: textMuted }}>/ {tageslichtZielMinuten} Min.</span>
         </div>
         <div style={{ fontSize: 12.5, color: textMuted, marginTop: 4 }}>{motivationsText(tageslichtHeuteMinuten, tageslichtZielMinuten)}</div>
+        <div data-sonnenzeiten style={{ fontSize: 12.5, fontWeight: 700, color: textMuted, marginTop: 8 }}>
+          🌅 Sonnenaufgang {sonnenaufgangUhr(new Date())} · 🌇 Sonnenuntergang {sonnenuntergangUhr(new Date())}
+        </div>
       </Card>
 
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}
