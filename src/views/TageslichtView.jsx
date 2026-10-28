@@ -12,6 +12,7 @@ import { useZielMitKorrektur } from "../ui/useZielMitKorrektur";
 import ItemVerlauf from "../ui/ItemVerlauf";
 import EintragVerlaufListe from "../ui/EintragVerlaufListe";
 import { sonnenaufgangUhr, sonnenuntergangUhr } from "../utils/sonne";
+import WetterTipp from "../ui/WetterTipp";
 
 // Bereichseigene Farbe statt der generischen Marken-Akzentfarbe — Tageslicht
 // ist Gelb, passend zu den bunten Home-Mini-Widgets.
@@ -97,6 +98,7 @@ export default function TageslichtView({ onHome, embedded = false }) {
         <div data-sonnenzeiten style={{ fontSize: 12.5, fontWeight: 700, color: textMuted, marginTop: 8 }}>
           🌅 Sonnenaufgang {sonnenaufgangUhr(new Date())} · 🌇 Sonnenuntergang {sonnenuntergangUhr(new Date())}
         </div>
+        <WetterTipp stunden style={{ marginTop: 10, textAlign: "left" }} />
       </Card>
 
       {fehler && <div style={{ fontSize: 12.5, color: danger, marginBottom: 14, textAlign: "center" }}>{fehler}</div>}

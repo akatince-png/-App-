@@ -286,7 +286,8 @@ Nutzerin: Tageslicht stand in ihrer Morgenroutine an Platz 3, die Sonne ging abe
 - Routine-Ablauf: Kommt der Tageslicht-Schritt vor Sonnenaufgang dran, fragt die App „☀️ Später nachholen“ oder „Trotzdem jetzt (z. B. Tageslichtlampe)“. Später nachholen speichert den Schritt mit `ausgelassen: true`, `tatsaechlichSek: null` (zählt nicht in die Messwoche).
 - Planung: Schritteliste und aufgeklappte Routine im Tagesplan zeigen beim Tageslicht-Schritt „🌅 Sonnenaufgang heute …“, orange, wenn er davor geplant ist. Die Tageslicht-Seite zeigt Sonnenauf- und -untergang.
 - Ihre Daten: Tageslicht-Schritt in ihrer Morgenroutine ans Ende gesetzt (`reihenfolge` 8).
-- Noch offen (nur auf Wunsch): Wetter/Bewölkung aus dem Internet (z. B. Open-Meteo), eigener Ort im Profil statt Hannover.
+- Wetter (Nutzerin: „Ja“): `utils/wetter.js` + `data/useWetter.js` holen die Stundenvorhersage (Bewölkung, Regen) von Open-Meteo (frei, ohne Konto; geschickt werden nur die Hannover-Koordinaten), höchstens alle 3 Std., Zwischenspeicher `localStorage` „aka-wetter“. `ui/WetterTipp.jsx` zeigt „Beste Zeit für Tageslicht: 12–14 Uhr (sonnig)“: auf der Tageslicht-Seite mit Stundenleiste, in der Routine-Rückfrage und beim zu früh geplanten Tageslicht-Schritt. In Playwright/vitest abgeschaltet (kein Internet nötig).
+- Noch offen (nur auf Wunsch): eigener Ort im Profil statt Hannover.
 
 ## 🗓️ Tagesplan aufgeräumt: Aufgaben des Tages im Plan, echte Zeiten (26.10.2026)
 
