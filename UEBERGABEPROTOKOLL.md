@@ -279,6 +279,15 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🌄 Tageslicht erst nach Sonnenaufgang (28.10.2026)
+
+Nutzerin: Tageslicht stand in ihrer Morgenroutine an Platz 3, die Sonne ging aber erst gegen 7 Uhr auf – der Schritt war nicht machbar. Gewünscht: im Zweifel ablehnen können, bei der Planung sehen, wann die Sonne aufgeht, und ihr Tageslicht ans Ende der Routine.
+- `utils/sonne.js`: `sonnenaufgang`/`sonnenaufgangUhr` (gleiche Rechnung wie der Sonnenuntergang, Ort Hannover), `istLichtSchritt` (kern_key `licht` oder Name), `nochZuDunkel` (bis 15 Min. nach Aufgang), `lichtHinweis(zeit)`.
+- Routine-Ablauf: Kommt der Tageslicht-Schritt vor Sonnenaufgang dran, fragt die App „☀️ Später nachholen“ oder „Trotzdem jetzt (z. B. Tageslichtlampe)“. Später nachholen speichert den Schritt mit `ausgelassen: true`, `tatsaechlichSek: null` (zählt nicht in die Messwoche).
+- Planung: Schritteliste und aufgeklappte Routine im Tagesplan zeigen beim Tageslicht-Schritt „🌅 Sonnenaufgang heute …“, orange, wenn er davor geplant ist. Die Tageslicht-Seite zeigt Sonnenauf- und -untergang.
+- Ihre Daten: Tageslicht-Schritt in ihrer Morgenroutine ans Ende gesetzt (`reihenfolge` 8).
+- Noch offen (nur auf Wunsch): Wetter/Bewölkung aus dem Internet (z. B. Open-Meteo), eigener Ort im Profil statt Hannover.
+
 ## 🗓️ Tagesplan aufgeräumt: Aufgaben des Tages im Plan, echte Zeiten (26.10.2026)
 
 Nutzerin: Oben im Tagesplan stand „Heute aus deiner Matrix“ mit allem Roten aus der Matrix – zu voll, der Plan kam erst weit unten. Gewünscht: nur das am Tag Eingeplante, direkt im Plan; abhaken, ausfallen lassen und dokumentieren, wann begonnen/beendet.

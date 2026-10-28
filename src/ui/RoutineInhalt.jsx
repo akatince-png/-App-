@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import RoutineSchritteEditor from "./RoutineSchritteEditor";
-import RoutineSchritteListe from "./RoutineSchritteListe";
+import RoutineSchritteListe, { LichtZeile } from "./RoutineSchritteListe";
+import { istLichtSchritt } from "../utils/sonne";
 
 // Inhalt einer aufgeklappten Routine im Bild-Tagesplan (25.10., Nutzerin:
 // „alle Bestandteile ersichtlich und direkt bearbeiten“). Erst die Schritte
 // mit Häkchen-Stand, auf Wunsch darunter der Editor wie in der Liste.
 export default function RoutineInhalt({ routine, status }) {
-  const { routineSchritte = [], routineSchrittHinzufuegen, routineSchrittEntfernen, routineSchrittVerschieben } = useAppData();
+  const { routineSchritte = [], routineSchrittZeit, routineSchrittHinzufuegen, routineSchrittEntfernen, routineSchrittVerschieben } = useAppData();
   const [bearbeiten, setBearbeiten] = useState(false);
   const schritte = status?.schritte || [];
   return (
@@ -23,6 +24,7 @@ export default function RoutineInhalt({ routine, status }) {
                 <span style={{ flex: 1, minWidth: 0, textDecoration: fertig ? "line-through" : "none", opacity: fertig ? 0.6 : 1 }}>
                   {s.kurz ? "⚡ " : ""}
                   {s.name}
+                  {routine === "morgen" && istLichtSchritt(s) && !fertig && <LichtZeile zeit={routineSchrittZeit?.(s.id)} />}
                 </span>
                 {Number(s.dauerMin) > 0 && <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>{s.dauerMin} Min</span>}
               </li>

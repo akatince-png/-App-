@@ -6,6 +6,7 @@ import { ROUTINE_META } from "../utils/dayItems";
 import ItemVerlauf from "./ItemVerlauf";
 import { pauseFuer } from "../utils/kernprogramm";
 import { toLocalISODate } from "../utils/dates";
+import { istLichtSchritt, lichtHinweis } from "../utils/sonne";
 
 const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
@@ -80,6 +81,7 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
                 {zeit && <span style={{ color: farbe }}>{zeit} · </span>}
                 {s.name}
               </div>
+              {routine === "morgen" && istLichtSchritt(s) && <LichtZeile zeit={zeit} />}
               <div style={{ fontSize: 13, color: textMuted, marginTop: 1 }}>
                 {s.dauerMin} Min.
                 {s.kernKey && " · 🔒 gehört zum Kernprogramm"}
@@ -150,5 +152,17 @@ export default function RoutineSchritteListe({ routine, schritte, onEntfernen, o
         );
       })}
     </Card>
+  );
+}
+
+// Sonnenaufgang beim Tageslicht-Schritt (28.10.): orange, wenn der Schritt
+// geplant vor (bzw. kurz nach) Sonnenaufgang liegt.
+export function LichtZeile({ zeit }) {
+  const h = lichtHinweis(zeit);
+  if (!h) return null;
+  return (
+    <span data-licht-hinweis={h.zuFrueh ? "zu-frueh" : "ok"} style={{ display: "block", fontSize: 12.5, fontWeight: 700, marginTop: 2, color: h.zuFrueh ? "color-mix(in srgb, #D9822B var(--mp-schrift), var(--mp-schrift-hell))" : textMuted }}>
+      {h.text}
+    </span>
   );
 }

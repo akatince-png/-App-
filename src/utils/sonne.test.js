@@ -14,3 +14,19 @@ describe("Sonnenuntergang Hannover (24.10.)", () => {
     expect(Math.abs(utcMin(sonnenuntergang(tag)) - erwartet)).toBeLessThanOrEqual(5);
   });
 });
+
+describe("Sonnenaufgang (28.10.)", () => {
+  it("liegt in Hannover Ende Oktober zwischen 7 und 8 Uhr (MEZ/MESZ)", async () => {
+    const { sonnenaufgang } = await import("./sonne");
+    const d = sonnenaufgang(new Date(2026, 9, 28, 12));
+    const utcMin = d.getUTCHours() * 60 + d.getUTCMinutes();
+    expect(utcMin).toBeGreaterThan(6 * 60 - 20); // ca. 06:15 UTC = 07:15 MEZ
+    expect(utcMin).toBeLessThan(6 * 60 + 40);
+  });
+  it("erkennt den Tageslicht-Schritt", async () => {
+    const { istLichtSchritt } = await import("./sonne");
+    expect(istLichtSchritt({ kernKey: "licht" })).toBe(true);
+    expect(istLichtSchritt({ name: "☀️ Tageslicht – draußen" })).toBe(true);
+    expect(istLichtSchritt({ name: "💧 Glas Wasser" })).toBe(false);
+  });
+});

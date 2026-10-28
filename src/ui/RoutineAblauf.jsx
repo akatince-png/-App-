@@ -18,6 +18,7 @@ import AufgeladenFenster from "./AufgeladenFenster";
 import GuteNachtFenster from "./GuteNachtFenster";
 import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBibliothek";
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
+import { istLichtSchritt, nochZuDunkel, sonnenaufgangUhr } from "../utils/sonne";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -108,6 +109,12 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
   const atemInfo = atemFuerRoutineSchritt(aktuell, routine);
   const atemUebung = atemInfo ? { ...bibliotheksUebung(atemInfo.key), dauerMinuten: atemInfo.dauerMinuten } : null;
 
+  // Tageslicht vor Sonnenaufgang (28.10., Nutzerin: „im Zweifelsfall sogar
+  // ablehnen, weil die Sonne dann noch nicht aufgegangen ist“): erst fragen,
+  // ob später nachholen oder trotzdem jetzt (z. B. Tageslichtlampe).
+  const [lichtTrotzdem, setLichtTrotzdem] = useState(null);
+  const lichtFrage = istLichtSchritt(aktuell) && lichtTrotzdem !== aktuell?.id && nochZuDunkel(new Date());
+
   // Schritt-Uhr (29.09., Nutzerin): jeder Schritt hat eine Soll-Zeit als
   // Rahmen – auch in der Messwoche. Sie läuft rückwärts; ist sie um, gibt es
   // Ton + Vibration und die Uhr zählt sichtbar weiter („+1:20 länger“),
@@ -118,7 +125,7 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
   const restSek = sollSek - schrittSek;
   const signalRef = useRef({ index: -1, vorwarnung: false, ende: false });
   useEffect(() => {
-    if (fertig || !wachGefragt || !aktuell || istTagebuchSchritt(aktuell) || atemUebung) return;
+    if (fertig || !wachGefragt || !aktuell || istTagebuchSchritt(aktuell) || atemUebung || lichtFrage) return;
     const sig = signalRef.current;
     if (sig.index !== index) signalRef.current = { index, vorwarnung: false, ende: false };
     const r = signalRef.current;
@@ -134,9 +141,10 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
     }
   });
 
-  const weiter = () => {
-    const tatsaechlichSek = Math.round((Date.now() - startZeitRef.current) / 1000);
-    protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek }];
+  const weiter = (opt) => {
+    const ausgelassen = opt?.ausgelassen === true; // onClick/onGespeichert reichen ein Event bzw. den Eintrag durch
+    const tatsaechlichSek = ausgelassen ? null : Math.round((Date.now() - startZeitRef.current) / 1000);
+    protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek, ...(ausgelassen ? { ausgelassen: true } : {}) }];
     if (index + 1 < schritte.length) {
       setIndex((i) => i + 1);
       startZeitRef.current = Date.now();
@@ -325,6 +333,26 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
           </div>
         </Card>
         </div>
+      ) : lichtFrage ? (
+        <Card data-routine-licht-frage style={{ textAlign: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 34 }}>🌄</div>
+          <div style={{ fontSize: 20, fontWeight: 800, margin: "6px 0 6px" }}>{aktuell.name}</div>
+          <div style={{ fontSize: 14, color: textMuted, lineHeight: 1.5, marginBottom: 14 }}>
+            Die Sonne geht heute erst um {sonnenaufgangUhr(new Date())} Uhr auf, draußen ist es noch kaum hell. Tageslicht holst du besser später nach.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <PrimaryButton onClick={() => weiter({ ausgelassen: true })}>☀️ Später nachholen</PrimaryButton>
+            <PrimaryButton
+              variant="ghost"
+              onClick={() => {
+                setLichtTrotzdem(aktuell.id);
+                startZeitRef.current = Date.now();
+              }}
+            >
+              Trotzdem jetzt (z. B. Tageslichtlampe)
+            </PrimaryButton>
+          </div>
+        </Card>
       ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>

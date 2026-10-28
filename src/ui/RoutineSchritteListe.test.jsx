@@ -77,3 +77,18 @@ describe("RoutineSchritteListe – Kernprogramm", () => {
     expect(screen.getByLabelText("Dauer in Minuten").value).toBe("1");
   });
 });
+
+describe("Tageslicht-Schritt mit Sonnenaufgang (28.10.)", () => {
+  it("warnt, wenn Tageslicht vor Sonnenaufgang geplant ist", () => {
+    const { container } = render(
+      <RoutineSchritteListe routine="morgen" schritte={[{ id: "s1", routine: "morgen", reihenfolge: 0, name: "☀️ Tageslicht", kernKey: "licht", dauerMin: 5 }]} onEntfernen={() => {}} onVerschieben={() => {}} />
+    );
+    const hinweis = container.querySelector("[data-licht-hinweis]");
+    expect(hinweis).not.toBeNull();
+    expect(hinweis.textContent).toContain("Sonnenaufgang");
+  });
+  it("zeigt bei anderen Schritten keinen Sonnenhinweis", () => {
+    const { container } = render(<RoutineSchritteListe routine="morgen" schritte={SCHRITTE} onEntfernen={() => {}} onVerschieben={() => {}} />);
+    expect(container.querySelector("[data-licht-hinweis]")).toBeNull();
+  });
+});
