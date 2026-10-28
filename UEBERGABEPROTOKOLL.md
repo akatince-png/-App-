@@ -279,6 +279,14 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## ↺ Routine fortsetzen statt neu anfangen (28.10.2026)
+
+Nutzerin: Morgenroutine gestartet, nebenbei anderes gemacht, App geschlossen – beim Öffnen fing die Routine wieder bei Schritt 1 an. Außerdem wirkte Abhaken auf der Startseite nicht auf die Routine. DB-Prüfung: heute nur **ein** Durchlauf gespeichert (06:00–07:30), keine Dreifach-Einträge (der Durchlauf wird nur beim Abschluss gespeichert, `durchlaufSpeichern` lässt je Tag nur einen zu).
+- `RoutineAblauf.jsx`: Der laufende Durchlauf steht in `localStorage` „aka-routine-lauf-<routine>“ (Datum, Fassung, Protokoll, Start). Beim Öffnen geht es beim ersten offenen Schritt weiter („↺ Weiter, wo du warst“), Gesamtzeit läuft ab dem echten Start. Jeder fertige Schritt wird sofort per `routineSchrittMerken` (neu in `useRoutinen`, ohne Feier/Auto-Durchlauf) in `routine_schritt_logs` geschrieben – damit auch geräteübergreifend. Auf der Startseite abgehakte Schritte überspringt der Ablauf; im Abschluss-Protokoll stehen sie ohne Zeit.
+- Startseite (`RoutineStart` in `KernprogrammKarte.jsx`): Knopf „▶ Morgenroutine fortsetzen“, sobald etwas erledigt/begonnen ist; darunter „▾ Schritte einzeln abhaken“ mit der bestehenden `RoutineHeuteChecklist`.
+- e2e-Harness: Endung „merken“ gilt als Funktion.
+- Offen, Frage an die Nutzerin: Tagespunkte wie Morgensupplemente/Frühstück auch mit dem passenden Routine-Schritt verknüpfen?
+
 ## 🌄 Tageslicht erst nach Sonnenaufgang (28.10.2026)
 
 Nutzerin: Tageslicht stand in ihrer Morgenroutine an Platz 3, die Sonne ging aber erst gegen 7 Uhr auf – der Schritt war nicht machbar. Gewünscht: im Zweifel ablehnen können, bei der Planung sehen, wann die Sonne aufgeht, und ihr Tageslicht ans Ende der Routine.

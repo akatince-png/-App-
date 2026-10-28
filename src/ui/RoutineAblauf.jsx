@@ -26,6 +26,27 @@ const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 const ROUTINE_LABEL = { morgen: "Morgenroutine", abend: "Abendroutine" };
 const ROUTINE_EMOJI = { morgen: "🌅", abend: "🌙" };
 
+// Laufender Durchlauf im Browser gemerkt (28.10., Nutzerin: „App geschlossen,
+// wieder geöffnet … Morgenroutine auf den Start zurückgesetzt“). Gilt nur für
+// heute; nach dem Abschluss gelöscht.
+const laufSchluessel = (routine) => `aka-routine-lauf-${routine}`;
+function laufLesen(routine, datum) {
+  try {
+    const x = JSON.parse(localStorage.getItem(laufSchluessel(routine)) || "null");
+    return x && x.datum === datum ? x : null;
+  } catch {
+    return null;
+  }
+}
+function laufMerken(routine, lauf) {
+  try {
+    if (lauf) localStorage.setItem(laufSchluessel(routine), JSON.stringify(lauf));
+    else localStorage.removeItem(laufSchluessel(routine));
+  } catch {
+    /* ohne Speicher geht es trotzdem, nur ohne Fortsetzen */
+  }
+}
+
 function fmtDauer(sekunden) {
   const s = Math.max(0, Math.round(sekunden));
   const m = Math.floor(s / 60);
@@ -41,8 +62,9 @@ function fmtDauer(sekunden) {
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
 export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
   useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
-  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand, atemuebungAbschliessen, aenderungVermerken } = useAppData();
+  const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand, atemuebungAbschliessen, aenderungVermerken, routineSchrittErledigt = {}, routineSchrittMerken } = useAppData();
   const heute = toLocalISODate(new Date());
+  const [gemerkt] = useState(() => laufLesen(routine, heute));
   const tagebuchHeute = (tagebuchEintraege || []).find((e) => e.datum === heute);
   const [tagebuchNachher, setTagebuchNachher] = useState(false);
   // Messwoche (26.09.): Woche 1 des AKA-Coachings misst statt vorzugeben –
@@ -53,21 +75,29 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
   const weckzeit = routineEinstellungen?.[routine]?.startZeit || "";
   const weckMs = weckzeit ? new Date(`${heute}T${weckzeit}:00`).getTime() : null;
   // Frage "Seit wann wach?" nur morgens und nur bis 3 h nach der Weckzeit.
-  const [wachGefragt, setWachGefragt] = useState(!(messmodus && routine === "morgen" && weckMs && Date.now() > weckMs && Date.now() - weckMs < 3 * 3600000));
-  const [index, setIndex] = useState(0);
+  const [wachGefragt, setWachGefragt] = useState(!!gemerkt || !(messmodus && routine === "morgen" && weckMs && Date.now() > weckMs && Date.now() - weckMs < 3 * 3600000));
   const [fertig, setFertig] = useState(false);
   // ⚡ Kurzfassung (24.10., Nutzerin: „diese Notfallversion gerne überall
   // integrieren“): Sind Schritte als „kurz“ markiert, fragt die Routine beim
   // Start „Ganz“ oder „Kurz“. Die Kurzfassung zählt genauso als geschafft.
   const kurzSchritte = alleSchritte.filter((s) => s.kurz);
   const kurzMoeglich = kurzSchritte.length > 0 && kurzSchritte.length < alleSchritte.length;
-  const [fassung, setFassung] = useState(kurzMoeglich ? null : "ganz");
+  const [fassung, setFassung] = useState(gemerkt?.fassung || (kurzMoeglich ? null : "ganz"));
   const schritte = fassung === "kurz" ? kurzSchritte : alleSchritte;
   const [musikFehler, setMusikFehler] = useState(null);
-  const protokollRef = useRef([]);
+  const protokollRef = useRef(gemerkt?.protokoll || []);
+  // Fortsetzen: erster Schritt, der heute weder abgehakt (auch auf der
+  // Startseite) noch im gemerkten Durchlauf erledigt ist.
+  const ersterOffener = (liste) => {
+    const gemacht = new Set(protokollRef.current.map((p) => p.schrittId));
+    const i = liste.findIndex((sc) => !gemacht.has(sc.id) && !routineSchrittErledigt[`${heute}__${sc.id}`]);
+    return i < 0 ? Math.max(0, liste.length - 1) : i;
+  };
+  const [index, setIndex] = useState(() => ersterOffener(schritte));
+  const fortgesetzt = index > 0;
   const feierRef = useRef(null);
   const startZeitRef = useRef(Date.now());
-  const gestartetUmRef = useRef(new Date().toISOString());
+  const gestartetUmRef = useRef(gemerkt?.gestartetUm || new Date().toISOString());
   // Belohnungsfenster (Nutzerin-Vorgabe, 12.09.): bei Routinen mit echtem
   // Start/Ende-Verlauf zählt für "rechtzeitig" der START, nicht das Ende —
   // einmal innerhalb des Puffers nach der geplanten Startzeit (Zeitrahmen
@@ -81,7 +111,13 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
   // Schritt-Countdowns durch, beginnt beim Start der Routine und endet erst
   // beim wirklichen Abschluss — damit sichtbar/auswertbar wird, ob die
   // ganze Routine zu lang oder zu kurz ist, nicht nur einzelne Schritte.
-  const gesamtStartRef = useRef(Date.now());
+  const gesamtStartRef = useRef(gemerkt?.gesamtStart || Date.now());
+  const merken = (f = fassung) => laufMerken(routine, { datum: heute, fassung: f, protokoll: protokollRef.current, gestartetUm: gestartetUmRef.current, gesamtStart: gesamtStartRef.current });
+  // Gleich beim Start merken, nicht erst nach dem ersten Schritt.
+  useEffect(() => {
+    if (fassung && wachGefragt) merken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fassung, wachGefragt]);
   const [gesamtSek, setGesamtSek] = useState(0);
   useEffect(() => {
     if (fertig) return;
@@ -146,10 +182,19 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
     const ausgelassen = opt?.ausgelassen === true; // onClick/onGespeichert reichen ein Event bzw. den Eintrag durch
     const tatsaechlichSek = ausgelassen ? null : Math.round((Date.now() - startZeitRef.current) / 1000);
     protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek, ...(ausgelassen ? { ausgelassen: true } : {}) }];
-    if (index + 1 < schritte.length) {
-      setIndex((i) => i + 1);
+    if (!ausgelassen) routineSchrittMerken?.(aktuell.id, heute);
+    // Nächster offener Schritt; was schon auf der Startseite abgehakt ist, wird übersprungen.
+    let naechster = index + 1;
+    while (naechster < schritte.length && routineSchrittErledigt[`${heute}__${schritte[naechster].id}`]) naechster++;
+    if (naechster < schritte.length) {
+      setIndex(naechster);
       startZeitRef.current = Date.now();
+      merken();
     } else {
+      laufMerken(routine, null);
+      // Schritte, die auf der Startseite abgehakt wurden, ohne Zeit mitspeichern.
+      const vorhanden = new Map(protokollRef.current.map((p) => [p.schrittId, p]));
+      protokollRef.current = schritte.map((sc) => vorhanden.get(sc.id) || { schrittId: sc.id, name: sc.name, geplantMin: sc.dauerMin, tatsaechlichSek: null });
       // Musik lief seit dem Start automatisch mit — muss beim Abschluss
       // genauso automatisch aufhören, sonst läuft sie einfach unbemerkt
       // weiter (gleicher Bug wie beim Workflow-/Trainings-Timer).
@@ -187,8 +232,10 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
     const minuten = (liste) => liste.reduce((summe, s) => summe + (Number(s.dauerMin) || 0), 0);
     const waehlen = (f) => {
       setFassung(f);
+      setIndex(ersterOffener(f === "kurz" ? kurzSchritte : alleSchritte));
       startZeitRef.current = Date.now();
       gesamtStartRef.current = Date.now();
+      merken(f);
     };
     return (
       <Shell>
@@ -288,6 +335,7 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
       </div>
       <div style={{ fontSize: 12, color: textMuted, textAlign: "center", marginBottom: 8 }}>
         {ROUTINE_EMOJI[routine]} {ROUTINE_LABEL[routine]} · Schritt {index + 1} von {schritte.length}
+        {fortgesetzt && <div data-routine-fortgesetzt style={{ fontWeight: 700, marginTop: 2 }}>↺ Weiter, wo du warst – erledigte Schritte sind gespeichert</div>}
         {messmodus && ` · 📏 ${messName}${messTagNr ? ` Tag ${messTagNr}` : ""}`}
       </div>
       {musikFehler && (
