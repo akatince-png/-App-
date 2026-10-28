@@ -14,8 +14,9 @@ export default function WetterTipp({ stunden: mitStunden = false, style }) {
   if (!tipp) return null;
   const heuteIso = `${jetzt.getFullYear()}-${String(jetzt.getMonth() + 1).padStart(2, "0")}-${String(jetzt.getDate()).padStart(2, "0")}`;
   const auf = sonnenaufgang(jetzt)?.getHours() ?? 7;
-  const unter = sonnenuntergang(jetzt)?.getHours() ?? 17;
-  const leiste = mitStunden ? stundenFuerTag(daten, heuteIso).filter((s) => s.stunde >= auf && s.stunde <= unter) : [];
+  const u = sonnenuntergang(jetzt);
+  const unter = u ? u.getHours() + (u.getMinutes() >= 30 ? 1 : 0) : 17;
+  const leiste = mitStunden ? stundenFuerTag(daten, heuteIso).filter((s) => s.stunde >= auf && s.stunde < unter) : [];
   return (
     <div data-wetter-tipp style={{ fontSize: 13, lineHeight: 1.45, ...style }}>
       <div style={{ fontWeight: 800 }}>🌤️ {tipp.text}</div>

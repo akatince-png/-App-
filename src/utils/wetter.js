@@ -31,17 +31,22 @@ export function besteLichtZeit(stunden, datum = new Date(), jetzt = new Date()) 
   if (!auf || !unter || !stunden.length) return null;
   const heute = datum.toDateString() === jetzt.toDateString();
   const ab = Math.max(auf.getHours() + 1, heute ? jetzt.getHours() : 0);
-  const bis = unter.getHours();
-  let beste = null;
-  for (let s = ab; s + 2 <= bis + 1; s++) {
-    const fenster = stunden.filter((x) => x.stunde === s || x.stunde === s + 1);
-    if (fenster.length < 2) continue;
-    const wolken = Math.round((fenster[0].wolken + fenster[1].wolken) / 2);
-    const regen = Math.max(fenster[0].regen, fenster[1].regen);
-    const wert = wolken + regen * 2;
-    if (!beste || wert < beste.wert) beste = { von: s, bis: s + 2, wolken, regen, wert };
+  // Das Fenster muss vor Sonnenuntergang enden (17:00 → spätestens 15–17 Uhr).
+  const bis = unter.getHours() + (unter.getMinutes() >= 30 ? 1 : 0);
+  // Kurz vor Sonnenuntergang passt oft kein 2-Stunden-Fenster mehr – dann 1 Stunde.
+  for (const laenge of [2, 1]) {
+    let beste = null;
+    for (let s = ab; s + laenge <= bis; s++) {
+      const fenster = stunden.filter((x) => x.stunde >= s && x.stunde < s + laenge);
+      if (fenster.length < laenge) continue;
+      const wolken = Math.round(fenster.reduce((summe, x) => summe + x.wolken, 0) / laenge);
+      const regen = Math.max(...fenster.map((x) => x.regen));
+      const wert = wolken + regen * 2;
+      if (!beste || wert < beste.wert) beste = { von: s, bis: s + laenge, wolken, regen, wert };
+    }
+    if (beste) return beste;
   }
-  return beste;
+  return null;
 }
 
 const hh = (s) => String(s).padStart(2, "0");
