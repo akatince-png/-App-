@@ -12,6 +12,7 @@ import SchnellIcon from "../ui/SchnellIcon";
 import { istZuFrueh } from "../utils/fruehAbhaken";
 import { WOCHENTAGE } from "../constants";
 import { addDays, fmtDate, sameDay, toLocalISODate, verspaetungText } from "../utils/dates";
+import { useRoutineVerknuepfung } from "../data/useRoutineVerknuepfung";
 import { statusText } from "../utils/motivation";
 import { buildDayItems, KATEGORIE_META as KATEGORIE, ROUTINE_META } from "../utils/dayItems";
 import { BereichColorProvider } from "../ui/BereichColorContext";
@@ -148,7 +149,10 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   // Ein-Tipp-Abhaken (UX-Review 23.09.): "Bestätigen" hakt sofort ab (inkl.
   // Belohnungsfenster, siehe skip*Feedback in den Daten-Hooks) und öffnet
   // danach nur noch die optionale Kurz-Rückmeldung (ui/SchnellFeedback.jsx).
+  // Routine ↔ Tagespunkte (28.10.): wird unten gesetzt, sobald die Tagespunkte da sind.
+  const verknuepfungRef = useRef(null);
   const openFeedback = (dose, key, kategorie) => {
+    verknuepfungRef.current?.itemsErledigt([{ key }]);
     if (kategorie === "hormon") skipHormonFeedback(dose);
     else if (kategorie === "supplement") skipSupplementFeedback(dose);
     if (dose?.name) aenderungVermerken({ kategorie, itemName: dose.name, aktion: "erledigt", detail: verspaetungText(dose.zeit ?? dose.uhrzeit) || "" });
@@ -163,14 +167,16 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   openFeedbackRef.current = openFeedback;
   // Gebündelte Gabe (26.10., Nutzerin: „nicht jedes Supplement einzeln“):
   // abhaken ohne Rückfrage je Einzelnem.
-  const gabeErledigen = (teile) =>
-    teile
+  const gabeErledigen = (teile) => {
+    verknuepfungRef.current?.itemsErledigt(teile.filter((t) => !t.done));
+    return teile
       .filter((t) => !t.done && t.doseRef)
       .forEach((t) => {
         if (t.kategorie === "hormon") skipHormonFeedback(t.doseRef);
         else skipSupplementFeedback(t.doseRef);
         if (t.doseRef.name) aenderungVermerken({ kategorie: t.kategorie, itemName: t.doseRef.name, aktion: "erledigt", detail: verspaetungText(t.doseRef.zeit ?? t.doseRef.uhrzeit) || "" });
       });
+  };
   // Vertippt? (26.10., Nutzerin: „Haken wieder entfernen … gerne einmal fragen,
   // ob ich es doch nicht genommen habe“). Nimmt den Haken zurück und löscht den
   // „erledigt“-Eintrag von heute aus dem Protokoll.
@@ -345,6 +351,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
             onConfirm: () => {
               const warErledigt = item.done;
               toggleGewohnheitErledigt(tagStr, item.raw.id);
+              if (!warErledigt) verknuepfungRef.current?.itemsErledigt([item]);
               if (!warErledigt) aenderungVermerken({ kategorie: "gewohnheit", itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.uhrzeit) || "" });
             },
           };
@@ -354,6 +361,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
           onConfirm: () => {
             const warErledigt = item.done;
             toggleMahlzeitErledigt(tagStr, item.raw.id, item.logZeit ?? item.uhrzeit);
+            if (!warErledigt) verknuepfungRef.current?.itemsErledigt([item]);
             if (!warErledigt) aenderungVermerken({ kategorie: "mahlzeit", itemName: item.raw.name, aktion: "erledigt", detail: verspaetungText(item.logZeit ?? item.uhrzeit) || "" });
           },
         };
@@ -388,6 +396,8 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
   );
 
   const tagesItems = useMemo(() => itemsForDate(selectedDate), [selectedDate, itemsForDate]);
+  const verknuepfung = useRoutineVerknuepfung(tagesItems, toLocalISODate(selectedDate));
+  verknuepfungRef.current = verknuepfung;
   // Termine aus „Mein Alltag“ im Bild-Tagesplan (26.10.), mit Rückmeldung.
   const termine = useMemo(() => {
     const tag = toLocalISODate(selectedDate);
@@ -723,6 +733,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         onAbschluss={() => setAblaufRoutine(null)}
         onAbbrechen={() => setAblaufRoutine(null)}
         routineDurchlaufSpeichern={routineDurchlaufSpeichern}
+        onSchrittFertig={verknuepfung.schrittErledigt}
       />
     );
   }

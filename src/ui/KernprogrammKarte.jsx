@@ -49,7 +49,7 @@ function aktuelleRoutine(jetzt = new Date()) {
   return jetzt.getHours() < 14 ? "morgen" : "abend";
 }
 
-export function RoutineStart({ onRoutineStart }) {
+export function RoutineStart({ onRoutineStart, onSchrittBestaetigt }) {
   const {
     routineSchritte,
     routineDurchlaeufe,
@@ -142,7 +142,7 @@ export function RoutineStart({ onRoutineStart }) {
     >
       {einzeln ? "▴ Schritte zuklappen" : "▾ Schritte einzeln abhaken"}
     </button>
-    {einzeln && <RoutineHeuteChecklist routine={routine} onStoppuhrStart={onRoutineStart} />}
+    {einzeln && <RoutineHeuteChecklist routine={routine} onStoppuhrStart={onRoutineStart} onSchrittBestaetigt={onSchrittBestaetigt} />}
     </>
   );
 }
