@@ -36,3 +36,12 @@ describe("Wetter für Tageslicht (28.10.)", () => {
     expect(lichtTipp(null, tag, tag)).toBeNull();
   });
 });
+
+describe("Fenster endet vor Sonnenuntergang (28.10., Foto Nutzerin: „16–18 Uhr“ bei Untergang 17:00)", () => {
+  it("schlägt nichts nach Sonnenuntergang vor", () => {
+    const klar = { hourly: { time: DATEN.hourly.time, cloud_cover: DATEN.hourly.time.map((_, i) => (i >= 16 ? 0 : 50)), precipitation_probability: DATEN.hourly.time.map(() => 0) } };
+    const tag = new Date(2026, 9, 28, 6, 0);
+    const b = besteLichtZeit(stundenFuerTag(klar, "2026-10-28"), tag, tag);
+    expect(b.bis).toBeLessThanOrEqual(17);
+  });
+});
