@@ -317,6 +317,22 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     [userId, durchlaeufe, einstellungenAm, belohnungPufferMin, aenderungVermerken]
   );
 
+  // Schritt aus dem geführten Ablauf sofort merken (28.10., Nutzerin: „App
+  // geschlossen … Morgenroutine auf den Start zurückgesetzt“). Ohne Feier und
+  // ohne automatischen Durchlauf – den speichert der Ablauf am Ende selbst
+  // mit den echten Zeiten.
+  const schrittMerken = useCallback(
+    async (schrittId, datum) => {
+      const k = `${datum}__${schrittId}`;
+      if (schrittErledigt[k] || pendingErledigtRef.current[k]) return;
+      pendingErledigtRef.current[k] = true;
+      setSchrittErledigt((prev) => ({ ...prev, [k]: true }));
+      const { error } = await supabase.from("routine_schritt_logs").upsert({ user_id: userId, schritt_id: schrittId, datum }, { onConflict: "user_id,schritt_id,datum" });
+      if (error) console.error(error);
+    },
+    [schrittErledigt, userId]
+  );
+
   // Bestätigt/entfernt EINEN Schritt für einen Tag, unabhängig vom
   // geführten Ablauf (12.09., Nutzerin-Vorgabe: direkt auf der Startseite
   // abhaken können, ohne "Morgenroutine starten" zu müssen, nur um einen
@@ -573,6 +589,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
     routineSchrittErledigt: schrittErledigt,
     routineSchrittZeit: schrittZeit,
     routineSchrittErledigtUmschalten: toggleSchrittErledigt,
+    routineSchrittMerken: schrittMerken,
     routineSchrittHinzufuegen: schrittHinzufuegen,
     routineSchrittEntfernen: schrittEntfernen,
     routineSchrittVerschieben: schrittVerschieben,

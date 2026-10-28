@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { ETAPPEN_NAME, WOCHEN, datumKurz } from "../utils/kernprogramm";
 import { routineTagesStatus } from "../utils/routineStatus";
@@ -6,6 +6,7 @@ import { toLocalISODate } from "../utils/dates";
 import { plastikFarbe } from "./plastik";
 import AmpelPunkt from "./AmpelPunkt";
 import { STUFEN } from "../utils/prioritaet";
+import RoutineHeuteChecklist from "./RoutineHeuteChecklist";
 
 // Startseite (25.09., Vorschau freigegeben): wo stehe ich im AKA-Coaching?
 // Einführung: "Woche 2 von 4 – Bewegung" mit dem, was neu dazukommt.
@@ -55,6 +56,7 @@ export function RoutineStart({ onRoutineStart }) {
     routineSchrittErledigt,
     routineEinstellungen,
   } = useAppData();
+  const [einzeln, setEinzeln] = useState(false);
   if (!onRoutineStart) return null;
   const routine = aktuelleRoutine();
   const status = routineTagesStatus(routine, toLocalISODate(new Date()), {
@@ -86,7 +88,15 @@ export function RoutineStart({ onRoutineStart }) {
           : ""}
       </div>
     );
+  // Fortsetzen (28.10.): schon Schritte erledigt oder ein Durchlauf begonnen.
+  let begonnen = status.anzahlErledigt > 0;
+  try {
+    begonnen ||= JSON.parse(localStorage.getItem(`aka-routine-lauf-${routine}`) || "null")?.datum === toLocalISODate(new Date());
+  } catch {
+    /* ohne Speicher: nur nach abgehakten Schritten */
+  }
   return (
+    <>
     <button
       type="button"
       className="mp-tap"
@@ -105,7 +115,7 @@ export function RoutineStart({ onRoutineStart }) {
         fontFamily: "inherit",
       }}
     >
-      ▶ {ROUTINE_TEXT[routine]} starten
+      ▶ {ROUTINE_TEXT[routine]} {begonnen ? "fortsetzen" : "starten"}
       <span
         style={{
           display: "block",
@@ -121,6 +131,19 @@ export function RoutineStart({ onRoutineStart }) {
         mit Stoppuhr · <span style={{ display: "inline-flex", verticalAlign: "-1px" }}><AmpelPunkt stufe={STUFEN.pflicht} /></span>
       </span>
     </button>
+    {/* Schritte einzeln abhaken (28.10., Nutzerin): zählt für die Routine,
+        der geführte Ablauf überspringt sie danach. */}
+    <button
+      type="button"
+      data-routine-einzeln
+      aria-expanded={einzeln}
+      onClick={() => setEinzeln((e) => !e)}
+      style={{ marginTop: 6, border: "none", background: "transparent", padding: "4px 2px", fontSize: 13, fontWeight: 800, color: "var(--mp-accent-dark-text)", cursor: "pointer", fontFamily: "inherit" }}
+    >
+      {einzeln ? "▴ Schritte zuklappen" : "▾ Schritte einzeln abhaken"}
+    </button>
+    {einzeln && <RoutineHeuteChecklist routine={routine} onStoppuhrStart={onRoutineStart} />}
+    </>
   );
 }
 
