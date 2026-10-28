@@ -19,6 +19,7 @@ import GuteNachtFenster from "./GuteNachtFenster";
 import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBibliothek";
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 import { istLichtSchritt, nochZuDunkel, sonnenaufgangUhr } from "../utils/sonne";
+import WetterTipp from "./WetterTipp";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -340,6 +341,7 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
           <div style={{ fontSize: 14, color: textMuted, lineHeight: 1.5, marginBottom: 14 }}>
             Die Sonne geht heute erst um {sonnenaufgangUhr(new Date())} Uhr auf, draußen ist es noch kaum hell. Tageslicht holst du besser später nach.
           </div>
+          <WetterTipp style={{ marginBottom: 14 }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <PrimaryButton onClick={() => weiter({ ausgelassen: true })}>☀️ Später nachholen</PrimaryButton>
             <PrimaryButton

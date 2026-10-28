@@ -7,6 +7,7 @@ import ItemVerlauf from "./ItemVerlauf";
 import { pauseFuer } from "../utils/kernprogramm";
 import { toLocalISODate } from "../utils/dates";
 import { istLichtSchritt, lichtHinweis } from "../utils/sonne";
+import WetterTipp from "./WetterTipp";
 
 const ROUTINE_FARBE = { morgen: ROUTINE_META.morgenroutine.dot, abend: ROUTINE_META.abendroutine.dot };
 const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
@@ -163,6 +164,7 @@ export function LichtZeile({ zeit }) {
   return (
     <span data-licht-hinweis={h.zuFrueh ? "zu-frueh" : "ok"} style={{ display: "block", fontSize: 12.5, fontWeight: 700, marginTop: 2, color: h.zuFrueh ? "color-mix(in srgb, #D9822B var(--mp-schrift), var(--mp-schrift-hell))" : textMuted }}>
       {h.text}
+      {h.zuFrueh && <WetterTipp style={{ fontSize: 12.5, fontWeight: 600, marginTop: 4, color: "var(--mp-text)" }} />}
     </span>
   );
 }
