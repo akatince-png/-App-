@@ -285,7 +285,7 @@ Nutzerin: Morgenroutine gestartet, nebenbei anderes gemacht, App geschlossen –
 - `RoutineAblauf.jsx`: Der laufende Durchlauf steht in `localStorage` „aka-routine-lauf-<routine>“ (Datum, Fassung, Protokoll, Start). Beim Öffnen geht es beim ersten offenen Schritt weiter („↺ Weiter, wo du warst“), Gesamtzeit läuft ab dem echten Start. Jeder fertige Schritt wird sofort per `routineSchrittMerken` (neu in `useRoutinen`, ohne Feier/Auto-Durchlauf) in `routine_schritt_logs` geschrieben – damit auch geräteübergreifend. Auf der Startseite abgehakte Schritte überspringt der Ablauf; im Abschluss-Protokoll stehen sie ohne Zeit.
 - Startseite (`RoutineStart` in `KernprogrammKarte.jsx`): Knopf „▶ Morgenroutine fortsetzen“, sobald etwas erledigt/begonnen ist; darunter „▾ Schritte einzeln abhaken“ mit der bestehenden `RoutineHeuteChecklist`.
 - e2e-Harness: Endung „merken“ gilt als Funktion.
-- Offen, Frage an die Nutzerin: Tagespunkte wie Morgensupplemente/Frühstück auch mit dem passenden Routine-Schritt verknüpfen?
+- Verknüpfung Routine ↔ Tagespunkte (Nutzerin: „Ja“, beide Richtungen): `utils/routineVerknuepfung.js` verbindet über Namen und Tageszeit (Frühstück ↔ Mahlzeit vor 11 Uhr, Dosette/Supplement ↔ Supplemente der Tageszeit ohne Getränk, Shaker ↔ Shaker, Medikament ↔ Medikament der Tageszeit, sonst Name des Punkts im Schritt). `data/useRoutineVerknuepfung.js`: Schritt fertig (Ablauf oder „Schritte einzeln abhaken“) hakt offene verknüpfte Punkte ab; Punkte auf Startseite/Tagesplan abgehakt → Schritt wird abgehakt, sobald alle seine verknüpften Punkte erledigt sind. Eingebunden in HomeView und TagesplanView.
 
 ## 🌄 Tageslicht erst nach Sonnenaufgang (28.10.2026)
 

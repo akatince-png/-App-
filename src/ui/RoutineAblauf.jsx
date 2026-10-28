@@ -60,7 +60,7 @@ function fmtDauer(sekunden) {
 // "Schritt fertig" geht jederzeit, auch vor Ablauf des Timers (z. B. wenn
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
-export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern }) {
+export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern, onSchrittFertig }) {
   useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand, atemuebungAbschliessen, aenderungVermerken, routineSchrittErledigt = {}, routineSchrittMerken } = useAppData();
   const heute = toLocalISODate(new Date());
@@ -182,7 +182,11 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
     const ausgelassen = opt?.ausgelassen === true; // onClick/onGespeichert reichen ein Event bzw. den Eintrag durch
     const tatsaechlichSek = ausgelassen ? null : Math.round((Date.now() - startZeitRef.current) / 1000);
     protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek, ...(ausgelassen ? { ausgelassen: true } : {}) }];
-    if (!ausgelassen) routineSchrittMerken?.(aktuell.id, heute);
+    if (!ausgelassen) {
+      routineSchrittMerken?.(aktuell.id, heute);
+      // Verknüpfte Tagespunkte mit abhaken (28.10., utils/routineVerknuepfung.js).
+      onSchrittFertig?.({ ...aktuell, routine });
+    }
     // Nächster offener Schritt; was schon auf der Startseite abgehakt ist, wird übersprungen.
     let naechster = index + 1;
     while (naechster < schritte.length && routineSchrittErledigt[`${heute}__${schritte[naechster].id}`]) naechster++;

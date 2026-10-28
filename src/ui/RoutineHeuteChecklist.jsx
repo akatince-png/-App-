@@ -35,7 +35,7 @@ const ROUTINE_KATEGORIE = { morgen: "morgenroutine", abend: "abendroutine" };
 // keine Stoppuhr“): in diesen Wochen führt „Bestätigen“ in den geführten
 // Ablauf mit Stoppuhr (`onStoppuhrStart`), damit gemessen wird. Manuell
 // abhaken bleibt möglich über „Ohne Stoppuhr abhaken“.
-export default function RoutineHeuteChecklist({ routine, datum, onStoppuhrStart }) {
+export default function RoutineHeuteChecklist({ routine, datum, onStoppuhrStart, onSchrittBestaetigt }) {
   const { routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineSchrittZeit, routineSchrittErledigtUmschalten, aenderungVermerken, tagebuchEintraege, kernStand } =
     useAppData();
   const [ohneStoppuhr, setOhneStoppuhr] = useState(false);
@@ -77,6 +77,7 @@ export default function RoutineHeuteChecklist({ routine, datum, onStoppuhrStart 
   };
   const bestaetigen = (schritt) => {
     routineSchrittErledigtUmschalten(schritt.id, heute);
+    onSchrittBestaetigt?.({ ...schritt, routine });
     aenderungVermerken({ kategorie: ROUTINE_KATEGORIE[routine], itemName: schritt.name, aktion: "erledigt", detail: "" });
   };
 

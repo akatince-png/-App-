@@ -45,6 +45,7 @@ import { startVariante } from "../utils/startVariante";
 import SchnellIcon from "../ui/SchnellIcon";
 import SchnellFenster, { AppKacheln } from "../ui/SchnellFenster";
 import HeutePlanKarte from "../ui/HeutePlanKarte";
+import { useRoutineVerknuepfung } from "../data/useRoutineVerknuepfung";
 import MorgenStartFenster from "../ui/MorgenStartFenster";
 import { SCHNELL_AUF_STARTSEITE, kamUeberSchnell, nimmSchnellStart } from "../utils/schnellStart";
 import NaechsterSchrittFenster from "../ui/NaechsterSchrittFenster";
@@ -349,6 +350,8 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
   const erledigtCount = displayItems.filter((i) => i.done).length;
   const offeneItems = displayItems.filter((i) => !i.done);
   const tagStr = toLocalISODate(today);
+  // Routine ↔ Tagespunkte (28.10.): abhaken zählt in beide Richtungen.
+  const verknuepfung = useRoutineVerknuepfung(heuteItems, tagStr);
 
   // Morgen-/Abendroutine tauchen jetzt auch unter "Als Nächstes" auf (12.09.,
   // Nutzerinnen-Vorgabe: "ich hab grad eine aktuell hinterlegte Morgenroutine,
@@ -1058,6 +1061,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         }}
         onAbbrechen={() => setAblaufRoutine(null)}
         routineDurchlaufSpeichern={routineDurchlaufSpeichern}
+        onSchrittFertig={verknuepfung.schrittErledigt}
       />
     );
   }
@@ -1210,13 +1214,14 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
               if (!i.bundleIds && !i.teile && !direktErledigbar(i)) return onOpenView("tagesplan");
               // Gabe (26.10.): alle offenen Teile auf einmal.
               const r = i.teile ? auswahlErledigen(i) : i.bundleIds ? buendelErledigen(i) : direktErledigen(i);
+              if (!i.done) verknuepfung.itemsErledigt(i.teile ? i.teile.filter((x) => !x.done) : [i]);
               // „Vergiss nicht – als Nächstes …“ (07.10.)
               if (!i.done) setNaechsterHinweis(naechsteSchritte(displayItems.filter((x) => x.key !== i.key && !(x.kategorie === "workflow" && istWorkflowHeuteErledigt(x.raw?.preset?.id))), 1)[0] || null);
               return r;
             }}
             onOpenPlan={() => onOpenView("tagesplan")}
           >
-            {proband === null && <RoutineStart onRoutineStart={setAblaufRoutine} />}
+            {proband === null && <RoutineStart onRoutineStart={setAblaufRoutine} onSchrittBestaetigt={verknuepfung.schrittErledigt} />}
           </HeutePlanKarte>
         }
         kalender={!isEmergencyMode && <ZeitraumKalender zeitraum={effektiverZeitraum} bloeckeFuer={bloeckeFuer} heute={today} onOeffnen={() => onOpenView("kalender")} />}
