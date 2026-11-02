@@ -1,7 +1,7 @@
 // Erzeugt public/datenschutz.html und public/impressum.html aus
 // src/utils/rechtstexte.js (eine Quelle für App und öffentliche Seiten).
 // Läuft automatisch vor jedem Build (npm "prebuild"). Die öffentliche
-// Datenschutz-URL für App Store Connect: https://akaapp.vercel.app/datenschutz.html
+// Datenschutz-URL für App Store Connect: https://akaapp.vercel.app/datenschutz
 import fs from "node:fs";
 import { DATENSCHUTZ, IMPRESSUM } from "../src/utils/rechtstexte.js";
 
@@ -44,6 +44,19 @@ ${inhalt}
 `;
 }
 
-fs.writeFileSync(new URL("../public/datenschutz.html", import.meta.url), seite("Datenschutzerklärung", DATENSCHUTZ, { href: "impressum.html", text: "Impressum" }));
-fs.writeFileSync(new URL("../public/impressum.html", import.meta.url), seite("Impressum", IMPRESSUM, { href: "datenschutz.html", text: "Datenschutzerklärung" }));
-console.log("Rechtstexte: public/datenschutz.html + public/impressum.html erzeugt");
+// Kurze Adressen /datenschutz und /impressum (02.11., App-Store-Vorbereitung):
+// als Ordner mit index.html, damit sie auf Vercel und Netlify ohne
+// Umleitungsregeln funktionieren. Die .html-Adressen bleiben für alte Links.
+const ds = seite("Datenschutzerklärung", DATENSCHUTZ, { href: "/impressum", text: "Impressum" });
+const imp = seite("Impressum", IMPRESSUM, { href: "/datenschutz", text: "Datenschutzerklärung" });
+for (const [pfad, html] of [
+  ["../public/datenschutz.html", ds],
+  ["../public/impressum.html", imp],
+  ["../public/datenschutz/index.html", ds],
+  ["../public/impressum/index.html", imp],
+]) {
+  const ziel = new URL(pfad, import.meta.url);
+  fs.mkdirSync(new URL(".", ziel), { recursive: true });
+  fs.writeFileSync(ziel, html);
+}
+console.log("Rechtstexte: /datenschutz und /impressum (+ .html) erzeugt");
