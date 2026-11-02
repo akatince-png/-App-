@@ -279,6 +279,14 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 📱 App Store: Phase 1 Store-Tauglichkeit (02.11.2026)
+
+Auftrag der Nutzerin: AKA in den Apple App Store, ohne Mac (iPad Pro + Developer-Account), Weg Capacitor + Codemagic + TestFlight, 4 Phasen je eigener PR; Web-Version muss unverändert laufen; keine Secrets ins (öffentliche) Repo. **Store-Name „AKA“, Bundle-ID `de.akaince.aka`** (Nutzerin, 02.11.). Ihre Nachricht brach bei Phase 2 ab – Phasen 2–4 erneut erfragen.
+- Konto löschen gab es schon (28.09.): Mehr → Datenschutz & Konto, Bestätigung durch Tippen von „LÖSCHEN“, Edge Function `konto-loeschen` (live, v1) löscht Dateien in `photos`/`profilbilder`/`nachweise` und den Auth-User. Geprüft 02.11.: alle Fremdschlüssel auf `auth.users`/`profiles` sind CASCADE oder SET NULL, keine `user_id`/`proband_id`-Spalte ohne Fremdschlüssel; `uebungsbilder` ist ein Admin-Bucket ohne Nutzerdaten.
+- „Ende-zu-Ende“ stand nirgends mehr; „Verschlüsselte Übertragung und Speicherung“ → „Verschlüsselte Übertragung (TLS)“, „Server in der EU“ → „Datenbank-Server in der EU (Frankfurt)“ (KI-Dienste laufen teils außerhalb, steht in der Datenschutzerklärung). DE/EN/TR.
+- Öffentliche Seiten jetzt auch unter `/datenschutz` und `/impressum` (Ordner mit index.html, erzeugt von `scripts/rechtstexte-html.mjs`, funktioniert auf Vercel und Netlify ohne Regeln); `.html`-Adressen bleiben. URL für App Store Connect: https://akaapp.vercel.app/datenschutz. Links im Mehr-Tab und auf dem Login-Screen bestanden schon.
+- Text-Prüfung Heil-/Wirkversprechen: Liste an die Nutzerin (Gehirn-Erklärtexte `utils/gehirn.js`, „jeder Haken lädt dein Gehirn auf“, KI-Systemprompt ohne ausdrückliche Regel gegen Heil-/Wirkversprechen). Noch nichts geändert, wartet auf ihre Entscheidung.
+
 ## ↺ Routine fortsetzen statt neu anfangen (28.10.2026)
 
 Nutzerin: Morgenroutine gestartet, nebenbei anderes gemacht, App geschlossen – beim Öffnen fing die Routine wieder bei Schritt 1 an. Außerdem wirkte Abhaken auf der Startseite nicht auf die Routine. DB-Prüfung: heute nur **ein** Durchlauf gespeichert (06:00–07:30), keine Dreifach-Einträge (der Durchlauf wird nur beim Abschluss gespeichert, `durchlaufSpeichern` lässt je Tag nur einen zu).
