@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { aufMorgen, inDenPool } from "../utils/tagesabschluss";
+import { aufTermin, inDenPool } from "../utils/tagesabschluss";
+import { addDays, toLocalISODate } from "../utils/dates";
+import TerminWahl from "./TerminWahl";
 import { aufgabeZeitText, uhr } from "../utils/termin";
 
 // Aufgabe aus der Matrix im Tagesplan (26.10., Nutzerin: „ganz normal
@@ -21,6 +23,7 @@ export default function AufgabeRueckmeldung({ aufgabe: a, datum, onFertig }) {
   const [start, setStart] = useState(uhr(a.gestartetAm) || a.uhrzeit || "");
   const [ende, setEnde] = useState(uhr(a.erledigtAm) || jetztUhr());
   const [fehler, setFehler] = useState(null);
+  const [verschieben, setVerschieben] = useState(null);
   const speichern = async (neu) => {
     setFehler(null);
     const r = await matrixAufgabeSpeichern?.(neu);
@@ -103,16 +106,27 @@ export default function AufgabeRueckmeldung({ aufgabe: a, datum, onFertig }) {
         <div style={{ display: "grid", gap: 8 }}>
           <div style={{ fontSize: 13, fontWeight: 800 }}>Was passiert damit?</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button type="button" onClick={() => speichern({ ...aufMorgen(a, new Date(`${datum}T12:00:00`)), gestartetAm: null })} style={knopf("var(--mp-accent)")}>
+            <button type="button" aria-pressed={verschieben === "morgen"} onClick={() => setVerschieben("morgen")} style={knopf("var(--mp-accent)")}>
               → Morgen
             </button>
-            <button type="button" onClick={() => speichern({ ...inDenPool(a), gestartetAm: null })} style={knopf("#E0A21B")}>
+            <button type="button" aria-pressed={verschieben === "spaeter"} onClick={() => setVerschieben("spaeter")} style={knopf("#E0A21B")}>
               ⏸ Später
             </button>
             <button type="button" data-aufgabe-ausgefallen onClick={() => speichern({ ...a, ausgefallen: true, erledigtAm: new Date().toISOString(), mitAm: a.mitAm })} style={knopf("#8A90A6")}>
               ✕ Entfällt ganz
             </button>
           </div>
+          {verschieben && (
+            <TerminWahl
+              key={verschieben}
+              datum={toLocalISODate(addDays(new Date(`${datum}T12:00:00`), verschieben === "morgen" ? 1 : 2))}
+              mitDatum={verschieben === "spaeter"}
+              uhrzeit={a.uhrzeit || ""}
+              onSpeichern={({ datum: tag, uhrzeit }) => speichern({ ...aufTermin(a, tag, uhrzeit), gestartetAm: null })}
+              onOhneTermin={verschieben === "spaeter" ? () => speichern({ ...inDenPool(a), gestartetAm: null }) : null}
+              onAbbrechen={() => setVerschieben(null)}
+            />
+          )}
           <button type="button" onClick={() => setModus(null)} style={{ border: "none", background: "transparent", padding: 0, fontSize: 12.5, fontWeight: 700, color: "var(--mp-text-muted)", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
             ‹ Zurück
           </button>

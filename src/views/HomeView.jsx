@@ -1062,6 +1062,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         onAbbrechen={() => setAblaufRoutine(null)}
         routineDurchlaufSpeichern={routineDurchlaufSpeichern}
         onSchrittFertig={verknuepfung.schrittErledigt}
+        verknuepfteFuer={verknuepfung.itemsFuer}
       />
     );
   }

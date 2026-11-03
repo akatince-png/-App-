@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { addDays } from "../utils/dates";
+import { addDays, toLocalISODate } from "../utils/dates";
 import { QUADRANT, quadrantVon } from "../utils/matrix";
-import { abschlussTag, alsGeschafft, aufMorgen, heuteFaellig, heuteGeschafft, inDenPool } from "../utils/tagesabschluss";
+import { abschlussTag, alsGeschafft, aufTermin, heuteFaellig, heuteGeschafft, inDenPool } from "../utils/tagesabschluss";
+import TerminWahl from "./TerminWahl";
 import MitWahl from "./MitWahl";
 
 // Tagesabschluss in der Abendroutine (25.10., Nutzerin): zuerst „Was hast du
@@ -18,6 +19,8 @@ export default function TagesRueckblick() {
   const offen = heuteFaellig(matrixAufgaben, heute);
   const geschafft = heuteGeschafft(matrixAufgaben, heute);
   const [planen, setPlanen] = useState(false);
+  // Welche Aufgabe gerade „Morgen“/„Später“ mit Uhrzeit bekommt (03.11.).
+  const [wahl, setWahl] = useState(null);
   const speichern = (a) => matrixAufgabeSpeichern?.(a);
 
   if (planen || (!offen.length && !geschafft.length)) {
@@ -55,13 +58,27 @@ export default function TagesRueckblick() {
               <button type="button" onClick={() => speichern(alsGeschafft(a))} style={knopf("#2E9C6E")}>
                 ✓ Geschafft
               </button>
-              <button type="button" onClick={() => speichern(aufMorgen(a, heute))} style={knopf("var(--mp-accent)")}>
+              <button type="button" aria-pressed={wahl?.id === a.id && wahl.art === "morgen"} onClick={() => setWahl({ id: a.id, art: "morgen" })} style={knopf("var(--mp-accent)")}>
                 → Morgen
               </button>
-              <button type="button" onClick={() => speichern(inDenPool(a))} style={knopf("", false)}>
+              <button type="button" aria-pressed={wahl?.id === a.id && wahl.art === "spaeter"} onClick={() => setWahl({ id: a.id, art: "spaeter" })} style={knopf("", false)}>
                 ⏸ Später
               </button>
             </div>
+            {wahl?.id === a.id && (
+              <TerminWahl
+                key={wahl.art}
+                datum={toLocalISODate(addDays(heute, wahl.art === "morgen" ? 1 : 2))}
+                mitDatum={wahl.art === "spaeter"}
+                uhrzeit={a.uhrzeit || ""}
+                onSpeichern={({ datum, uhrzeit }) => {
+                  speichern(aufTermin(a, datum, uhrzeit));
+                  setWahl(null);
+                }}
+                onOhneTermin={wahl.art === "spaeter" ? () => (speichern(inDenPool(a)), setWahl(null)) : null}
+                onAbbrechen={() => setWahl(null)}
+              />
+            )}
           </div>
         );
       })}

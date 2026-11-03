@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import PlastikSymbol from "./PlastikSymbol";
 import { plastikFarbe } from "./plastik";
 import { KATEGORIE_META } from "../utils/dayItems";
-import { zeitText } from "../utils/naechsteSchritte";
+import { nochNichtDran, zeitText } from "../utils/naechsteSchritte";
 import { toLocalISODate } from "../utils/dates";
 import GetraenkPortion from "./GetraenkPortion";
 import bildSupplemente from "../assets/fenster/supplemente.jpg";
@@ -86,6 +86,18 @@ export default function NaechsterSchrittFenster({ schritte = [], direkt, onErled
   const meta = KATEGORIE_META[item.kategorie] || KATEGORIE_META.gewohnheit;
   const farbe = item.farbe?.dot || meta.dot;
   const kannDirekt = direkt(item);
+  // Noch nicht dran (03.11.): nur ankündigen – „Dein nächster Schritt heute“ –
+  // und verabschieden, kein „Jetzt einnehmen“.
+  if (nochNichtDran(item)) {
+    return (
+      <Huelle farbe={farbe} bild={BILD[item.kategorie]} item={item}>
+        <div data-naechster-vorschau style={{ fontSize: 12.5, fontWeight: 900, letterSpacing: 0.6, color: farbe }}>DEIN NÄCHSTER SCHRITT HEUTE</div>
+        <div style={{ fontSize: 26, fontWeight: 900, margin: "4px 0 2px", lineHeight: 1.15 }}>{item.name}</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#4A5570", marginBottom: 16 }}>{zeitText(item)}{teile ? ` · ${teile.map((t) => t.name).join(", ")}` : item.detail ? ` · ${item.detail}` : ""}</div>
+        <Knopf farbe={farbe} onClick={onSpaeter} data="bis-spaeter">Bis später 👋</Knopf>
+      </Huelle>
+    );
+  }
   return (
     <Huelle farbe={farbe} bild={BILD[item.kategorie]} item={item}>
       <div style={{ fontSize: 12.5, fontWeight: 900, letterSpacing: 0.6, color: farbe }}>ALS NÄCHSTES · {zeitText(item).toUpperCase()}</div>

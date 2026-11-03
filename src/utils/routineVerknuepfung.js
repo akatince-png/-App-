@@ -25,9 +25,18 @@ export function verknuepfteItems(schritt, items = []) {
     if (/fr(ü|ue)hst(ü|ue)ck/.test(n) && it.kategorie === "mahlzeit" && (/fr(ü|ue)hst/.test(name) || zeit)) return true;
     if (/dosette|supplement/.test(n) && it.kategorie === "supplement" && zeit && !getraenk) return true;
     if (/medikament|medikation|tablette/.test(n) && it.kategorie === "hormon" && zeit) return true;
+    // Injektionen (03.11., Nutzerin: „HGH ist nicht mit drin“): „spritzen/Injektion“
+    // ↔ Injektionen der Tageszeit; außerdem das erste Wort des Namens (z. B. „HGH“).
+    if (/spritz|injektion/.test(n) && it.kategorie === "hormon" && zeit && /injektion|spritz|subkutan/i.test(`${it.raw?.einnahmeart || ""} ${it.raw?.name || it.name || ""}`)) return true;
+    const erstes = name.split(" ")[0];
+    if (zeit && erstes.length >= 3 && ` ${n} `.includes(` ${erstes} `)) return true;
     return name.length >= 4 && ` ${n} `.includes(` ${name} `);
   });
 }
+
+// Schritte, die nur an manchen Tagen dran sind (Spritztag): Gibt es heute
+// nichts dazu, überspringt der Ablauf sie.
+export const nurWennFaellig = (schritt) => /spritz|injektion/.test(norm(schritt?.name));
 
 // Schritte, die durch die gerade abgehakten Punkte komplett erledigt sind:
 // alle ihre verknüpften Punkte sind jetzt erledigt.

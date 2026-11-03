@@ -47,5 +47,8 @@ export function useRoutineVerknuepfung(items, tagStr) {
     [items, tagStr, routineSchritte, routineDurchlaeufe, routineSchrittErledigt, routineSchrittErledigtUmschalten]
   );
 
-  return { schrittErledigt, itemsErledigt };
+  // Welche Tagespunkte gehören zu einem Schritt (Anzeige im Ablauf, Spritztag).
+  const itemsFuer = useCallback((schritt) => verknuepfteItems(schritt, items), [items]);
+
+  return { schrittErledigt, itemsErledigt, itemsFuer };
 }
