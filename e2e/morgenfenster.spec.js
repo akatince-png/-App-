@@ -63,11 +63,11 @@ test("Als Nächstes: nach der Morgenroutine kommt die nächste Tätigkeit", asyn
   }
   await page.getByRole("button", { name: "Los in den Tag" }).click();
   const fenster = page.locator("[data-naechster-schritt]");
-  await expect(fenster).toContainText("ALS NÄCHSTES");
-  // Im Harness speichert Abhaken nichts (Mock) – hier nur: Knopf da, Liste „Danach“ da.
-  await expect(fenster.locator('[data-naechster-knopf="erledigt"]')).toBeVisible();
-  await expect(fenster.locator("[data-naechster-danach]")).toContainText("Wäsche machen");
-  await fenster.getByRole("button", { name: "Später" }).click();
+  // 03.11. (Nutzerin): Was erst später dran ist (z. B. Mittagssupplemente),
+  // wird nur angekündigt – kein „Erledigt“, nur „Bis später“.
+  await expect(fenster).toContainText("DEIN NÄCHSTER SCHRITT HEUTE");
+  await expect(fenster.locator('[data-naechster-knopf="erledigt"]')).toHaveCount(0);
+  await fenster.locator('[data-naechster-knopf="bis-spaeter"]').click();
   await expect(fenster).toHaveCount(0);
 });
 

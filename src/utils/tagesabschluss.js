@@ -34,6 +34,8 @@ export function heuteGeschafft(aufgaben = [], heute = new Date()) {
 
 export const alsGeschafft = (a, jetzt = new Date()) => ({ ...a, erledigtAm: jetzt.toISOString() });
 export const aufMorgen = (a, heute = new Date()) => ({ ...a, geplantAm: toLocalISODate(addDays(heute, 1)), mitAm: null, verschoben: (a.verschoben || 0) + 1 });
+// Auf einen festen Termin legen (03.11.): Tag + Uhrzeit, erscheint dann im Kalender.
+export const aufTermin = (a, tagIso, uhrzeit) => ({ ...a, geplantAm: tagIso, uhrzeit: uhrzeit || null, mitAm: null, verschoben: (a.verschoben || 0) + 1 });
 export const inDenPool = (a) => ({ ...a, geplantAm: null, uhrzeit: null, mitAm: null, verschoben: (a.verschoben || 0) + 1 });
 
 const projektAktiv = (p, tag) => (p.sessionTage || []).length > 0 && (!p.deadline || p.deadline >= tag) && (!p.start || p.start <= tag);

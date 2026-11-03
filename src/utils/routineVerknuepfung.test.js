@@ -28,3 +28,26 @@ describe("Routine ↔ Tagespunkte (28.10.)", () => {
     expect(verknuepfteItems({ routine: "morgen", name: "🚿 Duschen & Anziehen" }, ITEMS)).toEqual([]);
   });
 });
+
+describe("Injektionen in den Routinen (03.11.)", () => {
+  const HORMONE = [
+    { key: "h1", kategorie: "hormon", name: "HGH (Wachstumshormon), subkutan", raw: { name: "HGH (Wachstumshormon), subkutan", einnahmeart: "Injektion" }, uhrzeit: "22:25", done: false },
+    { key: "h2", kategorie: "hormon", name: "Testosteron (250 mg/ml), subkutan", raw: { name: "Testosteron (250 mg/ml), subkutan", einnahmeart: "Injektion" }, uhrzeit: "06:35", done: false },
+    { key: "s5", kategorie: "supplement", name: "NAC (mittags)", raw: { id: "n", name: "NAC (mittags)" }, uhrzeit: "13:00", done: false },
+    { key: "s6", kategorie: "supplement", name: "NAC (abends)", raw: { id: "n2", name: "NAC (abends)" }, uhrzeit: "21:55", done: false },
+  ];
+  it("verknüpft „HGH spritzen“ abends mit der HGH-Gabe", () => {
+    expect(verknuepfteItems({ routine: "abend", name: "💉 HGH spritzen (2 I.E.)" }, HORMONE).map((x) => x.key)).toEqual(["h1"]);
+  });
+  it("verknüpft den Spritztag morgens mit den Morgen-Injektionen", () => {
+    expect(verknuepfteItems({ routine: "morgen", name: "💉 Spritztag: Testosteron + Retatrutid" }, HORMONE).map((x) => x.key)).toEqual(["h2"]);
+  });
+  it("nimmt abends nur die Abend-Supplemente, nicht die vom Mittag", () => {
+    expect(verknuepfteItems({ routine: "abend", name: "💊 Dosette Abend: Magnesium + NAC" }, HORMONE).map((x) => x.key)).toEqual(["s6"]);
+  });
+  it("erkennt Spritztag-Schritte als nur-wenn-fällig", async () => {
+    const { nurWennFaellig } = await import("./routineVerknuepfung");
+    expect(nurWennFaellig({ name: "💉 Spritztag: Testosteron + Retatrutid" })).toBe(true);
+    expect(nurWennFaellig({ name: "🚿 Duschen & Anziehen" })).toBe(false);
+  });
+});

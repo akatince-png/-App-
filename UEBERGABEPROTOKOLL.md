@@ -279,6 +279,14 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 💉 Routinen mit Injektionen, Termine mit Uhrzeit, „Als Nächstes“ nur wenn dran (03.11.2026)
+
+Nutzerin: HGH fehlte in der Abendroutine; Supplemente/Injektionen sollen in Morgen- und Abendroutine drin sein. Tagesabschluss: beim Verschieben fragen „auf wann“ (Datum + Uhrzeit, dann im Kalender), bei „Morgen“ und in der Planung Uhrzeiten festlegen. Nach der Morgenroutine nicht schon die Mittagssupplemente zum Einnehmen anbieten.
+- Ihre Daten (Sicherung `sicherung.routine_schritte_20261103`): Abend neuer Schritt „💉 HGH spritzen (2 I.E.)“ nach Bad & Bett (dort „HGH spritzen“ raus); Morgen neuer Schritt „💉 Spritztag: Testosteron + Retatrutid“ nach Duschen (dort Spritztag-Hinweis raus).
+- `utils/routineVerknuepfung.js`: „spritzen/Injektion“ ↔ Injektionen der Tageszeit (auch „subkutan“ im Namen), erstes Wort des Namens (HGH, Testosteron, NAC) nur zur passenden Tageszeit; `nurWennFaellig` – Spritztag-Schritte fallen im Ablauf weg, wenn heute keine Injektion fällig ist. Ablauf zeigt je Schritt „DAZU GEHÖRT – WIRD MIT ABGEHAKT“ (`verknuepfteFuer` aus `useRoutineVerknuepfung.itemsFuer`).
+- `ui/TerminWahl.jsx` (neu): „→ Morgen“ fragt die Uhrzeit, „Später“ Datum + Uhrzeit (oder „Ohne Termin in den Pool“); `aufTermin` setzt `geplantAm` + `uhrzeit` → erscheint im Kalender. Eingebaut in `TagesRueckblick` und `AufgabeRueckmeldung`. `MitWahl`: jede gewählte MIT/freiwillige Aufgabe bekommt „🕐 Uhrzeit festlegen“; MIT abwählen nimmt den Termin des Tages mit weg.
+- `NaechsterSchrittFenster`: Punkt mehr als 30 Min. hin (`nochNichtDran`) → nur „DEIN NÄCHSTER SCHRITT HEUTE · um 13:00 Uhr“ + „Bis später 👋“.
+
 ## 📱 App Store: Phase 1 Store-Tauglichkeit (02.11.2026)
 
 Auftrag der Nutzerin: AKA in den Apple App Store, ohne Mac (iPad Pro + Developer-Account), Weg Capacitor + Codemagic + TestFlight, 4 Phasen je eigener PR; Web-Version muss unverändert laufen; keine Secrets ins (öffentliche) Repo. **Store-Name „AKA“, Bundle-ID `de.akaince.aka`** (Nutzerin, 02.11.). Ihre Nachricht brach bei Phase 2 ab – Phasen 2–4 erneut erfragen.

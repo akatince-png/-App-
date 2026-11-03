@@ -28,3 +28,11 @@ export function zeitText(item, jetzt = new Date()) {
   const jetztMin = jetzt.getHours() * 60 + jetzt.getMinutes();
   return m <= jetztMin + 5 ? "jetzt dran" : `um ${item.uhrzeit.slice(0, 5)} Uhr`;
 }
+
+/** Noch nicht dran (03.11., Nutzerin: nach der Morgenroutine nicht schon die
+ *  Mittagssupplemente zum Einnehmen anbieten): mehr als 30 Min. hin. */
+export function nochNichtDran(item, jetzt = new Date()) {
+  const m = minuten(item?.uhrzeit);
+  if (m === null) return false;
+  return m > jetzt.getHours() * 60 + jetzt.getMinutes() + 30;
+}

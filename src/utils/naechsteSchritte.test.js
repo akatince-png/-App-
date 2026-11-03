@@ -20,3 +20,13 @@ describe("naechsteSchritte", () => {
     expect(zeitText({ uhrzeit: "" }, jetzt)).toBe("heute");
   });
 });
+
+describe("nochNichtDran (03.11.)", () => {
+  it("Mittagssupplemente um 13 Uhr sind um 7:40 noch nicht dran, um 12:45 schon", async () => {
+    const { nochNichtDran } = await import("./naechsteSchritte");
+    const mittag = { uhrzeit: "13:00" };
+    expect(nochNichtDran(mittag, new Date(2026, 10, 3, 7, 40))).toBe(true);
+    expect(nochNichtDran(mittag, new Date(2026, 10, 3, 12, 45))).toBe(false);
+    expect(nochNichtDran({ uhrzeit: null }, new Date(2026, 10, 3, 7, 40))).toBe(false);
+  });
+});

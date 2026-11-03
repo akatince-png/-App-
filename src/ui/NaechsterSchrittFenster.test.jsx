@@ -18,3 +18,28 @@ describe("NaechsterSchrittFenster – Bündel", () => {
     expect(onErledigt.mock.calls[0][1].map((t) => t.key)).toEqual(["a", "c"]);
   });
 });
+
+// 03.11. (Nutzerin): Nach der Morgenroutine nicht schon die Mittagssupplemente
+// zum Einnehmen anbieten – nur ankündigen und „Bis später“.
+describe("NaechsterSchrittFenster – noch nicht dran", () => {
+  it("kündigt einen späteren Punkt nur an", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 3, 7, 40));
+    const onSpaeter = vi.fn();
+    const onErledigt = vi.fn();
+    render(<NaechsterSchrittFenster schritte={[{ key: "m", kategorie: "supplement", name: "Mittagssupplemente", uhrzeit: "13:00" }]} direkt={() => true} onErledigt={onErledigt} onOeffnen={() => {}} onSpaeter={onSpaeter} />);
+    expect(screen.getByText("DEIN NÄCHSTER SCHRITT HEUTE")).toBeTruthy();
+    expect(screen.queryByText("✓ Erledigt")).toBeNull();
+    fireEvent.click(screen.getByText("Bis später 👋"));
+    expect(onSpaeter).toHaveBeenCalled();
+    expect(onErledigt).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+  it("bietet Abhaken an, wenn es gleich dran ist", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 3, 12, 50));
+    render(<NaechsterSchrittFenster schritte={[{ key: "m", kategorie: "supplement", name: "Mittagssupplemente", uhrzeit: "13:00" }]} direkt={() => true} onErledigt={() => {}} onOeffnen={() => {}} onSpaeter={() => {}} />);
+    expect(screen.getByText("✓ Erledigt")).toBeTruthy();
+    vi.useRealTimers();
+  });
+});

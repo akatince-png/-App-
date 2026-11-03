@@ -20,6 +20,7 @@ import { atemFuerRoutineSchritt, bibliotheksUebung } from "../utils/atemBiblioth
 import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 import { istLichtSchritt, nochZuDunkel, sonnenaufgangUhr } from "../utils/sonne";
 import WetterTipp from "./WetterTipp";
+import { nurWennFaellig } from "../utils/routineVerknuepfung";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -60,7 +61,9 @@ function fmtDauer(sekunden) {
 // "Schritt fertig" geht jederzeit, auch vor Ablauf des Timers (z. B. wenn
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
-export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern, onSchrittFertig }) {
+export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern, onSchrittFertig, verknuepfteFuer }) {
+  // Spritztag-Schritte (03.11.): nur an Tagen, an denen die Injektion fällig ist.
+  const [alleSchritte] = useState(() => (verknuepfteFuer ? rohSchritte.filter((sc) => !nurWennFaellig(sc) || verknuepfteFuer({ ...sc, routine }).length > 0) : rohSchritte));
   useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
   const { spotifyVerbunden, spotifyAnlaesse, spotifyAbspielen, spotifyPausieren, routineEinstellungen, belohnungPufferMin, tagebuchEintraege, kernStand, atemuebungAbschliessen, aenderungVermerken, routineSchrittErledigt = {}, routineSchrittMerken } = useAppData();
   const heute = toLocalISODate(new Date());
@@ -410,6 +413,7 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
       ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>
+        <DazuGehoert items={verknuepfteFuer?.({ ...aktuell, routine }) || []} />
         <div aria-label="Uhr Schritt" data-schritt-uhr={restSek > 0 ? "laeuft" : "drueber"} style={{ fontSize: 44, fontWeight: 900, fontVariantNumeric: "tabular-nums", color: restSek > 0 ? "inherit" : "color-mix(in srgb, #D9822B var(--mp-schrift), var(--mp-schrift-hell))" }}>
           {restSek > 0 ? fmtDauer(restSek) : `+${fmtDauer(-restSek)}`}
           <div style={{ fontSize: 12.5, fontWeight: 700, color: textMuted }}>
@@ -437,5 +441,22 @@ export default function RoutineAblauf({ routine, schritte: alleSchritte, onAbsch
         </button>
       </div>
     </Shell>
+  );
+}
+
+// Was zu diesem Schritt gehört (03.11., Nutzerin: Supplemente und Injektionen
+// sollen in den Routinen mit drin sein): wird mit „Schritt fertig“ abgehakt.
+function DazuGehoert({ items }) {
+  if (!items.length) return null;
+  return (
+    <div data-schritt-dazu style={{ textAlign: "left", margin: "-6px auto 14px", maxWidth: 360, padding: "8px 12px", borderRadius: 14, background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))" }}>
+      <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 4 }}>DAZU GEHÖRT – WIRD MIT ABGEHAKT</div>
+      {items.map((it) => (
+        <div key={it.key} style={{ display: "flex", gap: 8, fontSize: 13.5, fontWeight: 700, padding: "2px 0", opacity: it.done ? 0.6 : 1 }}>
+          <span aria-hidden="true">{it.done ? "✅" : it.kategorie === "hormon" ? "💉" : it.kategorie === "mahlzeit" ? "🍽️" : "💊"}</span>
+          <span style={{ flex: 1, minWidth: 0 }}>{it.raw?.name || it.name}</span>
+        </div>
+      ))}
+    </div>
   );
 }

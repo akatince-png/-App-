@@ -38,7 +38,8 @@ export default function MitWahl({ datum, titel, mitFreiwillig = true }) {
 
   const mitUmschalten = async (k) => {
     setHinweis(null);
-    if (k.stand === "mit") return Promise.all(passende(k).filter((a) => a.mitAm === tag).map((a) => speichern({ ...a, mitAm: null })));
+    // Abwählen nimmt auch den Termin des Tages weg, sonst stünde sie als „freiwillig“ da.
+    if (k.stand === "mit") return Promise.all(passende(k).filter((a) => a.mitAm === tag).map((a) => speichern({ ...a, mitAm: null, ...(a.geplantAm === tag ? { geplantAm: null, uhrzeit: null } : {}) })));
     if (anzahlMits >= MIT_GRENZE) return setHinweis(`Schon ${MIT_GRENZE} MITs – erst eine abwählen. Weniger ist mehr.`);
     const a = passende(k)[0] || aufgabeFuerTag(k, datum);
     await speichern({ ...a, mitAm: tag });
@@ -70,6 +71,7 @@ export default function MitWahl({ datum, titel, mitFreiwillig = true }) {
           {k.projektId ? "🗂️ " : ""}
           {k.titel}
           {fw && <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--mp-text-muted)" }}>freiwillig – kein Muss</span>}
+          {(an || fw) && passende(k)[0] && <ZeitFeld key={passende(k)[0].id} aufgabe={passende(k)[0]} tag={tag} speichern={speichern} />}
         </span>
         <Prioritaet quadrant={k.quadrant} />
         {mitFreiwillig && !an && (
@@ -114,5 +116,22 @@ export default function MitWahl({ datum, titel, mitFreiwillig = true }) {
       )}
       {hinweis && <div role="status" style={{ fontSize: 12.5, color: "color-mix(in srgb, #8A5A00 var(--mp-schrift), var(--mp-schrift-hell))", marginTop: 6 }}>{hinweis}</div>}
     </div>
+  );
+}
+
+// Uhrzeit je geplanter Aufgabe (03.11., Nutzerin: „Zeiten angeben, wann ich
+// zu welchem Zeitpunkt das Ganze machen möchte“). Mit Uhrzeit steht die
+// Aufgabe auch im Kalender.
+function ZeitFeld({ aufgabe: a, tag, speichern }) {
+  const [zeit, setZeit] = useState(a.uhrzeit || "");
+  const sichern = (wert) => {
+    setZeit(wert);
+    if (wert === "" || /^\d\d:\d\d$/.test(wert)) speichern({ ...a, geplantAm: tag, uhrzeit: wert || null });
+  };
+  return (
+    <label data-mit-uhrzeit style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, fontSize: 12, fontWeight: 700, color: zeit ? "var(--mp-text)" : "color-mix(in srgb, #8A5A00 var(--mp-schrift), var(--mp-schrift-hell))" }}>
+      🕐 {zeit ? "um" : "Uhrzeit festlegen:"}
+      <input type="time" value={zeit} onChange={(e) => sichern(e.target.value)} aria-label={`Uhrzeit für ${a.titel}`} style={{ border: "1.5px solid var(--mp-rand)", borderRadius: 9, padding: "4px 7px", fontSize: 13.5, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" }} />
+    </label>
   );
 }
