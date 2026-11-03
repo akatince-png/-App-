@@ -22,7 +22,9 @@ initErrorMonitoring()
 // Registrierung ist Voraussetzung für Push-Benachrichtigungen (auch wenn die
 // App gerade geschlossen ist) — schadet nicht, wenn der Browser das nicht
 // unterstützt oder die App gerade nicht als installierte PWA läuft.
-if ('serviceWorker' in navigator) {
+// In der iPhone-App (Capacitor, 03.11.) kein Service Worker: Push und
+// Erinnerungen laufen dort nativ über Apple (data/nativePush.js).
+if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });

@@ -5,7 +5,7 @@ Der komplette App-Code bleibt derselbe. Capacitor verpackt ihn in eine echte iPh
 
 ## Was schon erledigt ist (ohne Mac)
 - `capacitor.config.json`:
-  - App-ID `de.aka.app`: bitte prüfen, sie muss zur App-ID im Apple-Developer-Konto passen, bei Bedarf hier und in Xcode ändern.
+  - App-ID (Bundle-ID) `de.akaince.aka` (Nutzerin, 02.11.), im Apple-Developer-Konto genauso anlegen.
   - Name „AKA“, Hintergrund Nachtblau.
 - iOS-Projekt `ios/App` (Swift Package Manager, kein CocoaPods nötig).
 - Datenschutz-Texte für die Berechtigungen in `ios/App/App/Info.plist`: Kamera, Mikrofon, Spracherkennung, Fotos.
@@ -32,7 +32,7 @@ Der Code ist fertig (Stand 27.09.): Die iPhone-App meldet sich bei Apple an, die
    - `APNS_KEY_ID` = die Key ID
    - `APNS_TEAM_ID` = die Team ID
    - `APNS_PRIVATE_KEY` = den kompletten Inhalt der .p8-Datei (mit einem Texteditor öffnen, alles kopieren, inklusive der BEGIN/END-Zeilen)
-   - Nur falls die App-ID nicht `de.aka.app` ist: `APNS_BUNDLE_ID` = eure App-ID.
+   - Nur falls die App-ID nicht `de.akaince.aka` ist: `APNS_BUNDLE_ID` = eure App-ID.
 6. Auf dem iPhone in der App: Mehr → Erinnerungen aktivieren → „Test senden“.
 
 Was passiert technisch: Das Gerät landet in `push_subscriptions` mit `endpoint = "apns:<Geräteschlüssel>"`. `send-push`, `send-due-reminders` und `send-team-push` nutzen gemeinsam `supabase/functions/_shared/push.ts`: Web-Geräte über Web-Push, iPhones über Apple. Testläufe aus Xcode und echte App-Store-Installationen werden automatisch unterschieden.
@@ -58,7 +58,7 @@ Statt die App öffentlich in den App Store zu stellen, bekommen die Coachees sie
 
 **Einmalig vorbereiten**
 1. Apple-Developer-Konto (99 €/Jahr) und ein Mac mit Xcode.
-2. App Store Connect → **Meine Apps → „+“ → Neue App**: Plattform iOS, Name „AKA“, Sprache Deutsch, Bundle-ID `de.aka.app` (muss zur App-ID im Developer-Konto passen), SKU z. B. `aka-001`.
+2. App Store Connect → **Meine Apps → „+“ → Neue App**: Plattform iOS, Name „AKA“, Sprache Deutsch, Bundle-ID `de.akaince.aka` (muss zur App-ID im Developer-Konto passen), SKU z. B. `aka-001`.
 3. Am Mac (siehe „Was am Mac zu tun ist“ oben): `npm install`, `npm run ios:sync`, `npm run ios:open`, in Xcode das Team wählen.
 
 **Eine Version hochladen**

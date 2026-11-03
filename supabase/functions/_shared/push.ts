@@ -6,7 +6,7 @@
 // Für Apple braucht es diese Supabase-Secrets (setzt die Nutzerin selbst,
 // Anleitung in docs/APP-STORE.md – NIE im Code oder Chat):
 //   APNS_KEY_ID, APNS_TEAM_ID, APNS_PRIVATE_KEY (Inhalt der .p8-Datei),
-//   optional APNS_BUNDLE_ID (Standard de.aka.app) und
+//   optional APNS_BUNDLE_ID (Standard de.akaince.aka) und
 //   APNS_UMGEBUNG ("production" Standard, "sandbox" für Xcode-Testläufe).
 import webpush from "npm:web-push@3.6.7";
 
@@ -53,7 +53,7 @@ async function apnsSenden(host: string, jwt: string, geraet: string, inhalt: Pus
     method: "POST",
     headers: {
       authorization: `bearer ${jwt}`,
-      "apns-topic": Deno.env.get("APNS_BUNDLE_ID") || "de.aka.app",
+      "apns-topic": Deno.env.get("APNS_BUNDLE_ID") || "de.akaince.aka",
       "apns-push-type": "alert",
       "apns-priority": "10",
       "content-type": "application/json",
