@@ -18,19 +18,25 @@ export function useRoutineVerknuepfung(items, tagStr) {
     aenderungVermerken,
   } = useAppData();
 
+  // Einen Tagespunkt umschalten (03.11., Nutzerin: in der Routine einzeln abhaken).
+  const itemUmschalten = useCallback(
+    (it, schrittName) => {
+      const zeit = it.originalUhrzeit ?? it.uhrzeit;
+      if (!it.done && it.raw?.name) aenderungVermerken?.({ kategorie: it.kategorie, itemName: it.raw.name, aktion: "erledigt", detail: schrittName ? `in „${schrittName}“` : "" });
+      if (it.kategorie === "supplement" && it.raw?.id) toggleSupplementErledigt?.(tagStr, it.raw.id, zeit);
+      else if (it.kategorie === "hormon" && it.raw?.name) toggleHormonErledigt?.(tagStr, it.raw.name, zeit);
+      else if (it.kategorie === "mahlzeit" && it.refId) toggleMahlzeitErledigt?.(tagStr, it.refId, it.logZeit ?? zeit);
+      else if (it.kategorie === "gewohnheit" && it.raw?.id) toggleGewohnheitErledigt?.(tagStr, it.raw.id);
+    },
+    [tagStr, aenderungVermerken, toggleSupplementErledigt, toggleHormonErledigt, toggleMahlzeitErledigt, toggleGewohnheitErledigt]
+  );
+
   // Schritt fertig (geführter Ablauf oder Checkliste) → verknüpfte offene Punkte abhaken.
   const schrittErledigt = useCallback(
     (schritt) => {
-      for (const it of verknuepfteItems(schritt, items).filter((x) => !x.done)) {
-        const zeit = it.originalUhrzeit ?? it.uhrzeit;
-        if (it.raw?.name) aenderungVermerken?.({ kategorie: it.kategorie, itemName: it.raw.name, aktion: "erledigt", detail: `mit „${schritt.name}“` });
-        if (it.kategorie === "supplement" && it.raw?.id) toggleSupplementErledigt?.(tagStr, it.raw.id, zeit);
-        else if (it.kategorie === "hormon" && it.raw?.name) toggleHormonErledigt?.(tagStr, it.raw.name, zeit);
-        else if (it.kategorie === "mahlzeit" && it.refId) toggleMahlzeitErledigt?.(tagStr, it.refId, it.logZeit ?? zeit);
-        else if (it.kategorie === "gewohnheit" && it.raw?.id) toggleGewohnheitErledigt?.(tagStr, it.raw.id);
-      }
+      for (const it of verknuepfteItems(schritt, items).filter((x) => !x.done)) itemUmschalten(it, schritt.name);
     },
-    [items, tagStr, aenderungVermerken, toggleSupplementErledigt, toggleHormonErledigt, toggleMahlzeitErledigt, toggleGewohnheitErledigt]
+    [items, itemUmschalten]
   );
 
   // Punkte auf der Startseite abgehakt → passende Routine-Schritte mit abhaken.
@@ -50,5 +56,5 @@ export function useRoutineVerknuepfung(items, tagStr) {
   // Welche Tagespunkte gehören zu einem Schritt (Anzeige im Ablauf, Spritztag).
   const itemsFuer = useCallback((schritt) => verknuepfteItems(schritt, items), [items]);
 
-  return { schrittErledigt, itemsErledigt, itemsFuer };
+  return { schrittErledigt, itemsErledigt, itemsFuer, itemUmschalten };
 }

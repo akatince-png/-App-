@@ -1063,6 +1063,7 @@ export default function HomeView({ onOpenView, onOpenTraining }) {
         routineDurchlaufSpeichern={routineDurchlaufSpeichern}
         onSchrittFertig={verknuepfung.schrittErledigt}
         verknuepfteFuer={verknuepfung.itemsFuer}
+        itemUmschalten={verknuepfung.itemUmschalten}
       />
     );
   }

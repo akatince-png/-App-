@@ -61,7 +61,7 @@ function fmtDauer(sekunden) {
 // "Schritt fertig" geht jederzeit, auch vor Ablauf des Timers (z. B. wenn
 // etwas schneller ging als geplant). Tatsächlich gebrauchte Zeit je Schritt
 // wird mitgeschrieben und am Ende als ein Durchlauf gespeichert.
-export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern, onSchrittFertig, verknuepfteFuer }) {
+export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschluss, onAbbrechen, routineDurchlaufSpeichern, onSchrittFertig, verknuepfteFuer, itemUmschalten }) {
   // Spritztag-Schritte (03.11.): nur an Tagen, an denen die Injektion fällig ist.
   const [alleSchritte] = useState(() => (verknuepfteFuer ? rohSchritte.filter((sc) => !nurWennFaellig(sc) || verknuepfteFuer({ ...sc, routine }).length > 0) : rohSchritte));
   useLiveNeuladenSperre(); // Coach-Änderungen erst nach der Routine neu laden
@@ -181,14 +181,33 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
     }
   });
 
+  // Supplemente/Injektionen des Schritts einzeln abhaken (03.11., Nutzerin:
+  // „Ich habe ein paar Mal vergessen, das HGH zu nehmen“). `dazuLokal` zeigt
+  // den Haken sofort, bis die Daten nachziehen; `nachfrage` = noch etwas offen.
+  const [dazuLokal, setDazuLokal] = useState({});
+  const [nachfrage, setNachfrage] = useState(false);
+  useEffect(() => {
+    setDazuLokal({});
+    setNachfrage(false);
+  }, [index]);
+  const dazuItems = (aktuell && verknuepfteFuer?.({ ...aktuell, routine })) || [];
+  const dazuFertig = (it) => (it.key in dazuLokal ? dazuLokal[it.key] : it.done);
+  const dazuOffen = dazuItems.filter((it) => !dazuFertig(it));
+  const dazuUmschalten = (it) => {
+    setDazuLokal((l) => ({ ...l, [it.key]: !dazuFertig(it) }));
+    itemUmschalten?.(it, aktuell.name);
+  };
+  const schrittFertigKlick = () => (dazuOffen.length ? setNachfrage(true) : weiter());
+
   const weiter = (opt) => {
     const ausgelassen = opt?.ausgelassen === true; // onClick/onGespeichert reichen ein Event bzw. den Eintrag durch
     const tatsaechlichSek = ausgelassen ? null : Math.round((Date.now() - startZeitRef.current) / 1000);
     protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek, ...(ausgelassen ? { ausgelassen: true } : {}) }];
     if (!ausgelassen) {
       routineSchrittMerken?.(aktuell.id, heute);
-      // Verknüpfte Tagespunkte mit abhaken (28.10., utils/routineVerknuepfung.js).
-      onSchrittFertig?.({ ...aktuell, routine });
+      // Verknüpfte Tagespunkte mit abhaken (28.10., utils/routineVerknuepfung.js) –
+      // außer bei „Heute ohne“ (03.11.).
+      if (opt?.ohneDazu !== true) onSchrittFertig?.({ ...aktuell, routine });
     }
     // Nächster offener Schritt; was schon auf der Startseite abgehakt ist, wird übersprungen.
     let naechster = index + 1;
@@ -413,7 +432,7 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
       ) : (
       <Card style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>{aktuell.name}</div>
-        <DazuGehoert items={verknuepfteFuer?.({ ...aktuell, routine }) || []} />
+        <DazuGehoert items={dazuItems} fertig={dazuFertig} onUmschalten={itemUmschalten ? dazuUmschalten : null} />
         <div aria-label="Uhr Schritt" data-schritt-uhr={restSek > 0 ? "laeuft" : "drueber"} style={{ fontSize: 44, fontWeight: 900, fontVariantNumeric: "tabular-nums", color: restSek > 0 ? "inherit" : "color-mix(in srgb, #D9822B var(--mp-schrift), var(--mp-schrift-hell))" }}>
           {restSek > 0 ? fmtDauer(restSek) : `+${fmtDauer(-restSek)}`}
           <div style={{ fontSize: 12.5, fontWeight: 700, color: textMuted }}>
@@ -424,11 +443,25 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
         {/* Abends erst „heute geschafft?“, dann ⭐ für morgen (25.10.); morgens ⭐ bei Top 3. */}
         {aktuell.kernKey === "plan_morgen" && <TagesRueckblick />}
         {aktuell.kernKey === "top3" && <MitWahl datum={new Date()} titel="⭐ Deine MITs für heute" />}
-        <div style={{ marginTop: 14 }}>
-          <PrimaryButton onClick={weiter} variant="success">
-            Schritt fertig
-          </PrimaryButton>
-        </div>
+        {nachfrage && dazuOffen.length > 0 ? (
+          <div data-schritt-nachfrage style={{ marginTop: 14, padding: "10px 12px", borderRadius: 14, background: "color-mix(in srgb, #FFF1CC var(--mp-flaeche), var(--mp-karte))" }}>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Noch nicht abgehakt: {dazuOffen.map((it) => it.raw?.name || it.name).join(", ")}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <PrimaryButton onClick={weiter} variant="success">
+                ✓ Doch genommen – alles abhaken
+              </PrimaryButton>
+              <PrimaryButton variant="ghost" onClick={() => weiter({ ohneDazu: true })}>
+                Heute ohne – weiter
+              </PrimaryButton>
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginTop: 14 }}>
+            <PrimaryButton onClick={schrittFertigKlick} variant="success">
+              Schritt fertig
+            </PrimaryButton>
+          </div>
+        )}
       </Card>
       )}
       <div style={{ textAlign: "center" }}>
@@ -445,18 +478,35 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
 }
 
 // Was zu diesem Schritt gehört (03.11., Nutzerin: Supplemente und Injektionen
-// sollen in den Routinen mit drin sein): wird mit „Schritt fertig“ abgehakt.
-function DazuGehoert({ items }) {
+// sollen in den Routinen mit drin sein, einzeln abhakbar, „das soll nicht
+// untergehen“). Jede Gabe ist eine eigene Zeile zum Antippen.
+function DazuGehoert({ items, fertig, onUmschalten }) {
   if (!items.length) return null;
   return (
-    <div data-schritt-dazu style={{ textAlign: "left", margin: "-6px auto 14px", maxWidth: 360, padding: "8px 12px", borderRadius: 14, background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))" }}>
-      <div style={{ fontSize: 11.5, fontWeight: 800, color: textMuted, marginBottom: 4 }}>DAZU GEHÖRT – WIRD MIT ABGEHAKT</div>
-      {items.map((it) => (
-        <div key={it.key} style={{ display: "flex", gap: 8, fontSize: 13.5, fontWeight: 700, padding: "2px 0", opacity: it.done ? 0.6 : 1 }}>
-          <span aria-hidden="true">{it.done ? "✅" : it.kategorie === "hormon" ? "💉" : it.kategorie === "mahlzeit" ? "🍽️" : "💊"}</span>
-          <span style={{ flex: 1, minWidth: 0 }}>{it.raw?.name || it.name}</span>
-        </div>
-      ))}
+    <div data-schritt-dazu style={{ textAlign: "left", margin: "-6px auto 14px", maxWidth: 380, display: "grid", gap: 6 }}>
+      {items.map((it) => {
+        const an = fertig(it);
+        const symbol = it.kategorie === "hormon" ? "💉" : it.kategorie === "mahlzeit" ? "🍽️" : "💊";
+        return (
+          <button
+            key={it.key}
+            type="button"
+            role="checkbox"
+            aria-checked={an}
+            disabled={!onUmschalten}
+            onClick={() => onUmschalten?.(it)}
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", border: `1.5px solid ${an ? "#2E9C6E" : "var(--mp-rand)"}`, borderRadius: 14, padding: "10px 12px", background: an ? "color-mix(in srgb, #DDF3E9 var(--mp-flaeche), var(--mp-karte))" : "var(--mp-karte)", cursor: onUmschalten ? "pointer" : "default", fontFamily: "inherit", color: "inherit" }}
+          >
+            <span aria-hidden="true" style={{ width: 24, height: 24, borderRadius: 8, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: an ? "#2E9C6E" : "transparent", border: `2px solid ${an ? "#2E9C6E" : "#C3C8D4"}`, color: "#fff", fontSize: 15, fontWeight: 900 }}>{an ? "✓" : ""}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <b style={{ display: "block", fontSize: 15 }}>
+                {symbol} {it.raw?.name || it.name}
+              </b>
+              {it.detail && <span style={{ fontSize: 12.5, color: textMuted }}>{it.detail}</span>}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
