@@ -1,0 +1,56 @@
+# Cloud-Build für die iPhone-/iPad-App (03.11., Nutzerin: kein Mac, nur iPad +
+# Apple-Developer-Konto; Weg Capacitor → Codemagic → TestFlight).
+# Anleitung Schritt für Schritt: docs/APP-STORE-OHNE-MAC.md
+#
+# Hier stehen KEINE Zugangsdaten (Repo ist öffentlich). Alles Geheime liegt in
+# Codemagic selbst:
+# - Integration „AKA App Store Connect“ (App-Store-Connect-API-Schlüssel, .p8)
+#   unter Team settings → Integrations → Developer Portal.
+# - Variablengruppe „aka_web“ (Environment variables) mit denselben Werten wie
+#   bei Vercel: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_AI_PROVIDER,
+#   VITE_AI_MODEL, optional VITE_SPOTIFY_CLIENT_ID, VITE_SENTRY_DSN.
+# - Verteilungs-Zertifikat unter Team settings → Code signing identities
+#   (dort mit „Generate certificate“ anlegen lassen).
+workflows:
+  ios-testflight:
+    name: AKA iOS → TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: AKA App Store Connect
+    environment:
+      groups:
+        - aka_web
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: de.akaince.aka
+      vars:
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+      node: 22
+      xcode: latest
+    # Nur auf Knopfdruck in Codemagic (kein automatischer Build bei jedem Push).
+    scripts:
+      - name: Abhängigkeiten installieren
+        script: npm ci
+      - name: Web-App bauen
+        script: npm run build
+      - name: Web-App ins iOS-Projekt kopieren
+        script: npx cap sync ios
+      - name: Signierung einrichten
+        script: xcode-project use-profiles
+      - name: Build-Nummer hochzählen
+        # Jede TestFlight-Version braucht eine neue, höhere Build-Nummer;
+        # Codemagic zählt $BUILD_NUMBER je Workflow automatisch hoch.
+        script: |
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" "$XCODE_PROJECT/project.pbxproj"
+          grep -m1 "CURRENT_PROJECT_VERSION" "$XCODE_PROJECT/project.pbxproj"
+      - name: App bauen (.ipa)
+        script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
