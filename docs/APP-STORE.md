@@ -1,5 +1,7 @@
 # AKA als iPhone-App (Capacitor) – Anleitung für den Mac
 
+> **Ohne Mac (Stand 03.11.):** Der aktuelle Weg ist Codemagic + TestFlight, alles vom iPad aus – siehe **`docs/APP-STORE-OHNE-MAC.md`**. Diese Datei bleibt für den Mac-Weg und für die Push-Einrichtung.
+
 Stand 27.09.2026. Die Web-App ist mit **Capacitor 8** als iOS-Projekt vorbereitet (Ordner `ios/`).
 Der komplette App-Code bleibt derselbe. Capacitor verpackt ihn in eine echte iPhone-App.
 
@@ -70,7 +72,7 @@ Statt die App öffentlich in den App Store zu stellen, bekommen die Coachees sie
 **Testinformationen (TestFlight → Testinformationen)**
 - Beschreibung, was getestet werden soll, z. B. „ADHS-Alltagsbegleiter im Pilot-Coaching“.
 - Feedback-E-Mail: deine Adresse.
-- Datenschutz-URL: `https://akaapp.vercel.app/datenschutz.html`
+- Datenschutz-URL: `https://akaapp.vercel.app/datenschutz`
 - **Anmeldedaten für die Beta-Prüfung:** ein eigenes Test-Coachee-Konto mit Beispieldaten. Die Zugangsdaten gibst **du** dort ein, nie in den Chat.
 - Prüfnotiz: „Keine offene Registrierung, Zugang per Einladung durch den Coach. KI-Funktionen nur nach freiwilliger Einwilligung. Konto löschen: Mehr → Datenschutz & Konto.“
 
