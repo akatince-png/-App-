@@ -279,7 +279,7 @@ function SeiteKopfKoerper() {
   const [zeitraum, setZeitraum] = useState("tag");
   return (
     <>
-      <Titel unter="Im Hyperfokus gehen Trinken, Essen, Licht und Pausen schnell unter. Deine Startseite zeigt alles auf einen Blick – jeder Haken lädt dein Gehirn auf.">Die „Kleinigkeiten“, die untergehen.</Titel>
+      <Titel unter="Im Hyperfokus gehen Trinken, Essen, Licht und Pausen schnell unter. Deine Startseite zeigt alles auf einen Blick – jeder Haken zählt für deinen Tag.">Die „Kleinigkeiten“, die untergehen.</Titel>
       <GehirnKarte widgets={BEISPIEL_BALKEN} kategorien={BEISPIEL_KATEGORIEN} zeitraum={zeitraum} setZeitraum={setZeitraum} tage={1} phase="tag" koerper={BEISPIEL_KOERPER} gruss="So sieht deine Startseite aus (Beispiel)" kopfUnten />
     </>
   );

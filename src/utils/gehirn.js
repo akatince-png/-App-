@@ -15,7 +15,7 @@ export const REGIONEN = [
     emoji: "🎯",
     farbe: "#7C5CE0",
     kategorien: ["gewohnheiten", "morgenroutine", "abendroutine", "tagesraetsel", "konzentration", "fokusGemeinsam", "alltagPlanung"],
-    text: "Routinen, Denksport und erledigte Alltags-Termine trainieren Planung, Arbeitsgedächtnis und Selbststeuerung — genau die Fähigkeiten, bei denen ADHS am meisten Unterstützung braucht.",
+    text: "Routinen, Denksport und erledigte Alltags-Termine fordern Planung, Arbeitsgedächtnis und Selbststeuerung — genau die Bereiche, in denen viele Menschen mit ADHS Unterstützung im Alltag suchen.",
   },
   {
     key: "bewegung",
@@ -23,7 +23,7 @@ export const REGIONEN = [
     emoji: "💪",
     farbe: "#E4643F",
     kategorien: ["training"],
-    text: "Bewegung schüttet Dopamin und Noradrenalin aus — die Botenstoffe, die für Antrieb und Konzentration wichtig sind.",
+    text: "Bei Bewegung schüttet der Körper unter anderem Dopamin und Noradrenalin aus — Botenstoffe, die mit Antrieb und Konzentration zu tun haben.",
   },
   {
     key: "energie",
@@ -31,7 +31,7 @@ export const REGIONEN = [
     emoji: "⚡",
     farbe: "#D99A1E",
     kategorien: ["ernaehrung", "hydration", "supplemente", "medikamente"],
-    text: "Regelmäßig essen, genug trinken und Einnahmen einhalten hält den Energiepegel deines Gehirns stabil — weniger Tiefs, weniger Reizbarkeit.",
+    text: "Regelmäßig essen, genug trinken und Einnahmen einhalten kann helfen, den Tag gleichmäßiger zu erleben — viele merken dann weniger Tiefs.",
   },
   {
     key: "rhythmus",
@@ -39,7 +39,7 @@ export const REGIONEN = [
     emoji: "☀️",
     farbe: "#E8B90C",
     kategorien: ["tageslicht"],
-    text: "Tageslicht, vor allem morgens, stellt deine innere Uhr — das macht tagsüber wacher und abends leichter müde.",
+    text: "Tageslicht, vor allem morgens, ist ein wichtiger Taktgeber für die innere Uhr — viele fühlen sich dadurch tagsüber wacher und abends eher müde.",
   },
   {
     key: "ruhe",
@@ -47,7 +47,7 @@ export const REGIONEN = [
     emoji: "🌬️",
     farbe: "#1FA39A",
     kategorien: ["atemuebungen", "alltagAusgleich"],
-    text: "Ruhiges Atmen bremst das Stresssystem — das hilft, Gefühle und Impulse besser zu steuern. Auch Me-Time, Hobbys und Zeit mit Menschen zählen hier.",
+    text: "Ruhiges Atmen kann helfen, runterzukommen — und damit den Umgang mit Gefühlen und Impulsen erleichtern. Auch Me-Time, Hobbys und Zeit mit Menschen zählen hier.",
   },
   {
     key: "erholung",
@@ -55,7 +55,7 @@ export const REGIONEN = [
     emoji: "🌙",
     farbe: "#5470E0",
     kategorien: ["schlaf"],
-    text: "Im Schlaf räumt dein Gehirn auf und speichert Gelerntes. Zu wenig Schlaf verstärkt Unruhe und Vergesslichkeit.",
+    text: "Im Schlaf verarbeitet dein Gehirn den Tag. Wer zu wenig schläft, merkt oft mehr Unruhe und Vergesslichkeit.",
   },
 ];
 
