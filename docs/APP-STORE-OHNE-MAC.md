@@ -70,3 +70,41 @@ Der kostenlose Tarif hat 500 Build-Minuten im Monat. Das reicht für viele Versi
 Push in der iPhone-App läuft über Apple, nicht über den Browser. Dafür braucht Supabase einen Apple-Push-Schlüssel.
 Wie das geht, steht in `docs/APP-STORE.md` im Abschnitt „Push-Erinnerungen einrichten“.
 Die Bundle-ID `de.akaince.aka` ist im Code schon voreingestellt.
+
+## Teil D – Auf dem iPad testen (TestFlight)
+
+1. In App Store Connect zu **TestFlight** gehen und beim neuen Build eventuell die **Exportbestimmungen** bestätigen.
+   Die App nutzt nur normales HTTPS, das ist im Code schon so hinterlegt.
+2. **Interne Tests → „+“** wählen, Gruppe „Ich“ anlegen und dich selbst als Testerin hinzufügen.
+   Interne Tests brauchen keine Prüfung durch Apple.
+3. Auf dem iPad die App **TestFlight** aus dem App Store laden. Die Einladung kommt per E-Mail.
+   Dann in TestFlight AKA **installieren**.
+4. **Das bitte testen:**
+   - Anmelden
+   - Tagesplan und Abhaken
+   - Morgen- und Abendroutine
+   - Kamera (Präparat-Foto)
+   - Erinnerungen unter Mehr → Erinnerungen aktivieren → „Test senden“. Das geht erst mit dem Apple-Push-Schlüssel, siehe oben.
+   - Konto löschen **nur mit einem Testkonto**
+
+## Teil E – Coachees einladen und später der öffentliche App Store
+
+- **Coachees über TestFlight:**
+  - Unter **Externe Tests** eine Gruppe „Coachees“ anlegen, die Version hinzufügen und **zur Prüfung senden**. Apples Beta-Prüfung dauert meist 1–2 Tage.
+  - Danach den **öffentlichen Link** aktivieren und an die Coachees schicken.
+- **Angaben für Apples Prüfung:**
+  - **Datenschutz-URL:** https://akaapp.vercel.app/datenschutz
+  - **Impressum:** https://akaapp.vercel.app/impressum
+  - **Anmeldedaten für die Prüfung:** ein eigenes Test-Coachee-Konto mit Beispieldaten. Die Zugangsdaten trägst du bei Apple ein, nie im Chat.
+  - **Prüfnotiz:** „Keine offene Registrierung, Zugang per Einladung durch den Coach. KI-Funktionen nur nach freiwilliger Einwilligung. Konto löschen: Mehr → Datenschutz & Konto. Lifestyle-App ohne medizinische Versprechen.“
+  - **Kategorie:** „Gesundheit & Fitness“ oder „Lifestyle“.
+- **Öffentlicher App Store:** Was dafür noch fehlt, steht in `docs/APP-STORE-DATENSCHUTZ.md`: Impressum vollständig, Auftragsverarbeitungsverträge, fachliche Prüfung der Texte, Datenschutz-Angaben bei Apple, Bildschirmfotos.
+
+## Bekannt: was in der iPhone-App anders ist
+
+- **Diktieren:** Die Spracheingabe des Browsers fehlt in der iOS-App teilweise. Tippen geht immer.
+  Falls nötig, kommt später ein eigenes Plugin dazu.
+- **Links aus E-Mails** (Einladung, Passwort vergessen) öffnen im Browser, nicht in der App.
+  Dort einfach anmelden, danach geht es in der App weiter.
+- **Neue Versionen:** Jede Änderung an der App braucht einen neuen Build in Codemagic.
+  Die Web-Version unter akaapp.vercel.app aktualisiert sich weiter von selbst.
