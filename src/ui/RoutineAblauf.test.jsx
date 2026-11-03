@@ -59,3 +59,28 @@ describe("Morgenroutine fortsetzen (28.10.)", () => {
     expect(screen.getByText(/Schritt 2 von 3/)).toBeTruthy();
   });
 });
+
+describe("Supplemente/Injektionen einzeln im Schritt (03.11.)", () => {
+  beforeEach(() => localStorage.clear());
+  const HGH = { key: "h1", kategorie: "hormon", name: "HGH", raw: { name: "HGH" }, detail: "2 I.E.", done: false };
+  const SCHRITT = [{ id: "x", name: "💉 HGH spritzen", dauerMin: 2 }];
+
+  it("zeigt die Gabe zum Abhaken und fragt nach, wenn sie offen ist", () => {
+    const umschalten = vi.fn();
+    const fertig = vi.fn();
+    render(<RoutineAblauf routine="abend" schritte={SCHRITT} onAbschluss={() => {}} onAbbrechen={() => {}} verknuepfteFuer={() => [HGH]} itemUmschalten={umschalten} onSchrittFertig={fertig} />);
+    fireEvent.click(screen.getByText("Schritt fertig"));
+    expect(document.querySelector("[data-schritt-nachfrage]").textContent).toContain("HGH");
+    fireEvent.click(screen.getByText("Heute ohne – weiter"));
+    expect(fertig).not.toHaveBeenCalled();
+  });
+
+  it("abgehakte Gabe → Schritt fertig ohne Nachfrage", () => {
+    const umschalten = vi.fn();
+    render(<RoutineAblauf routine="abend" schritte={SCHRITT} onAbschluss={() => {}} onAbbrechen={() => {}} verknuepfteFuer={() => [HGH]} itemUmschalten={umschalten} onSchrittFertig={() => {}} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /HGH/ }));
+    expect(umschalten).toHaveBeenCalledWith(HGH, "💉 HGH spritzen");
+    fireEvent.click(screen.getByText("Schritt fertig"));
+    expect(document.querySelector("[data-schritt-nachfrage]")).toBeNull();
+  });
+});

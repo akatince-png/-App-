@@ -735,6 +735,7 @@ export default function TagesplanView({ onHome, onOpenTraining, onEditItem, sele
         routineDurchlaufSpeichern={routineDurchlaufSpeichern}
         onSchrittFertig={verknuepfung.schrittErledigt}
         verknuepfteFuer={verknuepfung.itemsFuer}
+        itemUmschalten={verknuepfung.itemUmschalten}
       />
     );
   }
