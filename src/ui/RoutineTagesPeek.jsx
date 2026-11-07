@@ -1,5 +1,7 @@
 import React from "react";
 import RoutineHeuteChecklist from "./RoutineHeuteChecklist";
+import RoutineZeitprotokoll from "./RoutineZeitprotokoll";
+import { useAppData } from "../context/AppDataContext";
 import { useEscapeSchliesst } from "./useEscapeSchliesst";
 import { textMain, textMuted } from "./theme";
 import { fmtDate, parseLocalISODate } from "../utils/dates";
@@ -17,6 +19,9 @@ const ROUTINE_EMOJI = { morgen: "🌅", abend: "🌙" };
 // funktioniert hier genauso, auch für vergangene Tage.
 export default function RoutineTagesPeek({ routine, datum, onClose }) {
   useEscapeSchliesst(onClose);
+  // Zeitprotokoll des Tages (07.11.): wann wach, Beginn, je Schritt von–bis.
+  const { routineDurchlaeufe = [] } = useAppData();
+  const durchlauf = routineDurchlaeufe.find((d) => d.routine === routine && d.datum === datum);
 
   return (
     <div
@@ -51,6 +56,11 @@ export default function RoutineTagesPeek({ routine, datum, onClose }) {
             ×
           </button>
         </div>
+        {durchlauf?.schritte?.some((p) => p.startUm || p.tatsaechlichSek != null) && (
+          <div style={{ margin: "10px 0 6px", padding: "10px 12px", borderRadius: 14, background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))" }}>
+            <RoutineZeitprotokoll durchlauf={durchlauf} />
+          </div>
+        )}
         <RoutineHeuteChecklist routine={routine} datum={datum} />
       </div>
     </div>

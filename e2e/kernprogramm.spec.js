@@ -116,7 +116,7 @@ test("Messwoche: Bestätigen in der Abhak-Liste startet die Stoppuhr, ohne Uhr b
   const hinweis = page.locator("[data-mess-hinweis]").first();
   await expect(hinweis).toContainText("Messwoche");
   await page.getByRole("button", { name: "Bestätigen" }).first().click();
-  await expect(page.getByRole("button", { name: /Ab jetzt|Schritt fertig/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Gerade erst aufgewacht|Schritt fertig/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Routine abbrechen" }).click();
   await page.getByRole("button", { name: "Ohne Stoppuhr abhaken" }).first().click();
   await page.getByRole("button", { name: "Bestätigen" }).first().click();
@@ -129,7 +129,7 @@ test("Routine-Uhr: nach der Soll-Zeit zählt sie weiter, der Schritt bleibt steh
   await page.clock.install({ time: new Date(2026, 8, 29, 7, 10) });
   await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1#/home");
   await page.getByRole("button", { name: /Morgenroutine starten/ }).click();
-  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  const abJetzt = page.getByRole("button", { name: "Gerade erst aufgewacht" });
   if (await abJetzt.isVisible()) await abJetzt.click();
   const uhr = page.locator("[data-schritt-uhr]");
   await expect(uhr).toHaveAttribute("data-schritt-uhr", "laeuft");

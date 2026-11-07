@@ -279,6 +279,15 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## ⏱️ Routine-Zeitprotokoll: Aufwachen, Beginn, je Schritt von–bis, freie Reihenfolge (07.11.2026)
+
+Nutzerin: „Wecker auf 7, ich beginne erst um 9 – die realen Zeiten sollen dokumentiert werden“, dazu „wann ich einen Prozess starte und beende (Duschen nach 3 Min. beendet) … noch detaillierter“; „fällt mir schwer, mich immer an die Reihenfolge zu halten“.
+- Migration 0139 (eingespielt): `routine_durchlaeufe.aufgewacht_um`. `durchlaufSpeichern({ …, aufgewachtUm })`, `rowToDurchlauf.aufgewachtUm`.
+- `RoutineAblauf`: Frage „Seit wann bist du wach?“ morgens (Messwoche wie bisher bis 3 h nach Wecker; sonst wenn Start > 20 Min. nach der eingestellten Startzeit): „Mit dem Wecker um …“, eigene Uhrzeit, „Gerade erst aufgewacht“. **Beginn (`gestartet_um`) ist jetzt immer der echte Start** (früher setzte „Ab dem Wecker“ in der Messwoche den Beginn auf die Weckzeit – deshalb am 28.10. „06:00“); in der Messwoche läuft nur die Hauptuhr ab dem Aufwachen. Je Schritt im JSON: `startUm`, `endeUm`, `tatsaechlichSek`, `platz` (echte Reihenfolge), `planPlatz`.
+- Freie Reihenfolge: „↕ Lieber erst etwas anderes?“ listet offene Schritte zum Vorziehen; danach geht es mit dem ersten offenen Schritt weiter.
+- `ui/RoutineZeitprotokoll.jsx` (neu): „⏰ Wach 07:00 · ▶ Beginn 09:02 · ✓ Fertig 09:51“, je Schritt von–bis und Dauer, sortiert nach echter Reihenfolge (↕ = anders als geplant). Am Ende der Routine, im aufgeklappten Routine-Block im Tagesplan und im Routine-Peek der Wochenübersicht.
+- e2e: Knopf „Ab jetzt“ heißt jetzt „Gerade erst aufgewacht“.
+
 ## 💉 Routinen mit Injektionen, Termine mit Uhrzeit, „Als Nächstes“ nur wenn dran (03.11.2026)
 
 Nutzerin: HGH fehlte in der Abendroutine; Supplemente/Injektionen sollen in Morgen- und Abendroutine drin sein. Tagesabschluss: beim Verschieben fragen „auf wann“ (Datum + Uhrzeit, dann im Kalender), bei „Morgen“ und in der Planung Uhrzeiten festlegen. Nach der Morgenroutine nicht schon die Mittagssupplemente zum Einnehmen anbieten.

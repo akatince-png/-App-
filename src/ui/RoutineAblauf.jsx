@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLiveNeuladenSperre } from "../data/liveAktualisierung";
 import { Shell, Card, PrimaryButton } from "./primitives";
-import { cardBorder, danger, textMain, textMuted } from "./theme";
+import { danger, textMain, textMuted } from "./theme";
 import { useAppData } from "../context/AppDataContext";
 import { istRechtzeitig } from "../utils/belohnungZeit";
 import { feuereBelohnung } from "../utils/belohnungBus";
@@ -21,6 +21,7 @@ import { istMessPhase, istNachmessen, messTag } from "../utils/messwoche";
 import { istLichtSchritt, nochZuDunkel, sonnenaufgangUhr } from "../utils/sonne";
 import WetterTipp from "./WetterTipp";
 import { nurWennFaellig } from "../utils/routineVerknuepfung";
+import RoutineZeitprotokoll from "./RoutineZeitprotokoll";
 
 const ROUTINE_ANLASS = { morgen: "morgenroutine", abend: "abendroutine" };
 
@@ -77,8 +78,15 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
   const messTagNr = messTag(kernStand, heute);
   const weckzeit = routineEinstellungen?.[routine]?.startZeit || "";
   const weckMs = weckzeit ? new Date(`${heute}T${weckzeit}:00`).getTime() : null;
-  // Frage "Seit wann wach?" nur morgens und nur bis 3 h nach der Weckzeit.
-  const [wachGefragt, setWachGefragt] = useState(!!gemerkt || !(messmodus && routine === "morgen" && weckMs && Date.now() > weckMs && Date.now() - weckMs < 3 * 3600000));
+  // Frage "Seit wann wach?" nur morgens: in der Messwoche bis 3 h nach der
+  // Weckzeit, sonst wenn der Start mehr als 20 Min. nach der Weckzeit liegt
+  // (07.11., Nutzerin: „Wecker auf 7 Uhr, ich beginne aber erst um 9“). Die
+  // Aufwachzeit wird getrennt vom echten Beginn gespeichert.
+  const seitWecker = weckMs ? Date.now() - weckMs : -1;
+  const wachFrage = routine === "morgen" && weckMs && (messmodus ? seitWecker > 0 && seitWecker < 3 * 3600000 : seitWecker > 20 * 60000 && seitWecker < 8 * 3600000);
+  const [wachGefragt, setWachGefragt] = useState(!!gemerkt || !wachFrage);
+  const aufgewachtRef = useRef(gemerkt?.aufgewachtUm || null);
+  const [wachZeit, setWachZeit] = useState("");
   const [fertig, setFertig] = useState(false);
   // ⚡ Kurzfassung (24.10., Nutzerin: „diese Notfallversion gerne überall
   // integrieren“): Sind Schritte als „kurz“ markiert, fragt die Routine beim
@@ -115,7 +123,7 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
   // beim wirklichen Abschluss — damit sichtbar/auswertbar wird, ob die
   // ganze Routine zu lang oder zu kurz ist, nicht nur einzelne Schritte.
   const gesamtStartRef = useRef(gemerkt?.gesamtStart || Date.now());
-  const merken = (f = fassung) => laufMerken(routine, { datum: heute, fassung: f, protokoll: protokollRef.current, gestartetUm: gestartetUmRef.current, gesamtStart: gesamtStartRef.current });
+  const merken = (f = fassung) => laufMerken(routine, { datum: heute, fassung: f, protokoll: protokollRef.current, gestartetUm: gestartetUmRef.current, gesamtStart: gesamtStartRef.current, aufgewachtUm: aufgewachtRef.current });
   // Gleich beim Start merken, nicht erst nach dem ersten Schritt.
   useEffect(() => {
     if (fassung && wachGefragt) merken();
@@ -198,21 +206,38 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
     itemUmschalten?.(it, aktuell.name);
   };
   const schrittFertigKlick = () => (dazuOffen.length ? setNachfrage(true) : weiter());
+  // Freie Reihenfolge (07.11., Nutzerin: „fällt mir schwer, mich immer an die
+  // Reihenfolge zu halten“): jeden offenen Schritt vorziehen; das Zeitprotokoll
+  // hält fest, in welcher Reihenfolge es wirklich war.
+  const gemachtIds = new Set(protokollRef.current.map((p) => p.schrittId));
+  const andereOffene = schritte.map((sc, i) => ({ sc, i })).filter(({ sc, i }) => i !== index && !gemachtIds.has(sc.id) && !routineSchrittErledigt[`${heute}__${sc.id}`]);
+  const schrittVorziehen = (i) => {
+    setIndex(i);
+    startZeitRef.current = Date.now();
+    merken();
+  };
 
   const weiter = (opt) => {
     const ausgelassen = opt?.ausgelassen === true; // onClick/onGespeichert reichen ein Event bzw. den Eintrag durch
     const tatsaechlichSek = ausgelassen ? null : Math.round((Date.now() - startZeitRef.current) / 1000);
-    protokollRef.current = [...protokollRef.current, { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek, ...(ausgelassen ? { ausgelassen: true } : {}) }];
+    // Echte Uhrzeiten und Reihenfolge je Schritt (07.11., Nutzerin: „wann ich
+    // einen Prozess starte und beende … noch detaillierter“).
+    const zeiten = ausgelassen ? {} : { startUm: new Date(startZeitRef.current).toISOString(), endeUm: new Date().toISOString() };
+    protokollRef.current = [
+      ...protokollRef.current,
+      { schrittId: aktuell.id, name: aktuell.name, geplantMin: aktuell.dauerMin, tatsaechlichSek, ...zeiten, platz: protokollRef.current.length + 1, planPlatz: index + 1, ...(ausgelassen ? { ausgelassen: true } : {}) },
+    ];
     if (!ausgelassen) {
       routineSchrittMerken?.(aktuell.id, heute);
       // Verknüpfte Tagespunkte mit abhaken (28.10., utils/routineVerknuepfung.js) –
       // außer bei „Heute ohne“ (03.11.).
       if (opt?.ohneDazu !== true) onSchrittFertig?.({ ...aktuell, routine });
     }
-    // Nächster offener Schritt; was schon auf der Startseite abgehakt ist, wird übersprungen.
-    let naechster = index + 1;
-    while (naechster < schritte.length && routineSchrittErledigt[`${heute}__${schritte[naechster].id}`]) naechster++;
-    if (naechster < schritte.length) {
+    // Nächster offener Schritt in Plan-Reihenfolge; was schon erledigt ist
+    // (auch auf der Startseite) oder vorgezogen wurde, wird übersprungen.
+    const gemacht = new Set(protokollRef.current.map((p) => p.schrittId));
+    const naechster = schritte.findIndex((sc) => !gemacht.has(sc.id) && !routineSchrittErledigt[`${heute}__${sc.id}`]);
+    if (naechster >= 0) {
       setIndex(naechster);
       startZeitRef.current = Date.now();
       merken();
@@ -225,7 +250,7 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
       // genauso automatisch aufhören, sonst läuft sie einfach unbemerkt
       // weiter (gleicher Bug wie beim Workflow-/Trainings-Timer).
       spotifyPausieren();
-      routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current });
+      routineDurchlaufSpeichern?.({ routine, schritte: protokollRef.current, gestartetUm: gestartetUmRef.current, aufgewachtUm: aufgewachtRef.current });
       // Immer feiern (25.09.), pünktlich oder später — siehe routineFeier.js.
       // „Aufgeladen“ (morgens) bzw. „Gute Nacht“ (abends) übernehmen seit
       // 06.10. die Feier selbst, sonst lägen zwei Fenster übereinander.
@@ -285,22 +310,32 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
   }
 
   if (!wachGefragt && schritte.length) {
-    const ab = (ms) => {
-      gestartetUmRef.current = new Date(ms).toISOString();
-      gesamtStartRef.current = ms;
+    // Beginn ist immer der echte Start; die Aufwachzeit steht extra.
+    // In der Messwoche läuft die Hauptuhr ab dem Aufwachen.
+    const wach = (ms) => {
+      aufgewachtRef.current = ms ? new Date(ms).toISOString() : null;
+      if (messmodus && ms) gesamtStartRef.current = ms;
       startZeitRef.current = Date.now();
       setWachGefragt(true);
     };
+    const eigeneMs = wachZeit ? new Date(`${heute}T${wachZeit}:00`).getTime() : null;
     return (
-      <Shell>
+      <Shell mittig>
         <Card style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 30 }}>📏</div>
-          <div style={{ fontSize: 17, fontWeight: 900, margin: "6px 0 4px" }}>{messName}{messTagNr ? ` · Tag ${messTagNr} von 7` : ""}</div>
-          <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 14 }}>Wir messen nur, wie lange deine Morgenroutine wirklich dauert – nichts muss schnell gehen. Ab wann soll die Hauptuhr laufen?</div>
+          <div style={{ fontSize: 30 }}>{messmodus ? "📏" : "⏰"}</div>
+          {messmodus && <div style={{ fontSize: 13, fontWeight: 800, color: textMuted }}>{messName}{messTagNr ? ` · Tag ${messTagNr} von 7` : ""}</div>}
+          <div data-wach-frage style={{ fontSize: 18, fontWeight: 900, margin: "6px 0 4px" }}>Seit wann bist du wach?</div>
+          <div style={{ fontSize: 13.5, color: textMuted, lineHeight: 1.5, marginBottom: 14 }}>Dann ist dokumentiert, wann du aufgewacht bist und wann du wirklich losgelegt hast.</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <PrimaryButton onClick={() => ab(weckMs)}>⏰ Ab dem Wecker ({weckzeit})</PrimaryButton>
-            <PrimaryButton variant="ghost" onClick={() => ab(Date.now())}>
-              Ab jetzt
+            <PrimaryButton onClick={() => wach(weckMs)}>⏰ Mit dem Wecker um {weckzeit}</PrimaryButton>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="time" value={wachZeit} onChange={(e) => setWachZeit(e.target.value)} aria-label="Aufgewacht um" style={{ flex: 1, minWidth: 0, border: "1.5px solid var(--mp-rand)", borderRadius: 12, padding: "10px", fontSize: 16, fontFamily: "inherit", background: "var(--mp-karte)", color: "inherit" }} />
+              <PrimaryButton variant="ghost" disabled={!eigeneMs} onClick={() => wach(eigeneMs)}>
+                Andere Uhrzeit
+              </PrimaryButton>
+            </div>
+            <PrimaryButton variant="ghost" onClick={() => wach(Date.now())}>
+              Gerade erst aufgewacht
             </PrimaryButton>
           </div>
         </Card>
@@ -331,22 +366,7 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
         )}
         {protokoll.length > 0 && (
           <Card>
-            <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8 }}>Auswertung — geplant vs. tatsächlich</div>
-            {protokoll.map((p, i) => {
-              const geplantSek = (Number(p.geplantMin) || 0) * 60;
-              const abweichung = p.tatsaechlichSek - geplantSek;
-              return (
-                <div
-                  key={i}
-                  style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: i > 0 ? `1px solid ${cardBorder}` : "none", fontSize: 12.5 }}
-                >
-                  <div>{p.name}</div>
-                  <div style={{ color: Math.abs(abweichung) > 60 ? (abweichung > 0 ? danger : "var(--mp-accent-dark-text)") : textMuted, fontWeight: 700 }}>
-                    {fmtDauer(p.tatsaechlichSek)} <span style={{ color: textMuted, fontWeight: 400 }}>(geplant {p.geplantMin} Min.)</span>
-                  </div>
-                </div>
-              );
-            })}
+            <RoutineZeitprotokoll durchlauf={{ schritte: protokoll, gestartetUm: gestartetUmRef.current, abgeschlossenUm: new Date().toISOString(), aufgewachtUm: aufgewachtRef.current }} />
           </Card>
         )}
       </Shell>
@@ -464,6 +484,7 @@ export default function RoutineAblauf({ routine, schritte: rohSchritte, onAbschl
         )}
       </Card>
       )}
+      <AndererSchritt offen={andereOffene} onWaehlen={schrittVorziehen} />
       <div style={{ textAlign: "center" }}>
         <button
           type="button"
@@ -507,6 +528,37 @@ function DazuGehoert({ items, fertig, onUmschalten }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+// „Lieber erst etwas anderes?“ – offene Schritte zum Vorziehen (07.11.).
+function AndererSchritt({ offen, onWaehlen }) {
+  const [auf, setAuf] = useState(false);
+  if (!offen.length) return null;
+  return (
+    <div data-anderer-schritt style={{ textAlign: "center", marginBottom: 4 }}>
+      <button type="button" aria-expanded={auf} onClick={() => setAuf((a) => !a)} style={{ border: "none", background: "transparent", color: "var(--mp-accent-dark-text)", fontSize: 13.5, fontWeight: 800, cursor: "pointer", padding: 8, fontFamily: "inherit" }}>
+        {auf ? "▴ Zuklappen" : "↕ Lieber erst etwas anderes?"}
+      </button>
+      {auf && (
+        <div style={{ display: "grid", gap: 6, maxWidth: 420, margin: "0 auto 8px", textAlign: "left" }}>
+          {offen.map(({ sc, i }) => (
+            <button
+              key={sc.id}
+              type="button"
+              onClick={() => {
+                setAuf(false);
+                onWaehlen(i);
+              }}
+              style={{ border: "1.5px solid var(--mp-rand)", borderRadius: 14, padding: "10px 12px", background: "var(--mp-karte)", color: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", textAlign: "left", display: "flex", justifyContent: "space-between", gap: 8 }}
+            >
+              <span>{sc.name}</span>
+              <span style={{ color: textMuted, fontSize: 12.5, flexShrink: 0 }}>{sc.dauerMin} Min.</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

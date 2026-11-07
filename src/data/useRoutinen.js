@@ -31,6 +31,7 @@ function rowToDurchlauf(r) {
     schritte: r.schritte || [],
     gestartetUm: r.gestartet_um,
     abgeschlossenUm: r.abgeschlossen_um,
+    aufgewachtUm: r.aufgewacht_um || null,
   };
 }
 
@@ -268,7 +269,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
   // hinterher nachvollziehbar ist (Nutzerinnen-Vorgabe: Zeitgefühl-Problem
   // bei ADHS, "muss irgendwann getrackt/nachvollziehbar sein").
   const durchlaufSpeichern = useCallback(
-    async ({ routine, schritte: schritteProtokoll, gestartetUm }) => {
+    async ({ routine, schritte: schritteProtokoll, gestartetUm, aufgewachtUm = null }) => {
       const heute = toLocalISODate(new Date());
       // Bug-Fix (Nutzerinnen-Report, 17.09.: "Zusammenhänge" bei Morgen-/
       // Abendroutine nicht in Ordnung): dieselbe Routine ließ sich am selben
@@ -294,6 +295,7 @@ export function useRoutinen(userId, belohnungPufferMin, aenderungVermerken) {
         schritte: schritteProtokoll,
         gestartet_um: gestartetUm,
         abgeschlossen_um: new Date().toISOString(),
+        ...(aufgewachtUm ? { aufgewacht_um: aufgewachtUm } : {}),
       };
       const { data, error } = await supabase.from("routine_durchlaeufe").insert(row).select().single();
       if (error) {
