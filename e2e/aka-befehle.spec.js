@@ -6,7 +6,7 @@ import { test, expect } from "@playwright/test";
 test("Aka-Übergabe: Startseite startet die gewünschte Morgenroutine", async ({ page }) => {
   await page.addInitScript(() => sessionStorage.setItem("aka-routine-start", "morgen"));
   await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1#/home");
-  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  const abJetzt = page.getByRole("button", { name: "Gerade erst aufgewacht" });
   const weiter = page.getByRole("button", { name: /^(Schritt fertig|Schon geatmet – weiter)$/ }).first();
   await expect(abJetzt.or(weiter)).toBeVisible();
   // Nur einmal: nach dem Abholen ist der Wunsch weg.
@@ -20,7 +20,7 @@ test("Aka-Übergabe: Ereignis startet die Abendroutine auf offener Startseite", 
     sessionStorage.setItem("aka-routine-start", "abend");
     window.dispatchEvent(new Event("aka-routine-starten"));
   });
-  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  const abJetzt = page.getByRole("button", { name: "Gerade erst aufgewacht" });
   const weiter = page.getByRole("button", { name: /^(Schritt fertig|Schon geatmet – weiter)$/ }).first();
   await expect(abJetzt.or(weiter)).toBeVisible();
 });

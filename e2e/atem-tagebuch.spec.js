@@ -105,7 +105,7 @@ test("Morgenroutine mit Stoppuhr: Atem-Schritt zeigt die geführte Übung", asyn
   await page.clock.install({ time: new Date(2026, 8, 30, 7, 20) });
   await page.goto("/e2e/harness/index.html?isAdmin=0&kern=1&atemschritt=1#/home");
   await page.getByRole("button", { name: /Morgenroutine starten/ }).click();
-  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  const abJetzt = page.getByRole("button", { name: "Gerade erst aufgewacht" });
   if (await abJetzt.isVisible()) await abJetzt.click();
   // Harness: Glas Wasser → Zähne putzen → Atemübung
   await page.getByRole("button", { name: "Schritt fertig" }).click();
@@ -142,7 +142,7 @@ test("Morgenroutine: Kurzfassung läuft nur die markierten Schritte", async ({ p
   await page.getByRole("button", { name: /Morgenroutine starten/ }).click();
   await expect(page.getByRole("button", { name: /^Ganz · 3 Schritte/ })).toBeVisible();
   await page.getByRole("button", { name: /⚡ Kurz · 2 Schritte/ }).click();
-  const abJetzt = page.getByRole("button", { name: "Ab jetzt" });
+  const abJetzt = page.getByRole("button", { name: "Gerade erst aufgewacht" });
   if (await abJetzt.isVisible()) await abJetzt.click();
   await expect(page.getByText("Schritt 1 von 2", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Schritt fertig" }).click();

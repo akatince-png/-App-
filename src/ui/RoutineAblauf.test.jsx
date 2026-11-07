@@ -84,3 +84,51 @@ describe("Supplemente/Injektionen einzeln im Schritt (03.11.)", () => {
     expect(document.querySelector("[data-schritt-nachfrage]")).toBeNull();
   });
 });
+
+describe("Zeitprotokoll und freie Reihenfolge (07.11.)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    for (const k of Object.keys(erledigt)) delete erledigt[k];
+  });
+  it("speichert je Schritt Start, Ende und die echte Reihenfolge", () => {
+    render(<RoutineAblauf routine="morgen" schritte={SCHRITTE} onAbschluss={() => {}} onAbbrechen={() => {}} />);
+    fireEvent.click(screen.getByText("↕ Lieber erst etwas anderes?"));
+    fireEvent.click(screen.getByText("Frühstück"));
+    expect(screen.getByText(/Schritt 3 von 3/)).toBeTruthy();
+    fireEvent.click(screen.getByText("Schritt fertig"));
+    const lauf = JSON.parse(localStorage.getItem("aka-routine-lauf-morgen"));
+    const p = lauf.protokoll[0];
+    expect(p.schrittId).toBe("c");
+    expect(p.platz).toBe(1);
+    expect(p.planPlatz).toBe(3);
+    expect(p.startUm && p.endeUm).toBeTruthy();
+    // danach geht es mit dem ersten offenen Schritt weiter
+    expect(screen.getByText(/Schritt 1 von 3/)).toBeTruthy();
+  });
+});
+
+describe("RoutineZeitprotokoll", () => {
+  it("zeigt Wach, Beginn, Fertig und je Schritt von–bis", async () => {
+    const { default: RoutineZeitprotokoll } = await import("./RoutineZeitprotokoll");
+    const d = (h, m) => new Date(2026, 10, 7, h, m).toISOString();
+    render(
+      <RoutineZeitprotokoll
+        durchlauf={{
+          aufgewachtUm: d(7, 0),
+          gestartetUm: d(9, 2),
+          abgeschlossenUm: d(9, 51),
+          schritte: [
+            { name: "Duschen", geplantMin: 20, tatsaechlichSek: 180, startUm: d(9, 10), endeUm: d(9, 13), platz: 2, planPlatz: 1 },
+            { name: "Glas Wasser", geplantMin: 1, tatsaechlichSek: 40, startUm: d(9, 2), endeUm: d(9, 3), platz: 1, planPlatz: 2 },
+          ],
+        }}
+      />
+    );
+    const text = document.querySelector("[data-routine-zeitprotokoll]").textContent;
+    expect(text).toContain("Wach 07:00");
+    expect(text).toContain("Beginn 09:02");
+    expect(text).toContain("09:10–09:13");
+    expect(text).toContain("3 Min.");
+    expect(text.indexOf("Glas Wasser")).toBeLessThan(text.indexOf("Duschen"));
+  });
+});

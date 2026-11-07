@@ -3,16 +3,24 @@ import { useAppData } from "../context/AppDataContext";
 import RoutineSchritteEditor from "./RoutineSchritteEditor";
 import RoutineSchritteListe, { LichtZeile } from "./RoutineSchritteListe";
 import { istLichtSchritt } from "../utils/sonne";
+import RoutineZeitprotokoll from "./RoutineZeitprotokoll";
 
 // Inhalt einer aufgeklappten Routine im Bild-Tagesplan (25.10., Nutzerin:
 // „alle Bestandteile ersichtlich und direkt bearbeiten“). Erst die Schritte
 // mit Häkchen-Stand, auf Wunsch darunter der Editor wie in der Liste.
 export default function RoutineInhalt({ routine, status }) {
-  const { routineSchritte = [], routineSchrittZeit, routineSchrittHinzufuegen, routineSchrittEntfernen, routineSchrittVerschieben } = useAppData();
+  const { routineSchritte = [], routineDurchlaeufe = [], routineSchrittZeit, routineSchrittHinzufuegen, routineSchrittEntfernen, routineSchrittVerschieben } = useAppData();
   const [bearbeiten, setBearbeiten] = useState(false);
   const schritte = status?.schritte || [];
+  // Zeitprotokoll (07.11.): ist die Routine an dem Tag durch, steht hier was wann wie lange.
+  const durchlauf = status?.abgeschlossen ? routineDurchlaeufe.find((d) => d.routine === routine && d.datum === status.datum) : null;
   return (
     <div>
+      {durchlauf?.schritte?.some((p) => p.startUm || p.tatsaechlichSek != null) && (
+        <div style={{ marginBottom: 10, padding: "10px 12px", borderRadius: 14, background: "color-mix(in srgb, #F4F7FC var(--mp-flaeche), var(--mp-karte))" }}>
+          <RoutineZeitprotokoll durchlauf={durchlauf} />
+        </div>
+      )}
       {!schritte.length && <div style={{ fontSize: 12.5, color: "var(--mp-text-muted)", marginBottom: 6 }}>Für diesen Tag sind noch keine Schritte eingerichtet.</div>}
       {!bearbeiten && schritte.length > 0 && (
         <ol data-routine-schritte style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
