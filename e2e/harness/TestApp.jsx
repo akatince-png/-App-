@@ -291,6 +291,20 @@ function leseOverridesAusUrl() {
     if (params.get("projektplan") === "1") overrides.projekte[0] = { ...overrides.projekte[0], ziel: "Erklärung abgegeben", start: tagIso(0), deadline: tagIso(60), sessionTage: ["Mo", "Do"], sessionUhrzeit: "18:00", sessionDauerMin: 45, sessionsZiel: 16 };
   }
   // ?alltag=1: Kalender „Mein Alltag“ mit Beispiel-Einträgen (28.09., Vorschau).
+  // ?termine=abend|morgen (10.11.): Routine gerade abgeschlossen, morgen ein Termin → Termin-Erinnerung.
+  const termineRoutine = params.get("termine");
+  if (termineRoutine) {
+    const iso = (n) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    overrides.routineDurchlaeufe = [{ id: "d-t", routine: termineRoutine, datum: iso(0), schritte: [], gestartetUm: new Date(Date.now() - 40 * 60000).toISOString(), abgeschlossenUm: new Date(Date.now() - 5 * 60000).toISOString() }];
+    overrides.alltagEintraege = [
+      { id: "t1", bereich: "eigen", titel: "🏫 Hilfeplangespräch", start: "13:15", ende: "14:45", datum: iso(1), wochentage: [], erinnerung: true, notiz: "❗ Wichtig" },
+      { id: "t2", bereich: "termin", titel: "Doku alt", start: "09:00", datum: iso(1), wochentage: [], erinnerung: false },
+    ];
+  }
   if (params.get("alltag") === "1") {
     const iso0 = (n) => {
       const d = new Date();
