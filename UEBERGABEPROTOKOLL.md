@@ -279,6 +279,15 @@ Claude ist dabei strategischer Co-Pilot, Software-Architekt und Gründungsberate
 - **Slogan seit 24.10.:** „Deine rechte Hand im Alltag“ (vorher „Deine exekutive rechte Hand“). Canva-Datei
   „AKA Hintergründe & Profilbilder“ (13 Seiten) fertig, Logo-Thema laut Nutzerin abgeschlossen.
 
+## 🔔 Termin-Erinnerung nach Morgen- und Abendroutine (10.11.2026)
+
+Nutzer: nach der Morgen- und nach der Abendroutine einmal kurz an die Termine am Folgetag erinnern („hey, denk dran, morgen 19 Uhr …“).
+- `utils/termineMorgen.js` (+ Test): Termine eines Tages = einmalige Einträge aus „Mein Alltag“ (`datum`), wöchentliche nur aus Bereich `termin`, Matrix-Aufgaben der Art Termin; `erinnerung: false` bleibt draußen (rückwirkende Doku). Mit ❗/„wichtig“/„Frist“ fett.
+- `ui/TermineMorgenHinweis.jsx`, in `AuthenticatedApp` gemountet (nicht im Verwalten-Modus): hört auf `routineDurchlaeufe`, erscheint 1,2 s nach dem Abschluss (nach der Feier), nur innerhalb 90 Min., einmal pro Routine und Tag (localStorage `aka-termine-hinweis-gezeigt`). Abends: morgen. Morgens: morgen + restliche Termine von heute. Bleibt bis „Alles klar“.
+- e2e: `termine-morgen.spec.js`, Harness `?termine=abend|morgen`.
+- Daten (10.11., per SQL im Konto des Nutzers): 23 Einträge in „Mein Alltag“, u. a. Hilfeplangespräch 16.11. 13:15, Frist Jugendamt 20.11., Bürgeramt 07.12., Weihnachts-Umgang als VORSCHLAG, Zahlungs-Erinnerungen, 10 rückwirkende Termine (erinnerung=false).
+- Schichtpläne: Struktur besteht schon (`#/dienstplan-foto`, `routine_schichtplan`, Dienst-Einträge in „Mein Alltag“).
+
 ## ⏱️ Routine-Zeitprotokoll: Aufwachen, Beginn, je Schritt von–bis, freie Reihenfolge (07.11.2026)
 
 Nutzerin: „Wecker auf 7, ich beginne erst um 9 – die realen Zeiten sollen dokumentiert werden“, dazu „wann ich einen Prozess starte und beende (Duschen nach 3 Min. beendet) … noch detaillierter“; „fällt mir schwer, mich immer an die Reihenfolge zu halten“.

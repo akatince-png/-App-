@@ -9,6 +9,7 @@ import { useAdmin } from "./context/AdminContext";
 import HomeView from "./views/HomeView";
 import AppSidebar from "./ui/AppSidebar";
 import Belohnungsfenster from "./ui/Belohnungsfenster";
+import TermineMorgenHinweis from "./ui/TermineMorgenHinweis";
 import MomentFrageHost from "./ui/MomentFrageHost";
 import { ZusatzprotokollBanner } from "./ui/Zusatzprotokolle";
 import Aka from "./ui/Aka";
@@ -554,6 +555,7 @@ export default function AuthenticatedApp() {
     <div className={mitLeiste ? "mp-app-shell mp-mit-leiste" : "mp-app-shell"}>
       <Belohnungsfenster />
       <MomentFrageHost />
+      {!proband && <TermineMorgenHinweis />}
       {!isAdmin && !proband && <HilfeWaechter />}
       <AkutModusGlobal sichtbar={view !== "home" && view !== "form" && view !== "tour"} />
       {zeigeSidebar && <AppSidebar view={view} onNavigate={setView} isAdmin={isAdmin} />}
